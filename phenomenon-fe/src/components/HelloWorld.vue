@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-defineProps<{ msg: string }>()
+  defineProps<{ msg: string }>();
 
-const count = ref(0)
+  const count = ref(0);
 </script>
 
 <template>
@@ -32,7 +32,7 @@ const count = ref(0)
 </template>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
-}
+  .read-the-docs {
+    color: #888;
+  }
 </style>

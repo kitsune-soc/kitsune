@@ -1,2 +1,5 @@
 **/node_modules
-target
+target/
+phenomenon-fe/
+Dockerfile.dev
+Dockerfile.prod

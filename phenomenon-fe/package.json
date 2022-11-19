@@ -6,13 +6,28 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint --ext .js,.vue,.ts --ignore-path .gitignore src",
+    "format": "prettier . --write"
   },
   "dependencies": {
+    "@apollo/client": "^3.7.1",
+    "@vue/apollo-composable": "^4.0.0-beta.1",
+    "graphql": "^16.6.0",
+    "graphql-tag": "^2.12.6",
     "vue": "^3.2.41"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
     "@vitejs/plugin-vue": "^3.2.0",
+    "@vue/eslint-config-prettier": "^7.0.0",
+    "@vue/eslint-config-typescript": "^11.0.2",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-vue": "^9.7.0",
+    "prettier": "^2.7.1",
     "sass": "^1.56.1",
     "typescript": "^4.6.4",
     "vite": "^3.2.3",

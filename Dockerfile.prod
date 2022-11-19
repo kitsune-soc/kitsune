@@ -8,4 +8,4 @@ RUN cargo -Z sparse-registry build
 FROM alpine:latest
 WORKDIR /app
 COPY --from=build /build/target/debug/phenomenon .
-CMD ["phenomenon"]
+CMD ["/app/phenomenon"]
