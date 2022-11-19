@@ -2,7 +2,6 @@ use argon2::password_hash;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use rsa::{pkcs1, pkcs8};
 use sea_orm::TransactionError;
@@ -52,9 +51,6 @@ pub enum Error {
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
-
-    #[error(transparent)]
-    Validator(#[from] validator::ValidationErrors),
 }
 
 impl From<Error> for Response {
@@ -78,7 +74,6 @@ impl IntoResponse for Error {
             Self::Database(sea_orm::DbErr::RecordNotFound(..)) => {
                 StatusCode::NOT_FOUND.into_response()
             }
-            Self::Validator(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
             err => {
                 error!(error = %err, "Error occurred in handler");
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()

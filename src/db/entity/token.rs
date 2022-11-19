@@ -2,21 +2,16 @@ use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, PartialOrd, SimpleObject)]
-#[sea_orm(table_name = "posts")]
-#[graphql(complex, name = "Post")]
+#[graphql(complex, name = "Token")]
+#[sea_orm(table_name = "tokens")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub token: String,
     #[graphql(skip)]
     pub user_id: Uuid,
-    pub subject: Option<String>,
-    pub content: String,
-    pub url: String,
     pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
 }
 
 #[ComplexObject]
@@ -25,7 +20,7 @@ impl Model {
         Ok(super::user::Entity::find_by_id(self.user_id)
             .one(&ctx.state().db_conn)
             .await?
-            .expect("[Bug] Post without associated user encountered"))
+            .expect("[Bug] Token without associated user"))
     }
 }
 
