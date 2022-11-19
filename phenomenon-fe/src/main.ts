@@ -1,22 +1,14 @@
 import { createApp, h, provide } from 'vue';
 import './style.scss';
 import App from './App.vue';
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 
-import {createRouter, createWebHashHistory} from 'vue-router';
-
-const Home = { template: '<p>Home</p>' }
-const About = { template: '<div>About</div>' }
-
-const routes = [
-  { path: '/', component: Home },
-  { path: '/about', component: About },
-]
+const routes: RouteRecordRaw[] = [];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-})
-
+});
 
 import {
   ApolloClient,
@@ -35,11 +27,11 @@ const apolloClient = new ApolloClient({
   cache,
 });
 
-const app = createApp({
+createApp({
   setup() {
     provide(DefaultApolloClient, apolloClient);
   },
   render: () => h(App),
 })
-app.use(router);
-app.mount('#app');
+  .use(router)
+  .mount('#app');
