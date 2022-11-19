@@ -1,14 +1,7 @@
 import { createApp, h, provide } from 'vue';
 import './style.scss';
 import App from './App.vue';
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
-
-const routes: RouteRecordRaw[] = [];
-
-const router = createRouter({
-  history: createWebHashHistory(),
-  routes,
-});
+import { router } from './router';
 
 import {
   ApolloClient,
