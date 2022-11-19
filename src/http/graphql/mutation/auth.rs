@@ -36,7 +36,7 @@ pub struct RegisterData {
     pub username: String,
     #[graphql(validator(email))]
     pub email: String,
-    #[graphql(validator(custom = "PasswordValidator"))]
+    #[graphql(secret, validator(custom = "PasswordValidator"))]
     pub password: String,
 }
 
@@ -49,7 +49,7 @@ impl AuthMutation {
         &self,
         ctx: &Context<'_>,
         username: String,
-        password: String,
+        #[graphql(secret)] password: String,
     ) -> Result<token::Model> {
         let state = ctx.state();
         let Some(user) = user::Entity::find()
