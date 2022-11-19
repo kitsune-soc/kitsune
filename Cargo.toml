@@ -1,0 +1,49 @@
+[package]
+name = "phenomenon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+argon2 = { version = "0.4.1", features = ["std"] }
+async-trait = "0.1.58"
+axum = { version = "0.5.17", features = ["macros"] }
+base64 = "0.13.1"
+chrono = "0.4.23"
+dotenvy = "0.15.6"
+envy = "0.4.2"
+futures-util = "0.3.25"
+migration = { version = "0.1.0", path = "migration" }
+phenomenon-ap = { version = "0.1.0", path = "phenomenon-ap" }
+phenomenon-http-signatures = { version = "0.1.0", path = "phenomenon-http-signatures" }
+pin-project-lite = "0.2.9"
+rand = "0.8.5"
+rayon = "1.5.3"
+reqwest = { version = "0.11.12", default-features = false, features = ["json", "rustls-tls-native-roots"] }
+rsa = "0.7.1"
+sea-orm = { version = "0.10.2", features = ["runtime-tokio-rustls", "sqlx-postgres"] }
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+sha2 = "0.10.6"
+thiserror = "1.0.37"
+tokio = { version = "1.21.2", features = ["full"] }
+tower-http = { version = "0.3.4", features = ["follow-redirect", "trace"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
+url = "2.3.1"
+uuid = { version = "1.2.1", features = ["v4"] }
+validator = { version = "0.16.0", features = ["derive"] }
+zeroize = "1.5.7"
+zxcvbn = "2.2.1"
+
+[profile.dev.package.num-bigint-dig]
+opt-level = 3
+
+[workspace]
+members = [
+    ".", 
+    "migration", 
+    "phenomenon-ap", 
+    "phenomenon-http-signatures"
+]
+
+[features]
