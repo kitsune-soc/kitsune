@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::DecodePrivateKey, RsaPrivateKey, RsaPublicKey};
 use sea_orm::prelude::*;
 use uuid::Uuid;
-use zeroize::Zeroize;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, PartialOrd, SimpleObject)]
 #[sea_orm(table_name = "users")]
@@ -55,18 +54,6 @@ impl Model {
             .all(&ctx.state().db_conn)
             .await
             .map_err(Into::into)
-    }
-}
-
-impl Zeroize for Model {
-    fn zeroize(&mut self) {
-        self.private_key.zeroize();
-    }
-}
-
-impl Zeroize for ActiveModel {
-    fn zeroize(&mut self) {
-        self.private_key.take().zeroize();
     }
 }
 

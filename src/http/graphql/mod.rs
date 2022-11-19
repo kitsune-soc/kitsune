@@ -1,7 +1,9 @@
 use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::AuthExtactor;
 use crate::{db::entity::user, state::State};
-use async_graphql::{http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema};
+use async_graphql::{
+    extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
+};
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
 use axum::{
     response::Html,
@@ -31,12 +33,11 @@ impl ContextExt for &'_ Context<'_> {
 }
 
 async fn graphql_route(
-    Extension(state): Extension<State>,
     Extension(schema): Extension<GraphQLSchema>,
     AuthExtactor(user): AuthExtactor,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
-    let mut req = req.into_inner().data(state);
+    let mut req = req.into_inner();
     if let Some(user) = user {
         req = req.data(user);
     }
@@ -54,12 +55,15 @@ async fn graphiql_route() -> Html<String> {
     Html(page_src)
 }
 
-pub fn routes() -> Router {
-    let schema: GraphQLSchema = Schema::new(
+pub fn routes(state: State) -> Router {
+    let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),
         RootMutation::default(),
         EmptySubscription,
-    );
+    )
+    .data(state)
+    .extension(Tracing)
+    .finish();
 
     Router::new()
         .route("/graphql", any(graphql_route))

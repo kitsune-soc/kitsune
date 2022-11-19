@@ -133,6 +133,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "base64",
+ "blocking",
  "bytes",
  "chrono",
  "fast_chemail",
@@ -1808,7 +1809,6 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "uuid",
- "zeroize",
  "zxcvbn",
 ]
 

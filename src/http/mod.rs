@@ -15,7 +15,7 @@ pub async fn run(state: State, port: u16) {
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .merge(graphql::routes())
+        .merge(graphql::routes(state.clone()))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
         .into_make_service();
