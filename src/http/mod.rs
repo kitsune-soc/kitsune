@@ -20,7 +20,7 @@ pub async fn run(state: State, port: u16) {
         .layer(Extension(state))
         .into_make_service();
 
-    axum::Server::bind(&([127, 0, 0, 1], port).into())
+    axum::Server::bind(&([0, 0, 0, 0], port).into())
         .serve(router)
         .await
         .unwrap();
