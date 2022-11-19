@@ -1,0 +1,11 @@
+FROM rust:1-alpine AS build
+COPY . /build
+WORKDIR /build
+RUN rustup default nightly
+RUN apk add --no-cache musl-dev
+RUN cargo -Z sparse-registry build
+
+FROM alpine:latest
+WORKDIR /app
+COPY --from=build /build/target/debug/phenomenon .
+CMD ["/app/phenomenon"]
