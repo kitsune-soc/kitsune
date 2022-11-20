@@ -1,6 +1,7 @@
 import { createApp, h, provide } from 'vue';
 import './style.scss';
 import App from './App.vue';
+import { router } from './router';
 
 import {
   ApolloClient,
@@ -24,4 +25,6 @@ createApp({
     provide(DefaultApolloClient, apolloClient);
   },
   render: () => h(App),
-}).mount('#app');
+})
+  .use(router)
+  .mount('#app');
