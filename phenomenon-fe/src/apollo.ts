@@ -3,9 +3,10 @@ import {
   createHttpLink,
   InMemoryCache,
 } from '@apollo/client/core';
+import { BACKEND_PREFIX } from './consts';
 
 const httpLink = createHttpLink({
-  uri: '/graphql',
+  uri: `${BACKEND_PREFIX}/graphql`,
 });
 const cache = new InMemoryCache();
 

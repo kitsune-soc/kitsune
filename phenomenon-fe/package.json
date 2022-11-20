@@ -16,7 +16,7 @@
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "vue": "^3.2.41",
-    "vue-router": "4"
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.43.0",
