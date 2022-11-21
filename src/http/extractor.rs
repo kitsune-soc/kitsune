@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{token, user},
+    db::entity::{oauth::access_token, user},
     error::Error,
     state::State,
 };
@@ -11,8 +11,9 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, TypedHeader,
 };
+use chrono::Utc;
 use headers::{authorization::Bearer, Authorization};
-use sea_orm::EntityTrait;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 pub struct AuthExtactor(pub Option<user::Model>);
 
@@ -29,7 +30,8 @@ impl FromRequest<Body> for AuthExtactor {
             TypedHeader::<Authorization<Bearer>>::from_request(req).await
         {
             let Some((_token, user)) =
-                token::Entity::find_by_id(bearer_token.token().into())
+                access_token::Entity::find_by_id(bearer_token.token().into())
+                    .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
                     .find_also_related(user::Entity)
                     .one(&state.db_conn)
                     .await
