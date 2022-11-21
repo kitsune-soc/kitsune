@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 argon2 = { version = "0.4.1", features = ["std"] }
+askama = "0.11.1"
 async-graphql = { version = "4.0.16", features = ["chrono", "email-validator", "tracing", "unblock", "uuid"] }
 async-graphql-axum = "4.0.16"
 async-trait = "0.1.58"
