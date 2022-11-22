@@ -22,7 +22,7 @@ pub async fn get(Extension(state): Extension<State>) -> Result<Json<Instance>> {
     Ok(Json(Instance {
         uri: state.config.domain.clone(),
         title: state.config.domain,
-        short_description: String::new(),
+        short_description: "https://www.youtube.com/watch?v=6lnnPnr_0SU".into(),
         description: String::new(),
         email: String::new(),
         version: env!("CARGO_PKG_VERSION").into(),

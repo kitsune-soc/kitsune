@@ -13,7 +13,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension, Form, Json,
+    Extension, Json,
 };
 use chrono::Utc;
 use futures_util::FutureExt;

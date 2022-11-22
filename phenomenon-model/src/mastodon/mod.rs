@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod account;
 pub mod instance;
 
+pub use self::account::Account;
 pub use self::instance::Instance;
 
 #[derive(Deserialize, Serialize)]

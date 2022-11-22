@@ -23,7 +23,6 @@ async fn handle_error(err: io::Error) -> StatusCode {
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
     let mut router = Router::new()
-        .route("/@:username", get(users::get))
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())

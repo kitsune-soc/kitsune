@@ -1,6 +1,6 @@
 [package]
 name = "phenomenon"
-version = "0.1.0"
+version = "0.1.0-UTA"
 edition = "2021"
 
 [dependencies]
