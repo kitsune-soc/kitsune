@@ -1,7 +1,9 @@
 //!
 //! Standard-compliant OAuth2 flows
 //!
-//! Implemented in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
+//! Implemented (somewhat) in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
+//!
+//! TODO: Implement client credentials grant
 //!
 
 use axum::{
