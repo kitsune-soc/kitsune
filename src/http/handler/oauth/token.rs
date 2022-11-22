@@ -7,6 +7,7 @@ use crate::{
     state::State,
     util::generate_secret,
 };
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -29,7 +30,8 @@ struct AccessTokenResponse {
     access_token: String,
     token_type: String,
     expires_in: i64,
-    refresh_token: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    refresh_token: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -116,13 +118,54 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
         access_token: access_token.token,
         token_type: "Bearer".into(),
         expires_in: (access_token.expired_at - access_token.created_at).num_seconds(),
-        refresh_token: refresh_token.token,
+        refresh_token: Some(refresh_token.token),
     })
     .into_response())
 }
 
 async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
-    todo!();
+    let user = user::Entity::find()
+        .filter(user::Column::Username.eq(data.username))
+        .filter(user::Column::Domain.is_null())
+        .one(&state.db_conn)
+        .await?
+        .ok_or(Error::UserNotFound)?;
+
+    let is_valid = crate::blocking::cpu(move || {
+        let password = user.password.ok_or(Error::BrokenRecord)?;
+        let password_hash = PasswordHash::new(&password)?;
+        let argon2 = Argon2::default();
+
+        Ok::<_, Error>(
+            argon2
+                .verify_password(data.password.as_bytes(), &password_hash)
+                .is_ok(),
+        )
+    })
+    .await??;
+
+    if !is_valid {
+        return Err(Error::PasswordMismatch);
+    }
+
+    let access_token = access_token::Model {
+        token: generate_secret(),
+        user_id: Some(user.id),
+        application_id: None,
+        created_at: Utc::now(),
+        expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+    }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
+
+    Ok(Json(AccessTokenResponse {
+        access_token: access_token.token,
+        token_type: "Bearer".into(),
+        expires_in: (access_token.expired_at - access_token.created_at).num_seconds(),
+        refresh_token: None,
+    })
+    .into_response())
 }
 
 async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response> {
@@ -135,7 +178,7 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
 
-    let new_access_token = state
+    let (new_access_token, new_refresh_token) = state
         .db_conn
         .transaction(|tx| {
             async move {
@@ -149,7 +192,7 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
                 .insert(tx)
                 .await?;
 
-                refresh_token::ActiveModel {
+                let new_refresh_token = refresh_token::ActiveModel {
                     token: ActiveValue::Set(refresh_token.token),
                     access_token: ActiveValue::Set(new_access_token.token.clone()),
                     ..Default::default()
@@ -161,13 +204,19 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
                     .exec(tx)
                     .await?;
 
-                Ok(new_access_token)
+                Ok((new_access_token, new_refresh_token))
             }
             .boxed()
         })
         .await?;
 
-    Ok(().into_response())
+    Ok(Json(AccessTokenResponse {
+        access_token: new_access_token.token,
+        token_type: "Bearer".into(),
+        expires_in: (new_access_token.expired_at - new_access_token.created_at).num_seconds(),
+        refresh_token: Some(new_refresh_token.token),
+    })
+    .into_response())
 }
 
 pub async fn post(
