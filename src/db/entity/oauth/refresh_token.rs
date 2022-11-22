@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
-#[sea_orm(table_name = "oauth2_applications")]
+#[sea_orm(table_name = "oauth2_refresh_tokens")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub token: String,

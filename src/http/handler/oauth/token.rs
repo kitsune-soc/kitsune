@@ -39,6 +39,7 @@ pub struct AuthorizationCodeData {
     code: String,
     redirect_uri: String,
     client_id: Uuid,
+    client_secret: String,
 }
 
 #[derive(Deserialize)]
@@ -50,6 +51,8 @@ pub struct PasswordData {
 
 #[derive(Deserialize)]
 pub struct RefreshTokenData {
+    client_id: Uuid,
+    client_secret: String,
     refresh_token: String,
     scope: Option<String>,
 }
@@ -74,6 +77,7 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
 
     let Some(application) = application::Entity::find_by_id(data.client_id)
         .filter(application::Column::Id.eq(authorization_code.application_id))
+        .filter(application::Column::Secret.eq(data.client_secret))
         .filter(application::Column::RedirectUri.eq(data.redirect_uri))
         .one(&state.db_conn)
         .await?
@@ -177,6 +181,15 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
     else {
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
+
+    let application = application::Entity::find_by_id(refresh_token.application_id)
+        .filter(application::Column::Id.eq(data.client_id))
+        .filter(application::Column::Secret.eq(data.client_secret))
+        .one(&state.db_conn)
+        .await?;
+    if application.is_none() {
+        return Err(Error::OAuthApplicationNotFound);
+    }
 
     let (new_access_token, new_refresh_token) = state
         .db_conn
