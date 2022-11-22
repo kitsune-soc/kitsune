@@ -10,7 +10,7 @@ use crate::{
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension, Form,
+    Extension, Form, Json,
 };
 use chrono::{Duration, Utc};
 use futures_util::FutureExt;
@@ -19,10 +19,18 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
     QueryFilter, TransactionTrait,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
+
+#[derive(Serialize)]
+struct AccessTokenResponse {
+    access_token: String,
+    token_type: String,
+    expires_in: i64,
+    refresh_token: String,
+}
 
 #[derive(Deserialize)]
 pub struct AuthorizationCodeData {
@@ -104,7 +112,13 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
         })
         .await?;
 
-    todo!();
+    Ok(Json(AccessTokenResponse {
+        access_token: access_token.token,
+        token_type: "Bearer".into(),
+        expires_in: (access_token.expired_at - access_token.created_at).num_seconds(),
+        refresh_token: refresh_token.token,
+    })
+    .into_response())
 }
 
 async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
