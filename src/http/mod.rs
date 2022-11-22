@@ -24,10 +24,6 @@ async fn handle_error(err: io::Error) -> StatusCode {
 pub async fn run(state: State, port: u16) {
     let router = Router::new()
         .route("/@:username", get(users::get))
-        .route(
-            "/public/*",
-            get_service(ServeDir::new("public")).handle_error(handle_error),
-        )
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
@@ -35,6 +31,7 @@ pub async fn run(state: State, port: u16) {
         .merge(graphql::routes(state.clone()))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
+        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error))
         .into_make_service();
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
