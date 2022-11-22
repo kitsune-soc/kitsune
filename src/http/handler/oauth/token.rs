@@ -17,8 +17,8 @@ use chrono::{Duration, Utc};
 use futures_util::FutureExt;
 use once_cell::sync::Lazy;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
+    ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -65,6 +65,27 @@ pub enum TokenForm {
     RefreshToken(RefreshTokenData),
 }
 
+async fn get_application<C>(
+    db_conn: &C,
+    id: Uuid,
+    secret: String,
+    redirect_uri: Option<String>,
+) -> Result<application::Model>
+where
+    C: ConnectionTrait,
+{
+    let mut query =
+        application::Entity::find_by_id(id).filter(application::Column::Secret.eq(secret));
+    if let Some(redirect_uri) = redirect_uri {
+        query = query.filter(application::Column::RedirectUri.eq(redirect_uri));
+    }
+
+    query
+        .one(db_conn)
+        .await?
+        .ok_or(Error::OAuthApplicationNotFound)
+}
+
 async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         authorization_code::Entity::find_by_id(data.code)
@@ -75,15 +96,17 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
         return Ok((StatusCode::UNAUTHORIZED, "Unknown authorization code").into_response());
     };
 
-    let Some(application) = application::Entity::find_by_id(data.client_id)
-        .filter(application::Column::Id.eq(authorization_code.application_id))
-        .filter(application::Column::Secret.eq(data.client_secret))
-        .filter(application::Column::RedirectUri.eq(data.redirect_uri))
-        .one(&state.db_conn)
-        .await?
-    else {
-        return Err(Error::OAuthApplicationNotFound);
-    };
+    if data.client_id != authorization_code.application_id {
+        return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
+    }
+
+    let application = get_application(
+        &state.db_conn,
+        data.client_id,
+        data.client_secret,
+        Some(data.redirect_uri),
+    )
+    .await?;
 
     let (access_token, refresh_token) = state
         .db_conn
@@ -181,15 +204,7 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
     else {
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
-
-    let application = application::Entity::find_by_id(refresh_token.application_id)
-        .filter(application::Column::Id.eq(data.client_id))
-        .filter(application::Column::Secret.eq(data.client_secret))
-        .one(&state.db_conn)
-        .await?;
-    if application.is_none() {
-        return Err(Error::OAuthApplicationNotFound);
-    }
+    get_application(&state.db_conn, data.client_id, data.client_secret, None).await?;
 
     let (new_access_token, new_refresh_token) = state
         .db_conn
