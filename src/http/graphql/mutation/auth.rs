@@ -46,50 +46,6 @@ pub struct AuthMutation;
 
 #[Object]
 impl AuthMutation {
-    /*pub async fn login(
-        &self,
-        ctx: &Context<'_>,
-        username: String,
-        #[graphql(secret)] password: String,
-    ) -> Result<access_token::Model> {
-        let state = ctx.state();
-        let Some(user) = user::Entity::find()
-            .filter(user::Column::Username.eq(username))
-            .filter(user::Column::Domain.is_null())
-            .one(&state.db_conn)
-            .await?
-        else {
-            return Err(Error::new("User not found"));
-        };
-
-        let is_valid = crate::blocking::cpu(move || {
-            let argon2 = Argon2::default();
-            let hashed_password = user.password.unwrap();
-            let hashed_password = PasswordHash::new(hashed_password.as_str())?;
-            Ok::<_, Error>(
-                argon2
-                    .verify_password(password.as_bytes(), &hashed_password)
-                    .is_ok(),
-            )
-        })
-        .await??;
-
-        if !is_valid {
-            return Err(Error::new("Invalid password"));
-        }
-
-        let token = generate_secret();
-
-        Ok(token::Model {
-            token,
-            user_id: user.id,
-            created_at: Utc::now(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?)
-    }*/
-
     pub async fn register_oauth_application(
         &self,
         ctx: &Context<'_>,
