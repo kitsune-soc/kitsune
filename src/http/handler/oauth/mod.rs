@@ -9,5 +9,5 @@ use axum::{routing::get, Router};
 pub mod authorize;
 
 pub fn routes() -> Router {
-    Router::new().route("/authorize", get(authorize::get))
+    Router::new().route("/authorize", get(authorize::get).post(authorize::post))
 }

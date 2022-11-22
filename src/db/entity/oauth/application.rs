@@ -1,7 +1,9 @@
+use async_graphql::SimpleObject;
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
 
-#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
+#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, SimpleObject)]
+#[graphql(name = "OAuthApplication")]
 #[sea_orm(table_name = "oauth2_applications")]
 pub struct Model {
     #[sea_orm(primary_key)]

@@ -1,8 +1,9 @@
 use crate::{
-    db::entity::{oauth::access_token, user},
+    db::entity::{oauth::application, user},
     http::graphql::ContextExt,
+    util::generate_secret,
 };
-use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use async_graphql::{Context, CustomValidator, Error, InputObject, Object, Result};
 use chrono::Utc;
 use rsa::{
@@ -45,7 +46,7 @@ pub struct AuthMutation;
 
 #[Object]
 impl AuthMutation {
-    pub async fn login(
+    /*pub async fn login(
         &self,
         ctx: &Context<'_>,
         username: String,
@@ -77,22 +78,38 @@ impl AuthMutation {
             return Err(Error::new("Invalid password"));
         }
 
-        let token_data: [u8; 32] = rand::random();
-        let token = hex::encode(token_data);
+        let token = generate_secret();
 
-        todo!();
-
-        /* Ok(token::Model {
+        Ok(token::Model {
             token,
             user_id: user.id,
             created_at: Utc::now(),
         }
         .into_active_model()
         .insert(&state.db_conn)
-        .await?) */
+        .await?)
+    }*/
+
+    pub async fn register_oauth_application(
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        redirect_uri: String,
+    ) -> Result<application::Model> {
+        Ok(application::Model {
+            id: Uuid::new_v4(),
+            secret: generate_secret(),
+            name,
+            redirect_uri,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+        .into_active_model()
+        .insert(&ctx.state().db_conn)
+        .await?)
     }
 
-    pub async fn register(
+    pub async fn register_user(
         &self,
         ctx: &Context<'_>,
         register_data: RegisterData,

@@ -24,6 +24,15 @@ enum OAuth2Applications {
 }
 
 #[derive(Iden)]
+enum OAuth2AuthorizationCodes {
+    Table,
+    Code,
+    ApplicationId,
+    UserId,
+    CreatedAt,
+}
+
+#[derive(Iden)]
 enum OAuth2RefreshTokens {
     Table,
     Token,
@@ -64,6 +73,48 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(OAuth2Applications::UpdatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(OAuth2AuthorizationCodes::Table)
+                    .col(
+                        ColumnDef::new(OAuth2AuthorizationCodes::Code)
+                            .text()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(OAuth2AuthorizationCodes::ApplicationId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(OAuth2AuthorizationCodes::UserId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(OAuth2AuthorizationCodes::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from_col(OAuth2AuthorizationCodes::UserId)
+                            .to(Users::Table, Users::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from_col(OAuth2AuthorizationCodes::ApplicationId)
+                            .to(OAuth2Applications::Table, OAuth2Applications::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )

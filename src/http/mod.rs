@@ -14,6 +14,7 @@ pub mod graphql;
 mod extractor;
 mod handler;
 
+#[allow(clippy::unused_async)]
 async fn handle_error(err: io::Error) -> StatusCode {
     error!(error = %err, "Static file handler failed");
     StatusCode::INTERNAL_SERVER_ERROR
