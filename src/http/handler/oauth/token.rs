@@ -57,6 +57,7 @@ pub struct RefreshTokenData {
 #[serde(rename_all = "snake_case", tag = "grant_type")]
 pub enum TokenForm {
     AuthorizationCode(AuthorizationCodeData),
+    ClientCredentials,
     Password(PasswordData),
     RefreshToken(RefreshTokenData),
 }
@@ -107,6 +108,47 @@ async fn authorization_code(
                 .await?;
 
                 authorization_code.delete(tx).await?;
+
+                Ok((access_token, refresh_token))
+            }
+            .boxed()
+        })
+        .await?;
+
+    Ok(Json(AccessTokenResponse {
+        expires_in: access_token.ttl().num_seconds(),
+        access_token: access_token.token,
+        token_type: "Bearer".into(),
+        refresh_token: Some(refresh_token.token),
+    })
+    .into_response())
+}
+
+async fn client_credentials(state: State, application: application::Model) -> Result<Response> {
+    let (access_token, refresh_token) = state
+        .db_conn
+        .transaction(move |tx| {
+            async move {
+                let access_token = access_token::Model {
+                    token: generate_secret(),
+                    user_id: None,
+                    application_id: Some(application.id),
+                    created_at: Utc::now(),
+                    expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+                }
+                .into_active_model()
+                .insert(tx)
+                .await?;
+
+                let refresh_token = refresh_token::Model {
+                    token: generate_secret(),
+                    access_token: access_token.token.clone(),
+                    application_id: application.id,
+                    created_at: Utc::now(),
+                }
+                .into_active_model()
+                .insert(tx)
+                .await?;
 
                 Ok((access_token, refresh_token))
             }
@@ -237,11 +279,19 @@ pub async fn post(
         (TokenForm::AuthorizationCode(data), Some(OAuthApplication(application))) => {
             authorization_code(state, application, data).await
         }
+        (TokenForm::ClientCredentials, Some(OAuthApplication(application))) => {
+            client_credentials(state, application).await
+        }
         (TokenForm::Password(data), ..) => password_grant(state, data).await,
         (TokenForm::RefreshToken(data), Some(OAuthApplication(application))) => {
             refresh_token(state, application, data).await
         }
-        (TokenForm::AuthorizationCode(..) | TokenForm::RefreshToken(..), None) => Ok((
+        (
+            TokenForm::AuthorizationCode(..)
+            | TokenForm::ClientCredentials
+            | TokenForm::RefreshToken(..),
+            None,
+        ) => Ok((
             StatusCode::UNAUTHORIZED,
             "Missing OAuth application credentials",
         )
