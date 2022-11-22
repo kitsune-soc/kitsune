@@ -1,5 +1,5 @@
 [package]
-name = "phenomenon-ap"
+name = "phenomenon-model"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,4 @@ edition = "2021"
 chrono = { version = "0.4.23", features = ["serde"] }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.88"
+uuid = { version = "1.2.2", features = ["serde"] }

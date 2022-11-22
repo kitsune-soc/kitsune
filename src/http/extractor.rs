@@ -1,28 +1,20 @@
 use crate::{
-    db::entity::{
-        oauth::{access_token, application},
-        user,
-    },
+    db::entity::{oauth::access_token, user},
     error::Error,
     state::State,
 };
 use async_trait::async_trait;
 use axum::{
     body::Body,
-    extract::{FromRequest, Query, RequestParts},
+    extract::{FromRequest, RequestParts},
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension, TypedHeader,
+    Extension, Form, Json, TypedHeader,
 };
 use chrono::Utc;
-use headers::{
-    authorization::{Basic, Bearer},
-    Authorization,
-};
+use headers::{authorization::Bearer, Authorization};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use serde::Deserialize;
-use std::str::FromStr;
-use uuid::Uuid;
+use serde::de::DeserializeOwned;
 
 pub struct AuthExtactor(pub Option<user::Model>);
 
@@ -56,44 +48,24 @@ impl FromRequest<Body> for AuthExtactor {
     }
 }
 
-#[derive(Deserialize)]
-struct OAuthApplicationQuery {
-    client_id: Uuid,
-    client_secret: String,
-}
-
-pub struct OAuthApplication(pub application::Model);
+pub struct FormOrJson<T>(pub T);
 
 #[async_trait]
-impl FromRequest<Body> for OAuthApplication {
+impl<T> FromRequest<Body> for FormOrJson<T>
+where
+    T: DeserializeOwned + Send,
+{
     type Rejection = Response;
 
     async fn from_request(req: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        let Extension(state) = Extension::<State>::from_request(req)
-            .await
-            .map_err(IntoResponse::into_response)?;
-
-        let (client_id, client_secret) = if let Ok(TypedHeader(Authorization(creds))) =
-            TypedHeader::<Authorization<Basic>>::from_request(req).await
-        {
-            (
-                Uuid::from_str(creds.username()).map_err(Error::from)?,
-                creds.password().to_string(),
-            )
+        if let Ok(Form(data)) = Form::from_request(req).await {
+            Ok(Self(data))
         } else {
-            let Query(query) = Query::<OAuthApplicationQuery>::from_request(req)
+            let Json(data) = Json::from_request(req)
                 .await
                 .map_err(IntoResponse::into_response)?;
-            (query.client_id, query.client_secret)
-        };
 
-        let application = application::Entity::find_by_id(client_id)
-            .filter(application::Column::Secret.eq(client_secret))
-            .one(&state.db_conn)
-            .await
-            .map_err(Error::from)?
-            .ok_or(Error::OAuthApplicationNotFound)?;
-
-        Ok(Self(application))
+            Ok(Self(data))
+        }
     }
 }

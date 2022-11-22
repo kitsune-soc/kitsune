@@ -7,7 +7,7 @@ use axum::{
     routing::{get, get_service},
     Extension, Router,
 };
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::{cors::CorsLayer, services::ServeDir, trace::TraceLayer};
 
 pub mod graphql;
 
@@ -22,20 +22,27 @@ async fn handle_error(err: io::Error) -> StatusCode {
 
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
-    let router = Router::new()
+    let mut router = Router::new()
         .route("/@:username", get(users::get))
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
         .merge(graphql::routes(state.clone()))
-        .layer(TraceLayer::new_for_http())
+        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error));
+
+    #[cfg(feature = "mastodon")]
+    {
+        router = router.merge(handler::mastodon::routes());
+    }
+
+    router = router
         .layer(Extension(state))
-        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error))
-        .into_make_service();
+        .layer(CorsLayer::permissive())
+        .layer(TraceLayer::new_for_http());
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
-        .serve(router)
+        .serve(router.into_make_service())
         .await
         .unwrap();
 }

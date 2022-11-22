@@ -3,8 +3,8 @@ use crate::{
     error::{Error, Result},
 };
 use axum::http::Uri;
-use phenomenon_ap::object::Note;
 use phenomenon_http_signatures::Request;
+use phenomenon_model::ap::object::Note;
 use reqwest::Client;
 use rsa::pkcs8::{self, SecretDocument};
 use sha2::{Digest, Sha256};
