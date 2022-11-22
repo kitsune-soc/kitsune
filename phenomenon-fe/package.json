@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.1",
+    "@fontsource/play": "^4.5.12",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/vue-fontawesome": "^3.0.2",
