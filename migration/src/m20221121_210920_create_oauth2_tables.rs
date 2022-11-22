@@ -30,6 +30,7 @@ enum Oauth2AuthorizationCodes {
     ApplicationId,
     UserId,
     CreatedAt,
+    ExpiredAt,
 }
 
 #[derive(Iden)]
@@ -99,6 +100,11 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(Oauth2AuthorizationCodes::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Oauth2AuthorizationCodes::ExpiredAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )

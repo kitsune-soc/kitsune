@@ -10,9 +10,13 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use chrono::Duration;
+use once_cell::sync::Lazy;
 
 mod authorize;
 mod token;
+
+static TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 pub fn routes() -> Router {
     Router::new()

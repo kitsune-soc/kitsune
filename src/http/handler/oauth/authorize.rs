@@ -1,3 +1,4 @@
+use super::TOKEN_VALID_DURATION;
 use crate::{
     db::entity::{
         oauth::{application, authorization_code},
@@ -119,6 +120,7 @@ pub async fn post(
         application_id: application.id,
         user_id: user.id,
         created_at: Utc::now(),
+        expired_at: Utc::now() + *TOKEN_VALID_DURATION,
     }
     .into_active_model()
     .insert(&state.db_conn)

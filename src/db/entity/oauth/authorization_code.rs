@@ -9,6 +9,7 @@ pub struct Model {
     pub application_id: Uuid,
     pub user_id: Uuid,
     pub created_at: DateTime<Utc>,
+    pub expired_at: DateTime<Utc>,
 }
 
 impl Related<super::application::Entity> for Entity {

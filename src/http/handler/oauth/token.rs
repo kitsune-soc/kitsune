@@ -1,3 +1,4 @@
+use super::TOKEN_VALID_DURATION;
 use crate::{
     db::entity::{
         oauth::{access_token, application, authorization_code, refresh_token},
@@ -14,16 +15,13 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, Form, Json,
 };
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use futures_util::FutureExt;
-use once_cell::sync::Lazy;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
     QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
-
-static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 #[derive(Serialize)]
 struct AccessTokenResponse {
@@ -69,6 +67,7 @@ async fn authorization_code(
 ) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         authorization_code::Entity::find_by_id(data.code)
+            .filter(authorization_code::Column::ExpiredAt.lt(Utc::now()))
             .find_also_related(user::Entity)
             .one(&state.db_conn)
             .await?
@@ -91,7 +90,7 @@ async fn authorization_code(
                     user_id: Some(user.id),
                     application_id: Some(authorization_code.application_id),
                     created_at: Utc::now(),
-                    expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+                    expired_at: Utc::now() + *TOKEN_VALID_DURATION,
                 }
                 .into_active_model()
                 .insert(tx)
@@ -134,7 +133,7 @@ async fn client_credentials(state: State, application: application::Model) -> Re
                     user_id: None,
                     application_id: Some(application.id),
                     created_at: Utc::now(),
-                    expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+                    expired_at: Utc::now() + *TOKEN_VALID_DURATION,
                 }
                 .into_active_model()
                 .insert(tx)
@@ -195,7 +194,7 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
         user_id: Some(user.id),
         application_id: None,
         created_at: Utc::now(),
-        expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+        expired_at: Utc::now() + *TOKEN_VALID_DURATION,
     }
     .into_active_model()
     .insert(&state.db_conn)
@@ -236,7 +235,7 @@ async fn refresh_token(
                 let new_access_token = access_token::Model {
                     token: generate_secret(),
                     created_at: Utc::now(),
-                    expired_at: Utc::now() + *ACCESS_TOKEN_VALID_DURATION,
+                    expired_at: Utc::now() + *TOKEN_VALID_DURATION,
                     ..access_token
                 }
                 .into_active_model()
