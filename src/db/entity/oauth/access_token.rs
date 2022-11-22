@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use sea_orm::prelude::*;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
@@ -10,6 +10,13 @@ pub struct Model {
     pub application_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub expired_at: DateTime<Utc>,
+}
+
+impl Model {
+    /// Time until the token is expired
+    pub fn ttl(&self) -> Duration {
+        self.expired_at - self.created_at
+    }
 }
 
 impl Related<super::application::Entity> for Entity {

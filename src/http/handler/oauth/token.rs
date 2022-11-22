@@ -18,11 +18,10 @@ use chrono::{Duration, Utc};
 use futures_util::FutureExt;
 use once_cell::sync::Lazy;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
-    ModelTrait, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
+    QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
@@ -39,8 +38,6 @@ struct AccessTokenResponse {
 pub struct AuthorizationCodeData {
     code: String,
     redirect_uri: String,
-    client_id: Uuid,
-    client_secret: String,
 }
 
 #[derive(Deserialize)]
@@ -52,8 +49,6 @@ pub struct PasswordData {
 
 #[derive(Deserialize)]
 pub struct RefreshTokenData {
-    client_id: Uuid,
-    client_secret: String,
     refresh_token: String,
     scope: Option<String>,
 }
@@ -80,7 +75,9 @@ async fn authorization_code(
         return Ok((StatusCode::UNAUTHORIZED, "Unknown authorization code").into_response());
     };
 
-    if data.client_id != authorization_code.application_id {
+    if application.id != authorization_code.application_id
+        || application.redirect_uri != data.redirect_uri
+    {
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
 
@@ -118,9 +115,9 @@ async fn authorization_code(
         .await?;
 
     Ok(Json(AccessTokenResponse {
+        expires_in: access_token.ttl().num_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
-        expires_in: (access_token.expired_at - access_token.created_at).num_seconds(),
         refresh_token: Some(refresh_token.token),
     })
     .into_response())
@@ -163,9 +160,9 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
     .await?;
 
     Ok(Json(AccessTokenResponse {
+        expires_in: access_token.ttl().num_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
-        expires_in: (access_token.expired_at - access_token.created_at).num_seconds(),
         refresh_token: None,
     })
     .into_response())
@@ -190,7 +187,7 @@ async fn refresh_token(
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
 
-    let (new_access_token, new_refresh_token) = state
+    let (access_token, refresh_token) = state
         .db_conn
         .transaction(|tx| {
             async move {
@@ -204,7 +201,7 @@ async fn refresh_token(
                 .insert(tx)
                 .await?;
 
-                let new_refresh_token = refresh_token::ActiveModel {
+                let refresh_token = refresh_token::ActiveModel {
                     token: ActiveValue::Set(refresh_token.token),
                     access_token: ActiveValue::Set(new_access_token.token.clone()),
                     ..Default::default()
@@ -216,17 +213,17 @@ async fn refresh_token(
                     .exec(tx)
                     .await?;
 
-                Ok((new_access_token, new_refresh_token))
+                Ok((new_access_token, refresh_token))
             }
             .boxed()
         })
         .await?;
 
     Ok(Json(AccessTokenResponse {
-        access_token: new_access_token.token,
+        expires_in: access_token.ttl().num_seconds(),
+        access_token: access_token.token,
         token_type: "Bearer".into(),
-        expires_in: (new_access_token.expired_at - new_access_token.created_at).num_seconds(),
-        refresh_token: Some(new_refresh_token.token),
+        refresh_token: Some(refresh_token.token),
     })
     .into_response())
 }
