@@ -58,6 +58,9 @@ pub enum Error {
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
 
+    #[error(transparent)]
+    Uuid(#[from] uuid::Error),
+
     #[error("User not found")]
     UserNotFound,
 }
