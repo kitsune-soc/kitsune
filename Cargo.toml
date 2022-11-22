@@ -18,6 +18,7 @@ futures-util = "0.3.25"
 headers = "0.3.8"
 hex = "0.4.3"
 migration = { version = "0.1.0", path = "migration" }
+once_cell = "1.16.0"
 phenomenon-ap = { version = "0.1.0", path = "phenomenon-ap" }
 phenomenon-http-signatures = { version = "0.1.0", path = "phenomenon-http-signatures" }
 pin-project-lite = "0.2.9"
@@ -40,6 +41,10 @@ zxcvbn = "2.2.1"
 
 [profile.dev.package.num-bigint-dig]
 opt-level = 3
+
+[profile.release]
+lto = 'thin'
+strip = true
 
 [workspace]
 members = [

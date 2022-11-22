@@ -4,10 +4,16 @@
 //! Implemented in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
 //!
 
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 
-pub mod authorize;
+mod authorize;
+mod token;
 
 pub fn routes() -> Router {
-    Router::new().route("/authorize", get(authorize::get).post(authorize::post))
+    Router::new()
+        .route("/authorize", get(authorize::get).post(authorize::post))
+        .route("/token", post(token::post))
 }
