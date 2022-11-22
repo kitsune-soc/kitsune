@@ -59,6 +59,9 @@ impl Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::oauth::access_token::Entity")]
+    OAuth2AccessToken,
+
     #[sea_orm(has_many = "super::post::Entity")]
     Post,
 }

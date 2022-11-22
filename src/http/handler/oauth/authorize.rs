@@ -1,0 +1,148 @@
+use crate::{
+    db::entity::{
+        oauth::{application, authorization_code},
+        user,
+    },
+    error::{Error, Result},
+    state::State,
+    util::generate_secret,
+};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
+use askama::Template;
+use axum::{
+    extract::Query,
+    http::StatusCode,
+    response::{Html, IntoResponse, Response},
+    Extension, Form,
+};
+use chrono::Utc;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use serde::Deserialize;
+use std::str::FromStr;
+use url::Url;
+use uuid::Uuid;
+
+/// If the Redirect URI is equal to this string, show the token instead of redirecting the user
+const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
+
+#[derive(Deserialize)]
+pub struct AuthorizeQuery {
+    response_type: String,
+    client_id: Uuid,
+    redirect_uri: String,
+    scope: Option<String>,
+    state: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct AuthorizeForm {
+    username: String,
+    password: String,
+}
+
+#[derive(Template)]
+#[template(path = "authorize.html")]
+struct AuthorizePage {
+    app_name: String,
+    domain: String,
+}
+
+#[derive(Template)]
+#[template(path = "token.html")]
+struct ShowTokenPage {
+    app_name: String,
+    domain: String,
+    token: String,
+}
+
+pub async fn get(
+    Extension(state): Extension<State>,
+    Query(query): Query<AuthorizeQuery>,
+) -> Result<Response> {
+    if query.response_type != "code" {
+        return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
+    }
+
+    let application = application::Entity::find_by_id(query.client_id)
+        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
+        .one(&state.db_conn)
+        .await?
+        .ok_or(Error::OAuthApplicationNotFound)?;
+
+    let page = AuthorizePage {
+        app_name: application.name,
+        domain: state.config.domain,
+    }
+    .render()
+    .unwrap();
+
+    Ok(Html(page).into_response())
+}
+
+pub async fn post(
+    Extension(state): Extension<State>,
+    Query(query): Query<AuthorizeQuery>,
+    Form(form): Form<AuthorizeForm>,
+) -> Result<Response> {
+    let user = user::Entity::find()
+        .filter(user::Column::Username.eq(form.username))
+        .filter(user::Column::Domain.is_null())
+        .one(&state.db_conn)
+        .await?
+        .ok_or(Error::UserNotFound)?;
+
+    let application = application::Entity::find_by_id(query.client_id)
+        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
+        .one(&state.db_conn)
+        .await?
+        .ok_or(Error::OAuthApplicationNotFound)?;
+
+    let is_valid = crate::blocking::cpu(move || {
+        let password = user.password.ok_or(Error::BrokenRecord)?;
+        let password_hash = PasswordHash::new(&password)?;
+        let argon2 = Argon2::default();
+
+        Ok::<_, Error>(
+            argon2
+                .verify_password(form.password.as_bytes(), &password_hash)
+                .is_ok(),
+        )
+    })
+    .await??;
+
+    if !is_valid {
+        return Err(Error::PasswordMismatch);
+    }
+
+    let authorization_code = authorization_code::Model {
+        code: generate_secret(),
+        application_id: application.id,
+        user_id: user.id,
+        created_at: Utc::now(),
+    }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
+
+    if application.redirect_uri == SHOW_TOKEN_URI {
+        let page = ShowTokenPage {
+            app_name: application.name,
+            domain: state.config.domain,
+            token: authorization_code.code,
+        }
+        .render()
+        .unwrap();
+
+        Ok(Html(page).into_response())
+    } else {
+        let mut url = Url::from_str(&application.redirect_uri)?;
+        url.query_pairs_mut()
+            .append_pair("code", &authorization_code.code);
+
+        if let Some(state) = query.state {
+            url.query_pairs_mut().append_pair("state", &state);
+        }
+
+        Ok((StatusCode::FOUND, [("Location", url.as_str())]).into_response())
+    }
+}

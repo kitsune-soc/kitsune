@@ -22,7 +22,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Jobs::Table)
-                    .col(ColumnDef::new(Jobs::Id).uuid().primary_key().not_null())
+                    .col(ColumnDef::new(Jobs::Id).uuid().primary_key())
                     .col(ColumnDef::new(Jobs::State).big_unsigned().not_null())
                     .col(ColumnDef::new(Jobs::Context).json_binary().not_null())
                     .col(

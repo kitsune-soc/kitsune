@@ -1,4 +1,4 @@
 pub mod job;
+pub mod oauth;
 pub mod post;
-pub mod token;
 pub mod user;

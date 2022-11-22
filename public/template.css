@@ -1,0 +1,196 @@
+@import url("https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap");
+:root {
+  --crimson: #ff124f;
+  --magenta: #ff00a0;
+  --pink: #fe75fe;
+  --indigo: #7a04eb;
+  --darkblue: #120458;
+}
+
+* {
+  font-family: Play;
+}
+
+body {
+  /*background-image: url("/public/assets/BG.webp");*/
+  background-image: url("/assets/BG.webp");
+  background-size: cover;
+  backdrop-filter: blur(2.5px) saturate(1.4);
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+}
+
+.header {
+  font-size: 4.3rem;
+  color: var(--crimson);
+  text-shadow: var(--indigo) 3px 3px 6.5px;
+  line-height: 100%;
+  margin: 25px auto;
+}
+
+form {
+  background: linear-gradient(to top left, var(--darkblue), #000);
+  padding: 8vh 4.5vh;
+  border: 10px solid;
+  border-image-slice: 1;
+  border-width: 4px;
+  border-image-source: linear-gradient(to left, var(--crimson), var(--indigo));
+  font-size: 18px;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+form .field {
+  width: 280px;
+  min-height: 30px;
+  margin: 10px auto;
+  margin-bottom: 20px;
+  border: 0.5px solid var(--pink);
+  border-radius: 2px;
+  font-size: 20px;
+}
+
+.label {
+  text-transform: uppercase;
+}
+
+.disclaimer {
+  background: linear-gradient(to right, var(--darkblue) 10%, #000);
+  padding: 2vh;
+  border: 10px solid;
+  border-image-slice: 1;
+  border-width: 3px;
+  border-image-source: linear-gradient(to left, var(--crimson), var(--indigo));
+  font-size: 16px;
+  font-weight: bold;
+  max-width: 80%;
+}
+
+.appName {
+  color: var(--pink);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.formButton {
+  background-color: var(--crimson);
+  border: 0.5px solid var(--pink);
+  border-radius: 5px;
+  padding: 10px;
+  color: white;
+  font-size: 20px;
+  font-weight: 500;
+  width: 100px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.5s;
+}
+
+.formButton:hover {
+  background-color: var(--pink);
+  color: var(--darkblue);
+  transition: 0.3s;
+}
+
+.tokenContainer {
+  background: linear-gradient(to top left, var(--darkblue), #000);
+  padding: 8vh 4.5vh;
+  border: 10px solid;
+  border-image-slice: 1;
+  border-width: 4px;
+  border-image-source: linear-gradient(to left, var(--crimson), var(--indigo));
+  font-size: 20px;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.token {
+  border: .5px solid var(--pink);
+  width: 400px;
+  padding: 20px 10px;
+  text-align: center;
+  overflow-x: auto;
+  font-weight: bold;
+}
+
+.token::-webkit-scrollbar {
+  width: .5em;
+  height: 10px;
+}
+ 
+.token::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.token::-webkit-scrollbar-thumb {
+  background-color: var(--crimson);
+  outline: 1px solid var(--darkblue);
+}
+
+@media only screen and (max-width: 500px) {
+  body {
+    backdrop-filter: blur(2px);
+    background-position: 50% 20%;
+  }
+
+  .header {
+    font-size: 42px;
+    color: var(--crimson);
+    text-shadow: var(--indigo) 3px 3px 8px;
+    line-height: 100%;
+    margin: 25px auto;
+  }
+
+  form, .tokenContainer {
+    padding: 6vh 4vh;
+    font-size: 16px;
+    border-width: 3px;
+  }
+
+  .token {
+    max-width: 250px;
+  }
+
+  form .field {
+    width: 200px;
+    min-height: 25px;
+    margin: 10px auto;
+    margin-bottom: 20px;
+    border: 0.5px solid var(--pink);
+    border-radius: 2px;
+    font-size: 16px;
+  }
+
+  .formButton {
+    padding: 8px;
+    font-size: 16px;
+    width: 80px;
+  }
+
+  .disclaimer {
+    font-size: 13px;
+    max-width: 70%;
+    text-align: center;
+    border-width: 3px;
+  }
+}

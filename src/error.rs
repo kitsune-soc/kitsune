@@ -25,6 +25,9 @@ pub enum Error {
     #[error("Malformed ActivityPub object")]
     MalformedApObject,
 
+    #[error("OAuth application not found")]
+    OAuthApplicationNotFound,
+
     #[error(transparent)]
     Oneshot(#[from] oneshot::error::RecvError),
 
@@ -36,6 +39,9 @@ pub enum Error {
 
     #[error(transparent)]
     PasswordHash(#[from] password_hash::Error),
+
+    #[error("Password mismatch")]
+    PasswordMismatch,
 
     #[error(transparent)]
     Pkcs1(#[from] pkcs1::Error),
@@ -51,6 +57,12 @@ pub enum Error {
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
+
+    #[error(transparent)]
+    Uuid(#[from] uuid::Error),
+
+    #[error("User not found")]
+    UserNotFound,
 }
 
 impl From<Error> for Response {
@@ -73,6 +85,12 @@ impl IntoResponse for Error {
         match self {
             Self::Database(sea_orm::DbErr::RecordNotFound(..)) => {
                 StatusCode::NOT_FOUND.into_response()
+            }
+            err @ (Self::OAuthApplicationNotFound | Self::UserNotFound) => {
+                (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+            }
+            err @ Self::PasswordMismatch => {
+                (StatusCode::UNAUTHORIZED, err.to_string()).into_response()
             }
             err => {
                 error!(error = %err, "Error occurred in handler");

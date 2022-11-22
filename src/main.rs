@@ -1,5 +1,10 @@
+#![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
+#![allow(
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    forbidden_lint_groups
+)]
 
 use self::{config::Configuration, fetcher::Fetcher, state::State};
 use std::future;
@@ -17,6 +22,7 @@ mod http;
 mod job;
 mod mapping;
 mod state;
+mod util;
 
 #[tokio::main]
 async fn main() {
