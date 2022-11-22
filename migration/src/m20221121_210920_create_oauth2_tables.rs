@@ -16,6 +16,7 @@ enum OAuth2AccessTokens {
 enum OAuth2Applications {
     Table,
     Id,
+    Name,
     Secret,
     RedirectUri,
     CreatedAt,
@@ -42,6 +43,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(OAuth2Applications::Table)
                     .col(ColumnDef::new(OAuth2Applications::Id).uuid().primary_key())
+                    .col(ColumnDef::new(OAuth2Applications::Name).text().not_null())
                     .col(
                         ColumnDef::new(OAuth2Applications::Secret)
                             .text()

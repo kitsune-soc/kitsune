@@ -6,6 +6,7 @@ use sea_orm::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
+    pub name: String,
     pub secret: String,
     pub redirect_uri: String,
     pub created_at: DateTime<Utc>,

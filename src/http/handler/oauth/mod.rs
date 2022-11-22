@@ -1,10 +1,10 @@
 //!
 //! Standard-compliant OAuth2 flows
-//! 
+//!
 //! Implemented in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
-//! 
+//!
 
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
 
 pub mod authorize;
 

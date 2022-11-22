@@ -1,8 +1,10 @@
+use async_graphql::SimpleObject;
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
 
-#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
+#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, SimpleObject)]
 #[sea_orm(table_name = "oauth2_access_tokens")]
+#[graphql(name = "OAuthAccessToken")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub token: String,

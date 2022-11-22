@@ -8,8 +8,8 @@
     <title>OAuth Login</title>
   </head>
   <body>
-    <p class="header">alcohol.social</p>
-    <form action="/" method="post">
+    <p class="header">{{domain}}</p>
+    <form method="post">
       <div>
         <label class="label" for="username">Username</label><br />
         <input
@@ -32,7 +32,7 @@
     </form>
     <div class="disclaimer">
       <p>
-        Attention: <span class="appName">Alcohol</span> is able to use your
+        Attention: <span class="appName">{{app_name}}</span> is able to use your
         data, so beware bitches, people can steal your shit! Be safe out there!
       </p>
     </div>

@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{token, user},
+    db::entity::{oauth::access_token, user},
     http::graphql::ContextExt,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
@@ -50,7 +50,7 @@ impl AuthMutation {
         ctx: &Context<'_>,
         username: String,
         #[graphql(secret)] password: String,
-    ) -> Result<token::Model> {
+    ) -> Result<access_token::Model> {
         let state = ctx.state();
         let Some(user) = user::Entity::find()
             .filter(user::Column::Username.eq(username))
@@ -80,14 +80,16 @@ impl AuthMutation {
         let token_data: [u8; 32] = rand::random();
         let token = hex::encode(token_data);
 
-        Ok(token::Model {
+        todo!();
+
+        /* Ok(token::Model {
             token,
             user_id: user.id,
             created_at: Utc::now(),
         }
         .into_active_model()
         .insert(&state.db_conn)
-        .await?)
+        .await?) */
     }
 
     pub async fn register(
