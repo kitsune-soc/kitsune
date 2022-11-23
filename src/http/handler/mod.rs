@@ -1,4 +1,4 @@
-#[cfg(feature = "mastodon")]
+#[cfg(feature = "mastodon-api")]
 pub mod mastodon;
 
 pub mod oauth;

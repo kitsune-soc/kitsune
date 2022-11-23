@@ -4,7 +4,7 @@ use crate::{
     state::State,
 };
 use async_trait::async_trait;
-use phenomenon_model::mastodon::Account;
+use phenomenon_model::mastodon::{account::Source, Account};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 
 #[async_trait]
@@ -44,6 +44,13 @@ impl IntoMastodon for user::Model {
             followers_count: 0,
             following_count: 0,
             statuses_count,
+            source: Source {
+                privacy: "public".into(),
+                sensitive: false,
+                language: String::new(),
+                note: String::new(),
+                fields: Vec::new(),
+            },
         })
     }
 }
