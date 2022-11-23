@@ -20,6 +20,14 @@
       <font-awesome-icon class="icon" icon="fa-globe-europe fa-solid" />
       Federated
     </router-link>
+
+    <div class="create-status nav-bar-element right-side">
+      <font-awesome-icon class="icon" icon="fa-pen-to-square fa-solid" />
+    </div>
+    <img
+      class="nav-bar-element profile-menu-button right-side"
+      src="https://avatarfiles.alphacoders.com/267/thumb-267407.png"
+    />
   </nav>
 </template>
 
@@ -33,7 +41,6 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: initial;
     background-color: colours.$darkblue;
     padding: 0 50px;
 
@@ -44,6 +51,20 @@
 
       & .icon {
         margin-right: 7px;
+      }
+
+      &.create-status,
+      &.profile-menu-button {
+        cursor: pointer;
+      }
+
+      &.profile-menu-button {
+        height: 30px;
+        border-radius: 4px;
+      }
+
+      &.right-side {
+        float: right;
       }
 
       &:hover {
