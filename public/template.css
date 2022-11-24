@@ -13,8 +13,7 @@
 }
 
 body {
-  /*background-image: url("/public/assets/BG.webp");*/
-  background-image: url("/assets/BG.webp");
+  background-image: url("/public/assets/BG.webp");
   background-size: cover;
   backdrop-filter: blur(2.5px) saturate(1.4);
   background-position: center;
