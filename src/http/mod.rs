@@ -25,6 +25,13 @@ async fn handle_error(err: io::Error) -> StatusCode {
 
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
+    let frontend_dir = &state.config.frontend_dir;
+    let frontend_index_path = {
+        let mut tmp = frontend_dir.clone();
+        tmp.push("index.html");
+        tmp
+    };
+
     let router = Router::new()
         .route("/@:username", get(users::get))
         .nest("/oauth", oauth::routes())
@@ -36,13 +43,9 @@ pub async fn run(state: State, port: u16) {
             get_service(ServeDir::new("public")).handle_error(handle_error),
         )
         .merge(graphql::routes(state.clone()))
-        // TODO: Make path configurable
         .fallback(
-            get_service(
-                ServeDir::new("phenomenon-fe/dist")
-                    .fallback(ServeFile::new("phenomenon-fe/dist/index.html")),
-            )
-            .handle_error(handle_error),
+            get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
+                .handle_error(handle_error),
         )
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
