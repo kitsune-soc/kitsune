@@ -30,7 +30,10 @@
         <img src="https://avatarfiles.alphacoders.com/267/thumb-267407.png" />
       </div>
       <div class="nav-bar-element">
-        <font-awesome-icon class="icon create-status" icon="fa-pen-to-square fa-solid" />
+        <font-awesome-icon
+          class="icon create-status"
+          icon="fa-pen-to-square fa-solid"
+        />
       </div>
     </div>
   </nav>

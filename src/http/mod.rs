@@ -9,7 +9,7 @@ use axum::{
 };
 use tower_http::{
     services::{ServeDir, ServeFile},
-    trace::TraceLayer,
+    trace::TraceLayer, cors::CorsLayer,
 };
 
 pub mod graphql;
@@ -47,6 +47,7 @@ pub async fn run(state: State, port: u16) {
             get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
                 .handle_error(handle_error),
         )
+        .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
         .into_make_service();
