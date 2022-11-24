@@ -2,7 +2,11 @@ use self::handler::{oauth, posts, users, well_known};
 use crate::state::State;
 use axum::{http::StatusCode, routing::get_service, Extension, Router};
 use std::io;
-use tower_http::{cors::CorsLayer, services::ServeDir, trace::TraceLayer};
+use tower_http::{
+    cors::CorsLayer,
+    services::{ServeDir, ServeFile},
+    trace::TraceLayer,
+};
 
 pub mod graphql;
 
@@ -17,6 +21,13 @@ async fn handle_error(err: io::Error) -> StatusCode {
 
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
+    let frontend_dir = &state.config.frontend_dir;
+    let frontend_index_path = {
+        let mut tmp = frontend_dir.clone();
+        tmp.push("index.html");
+        tmp
+    };
+
     let mut router = Router::new()
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
@@ -25,8 +36,7 @@ pub async fn run(state: State, port: u16) {
         .nest(
             "/public",
             get_service(ServeDir::new("public")).handle_error(handle_error),
-        )
-        .merge(graphql::routes(state.clone()));
+        );
 
     #[cfg(feature = "mastodon-api")]
     {
@@ -34,6 +44,12 @@ pub async fn run(state: State, port: u16) {
     }
 
     router = router
+        .merge(graphql::routes(state.clone()))
+        .fallback(
+            get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
+                .handle_error(handle_error),
+        )
+        .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http());
