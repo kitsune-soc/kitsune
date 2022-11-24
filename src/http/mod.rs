@@ -22,8 +22,11 @@ pub async fn run(state: State, port: u16) {
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .merge(graphql::routes(state.clone()))
-        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error));
+        .nest(
+            "/public",
+            get_service(ServeDir::new("public")).handle_error(handle_error),
+        )
+        .merge(graphql::routes(state.clone()));
 
     #[cfg(feature = "mastodon-api")]
     {

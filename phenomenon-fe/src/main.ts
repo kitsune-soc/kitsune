@@ -1,7 +1,8 @@
 import { createApp, h, provide } from 'vue';
 import { DefaultApolloClient } from '@vue/apollo-composable';
+import '@fontsource/play';
 import './icons';
-import './style.scss';
+import './styles/root.scss';
 import App from './App.vue';
 import { apolloClient } from './apollo';
 import { router } from './router';

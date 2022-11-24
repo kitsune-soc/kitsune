@@ -2,13 +2,15 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faBell,
   faEnvelope,
-  faGlobe,
+  faGlobeEurope,
   faHouse,
-  faUser,
+  faPenToSquare,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faBell);
 library.add(faEnvelope);
-library.add(faGlobe);
+library.add(faGlobeEurope);
 library.add(faHouse);
-library.add(faUser);
+library.add(faPenToSquare);
+library.add(faUsers);
