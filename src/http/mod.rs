@@ -7,7 +7,10 @@ use axum::{
     routing::{get, get_service},
     Extension, Router,
 };
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::{
+    services::{ServeDir, ServeFile},
+    trace::TraceLayer,
+};
 
 pub mod graphql;
 
@@ -22,16 +25,30 @@ async fn handle_error(err: io::Error) -> StatusCode {
 
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
+    let frontend_dir = &state.config.frontend_dir;
+    let frontend_index_path = {
+        let mut tmp = frontend_dir.clone();
+        tmp.push("index.html");
+        tmp
+    };
+
     let router = Router::new()
         .route("/@:username", get(users::get))
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
+        .nest(
+            "/public",
+            get_service(ServeDir::new("public")).handle_error(handle_error),
+        )
         .merge(graphql::routes(state.clone()))
+        .fallback(
+            get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
+                .handle_error(handle_error),
+        )
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
-        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error))
         .into_make_service();
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
