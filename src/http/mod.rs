@@ -28,10 +28,13 @@ pub async fn run(state: State, port: u16) {
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
+        .nest(
+            "/public",
+            get_service(ServeDir::new("public")).handle_error(handle_error),
+        )
         .merge(graphql::routes(state.clone()))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
-        .fallback(get_service(ServeDir::new("public")).handle_error(handle_error))
         .into_make_service();
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
