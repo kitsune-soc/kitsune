@@ -7,8 +7,10 @@ use axum::{
     routing::{get, get_service},
     Extension, Router,
 };
-use axum_extra::routing::SpaRouter;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::{
+    services::{ServeDir, ServeFile},
+    trace::TraceLayer,
+};
 
 pub mod graphql;
 
@@ -23,9 +25,6 @@ async fn handle_error(err: io::Error) -> StatusCode {
 
 #[instrument(skip(state))]
 pub async fn run(state: State, port: u16) {
-    // TODO: Make path configurable
-    let frontend =
-        SpaRouter::new("/assets", "phenomenon-fe/dist/assets").index_file("../index.html");
     let router = Router::new()
         .route("/@:username", get(users::get))
         .nest("/oauth", oauth::routes())
@@ -37,7 +36,14 @@ pub async fn run(state: State, port: u16) {
             get_service(ServeDir::new("public")).handle_error(handle_error),
         )
         .merge(graphql::routes(state.clone()))
-        .merge(frontend)
+        // TODO: Make path configurable
+        .fallback(
+            get_service(
+                ServeDir::new("phenomenon-fe/dist")
+                    .fallback(ServeFile::new("phenomenon-fe/dist/index.html")),
+            )
+            .handle_error(handle_error),
+        )
         .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
         .into_make_service();
