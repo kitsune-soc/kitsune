@@ -10,6 +10,7 @@ async-graphql = { version = "4.0.16", features = ["chrono", "email-validator", "
 async-graphql-axum = "4.0.16"
 async-trait = "0.1.58"
 axum = { version = "0.5.17", features = ["headers", "macros"] }
+axum-extra = { version = "0.3.7", features = ["spa"] }
 base64 = "0.13.1"
 chrono = "0.4.23"
 dotenvy = "0.15.6"
