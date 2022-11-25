@@ -1,8 +1,10 @@
 use crate::{db::entity::post, http::graphql::ContextExt};
-use async_graphql::{Context, Object, Result};
+use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use pulldown_cmark::{html, Options, Parser};
-use sea_orm::{ActiveModelTrait, IntoActiveModel};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
+};
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -34,5 +36,20 @@ impl PostMutation {
         .into_active_model()
         .insert(&state.db_conn)
         .await?)
+    }
+
+    pub async fn delete_post(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
+        let state = ctx.state();
+        let user = ctx.user()?;
+
+        let post = post::Entity::find_by_id(id)
+            .belongs_to(user)
+            .one(&state.db_conn)
+            .await?
+            .ok_or_else(|| Error::new("Post not found"))?;
+
+        post.delete(&state.db_conn).await?;
+
+        Ok(id)
     }
 }

@@ -86,8 +86,11 @@ pub async fn post(
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
     let user = user::Entity::find()
-        .filter(user::Column::Username.eq(form.username))
-        .filter(user::Column::Domain.is_null())
+        .filter(
+            user::Column::Username
+                .eq(form.username)
+                .and(user::Column::Domain.is_null()),
+        )
         .one(&state.db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
