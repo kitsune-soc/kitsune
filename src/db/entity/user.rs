@@ -11,6 +11,8 @@ use uuid::Uuid;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
+    pub display_name: Option<String>,
+    pub note: Option<String>,
     #[sea_orm(indexed)]
     pub username: String,
     #[sea_orm(indexed)]

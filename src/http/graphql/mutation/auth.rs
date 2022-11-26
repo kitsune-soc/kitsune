@@ -115,6 +115,8 @@ impl AuthMutation {
 
         let new_user = user::Model {
             id: Uuid::new_v4(),
+            display_name: None,
+            note: None,
             username: register_data.username,
             email: Some(register_data.email),
             password: Some(hashed_password?),

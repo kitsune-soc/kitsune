@@ -55,6 +55,8 @@ impl Fetcher {
 
         user::Model {
             id: Uuid::new_v4(),
+            display_name: actor.name,
+            note: actor.subject,
             username: actor.preferred_username,
             email: None,
             password: None,
