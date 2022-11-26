@@ -6,7 +6,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing, Extension, Json, Router,
 };
-use phenomenon_ap::helper::Privacy;
+use phenomenon_model::ap::Privacy;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 

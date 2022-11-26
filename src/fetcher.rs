@@ -3,7 +3,7 @@ use crate::{
     error::{Error, Result},
 };
 use chrono::Utc;
-use phenomenon_ap::object::{Actor, Note};
+use phenomenon_model::ap::object::{Actor, Note};
 use reqwest::Client;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,

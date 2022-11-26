@@ -1,15 +1,11 @@
-use std::io;
-
 use self::handler::{oauth, posts, users, well_known};
 use crate::state::State;
-use axum::{
-    http::StatusCode,
-    routing::{get, get_service},
-    Extension, Router,
-};
+use axum::{http::StatusCode, routing::get_service, Extension, Router};
+use std::io;
 use tower_http::{
+    cors::CorsLayer,
     services::{ServeDir, ServeFile},
-    trace::TraceLayer, cors::CorsLayer,
+    trace::TraceLayer,
 };
 
 pub mod graphql;
@@ -32,8 +28,7 @@ pub async fn run(state: State, port: u16) {
         tmp
     };
 
-    let router = Router::new()
-        .route("/@:username", get(users::get))
+    let mut router = Router::new()
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
@@ -41,19 +36,25 @@ pub async fn run(state: State, port: u16) {
         .nest(
             "/public",
             get_service(ServeDir::new("public")).handle_error(handle_error),
-        )
+        );
+
+    #[cfg(feature = "mastodon-api")]
+    {
+        router = router.merge(handler::mastodon::routes());
+    }
+
+    router = router
         .merge(graphql::routes(state.clone()))
         .fallback(
             get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
                 .handle_error(handle_error),
         )
-        .layer(CorsLayer::permissive())
-        .layer(TraceLayer::new_for_http())
         .layer(Extension(state))
-        .into_make_service();
+        .layer(CorsLayer::permissive())
+        .layer(TraceLayer::new_for_http());
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
-        .serve(router)
+        .serve(router.into_make_service())
         .await
         .unwrap();
 }
