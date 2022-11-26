@@ -5,7 +5,7 @@ use crate::{
         user,
     },
     error::{Error, Result},
-    http::extractor::OAuthApplication,
+    http::extractor::FormOrJson,
     state::State,
     util::generate_secret,
 };
@@ -13,15 +13,16 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension, Form, Json,
+    Extension, Json,
 };
 use chrono::Utc;
 use futures_util::FutureExt;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
+    ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Serialize)]
 struct AccessTokenResponse {
@@ -34,8 +35,16 @@ struct AccessTokenResponse {
 
 #[derive(Deserialize)]
 pub struct AuthorizationCodeData {
+    client_id: Uuid,
+    client_secret: String,
     code: String,
     redirect_uri: String,
+}
+
+#[derive(Deserialize)]
+pub struct ClientCredentialsData {
+    client_id: Uuid,
+    client_secret: String,
 }
 
 #[derive(Deserialize)]
@@ -47,6 +56,8 @@ pub struct PasswordData {
 
 #[derive(Deserialize)]
 pub struct RefreshTokenData {
+    client_id: Uuid,
+    client_secret: String,
     refresh_token: String,
     scope: Option<String>,
 }
@@ -55,19 +66,36 @@ pub struct RefreshTokenData {
 #[serde(rename_all = "snake_case", tag = "grant_type")]
 pub enum TokenForm {
     AuthorizationCode(AuthorizationCodeData),
-    ClientCredentials,
+    ClientCredentials(ClientCredentialsData),
     Password(PasswordData),
     RefreshToken(RefreshTokenData),
 }
 
-async fn authorization_code(
-    state: State,
-    application: application::Model,
-    data: AuthorizationCodeData,
-) -> Result<Response> {
+async fn get_application<C>(
+    db_conn: &C,
+    id: Uuid,
+    secret: String,
+    redirect_uri: Option<String>,
+) -> Result<application::Model>
+where
+    C: ConnectionTrait,
+{
+    let mut query =
+        application::Entity::find_by_id(id).filter(application::Column::Secret.eq(secret));
+    if let Some(redirect_uri) = redirect_uri {
+        query = query.filter(application::Column::RedirectUri.eq(redirect_uri));
+    }
+
+    query
+        .one(db_conn)
+        .await?
+        .ok_or(Error::OAuthApplicationNotFound)
+}
+
+async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         authorization_code::Entity::find_by_id(data.code)
-            .filter(authorization_code::Column::ExpiredAt.lt(Utc::now()))
+            .filter(authorization_code::Column::ExpiredAt.gt(Utc::now()))
             .find_also_related(user::Entity)
             .one(&state.db_conn)
             .await?
@@ -75,9 +103,15 @@ async fn authorization_code(
         return Ok((StatusCode::UNAUTHORIZED, "Unknown authorization code").into_response());
     };
 
-    if application.id != authorization_code.application_id
-        || application.redirect_uri != data.redirect_uri
-    {
+    let application = get_application(
+        &state.db_conn,
+        data.client_id,
+        data.client_secret,
+        Some(data.redirect_uri),
+    )
+    .await?;
+
+    if application.id != authorization_code.application_id {
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
 
@@ -123,11 +157,14 @@ async fn authorization_code(
     .into_response())
 }
 
-async fn client_credentials(state: State, application: application::Model) -> Result<Response> {
+async fn client_credentials(state: State, data: ClientCredentialsData) -> Result<Response> {
     let (access_token, refresh_token) = state
         .db_conn
         .transaction(move |tx| {
             async move {
+                let application =
+                    get_application(tx, data.client_id, data.client_secret, None).await?;
+
                 let access_token = access_token::Model {
                     token: generate_secret(),
                     user_id: None,
@@ -212,11 +249,7 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
     .into_response())
 }
 
-async fn refresh_token(
-    state: State,
-    application: application::Model,
-    data: RefreshTokenData,
-) -> Result<Response> {
+async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response> {
     let Some((refresh_token, Some(access_token))) =
         refresh_token::Entity::find_by_id(data.refresh_token)
             .filter(access_token::Column::ApplicationId.is_not_null())
@@ -227,6 +260,8 @@ async fn refresh_token(
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
 
+    let application =
+        get_application(&state.db_conn, data.client_id, data.client_secret, None).await?;
     if access_token.application_id.unwrap() != application.id {
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
@@ -274,29 +309,12 @@ async fn refresh_token(
 
 pub async fn post(
     Extension(state): Extension<State>,
-    application: Option<OAuthApplication>,
-    Form(form): Form<TokenForm>,
+    FormOrJson(form): FormOrJson<TokenForm>,
 ) -> Result<Response> {
-    match (form, application) {
-        (TokenForm::AuthorizationCode(data), Some(OAuthApplication(application))) => {
-            authorization_code(state, application, data).await
-        }
-        (TokenForm::ClientCredentials, Some(OAuthApplication(application))) => {
-            client_credentials(state, application).await
-        }
-        (TokenForm::Password(data), ..) => password_grant(state, data).await,
-        (TokenForm::RefreshToken(data), Some(OAuthApplication(application))) => {
-            refresh_token(state, application, data).await
-        }
-        (
-            TokenForm::AuthorizationCode(..)
-            | TokenForm::ClientCredentials
-            | TokenForm::RefreshToken(..),
-            None,
-        ) => Ok((
-            StatusCode::UNAUTHORIZED,
-            "Missing OAuth application credentials",
-        )
-            .into_response()),
+    match form {
+        TokenForm::AuthorizationCode(data) => authorization_code(state, data).await,
+        TokenForm::ClientCredentials(data) => client_credentials(state, data).await,
+        TokenForm::Password(data) => password_grant(state, data).await,
+        TokenForm::RefreshToken(data) => refresh_token(state, data).await,
     }
 }

@@ -1789,7 +1789,7 @@ dependencies = [
 
 [[package]]
 name = "phenomenon"
-version = "0.1.0"
+version = "0.1.0-UTA"
 dependencies = [
  "ammonia",
  "argon2",
@@ -1807,8 +1807,8 @@ dependencies = [
  "hex",
  "migration",
  "once_cell",
- "phenomenon-ap",
  "phenomenon-http-signatures",
+ "phenomenon-model",
  "pin-project-lite",
  "pulldown-cmark",
  "rand",
@@ -1830,15 +1830,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "phenomenon-ap"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "phenomenon-http-signatures"
 version = "0.1.0"
 dependencies = [
@@ -1846,6 +1837,16 @@ dependencies = [
  "http",
  "ring",
  "thiserror",
+]
+
+[[package]]
+name = "phenomenon-model"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

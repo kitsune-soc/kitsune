@@ -8,8 +8,8 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, Json,
 };
-use phenomenon_ap::Activity;
 use phenomenon_http_signatures::Request;
+use phenomenon_model::ap::Activity;
 use rsa::pkcs1::EncodeRsaPublicKey;
 
 pub struct SignedActivity(pub Activity);

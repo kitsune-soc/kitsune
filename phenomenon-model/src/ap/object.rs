@@ -1,4 +1,4 @@
-use crate::Object;
+use super::Object;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

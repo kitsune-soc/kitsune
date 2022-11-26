@@ -4,7 +4,7 @@ use crate::{
     state::State,
 };
 use async_trait::async_trait;
-use phenomenon_ap::{
+use phenomenon_model::ap::{
     helper::StringOrObject,
     object::{Actor, Note, PublicKey},
     Object,

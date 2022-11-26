@@ -1,6 +1,5 @@
+use super::{object::Note, Activity, Object, PUBLIC_IDENTIFIER};
 use serde::{Deserialize, Serialize};
-
-use crate::{object::Note, Activity, Object, PUBLIC_IDENTIFIER};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]

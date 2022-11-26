@@ -10,10 +10,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 pub mod inbox;
 
-pub async fn get(
-    Extension(state): Extension<State>,
-    Path(username): Path<String>,
-) -> Result<Response> {
+async fn get(Extension(state): Extension<State>, Path(username): Path<String>) -> Result<Response> {
     let Some(user) = user::Entity::find()
         .filter(user::Column::Username.eq(username).and(user::Column::Domain.is_null()))
         .one(&state.db_conn)

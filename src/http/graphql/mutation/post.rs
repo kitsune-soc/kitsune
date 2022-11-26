@@ -3,7 +3,7 @@ use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
+    ActiveModelTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
 };
 use uuid::Uuid;
 
