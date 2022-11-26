@@ -1,10 +1,8 @@
-use crate::{db::entity::post, http::graphql::ContextExt};
+use crate::{db::entity::post, http::graphql::ContextExt, util::CleanHtmlExt};
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use pulldown_cmark::{html, Options, Parser};
-use sea_orm::{
-    ActiveModelTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
-};
+use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter};
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -19,7 +17,8 @@ impl PostMutation {
             let parser = Parser::new_ext(&content, Options::all());
             let mut buf = String::new();
             html::push_html(&mut buf, parser);
-            ammonia::clean(&buf)
+            buf.clean_html();
+            buf
         };
 
         let id = Uuid::new_v4();

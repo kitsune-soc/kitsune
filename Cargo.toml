@@ -40,6 +40,7 @@ tracing-subscriber = "0.3.16"
 url = "2.3.1"
 uuid = { version = "1.2.2", features = ["v4"] }
 zxcvbn = "2.2.1"
+http = "0.2.8"
 
 [features]
 default = ["mastodon-api"]
