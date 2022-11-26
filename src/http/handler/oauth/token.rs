@@ -203,8 +203,11 @@ async fn client_credentials(state: State, data: ClientCredentialsData) -> Result
 
 async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
     let user = user::Entity::find()
-        .filter(user::Column::Username.eq(data.username))
-        .filter(user::Column::Domain.is_null())
+        .filter(
+            user::Column::Username
+                .eq(data.username)
+                .and(user::Column::Domain.is_null()),
+        )
         .one(&state.db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
@@ -249,8 +252,8 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
 async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response> {
     let Some((refresh_token, Some(access_token))) =
         refresh_token::Entity::find_by_id(data.refresh_token)
-            .find_also_related(access_token::Entity)
             .filter(access_token::Column::ApplicationId.is_not_null())
+            .find_also_related(access_token::Entity)
             .one(&state.db_conn)
             .await?
     else {
