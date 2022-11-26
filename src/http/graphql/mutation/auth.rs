@@ -4,7 +4,7 @@ use crate::{
     util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use async_graphql::{Context, CustomValidator, Error, InputObject, Object, Result};
+use async_graphql::{Context, CustomValidator, Error, Object, Result};
 use chrono::Utc;
 use rsa::{
     pkcs8::{EncodePrivateKey, LineEnding},
@@ -30,15 +30,6 @@ impl CustomValidator<String> for PasswordValidator {
 
         Ok(())
     }
-}
-
-#[derive(InputObject)]
-pub struct RegisterData {
-    pub username: String,
-    #[graphql(validator(email))]
-    pub email: String,
-    #[graphql(secret, validator(custom = "PasswordValidator"))]
-    pub password: String,
 }
 
 #[derive(Default)]
@@ -68,14 +59,16 @@ impl AuthMutation {
     pub async fn register_user(
         &self,
         ctx: &Context<'_>,
-        register_data: RegisterData,
+        username: String,
+        #[graphql(validator(email))] email: String,
+        #[graphql(secret, validator(custom = "PasswordValidator"))] password: String,
     ) -> Result<user::Model> {
         let state = ctx.state();
 
         // These queries provide a better user experience than just a random 500 error
         // They are also fine from a performance standpoint since both, the username and the email field, are indexed
         let is_username_taken = user::Entity::find()
-            .filter(user::Column::Username.eq(register_data.username.as_str()))
+            .filter(user::Column::Username.eq(username.as_str()))
             .one(&state.db_conn)
             .await?
             .is_some();
@@ -84,7 +77,7 @@ impl AuthMutation {
         }
 
         let is_email_used = user::Entity::find()
-            .filter(user::Column::Email.eq(register_data.email.as_str()))
+            .filter(user::Column::Email.eq(email.as_str()))
             .one(&state.db_conn)
             .await?
             .is_some();
@@ -97,7 +90,7 @@ impl AuthMutation {
             let argon2 = Argon2::default();
 
             argon2
-                .hash_password(register_data.password.as_bytes(), &salt)
+                .hash_password(password.as_bytes(), &salt)
                 .map(|hash| hash.to_string())
         });
         let private_key_fut =
@@ -107,10 +100,7 @@ impl AuthMutation {
             tokio::try_join!(hashed_password_fut, private_key_fut)?;
         let private_key = private_key?.to_pkcs8_pem(LineEnding::LF)?;
 
-        let url = format!(
-            "https://{}/users/{}",
-            state.config.domain, register_data.username
-        );
+        let url = format!("https://{}/users/{}", state.config.domain, username);
         let inbox_url = format!("{url}/inbox");
 
         let new_user = user::Model {
@@ -119,8 +109,8 @@ impl AuthMutation {
             header: None,
             display_name: None,
             note: None,
-            username: register_data.username,
-            email: Some(register_data.email),
+            username,
+            email: Some(email),
             password: Some(hashed_password?),
             domain: None,
             url,
