@@ -36,6 +36,10 @@ pub async fn run(state: State, port: u16) {
         .nest(
             "/public",
             get_service(ServeDir::new("public")).handle_error(handle_error),
+        )
+        .nest(
+            "/media",
+            get_service(ServeDir::new(&state.config.upload_dir)).handle_error(handle_error),
         );
 
     #[cfg(feature = "mastodon-api")]

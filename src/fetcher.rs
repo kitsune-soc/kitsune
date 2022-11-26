@@ -51,10 +51,16 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
+        let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
+        actor.clean_html();
 
         user::Model {
             id: Uuid::new_v4(),
+            // TODO: Push in URLs from the actors
+            avatar: None,
+            header: None,
+            display_name: actor.name,
+            note: actor.subject,
             username: actor.preferred_username,
             email: None,
             password: None,
@@ -82,11 +88,7 @@ impl Fetcher {
         }
 
         let mut note: Note = self.client.get(url).send().await?.json().await?;
-
-        if let Some(ref mut subject) = note.subject {
-            subject.clean_html();
-        }
-        note.content.clean_html();
+        note.clean_html();
 
         let user = self
             .fetch_actor(note.rest.attributed_to().ok_or(Error::MalformedApObject)?)

@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
-    pub name: String,
+    pub name: Option<String>,
     pub preferred_username: String,
+    pub subject: Option<String>,
     #[serde(flatten)]
     pub rest: Object,
     pub public_key: PublicKey,

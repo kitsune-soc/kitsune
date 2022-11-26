@@ -1,8 +1,63 @@
-use self::{auth::AuthMutation, post::PostMutation};
-use async_graphql::MergedObject;
+use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
+use crate::http::graphql::ContextExt;
+use async_graphql::{Context, Error, MergedObject, Result, Upload};
+use mime::Mime;
+use std::{path::PathBuf, str::FromStr};
+use tokio::{
+    fs::{self, File},
+    io,
+};
+use tokio_util::compat::FuturesAsyncReadCompatExt;
+use uuid::Uuid;
 
 mod auth;
 mod post;
+mod user;
+
+const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
+
+/// Saves the file into a user-configured subdirectory and returns a full URL to the file
+async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<String> {
+    let state = ctx.state();
+    let value = file.value(ctx)?;
+    let content_type = value
+        .content_type
+        .as_deref()
+        .and_then(|content_type| Mime::from_str(content_type).ok())
+        .or_else(|| mime_guess::from_path(&value.filename).first())
+        .ok_or_else(|| Error::new("Failed to determine file type"))?;
+
+    if !ALLOWED_FILETYPES.contains(&content_type.type_()) {
+        return Err(Error::new("File type not allowed"));
+    }
+
+    // Create a directory with the name of a random UUID and place the file with its original filename into the directory.
+    // Doing this will prevent virtually all cases of filename collissions.
+    // The possibility of someone guessing the next UUID *and* knowing the name of the file is vanishingly small.
+    let directory_name = PathBuf::from(Uuid::new_v4().to_string());
+
+    let mut media_directory = state.config.upload_dir.clone();
+    media_directory.push(&directory_name);
+    fs::create_dir(&media_directory).await?;
+
+    let mut relative_media_path = directory_name.clone();
+    relative_media_path.push(&value.filename);
+
+    let mut full_media_path = media_directory;
+    full_media_path.push(&value.filename);
+
+    let mut reader = value.into_async_read().compat();
+    let mut writer = File::create(full_media_path).await?;
+
+    io::copy(&mut reader, &mut writer).await?;
+
+    let url = format!(
+        "https://{}/media/{}",
+        state.config.domain,
+        relative_media_path.display()
+    );
+    Ok(url)
+}
 
 #[derive(Default, MergedObject)]
-pub struct RootMutation(AuthMutation, PostMutation);
+pub struct RootMutation(AuthMutation, PostMutation, UserMutation);
