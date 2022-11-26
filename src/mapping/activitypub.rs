@@ -30,7 +30,7 @@ impl IntoActivityPub for post::Model {
             .expect("[Bug] No user associated with post");
 
         Ok(Note {
-            subject: None,
+            subject: self.subject,
             content: self.content,
             rest: Object {
                 id: self.url,
@@ -56,6 +56,8 @@ impl IntoActivityPub for user::Model {
         let public_key_id = format!("{}#main-key", self.url);
 
         Ok(Actor {
+            name: self.display_name,
+            subject: self.note,
             preferred_username: self.username,
             inbox: self.inbox_url,
             rest: Object {
