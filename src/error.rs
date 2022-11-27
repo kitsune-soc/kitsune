@@ -55,6 +55,9 @@ pub enum Error {
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
 
+    #[error("Unsupported media type")]
+    UnsupportedMediaType,
+
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
 

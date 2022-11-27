@@ -85,9 +85,11 @@ impl FromRequest<Body> for SignedActivity {
                 .await
                 .map_err(IntoResponse::into_response)?;
 
-        let Some(ap_id) = activity.rest.attributed_to() else {
-            return Err(StatusCode::BAD_REQUEST.into_response());
-        };
+        let ap_id = activity
+            .rest
+            .attributed_to()
+            .ok_or_else(|| StatusCode::BAD_REQUEST.into_response())?;
+
         let remote_user = state.fetcher.fetch_actor(ap_id).await?;
         let Some(public_key) = remote_user.public_key()? else {
             error!(user_id = %remote_user.id, "Missing RSA public key");

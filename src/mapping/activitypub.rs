@@ -6,11 +6,12 @@ use crate::{
 use async_trait::async_trait;
 use phenomenon_model::ap::{
     helper::StringOrObject,
-    object::{Actor, Note, PublicKey},
+    object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
     BaseObject, Object,
 };
 use rsa::{pkcs1::EncodeRsaPublicKey, pkcs8::LineEnding};
 use sea_orm::EntityTrait;
+use url::Url;
 
 #[async_trait]
 pub trait IntoActivityPub {
@@ -42,6 +43,28 @@ impl IntoActivityPub for post::Model {
     }
 }
 
+fn url_to_media_attachment(url: &str) -> Result<MediaAttachment> {
+    // TODO: Store attachment metadata in database
+
+    let url = Url::parse(url)?;
+    let mime_type = mime_guess::from_path(url.path())
+        .first()
+        .ok_or(Error::UnsupportedMediaType)?;
+
+    let r#type = match mime_type.type_() {
+        mime::AUDIO => MediaAttachmentType::Audio,
+        mime::IMAGE => MediaAttachmentType::Image,
+        mime::VIDEO => MediaAttachmentType::Video,
+        _ => return Err(Error::UnsupportedMediaType),
+    };
+
+    Ok(MediaAttachment {
+        r#type,
+        media_type: mime_type.to_string(),
+        url: url.to_string(),
+    })
+}
+
 #[async_trait]
 impl IntoActivityPub for user::Model {
     type Output = Object;
@@ -53,11 +76,22 @@ impl IntoActivityPub for user::Model {
             .to_pkcs1_pem(LineEnding::LF)?;
 
         let public_key_id = format!("{}#main-key", self.url);
+        let icon = self
+            .avatar
+            .as_deref()
+            .map(url_to_media_attachment)
+            .transpose()?;
+        let image = self
+            .header
+            .as_deref()
+            .map(url_to_media_attachment)
+            .transpose()?;
 
         Ok(Object::Person(Actor {
-            // TODO: Add avatar and header image to the actor
             name: self.display_name,
             subject: self.note,
+            icon,
+            image,
             preferred_username: self.username,
             inbox: self.inbox_url,
             rest: BaseObject {
