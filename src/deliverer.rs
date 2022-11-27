@@ -1,8 +1,9 @@
 use crate::{
+    consts::USER_AGENT,
     db::entity::user,
     error::{Error, Result},
 };
-use axum::http::Uri;
+use http::Uri;
 use phenomenon_http_signatures::Request;
 use phenomenon_model::ap::Object;
 use reqwest::Client;
@@ -20,14 +21,7 @@ pub struct Deliverer {
 impl Deliverer {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .user_agent(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION"),
-                ))
-                .build()
-                .unwrap(),
+            client: Client::builder().user_agent(USER_AGENT).build().unwrap(),
         }
     }
 

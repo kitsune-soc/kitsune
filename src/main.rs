@@ -14,6 +14,7 @@ extern crate tracing;
 
 mod blocking;
 mod config;
+mod consts;
 mod db;
 mod deliverer;
 mod error;

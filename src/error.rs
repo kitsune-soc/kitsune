@@ -1,8 +1,6 @@
 use argon2::password_hash;
-use axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
+use axum::response::{IntoResponse, Response};
+use http::StatusCode;
 use rsa::{pkcs1, pkcs8};
 use sea_orm::TransactionError;
 use thiserror::Error;
