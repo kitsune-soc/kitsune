@@ -19,12 +19,15 @@ pub fn ap_context() -> Value {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub enum ActivityType {
+    Accept,
     Announce,
     #[default]
     Create,
+    Block,
     Delete,
     Follow,
     Like,
+    Reject,
     Undo,
     Update,
 }

@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{post, user},
+    db::entity::{follow, post, user},
     error::Result,
     http::extractor::SignedActivity,
     state::State,
@@ -62,6 +62,31 @@ async fn delete_activity(state: &State, activity: Activity) -> Result<()> {
     Ok(())
 }
 
+async fn follow_activity(state: &State, activity: Activity) -> Result<()> {
+    let user = user::Entity::find()
+        .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
+        .one(&state.db_conn)
+        .await?
+        .unwrap();
+
+    if let Some(url) = activity.object.into_string() {
+        let followed_user = state.fetcher.fetch_actor(&url).await?;
+
+        follow::Model {
+            user_id: followed_user.id,
+            follower_id: user.id,
+            approved_at: None,
+            created_at: activity.rest.published_at,
+            updated_at: Utc::now(),
+        }
+        .into_active_model()
+        .insert(&state.db_conn)
+        .await?;
+    }
+
+    Ok(())
+}
+
 #[debug_handler]
 pub async fn post(
     Extension(state): Extension<State>,
@@ -70,11 +95,14 @@ pub async fn post(
     // TODO: Insert activity into database
 
     match activity.r#type {
+        ActivityType::Accept => todo!(),
         ActivityType::Announce => todo!(),
+        ActivityType::Block => todo!(),
         ActivityType::Create => create_activity(&state, activity).await,
         ActivityType::Delete => delete_activity(&state, activity).await,
-        ActivityType::Follow => todo!(),
+        ActivityType::Follow => follow_activity(&state, activity).await,
         ActivityType::Like => todo!(),
+        ActivityType::Reject => todo!(),
         ActivityType::Undo => todo!(),
         ActivityType::Update => todo!(),
     }

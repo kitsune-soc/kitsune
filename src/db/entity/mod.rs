@@ -1,3 +1,4 @@
+pub mod follow;
 pub mod job;
 pub mod media_attachment;
 pub mod oauth;
