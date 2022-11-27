@@ -1,8 +1,10 @@
 use crate::{
     db::entity::{post, user},
     error::{Error, Result},
+    util::CleanHtmlExt,
 };
 use chrono::Utc;
+use http::{HeaderMap, HeaderValue};
 use phenomenon_model::ap::object::{Actor, Note};
 use reqwest::Client;
 use sea_orm::{
@@ -19,8 +21,15 @@ pub struct Fetcher {
 
 impl Fetcher {
     pub fn new(db_conn: DatabaseConnection) -> Self {
+        let mut default_headers = HeaderMap::new();
+        default_headers.insert(
+            "Accept",
+            HeaderValue::from_static("application/activity+json"),
+        );
+
         Self {
             client: Client::builder()
+                .default_headers(default_headers)
                 .user_agent(concat!(
                     env!("CARGO_PKG_NAME"),
                     "/",
@@ -42,17 +51,16 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let actor: Actor = self
-            .client
-            .get(url.clone())
-            .header("Accept", "application/activity+json")
-            .send()
-            .await?
-            .json()
-            .await?;
+        let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
+        actor.clean_html();
 
         user::Model {
             id: Uuid::new_v4(),
+            // TODO: Push in URLs from the actors
+            avatar: None,
+            header: None,
+            display_name: actor.name,
+            note: actor.subject,
             username: actor.preferred_username,
             email: None,
             password: None,
@@ -79,14 +87,8 @@ impl Fetcher {
             return Ok(post);
         }
 
-        let note: Note = self
-            .client
-            .get(url)
-            .header("Accept", "application/activity+json")
-            .send()
-            .await?
-            .json()
-            .await?;
+        let mut note: Note = self.client.get(url).send().await?.json().await?;
+        note.clean_html();
 
         let user = self
             .fetch_actor(note.rest.attributed_to().ok_or(Error::MalformedApObject)?)
