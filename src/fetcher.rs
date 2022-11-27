@@ -56,9 +56,8 @@ impl Fetcher {
 
         user::Model {
             id: Uuid::new_v4(),
-            // TODO: Push in URLs from the actors
-            avatar: None,
-            header: None,
+            avatar: actor.icon.map(|icon| icon.url),
+            header: actor.image.map(|image| image.url),
             display_name: actor.name,
             note: actor.subject,
             username: actor.preferred_username,

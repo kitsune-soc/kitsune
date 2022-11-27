@@ -33,14 +33,18 @@ impl IntoMastodon for user::Model {
             id: self.id,
             acct,
             username: self.username,
-            display_name: String::new(),
+            display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
-            note: String::new(),
+            note: self.note.unwrap_or_default(),
             url: self.url,
-            avatar: "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into(),
-            avatar_static: "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into(),
-            header: String::new(),
-            header_static: String::new(),
+            avatar: self.avatar.clone().unwrap_or_else(|| {
+                "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
+            }),
+            avatar_static: self.avatar.unwrap_or_else(|| {
+                "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
+            }),
+            header: self.header.clone().unwrap_or_default(),
+            header_static: self.header.unwrap_or_default(),
             followers_count: 0,
             following_count: 0,
             statuses_count,

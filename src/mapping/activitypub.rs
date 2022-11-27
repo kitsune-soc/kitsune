@@ -55,6 +55,7 @@ impl IntoActivityPub for user::Model {
         let public_key_id = format!("{}#main-key", self.url);
 
         Ok(Object::Person(Actor {
+            // TODO: Add avatar and header image to the actor
             name: self.display_name,
             subject: self.note,
             preferred_username: self.username,
