@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::{consts::USER_AGENT, error::Result};
 use http::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -29,11 +29,7 @@ impl Webfinger {
         Self {
             client: Client::builder()
                 .default_headers(headers)
-                .user_agent(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION"),
-                ))
+                .user_agent(USER_AGENT)
                 .build()
                 .unwrap(),
         }

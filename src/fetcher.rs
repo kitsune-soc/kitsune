@@ -1,4 +1,5 @@
 use crate::{
+    consts::USER_AGENT,
     db::entity::{media_attachment, post, user},
     error::{Error, Result},
     util::CleanHtmlExt,
@@ -30,11 +31,7 @@ impl Fetcher {
         Self {
             client: Client::builder()
                 .default_headers(default_headers)
-                .user_agent(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION"),
-                ))
+                .user_agent(USER_AGENT)
                 .build()
                 .unwrap(),
             db_conn,
