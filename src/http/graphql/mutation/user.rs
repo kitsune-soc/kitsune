@@ -42,13 +42,13 @@ impl UserMutation {
         }
 
         if let Some(avatar) = avatar {
-            let url = handle_upload(ctx, avatar).await?;
-            active_user.avatar = ActiveValue::Set(Some(url));
+            let media_attachment = handle_upload(ctx, avatar).await?;
+            active_user.avatar_id = ActiveValue::Set(Some(media_attachment.id));
         }
 
         if let Some(header) = header {
-            let url = handle_upload(ctx, header).await?;
-            active_user.header = ActiveValue::Set(Some(url));
+            let media_attachment = handle_upload(ctx, header).await?;
+            active_user.header_id = ActiveValue::Set(Some(media_attachment.id));
         }
 
         active_user

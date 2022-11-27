@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{post, user},
+    db::entity::{media_attachment, post, user},
     error::{Error, Result},
     util::CleanHtmlExt,
 };
@@ -54,10 +54,42 @@ impl Fetcher {
         let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
         actor.clean_html();
 
+        let avatar_id = if let Some(icon) = actor.icon {
+            let media_attachment = media_attachment::Model {
+                id: Uuid::new_v4(),
+                content_type: icon.media_type,
+                url: icon.url,
+                created_at: Utc::now(),
+            }
+            .into_active_model()
+            .insert(&self.db_conn)
+            .await?;
+
+            Some(media_attachment.id)
+        } else {
+            None
+        };
+
+        let header_id = if let Some(image) = actor.image {
+            let media_attachment = media_attachment::Model {
+                id: Uuid::new_v4(),
+                content_type: image.media_type,
+                url: image.url,
+                created_at: Utc::now(),
+            }
+            .into_active_model()
+            .insert(&self.db_conn)
+            .await?;
+
+            Some(media_attachment.id)
+        } else {
+            None
+        };
+
         user::Model {
             id: Uuid::new_v4(),
-            avatar: actor.icon.map(|icon| icon.url),
-            header: actor.image.map(|image| image.url),
+            avatar_id,
+            header_id,
             display_name: actor.name,
             note: actor.subject,
             username: actor.preferred_username,

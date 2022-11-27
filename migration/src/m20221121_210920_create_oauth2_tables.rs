@@ -1,6 +1,5 @@
-use sea_orm_migration::prelude::*;
-
 use crate::m20220101_000001_create_table::Users;
+use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 enum Oauth2AccessTokens {

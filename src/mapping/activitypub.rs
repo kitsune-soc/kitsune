@@ -1,9 +1,10 @@
 use crate::{
-    db::entity::{post, user},
+    db::entity::{media_attachment, post, user},
     error::{Error, Result},
     state::State,
 };
 use async_trait::async_trait;
+use mime::Mime;
 use phenomenon_model::ap::{
     helper::StringOrObject,
     object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
@@ -11,13 +12,34 @@ use phenomenon_model::ap::{
 };
 use rsa::{pkcs1::EncodeRsaPublicKey, pkcs8::LineEnding};
 use sea_orm::EntityTrait;
-use url::Url;
+use std::str::FromStr;
 
 #[async_trait]
 pub trait IntoActivityPub {
     type Output;
 
     async fn into_activitypub(self, state: &State) -> Result<Self::Output>;
+}
+
+#[async_trait]
+impl IntoActivityPub for media_attachment::Model {
+    type Output = MediaAttachment;
+
+    async fn into_activitypub(self, _state: &State) -> Result<Self::Output> {
+        let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
+        let r#type = match mime.type_() {
+            mime::AUDIO => MediaAttachmentType::Audio,
+            mime::IMAGE => MediaAttachmentType::Image,
+            mime::VIDEO => MediaAttachmentType::Video,
+            _ => return Err(Error::UnsupportedMediaType),
+        };
+
+        Ok(MediaAttachment {
+            r#type,
+            media_type: self.content_type,
+            url: self.url,
+        })
+    }
 }
 
 #[async_trait]
@@ -43,49 +65,35 @@ impl IntoActivityPub for post::Model {
     }
 }
 
-fn url_to_media_attachment(url: &str) -> Result<MediaAttachment> {
-    // TODO: Store attachment metadata in database
-
-    let url = Url::parse(url)?;
-    let mime_type = mime_guess::from_path(url.path())
-        .first()
-        .ok_or(Error::UnsupportedMediaType)?;
-
-    let r#type = match mime_type.type_() {
-        mime::AUDIO => MediaAttachmentType::Audio,
-        mime::IMAGE => MediaAttachmentType::Image,
-        mime::VIDEO => MediaAttachmentType::Video,
-        _ => return Err(Error::UnsupportedMediaType),
-    };
-
-    Ok(MediaAttachment {
-        r#type,
-        media_type: mime_type.to_string(),
-        url: url.to_string(),
-    })
-}
-
 #[async_trait]
 impl IntoActivityPub for user::Model {
     type Output = Object;
 
-    async fn into_activitypub(self, _state: &State) -> Result<Self::Output> {
+    async fn into_activitypub(self, state: &State) -> Result<Self::Output> {
         let public_key = self
             .public_key()?
             .ok_or(Error::BrokenRecord)?
             .to_pkcs1_pem(LineEnding::LF)?;
 
         let public_key_id = format!("{}#main-key", self.url);
-        let icon = self
-            .avatar
-            .as_deref()
-            .map(url_to_media_attachment)
-            .transpose()?;
-        let image = self
-            .header
-            .as_deref()
-            .map(url_to_media_attachment)
-            .transpose()?;
+        let icon = if let Some(avatar_id) = self.avatar_id {
+            let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
+                .one(&state.db_conn)
+                .await?
+                .expect("[Bug] Missing media attachment");
+            Some(media_attachment.into_activitypub(state).await?)
+        } else {
+            None
+        };
+        let image = if let Some(header_id) = self.header_id {
+            let media_attachment = media_attachment::Entity::find_by_id(header_id)
+                .one(&state.db_conn)
+                .await?
+                .expect("[Bug] Missing media attachment");
+            Some(media_attachment.into_activitypub(state).await?)
+        } else {
+            None
+        };
 
         Ok(Object::Person(Actor {
             name: self.display_name,

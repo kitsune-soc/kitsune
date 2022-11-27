@@ -1,7 +1,9 @@
 use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
-use crate::http::graphql::ContextExt;
+use crate::{db::entity::media_attachment, http::graphql::ContextExt};
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
+use chrono::Utc;
 use mime::Mime;
+use sea_orm::{ActiveModelTrait, IntoActiveModel};
 use std::{path::PathBuf, str::FromStr};
 use tokio::{
     fs::{self, File},
@@ -17,7 +19,8 @@ mod user;
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 
 /// Saves the file into a user-configured subdirectory and returns a full URL to the file
-async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<String> {
+// TODO: Refactor this
+async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<media_attachment::Model> {
     let state = ctx.state();
     let value = file.value(ctx)?;
     let content_type = value
@@ -56,7 +59,16 @@ async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<String> {
         state.config.domain,
         relative_media_path.display()
     );
-    Ok(url)
+
+    Ok(media_attachment::Model {
+        id: Uuid::new_v4(),
+        content_type: content_type.to_string(),
+        url,
+        created_at: Utc::now(),
+    }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?)
 }
 
 #[derive(Default, MergedObject)]
