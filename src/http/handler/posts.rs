@@ -2,10 +2,10 @@ use crate::{db::entity::post, error::Result, mapping::IntoActivityPub, state::St
 use axum::{
     debug_handler,
     extract::Path,
-    http::StatusCode,
     response::{IntoResponse, Response},
     routing, Extension, Json, Router,
 };
+use http::StatusCode;
 use phenomenon_model::ap::Privacy;
 use sea_orm::EntityTrait;
 use uuid::Uuid;

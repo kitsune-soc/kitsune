@@ -1,11 +1,11 @@
 use crate::{db::entity::user, error::Result, mapping::IntoActivityPub, state::State};
 use axum::{
     extract::Path,
-    http::StatusCode,
     response::{IntoResponse, Response},
     routing::{self, post},
     Extension, Json, Router,
 };
+use http::StatusCode;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 pub mod inbox;

@@ -1,3 +1,4 @@
+use super::media_attachment;
 use crate::{error::Result, http::graphql::ContextExt};
 use async_graphql::{ComplexObject, Context, SimpleObject};
 use chrono::{DateTime, Utc};
@@ -11,8 +12,11 @@ use uuid::Uuid;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
-    pub avatar: Option<String>,
-    pub header: Option<String>,
+    // TODO: Express relationship in trait form
+    #[graphql(skip)]
+    pub avatar_id: Option<Uuid>,
+    #[graphql(skip)]
+    pub header_id: Option<Uuid>,
     pub display_name: Option<String>,
     pub note: Option<String>,
     #[sea_orm(indexed)]
@@ -53,6 +57,28 @@ impl Model {
 
 #[ComplexObject]
 impl Model {
+    pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<media_attachment::Model>> {
+        if let Some(avatar_id) = self.avatar_id {
+            media_attachment::Entity::find_by_id(avatar_id)
+                .one(&ctx.state().db_conn)
+                .await
+                .map_err(Into::into)
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<media_attachment::Model>> {
+        if let Some(header_id) = self.header_id {
+            media_attachment::Entity::find_by_id(header_id)
+                .one(&ctx.state().db_conn)
+                .await
+                .map_err(Into::into)
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn posts(&self, ctx: &Context<'_>) -> Result<Vec<super::post::Model>> {
         self.find_related(super::post::Entity)
             .all(&ctx.state().db_conn)

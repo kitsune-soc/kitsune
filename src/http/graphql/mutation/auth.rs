@@ -59,7 +59,7 @@ impl AuthMutation {
     pub async fn register_user(
         &self,
         ctx: &Context<'_>,
-        username: String,
+        #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
         #[graphql(validator(email))] email: String,
         #[graphql(secret, validator(custom = "PasswordValidator"))] password: String,
     ) -> Result<user::Model> {
@@ -105,8 +105,8 @@ impl AuthMutation {
 
         let new_user = user::Model {
             id: Uuid::new_v4(),
-            avatar: None,
-            header: None,
+            avatar_id: None,
+            header_id: None,
             display_name: None,
             note: None,
             username,

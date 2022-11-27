@@ -6,7 +6,7 @@
     forbidden_lint_groups
 )]
 
-use self::{config::Configuration, fetcher::Fetcher, state::State};
+use self::{config::Configuration, fetcher::Fetcher, state::State, webfinger::Webfinger};
 use std::future;
 
 #[macro_use]
@@ -14,6 +14,7 @@ extern crate tracing;
 
 mod blocking;
 mod config;
+mod consts;
 mod db;
 mod deliverer;
 mod error;
@@ -23,6 +24,7 @@ mod job;
 mod mapping;
 mod state;
 mod util;
+mod webfinger;
 
 #[tokio::main]
 async fn main() {
@@ -38,6 +40,7 @@ async fn main() {
         config: config.clone(),
         db_conn: conn.clone(),
         fetcher: Fetcher::new(conn),
+        webfinger: Webfinger::new(),
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

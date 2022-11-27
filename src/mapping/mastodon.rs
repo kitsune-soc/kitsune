@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{post, user},
+    db::entity::{media_attachment, post, user},
     error::Result,
     state::State,
 };
@@ -29,18 +29,38 @@ impl IntoMastodon for user::Model {
             acct.push_str(&domain);
         }
 
+        let avatar = if let Some(avatar_id) = self.avatar_id {
+            let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
+                .one(&state.db_conn)
+                .await?
+                .expect("[Bug] User profile picture missing");
+            media_attachment.url
+        } else {
+            "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
+        };
+
+        let header = if let Some(header_id) = self.header_id {
+            let media_attachment = media_attachment::Entity::find_by_id(header_id)
+                .one(&state.db_conn)
+                .await?
+                .expect("[Bug] User header image missing");
+            media_attachment.url
+        } else {
+            "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
+        };
+
         Ok(Account {
             id: self.id,
             acct,
             username: self.username,
-            display_name: String::new(),
+            display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
-            note: String::new(),
+            note: self.note.unwrap_or_default(),
             url: self.url,
-            avatar: "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into(),
-            avatar_static: "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into(),
-            header: String::new(),
-            header_static: String::new(),
+            avatar_static: avatar.clone(),
+            avatar,
+            header_static: header.clone(),
+            header,
             followers_count: 0,
             following_count: 0,
             statuses_count,

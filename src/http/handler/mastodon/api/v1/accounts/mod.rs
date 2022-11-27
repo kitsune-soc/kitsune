@@ -1,11 +1,11 @@
 use crate::{db::entity::user, error::Result, mapping::IntoMastodon, state::State};
 use axum::{
     extract::Path,
-    http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
     Extension, Json, Router,
 };
+use http::StatusCode;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 

@@ -1,29 +1,21 @@
-use crate::{db::entity::user, error::Result, state::State};
+use crate::{
+    db::entity::user,
+    error::Result,
+    state::State,
+    webfinger::{Link, Resource},
+};
 use axum::{
     extract::Query,
-    http::StatusCode,
     response::{IntoResponse, Response},
     Extension, Json,
 };
+use http::StatusCode;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct WebfingerQuery {
     resource: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Link {
-    pub rel: String,
-    pub href: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Webfinger {
-    pub subject: String,
-    pub aliases: Vec<String>,
-    pub links: Vec<Link>,
 }
 
 pub async fn get(
@@ -50,7 +42,7 @@ pub async fn get(
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
-    Ok(Json(Webfinger {
+    Ok(Json(Resource {
         subject: query.resource,
         aliases: vec![user.url.clone()],
         links: vec![Link {

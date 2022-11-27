@@ -16,8 +16,8 @@ enum Posts {
 pub enum Users {
     Table,
     Id,
-    Avatar,
-    Header,
+    AvatarId,
+    HeaderId,
     DisplayName,
     Note,
     Username,
@@ -44,8 +44,6 @@ impl MigrationTrait for Migration {
                     .table(Users::Table)
                     .if_not_exists()
                     .col(ColumnDef::new(Users::Id).uuid().primary_key())
-                    .col(ColumnDef::new(Users::Avatar).text())
-                    .col(ColumnDef::new(Users::Header).text())
                     .col(ColumnDef::new(Users::DisplayName).text())
                     .col(ColumnDef::new(Users::Note).text())
                     .col(ColumnDef::new(Users::Username).text().not_null())

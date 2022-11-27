@@ -31,11 +31,10 @@ pub async fn run(state: &State, deliverer: &Deliverer, ctx: DeliveryContext) -> 
     // TODO: Resolve follower collection
     let note = post.into_activitypub(state).await?;
     let user_ids = note
-        .rest
-        .to
+        .to()
         .iter()
         .filter(|url| *url != PUBLIC_IDENTIFIER)
-        .chain(note.rest.cc.iter().filter(|url| *url != PUBLIC_IDENTIFIER))
+        .chain(note.cc().iter().filter(|url| *url != PUBLIC_IDENTIFIER))
         .map(String::as_str);
 
     let inbox_stream = stream::iter(user_ids).then(|ap_id| async {

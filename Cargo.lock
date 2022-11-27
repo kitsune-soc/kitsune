@@ -1826,6 +1826,7 @@ dependencies = [
  "pulldown-cmark",
  "rand",
  "rayon",
+ "regex",
  "reqwest",
  "rsa",
  "sea-orm",

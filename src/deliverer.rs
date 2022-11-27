@@ -1,10 +1,11 @@
 use crate::{
+    consts::USER_AGENT,
     db::entity::user,
     error::{Error, Result},
 };
-use axum::http::Uri;
+use http::Uri;
 use phenomenon_http_signatures::Request;
-use phenomenon_model::ap::object::Note;
+use phenomenon_model::ap::Object;
 use reqwest::Client;
 use rsa::pkcs8::{self, SecretDocument};
 use sha2::{Digest, Sha256};
@@ -20,18 +21,11 @@ pub struct Deliverer {
 impl Deliverer {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .user_agent(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION"),
-                ))
-                .build()
-                .unwrap(),
+            client: Client::builder().user_agent(USER_AGENT).build().unwrap(),
         }
     }
 
-    pub async fn deliver(&self, inbox_url: &str, user: &user::Model, note: &Note) -> Result<()> {
+    pub async fn deliver(&self, inbox_url: &str, user: &user::Model, note: &Object) -> Result<()> {
         let (_label, private_key) =
             SecretDocument::from_pem(user.private_key.as_ref().ok_or(Error::BrokenRecord)?)
                 .map_err(pkcs8::Error::from)?;

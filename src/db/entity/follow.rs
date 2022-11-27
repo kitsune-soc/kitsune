@@ -1,18 +1,14 @@
-use crate::job::JobState;
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
-use serde_json::Value as JsonValue;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
-#[sea_orm(table_name = "jobs")]
+#[sea_orm(table_name = "users_followers")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
-    pub state: JobState,
-    pub context: JsonValue,
-    pub fail_count: u64,
-    pub last_failed_at: Option<DateTime<Utc>>,
+    pub user_id: Uuid,
+    #[sea_orm(primary_key)]
+    pub follower_id: Uuid,
+    pub approved_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

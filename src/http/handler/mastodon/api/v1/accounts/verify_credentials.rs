@@ -1,9 +1,9 @@
 use crate::{error::Result, http::extractor::AuthExtactor, mapping::IntoMastodon, state::State};
 use axum::{
-    http::StatusCode,
     response::{IntoResponse, Response},
     Extension, Json,
 };
+use http::StatusCode;
 
 pub async fn get(
     Extension(state): Extension<State>,
