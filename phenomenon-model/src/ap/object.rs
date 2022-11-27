@@ -1,4 +1,4 @@
-use super::Object;
+use super::BaseObject;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -8,7 +8,7 @@ pub struct Actor {
     pub preferred_username: String,
     pub subject: Option<String>,
     #[serde(flatten)]
-    pub rest: Object,
+    pub rest: BaseObject,
     pub public_key: PublicKey,
     pub inbox: String,
     pub outbox: String,
@@ -30,5 +30,5 @@ pub struct Note {
     pub subject: Option<String>,
     pub content: String,
     #[serde(flatten)]
-    pub rest: Object,
+    pub rest: BaseObject,
 }

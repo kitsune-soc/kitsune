@@ -1,4 +1,4 @@
-use super::{object::Note, Activity, Object, PUBLIC_IDENTIFIER};
+use super::{object::Note, Activity, BaseObject, Object, PUBLIC_IDENTIFIER};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -49,6 +49,16 @@ impl Privacy for Activity {
     }
 }
 
+impl Privacy for BaseObject {
+    fn is_public(&self) -> bool {
+        self.to.iter().any(|url| url == PUBLIC_IDENTIFIER)
+    }
+
+    fn is_unlisted(&self) -> bool {
+        !self.is_public() && self.cc.iter().any(|url| url == PUBLIC_IDENTIFIER)
+    }
+}
+
 impl Privacy for Note {
     fn is_public(&self) -> bool {
         self.rest.is_public()
@@ -61,10 +71,16 @@ impl Privacy for Note {
 
 impl Privacy for Object {
     fn is_public(&self) -> bool {
-        self.to.iter().any(|url| url == PUBLIC_IDENTIFIER)
+        match self {
+            Self::Note(ref note) => note.is_public(),
+            Self::Person(..) => unimplemented!("Called privacy helper on person"),
+        }
     }
 
     fn is_unlisted(&self) -> bool {
-        !self.is_public() && self.cc.iter().any(|url| url == PUBLIC_IDENTIFIER)
+        match self {
+            Self::Note(ref note) => note.is_unlisted(),
+            Self::Person(..) => unimplemented!("Called privacy helper on person"),
+        }
     }
 }
