@@ -6,6 +6,7 @@ use async_graphql::{
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
 use axum::{
+    debug_handler,
     response::Html,
     routing::{any, get},
     Extension, Router,
@@ -32,6 +33,7 @@ impl ContextExt for &'_ Context<'_> {
     }
 }
 
+#[debug_handler(state = State)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
     AuthExtactor(user): AuthExtactor,
@@ -55,7 +57,7 @@ async fn graphiql_route() -> Html<String> {
     Html(page_src)
 }
 
-pub fn routes(state: State) -> Router {
+pub fn routes(state: State) -> Router<State> {
     let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),
         RootMutation::default(),

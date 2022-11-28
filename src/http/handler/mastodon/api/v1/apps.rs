@@ -1,11 +1,11 @@
 use crate::{
-    db::entity::oauth::application, error::Result, http::extractor::FormOrJson, state::State,
+    db::entity::oauth::application, error::Result, http::extractor::FormOrJson,
     util::generate_secret,
 };
-use axum::{Extension, Json};
+use axum::{extract::State, Json};
 use chrono::Utc;
 use phenomenon_model::mastodon::App;
-use sea_orm::{ActiveModelTrait, IntoActiveModel};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -16,7 +16,7 @@ pub struct AppForm {
 }
 
 pub async fn post(
-    Extension(state): Extension<State>,
+    State(db_conn): State<DatabaseConnection>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
     let application = application::Model {
@@ -28,7 +28,7 @@ pub async fn post(
         updated_at: Utc::now(),
     }
     .into_active_model()
-    .insert(&state.db_conn)
+    .insert(&db_conn)
     .await?;
 
     Ok(Json(App {

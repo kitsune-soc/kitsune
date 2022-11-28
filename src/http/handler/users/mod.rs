@@ -1,16 +1,16 @@
-use crate::{db::entity::user, error::Result, mapping::IntoActivityPub, state::State};
+use crate::{db::entity::user, error::Result, mapping::IntoActivityPub};
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     response::{IntoResponse, Response},
     routing::{self, post},
-    Extension, Json, Router,
+    Json, Router,
 };
 use http::StatusCode;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 pub mod inbox;
 
-async fn get(Extension(state): Extension<State>, Path(username): Path<String>) -> Result<Response> {
+async fn get(State(state): State<crate::State>, Path(username): Path<String>) -> Result<Response> {
     let Some(user) = user::Entity::find()
         .filter(user::Column::Username.eq(username).and(user::Column::Domain.is_null()))
         .one(&state.db_conn)
@@ -21,7 +21,7 @@ async fn get(Extension(state): Extension<State>, Path(username): Path<String>) -
     Ok(Json(user.into_activitypub(&state).await?).into_response())
 }
 
-pub fn routes() -> Router {
+pub fn routes() -> Router<crate::State> {
     Router::new()
         .route("/:username", routing::get(get))
         .route("/:username/inbox", post(inbox::post))

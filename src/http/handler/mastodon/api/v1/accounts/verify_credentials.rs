@@ -1,12 +1,13 @@
-use crate::{error::Result, http::extractor::AuthExtactor, mapping::IntoMastodon, state::State};
+use crate::{error::Result, http::extractor::AuthExtactor, mapping::IntoMastodon};
 use axum::{
+    extract::State,
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use http::StatusCode;
 
 pub async fn get(
-    Extension(state): Extension<State>,
+    State(state): State<crate::State>,
     AuthExtactor(user): AuthExtactor,
 ) -> Result<Response> {
     if let Some(user) = user {

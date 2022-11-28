@@ -6,13 +6,13 @@ use crate::{
     },
     error::{Error, Result},
     http::extractor::FormOrJson,
-    state::State,
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
+    extract::State,
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use chrono::Utc;
 use futures_util::FutureExt;
@@ -92,7 +92,7 @@ where
         .ok_or(Error::OAuthApplicationNotFound)
 }
 
-async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result<Response> {
+async fn authorization_code(state: crate::State, data: AuthorizationCodeData) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         authorization_code::Entity::find_by_id(data.code)
             .filter(authorization_code::Column::ExpiredAt.gt(Utc::now()))
@@ -157,7 +157,7 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
     .into_response())
 }
 
-async fn client_credentials(state: State, data: ClientCredentialsData) -> Result<Response> {
+async fn client_credentials(state: crate::State, data: ClientCredentialsData) -> Result<Response> {
     let (access_token, refresh_token) = state
         .db_conn
         .transaction(move |tx| {
@@ -201,7 +201,7 @@ async fn client_credentials(state: State, data: ClientCredentialsData) -> Result
     .into_response())
 }
 
-async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
+async fn password_grant(state: crate::State, data: PasswordData) -> Result<Response> {
     let user = user::Entity::find()
         .filter(
             user::Column::Username
@@ -249,7 +249,7 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
     .into_response())
 }
 
-async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response> {
+async fn refresh_token(state: crate::State, data: RefreshTokenData) -> Result<Response> {
     let Some((refresh_token, Some(access_token))) =
         refresh_token::Entity::find_by_id(data.refresh_token)
             .filter(access_token::Column::ApplicationId.is_not_null())
@@ -308,7 +308,7 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
 }
 
 pub async fn post(
-    Extension(state): Extension<State>,
+    State(state): State<crate::State>,
     FormOrJson(form): FormOrJson<TokenForm>,
 ) -> Result<Response> {
     match form {
