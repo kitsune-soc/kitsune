@@ -6,7 +6,7 @@ use crate::{
     state::State,
 };
 use futures_util::{stream, StreamExt};
-use phenomenon_model::ap::PUBLIC_IDENTIFIER;
+use phenomenon_model::ap::{Activity, PUBLIC_IDENTIFIER};
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -29,12 +29,19 @@ pub async fn run(state: &State, deliverer: &Deliverer, ctx: DeliveryContext) -> 
     };
 
     // TODO: Resolve follower collection
-    let note = post.into_activitypub(state).await?;
-    let user_ids = note
-        .to()
+    let activity: Activity = todo!();
+    let user_ids = activity
+        .rest
+        .to
         .iter()
         .filter(|url| *url != PUBLIC_IDENTIFIER)
-        .chain(note.cc().iter().filter(|url| *url != PUBLIC_IDENTIFIER))
+        .chain(
+            activity
+                .rest
+                .cc
+                .iter()
+                .filter(|url| *url != PUBLIC_IDENTIFIER),
+        )
         .map(String::as_str);
 
     let inbox_stream = stream::iter(user_ids).then(|ap_id| async {
@@ -47,7 +54,7 @@ pub async fn run(state: &State, deliverer: &Deliverer, ctx: DeliveryContext) -> 
     // TODO: Run this concurrently
     // TODO: Don't error out if a single inbox failed to resolve
     while let Some(inbox) = inbox_stream.next().await.transpose()? {
-        deliverer.deliver(&inbox, &user, &note).await?;
+        deliverer.deliver(&inbox, &user, &activity).await?;
     }
 
     Ok(())
