@@ -2,6 +2,7 @@ use crate::{
     db::entity::{follow, post, user},
     error::Result,
     http::extractor::SignedActivity,
+    state::Zustand,
 };
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
@@ -11,7 +12,7 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-async fn create_activity(state: &crate::State, activity: Activity) -> Result<()> {
+async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let user = user::Entity::find()
         .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
@@ -41,7 +42,7 @@ async fn create_activity(state: &crate::State, activity: Activity) -> Result<()>
     Ok(())
 }
 
-async fn delete_activity(state: &crate::State, activity: Activity) -> Result<()> {
+async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let user = user::Entity::find()
         .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
@@ -61,7 +62,7 @@ async fn delete_activity(state: &crate::State, activity: Activity) -> Result<()>
     Ok(())
 }
 
-async fn follow_activity(state: &crate::State, activity: Activity) -> Result<()> {
+async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let user = user::Entity::find()
         .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
@@ -88,7 +89,7 @@ async fn follow_activity(state: &crate::State, activity: Activity) -> Result<()>
 
 #[debug_handler]
 pub async fn post(
-    State(state): State<crate::State>,
+    State(state): State<Zustand>,
     SignedActivity(activity): SignedActivity,
 ) -> Result<()> {
     // TODO: Insert activity into database

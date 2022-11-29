@@ -1,6 +1,7 @@
 use crate::{
     db::entity::user,
     error::Result,
+    state::Zustand,
     webfinger::{Link, Resource},
 };
 use axum::{
@@ -18,7 +19,7 @@ pub struct WebfingerQuery {
 }
 
 pub async fn get(
-    State(state): State<crate::State>,
+    State(state): State<Zustand>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
     let username_at_instance = query.resource.trim_start_matches("acct:");

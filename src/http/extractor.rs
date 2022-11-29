@@ -1,7 +1,7 @@
 use crate::{
     db::entity::{oauth::access_token, user},
     error::Error,
-    state::State,
+    state::Zustand,
 };
 use async_trait::async_trait;
 use axum::{
@@ -22,10 +22,13 @@ use serde::de::DeserializeOwned;
 pub struct AuthExtactor(pub Option<user::Model>);
 
 #[async_trait]
-impl FromRequestParts<State> for AuthExtactor {
+impl FromRequestParts<Zustand> for AuthExtactor {
     type Rejection = Response;
 
-    async fn from_request_parts(parts: &mut Parts, state: &State) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &Zustand,
+    ) -> Result<Self, Self::Rejection> {
         if let Ok(TypedHeader(Authorization::<Bearer>(bearer_token))) =
             parts.extract_with_state(state).await
         {
@@ -85,12 +88,12 @@ where
 pub struct SignedActivity(pub Activity);
 
 #[async_trait]
-impl FromRequest<State, Body> for SignedActivity {
+impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
     async fn from_request(
         req: http::Request<Body>,
-        state: &State,
+        state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
         let headers = req.headers().clone();
         let method = req.method().clone();

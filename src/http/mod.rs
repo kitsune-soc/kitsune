@@ -1,5 +1,5 @@
 use self::handler::{oauth, posts, users, well_known};
-use crate::state::State;
+use crate::state::Zustand;
 use axum::{http::StatusCode, routing::get_service, Router};
 use std::io;
 use tower_http::{
@@ -20,7 +20,7 @@ async fn handle_error(err: io::Error) -> StatusCode {
 }
 
 #[instrument(skip(state))]
-pub async fn run(state: State, port: u16) {
+pub async fn run(state: Zustand, port: u16) {
     let frontend_dir = &state.config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();

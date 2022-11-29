@@ -6,7 +6,7 @@
     forbidden_lint_groups
 )]
 
-use self::{config::Configuration, fetcher::Fetcher, state::State, webfinger::Webfinger};
+use self::{config::Configuration, fetcher::Fetcher, state::Zustand, webfinger::Webfinger};
 use std::future;
 
 #[macro_use]
@@ -36,7 +36,7 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
-    let state = State {
+    let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
         fetcher: Fetcher::new(conn),

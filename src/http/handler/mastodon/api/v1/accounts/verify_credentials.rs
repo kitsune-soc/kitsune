@@ -1,4 +1,4 @@
-use crate::{error::Result, http::extractor::AuthExtactor, mapping::IntoMastodon};
+use crate::{error::Result, http::extractor::AuthExtactor, mapping::IntoMastodon, state::Zustand};
 use axum::{
     extract::State,
     response::{IntoResponse, Response},
@@ -7,7 +7,7 @@ use axum::{
 use http::StatusCode;
 
 pub async fn get(
-    State(state): State<crate::State>,
+    State(state): State<Zustand>,
     AuthExtactor(user): AuthExtactor,
 ) -> Result<Response> {
     if let Some(user) = user {

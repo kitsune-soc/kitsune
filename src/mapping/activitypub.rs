@@ -1,7 +1,7 @@
 use crate::{
     db::entity::{media_attachment, post, user},
     error::{Error, Result},
-    state::State,
+    state::Zustand,
 };
 use async_trait::async_trait;
 use mime::Mime;
@@ -18,14 +18,14 @@ use std::str::FromStr;
 pub trait IntoActivityPub {
     type Output;
 
-    async fn into_activitypub(self, state: &State) -> Result<Self::Output>;
+    async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output>;
 }
 
 #[async_trait]
 impl IntoActivityPub for media_attachment::Model {
     type Output = MediaAttachment;
 
-    async fn into_activitypub(self, _state: &State) -> Result<Self::Output> {
+    async fn into_activitypub(self, _state: &Zustand) -> Result<Self::Output> {
         let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
             mime::AUDIO => MediaAttachmentType::Audio,
@@ -46,7 +46,7 @@ impl IntoActivityPub for media_attachment::Model {
 impl IntoActivityPub for post::Model {
     type Output = Object;
 
-    async fn into_activitypub(self, state: &State) -> Result<Self::Output> {
+    async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output> {
         let user = user::Entity::find_by_id(self.user_id)
             .one(&state.db_conn)
             .await?
@@ -69,7 +69,7 @@ impl IntoActivityPub for post::Model {
 impl IntoActivityPub for user::Model {
     type Output = Object;
 
-    async fn into_activitypub(self, state: &State) -> Result<Self::Output> {
+    async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output> {
         let public_key = self
             .public_key()?
             .ok_or(Error::BrokenRecord)?

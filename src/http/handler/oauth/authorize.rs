@@ -5,6 +5,7 @@ use crate::{
         user,
     },
     error::{Error, Result},
+    state::Zustand,
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
@@ -56,7 +57,7 @@ struct ShowTokenPage {
 }
 
 pub async fn get(
-    State(state): State<crate::State>,
+    State(state): State<Zustand>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
     if query.response_type != "code" {
@@ -80,7 +81,7 @@ pub async fn get(
 }
 
 pub async fn post(
-    State(state): State<crate::State>,
+    State(state): State<Zustand>,
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {

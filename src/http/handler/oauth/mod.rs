@@ -6,7 +6,7 @@
 //! TODO: Implement client credentials grant
 //!
 
-use crate::state::State;
+use crate::state::Zustand;
 use axum::{
     routing::{get, post},
     Router,
@@ -19,7 +19,7 @@ mod token;
 
 static TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
-pub fn routes() -> Router<State> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/authorize", get(authorize::get).post(authorize::post))
         .route("/token", post(token::post))
