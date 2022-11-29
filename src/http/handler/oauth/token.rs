@@ -6,20 +6,20 @@ use crate::{
     },
     error::{Error, Result},
     http::extractor::FormOrJson,
-    state::State,
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
+    extract::State,
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::StatusCode;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
-    ModelTrait, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
+    IntoActiveModel, ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -92,19 +92,22 @@ where
         .ok_or(Error::OAuthApplicationNotFound)
 }
 
-async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result<Response> {
+async fn authorization_code(
+    db_conn: DatabaseConnection,
+    data: AuthorizationCodeData,
+) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         authorization_code::Entity::find_by_id(data.code)
             .filter(authorization_code::Column::ExpiredAt.gt(Utc::now()))
             .find_also_related(user::Entity)
-            .one(&state.db_conn)
+            .one(&db_conn)
             .await?
     else {
         return Ok((StatusCode::UNAUTHORIZED, "Unknown authorization code").into_response());
     };
 
     let application = get_application(
-        &state.db_conn,
+        &db_conn,
         data.client_id,
         data.client_secret,
         Some(data.redirect_uri),
@@ -115,8 +118,7 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
 
-    let (access_token, refresh_token) = state
-        .db_conn
+    let (access_token, refresh_token) = db_conn
         .transaction(|tx| {
             async move {
                 let access_token = access_token::Model {
@@ -157,9 +159,11 @@ async fn authorization_code(state: State, data: AuthorizationCodeData) -> Result
     .into_response())
 }
 
-async fn client_credentials(state: State, data: ClientCredentialsData) -> Result<Response> {
-    let (access_token, refresh_token) = state
-        .db_conn
+async fn client_credentials(
+    db_conn: DatabaseConnection,
+    data: ClientCredentialsData,
+) -> Result<Response> {
+    let (access_token, refresh_token) = db_conn
         .transaction(move |tx| {
             async move {
                 let application =
@@ -201,14 +205,14 @@ async fn client_credentials(state: State, data: ClientCredentialsData) -> Result
     .into_response())
 }
 
-async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
+async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Result<Response> {
     let user = user::Entity::find()
         .filter(
             user::Column::Username
                 .eq(data.username)
                 .and(user::Column::Domain.is_null()),
         )
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
 
@@ -237,7 +241,7 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
         expired_at: Utc::now() + *TOKEN_VALID_DURATION,
     }
     .into_active_model()
-    .insert(&state.db_conn)
+    .insert(&db_conn)
     .await?;
 
     Ok(Json(AccessTokenResponse {
@@ -249,25 +253,23 @@ async fn password_grant(state: State, data: PasswordData) -> Result<Response> {
     .into_response())
 }
 
-async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response> {
+async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> Result<Response> {
     let Some((refresh_token, Some(access_token))) =
         refresh_token::Entity::find_by_id(data.refresh_token)
             .filter(access_token::Column::ApplicationId.is_not_null())
             .find_also_related(access_token::Entity)
-            .one(&state.db_conn)
+            .one(&db_conn)
             .await?
     else {
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
 
-    let application =
-        get_application(&state.db_conn, data.client_id, data.client_secret, None).await?;
+    let application = get_application(&db_conn, data.client_id, data.client_secret, None).await?;
     if access_token.application_id.unwrap() != application.id {
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
 
-    let (access_token, refresh_token) = state
-        .db_conn
+    let (access_token, refresh_token) = db_conn
         .transaction(|tx| {
             async move {
                 let new_access_token = access_token::Model {
@@ -308,13 +310,13 @@ async fn refresh_token(state: State, data: RefreshTokenData) -> Result<Response>
 }
 
 pub async fn post(
-    Extension(state): Extension<State>,
+    State(db_conn): State<DatabaseConnection>,
     FormOrJson(form): FormOrJson<TokenForm>,
 ) -> Result<Response> {
     match form {
-        TokenForm::AuthorizationCode(data) => authorization_code(state, data).await,
-        TokenForm::ClientCredentials(data) => client_credentials(state, data).await,
-        TokenForm::Password(data) => password_grant(state, data).await,
-        TokenForm::RefreshToken(data) => refresh_token(state, data).await,
+        TokenForm::AuthorizationCode(data) => authorization_code(db_conn, data).await,
+        TokenForm::ClientCredentials(data) => client_credentials(db_conn, data).await,
+        TokenForm::Password(data) => password_grant(db_conn, data).await,
+        TokenForm::RefreshToken(data) => refresh_token(db_conn, data).await,
     }
 }

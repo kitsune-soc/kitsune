@@ -1,6 +1,6 @@
 use self::handler::{oauth, posts, users, well_known};
-use crate::state::State;
-use axum::{http::StatusCode, routing::get_service, Extension, Router};
+use crate::state::Zustand;
+use axum::{http::StatusCode, routing::get_service, Router};
 use std::io;
 use tower_http::{
     cors::CorsLayer,
@@ -20,7 +20,7 @@ async fn handle_error(err: io::Error) -> StatusCode {
 }
 
 #[instrument(skip(state))]
-pub async fn run(state: State, port: u16) {
+pub async fn run(state: Zustand, port: u16) {
     let frontend_dir = &state.config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();
@@ -33,11 +33,11 @@ pub async fn run(state: State, port: u16) {
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest(
+        .nest_service(
             "/public",
             get_service(ServeDir::new("public")).handle_error(handle_error),
         )
-        .nest(
+        .nest_service(
             "/media",
             get_service(ServeDir::new(&state.config.upload_dir)).handle_error(handle_error),
         );
@@ -47,15 +47,15 @@ pub async fn run(state: State, port: u16) {
         router = router.merge(handler::mastodon::routes());
     }
 
-    router = router
+    let router = router
         .merge(graphql::routes(state.clone()))
-        .fallback(
+        .fallback_service(
             get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
                 .handle_error(handle_error),
         )
-        .layer(Extension(state))
         .layer(CorsLayer::permissive())
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .with_state(state);
 
     axum::Server::bind(&([0, 0, 0, 0], port).into())
         .serve(router.into_make_service())

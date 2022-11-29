@@ -1,7 +1,7 @@
 use crate::{
     db::entity::{media_attachment, post, user},
     error::Result,
-    state::State,
+    state::Zustand,
 };
 use async_trait::async_trait;
 use phenomenon_model::mastodon::{account::Source, Account};
@@ -11,14 +11,14 @@ use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 pub trait IntoMastodon {
     type Output;
 
-    async fn into_mastodon(self, state: &State) -> Result<Self::Output>;
+    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output>;
 }
 
 #[async_trait]
 impl IntoMastodon for user::Model {
     type Output = Account;
 
-    async fn into_mastodon(self, state: &State) -> Result<Self::Output> {
+    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
         let statuses_count = post::Entity::find()
             .filter(post::Column::UserId.eq(self.id))
             .count(&state.db_conn)

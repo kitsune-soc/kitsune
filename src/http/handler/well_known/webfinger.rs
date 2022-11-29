@@ -1,13 +1,13 @@
 use crate::{
     db::entity::user,
     error::Result,
-    state::State,
+    state::Zustand,
     webfinger::{Link, Resource},
 };
 use axum::{
-    extract::Query,
+    extract::{Query, State},
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use http::StatusCode;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -19,7 +19,7 @@ pub struct WebfingerQuery {
 }
 
 pub async fn get(
-    Extension(state): Extension<State>,
+    State(state): State<Zustand>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
     let username_at_instance = query.resource.trim_start_matches("acct:");

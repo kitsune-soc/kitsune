@@ -1,18 +1,18 @@
 use crate::{
     db::entity::{oauth::access_token, user},
     error::Error,
-    state::State,
+    state::Zustand,
 };
 use async_trait::async_trait;
 use axum::{
     body::Body,
-    extract::{FromRequest, RequestParts},
+    extract::{FromRequest, FromRequestParts},
     response::{IntoResponse, Response},
-    Extension, Form, Json, TypedHeader,
+    Form, Json, RequestExt, RequestPartsExt, TypedHeader,
 };
 use chrono::Utc;
-use headers::{authorization::Bearer, Authorization};
-use http::StatusCode;
+use headers::{authorization::Bearer, Authorization, ContentType};
+use http::{request::Parts, StatusCode};
 use phenomenon_http_signatures::Request;
 use phenomenon_model::ap::Activity;
 use rsa::pkcs1::EncodeRsaPublicKey;
@@ -22,16 +22,15 @@ use serde::de::DeserializeOwned;
 pub struct AuthExtactor(pub Option<user::Model>);
 
 #[async_trait]
-impl FromRequest<Body> for AuthExtactor {
+impl FromRequestParts<Zustand> for AuthExtactor {
     type Rejection = Response;
 
-    async fn from_request(req: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        let Extension(state) = Extension::<State>::from_request(req)
-            .await
-            .map_err(IntoResponse::into_response)?;
-
-        if let Ok(TypedHeader(Authorization(bearer_token))) =
-            TypedHeader::<Authorization<Bearer>>::from_request(req).await
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &Zustand,
+    ) -> Result<Self, Self::Rejection> {
+        if let Ok(TypedHeader(Authorization::<Bearer>(bearer_token))) =
+            parts.extract_with_state(state).await
         {
             let Some((_token, user)) =
                 access_token::Entity::find_by_id(bearer_token.token().into())
@@ -54,36 +53,54 @@ impl FromRequest<Body> for AuthExtactor {
 pub struct FormOrJson<T>(pub T);
 
 #[async_trait]
-impl<T> FromRequest<Body> for FormOrJson<T>
+impl<S, T> FromRequest<S, Body> for FormOrJson<T>
 where
-    T: DeserializeOwned + Send,
+    S: Send + Sync,
+    T: DeserializeOwned + Send + 'static,
 {
     type Rejection = Response;
 
-    async fn from_request(req: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        if let Ok(Form(data)) = Form::from_request(req).await {
-            Ok(Self(data))
-        } else {
-            let Json(data) = Json::from_request(req)
-                .await
-                .map_err(IntoResponse::into_response)?;
+    async fn from_request(
+        mut req: http::Request<Body>,
+        state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        let TypedHeader(content_type) = req
+            .extract_parts::<TypedHeader<ContentType>>()
+            .await
+            .map_err(IntoResponse::into_response)?;
 
-            Ok(Self(data))
-        }
+        let content = if content_type == ContentType::form_url_encoded() {
+            Form::from_request(req, state)
+                .await
+                .map_err(IntoResponse::into_response)?
+                .0
+        } else {
+            Json::from_request(req, state)
+                .await
+                .map_err(IntoResponse::into_response)?
+                .0
+        };
+
+        Ok(Self(content))
     }
 }
 
 pub struct SignedActivity(pub Activity);
 
 #[async_trait]
-impl FromRequest<Body> for SignedActivity {
+impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
-    async fn from_request(parts: &mut RequestParts<Body>) -> Result<Self, Self::Rejection> {
-        let (Extension(state), Json(activity)) =
-            <(Extension<State>, Json<Activity>)>::from_request(parts)
-                .await
-                .map_err(IntoResponse::into_response)?;
+    async fn from_request(
+        req: http::Request<Body>,
+        state: &Zustand,
+    ) -> Result<Self, Self::Rejection> {
+        let headers = req.headers().clone();
+        let method = req.method().clone();
+        let uri = req.uri().clone();
+
+        let Json(activity): Json<Activity> =
+            req.extract().await.map_err(IntoResponse::into_response)?;
 
         let ap_id = activity
             .rest
@@ -96,9 +113,6 @@ impl FromRequest<Body> for SignedActivity {
             return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
         };
 
-        let headers = parts.headers().clone();
-        let method = parts.method().clone();
-        let uri = parts.uri().clone();
         let is_valid = crate::blocking::cpu(move || {
             let request = Request {
                 headers: &headers,

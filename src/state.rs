@@ -1,8 +1,13 @@
 use crate::{config::Configuration, fetcher::Fetcher, webfinger::Webfinger};
+use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
 
-#[derive(Clone)]
-pub struct State {
+/// Application state
+///
+/// Called it "Zustand" to avoid a name collission with `axum::extract::State`.
+/// "Zustand" is just the german word for state.
+#[derive(Clone, FromRef)]
+pub struct Zustand {
     pub db_conn: DatabaseConnection,
     pub config: Configuration,
     pub fetcher: Fetcher,

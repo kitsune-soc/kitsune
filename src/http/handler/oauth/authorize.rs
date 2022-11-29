@@ -5,15 +5,15 @@ use crate::{
         user,
     },
     error::{Error, Result},
-    state::State,
+    state::Zustand,
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
-    extract::Query,
+    extract::{Query, State},
     response::{Html, IntoResponse, Response},
-    Extension, Form,
+    Form,
 };
 use chrono::Utc;
 use http::StatusCode;
@@ -57,7 +57,7 @@ struct ShowTokenPage {
 }
 
 pub async fn get(
-    Extension(state): Extension<State>,
+    State(state): State<Zustand>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
     if query.response_type != "code" {
@@ -81,7 +81,7 @@ pub async fn get(
 }
 
 pub async fn post(
-    Extension(state): Extension<State>,
+    State(state): State<Zustand>,
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {

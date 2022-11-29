@@ -3,7 +3,7 @@ use crate::{
     deliverer::Deliverer,
     error::{Error, Result},
     mapping::IntoActivityPub,
-    state::State,
+    state::Zustand,
 };
 use futures_util::{stream, StreamExt};
 use phenomenon_model::ap::{Activity, PUBLIC_IDENTIFIER};
@@ -19,7 +19,7 @@ pub struct DeliveryContext {
     post_id: Uuid,
 }
 
-pub async fn run(state: &State, deliverer: &Deliverer, ctx: DeliveryContext) -> Result<()> {
+pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -> Result<()> {
     let Some((post, Some(user))) = post::Entity::find_by_id(ctx.post_id)
         .find_also_related(user::Entity)
         .one(&state.db_conn)
