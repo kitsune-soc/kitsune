@@ -41,6 +41,15 @@ pub struct Activity {
     pub rest: BaseObject,
 }
 
+impl Activity {
+    pub fn object(&self) -> &str {
+        match self.object {
+            StringOrObject::Object(ref obj) => obj.id(),
+            StringOrObject::String(ref obj) => obj,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum Object {
@@ -49,6 +58,13 @@ pub enum Object {
 }
 
 impl Object {
+    pub fn id(&self) -> &str {
+        match self {
+            Self::Note(note) => &note.rest.id,
+            Self::Person(person) => &person.rest.id,
+        }
+    }
+
     pub fn cc(&self) -> &[String] {
         match self {
             Self::Note(ref note) => note.rest.cc.as_slice(),
