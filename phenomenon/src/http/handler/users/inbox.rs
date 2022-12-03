@@ -27,7 +27,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
                 subject: note.subject,
                 content: note.content,
                 url: note.rest.id,
-                created_at: note.rest.published_at,
+                created_at: note.rest.published,
                 updated_at: Utc::now(),
             }
             .into_active_model()
@@ -76,7 +76,7 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
             user_id: followed_user.id,
             follower_id: user.id,
             approved_at: None,
-            created_at: activity.rest.published_at,
+            created_at: activity.rest.published,
             updated_at: Utc::now(),
         }
         .into_active_model()

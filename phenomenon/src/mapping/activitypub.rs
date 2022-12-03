@@ -58,7 +58,7 @@ impl IntoActivityPub for post::Model {
             rest: BaseObject {
                 id: self.url,
                 attributed_to: Some(StringOrObject::String(user.url).into()),
-                published_at: self.created_at,
+                published: self.created_at,
                 ..BaseObject::default()
             },
         }))

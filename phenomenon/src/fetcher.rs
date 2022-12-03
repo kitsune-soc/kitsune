@@ -97,7 +97,7 @@ impl Fetcher {
             inbox_url: actor.inbox,
             public_key: Some(actor.public_key.public_key_pem),
             private_key: None,
-            created_at: actor.rest.published_at,
+            created_at: actor.rest.published,
             updated_at: Utc::now(),
         }
         .into_active_model()
@@ -128,7 +128,7 @@ impl Fetcher {
             subject: note.subject,
             content: note.content,
             url: note.rest.id,
-            created_at: note.rest.published_at,
+            created_at: note.rest.published,
             updated_at: Utc::now(),
         }
         .into_active_model()

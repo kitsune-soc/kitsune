@@ -41,7 +41,6 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(Users::Table)
                     .add_column_if_not_exists(ColumnDef::new(Users::AvatarId).uuid())
-                    .add_column_if_not_exists(ColumnDef::new(Users::HeaderId).uuid())
                     .add_foreign_key(
                         TableForeignKey::new()
                             .from_col(Users::AvatarId)
@@ -50,6 +49,15 @@ impl MigrationTrait for Migration {
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Users::Table)
+                    .add_column_if_not_exists(ColumnDef::new(Users::HeaderId).uuid())
                     .add_foreign_key(
                         TableForeignKey::new()
                             .from_col(Users::HeaderId)
