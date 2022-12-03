@@ -11,7 +11,6 @@ use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-// TODO: Enforce via semaphore or something
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
 #[derive(Deserialize, Serialize)]
@@ -19,8 +18,9 @@ pub struct DeliveryContext {
     post_id: Uuid,
 }
 
+#[instrument(skip_all, fields(post_id = %ctx.post_id))]
 pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -> Result<()> {
-    let Some((post, Some(user))) = post::Entity::find_by_id(ctx.post_id)
+    let Some((post, Some(author))) = post::Entity::find_by_id(ctx.post_id)
         .find_also_related(user::Entity)
         .one(&state.db_conn)
         .await?
@@ -29,32 +29,34 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -
     };
 
     // TODO: Resolve follower collection
+    // TODO: Actually fill this activity with meaningful data
+    // TODO: Make more efficient for larger number of followers
     let activity: Activity = todo!();
-    let user_ids = activity
+    let delivery_futures_iter = activity
         .rest
         .to
         .iter()
+        .cloned()
+        .chain(activity.rest.cc.iter().cloned())
         .filter(|url| *url != PUBLIC_IDENTIFIER)
-        .chain(
-            activity
-                .rest
-                .cc
-                .iter()
-                .filter(|url| *url != PUBLIC_IDENTIFIER),
-        )
-        .map(String::as_str);
+        .map(|ap_id| {
+            let author = &author;
+            let activity = &activity;
+            async move {
+                let user = state.fetcher.fetch_actor(&ap_id).await?;
+                deliverer.deliver(&user.inbox_url, author, activity).await?;
 
-    let inbox_stream = stream::iter(user_ids).then(|ap_id| async {
-        let user = state.fetcher.fetch_actor(ap_id).await?;
-        Ok::<_, Error>(user.inbox_url)
-    });
+                Ok::<_, Error>(())
+            }
+        });
 
-    tokio::pin!(inbox_stream);
+    let mut delivery_results =
+        stream::iter(delivery_futures_iter).buffer_unordered(MAX_CONCURRENT_REQUESTS);
 
-    // TODO: Run this concurrently
-    // TODO: Don't error out if a single inbox failed to resolve
-    while let Some(inbox) = inbox_stream.next().await.transpose()? {
-        deliverer.deliver(&inbox, &user, &activity).await?;
+    while let Some(delivery_result) = delivery_results.next().await {
+        if let Err(err) = delivery_result {
+            error!(error = %err, "Failed to deliver activity");
+        }
     }
 
     Ok(())
