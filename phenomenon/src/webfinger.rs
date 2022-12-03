@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 pub struct Link {
     pub rel: String,
-    pub href: String,
+    pub href: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -43,6 +43,63 @@ impl Webfinger {
         Ok(resource
             .links
             .into_iter()
-            .find_map(|link| (link.rel == "self").then_some(link.href)))
+            .find_map(|link| (link.rel == "self").then_some(link.href?)))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Resource, Webfinger};
+
+    const GARGRON_WEBFINGER_RESOURCE: &str = r#"
+    {
+        "subject": "acct:Gargron@mastodon.social",
+        "aliases": [
+            "https://mastodon.social/@Gargron",
+            "https://mastodon.social/users/Gargron"
+        ],
+        "links": [
+            {
+                "rel": "http://webfinger.net/rel/profile-page",
+                "type": "text/html",
+                "href": "https://mastodon.social/@Gargron"
+            },
+            {
+                "rel": "self",
+                "type": "application/activity+json",
+                "href": "https://mastodon.social/users/Gargron"
+            },
+            {
+                "rel": "http://ostatus.org/schema/1.0/subscribe",
+                "template": "https://mastodon.social/authorize_interaction?uri={uri}"
+            }
+        ]
+    }
+    "#;
+
+    #[test]
+    fn deserialise_gargron() {
+        let deserialised: Resource = serde_json::from_str(GARGRON_WEBFINGER_RESOURCE)
+            .expect("Failed to deserialise resource");
+
+        assert_eq!(deserialised.subject, "acct:Gargron@mastodon.social");
+        assert_eq!(
+            deserialised.aliases,
+            [
+                "https://mastodon.social/@Gargron",
+                "https://mastodon.social/users/Gargron"
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn fetch_qarnax_ap_id() {
+        let webfinger = Webfinger::new();
+        let ap_id = webfinger
+            .fetch_actor_url("qarnax", "corteximplant.com")
+            .await
+            .expect("Failed to fetch resource");
+
+        assert_eq!(ap_id, Some("https://corteximplant.com/users/qarnax".into()));
     }
 }
