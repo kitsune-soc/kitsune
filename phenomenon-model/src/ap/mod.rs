@@ -76,7 +76,7 @@ pub struct BaseObject {
     #[serde(rename = "@context")]
     pub context: Value,
     pub id: String,
-    pub attributed_to: Option<Box<StringOrObject<Actor>>>,
+    pub attributed_to: Option<StringOrObject<Box<Actor>>>,
     pub published: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,
@@ -86,7 +86,7 @@ pub struct BaseObject {
 
 impl BaseObject {
     pub fn attributed_to(&self) -> Option<&str> {
-        self.attributed_to.as_deref().map(|prop| {
+        self.attributed_to.as_ref().map(|prop| {
             match prop {
                 StringOrObject::Object(actor) => &actor.rest.id,
                 StringOrObject::String(id) => id,
