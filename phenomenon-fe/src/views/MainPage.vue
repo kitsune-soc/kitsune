@@ -105,13 +105,7 @@
       $email: String!
       $password: String!
     ) {
-      registerUser(
-        registerData: {
-          username: $username
-          email: $email
-          password: $password
-        }
-      ) {
+      registerUser(username: $username, email: $email, password: $password) {
         id
       }
     }
