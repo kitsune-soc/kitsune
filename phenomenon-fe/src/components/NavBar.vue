@@ -62,6 +62,7 @@
       padding: 15px;
       color: $shade1dark;
       cursor: pointer;
+      border-bottom: 4px solid transparent;
 
       &:hover {
         color: white;

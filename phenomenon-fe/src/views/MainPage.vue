@@ -1,9 +1,9 @@
 <template>
-  <div class="fuck">
+  <div>
     <!-- ADD BACKGROUND IMAGE AS A <img> ELEMENT -->
     <div class="main-container">
       <div class="main-intro">
-        <h2 class="main-intro-header">{{ result.instance.domain }}</h2>
+        <h2 v-if="result" class="main-intro-header">{{ result.instance.domain }}</h2>
         <p class="main-intro-description">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
@@ -72,12 +72,7 @@
         </form>
       </div>
     </div>
-    <footer>
-      <div class="main-footer">
-        <span>Phenomenon v{{ result.instance.version }}</span>
-        <a href="/">Source code</a>
-      </div>
-    </footer>
+    <Footer />
   </div>
 </template>
 
@@ -85,12 +80,12 @@
   import { useMutation, useQuery } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
+  import Footer from '../components/Footer.vue'
 
   const { result } = useQuery(gql`
     query getInstanceInfo {
       instance {
         domain
-        version
       }
     }
   `);
@@ -164,13 +159,6 @@
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
-  .fuck {
-    // background-image: url('/assets/BG.webp');
-    // background-size: cover;
-    // backdrop-filter: blur(5px) saturate(1.4);
-    // background-position: center;
-    // background-repeat: no-repeat;
-  }
   .main {
     &-container {
       display: flex;
@@ -179,6 +167,14 @@
       width: 78vw;
       margin: 0 auto;
       gap: 30px;
+
+      @media only screen and (max-width: 1023px) {
+        flex-direction: column;
+        height: auto;
+        width: 88vw;
+        justify-content: center;
+        padding: 2vh 0;
+      }
     }
 
     &-intro {
@@ -189,6 +185,12 @@
       height: 90%;
       padding: 1vw;
 
+      @media only screen and (max-width: 1023px) {
+        width: 75%;
+        margin: 0 auto;
+        text-align: center;
+      }
+
       &-header {
         font-size: 42px;
         font-weight: bold;
@@ -197,7 +199,7 @@
 
       &-description,
       &-more {
-        font-size: 20px;
+        font-size: 18px;
         line-height: 143%;
       }
     }
@@ -211,6 +213,11 @@
       height: 90%;
       padding: 0.5vh 1vw;
       gap: 30px;
+
+      @media only screen and (max-width: 1023px) {
+        align-items: center;
+        width: 75%;
+      }
     }
 
     &-login,
@@ -218,14 +225,6 @@
       background-color: $dark2;
       width: 60%;
       padding: 5vh 2vw;
-    }
-
-    &-footer {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      padding: 10px 0;
-      gap: 25px;
     }
   }
 
@@ -238,9 +237,10 @@
   }
 
   .field {
-    width: 280px;
+    width: 95%;
     border: 0.5px solid $shade1dark;
     background-color: $dark1;
+    margin: 0 auto;
     margin-bottom: 8px;
     border-radius: 2px;
     font-size: 20px;
