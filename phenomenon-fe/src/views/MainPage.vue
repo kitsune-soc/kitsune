@@ -3,7 +3,7 @@
     <!-- ADD BACKGROUND IMAGE AS A <img> ELEMENT -->
     <div class="main-container">
       <div class="main-intro">
-        <h2 class="main-intro-header">Phenomenon</h2>
+        <h2 class="main-intro-header">{{ result.instance.domain }}</h2>
         <p class="main-intro-description">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
@@ -17,61 +17,55 @@
         >
       </div>
       <div class="main-forms">
-        <form class="main-login">
+        <form class="main-login" @submit="login">
           <div class="field-group">
             <label class="label" for="username">Username</label><br />
             <input
+              v-model="loginData.username"
               class="field"
               type="text"
-              id="username"
               name="username"
-              value=""
             /><br />
             <label class="label" for="password">Password</label><br />
             <input
+              v-model="loginData.password"
               class="field"
               type="password"
-              id="password"
               name="password"
-              value=""
             />
           </div>
           <input class="formButton" type="submit" value="Login" />
         </form>
-        <form class="main-register">
+        <form class="main-register" @submit="register">
           <div class="field-group">
             <label class="label" for="username">Username</label><br />
             <input
+              v-model="registerData.username"
               class="field"
               type="text"
-              id="username"
               name="username"
-              value=""
             /><br />
             <label class="label" for="email">Email</label><br />
             <input
+              v-model="registerData.email"
               class="field"
               type="email"
-              id="email"
               name="email"
-              value=""
             /><br />
             <label class="label" for="password">Password</label><br />
             <input
+              v-model="registerData.password"
               class="field"
               type="password"
-              id="password"
               name="password"
-              value=""
             /><br />
             <label class="label" for="confirm-password">Confirm Password</label
             ><br />
             <input
+              v-model="registerData.passwordConfirm"
               class="field"
               type="password"
-              id="confirm-password"
               name="confirm-password"
-              value=""
             />
           </div>
           <input class="formButton" type="submit" value="Register" />
@@ -80,14 +74,93 @@
     </div>
     <footer>
       <div class="main-footer">
-        <span>Phenomenon v0.1</span>
+        <span>Phenomenon v{{ result.instance.version }}</span>
         <a href="/">Source code</a>
       </div>
     </footer>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import { useMutation, useQuery } from '@vue/apollo-composable';
+  import gql from 'graphql-tag';
+  import { reactive } from 'vue';
+
+  const { result } = useQuery(gql`
+    query getInstanceInfo {
+      instance {
+        domain
+        version
+      }
+    }
+  `);
+
+  const {
+    mutate: registerUser,
+    onDone,
+    onError,
+  } = useMutation(gql`
+    mutation registerUser(
+      $username: String!
+      $email: String!
+      $password: String!
+    ) {
+      registerUser(username: $username, email: $email, password: $password) {
+        id
+      }
+    }
+  `);
+
+  onDone(() => {
+    // TODO: Show to user
+    console.log('Registered successfully');
+  });
+
+  onError((err) => {
+    // TODO: Show to user
+    console.log(`Registration failed: ${err}`);
+  });
+
+  const loginData = reactive({
+    username: '',
+    password: '',
+  });
+
+  const registerData = reactive({
+    username: '',
+    email: '',
+    password: '',
+    passwordConfirm: '',
+  });
+
+  const login = (event: Event) => {
+    event.preventDefault();
+
+    // TODO: Start login process
+  };
+
+  const register = (event: Event) => {
+    event.preventDefault();
+
+    if (
+      registerData.username.trim() === '' ||
+      registerData.email === '' ||
+      registerData.password === ''
+    ) {
+      return;
+    }
+
+    if (registerData.password !== registerData.passwordConfirm) {
+      return;
+    }
+
+    registerUser({
+      username: registerData.username,
+      email: registerData.email,
+      password: registerData.password,
+    });
+  };
+</script>
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
