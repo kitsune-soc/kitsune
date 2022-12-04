@@ -35,15 +35,19 @@ async fn main() {
     let conn = self::db::connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
+
     let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
-        .expect("Failed to connect to Redis server");
+        .expect("Failed to build Redis pool manager");
+    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
+        .build()
+        .expect("Failed to build Redis pool");
 
     let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
         fetcher: Fetcher::new(conn),
-        redis_conn: redis_manager.into(),
-        webfinger: Webfinger::new(),
+        redis_conn: redis_conn.clone(),
+        webfinger: Webfinger::new(redis_conn),
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

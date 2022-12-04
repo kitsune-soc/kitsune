@@ -48,6 +48,12 @@ pub enum Error {
     Pkcs8(#[from] pkcs8::Error),
 
     #[error(transparent)]
+    Redis(#[from] redis::RedisError),
+
+    #[error(transparent)]
+    RedisPool(#[from] deadpool_redis::PoolError),
+
+    #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
 
     #[error(transparent)]

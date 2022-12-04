@@ -46,6 +46,7 @@ url = "2.3.1"
 uuid = { version = "1.2.2", features = ["v4"] }
 zxcvbn = "2.2.1"
 deadpool-redis = "0.11.0"
+redis = "0.22.1"
 
 [features]
 default = ["mastodon-api"]
