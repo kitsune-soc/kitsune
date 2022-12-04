@@ -17,6 +17,7 @@ pub struct Configuration {
     pub frontend_dir: PathBuf,
     pub job_workers: NonZeroUsize,
     pub port: u16,
+    pub redis_url: String,
     #[serde(default = "default_upload_dir")]
     pub upload_dir: PathBuf,
 }
