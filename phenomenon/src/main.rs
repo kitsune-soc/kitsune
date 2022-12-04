@@ -13,6 +13,7 @@ use std::future;
 extern crate tracing;
 
 mod blocking;
+mod cache;
 mod config;
 mod consts;
 mod db;
