@@ -33,6 +33,12 @@ impl Cacher {
         })
     }
 
+    pub async fn delete(&self, key: &str) -> RedisResult<()> {
+        let mut conn = self.get_connection().await?;
+        conn.del(self.compute_key(key)).await?;
+        Ok(())
+    }
+
     pub async fn get<V>(&self, key: &str) -> RedisResult<Option<V>>
     where
         V: FromRedisValue,
