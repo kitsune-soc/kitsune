@@ -3,8 +3,10 @@ use redis::{AsyncCommands, ErrorKind, RedisError, RedisResult};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
-#[derive(Clone)]
-pub struct Cacher<K, V> {
+pub struct Cacher<K, V>
+where
+    K: ?Sized,
+{
     prefix: String,
     redis_conn: deadpool_redis::Pool,
     ttl: Duration,
@@ -16,9 +18,10 @@ pub struct Cacher<K, V> {
 
 impl<K, V> Cacher<K, V>
 where
-    K: Display,
+    K: Display + ?Sized,
     V: Serialize + DeserializeOwned,
 {
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
     where
         P: ToString,
@@ -88,5 +91,20 @@ where
         .await?;
 
         Ok(())
+    }
+}
+
+impl<K, V> Clone for Cacher<K, V>
+where
+    K: ?Sized,
+{
+    fn clone(&self) -> Self {
+        Self {
+            prefix: self.prefix.clone(),
+            redis_conn: self.redis_conn.clone(),
+            ttl: self.ttl,
+            _key: PhantomData,
+            _value: PhantomData,
+        }
     }
 }

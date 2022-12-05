@@ -42,23 +42,21 @@ impl Webfinger {
 
     pub async fn fetch_actor_url(&self, username: &str, domain: &str) -> Result<Option<String>> {
         let acct = format!("acct:{username}@{domain}");
-
         if let Some(ap_id) = self.cacher.get(&acct).await? {
-            Ok(Some(ap_id))
-        } else {
-            let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
-
-            let resource: Resource = self.client.get(webfinger_url).send().await?.json().await?;
-            let Some(ap_id) = resource
-                .links
-                .into_iter()
-                .find_map(|link| (link.rel == "self").then_some(link.href))
-            else {
-                return Ok(None);
-            };
-            self.cacher.set(&acct, &ap_id).await?;
-
-            Ok(Some(ap_id))
+            return Ok(Some(ap_id));
         }
+
+        let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
+        let resource: Resource = self.client.get(webfinger_url).send().await?.json().await?;
+        let Some(ap_id) = resource
+            .links
+            .into_iter()
+            .find_map(|link| (link.rel == "self").then_some(link.href))
+        else {
+            return Ok(None);
+        };
+        self.cacher.set(&acct, &ap_id).await?;
+
+        Ok(Some(ap_id))
     }
 }
