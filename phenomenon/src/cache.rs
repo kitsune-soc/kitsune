@@ -3,6 +3,7 @@ use redis::{AsyncCommands, ErrorKind, RedisError, RedisResult};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
+#[derive(Clone)]
 pub struct Cacher<K, V> {
     prefix: String,
     redis_conn: deadpool_redis::Pool,
@@ -18,9 +19,12 @@ where
     K: Display,
     V: Serialize + DeserializeOwned,
 {
-    pub fn new(redis_conn: deadpool_redis::Pool, prefix: String, ttl: Duration) -> Self {
+    pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
+    where
+        P: ToString,
+    {
         Self {
-            prefix,
+            prefix: prefix.to_string(),
             redis_conn,
             ttl,
             _key: PhantomData,
@@ -43,13 +47,13 @@ where
         })
     }
 
-    pub async fn delete(&self, key: K) -> RedisResult<()> {
+    pub async fn delete(&self, key: &K) -> RedisResult<()> {
         let mut conn = self.get_connection().await?;
         conn.del(self.compute_key(key)).await?;
         Ok(())
     }
 
-    pub async fn get(&self, key: K) -> RedisResult<Option<V>> {
+    pub async fn get(&self, key: &K) -> RedisResult<Option<V>> {
         let mut conn = self.get_connection().await?;
         if let Some(serialised) = conn.get::<_, Option<String>>(self.compute_key(key)).await? {
             let deserialised = serde_json::from_str(&serialised).map_err(|err| {
@@ -65,7 +69,7 @@ where
         }
     }
 
-    pub async fn set(&self, key: K, value: &V) -> RedisResult<()> {
+    pub async fn set(&self, key: &K, value: &V) -> RedisResult<()> {
         let mut conn = self.get_connection().await?;
         let serialised = serde_json::to_string(value).map_err(|err| {
             RedisError::from((

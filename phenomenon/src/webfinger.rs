@@ -1,6 +1,5 @@
-use crate::{consts::USER_AGENT, error::Result};
+use crate::{cache::Cacher, consts::USER_AGENT, error::Result};
 use http::{HeaderMap, HeaderValue};
-use redis::AsyncCommands;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -22,8 +21,8 @@ pub struct Resource {
 
 #[derive(Clone)]
 pub struct Webfinger {
+    cacher: Cacher<String, String>,
     client: Client,
-    redis_conn: deadpool_redis::Pool,
 }
 
 impl Webfinger {
@@ -32,21 +31,19 @@ impl Webfinger {
         headers.insert("Accept", HeaderValue::from_static("application/jrd+json"));
 
         Self {
+            cacher: Cacher::new(redis_conn, "webfinger", CACHE_DURATION),
             client: Client::builder()
                 .default_headers(headers)
                 .user_agent(USER_AGENT)
                 .build()
                 .unwrap(),
-            redis_conn,
         }
     }
 
     pub async fn fetch_actor_url(&self, username: &str, domain: &str) -> Result<Option<String>> {
-        let mut conn = self.redis_conn.get().await?;
         let acct = format!("acct:{username}@{domain}");
 
-        let cache_key = format!("webfinger:{acct}");
-        if let Some(ap_id) = conn.get(&cache_key).await? {
+        if let Some(ap_id) = self.cacher.get(&acct).await? {
             Ok(Some(ap_id))
         } else {
             let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
@@ -59,10 +56,7 @@ impl Webfinger {
             else {
                 return Ok(None);
             };
-
-            #[allow(clippy::cast_possible_truncation)]
-            conn.set_ex(cache_key, &ap_id, CACHE_DURATION.as_secs() as usize)
-                .await?;
+            self.cacher.set(&acct, &ap_id).await?;
 
             Ok(Some(ap_id))
         }
