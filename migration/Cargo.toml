@@ -11,7 +11,7 @@ path = "src/lib.rs"
 [dependencies]
 
 [dependencies.sea-orm-migration]
-version = "0.10.4"
+version = "0.10.5"
 default-features = false
 features = [
   # Enable at least one `ASYNC_RUNTIME` and `DATABASE_DRIVER` feature if you want to run migration via CLI.

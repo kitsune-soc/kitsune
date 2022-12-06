@@ -4,9 +4,12 @@ use async_graphql::{ComplexObject, Context, SimpleObject};
 use chrono::{DateTime, Utc};
 use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::DecodePrivateKey, RsaPrivateKey, RsaPublicKey};
 use sea_orm::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, PartialOrd, SimpleObject)]
+#[derive(
+    Clone, Debug, DeriveEntityModel, Deserialize, Eq, PartialEq, PartialOrd, Serialize, SimpleObject,
+)]
 #[sea_orm(table_name = "users")]
 #[graphql(complex, name = "User")]
 pub struct Model {

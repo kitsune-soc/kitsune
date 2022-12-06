@@ -1,4 +1,5 @@
 use crate::{
+    cache::Cacher,
     consts::USER_AGENT,
     db::entity::{media_attachment, post, user},
     error::{Error, Result},
@@ -11,17 +12,24 @@ use reqwest::Client;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
 };
+use std::time::Duration;
 use url::Url;
 use uuid::Uuid;
+
+const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 
 #[derive(Clone)]
 pub struct Fetcher {
     client: Client,
     db_conn: DatabaseConnection,
+
+    // Caches
+    post_cache: Cacher<str, post::Model>,
+    user_cache: Cacher<str, user::Model>,
 }
 
 impl Fetcher {
-    pub fn new(db_conn: DatabaseConnection) -> Self {
+    pub fn new(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
         let mut default_headers = HeaderMap::new();
         default_headers.insert(
             "Accept",
@@ -35,10 +43,17 @@ impl Fetcher {
                 .build()
                 .unwrap(),
             db_conn,
+
+            post_cache: Cacher::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
+            user_cache: Cacher::new(redis_conn, "fetcher-actor", CACHE_DURATION),
         }
     }
 
     pub async fn fetch_actor(&self, url: &str) -> Result<user::Model> {
+        if let Some(user) = self.user_cache.get(url).await? {
+            return Ok(user);
+        }
+
         if let Some(user) = user::Entity::find()
             .filter(user::Column::Url.eq(url))
             .one(&self.db_conn)
@@ -107,6 +122,10 @@ impl Fetcher {
     }
 
     pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
+        if let Some(post) = self.post_cache.get(url).await? {
+            return Ok(post);
+        }
+
         if let Some(post) = post::Entity::find()
             .filter(post::Column::Url.eq(url))
             .one(&self.db_conn)

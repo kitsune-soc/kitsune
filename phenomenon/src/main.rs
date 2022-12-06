@@ -13,6 +13,7 @@ use std::future;
 extern crate tracing;
 
 mod blocking;
+mod cache;
 mod config;
 mod consts;
 mod db;
@@ -36,11 +37,18 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
+    let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
+        .expect("Failed to build Redis pool manager");
+    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
+        .build()
+        .expect("Failed to build Redis pool");
+
     let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
-        fetcher: Fetcher::new(conn),
-        webfinger: Webfinger::new(),
+        fetcher: Fetcher::new(conn, redis_conn.clone()),
+        redis_conn: redis_conn.clone(),
+        webfinger: Webfinger::new(redis_conn),
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use self::{catch_panic::CatchPanic, deliver_activity::DeliveryContext};
 use crate::{
     db::entity::job,
@@ -13,6 +11,7 @@ use sea_orm::{
     IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 mod catch_panic;
 mod deliver_activity;
