@@ -49,15 +49,24 @@ where
         format!("{}:{}:{key}", self.namespace, self.prefix)
     }
 
+    #[instrument(skip_all)]
     pub async fn delete(&self, key: &K) -> Result<(), CacheError> {
         let mut conn = self.redis_conn.get().await?;
-        conn.del(self.compute_key(key)).await?;
+        let key = self.compute_key(key);
+
+        debug!(%key, "Deleting cache entry");
+        conn.del(key).await?;
+
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn get(&self, key: &K) -> Result<Option<V>, CacheError> {
         let mut conn = self.redis_conn.get().await?;
-        if let Some(serialised) = conn.get::<_, Option<String>>(self.compute_key(key)).await? {
+        let key = self.compute_key(key);
+
+        debug!(%key, "Fetching cache entry");
+        if let Some(serialised) = conn.get::<_, Option<String>>(key).await? {
             let deserialised = serde_json::from_str(&serialised)?;
             Ok(Some(deserialised))
         } else {
@@ -65,17 +74,16 @@ where
         }
     }
 
+    #[instrument(skip_all)]
     pub async fn set(&self, key: &K, value: &V) -> Result<(), CacheError> {
         let mut conn = self.redis_conn.get().await?;
+        let key = self.compute_key(key);
         let serialised = serde_json::to_string(value)?;
 
+        debug!(%key, ttl = ?self.ttl, "Setting cache entry");
         #[allow(clippy::cast_possible_truncation)]
-        conn.set_ex(
-            self.compute_key(key),
-            serialised,
-            self.ttl.as_secs() as usize,
-        )
-        .await?;
+        conn.set_ex(key, serialised, self.ttl.as_secs() as usize)
+            .await?;
 
         Ok(())
     }
