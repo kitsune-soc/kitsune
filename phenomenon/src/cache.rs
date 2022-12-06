@@ -1,18 +1,26 @@
 use deadpool_redis::Connection;
+use derive_builder::Builder;
 use redis::{AsyncCommands, ErrorKind, RedisError, RedisResult};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
+#[derive(Builder)]
+#[builder(pattern = "owned")]
 pub struct Cacher<K, V>
 where
     K: ?Sized,
 {
+    #[builder(default = "\"DEFAULT-REDIS-CACHER\".into()")]
+    namespace: String,
+    #[builder(setter(into))]
     prefix: String,
     redis_conn: deadpool_redis::Pool,
     ttl: Duration,
 
     // Type phantom data
+    #[builder(setter(skip))]
     _key: PhantomData<K>,
+    #[builder(setter(skip))]
     _value: PhantomData<V>,
 }
 
@@ -21,23 +29,24 @@ where
     K: Display + ?Sized,
     V: Serialize + DeserializeOwned,
 {
-    #[allow(clippy::needless_pass_by_value)]
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
     where
-        P: ToString,
+        P: Into<String>,
     {
-        Self {
-            prefix: prefix.to_string(),
-            redis_conn,
-            ttl,
-            _key: PhantomData,
-            _value: PhantomData,
-        }
+        Self::builder()
+            .redis_conn(redis_conn)
+            .prefix(prefix)
+            .ttl(ttl)
+            .build()
+            .unwrap()
+    }
+
+    pub fn builder() -> CacherBuilder<K, V> {
+        CacherBuilder::default()
     }
 
     fn compute_key(&self, key: impl Display) -> String {
-        // TODO: Make namespace configurable
-        format!("DEFAULT-REDIS-CACHER:{}:{key}", self.prefix)
+        format!("{}:{}:{key}", self.namespace, self.prefix)
     }
 
     async fn get_connection(&self) -> RedisResult<Connection> {
@@ -100,6 +109,7 @@ where
 {
     fn clone(&self) -> Self {
         Self {
+            namespace: self.namespace.clone(),
             prefix: self.prefix.clone(),
             redis_conn: self.redis_conn.clone(),
             ttl: self.ttl,
