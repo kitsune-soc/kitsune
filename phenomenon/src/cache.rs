@@ -1,6 +1,6 @@
-use deadpool_redis::Connection;
+use crate::error::CacheError;
 use derive_builder::Builder;
-use redis::{AsyncCommands, ErrorKind, RedisError, RedisResult};
+use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
@@ -49,47 +49,25 @@ where
         format!("{}:{}:{key}", self.namespace, self.prefix)
     }
 
-    async fn get_connection(&self) -> RedisResult<Connection> {
-        self.redis_conn.get().await.map_err(|err| {
-            RedisError::from((
-                ErrorKind::IoError,
-                "Failed to obtain connection from pool",
-                err.to_string(),
-            ))
-        })
-    }
-
-    pub async fn delete(&self, key: &K) -> RedisResult<()> {
-        let mut conn = self.get_connection().await?;
+    pub async fn delete(&self, key: &K) -> Result<(), CacheError> {
+        let mut conn = self.redis_conn.get().await?;
         conn.del(self.compute_key(key)).await?;
         Ok(())
     }
 
-    pub async fn get(&self, key: &K) -> RedisResult<Option<V>> {
-        let mut conn = self.get_connection().await?;
+    pub async fn get(&self, key: &K) -> Result<Option<V>, CacheError> {
+        let mut conn = self.redis_conn.get().await?;
         if let Some(serialised) = conn.get::<_, Option<String>>(self.compute_key(key)).await? {
-            let deserialised = serde_json::from_str(&serialised).map_err(|err| {
-                RedisError::from((
-                    ErrorKind::IoError,
-                    "Failed to deserialise data",
-                    err.to_string(),
-                ))
-            })?;
+            let deserialised = serde_json::from_str(&serialised)?;
             Ok(Some(deserialised))
         } else {
             Ok(None)
         }
     }
 
-    pub async fn set(&self, key: &K, value: &V) -> RedisResult<()> {
-        let mut conn = self.get_connection().await?;
-        let serialised = serde_json::to_string(value).map_err(|err| {
-            RedisError::from((
-                ErrorKind::IoError,
-                "Failed to serialise data",
-                err.to_string(),
-            ))
-        })?;
+    pub async fn set(&self, key: &K, value: &V) -> Result<(), CacheError> {
+        let mut conn = self.redis_conn.get().await?;
+        let serialised = serde_json::to_string(value)?;
 
         #[allow(clippy::cast_possible_truncation)]
         conn.set_ex(
