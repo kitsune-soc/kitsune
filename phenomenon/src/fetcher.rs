@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use crate::{
     cache::Cacher,
     consts::USER_AGENT,
@@ -14,6 +12,7 @@ use reqwest::Client;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
 };
+use std::time::Duration;
 use url::Url;
 use uuid::Uuid;
 
