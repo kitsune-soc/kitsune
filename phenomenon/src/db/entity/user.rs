@@ -13,7 +13,7 @@ use uuid::Uuid;
 #[sea_orm(table_name = "users")]
 #[graphql(complex, name = "User")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     // TODO: Express relationship in trait form
     #[graphql(skip)]

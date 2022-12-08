@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[sea_orm(table_name = "posts")]
 #[graphql(complex, name = "Post")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     #[graphql(skip)]
     pub user_id: Uuid,

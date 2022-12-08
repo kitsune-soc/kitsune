@@ -49,6 +49,9 @@ url = "2.3.1"
 uuid = { version = "1.2.2", features = ["v4"] }
 zxcvbn = "2.2.1"
 
+[dev-dependencies]
+sea-orm = { version = "0.10.5", features = ["sqlx-sqlite"] }
+
 [features]
 default = ["mastodon-api"]
 mastodon-api = []

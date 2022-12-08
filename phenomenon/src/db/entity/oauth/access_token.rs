@@ -4,7 +4,7 @@ use sea_orm::prelude::*;
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
 #[sea_orm(table_name = "oauth2_access_tokens")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub token: String,
     pub user_id: Option<Uuid>,
     pub application_id: Option<Uuid>,
