@@ -15,8 +15,10 @@ pub struct Model {
     pub id: Uuid,
     #[graphql(skip)]
     pub user_id: Uuid,
+    #[sea_orm(nullable)]
     pub subject: Option<String>,
     pub content: String,
+    #[sea_orm(unique)]
     pub url: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

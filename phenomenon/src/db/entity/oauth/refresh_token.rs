@@ -6,6 +6,7 @@ use sea_orm::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub token: String,
+    #[sea_orm(unique)]
     pub access_token: String,
     pub application_id: Uuid,
     pub created_at: DateTime<Utc>,
