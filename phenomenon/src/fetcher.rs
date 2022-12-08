@@ -19,7 +19,7 @@ use uuid::Uuid;
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 
 #[derive(Clone)]
-pub struct Fetcher<PC, UC> {
+pub struct Fetcher<PC = RedisCache<str, post::Model>, UC = RedisCache<str, user::Model>> {
     client: Client,
     db_conn: DatabaseConnection,
 
@@ -28,7 +28,7 @@ pub struct Fetcher<PC, UC> {
     user_cache: UC,
 }
 
-impl Fetcher<RedisCache<str, post::Model>, RedisCache<str, user::Model>> {
+impl Fetcher {
     pub fn with_redis_cache(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
         Self::new(
             db_conn,

@@ -16,7 +16,7 @@ use sea_orm::DatabaseConnection;
 pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
-    pub fetcher: Fetcher<RedisCache<str, post::Model>, RedisCache<str, user::Model>>,
+    pub fetcher: Fetcher,
     pub redis_conn: deadpool_redis::Pool,
-    pub webfinger: Webfinger<RedisCache<str, String>>,
+    pub webfinger: Webfinger,
 }

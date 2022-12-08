@@ -24,9 +24,15 @@ pub struct Resource {
 }
 
 #[derive(Clone)]
-pub struct Webfinger<C> {
+pub struct Webfinger<C = RedisCache<str, String>> {
     cache: C,
     client: Client,
+}
+
+impl Webfinger {
+    pub fn with_redis_cache(redis_conn: deadpool_redis::Pool) -> Self {
+        Self::new(RedisCache::new(redis_conn, "webfinger", CACHE_DURATION))
+    }
 }
 
 impl<C> Webfinger<C>
@@ -65,12 +71,6 @@ where
         self.cache.set(&acct, &ap_id).await?;
 
         Ok(Some(ap_id))
-    }
-}
-
-impl Webfinger<RedisCache<str, String>> {
-    pub fn with_redis_cache(redis_conn: deadpool_redis::Pool) -> Self {
-        Self::new(RedisCache::new(redis_conn, "webfinger", CACHE_DURATION))
     }
 }
 
