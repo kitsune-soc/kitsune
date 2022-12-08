@@ -8,8 +8,9 @@ use sea_orm::DatabaseConnection;
 /// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub db_conn: DatabaseConnection,
     pub config: Configuration,
+    pub db_conn: DatabaseConnection,
     pub fetcher: Fetcher,
+    pub redis_conn: deadpool_redis::Pool,
     pub webfinger: Webfinger,
 }

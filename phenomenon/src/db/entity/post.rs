@@ -2,9 +2,12 @@ use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq, PartialOrd, SimpleObject)]
+#[derive(
+    Clone, Debug, DeriveEntityModel, Deserialize, Eq, PartialEq, PartialOrd, Serialize, SimpleObject,
+)]
 #[sea_orm(table_name = "posts")]
 #[graphql(complex, name = "Post")]
 pub struct Model {
