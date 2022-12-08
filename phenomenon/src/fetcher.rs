@@ -57,7 +57,6 @@ where
                 .build()
                 .unwrap(),
             db_conn,
-
             post_cache,
             user_cache,
         }

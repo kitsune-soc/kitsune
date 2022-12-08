@@ -1,10 +1,4 @@
-use crate::{
-    cache::RedisCache,
-    config::Configuration,
-    db::entity::{post, user},
-    fetcher::Fetcher,
-    webfinger::Webfinger,
-};
+use crate::{config::Configuration, fetcher::Fetcher, webfinger::Webfinger};
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
 

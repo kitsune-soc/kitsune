@@ -5,7 +5,7 @@ use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
-pub type CacheResult<T, E = CacheError> = Result<T, E>;
+type CacheResult<T, E = CacheError> = Result<T, E>;
 
 #[async_trait]
 pub trait Cache<K, V>
