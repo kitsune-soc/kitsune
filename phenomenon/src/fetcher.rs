@@ -1,5 +1,5 @@
 use crate::{
-    cache::Cacher,
+    cache::{Cache, RedisCache},
     consts::USER_AGENT,
     db::entity::{media_attachment, post, user},
     error::{Error, Result},
@@ -19,17 +19,31 @@ use uuid::Uuid;
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 
 #[derive(Clone)]
-pub struct Fetcher {
+pub struct Fetcher<PC, UC> {
     client: Client,
     db_conn: DatabaseConnection,
 
     // Caches
-    post_cache: Cacher<str, post::Model>,
-    user_cache: Cacher<str, user::Model>,
+    post_cache: PC,
+    user_cache: UC,
 }
 
-impl Fetcher {
-    pub fn new(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
+impl Fetcher<RedisCache<str, post::Model>, RedisCache<str, user::Model>> {
+    pub fn with_redis_cache(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
+        Self::new(
+            db_conn,
+            RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
+            RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION),
+        )
+    }
+}
+
+impl<PC, UC> Fetcher<PC, UC>
+where
+    PC: Cache<str, post::Model>,
+    UC: Cache<str, user::Model>,
+{
+    pub fn new(db_conn: DatabaseConnection, post_cache: PC, user_cache: UC) -> Self {
         let mut default_headers = HeaderMap::new();
         default_headers.insert(
             "Accept",
@@ -44,8 +58,8 @@ impl Fetcher {
                 .unwrap(),
             db_conn,
 
-            post_cache: Cacher::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
-            user_cache: Cacher::new(redis_conn, "fetcher-actor", CACHE_DURATION),
+            post_cache,
+            user_cache,
         }
     }
 

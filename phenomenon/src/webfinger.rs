@@ -1,4 +1,8 @@
-use crate::{cache::Cacher, consts::USER_AGENT, error::Result};
+use crate::{
+    cache::{Cache, RedisCache},
+    consts::USER_AGENT,
+    error::Result,
+};
 use http::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -20,18 +24,21 @@ pub struct Resource {
 }
 
 #[derive(Clone)]
-pub struct Webfinger {
-    cacher: Cacher<String, String>,
+pub struct Webfinger<C> {
+    cache: C,
     client: Client,
 }
 
-impl Webfinger {
-    pub fn new(redis_conn: deadpool_redis::Pool) -> Self {
+impl<C> Webfinger<C>
+where
+    C: Cache<str, String>,
+{
+    pub fn new(cache: C) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("Accept", HeaderValue::from_static("application/jrd+json"));
 
         Self {
-            cacher: Cacher::new(redis_conn, "webfinger", CACHE_DURATION),
+            cache,
             client: Client::builder()
                 .default_headers(headers)
                 .user_agent(USER_AGENT)
@@ -42,7 +49,7 @@ impl Webfinger {
 
     pub async fn fetch_actor_url(&self, username: &str, domain: &str) -> Result<Option<String>> {
         let acct = format!("acct:{username}@{domain}");
-        if let Some(ap_id) = self.cacher.get(&acct).await? {
+        if let Some(ap_id) = self.cache.get(&acct).await? {
             return Ok(Some(ap_id));
         }
 
@@ -55,15 +62,22 @@ impl Webfinger {
         else {
             return Ok(None);
         };
-        self.cacher.set(&acct, &ap_id).await?;
+        self.cache.set(&acct, &ap_id).await?;
 
         Ok(Some(ap_id))
+    }
+}
+
+impl Webfinger<RedisCache<str, String>> {
+    pub fn with_redis_cache(redis_conn: deadpool_redis::Pool) -> Self {
+        Self::new(RedisCache::new(redis_conn, "webfinger", CACHE_DURATION))
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::{Resource, Webfinger};
+    use crate::cache::NoopCache;
 
     const GARGRON_WEBFINGER_RESOURCE: &str = r#"
     {
@@ -108,7 +122,7 @@ mod test {
 
     #[tokio::test]
     async fn fetch_qarnax_ap_id() {
-        let webfinger = Webfinger::new();
+        let webfinger = Webfinger::new(NoopCache);
         let ap_id = webfinger
             .fetch_actor_url("qarnax", "corteximplant.com")
             .await

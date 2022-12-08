@@ -46,9 +46,9 @@ async fn main() {
     let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
-        fetcher: Fetcher::new(conn, redis_conn.clone()),
+        fetcher: Fetcher::with_redis_cache(conn, redis_conn.clone()),
         redis_conn: redis_conn.clone(),
-        webfinger: Webfinger::new(redis_conn),
+        webfinger: Webfinger::with_redis_cache(redis_conn),
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

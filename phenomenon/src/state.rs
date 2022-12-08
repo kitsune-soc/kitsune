@@ -1,4 +1,10 @@
-use crate::{config::Configuration, fetcher::Fetcher, webfinger::Webfinger};
+use crate::{
+    cache::RedisCache,
+    config::Configuration,
+    db::entity::{post, user},
+    fetcher::Fetcher,
+    webfinger::Webfinger,
+};
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
 
@@ -10,7 +16,7 @@ use sea_orm::DatabaseConnection;
 pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
-    pub fetcher: Fetcher,
+    pub fetcher: Fetcher<RedisCache<str, post::Model>, RedisCache<str, user::Model>>,
     pub redis_conn: deadpool_redis::Pool,
-    pub webfinger: Webfinger,
+    pub webfinger: Webfinger<RedisCache<str, String>>,
 }
