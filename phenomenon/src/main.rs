@@ -6,23 +6,23 @@
     forbidden_lint_groups
 )]
 
-use self::{config::Configuration, fetcher::Fetcher, state::Zustand, webfinger::Webfinger};
-use std::future;
-
 #[macro_use]
 extern crate tracing;
 
+use self::{activitypub::Fetcher, config::Configuration, state::Zustand, webfinger::Webfinger};
+use std::future;
+
+mod activitypub;
 mod blocking;
 mod cache;
 mod config;
 mod consts;
 mod db;
-mod deliverer;
 mod error;
-mod fetcher;
 mod http;
 mod job;
 mod mapping;
+mod sanitize;
 mod state;
 mod util;
 mod webfinger;

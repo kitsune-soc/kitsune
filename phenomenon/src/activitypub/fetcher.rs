@@ -1,9 +1,9 @@
 use crate::{
     cache::Cacher,
     consts::USER_AGENT,
-    db::entity::{media_attachment, post, user},
+    db::model::{media_attachment, post, user},
     error::{Error, Result},
-    util::CleanHtmlExt,
+    sanitize::CleanHtmlExt,
 };
 use chrono::Utc;
 use http::{HeaderMap, HeaderValue};

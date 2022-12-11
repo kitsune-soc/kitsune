@@ -1,7 +1,7 @@
 use self::{catch_panic::CatchPanic, deliver_activity::DeliveryContext};
 use crate::{
-    db::entity::job,
-    deliverer::Deliverer,
+    activitypub::Deliverer,
+    db::model::job,
     error::{Error, Result},
     state::Zustand,
 };

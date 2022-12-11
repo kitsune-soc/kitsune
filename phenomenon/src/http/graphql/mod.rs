@@ -1,6 +1,6 @@
 use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::AuthExtactor;
-use crate::{db::entity::user, state::Zustand};
+use crate::{db::model::user, state::Zustand};
 use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
 };

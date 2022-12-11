@@ -1,5 +1,5 @@
 use super::handle_upload;
-use crate::{db::entity::user, http::graphql::ContextExt, util::CleanHtmlExt};
+use crate::{db::model::user, http::graphql::ContextExt, sanitize::CleanHtmlExt};
 use async_graphql::{Context, Error, Object, Result, Upload};
 use sea_orm::{ActiveModelTrait, ActiveValue};
 

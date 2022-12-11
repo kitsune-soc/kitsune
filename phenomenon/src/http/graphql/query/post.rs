@@ -1,4 +1,4 @@
-use crate::{db::entity::post, http::graphql::ContextExt};
+use crate::{db::model::post, http::graphql::ContextExt};
 use async_graphql::{Context, Object, Result};
 use sea_orm::EntityTrait;
 use uuid::Uuid;

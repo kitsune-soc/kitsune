@@ -1,6 +1,6 @@
 use crate::{
     consts::USER_AGENT,
-    db::entity::user,
+    db::model::user,
     error::{Error, Result},
 };
 use http::Uri;

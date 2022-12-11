@@ -1,4 +1,4 @@
-use crate::{db::entity::user, error::Result, mapping::IntoMastodon, state::Zustand};
+use crate::{db::model::user, error::Result, mapping::IntoMastodon, state::Zustand};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
