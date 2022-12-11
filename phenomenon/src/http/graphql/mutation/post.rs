@@ -1,4 +1,4 @@
-use crate::{db::entity::post, http::graphql::ContextExt, util::CleanHtmlExt};
+use crate::{db::model::post, http::graphql::ContextExt, sanitize::CleanHtmlExt};
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use pulldown_cmark::{html, Options, Parser};

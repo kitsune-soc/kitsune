@@ -41,6 +41,7 @@ impl<K, V> RedisCache<K, V>
 where
     K: ?Sized,
 {
+    #[allow(clippy::missing_panics_doc)] // All invariants covered. Won't panic.
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
     where
         P: Into<String>,
@@ -53,6 +54,7 @@ where
             .unwrap()
     }
 
+    #[must_use]
     pub fn builder() -> RedisCacheBuilder<K, V> {
         RedisCacheBuilder::default()
     }

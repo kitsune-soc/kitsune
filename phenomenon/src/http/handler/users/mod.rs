@@ -1,4 +1,4 @@
-use crate::{db::entity::user, error::Result, mapping::IntoActivityPub, state::Zustand};
+use crate::{db::model::user, error::Result, mapping::IntoActivityPub, state::Zustand};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},

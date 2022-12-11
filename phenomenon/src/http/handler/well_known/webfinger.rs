@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::user,
+    db::model::user,
     error::Result,
     state::Zustand,
     webfinger::{Link, Resource},

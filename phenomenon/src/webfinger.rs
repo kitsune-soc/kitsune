@@ -30,6 +30,7 @@ pub struct Webfinger<C = RedisCache<str, String>> {
 }
 
 impl Webfinger {
+    #[must_use]
     pub fn with_redis_cache(redis_conn: deadpool_redis::Pool) -> Self {
         Self::new(RedisCache::new(redis_conn, "webfinger", CACHE_DURATION))
     }
@@ -39,6 +40,8 @@ impl<C> Webfinger<C>
 where
     C: Cache<str, String>,
 {
+    #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
+    #[must_use]
     pub fn new(cache: C) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("Accept", HeaderValue::from_static("application/jrd+json"));

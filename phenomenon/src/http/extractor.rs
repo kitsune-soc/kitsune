@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{oauth::access_token, user},
+    db::model::{oauth::access_token, user},
     error::Error,
     state::Zustand,
 };

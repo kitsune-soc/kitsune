@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{media_attachment, post, user},
+    db::model::{media_attachment, post, user},
     error::{Error, Result},
     state::Zustand,
 };

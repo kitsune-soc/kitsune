@@ -14,6 +14,7 @@ pub struct Model {
 
 impl Model {
     /// Time until the token is expired
+    #[must_use]
     pub fn ttl(&self) -> Duration {
         self.expired_at - self.created_at
     }

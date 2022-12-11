@@ -1,6 +1,6 @@
 use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::AuthExtactor;
-use crate::{db::entity::user, state::Zustand};
+use crate::{db::model::user, state::Zustand};
 use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
 };
@@ -57,6 +57,7 @@ async fn graphiql_route() -> Html<String> {
     Html(page_src)
 }
 
+#[must_use]
 pub fn routes(state: Zustand) -> Router<Zustand> {
     let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),
