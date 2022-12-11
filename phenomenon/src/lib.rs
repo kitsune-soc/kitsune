@@ -2,6 +2,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(
     clippy::doc_markdown,
+    clippy::missing_errors_doc,
     clippy::module_name_repetitions,
     forbidden_lint_groups
 )]

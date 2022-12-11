@@ -57,6 +57,7 @@ async fn graphiql_route() -> Html<String> {
     Html(page_src)
 }
 
+#[must_use]
 pub fn routes(state: Zustand) -> Router<Zustand> {
     let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),

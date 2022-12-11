@@ -29,6 +29,7 @@ where
     K: Display + ?Sized,
     V: Serialize + DeserializeOwned,
 {
+    #[allow(clippy::missing_panics_doc)] // All invariants covered. Won't panic.
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
     where
         P: Into<String>,
@@ -41,6 +42,7 @@ where
             .unwrap()
     }
 
+    #[must_use]
     pub fn builder() -> CacherBuilder<K, V> {
         CacherBuilder::default()
     }

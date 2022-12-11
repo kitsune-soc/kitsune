@@ -26,6 +26,8 @@ pub struct Webfinger {
 }
 
 impl Webfinger {
+    #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
+    #[must_use]
     pub fn new(redis_conn: deadpool_redis::Pool) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("Accept", HeaderValue::from_static("application/jrd+json"));

@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
 use tokio::sync::oneshot;
 
+#[allow(clippy::missing_panics_doc)] // Invariants covered. Won't panic.
 pub async fn cpu<F, O>(func: F) -> Result<O>
 where
     F: FnOnce() -> O + Send + 'static,

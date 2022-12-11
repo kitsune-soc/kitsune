@@ -72,7 +72,7 @@ async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
 #[instrument(skip(state))]
 pub async fn run(state: Zustand) {
     let mut interval = tokio::time::interval(PAUSE_BETWEEN_QUERIES);
-    let deliverer = Deliverer::new();
+    let deliverer = Deliverer::default();
 
     let mut found_job = false;
 
