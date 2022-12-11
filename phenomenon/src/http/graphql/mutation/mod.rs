@@ -1,5 +1,5 @@
 use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
-use crate::{db::entity::media_attachment, http::graphql::ContextExt};
+use crate::{db::model::media_attachment, http::graphql::ContextExt};
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use chrono::Utc;
 use mime::Mime;

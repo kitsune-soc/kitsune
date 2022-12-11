@@ -1,9 +1,9 @@
 use crate::{
     cache::Cacher,
     consts::USER_AGENT,
-    db::entity::{media_attachment, post, user},
+    db::model::{media_attachment, post, user},
     error::{Error, Result},
-    util::CleanHtmlExt,
+    sanitize::CleanHtmlExt,
 };
 use chrono::Utc;
 use http::{HeaderMap, HeaderValue};
@@ -29,6 +29,8 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
+    #[allow(clippy::missing_panics_doc)] // Invariants are covered. Won't panic.
+    #[must_use]
     pub fn new(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
         let mut default_headers = HeaderMap::new();
         default_headers.insert(
@@ -49,6 +51,11 @@ impl Fetcher {
         }
     }
 
+    /// Fetch an ActivityPub actor
+    ///
+    /// # Panics
+    ///
+    /// - Panics if the URL doesn't contain a host section
     pub async fn fetch_actor(&self, url: &str) -> Result<user::Model> {
         if let Some(user) = self.user_cache.get(url).await? {
             return Ok(user);

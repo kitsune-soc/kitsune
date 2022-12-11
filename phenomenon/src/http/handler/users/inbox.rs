@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{follow, post, user},
+    db::model::{follow, post, user},
     error::Result,
     http::extractor::SignedActivity,
     state::Zustand,

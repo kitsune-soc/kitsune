@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{oauth::application, user},
+    db::model::{oauth::application, user},
     http::graphql::ContextExt,
     util::generate_secret,
 };

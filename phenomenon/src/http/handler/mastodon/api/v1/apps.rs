@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::oauth::application, error::Result, http::extractor::FormOrJson,
+    db::model::oauth::application, error::Result, http::extractor::FormOrJson,
     util::generate_secret,
 };
 use axum::{extract::State, Json};

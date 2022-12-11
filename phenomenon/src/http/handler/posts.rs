@@ -1,4 +1,4 @@
-use crate::{db::entity::post, error::Result, mapping::IntoActivityPub, state::Zustand};
+use crate::{db::model::post, error::Result, mapping::IntoActivityPub, state::Zustand};
 use axum::{
     debug_handler,
     extract::Path,

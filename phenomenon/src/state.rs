@@ -1,4 +1,4 @@
-use crate::{config::Configuration, fetcher::Fetcher, webfinger::Webfinger};
+use crate::{activitypub::Fetcher, config::Configuration, webfinger::Webfinger};
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
 

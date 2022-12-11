@@ -1,6 +1,6 @@
 use crate::{
-    db::entity::{post, user},
-    deliverer::Deliverer,
+    activitypub::Deliverer,
+    db::model::{post, user},
     error::{Error, Result},
     mapping::IntoActivityPub,
     state::Zustand,
