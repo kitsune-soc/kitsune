@@ -1,31 +1,11 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    forbidden_lint_groups
-)]
 
-#[macro_use]
-extern crate tracing;
-
-use self::{activitypub::Fetcher, config::Configuration, state::Zustand, webfinger::Webfinger};
+use phenomenon::{
+    activitypub::Fetcher, config::Configuration, db, http, job, state::Zustand,
+    webfinger::Webfinger,
+};
 use std::future;
-
-mod activitypub;
-mod blocking;
-mod cache;
-mod config;
-mod consts;
-mod db;
-mod error;
-mod http;
-mod job;
-mod mapping;
-mod sanitize;
-mod state;
-mod util;
-mod webfinger;
 
 #[tokio::main]
 async fn main() {
