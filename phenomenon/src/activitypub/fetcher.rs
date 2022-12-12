@@ -177,3 +177,33 @@ where
         .map_err(Error::from)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{activitypub::Fetcher, cache::NoopCache};
+    use migration::{Migrator, MigratorTrait};
+    use sea_orm::Database;
+
+    #[tokio::test]
+    async fn fetch_actor() {
+        let db_conn = Database::connect("sqlite::memory:")
+            .await
+            .expect("Database connection");
+        Migrator::up(&db_conn, None)
+            .await
+            .expect("Database migration");
+        let fetcher = Fetcher::new(db_conn, NoopCache, NoopCache);
+
+        let user = fetcher
+            .fetch_actor("https://corteximplant.com/users/0x0")
+            .await
+            .expect("Fetch actor");
+
+        assert_eq!(user.username, "0x0");
+        assert_eq!(user.domain, Some("corteximplant.com".into()));
+        assert_eq!(user.email, None);
+        assert_eq!(user.url, "https://corteximplant.com/users/0x0");
+        assert_eq!(user.inbox_url, "https://corteximplant.com/users/0x0/inbox");
+        assert!(user.public_key.is_some());
+    }
+}
