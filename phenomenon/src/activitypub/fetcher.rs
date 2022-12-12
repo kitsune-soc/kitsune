@@ -180,18 +180,24 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{activitypub::Fetcher, cache::NoopCache};
+    use crate::{activitypub::Fetcher, cache::NoopCache, db::model::user};
     use migration::{Migrator, MigratorTrait};
-    use sea_orm::Database;
+    use sea_orm::{Database, DatabaseConnection, ModelTrait};
 
-    #[tokio::test]
-    async fn fetch_actor() {
+    async fn prepare_db() -> DatabaseConnection {
         let db_conn = Database::connect("sqlite::memory:")
             .await
             .expect("Database connection");
         Migrator::up(&db_conn, None)
             .await
             .expect("Database migration");
+
+        db_conn
+    }
+
+    #[tokio::test]
+    async fn fetch_actor() {
+        let db_conn = prepare_db().await;
         let fetcher = Fetcher::new(db_conn, NoopCache, NoopCache);
 
         let user = fetcher
@@ -205,5 +211,30 @@ mod test {
         assert_eq!(user.url, "https://corteximplant.com/users/0x0");
         assert_eq!(user.inbox_url, "https://corteximplant.com/users/0x0/inbox");
         assert!(user.public_key.is_some());
+    }
+
+    #[tokio::test]
+    async fn fetch_note() {
+        let db_conn = prepare_db().await;
+        let fetcher = Fetcher::new(db_conn.clone(), NoopCache, NoopCache);
+
+        let note = fetcher
+            .fetch_note("https://corteximplant.com/@0x0/109501674056556919")
+            .await
+            .expect("Fetch note");
+        assert_eq!(
+            note.url,
+            "https://corteximplant.com/users/0x0/statuses/109501674056556919"
+        );
+
+        let author = note
+            .find_related(user::Entity)
+            .one(&db_conn)
+            .await
+            .ok()
+            .flatten()
+            .expect("Get author");
+        assert_eq!(author.username, "0x0");
+        assert_eq!(author.url, "https://corteximplant.com/users/0x0");
     }
 }
