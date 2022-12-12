@@ -19,6 +19,7 @@
                         postgresql_15
                         redis
                         rust-bin.stable.latest.default
+                        sqlite
                         yarn
                     ];
                 };
