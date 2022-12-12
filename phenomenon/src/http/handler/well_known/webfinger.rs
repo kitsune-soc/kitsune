@@ -47,7 +47,7 @@ pub async fn get(
         aliases: vec![user.url.clone()],
         links: vec![Link {
             rel: "self".into(),
-            href: user.url,
+            href: Some(user.url),
         }],
     })
     .into_response())

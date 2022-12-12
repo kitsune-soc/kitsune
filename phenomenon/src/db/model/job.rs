@@ -7,7 +7,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
 #[sea_orm(table_name = "jobs")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub state: JobState,
     pub context: JsonValue,

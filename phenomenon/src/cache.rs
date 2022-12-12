@@ -1,12 +1,25 @@
 use crate::error::CacheError;
+use async_trait::async_trait;
 use derive_builder::Builder;
 use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
+type CacheResult<T, E = CacheError> = Result<T, E>;
+
+#[async_trait]
+pub trait Cache<K, V>
+where
+    K: ?Sized,
+{
+    async fn delete(&self, key: &K) -> CacheResult<()>;
+    async fn get(&self, key: &K) -> CacheResult<Option<V>>;
+    async fn set(&self, key: &K, value: &V) -> CacheResult<()>;
+}
+
 #[derive(Builder)]
 #[builder(pattern = "owned")]
-pub struct Cacher<K, V>
+pub struct RedisCache<K, V>
 where
     K: ?Sized,
 {
@@ -24,10 +37,9 @@ where
     _value: PhantomData<V>,
 }
 
-impl<K, V> Cacher<K, V>
+impl<K, V> RedisCache<K, V>
 where
-    K: Display + ?Sized,
-    V: Serialize + DeserializeOwned,
+    K: ?Sized,
 {
     #[allow(clippy::missing_panics_doc)] // All invariants covered. Won't panic.
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
@@ -43,16 +55,23 @@ where
     }
 
     #[must_use]
-    pub fn builder() -> CacherBuilder<K, V> {
-        CacherBuilder::default()
+    pub fn builder() -> RedisCacheBuilder<K, V> {
+        RedisCacheBuilder::default()
     }
 
     fn compute_key(&self, key: impl Display) -> String {
         format!("{}:{}:{key}", self.namespace, self.prefix)
     }
+}
 
+#[async_trait]
+impl<K, V> Cache<K, V> for RedisCache<K, V>
+where
+    K: Display + Send + Sync + ?Sized,
+    V: Serialize + DeserializeOwned + Send + Sync,
+{
     #[instrument(skip_all)]
-    pub async fn delete(&self, key: &K) -> Result<(), CacheError> {
+    async fn delete(&self, key: &K) -> CacheResult<()> {
         let mut conn = self.redis_conn.get().await?;
         let key = self.compute_key(key);
 
@@ -63,7 +82,7 @@ where
     }
 
     #[instrument(skip_all)]
-    pub async fn get(&self, key: &K) -> Result<Option<V>, CacheError> {
+    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
         let mut conn = self.redis_conn.get().await?;
         let key = self.compute_key(key);
 
@@ -77,7 +96,7 @@ where
     }
 
     #[instrument(skip_all)]
-    pub async fn set(&self, key: &K, value: &V) -> Result<(), CacheError> {
+    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
         let mut conn = self.redis_conn.get().await?;
         let key = self.compute_key(key);
         let serialised = serde_json::to_string(value)?;
@@ -91,7 +110,7 @@ where
     }
 }
 
-impl<K, V> Clone for Cacher<K, V>
+impl<K, V> Clone for RedisCache<K, V>
 where
     K: ?Sized,
 {
@@ -104,5 +123,26 @@ where
             _key: PhantomData,
             _value: PhantomData,
         }
+    }
+}
+
+pub struct NoopCache;
+
+#[async_trait]
+impl<K, V> Cache<K, V> for NoopCache
+where
+    K: Send + Sync + ?Sized,
+    V: Send + Sync,
+{
+    async fn delete(&self, _key: &K) -> CacheResult<()> {
+        Ok(())
+    }
+
+    async fn get(&self, _key: &K) -> CacheResult<Option<V>> {
+        Ok(None)
+    }
+
+    async fn set(&self, _key: &K, _value: &V) -> CacheResult<()> {
+        Ok(())
     }
 }

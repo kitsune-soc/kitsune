@@ -11,12 +11,14 @@ use uuid::Uuid;
 #[sea_orm(table_name = "posts")]
 #[graphql(complex, name = "Post")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     #[graphql(skip)]
     pub user_id: Uuid,
+    #[sea_orm(nullable)]
     pub subject: Option<String>,
     pub content: String,
+    #[sea_orm(unique)]
     pub url: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

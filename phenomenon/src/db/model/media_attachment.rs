@@ -6,7 +6,7 @@ use sea_orm::prelude::*;
 #[sea_orm(table_name = "media_attachments")]
 #[graphql(name = "MediaAttachment")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub content_type: String,
     pub url: String,
