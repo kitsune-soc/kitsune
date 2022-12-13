@@ -6,8 +6,8 @@ enum Jobs {
     Id,
     State,
     Context,
+    RunAt,
     FailCount,
-    LastFailedAt,
     CreatedAt,
     UpdatedAt,
 }
@@ -26,13 +26,16 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Jobs::State).big_unsigned().not_null())
                     .col(ColumnDef::new(Jobs::Context).json_binary().not_null())
                     .col(
+                        ColumnDef::new(Jobs::RunAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
                         ColumnDef::new(Jobs::FailCount)
                             .big_unsigned()
                             .not_null()
                             .default(0),
                     )
-                    .col(ColumnDef::new(Jobs::LastFailedAt).timestamp_with_time_zone())
-                    // TODO: Figure out triggers for created at and updated at
                     .col(
                         ColumnDef::new(Jobs::CreatedAt)
                             .timestamp_with_time_zone()

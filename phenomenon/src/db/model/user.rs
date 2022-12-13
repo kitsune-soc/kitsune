@@ -33,6 +33,8 @@ pub struct Model {
     #[sea_orm(indexed, unique)]
     pub url: String,
     #[graphql(skip)]
+    pub followers_url: String,
+    #[graphql(skip)]
     pub inbox_url: String,
     #[graphql(skip)]
     pub public_key: Option<String>,
@@ -94,6 +96,9 @@ impl Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::oauth::access_token::Entity")]
     OAuth2AccessToken,
+
+    #[sea_orm(has_many = "super::media_attachment::Entity")]
+    MediaAttachment,
 
     #[sea_orm(has_many = "super::post::Entity")]
     Post,

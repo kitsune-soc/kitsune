@@ -5,7 +5,10 @@ use sea_orm_migration::prelude::*;
 pub enum MediaAttachments {
     Table,
     Id,
+    UserId,
     ContentType,
+    Description,
+    Blurhash,
     Url,
     CreatedAt,
 }
@@ -21,16 +24,26 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(MediaAttachments::Table)
                     .col(ColumnDef::new(MediaAttachments::Id).uuid().primary_key())
+                    .col(ColumnDef::new(MediaAttachments::UserId).uuid().not_null())
                     .col(
                         ColumnDef::new(MediaAttachments::ContentType)
                             .text()
                             .not_null(),
                     )
+                    .col(ColumnDef::new(MediaAttachments::Description).text())
+                    .col(ColumnDef::new(MediaAttachments::Blurhash).text().not_null())
                     .col(ColumnDef::new(MediaAttachments::Url).text().not_null())
                     .col(
                         ColumnDef::new(MediaAttachments::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from_col(MediaAttachments::UserId)
+                            .to(Users::Table, Users::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )
@@ -46,7 +59,7 @@ impl MigrationTrait for Migration {
                             .from_col(Users::AvatarId)
                             .to_tbl(MediaAttachments::Table)
                             .to_col(MediaAttachments::Id)
-                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_delete(ForeignKeyAction::SetNull)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -63,7 +76,7 @@ impl MigrationTrait for Migration {
                             .from_col(Users::HeaderId)
                             .to_tbl(MediaAttachments::Table)
                             .to_col(MediaAttachments::Id)
-                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_delete(ForeignKeyAction::SetNull)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -72,7 +85,6 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // TODO: Create central ident enum with foreign key names
         manager
             .alter_table(
                 Table::alter()

@@ -1,15 +1,13 @@
-use crate::m20220101_000001_create_table::Users;
+use crate::m20220101_000001_create_table::{Posts, Users};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
-pub enum UsersFollowers {
+pub enum Favourites {
     Table,
     UserId,
-    FollowerId,
-    ApprovedAt,
+    PostId,
     Url,
     CreatedAt,
-    UpdatedAt,
 }
 
 #[derive(DeriveMigrationName)]
@@ -21,42 +19,37 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(UsersFollowers::Table)
-                    .col(ColumnDef::new(UsersFollowers::UserId).uuid().not_null())
-                    .col(ColumnDef::new(UsersFollowers::FollowerId).uuid().not_null())
-                    .col(ColumnDef::new(UsersFollowers::ApprovedAt).timestamp_with_time_zone())
+                    .if_not_exists()
+                    .table(Favourites::Table)
+                    .col(ColumnDef::new(Favourites::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Favourites::PostId).uuid().not_null())
                     .col(
-                        ColumnDef::new(UsersFollowers::Url)
+                        ColumnDef::new(Favourites::Url)
                             .text()
                             .not_null()
                             .unique_key(),
                     )
                     .col(
-                        ColumnDef::new(UsersFollowers::CreatedAt)
-                            .timestamp_with_time_zone()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(UsersFollowers::UpdatedAt)
+                        ColumnDef::new(Favourites::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .primary_key(
                         Index::create()
-                            .col(UsersFollowers::UserId)
-                            .col(UsersFollowers::FollowerId),
+                            .col(Favourites::UserId)
+                            .col(Favourites::PostId),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(UsersFollowers::UserId)
+                            .from_col(Favourites::UserId)
                             .to(Users::Table, Users::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(UsersFollowers::FollowerId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(Favourites::PostId)
+                            .to(Posts::Table, Posts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -67,7 +60,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(UsersFollowers::Table).to_owned())
+            .drop_table(Table::drop().table(Favourites::Table).to_owned())
             .await
     }
 }

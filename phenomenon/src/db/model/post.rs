@@ -1,9 +1,32 @@
 use crate::http::graphql::ContextExt;
-use async_graphql::{ComplexObject, Context, Result, SimpleObject};
+use async_graphql::{ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    Enum,
+    EnumIter,
+    DeriveActiveEnum,
+    Eq,
+    Ord,
+    PartialEq,
+    PartialOrd,
+    Serialize,
+)]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
+#[serde(rename_all = "camelCase")]
+pub enum Visibility {
+    Public = 0,
+    Unlisted = 1,
+    FollowerOnly = 2,
+    MentionOnly = 3,
+}
 
 #[derive(
     Clone, Debug, DeriveEntityModel, Deserialize, Eq, PartialEq, PartialOrd, Serialize, SimpleObject,
@@ -15,9 +38,11 @@ pub struct Model {
     pub id: Uuid,
     #[graphql(skip)]
     pub user_id: Uuid,
+    pub is_sensitive: bool,
     #[sea_orm(nullable)]
     pub subject: Option<String>,
     pub content: String,
+    pub visibility: Visibility,
     #[sea_orm(unique)]
     pub url: String,
     pub created_at: DateTime<Utc>,

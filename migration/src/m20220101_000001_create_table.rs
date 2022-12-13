@@ -1,12 +1,14 @@
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
-enum Posts {
+pub enum Posts {
     Table,
     Id,
     UserId,
+    IsSensitive,
     Subject,
     Content,
+    Visibility,
     Url,
     CreatedAt,
     UpdatedAt,
@@ -25,6 +27,7 @@ pub enum Users {
     Password,
     Domain,
     Url,
+    FollowersUrl,
     InboxUrl,
     PublicKey,
     PrivateKey,
@@ -51,10 +54,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Users::Password).text())
                     .col(ColumnDef::new(Users::Domain).text())
                     .col(ColumnDef::new(Users::Url).text().not_null().unique_key())
+                    .col(ColumnDef::new(Users::FollowersUrl).text().not_null())
                     .col(ColumnDef::new(Users::InboxUrl).text().not_null())
                     .col(ColumnDef::new(Users::PublicKey).text())
                     .col(ColumnDef::new(Users::PrivateKey).text())
-                    // TODO: Figure out triggers for created at and updated at
                     .col(
                         ColumnDef::new(Users::CreatedAt)
                             .timestamp_with_time_zone()
@@ -82,10 +85,11 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(Posts::Id).uuid().primary_key())
                     .col(ColumnDef::new(Posts::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Posts::IsSensitive).boolean().not_null())
                     .col(ColumnDef::new(Posts::Subject).text())
                     .col(ColumnDef::new(Posts::Content).text().not_null())
+                    .col(ColumnDef::new(Posts::Visibility).integer().not_null())
                     .col(ColumnDef::new(Posts::Url).text().not_null().unique_key())
-                    // TODO: Figure out triggers for created at and updated at
                     .col(
                         ColumnDef::new(Posts::CreatedAt)
                             .timestamp_with_time_zone()
