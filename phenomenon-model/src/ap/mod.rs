@@ -92,17 +92,17 @@ pub struct BaseObject {
     #[serde(rename = "@context")]
     pub context: Value,
     pub id: String,
-    pub attributed_to: Option<Box<StringOrObject<Actor>>>,
-    pub published_at: DateTime<Utc>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub attributed_to: Option<StringOrObject<Box<Actor>>>,
+    pub published: DateTime<Utc>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cc: Vec<String>,
 }
 
 impl BaseObject {
     pub fn attributed_to(&self) -> Option<&str> {
-        self.attributed_to.as_deref().map(|prop| {
+        self.attributed_to.as_ref().map(|prop| {
             match prop {
                 StringOrObject::Object(actor) => &actor.rest.id,
                 StringOrObject::String(id) => id,
@@ -118,7 +118,7 @@ impl Default for BaseObject {
             context: ap_context(),
             id: String::new(),
             attributed_to: None,
-            published_at: Utc::now(),
+            published: Utc::now(),
             to: Vec::new(),
             cc: Vec::new(),
         }

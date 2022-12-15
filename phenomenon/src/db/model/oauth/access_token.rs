@@ -1,15 +1,23 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use sea_orm::prelude::*;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
-#[sea_orm(table_name = "oauth2_authorization_codes")]
+#[sea_orm(table_name = "oauth2_access_tokens")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub code: String,
-    pub application_id: Uuid,
-    pub user_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub token: String,
+    pub user_id: Option<Uuid>,
+    pub application_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub expired_at: DateTime<Utc>,
+}
+
+impl Model {
+    /// Time until the token is expired
+    #[must_use]
+    pub fn ttl(&self) -> Duration {
+        self.expired_at - self.created_at
+    }
 }
 
 impl Related<super::application::Entity> for Entity {
@@ -32,6 +40,9 @@ pub enum Relation {
         to = "super::application::Column::Id"
     )]
     OAuth2Application,
+
+    #[sea_orm(has_one = "super::refresh_token::Entity")]
+    OAuth2RefreshToken,
 
     #[sea_orm(
         belongs_to = "super::super::user::Entity",

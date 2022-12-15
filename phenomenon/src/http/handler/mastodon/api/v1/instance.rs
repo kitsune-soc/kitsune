@@ -1,4 +1,4 @@
-use crate::{db::entity::user, error::Result, state::Zustand};
+use crate::{db::model::user, error::Result, state::Zustand};
 use axum::{extract::State, Json};
 use phenomenon_model::mastodon::{
     instance::{Stats, Urls},

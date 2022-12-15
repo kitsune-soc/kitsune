@@ -1,9 +1,7 @@
-use std::time::Duration;
-
 use self::{catch_panic::CatchPanic, deliver_activity::DeliveryContext};
 use crate::{
-    db::entity::job,
-    deliverer::Deliverer,
+    activitypub::Deliverer,
+    db::model::job,
     error::{Error, Result},
     state::Zustand,
 };
@@ -13,6 +11,7 @@ use sea_orm::{
     IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 mod catch_panic;
 mod deliver_activity;
@@ -73,7 +72,7 @@ async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
 #[instrument(skip(state))]
 pub async fn run(state: Zustand) {
     let mut interval = tokio::time::interval(PAUSE_BETWEEN_QUERIES);
-    let deliverer = Deliverer::new();
+    let deliverer = Deliverer::default();
 
     let mut found_job = false;
 

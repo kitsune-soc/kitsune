@@ -1,30 +1,11 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    forbidden_lint_groups
-)]
 
-use self::{config::Configuration, fetcher::Fetcher, state::Zustand, webfinger::Webfinger};
+use phenomenon::{
+    activitypub::Fetcher, config::Configuration, db, http, job, state::Zustand,
+    webfinger::Webfinger,
+};
 use std::future;
-
-#[macro_use]
-extern crate tracing;
-
-mod blocking;
-mod config;
-mod consts;
-mod db;
-mod deliverer;
-mod error;
-mod fetcher;
-mod http;
-mod job;
-mod mapping;
-mod state;
-mod util;
-mod webfinger;
 
 #[tokio::main]
 async fn main() {
@@ -36,11 +17,18 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
+    let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
+        .expect("Failed to build Redis pool manager");
+    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
+        .build()
+        .expect("Failed to build Redis pool");
+
     let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
-        fetcher: Fetcher::new(conn),
-        webfinger: Webfinger::new(),
+        fetcher: Fetcher::with_redis_cache(conn, redis_conn.clone()),
+        redis_conn: redis_conn.clone(),
+        webfinger: Webfinger::with_redis_cache(redis_conn),
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

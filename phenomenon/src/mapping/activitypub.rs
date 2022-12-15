@@ -1,5 +1,5 @@
 use crate::{
-    db::entity::{media_attachment, post, user},
+    db::model::{media_attachment, post, user},
     error::{Error, Result},
     state::Zustand,
 };
@@ -57,8 +57,8 @@ impl IntoActivityPub for post::Model {
             content: self.content,
             rest: BaseObject {
                 id: self.url,
-                attributed_to: Some(StringOrObject::String(user.url).into()),
-                published_at: self.created_at,
+                attributed_to: Some(StringOrObject::String(user.url)),
+                published: self.created_at,
                 ..BaseObject::default()
             },
         }))

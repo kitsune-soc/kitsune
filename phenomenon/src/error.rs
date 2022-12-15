@@ -1,6 +1,8 @@
 use argon2::password_hash;
 use axum::response::{IntoResponse, Response};
+use deadpool_redis::PoolError;
 use http::StatusCode;
+use redis::RedisError;
 use rsa::{pkcs1, pkcs8};
 use sea_orm::TransactionError;
 use thiserror::Error;
@@ -9,10 +11,25 @@ use tokio::sync::oneshot;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
+pub enum CacheError {
+    #[error(transparent)]
+    Pool(#[from] PoolError),
+
+    #[error(transparent)]
+    Redis(#[from] RedisError),
+
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+}
+
+#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
     #[error("Broken database record encountered")]
     BrokenRecord,
+
+    #[error(transparent)]
+    Cache(#[from] CacheError),
 
     #[error(transparent)]
     Database(#[from] sea_orm::DbErr),

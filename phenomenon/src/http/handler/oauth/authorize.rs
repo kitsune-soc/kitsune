@@ -1,6 +1,6 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
-    db::entity::{
+    db::model::{
         oauth::{application, authorization_code},
         user,
     },

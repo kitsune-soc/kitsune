@@ -1,6 +1,6 @@
 use crate::{
     consts::USER_AGENT,
-    db::entity::user,
+    db::model::user,
     error::{Error, Result},
 };
 use http::Uri;
@@ -19,12 +19,11 @@ pub struct Deliverer {
 }
 
 impl Deliverer {
-    pub fn new() -> Self {
-        Self {
-            client: Client::builder().user_agent(USER_AGENT).build().unwrap(),
-        }
-    }
-
+    /// Deliver the activity to an inbox
+    ///
+    /// # Panics
+    ///
+    /// - Panics in case the inbox URL isn't actually a valid URL
     pub async fn deliver(
         &self,
         inbox_url: &str,
@@ -74,5 +73,13 @@ impl Deliverer {
         }
 
         Ok(())
+    }
+}
+
+impl Default for Deliverer {
+    fn default() -> Self {
+        Self {
+            client: Client::builder().user_agent(USER_AGENT).build().unwrap(),
+        }
     }
 }
