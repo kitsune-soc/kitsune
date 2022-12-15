@@ -3,7 +3,9 @@
     <!-- ADD BACKGROUND IMAGE AS A <img> ELEMENT -->
     <div class="main-container">
       <div class="main-intro">
-        <h2 v-if="result" class="main-intro-header">{{ result.instance.domain }}</h2>
+        <h2 v-if="result" class="main-intro-header">
+          {{ result.instance.domain }}
+        </h2>
         <p class="main-intro-description">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
@@ -80,7 +82,7 @@
   import { useMutation, useQuery } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
-  import Footer from '../components/Footer.vue'
+  import Footer from '../components/Footer.vue';
 
   const { result } = useQuery(gql`
     query getInstanceInfo {
