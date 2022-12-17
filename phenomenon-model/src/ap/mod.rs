@@ -93,6 +93,8 @@ pub struct BaseObject {
     pub context: Value,
     pub id: String,
     pub attributed_to: Option<StringOrObject<Box<Actor>>>,
+    #[serde(default)]
+    pub sensitive: bool,
     pub published: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,
@@ -118,6 +120,7 @@ impl Default for BaseObject {
             context: ap_context(),
             id: String::new(),
             attributed_to: None,
+            sensitive: false,
             published: Utc::now(),
             to: Vec::new(),
             cc: Vec::new(),

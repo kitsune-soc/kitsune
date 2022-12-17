@@ -22,6 +22,7 @@ const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::A
 // TODO: Refactor this
 async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<media_attachment::Model> {
     let state = ctx.state();
+    let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;
     let content_type = value
         .content_type
@@ -62,6 +63,7 @@ async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<media_attachme
 
     Ok(media_attachment::Model {
         id: Uuid::new_v4(),
+        account_id: user_data.account.id,
         content_type: content_type.to_string(),
         url,
         created_at: Utc::now(),

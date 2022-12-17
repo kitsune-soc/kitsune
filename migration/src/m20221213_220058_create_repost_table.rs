@@ -1,10 +1,10 @@
-use crate::m20220101_000001_create_table::{Posts, Users};
+use crate::m20220101_000001_create_table::{Accounts, Posts};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 pub enum Reposts {
     Table,
-    UserId,
+    AccountId,
     PostId,
     Url,
     CreatedAt,
@@ -21,7 +21,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .if_not_exists()
                     .table(Reposts::Table)
-                    .col(ColumnDef::new(Reposts::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Reposts::AccountId).uuid().not_null())
                     .col(ColumnDef::new(Reposts::PostId).uuid().not_null())
                     .col(ColumnDef::new(Reposts::Url).text().not_null().unique_key())
                     .col(
@@ -29,11 +29,11 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
-                    .primary_key(Index::create().col(Reposts::UserId).col(Reposts::PostId))
+                    .primary_key(Index::create().col(Reposts::AccountId).col(Reposts::PostId))
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(Reposts::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(Reposts::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )

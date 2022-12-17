@@ -37,7 +37,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     #[graphql(skip)]
-    pub user_id: Uuid,
+    pub account_id: Uuid,
     pub is_sensitive: bool,
     #[sea_orm(nullable)]
     pub subject: Option<String>,
@@ -51,8 +51,8 @@ pub struct Model {
 
 #[ComplexObject]
 impl Model {
-    pub async fn user(&self, ctx: &Context<'_>) -> Result<super::user::Model> {
-        Ok(super::user::Entity::find_by_id(self.user_id)
+    pub async fn account(&self, ctx: &Context<'_>) -> Result<super::account::Model> {
+        Ok(super::account::Entity::find_by_id(self.account_id)
             .one(&ctx.state().db_conn)
             .await?
             .expect("[Bug] Post without associated user encountered"))
@@ -62,16 +62,16 @@ impl Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::user::Entity",
-        from = "Column::UserId",
-        to = "super::user::Column::Id"
+        belongs_to = "super::account::Entity",
+        from = "Column::AccountId",
+        to = "super::account::Column::Id"
     )]
-    User,
+    Account,
 }
 
-impl Related<super::user::Entity> for Entity {
+impl Related<super::account::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::User.def()
+        Relation::Account.def()
     }
 }
 

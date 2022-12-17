@@ -1,10 +1,10 @@
-use crate::m20220101_000001_create_table::Users;
+use crate::m20220101_000001_create_table::Accounts;
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
-pub enum UsersFollowers {
+pub enum AccountsFollowers {
     Table,
-    UserId,
+    AccountId,
     FollowerId,
     ApprovedAt,
     Url,
@@ -21,42 +21,50 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(UsersFollowers::Table)
-                    .col(ColumnDef::new(UsersFollowers::UserId).uuid().not_null())
-                    .col(ColumnDef::new(UsersFollowers::FollowerId).uuid().not_null())
-                    .col(ColumnDef::new(UsersFollowers::ApprovedAt).timestamp_with_time_zone())
+                    .table(AccountsFollowers::Table)
                     .col(
-                        ColumnDef::new(UsersFollowers::Url)
+                        ColumnDef::new(AccountsFollowers::AccountId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(AccountsFollowers::FollowerId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(AccountsFollowers::ApprovedAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(AccountsFollowers::Url)
                             .text()
                             .not_null()
                             .unique_key(),
                     )
                     .col(
-                        ColumnDef::new(UsersFollowers::CreatedAt)
+                        ColumnDef::new(AccountsFollowers::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(UsersFollowers::UpdatedAt)
+                        ColumnDef::new(AccountsFollowers::UpdatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .primary_key(
                         Index::create()
-                            .col(UsersFollowers::UserId)
-                            .col(UsersFollowers::FollowerId),
+                            .col(AccountsFollowers::AccountId)
+                            .col(AccountsFollowers::FollowerId),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(UsersFollowers::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(AccountsFollowers::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(UsersFollowers::FollowerId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(AccountsFollowers::FollowerId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -67,7 +75,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(UsersFollowers::Table).to_owned())
+            .drop_table(Table::drop().table(AccountsFollowers::Table).to_owned())
             .await
     }
 }

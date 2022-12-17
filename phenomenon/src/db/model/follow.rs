@@ -2,10 +2,10 @@ use chrono::{DateTime, Utc};
 use sea_orm::prelude::*;
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]
-#[sea_orm(table_name = "users_followers")]
+#[sea_orm(table_name = "accounts_followers")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub user_id: Uuid,
+    pub account_id: Uuid,
     #[sea_orm(primary_key, auto_increment = false)]
     pub follower_id: Uuid,
     pub approved_at: Option<DateTime<Utc>>,

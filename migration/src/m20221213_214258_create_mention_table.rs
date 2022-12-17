@@ -1,11 +1,11 @@
-use crate::m20220101_000001_create_table::{Posts, Users};
+use crate::m20220101_000001_create_table::{Accounts, Posts};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 pub enum PostsMentions {
     Table,
     PostId,
-    UserId,
+    AccountId,
 }
 
 #[derive(DeriveMigrationName)]
@@ -20,11 +20,11 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .table(PostsMentions::Table)
                     .col(ColumnDef::new(PostsMentions::PostId).uuid().not_null())
-                    .col(ColumnDef::new(PostsMentions::UserId).uuid().not_null())
+                    .col(ColumnDef::new(PostsMentions::AccountId).uuid().not_null())
                     .primary_key(
                         Index::create()
                             .col(PostsMentions::PostId)
-                            .col(PostsMentions::UserId),
+                            .col(PostsMentions::AccountId),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -35,8 +35,8 @@ impl MigrationTrait for Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(PostsMentions::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(PostsMentions::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )

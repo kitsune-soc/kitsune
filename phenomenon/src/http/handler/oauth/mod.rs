@@ -3,8 +3,6 @@
 //!
 //! Implemented (somewhat) in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
 //!
-//! TODO: Implement client credentials grant
-//!
 
 use crate::state::Zustand;
 use axum::{

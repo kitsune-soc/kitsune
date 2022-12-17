@@ -1,10 +1,10 @@
-use crate::m20220101_000001_create_table::{Posts, Users};
+use crate::m20220101_000001_create_table::{Accounts, Posts};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 pub enum Favourites {
     Table,
-    UserId,
+    AccountId,
     PostId,
     Url,
     CreatedAt,
@@ -21,7 +21,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .if_not_exists()
                     .table(Favourites::Table)
-                    .col(ColumnDef::new(Favourites::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Favourites::AccountId).uuid().not_null())
                     .col(ColumnDef::new(Favourites::PostId).uuid().not_null())
                     .col(
                         ColumnDef::new(Favourites::Url)
@@ -36,13 +36,13 @@ impl MigrationTrait for Migration {
                     )
                     .primary_key(
                         Index::create()
-                            .col(Favourites::UserId)
+                            .col(Favourites::AccountId)
                             .col(Favourites::PostId),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(Favourites::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(Favourites::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )

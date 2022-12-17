@@ -1,5 +1,5 @@
 use crate::{
-    db::model::{media_attachment, post, user},
+    db::model::{account, media_attachment, post},
     error::{Error, Result},
     state::Zustand,
 };
@@ -10,7 +10,6 @@ use phenomenon_model::ap::{
     object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
     BaseObject, Object,
 };
-use rsa::{pkcs1::EncodeRsaPublicKey, pkcs8::LineEnding};
 use sea_orm::EntityTrait;
 use std::str::FromStr;
 
@@ -36,7 +35,9 @@ impl IntoActivityPub for media_attachment::Model {
 
         Ok(MediaAttachment {
             r#type,
+            name: self.description,
             media_type: self.content_type,
+            blurhash: self.blurhash,
             url: self.url,
         })
     }
@@ -47,7 +48,7 @@ impl IntoActivityPub for post::Model {
     type Output = Object;
 
     async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output> {
-        let user = user::Entity::find_by_id(self.user_id)
+        let user = account::Entity::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] No user associated with post");
@@ -66,15 +67,10 @@ impl IntoActivityPub for post::Model {
 }
 
 #[async_trait]
-impl IntoActivityPub for user::Model {
+impl IntoActivityPub for account::Model {
     type Output = Object;
 
     async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output> {
-        let public_key = self
-            .public_key()?
-            .ok_or(Error::BrokenRecord)?
-            .to_pkcs1_pem(LineEnding::LF)?;
-
         let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
             let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
@@ -109,7 +105,7 @@ impl IntoActivityPub for user::Model {
             public_key: PublicKey {
                 id: public_key_id,
                 owner: self.url,
-                public_key_pem: public_key,
+                public_key_pem: self.public_key,
             },
             ..Actor::default()
         }))

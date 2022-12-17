@@ -1,5 +1,5 @@
 use crate::{
-    db::model::{follow, post, user},
+    db::model::{account, follow, post},
     error::Result,
     http::extractor::SignedActivity,
     state::Zustand,
@@ -13,8 +13,8 @@ use sea_orm::{
 use uuid::Uuid;
 
 async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let user = user::Entity::find()
-        .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
+    let account = account::Entity::find()
+        .filter(account::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?
         .unwrap();
@@ -23,9 +23,10 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
         Some(Object::Note(note)) => {
             post::Model {
                 id: Uuid::new_v4(),
-                user_id: user.id,
+                account_id: account.id,
                 subject: note.subject,
                 content: note.content,
+                is_sensitive: note.rest.sensitive,
                 url: note.rest.id,
                 created_at: note.rest.published,
                 updated_at: Utc::now(),
@@ -43,15 +44,15 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
 }
 
 async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let user = user::Entity::find()
-        .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
+    let account = account::Entity::find()
+        .filter(account::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?
         .unwrap();
 
     if let Some(url) = activity.object.into_string() {
         post::Entity::delete(post::ActiveModel {
-            user_id: ActiveValue::Set(user.id),
+            account_id: ActiveValue::Set(account.id),
             url: ActiveValue::Set(url),
             ..Default::default()
         })
@@ -63,8 +64,8 @@ async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
 }
 
 async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let user = user::Entity::find()
-        .filter(user::Column::Url.eq(activity.rest.attributed_to().unwrap()))
+    let account = account::Entity::find()
+        .filter(account::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?
         .unwrap();
@@ -73,9 +74,10 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
         let followed_user = state.fetcher.fetch_actor(&url).await?;
 
         follow::Model {
-            user_id: followed_user.id,
-            follower_id: user.id,
+            account_id: followed_user.id,
+            follower_id: account.id,
             approved_at: None,
+            url: activity.rest.id,
             created_at: activity.rest.published,
             updated_at: Utc::now(),
         }

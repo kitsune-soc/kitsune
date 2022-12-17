@@ -1,11 +1,11 @@
-use crate::m20220101_000001_create_table::Users;
+use crate::m20220101_000001_create_table::Accounts;
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 pub enum MediaAttachments {
     Table,
     Id,
-    UserId,
+    AccountId,
     ContentType,
     Description,
     Blurhash,
@@ -24,14 +24,18 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(MediaAttachments::Table)
                     .col(ColumnDef::new(MediaAttachments::Id).uuid().primary_key())
-                    .col(ColumnDef::new(MediaAttachments::UserId).uuid().not_null())
+                    .col(
+                        ColumnDef::new(MediaAttachments::AccountId)
+                            .uuid()
+                            .not_null(),
+                    )
                     .col(
                         ColumnDef::new(MediaAttachments::ContentType)
                             .text()
                             .not_null(),
                     )
                     .col(ColumnDef::new(MediaAttachments::Description).text())
-                    .col(ColumnDef::new(MediaAttachments::Blurhash).text().not_null())
+                    .col(ColumnDef::new(MediaAttachments::Blurhash).text())
                     .col(ColumnDef::new(MediaAttachments::Url).text().not_null())
                     .col(
                         ColumnDef::new(MediaAttachments::CreatedAt)
@@ -40,8 +44,8 @@ impl MigrationTrait for Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(MediaAttachments::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from_col(MediaAttachments::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -52,11 +56,11 @@ impl MigrationTrait for Migration {
         manager
             .alter_table(
                 Table::alter()
-                    .table(Users::Table)
-                    .add_column_if_not_exists(ColumnDef::new(Users::AvatarId).uuid())
+                    .table(Accounts::Table)
+                    .add_column_if_not_exists(ColumnDef::new(Accounts::AvatarId).uuid())
                     .add_foreign_key(
                         TableForeignKey::new()
-                            .from_col(Users::AvatarId)
+                            .from_col(Accounts::AvatarId)
                             .to_tbl(MediaAttachments::Table)
                             .to_col(MediaAttachments::Id)
                             .on_delete(ForeignKeyAction::SetNull)
@@ -69,11 +73,11 @@ impl MigrationTrait for Migration {
         manager
             .alter_table(
                 Table::alter()
-                    .table(Users::Table)
-                    .add_column_if_not_exists(ColumnDef::new(Users::HeaderId).uuid())
+                    .table(Accounts::Table)
+                    .add_column_if_not_exists(ColumnDef::new(Accounts::HeaderId).uuid())
                     .add_foreign_key(
                         TableForeignKey::new()
-                            .from_col(Users::HeaderId)
+                            .from_col(Accounts::HeaderId)
                             .to_tbl(MediaAttachments::Table)
                             .to_col(MediaAttachments::Id)
                             .on_delete(ForeignKeyAction::SetNull)
@@ -88,9 +92,9 @@ impl MigrationTrait for Migration {
         manager
             .alter_table(
                 Table::alter()
-                    .table(Users::Table)
-                    .drop_column(Users::AvatarId)
-                    .drop_column(Users::HeaderId)
+                    .table(Accounts::Table)
+                    .drop_column(Accounts::AvatarId)
+                    .drop_column(Accounts::HeaderId)
                     .to_owned(),
             )
             .await?;

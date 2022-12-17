@@ -5,7 +5,7 @@ use sea_orm::prelude::*;
 #[sea_orm(table_name = "favourites")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub user_id: Uuid,
+    pub account_id: Uuid,
     #[sea_orm(primary_key, auto_increment = false)]
     pub post_id: Uuid,
     pub url: String,

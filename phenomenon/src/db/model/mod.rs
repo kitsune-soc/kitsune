@@ -1,3 +1,4 @@
+pub mod account;
 pub mod favourite;
 pub mod follow;
 pub mod job;

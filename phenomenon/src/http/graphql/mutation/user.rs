@@ -1,5 +1,5 @@
 use super::handle_upload;
-use crate::{db::model::user, http::graphql::ContextExt, sanitize::CleanHtmlExt};
+use crate::{db::model::account, http::graphql::ContextExt, sanitize::CleanHtmlExt};
 use async_graphql::{Context, Error, Object, Result, Upload};
 use sea_orm::{ActiveModelTrait, ActiveValue};
 
@@ -15,11 +15,11 @@ impl UserMutation {
         note: Option<String>,
         avatar: Option<Upload>,
         header: Option<Upload>,
-    ) -> Result<user::Model> {
+    ) -> Result<account::Model> {
         let state = ctx.state();
-        let user = ctx.user()?;
-        let mut active_user = user::ActiveModel {
-            id: ActiveValue::Set(user.id),
+        let user = ctx.user_data()?;
+        let mut active_user = account::ActiveModel {
+            id: ActiveValue::Set(user.account.id),
             ..Default::default()
         };
 

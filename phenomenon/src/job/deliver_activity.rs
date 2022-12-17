@@ -1,13 +1,12 @@
 use crate::{
     activitypub::Deliverer,
-    db::model::{post, user},
+    db::model::{account, post, user},
     error::{Error, Result},
-    mapping::IntoActivityPub,
     state::Zustand,
 };
 use futures_util::{stream, StreamExt};
 use phenomenon_model::ap::{Activity, PUBLIC_IDENTIFIER};
-use sea_orm::EntityTrait;
+use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,13 +19,18 @@ pub struct DeliveryContext {
 
 #[instrument(skip_all, fields(post_id = %ctx.post_id))]
 pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -> Result<()> {
-    let Some((post, Some(author))) = post::Entity::find_by_id(ctx.post_id)
-        .find_also_related(user::Entity)
+    let Some((post, Some(account))) = post::Entity::find_by_id(ctx.post_id)
+        .find_also_related(account::Entity)
         .one(&state.db_conn)
         .await?
     else {
         return Ok(());
     };
+    let user = account
+        .find_related(user::Entity)
+        .one(&state.db_conn)
+        .await?
+        .expect("[Bug] Trying to deliver activity for account with no associated user");
 
     // TODO: Resolve follower collection
     // TODO: Actually fill this activity with meaningful data
@@ -40,11 +44,15 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -
         .chain(activity.rest.cc.iter().cloned())
         .filter(|url| *url != PUBLIC_IDENTIFIER)
         .map(|ap_id| {
-            let author = &author;
+            let account = &account;
+            let user = &user;
             let activity = &activity;
+
             async move {
-                let user = state.fetcher.fetch_actor(&ap_id).await?;
-                deliverer.deliver(&user.inbox_url, author, activity).await?;
+                let account = state.fetcher.fetch_actor(&ap_id).await?;
+                deliverer
+                    .deliver(&account.inbox_url, &account, user, activity)
+                    .await?;
 
                 Ok::<_, Error>(())
             }

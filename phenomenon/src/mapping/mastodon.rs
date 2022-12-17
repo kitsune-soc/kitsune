@@ -1,5 +1,5 @@
 use crate::{
-    db::model::{media_attachment, post, user},
+    db::model::{account, media_attachment, post},
     error::Result,
     state::Zustand,
 };
@@ -15,12 +15,12 @@ pub trait IntoMastodon {
 }
 
 #[async_trait]
-impl IntoMastodon for user::Model {
+impl IntoMastodon for account::Model {
     type Output = Account;
 
     async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
         let statuses_count = post::Entity::find()
-            .filter(post::Column::UserId.eq(self.id))
+            .filter(post::Column::AccountId.eq(self.id))
             .count(&state.db_conn)
             .await?;
         let mut acct = self.username.clone();
