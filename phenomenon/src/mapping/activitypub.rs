@@ -1,17 +1,26 @@
 use crate::{
-    db::model::{account, media_attachment, post},
+    db::model::{
+        account, media_attachment, mention,
+        post::{self, Visibility},
+    },
     error::{Error, Result},
     state::Zustand,
 };
 use async_trait::async_trait;
 use mime::Mime;
 use phenomenon_type::ap::{
+    ap_context,
     helper::StringOrObject,
     object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
-    BaseObject, Object,
+    BaseObject, Object, PUBLIC_IDENTIFIER,
 };
-use sea_orm::EntityTrait;
+use sea_orm::{prelude::*, QuerySelect};
 use std::str::FromStr;
+
+#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
+enum UrlQuery {
+    Url,
+}
 
 #[async_trait]
 pub trait IntoActivityPub {
@@ -53,14 +62,39 @@ impl IntoActivityPub for post::Model {
             .await?
             .expect("[Bug] No user associated with post");
 
+        let mut mentioned: Vec<String> = self
+            .find_linked(mention::MentionedAccounts)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<_, UrlQuery>()
+            .all(&state.db_conn)
+            .await?;
+
+        let (mut to, cc) = match self.visibility {
+            Visibility::Public => (
+                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url],
+                vec![],
+            ),
+            Visibility::Unlisted => (
+                vec![account.followers_url],
+                vec![PUBLIC_IDENTIFIER.to_string()],
+            ),
+            Visibility::FollowerOnly => (vec![account.followers_url], vec![]),
+            Visibility::MentionOnly => (vec![], vec![]),
+        };
+        to.append(&mut mentioned);
+
         Ok(Object::Note(Note {
             subject: self.subject,
             content: self.content,
             rest: BaseObject {
+                context: ap_context(),
                 id: self.url,
                 attributed_to: Some(StringOrObject::String(account.url)),
+                sensitive: self.is_sensitive,
                 published: self.created_at,
-                ..BaseObject::default()
+                to,
+                cc,
             },
         }))
     }
@@ -91,23 +125,31 @@ impl IntoActivityPub for account::Model {
             None
         };
 
+        // TODO: Save these into the database
+        let outbox_url = format!("{}/outbox", self.url);
+        let following_url = format!("{}/following", self.url);
+
         Ok(Object::Person(Actor {
             name: self.display_name,
             subject: self.note,
             icon,
             image,
             preferred_username: self.username,
+            manually_approves_followers: self.locked,
             inbox: self.inbox_url,
+            outbox: outbox_url,
+            followers: self.followers_url,
+            following: following_url,
             rest: BaseObject {
                 id: self.url.clone(),
-                ..BaseObject::default()
+                published: self.created_at,
+                ..Default::default()
             },
             public_key: PublicKey {
                 id: public_key_id,
                 owner: self.url,
                 public_key_pem: self.public_key,
             },
-            ..Actor::default()
         }))
     }
 }

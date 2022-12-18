@@ -6,6 +6,7 @@ use phenomenon::{
     webfinger::Webfinger,
 };
 use std::future;
+use tokio::task::LocalSet;
 
 #[tokio::main]
 async fn main() {
@@ -33,8 +34,9 @@ async fn main() {
 
     tokio::spawn(self::http::run(state.clone(), config.port));
 
+    let local_set = LocalSet::new();
     for _ in 0..config.job_workers.get() {
-        tokio::spawn(self::job::run(state.clone()));
+        local_set.spawn_local(self::job::run(state.clone()));
     }
 
     future::pending::<()>().await;
