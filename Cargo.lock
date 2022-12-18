@@ -1036,6 +1036,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fancy-regex"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0678ab2d46fa5195aaf59ad034c083d351377d4af57f3e073c074d0da3e3c766"
+dependencies = [
+ "bit-set",
+ "regex",
+]
+
+[[package]]
 name = "fast_chemail"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2073,6 +2083,7 @@ dependencies = [
  "derive_builder 0.12.0",
  "dotenvy",
  "envy",
+ "fancy-regex 0.10.0",
  "futures-util",
  "headers",
  "hex",
@@ -2089,7 +2100,6 @@ dependencies = [
  "rand",
  "rayon",
  "redis",
- "regex",
  "reqwest",
  "rsa",
  "sea-orm",
@@ -4004,7 +4014,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "568becce91e872373a4b33f24ddc67e5280ae2536ccb8c9d22a25d398b72c8b0"
 dependencies = [
  "derive_builder 0.11.2",
- "fancy-regex",
+ "fancy-regex 0.8.0",
  "itertools",
  "js-sys",
  "lazy_static",
