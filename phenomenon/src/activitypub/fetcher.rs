@@ -1,7 +1,10 @@
 use crate::{
     cache::{Cache, RedisCache},
     consts::USER_AGENT,
-    db::model::{account, media_attachment, post},
+    db::model::{
+        account, media_attachment,
+        post::{self, Visibility},
+    },
     error::{Error, Result},
     sanitize::CleanHtmlExt,
 };
@@ -176,6 +179,7 @@ where
         let user = self
             .fetch_actor(note.rest.attributed_to().ok_or(Error::MalformedApObject)?)
             .await?;
+        let visibility = Visibility::from_activitypub(&user, &note);
 
         post::Model {
             id: Uuid::new_v4(),
@@ -183,6 +187,7 @@ where
             subject: note.subject,
             content: note.content,
             is_sensitive: note.rest.sensitive,
+            visibility,
             url: note.rest.id,
             created_at: note.rest.published,
             updated_at: Utc::now(),

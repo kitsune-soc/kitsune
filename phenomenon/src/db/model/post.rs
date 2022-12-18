@@ -1,6 +1,8 @@
+use super::account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
+use phenomenon_type::ap::{helper::CcTo, Privacy};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -26,6 +28,23 @@ pub enum Visibility {
     Unlisted = 1,
     FollowerOnly = 2,
     MentionOnly = 3,
+}
+
+impl Visibility {
+    pub fn from_activitypub<O>(owner: &account::Model, obj: &O) -> Self
+    where
+        O: CcTo + Privacy,
+    {
+        if obj.is_public() {
+            Self::Public
+        } else if obj.is_unlisted() {
+            Self::Unlisted
+        } else if obj.to().contains(&owner.followers_url) {
+            Self::FollowerOnly
+        } else {
+            Self::MentionOnly
+        }
+    }
 }
 
 #[derive(

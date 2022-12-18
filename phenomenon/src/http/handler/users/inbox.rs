@@ -1,5 +1,8 @@
 use crate::{
-    db::model::{account, follow, post},
+    db::model::{
+        account, follow,
+        post::{self, Visibility},
+    },
     error::Result,
     http::extractor::SignedActivity,
     state::Zustand,
@@ -18,6 +21,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
         .one(&state.db_conn)
         .await?
         .unwrap();
+    let visibility = Visibility::from_activitypub(&account, &activity);
 
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
@@ -27,6 +31,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
                 subject: note.subject,
                 content: note.content,
                 is_sensitive: note.rest.sensitive,
+                visibility,
                 url: note.rest.id,
                 created_at: note.rest.published,
                 updated_at: Utc::now(),

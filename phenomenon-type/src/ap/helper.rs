@@ -30,6 +30,57 @@ impl<T> Default for StringOrObject<T> {
     }
 }
 
+pub trait CcTo {
+    fn cc(&self) -> &[String];
+    fn to(&self) -> &[String];
+}
+
+impl CcTo for Activity {
+    fn cc(&self) -> &[String] {
+        self.rest.cc()
+    }
+
+    fn to(&self) -> &[String] {
+        self.rest.to()
+    }
+}
+
+impl CcTo for BaseObject {
+    fn cc(&self) -> &[String] {
+        self.cc.as_slice()
+    }
+
+    fn to(&self) -> &[String] {
+        self.to.as_slice()
+    }
+}
+
+impl CcTo for Note {
+    fn cc(&self) -> &[String] {
+        self.rest.cc()
+    }
+
+    fn to(&self) -> &[String] {
+        self.rest.to()
+    }
+}
+
+impl CcTo for Object {
+    fn cc(&self) -> &[String] {
+        match self {
+            Self::Note(note) => note.cc(),
+            Self::Person(..) => unimplemented!("Called CC/TO helper on person"),
+        }
+    }
+
+    fn to(&self) -> &[String] {
+        match self {
+            Self::Note(note) => note.to(),
+            Self::Person(..) => unimplemented!("Called CC/TO helper on person"),
+        }
+    }
+}
+
 pub trait Privacy {
     fn is_public(&self) -> bool;
     fn is_unlisted(&self) -> bool;
