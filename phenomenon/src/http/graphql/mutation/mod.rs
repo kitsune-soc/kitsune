@@ -20,7 +20,11 @@ const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::A
 
 /// Saves the file into a user-configured subdirectory and returns a full URL to the file
 // TODO: Refactor this
-async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<media_attachment::Model> {
+async fn handle_upload(
+    ctx: &Context<'_>,
+    file: Upload,
+    description: Option<String>,
+) -> Result<media_attachment::Model> {
     let state = ctx.state();
     let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;
@@ -65,6 +69,7 @@ async fn handle_upload(ctx: &Context<'_>, file: Upload) -> Result<media_attachme
         id: Uuid::new_v4(),
         account_id: user_data.account.id,
         content_type: content_type.to_string(),
+        description,
         url,
         created_at: Utc::now(),
     }
