@@ -86,6 +86,9 @@ pub enum Relation {
         to = "super::account::Column::Id"
     )]
     Account,
+
+    #[sea_orm(has_many = "super::mention::Entity")]
+    Mention,
 }
 
 impl Related<super::account::Entity> for Entity {

@@ -15,6 +15,31 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::account::Entity",
+        from = "Column::AccountId",
+        to = "super::account::Column::Id"
+    )]
+    Account,
+
+    #[sea_orm(
+        belongs_to = "super::account::Entity",
+        from = "Column::FollowerId",
+        to = "super::account::Column::Id"
+    )]
+    Follower,
+}
+
+pub struct Followers;
+
+impl Linked for Followers {
+    type FromEntity = super::account::Entity;
+    type ToEntity = super::account::Entity;
+
+    fn link(&self) -> Vec<sea_orm::LinkDef> {
+        vec![Relation::Account.def().rev(), Relation::Follower.def()]
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
