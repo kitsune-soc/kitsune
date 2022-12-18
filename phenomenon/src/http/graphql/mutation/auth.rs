@@ -120,6 +120,7 @@ impl AuthMutation {
                         header_id: None,
                         display_name: None,
                         username: username.clone(),
+                        locked: false,
                         note: None,
                         domain: None,
                         url,

@@ -22,6 +22,7 @@ pub struct Model {
     pub note: Option<String>,
     #[sea_orm(indexed)]
     pub username: String,
+    pub locked: bool,
     #[graphql(skip)]
     pub domain: Option<String>,
     #[sea_orm(indexed, unique)]

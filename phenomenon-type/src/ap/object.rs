@@ -30,6 +30,8 @@ pub struct Actor {
     pub image: Option<MediaAttachment>,
     #[serde(flatten)]
     pub rest: BaseObject,
+    #[serde(default)]
+    pub manually_approves_followers: bool,
     pub public_key: PublicKey,
     pub inbox: String,
     pub outbox: String,

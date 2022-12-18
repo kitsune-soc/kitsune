@@ -14,8 +14,8 @@ use http::{HeaderMap, HeaderValue};
 use phenomenon_type::ap::object::{Actor, Note};
 use reqwest::Client;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
-    TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    IntoActiveValue, QueryFilter, TransactionTrait,
 };
 use std::time::Duration;
 use url::Url;
@@ -95,11 +95,30 @@ where
         self.db_conn
             .transaction(|tx| {
                 async move {
-                    let account_id = Uuid::new_v4();
+                    let account = account::Model {
+                        id: Uuid::new_v4(),
+                        avatar_id: None,
+                        header_id: None,
+                        display_name: actor.name,
+                        note: actor.subject,
+                        username: actor.preferred_username,
+                        locked: actor.manually_approves_followers,
+                        domain: Some(url.host_str().unwrap().into()),
+                        url: actor.rest.id,
+                        followers_url: actor.followers,
+                        inbox_url: actor.inbox,
+                        public_key: actor.public_key.public_key_pem,
+                        created_at: actor.rest.published,
+                        updated_at: Utc::now(),
+                    }
+                    .into_active_model()
+                    .insert(tx)
+                    .await?;
+
                     let avatar_id = if let Some(icon) = actor.icon {
                         let media_attachment = media_attachment::Model {
                             id: Uuid::new_v4(),
-                            account_id,
+                            account_id: account.id,
                             description: icon.name,
                             content_type: icon.media_type,
                             blurhash: icon.blurhash,
@@ -118,7 +137,7 @@ where
                     let header_id = if let Some(image) = actor.image {
                         let media_attachment = media_attachment::Model {
                             id: Uuid::new_v4(),
-                            account_id,
+                            account_id: account.id,
                             description: image.name,
                             content_type: image.media_type,
                             blurhash: image.blurhash,
@@ -134,23 +153,13 @@ where
                         None
                     };
 
-                    account::Model {
-                        id: account_id,
-                        avatar_id,
-                        header_id,
-                        display_name: actor.name,
-                        note: actor.subject,
-                        username: actor.preferred_username,
-                        domain: Some(url.host_str().unwrap().into()),
-                        url: actor.rest.id,
-                        followers_url: actor.followers,
-                        inbox_url: actor.inbox,
-                        public_key: actor.public_key.public_key_pem,
-                        created_at: actor.rest.published,
-                        updated_at: Utc::now(),
+                    account::ActiveModel {
+                        id: ActiveValue::Set(account.id),
+                        avatar_id: avatar_id.into_active_value(),
+                        header_id: header_id.into_active_value(),
+                        ..Default::default()
                     }
-                    .into_active_model()
-                    .insert(tx)
+                    .update(tx)
                     .await
                     .map_err(Error::from)
                 }
