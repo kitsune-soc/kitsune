@@ -55,6 +55,7 @@ impl IntoMastodon for account::Model {
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
+            locked: self.locked,
             note: self.note.unwrap_or_default(),
             url: self.url,
             avatar_static: avatar.clone(),

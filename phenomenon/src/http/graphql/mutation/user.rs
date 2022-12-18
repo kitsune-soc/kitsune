@@ -15,6 +15,7 @@ impl UserMutation {
         note: Option<String>,
         avatar: Option<Upload>,
         header: Option<Upload>,
+        locked: Option<bool>,
     ) -> Result<account::Model> {
         let state = ctx.state();
         let user = ctx.user_data()?;
@@ -49,6 +50,10 @@ impl UserMutation {
         if let Some(header) = header {
             let media_attachment = handle_upload(ctx, header, None).await?;
             active_user.header_id = ActiveValue::Set(Some(media_attachment.id));
+        }
+
+        if let Some(locked) = locked {
+            active_user.locked = ActiveValue::Set(locked);
         }
 
         active_user
