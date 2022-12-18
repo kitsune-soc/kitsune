@@ -5,7 +5,7 @@ use crate::{
     util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use async_graphql::{Context, CustomValidator, Error, Object, Result};
+use async_graphql::{Context, CustomValidator, Error, InputValueError, Object, Result};
 use chrono::Utc;
 use futures_util::FutureExt;
 use rsa::{
@@ -23,7 +23,7 @@ const MIN_PASSWORD_STRENGTH: u8 = 3;
 struct PasswordValidator;
 
 impl CustomValidator<String> for PasswordValidator {
-    fn check(&self, value: &String) -> Result<(), String> {
+    fn check(&self, value: &String) -> Result<(), InputValueError<String>> {
         let Ok(entropy) = zxcvbn(value.as_str(), &[]) else {
             return Err("Password strength validation failed".into());
         };
