@@ -1,4 +1,8 @@
-use crate::{db::model::post, http::graphql::ContextExt, sanitize::CleanHtmlExt};
+use crate::{
+    db::model::post::{self, Visibility},
+    http::graphql::ContextExt,
+    sanitize::CleanHtmlExt,
+};
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use pulldown_cmark::{html, Options, Parser};
@@ -10,9 +14,15 @@ pub struct PostMutation;
 
 #[Object]
 impl PostMutation {
-    pub async fn create_post(&self, ctx: &Context<'_>, content: String) -> Result<post::Model> {
+    pub async fn create_post(
+        &self,
+        ctx: &Context<'_>,
+        content: String,
+        is_sensitive: bool,
+        visibility: Visibility,
+    ) -> Result<post::Model> {
         let state = ctx.state();
-        let user = ctx.user()?;
+        let user = ctx.user_data()?;
         let content = {
             let parser = Parser::new_ext(&content, Options::all());
             let mut buf = String::new();
@@ -25,9 +35,11 @@ impl PostMutation {
         let url = format!("https://{}/posts/{id}", state.config.domain);
         Ok(post::Model {
             id,
-            user_id: user.id,
+            account_id: user.account.id,
             subject: None,
             content,
+            is_sensitive,
+            visibility,
             url,
             created_at: Utc::now(),
             updated_at: Utc::now(),
@@ -39,10 +51,10 @@ impl PostMutation {
 
     pub async fn delete_post(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
         let state = ctx.state();
-        let user = ctx.user()?;
+        let user = ctx.user_data()?;
 
         let post = post::Entity::find_by_id(id)
-            .belongs_to(user)
+            .belongs_to(&user.account)
             .one(&state.db_conn)
             .await?
             .ok_or_else(|| Error::new("Post not found"))?;

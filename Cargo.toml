@@ -10,5 +10,5 @@ members = [
     "migration", 
     "phenomenon",
     "phenomenon-http-signatures",
-    "phenomenon-model",
+    "phenomenon-type",
 ]

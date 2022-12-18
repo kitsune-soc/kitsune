@@ -1,12 +1,33 @@
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
-enum Posts {
+pub enum Accounts {
     Table,
     Id,
-    UserId,
+    AvatarId,
+    HeaderId,
+    DisplayName,
+    Note,
+    Username,
+    Locked,
+    Domain,
+    Url,
+    FollowersUrl,
+    InboxUrl,
+    PublicKey,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(Iden)]
+pub enum Posts {
+    Table,
+    Id,
+    AccountId,
+    IsSensitive,
     Subject,
     Content,
+    Visibility,
     Url,
     CreatedAt,
     UpdatedAt,
@@ -16,17 +37,10 @@ enum Posts {
 pub enum Users {
     Table,
     Id,
-    AvatarId,
-    HeaderId,
-    DisplayName,
-    Note,
+    AccountId,
     Username,
     Email,
     Password,
-    Domain,
-    Url,
-    InboxUrl,
-    PublicKey,
     PrivateKey,
     CreatedAt,
     UpdatedAt,
@@ -41,20 +55,64 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
+                    .table(Accounts::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(Accounts::Id).uuid().primary_key())
+                    .col(ColumnDef::new(Accounts::DisplayName).text())
+                    .col(ColumnDef::new(Accounts::Note).text())
+                    .col(ColumnDef::new(Accounts::Username).text().not_null())
+                    .col(ColumnDef::new(Accounts::Locked).boolean().not_null())
+                    .col(ColumnDef::new(Accounts::Domain).text())
+                    .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
+                    .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::InboxUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::PublicKey).text().not_null())
+                    .col(
+                        ColumnDef::new(Accounts::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Accounts::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .index(
+                        Index::create()
+                            .col(Accounts::Username)
+                            .col(Accounts::Domain)
+                            .unique(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
                     .table(Users::Table)
                     .if_not_exists()
                     .col(ColumnDef::new(Users::Id).uuid().primary_key())
-                    .col(ColumnDef::new(Users::DisplayName).text())
-                    .col(ColumnDef::new(Users::Note).text())
-                    .col(ColumnDef::new(Users::Username).text().not_null())
-                    .col(ColumnDef::new(Users::Email).text())
-                    .col(ColumnDef::new(Users::Password).text())
-                    .col(ColumnDef::new(Users::Domain).text())
-                    .col(ColumnDef::new(Users::Url).text().not_null().unique_key())
-                    .col(ColumnDef::new(Users::InboxUrl).text().not_null())
-                    .col(ColumnDef::new(Users::PublicKey).text())
-                    .col(ColumnDef::new(Users::PrivateKey).text())
-                    // TODO: Figure out triggers for created at and updated at
+                    .col(
+                        ColumnDef::new(Users::AccountId)
+                            .uuid()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(
+                        ColumnDef::new(Users::Username)
+                            .text()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(ColumnDef::new(Users::Email).text().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(Users::Password)
+                            .text()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(ColumnDef::new(Users::PrivateKey).text().not_null())
                     .col(
                         ColumnDef::new(Users::CreatedAt)
                             .timestamp_with_time_zone()
@@ -65,11 +123,12 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
-                    .index(
-                        Index::create()
-                            .col(Users::Username)
-                            .col(Users::Domain)
-                            .unique(),
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from_col(Users::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )
@@ -81,11 +140,12 @@ impl MigrationTrait for Migration {
                     .table(Posts::Table)
                     .if_not_exists()
                     .col(ColumnDef::new(Posts::Id).uuid().primary_key())
-                    .col(ColumnDef::new(Posts::UserId).uuid().not_null())
+                    .col(ColumnDef::new(Posts::AccountId).uuid().not_null())
+                    .col(ColumnDef::new(Posts::IsSensitive).boolean().not_null())
                     .col(ColumnDef::new(Posts::Subject).text())
                     .col(ColumnDef::new(Posts::Content).text().not_null())
+                    .col(ColumnDef::new(Posts::Visibility).integer().not_null())
                     .col(ColumnDef::new(Posts::Url).text().not_null().unique_key())
-                    // TODO: Figure out triggers for created at and updated at
                     .col(
                         ColumnDef::new(Posts::CreatedAt)
                             .timestamp_with_time_zone()
@@ -98,8 +158,8 @@ impl MigrationTrait for Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from(Posts::Table, Posts::UserId)
-                            .to(Users::Table, Users::Id)
+                            .from(Posts::Table, Posts::AccountId)
+                            .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -115,6 +175,10 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(Users::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Accounts::Table).to_owned())
             .await
     }
 }

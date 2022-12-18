@@ -1,5 +1,5 @@
 use super::handle_upload;
-use crate::{db::model::user, http::graphql::ContextExt, sanitize::CleanHtmlExt};
+use crate::{db::model::account, http::graphql::ContextExt, sanitize::CleanHtmlExt};
 use async_graphql::{Context, Error, Object, Result, Upload};
 use sea_orm::{ActiveModelTrait, ActiveValue};
 
@@ -15,11 +15,12 @@ impl UserMutation {
         note: Option<String>,
         avatar: Option<Upload>,
         header: Option<Upload>,
-    ) -> Result<user::Model> {
+        locked: Option<bool>,
+    ) -> Result<account::Model> {
         let state = ctx.state();
-        let user = ctx.user()?;
-        let mut active_user = user::ActiveModel {
-            id: ActiveValue::Set(user.id),
+        let user = ctx.user_data()?;
+        let mut active_user = account::ActiveModel {
+            id: ActiveValue::Set(user.account.id),
             ..Default::default()
         };
 
@@ -42,13 +43,17 @@ impl UserMutation {
         }
 
         if let Some(avatar) = avatar {
-            let media_attachment = handle_upload(ctx, avatar).await?;
+            let media_attachment = handle_upload(ctx, avatar, None).await?;
             active_user.avatar_id = ActiveValue::Set(Some(media_attachment.id));
         }
 
         if let Some(header) = header {
-            let media_attachment = handle_upload(ctx, header).await?;
+            let media_attachment = handle_upload(ctx, header, None).await?;
             active_user.header_id = ActiveValue::Set(Some(media_attachment.id));
+        }
+
+        if let Some(locked) = locked {
+            active_user.locked = ActiveValue::Set(locked);
         }
 
         active_user

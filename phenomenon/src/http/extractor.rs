@@ -1,5 +1,5 @@
 use crate::{
-    db::model::{oauth::access_token, user},
+    db::model::{account, oauth::access_token, user},
     error::Error,
     state::Zustand,
 };
@@ -14,12 +14,18 @@ use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
 use http::{request::Parts, StatusCode};
 use phenomenon_http_signatures::Request;
-use phenomenon_model::ap::Activity;
-use rsa::pkcs1::EncodeRsaPublicKey;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use phenomenon_type::ap::Activity;
+use rsa::pkcs8::Document;
+use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use serde::de::DeserializeOwned;
 
-pub struct AuthExtactor(pub Option<user::Model>);
+#[derive(Clone)]
+pub struct UserData {
+    pub account: account::Model,
+    pub user: user::Model,
+}
+
+pub struct AuthExtactor(pub Option<UserData>);
 
 #[async_trait]
 impl FromRequestParts<Zustand> for AuthExtactor {
@@ -43,7 +49,17 @@ impl FromRequestParts<Zustand> for AuthExtactor {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             };
 
-            Ok(Self(user))
+            if let Some(user) = user {
+                let account = user
+                    .find_related(account::Entity)
+                    .one(&state.db_conn)
+                    .await
+                    .map_err(Error::from)?;
+
+                Ok(Self(account.map(|account| UserData { account, user })))
+            } else {
+                Ok(Self(None))
+            }
         } else {
             Ok(Self(None))
         }
@@ -108,10 +124,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .ok_or_else(|| StatusCode::BAD_REQUEST.into_response())?;
 
         let remote_user = state.fetcher.fetch_actor(ap_id).await?;
-        let Some(public_key) = remote_user.public_key()? else {
-            error!(user_id = %remote_user.id, "Missing RSA public key");
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        };
+        let (_tag, public_key) =
+            Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
 
         let is_valid = crate::blocking::cpu(move || {
             let request = Request {
@@ -120,8 +134,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 uri: &uri,
             };
 
-            phenomenon_http_signatures::verify(request, public_key.to_pkcs1_der()?.as_bytes())
-                .map_err(Error::from)
+            phenomenon_http_signatures::verify(request, public_key.as_bytes()).map_err(Error::from)
         })
         .await??;
 

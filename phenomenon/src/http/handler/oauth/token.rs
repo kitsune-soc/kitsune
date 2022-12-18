@@ -207,18 +207,13 @@ async fn client_credentials(
 
 async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Result<Response> {
     let user = user::Entity::find()
-        .filter(
-            user::Column::Username
-                .eq(data.username)
-                .and(user::Column::Domain.is_null()),
-        )
+        .filter(user::Column::Username.eq(data.username))
         .one(&db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password = user.password.ok_or(Error::BrokenRecord)?;
-        let password_hash = PasswordHash::new(&password)?;
+        let password_hash = PasswordHash::new(&user.password)?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(

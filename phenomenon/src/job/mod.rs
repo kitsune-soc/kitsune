@@ -6,6 +6,7 @@ use crate::{
     state::Zustand,
 };
 use chrono::Utc;
+use once_cell::sync::Lazy;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DeriveActiveEnum, EntityTrait, EnumIter,
     IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
@@ -16,8 +17,8 @@ use std::time::Duration;
 mod catch_panic;
 mod deliver_activity;
 
-const LINEAR_BACKOFF_DURATION: Duration = Duration::from_secs(60); // One minute
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(10);
+static LINEAR_BACKOFF_DURATION: Lazy<chrono::Duration> = Lazy::new(|| chrono::Duration::minutes(1)); // One minute
 
 #[derive(Deserialize, Serialize)]
 pub enum Job {
@@ -39,12 +40,8 @@ async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
     let Some(mut job) = job::Entity::find()
         .filter(
             job::Column::State.eq(JobState::Queued)
-                // Re-execute failed job after waiting for the linear backoff
-                // TODO: Linear backoff based on "fail_count" column value (math inside SQL query)
-                .or(
-                    job::Column::State.eq(JobState::Failed)
-                        .and(job::Column::LastFailedAt.lte(Utc::now())),
-                )
+                .or(job::Column::State.eq(JobState::Failed))
+                .and(job::Column::RunAt.lte(Utc::now()))
                 // Re-execute job if it has been running for longer than an hour (probably the worker crashed or something)
                 .or(
                     job::Column::State.eq(JobState::Running)
@@ -112,7 +109,8 @@ pub async fn run(state: Zustand) {
 
                 db_job.state = JobState::Failed;
                 db_job.fail_count += 1;
-                db_job.last_failed_at = Some(Utc::now());
+                db_job.run_at =
+                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32));
                 db_job.updated_at = Utc::now();
             }
             Err(..) => {
@@ -120,7 +118,8 @@ pub async fn run(state: Zustand) {
 
                 db_job.state = JobState::Failed;
                 db_job.fail_count += 1;
-                db_job.last_failed_at = Some(Utc::now());
+                db_job.run_at =
+                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32));
                 db_job.updated_at = Utc::now();
             }
             _ => {

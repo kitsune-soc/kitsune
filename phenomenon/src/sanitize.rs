@@ -1,4 +1,4 @@
-use phenomenon_model::ap::object::{Actor, Note};
+use phenomenon_type::ap::object::{Actor, Note};
 
 pub trait CleanHtmlExt {
     fn clean_html(&mut self);

@@ -25,6 +25,7 @@ pub struct Account {
     pub username: String,
     pub display_name: String,
     pub created_at: DateTime<Utc>,
+    pub locked: bool,
     pub note: String,
     pub url: String,
     pub avatar: String,

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum MediaAttachmentType {
     Audio,
     #[default]
+    Document,
     Image,
     Video,
 }
@@ -13,7 +14,9 @@ pub enum MediaAttachmentType {
 #[serde(rename_all = "camelCase")]
 pub struct MediaAttachment {
     pub r#type: MediaAttachmentType,
+    pub name: Option<String>,
     pub media_type: String,
+    pub blurhash: Option<String>,
     pub url: String,
 }
 
@@ -27,6 +30,8 @@ pub struct Actor {
     pub image: Option<MediaAttachment>,
     #[serde(flatten)]
     pub rest: BaseObject,
+    #[serde(default)]
+    pub manually_approves_followers: bool,
     pub public_key: PublicKey,
     pub inbox: String,
     pub outbox: String,

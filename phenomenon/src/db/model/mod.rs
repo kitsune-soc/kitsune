@@ -1,6 +1,10 @@
+pub mod account;
+pub mod favourite;
 pub mod follow;
 pub mod job;
 pub mod media_attachment;
+pub mod mention;
 pub mod oauth;
 pub mod post;
+pub mod repost;
 pub mod user;

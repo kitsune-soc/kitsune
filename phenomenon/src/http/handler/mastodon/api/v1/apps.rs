@@ -4,7 +4,7 @@ use crate::{
 };
 use axum::{extract::State, Json};
 use chrono::Utc;
-use phenomenon_model::mastodon::App;
+use phenomenon_type::mastodon::App;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use serde::Deserialize;
 use uuid::Uuid;

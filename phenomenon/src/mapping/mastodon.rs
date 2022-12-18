@@ -1,10 +1,10 @@
 use crate::{
-    db::model::{media_attachment, post, user},
+    db::model::{account, media_attachment, post},
     error::Result,
     state::Zustand,
 };
 use async_trait::async_trait;
-use phenomenon_model::mastodon::{account::Source, Account};
+use phenomenon_type::mastodon::{account::Source, Account};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 
 #[async_trait]
@@ -15,12 +15,12 @@ pub trait IntoMastodon {
 }
 
 #[async_trait]
-impl IntoMastodon for user::Model {
+impl IntoMastodon for account::Model {
     type Output = Account;
 
     async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
         let statuses_count = post::Entity::find()
-            .filter(post::Column::UserId.eq(self.id))
+            .filter(post::Column::AccountId.eq(self.id))
             .count(&state.db_conn)
             .await?;
         let mut acct = self.username.clone();
@@ -55,6 +55,7 @@ impl IntoMastodon for user::Model {
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
+            locked: self.locked,
             note: self.note.unwrap_or_default(),
             url: self.url,
             avatar_static: avatar.clone(),

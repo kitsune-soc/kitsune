@@ -1,16 +1,20 @@
 use crate::{
-    db::model::{oauth::application, user},
+    db::model::{account, oauth::application, user},
+    error::Error as ServerError,
     http::graphql::ContextExt,
     util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use async_graphql::{Context, CustomValidator, Error, Object, Result};
+use async_graphql::{Context, CustomValidator, Error, InputValueError, Object, Result};
 use chrono::Utc;
+use futures_util::FutureExt;
 use rsa::{
-    pkcs8::{EncodePrivateKey, LineEnding},
+    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
+};
 use uuid::Uuid;
 use zxcvbn::zxcvbn;
 
@@ -19,7 +23,7 @@ const MIN_PASSWORD_STRENGTH: u8 = 3;
 struct PasswordValidator;
 
 impl CustomValidator<String> for PasswordValidator {
-    fn check(&self, value: &String) -> Result<(), String> {
+    fn check(&self, value: &String) -> Result<(), InputValueError<String>> {
         let Ok(entropy) = zxcvbn(value.as_str(), &[]) else {
             return Err("Password strength validation failed".into());
         };
@@ -98,31 +102,57 @@ impl AuthMutation {
 
         let (hashed_password, private_key) =
             tokio::try_join!(hashed_password_fut, private_key_fut)?;
-        let private_key = private_key?.to_pkcs8_pem(LineEnding::LF)?;
+        let private_key = private_key?;
+        let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
+        let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
         let url = format!("https://{}/users/{}", state.config.domain, username);
+        let followers_url = format!("{url}/followers");
         let inbox_url = format!("{url}/inbox");
 
-        let new_user = user::Model {
-            id: Uuid::new_v4(),
-            avatar_id: None,
-            header_id: None,
-            display_name: None,
-            note: None,
-            username,
-            email: Some(email),
-            password: Some(hashed_password?),
-            domain: None,
-            url,
-            inbox_url,
-            public_key: None,
-            private_key: Some(private_key.to_string()),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?;
+        let new_user = state
+            .db_conn
+            .transaction(|tx| {
+                async move {
+                    let new_account = account::Model {
+                        id: Uuid::new_v4(),
+                        avatar_id: None,
+                        header_id: None,
+                        display_name: None,
+                        username: username.clone(),
+                        locked: false,
+                        note: None,
+                        domain: None,
+                        url,
+                        followers_url,
+                        inbox_url,
+                        public_key: public_key_str,
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                    }
+                    .into_active_model()
+                    .insert(tx)
+                    .await?;
+
+                    let new_user = user::Model {
+                        id: Uuid::new_v4(),
+                        account_id: new_account.id,
+                        username,
+                        email,
+                        password: hashed_password?,
+                        private_key: private_key_str.to_string(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                    }
+                    .into_active_model()
+                    .insert(tx)
+                    .await?;
+
+                    Ok::<_, ServerError>(new_user)
+                }
+                .boxed()
+            })
+            .await?;
 
         Ok(new_user)
     }
