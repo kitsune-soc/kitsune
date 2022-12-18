@@ -1,5 +1,5 @@
 use crate::{
-    db::model::user,
+    db::model::account,
     error::Result,
     state::Zustand,
     webfinger::{Link, Resource},
@@ -31,10 +31,10 @@ pub async fn get(
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let Some(user) = user::Entity::find()
+    let Some(account) = account::Entity::find()
         .filter(
-            user::Column::Username.eq(username)
-                .and(user::Column::Domain.is_null()),
+            account::Column::Username.eq(username)
+                .and(account::Column::Domain.is_null()),
         )
         .one(&state.db_conn)
         .await?
@@ -44,10 +44,10 @@ pub async fn get(
 
     Ok(Json(Resource {
         subject: query.resource,
-        aliases: vec![user.url.clone()],
+        aliases: vec![account.url.clone()],
         links: vec![Link {
             rel: "self".into(),
-            href: Some(user.url),
+            href: Some(account.url),
         }],
     })
     .into_response())

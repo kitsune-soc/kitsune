@@ -1,6 +1,6 @@
 use self::{mutation::RootMutation, query::RootQuery};
-use super::extractor::AuthExtactor;
-use crate::{db::model::user, state::Zustand};
+use super::extractor::{AuthExtactor, UserData};
+use crate::state::Zustand;
 use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
 };
@@ -19,7 +19,7 @@ mod query;
 
 pub trait ContextExt {
     fn state(&self) -> &Zustand;
-    fn user(&self) -> Result<&user::Model>;
+    fn user_data(&self) -> Result<&UserData>;
 }
 
 impl ContextExt for &'_ Context<'_> {
@@ -27,7 +27,7 @@ impl ContextExt for &'_ Context<'_> {
         self.data().expect("[Bug] State missing in GraphQL context")
     }
 
-    fn user(&self) -> Result<&user::Model> {
+    fn user_data(&self) -> Result<&UserData> {
         self.data_opt()
             .ok_or_else(|| Error::new("Authentication required"))
     }
@@ -36,12 +36,12 @@ impl ContextExt for &'_ Context<'_> {
 #[debug_handler(state = Zustand)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
-    AuthExtactor(user): AuthExtactor,
+    AuthExtactor(user_data): AuthExtactor,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
     let mut req = req.into_inner();
-    if let Some(user) = user {
-        req = req.data(user);
+    if let Some(user_data) = user_data {
+        req = req.data(user_data);
     }
 
     schema.execute_batch(req).await.into()

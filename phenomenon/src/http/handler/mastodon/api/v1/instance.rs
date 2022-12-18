@@ -1,21 +1,23 @@
-use crate::{db::model::user, error::Result, state::Zustand};
+use crate::{
+    db::model::{account, user},
+    error::Result,
+    state::Zustand,
+};
 use axum::{extract::State, Json};
-use phenomenon_model::mastodon::{
+use phenomenon_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
 };
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect};
 
 pub async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
-    let user_count = user::Entity::find()
-        .filter(user::Column::Domain.is_null())
-        .count(&state.db_conn)
-        .await?;
-    let domain_count = user::Entity::find()
-        .filter(user::Column::Domain.is_not_null())
+    let user_count = user::Entity::find().count(&state.db_conn).await?;
+
+    let domain_count = account::Entity::find()
+        .filter(account::Column::Domain.is_not_null())
         .select_only()
-        .column(user::Column::Domain)
-        .group_by(user::Column::Domain)
+        .column(account::Column::Domain)
+        .group_by(account::Column::Domain)
         .count(&state.db_conn)
         .await?;
 

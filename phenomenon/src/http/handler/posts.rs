@@ -7,7 +7,7 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use phenomenon_model::ap::Privacy;
+use phenomenon_type::ap::Privacy;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 

@@ -86,11 +86,7 @@ pub async fn post(
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
     let user = user::Entity::find()
-        .filter(
-            user::Column::Username
-                .eq(form.username)
-                .and(user::Column::Domain.is_null()),
-        )
+        .filter(user::Column::Username.eq(form.username))
         .one(&state.db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
@@ -102,8 +98,7 @@ pub async fn post(
         .ok_or(Error::OAuthApplicationNotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password = user.password.ok_or(Error::BrokenRecord)?;
-        let password_hash = PasswordHash::new(&password)?;
+        let password_hash = PasswordHash::new(&user.password)?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(

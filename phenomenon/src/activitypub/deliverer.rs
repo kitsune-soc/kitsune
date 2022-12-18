@@ -1,11 +1,11 @@
 use crate::{
     consts::USER_AGENT,
-    db::model::user,
-    error::{Error, Result},
+    db::model::{account, user},
+    error::Result,
 };
 use http::Uri;
 use phenomenon_http_signatures::Request;
-use phenomenon_model::ap::Activity;
+use phenomenon_type::ap::Activity;
 use reqwest::Client;
 use rsa::pkcs8::{self, SecretDocument};
 use sha2::{Digest, Sha256};
@@ -27,12 +27,12 @@ impl Deliverer {
     pub async fn deliver(
         &self,
         inbox_url: &str,
+        account: &account::Model,
         user: &user::Model,
         note: &Activity,
     ) -> Result<()> {
         let (_label, private_key) =
-            SecretDocument::from_pem(user.private_key.as_ref().ok_or(Error::BrokenRecord)?)
-                .map_err(pkcs8::Error::from)?;
+            SecretDocument::from_pem(&user.private_key).map_err(pkcs8::Error::from)?;
         let body = serde_json::to_string(&note)?;
         let body_digest = base64::encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
@@ -44,7 +44,7 @@ impl Deliverer {
             .body(body.clone())
             .build()?;
 
-        let key_id = format!("{}#main-key", user.url);
+        let key_id = format!("{}#main-key", account.url);
         let headers = request.headers().clone();
         let uri =
             Uri::try_from(request.url().as_str()).expect("[Bug] Invalid URI stored in url::Url");

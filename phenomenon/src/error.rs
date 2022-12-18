@@ -3,7 +3,10 @@ use axum::response::{IntoResponse, Response};
 use deadpool_redis::PoolError;
 use http::StatusCode;
 use redis::RedisError;
-use rsa::{pkcs1, pkcs8};
+use rsa::{
+    pkcs1,
+    pkcs8::{self, der},
+};
 use sea_orm::TransactionError;
 use thiserror::Error;
 use tokio::sync::oneshot;
@@ -33,6 +36,9 @@ pub enum Error {
 
     #[error(transparent)]
     Database(#[from] sea_orm::DbErr),
+
+    #[error(transparent)]
+    Der(#[from] der::Error),
 
     #[error(transparent)]
     HttpSignature(#[from] phenomenon_http_signatures::Error),
