@@ -14,7 +14,7 @@ use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
 use http::{request::Parts, StatusCode};
 use phenomenon_http_signatures::Request;
-use phenomenon_model::ap::Activity;
+use phenomenon_type::ap::Activity;
 use rsa::pkcs8::Document;
 use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use serde::de::DeserializeOwned;

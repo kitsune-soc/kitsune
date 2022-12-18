@@ -8,7 +8,7 @@ use crate::{
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::{HeaderMap, HeaderValue};
-use phenomenon_model::ap::object::{Actor, Note};
+use phenomenon_type::ap::object::{Actor, Note};
 use reqwest::Client;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,

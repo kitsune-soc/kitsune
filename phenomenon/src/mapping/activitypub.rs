@@ -5,7 +5,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use mime::Mime;
-use phenomenon_model::ap::{
+use phenomenon_type::ap::{
     helper::StringOrObject,
     object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
     BaseObject, Object,
@@ -48,7 +48,7 @@ impl IntoActivityPub for post::Model {
     type Output = Object;
 
     async fn into_activitypub(self, state: &Zustand) -> Result<Self::Output> {
-        let user = account::Entity::find_by_id(self.account_id)
+        let account = account::Entity::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] No user associated with post");
@@ -58,7 +58,7 @@ impl IntoActivityPub for post::Model {
             content: self.content,
             rest: BaseObject {
                 id: self.url,
-                attributed_to: Some(StringOrObject::String(user.url)),
+                attributed_to: Some(StringOrObject::String(account.url)),
                 published: self.created_at,
                 ..BaseObject::default()
             },

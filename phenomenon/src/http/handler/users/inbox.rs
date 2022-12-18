@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
-use phenomenon_model::ap::{Activity, ActivityType, Object};
+use phenomenon_type::ap::{Activity, ActivityType, Object};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
 };

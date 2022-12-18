@@ -2,9 +2,13 @@ use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
 use crate::{db::model::media_attachment, http::graphql::ContextExt};
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use chrono::Utc;
+use image::{EncodableLayout, GenericImageView};
 use mime::Mime;
 use sea_orm::{ActiveModelTrait, IntoActiveModel};
-use std::{path::PathBuf, str::FromStr};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 use tokio::{
     fs::{self, File},
     io,
@@ -17,6 +21,26 @@ mod post;
 mod user;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
+
+async fn calculate_blurhash<P>(path: P) -> Result<String>
+where
+    P: AsRef<Path> + Send + 'static,
+{
+    tokio::task::spawn_blocking(move || {
+        let image = image::open(path)?;
+        let (width, height) = image.dimensions();
+        let rgba_data = image.into_rgba8();
+
+        Ok(blurhash_ng::encode(
+            4,
+            3,
+            width,
+            height,
+            rgba_data.as_bytes(),
+        ))
+    })
+    .await?
+}
 
 /// Saves the file into a user-configured subdirectory and returns a full URL to the file
 // TODO: Refactor this
@@ -55,7 +79,7 @@ async fn handle_upload(
     full_media_path.push(&value.filename);
 
     let mut reader = value.into_async_read().compat();
-    let mut writer = File::create(full_media_path).await?;
+    let mut writer = File::create(&full_media_path).await?;
 
     io::copy(&mut reader, &mut writer).await?;
 
@@ -65,9 +89,17 @@ async fn handle_upload(
         relative_media_path.display()
     );
 
+    // TODO: Calculate blurhashes for image attachments
+    let blurhash = if content_type.type_() == mime::IMAGE {
+        calculate_blurhash(full_media_path).await.ok()
+    } else {
+        None
+    };
+
     Ok(media_attachment::Model {
         id: Uuid::new_v4(),
         account_id: user_data.account.id,
+        blurhash,
         content_type: content_type.to_string(),
         description,
         url,

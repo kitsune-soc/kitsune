@@ -4,7 +4,7 @@ use crate::{
     state::Zustand,
 };
 use async_trait::async_trait;
-use phenomenon_model::mastodon::{account::Source, Account};
+use phenomenon_type::mastodon::{account::Source, Account};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 
 #[async_trait]

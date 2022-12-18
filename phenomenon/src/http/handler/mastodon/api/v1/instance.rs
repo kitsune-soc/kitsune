@@ -4,7 +4,7 @@ use crate::{
     state::Zustand,
 };
 use axum::{extract::State, Json};
-use phenomenon_model::mastodon::{
+use phenomenon_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
 };

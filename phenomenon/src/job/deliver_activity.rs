@@ -5,7 +5,7 @@ use crate::{
     state::Zustand,
 };
 use futures_util::{stream, StreamExt};
-use phenomenon_model::ap::{Activity, PUBLIC_IDENTIFIER};
+use phenomenon_type::ap::{Activity, PUBLIC_IDENTIFIER};
 use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

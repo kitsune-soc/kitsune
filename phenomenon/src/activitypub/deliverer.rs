@@ -5,7 +5,7 @@ use crate::{
 };
 use http::Uri;
 use phenomenon_http_signatures::Request;
-use phenomenon_model::ap::Activity;
+use phenomenon_type::ap::Activity;
 use reqwest::Client;
 use rsa::pkcs8::{self, SecretDocument};
 use sha2::{Digest, Sha256};
