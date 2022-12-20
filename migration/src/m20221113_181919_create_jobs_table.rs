@@ -23,7 +23,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Jobs::Table)
                     .col(ColumnDef::new(Jobs::Id).uuid().primary_key())
-                    .col(ColumnDef::new(Jobs::State).big_unsigned().not_null())
+                    .col(ColumnDef::new(Jobs::State).integer().not_null())
                     .col(ColumnDef::new(Jobs::Context).json_binary().not_null())
                     .col(
                         ColumnDef::new(Jobs::RunAt)
@@ -32,7 +32,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(Jobs::FailCount)
-                            .big_unsigned()
+                            .integer()
                             .not_null()
                             .default(0),
                     )

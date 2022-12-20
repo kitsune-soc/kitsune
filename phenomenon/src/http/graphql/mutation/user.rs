@@ -18,9 +18,9 @@ impl UserMutation {
         locked: Option<bool>,
     ) -> Result<account::Model> {
         let state = ctx.state();
-        let user = ctx.user_data()?;
+        let user_data = ctx.user_data()?;
         let mut active_user = account::ActiveModel {
-            id: ActiveValue::Set(user.account.id),
+            id: ActiveValue::Set(user_data.account.id),
             ..Default::default()
         };
 
