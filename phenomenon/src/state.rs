@@ -11,6 +11,5 @@ pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub fetcher: Fetcher,
-    pub redis_conn: deadpool_redis::Pool,
     pub webfinger: Webfinger,
 }

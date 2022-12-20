@@ -1,12 +1,20 @@
 use crate::{
-    db::model::post::{self, Visibility},
+    db::model::{
+        mention,
+        post::{self, Visibility},
+    },
+    error::Error as ServerError,
     http::graphql::ContextExt,
+    mention::MentionResolver,
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
+use futures_util::FutureExt;
 use pulldown_cmark::{html, Options, Parser};
-use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter, TransactionTrait,
+};
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -31,22 +39,53 @@ impl PostMutation {
             buf
         };
 
+        // TODO: Cache this resolver somewhere
+        let mention_resolver = MentionResolver::new(
+            state.db_conn.clone(),
+            state.fetcher.clone(),
+            state.webfinger.clone(),
+        );
+        let (mentioned_account_ids, content) = mention_resolver.resolve(content).await?;
+
         let id = Uuid::new_v4();
+        let account_id = user.account.id;
         let url = format!("https://{}/posts/{id}", state.config.domain);
-        Ok(post::Model {
-            id,
-            account_id: user.account.id,
-            subject: None,
-            content,
-            is_sensitive,
-            visibility,
-            url,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?)
+
+        state
+            .db_conn
+            .transaction(move |tx| {
+                async move {
+                    let post = post::Model {
+                        id,
+                        account_id,
+                        subject: None,
+                        content,
+                        is_sensitive,
+                        visibility,
+                        url,
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                    }
+                    .into_active_model()
+                    .insert(tx)
+                    .await?;
+
+                    for account_id in mentioned_account_ids {
+                        mention::Model {
+                            account_id,
+                            post_id: post.id,
+                        }
+                        .into_active_model()
+                        .insert(tx)
+                        .await?;
+                    }
+
+                    Ok::<_, ServerError>(post)
+                }
+                .boxed()
+            })
+            .await
+            .map_err(Error::from)
     }
 
     pub async fn delete_post(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
@@ -58,6 +97,8 @@ impl PostMutation {
             .one(&state.db_conn)
             .await?
             .ok_or_else(|| Error::new("Post not found"))?;
+
+        // TODO: Send out delete activity
 
         post.delete(&state.db_conn).await?;
 
