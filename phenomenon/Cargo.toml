@@ -24,6 +24,7 @@ headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.8"
 image = "0.24.5"
+itertools = "0.10.5"
 migration = { path = "../migration" }
 mime = "0.3.16"
 mime_guess = "2.0.4"
