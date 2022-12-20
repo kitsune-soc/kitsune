@@ -13,7 +13,6 @@ use sea_orm::{
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use tokio::task::LocalSet;
 
 mod catch_panic;
 mod deliver_activity;
@@ -104,6 +103,7 @@ pub async fn run(state: Zustand) {
         })
         .await;
 
+        #[allow(clippy::cast_possible_truncation)]
         match execution_result {
             Ok(Err(err)) => {
                 error!(error = %err, "Job execution failed");
