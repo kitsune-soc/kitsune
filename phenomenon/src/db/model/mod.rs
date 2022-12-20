@@ -7,4 +7,5 @@ pub mod mention;
 pub mod oauth;
 pub mod post;
 pub mod repost;
+pub mod role;
 pub mod user;
