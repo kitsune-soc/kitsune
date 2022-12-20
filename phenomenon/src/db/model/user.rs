@@ -56,4 +56,10 @@ impl Related<super::account::Entity> for Entity {
     }
 }
 
+impl Related<super::role::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Role.def()
+    }
+}
+
 impl ActiveModelBehavior for ActiveModel {}

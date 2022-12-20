@@ -11,7 +11,8 @@ use phenomenon::{
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
+    QueryFilter,
 };
 use std::error::Error;
 use uuid::Uuid;
@@ -26,11 +27,9 @@ enum RoleSubcommand {
     /// Add a role to a user
     Add {
         /// Username of the user you want to add the role to
-        #[arg(long, short)]
         username: String,
 
         /// Name of the role you want to add
-        #[arg(long, short)]
         role: Role,
     },
 
@@ -40,11 +39,9 @@ enum RoleSubcommand {
     /// Remove a role from a user
     Remove {
         /// Username of the user you want to add the role to
-        #[arg(long, short)]
         username: String,
 
         /// Name of the role you want to add
-        #[arg(long, short)]
         role: Role,
     },
 }
@@ -96,11 +93,11 @@ async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
         eprintln!("User \"{username}\" not found!");
         return Ok(());
     };
-    let roles = role::Entity::find().belongs_to(&user).all(&db_conn).await?;
+    let roles = user.find_related(role::Entity).all(&db_conn).await?;
 
     println!("User \"{username}\" has the following roles:");
     for role in roles {
-        println!("- {} (added: {})", role.role, role.created_at);
+        println!("- {:?} (added at: {})", role.role, role.created_at);
     }
 
     Ok(())
@@ -117,8 +114,11 @@ async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) ->
     };
 
     role::Entity::delete_many()
-        .filter(role::Column::Role.eq(role))
-        .belongs_to(&user)
+        .filter(
+            role::Column::Role
+                .eq(role)
+                .and(role::Column::UserId.eq(user.id)),
+        )
         .exec(&db_conn)
         .await?;
 
