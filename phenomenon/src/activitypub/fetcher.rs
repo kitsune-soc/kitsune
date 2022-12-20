@@ -19,7 +19,7 @@ use sea_orm::{
 };
 use std::time::Duration;
 use url::Url;
-use uuid::Uuid;
+use uuid::{Timestamp, Uuid};
 
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 
@@ -94,9 +94,16 @@ where
 
         self.db_conn
             .transaction(|tx| {
+                #[allow(clippy::cast_sign_loss)]
+                let uuid_timestamp = Timestamp::from_unix(
+                    uuid::NoContext,
+                    actor.rest.published.timestamp() as u64,
+                    actor.rest.published.timestamp_subsec_nanos(),
+                );
+
                 async move {
                     let account = account::Model {
-                        id: Uuid::new_v4(),
+                        id: Uuid::new_v7(uuid_timestamp),
                         avatar_id: None,
                         header_id: None,
                         display_name: actor.name,
@@ -117,7 +124,7 @@ where
 
                     let avatar_id = if let Some(icon) = actor.icon {
                         let media_attachment = media_attachment::Model {
-                            id: Uuid::new_v4(),
+                            id: Uuid::now_v7(),
                             account_id: account.id,
                             description: icon.name,
                             content_type: icon.media_type,
@@ -136,7 +143,7 @@ where
 
                     let header_id = if let Some(image) = actor.image {
                         let media_attachment = media_attachment::Model {
-                            id: Uuid::new_v4(),
+                            id: Uuid::now_v7(),
                             account_id: account.id,
                             description: image.name,
                             content_type: image.media_type,
@@ -190,8 +197,15 @@ where
             .await?;
         let visibility = Visibility::from_activitypub(&user, &note);
 
+        #[allow(clippy::cast_sign_loss)]
+        let uuid_timestamp = Timestamp::from_unix(
+            uuid::NoContext,
+            note.rest.published.timestamp() as u64,
+            note.rest.published.timestamp_subsec_nanos(),
+        );
+
         post::Model {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v7(uuid_timestamp),
             account_id: user.id,
             subject: note.subject,
             content: note.content,
