@@ -25,7 +25,7 @@ enum InboxQuery {
 
 #[derive(Deserialize, Serialize)]
 pub struct DeliveryContext {
-    post_id: Uuid,
+    pub post_id: Uuid,
 }
 
 #[instrument(skip_all, fields(post_id = %ctx.post_id))]

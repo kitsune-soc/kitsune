@@ -1,10 +1,11 @@
 use crate::{
     db::model::{
-        mention,
+        job, mention,
         post::{self, Visibility},
     },
     error::Error as ServerError,
     http::graphql::ContextExt,
+    job::{deliver_activity::DeliveryContext, Job, JobState},
     mention::MentionResolver,
     sanitize::CleanHtmlExt,
 };
@@ -79,6 +80,21 @@ impl PostMutation {
                         .insert(tx)
                         .await?;
                     }
+
+                    let job_context = Job::DeliverActivity(DeliveryContext { post_id: post.id });
+
+                    job::Model {
+                        id: Uuid::now_v7(),
+                        state: JobState::Queued,
+                        run_at: Utc::now(),
+                        context: serde_json::to_value(job_context).unwrap(),
+                        fail_count: 0,
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                    }
+                    .into_active_model()
+                    .insert(tx)
+                    .await?;
 
                     Ok::<_, ServerError>(post)
                 }
