@@ -21,3 +21,17 @@ pub struct Configuration {
     #[serde(default = "default_upload_dir")]
     pub upload_dir: PathBuf,
 }
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            database_url: String::default(),
+            domain: String::default(),
+            frontend_dir: PathBuf::default(),
+            job_workers: NonZeroUsize::new(1).unwrap(),
+            port: u16::default(),
+            redis_url: String::default(),
+            upload_dir: PathBuf::default(),
+        }
+    }
+}
