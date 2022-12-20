@@ -5,8 +5,8 @@ use crate::{
     },
     error::Error as ServerError,
     http::graphql::ContextExt,
-    job::{deliver_activity::DeliveryContext, Job, JobState},
-    mention::MentionResolver,
+    job::{deliver_create::CreateDeliveryContext, Job, JobState},
+    resolve::MentionResolver,
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result};
@@ -81,7 +81,8 @@ impl PostMutation {
                         .await?;
                     }
 
-                    let job_context = Job::DeliverActivity(DeliveryContext { post_id: post.id });
+                    let job_context =
+                        Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
 
                     job::Model {
                         id: Uuid::now_v7(),
