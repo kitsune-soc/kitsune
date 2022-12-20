@@ -10,7 +10,7 @@ use crate::{
     state::Zustand,
 };
 use chrono::Utc;
-use futures_util::{stream::FuturesUnordered, StreamExt};
+use futures_util::{future::Either, stream::FuturesUnordered, StreamExt, TryStreamExt};
 use phenomenon_type::ap::{helper::StringOrObject, Activity, ActivityType, BaseObject};
 use sea_orm::{prelude::*, QuerySelect};
 use serde::{Deserialize, Serialize};
@@ -58,28 +58,32 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -
         object: StringOrObject::Object(object),
     };
 
-    let mut inbox_stream = post
+    let mentioned_inbox_stream = post
         .find_linked(mention::MentionedAccounts)
         .select_only()
         .column(account::Column::InboxUrl)
         .into_values::<String, InboxQuery>()
-        .paginate(&state.db_conn, MAX_CONCURRENT_REQUESTS as u64)
-        .into_stream();
+        .stream(&state.db_conn)
+        .await?;
 
-    if post.visibility != Visibility::MentionOnly {
+    let mut inbox_stream = if post.visibility == Visibility::MentionOnly {
+        Either::Left(mentioned_inbox_stream)
+    } else {
         let follower_inbox_stream = account
             .find_linked(follow::Followers)
             .select_only()
             .column(account::Column::InboxUrl)
             .into_values::<_, InboxQuery>()
-            .paginate(&state.db_conn, MAX_CONCURRENT_REQUESTS as u64)
-            .into_stream();
+            .stream(&state.db_conn)
+            .await?;
 
-        inbox_stream = inbox_stream.chain(follower_inbox_stream).boxed_local();
+        Either::Right(mentioned_inbox_stream.chain(follower_inbox_stream))
     }
+    .try_chunks(MAX_CONCURRENT_REQUESTS);
 
-    while let Some(inboxes) = inbox_stream.next().await.transpose()? {
-        let mut concurrent_resolver: FuturesUnordered<_> = inboxes
+    // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
+    while let Some(inbox_chunk) = inbox_stream.next().await.transpose().map_err(|err| err.1)? {
+        let mut concurrent_resolver: FuturesUnordered<_> = inbox_chunk
             .iter()
             .map(|inbox| deliverer.deliver(inbox, &account, &user, &activity))
             .collect();
