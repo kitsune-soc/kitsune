@@ -20,7 +20,7 @@ pub async fn post(
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
     let application = application::Model {
-        id: Uuid::new_v4(),
+        id: Uuid::now_v7(),
         name: form.client_name,
         secret: generate_secret(),
         redirect_uri: form.redirect_uris,

@@ -48,7 +48,7 @@ impl AuthMutation {
         redirect_uri: String,
     ) -> Result<application::Model> {
         Ok(application::Model {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             secret: generate_secret(),
             name,
             redirect_uri,
@@ -115,7 +115,7 @@ impl AuthMutation {
             .transaction(|tx| {
                 async move {
                     let new_account = account::Model {
-                        id: Uuid::new_v4(),
+                        id: Uuid::now_v7(),
                         avatar_id: None,
                         header_id: None,
                         display_name: None,
@@ -135,7 +135,7 @@ impl AuthMutation {
                     .await?;
 
                     let new_user = user::Model {
-                        id: Uuid::new_v4(),
+                        id: Uuid::now_v7(),
                         account_id: new_account.id,
                         username,
                         email,

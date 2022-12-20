@@ -66,7 +66,7 @@ async fn handle_upload(
     // Create a directory with the name of a random UUID and place the file with its original filename into the directory.
     // Doing this will prevent virtually all cases of filename collissions.
     // The possibility of someone guessing the next UUID *and* knowing the name of the file is vanishingly small.
-    let directory_name = PathBuf::from(Uuid::new_v4().to_string());
+    let directory_name = PathBuf::from(Uuid::now_v7().to_string());
 
     let mut media_directory = state.config.upload_dir.clone();
     media_directory.push(&directory_name);
@@ -97,7 +97,7 @@ async fn handle_upload(
     };
 
     Ok(media_attachment::Model {
-        id: Uuid::new_v4(),
+        id: Uuid::now_v7(),
         account_id: user_data.account.id,
         blurhash,
         content_type: content_type.to_string(),

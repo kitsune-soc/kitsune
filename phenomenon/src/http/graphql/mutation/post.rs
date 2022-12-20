@@ -47,7 +47,7 @@ impl PostMutation {
         );
         let (mentioned_account_ids, content) = mention_resolver.resolve(content).await?;
 
-        let id = Uuid::new_v4();
+        let id = Uuid::now_v7();
         let account_id = user.account.id;
         let url = format!("https://{}/posts/{id}", state.config.domain);
 

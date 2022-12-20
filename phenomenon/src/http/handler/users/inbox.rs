@@ -26,7 +26,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
             post::Model {
-                id: Uuid::new_v4(),
+                id: Uuid::now_v7(),
                 account_id: account.id,
                 subject: note.subject,
                 content: note.content,
