@@ -26,7 +26,7 @@ pub enum Job {
 }
 
 #[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
-#[sea_orm(rs_type = "u64", db_type = "BigUnsigned")]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
 pub enum JobState {
     Queued = 0,
     Running = 1,

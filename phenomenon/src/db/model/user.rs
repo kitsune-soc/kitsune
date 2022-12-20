@@ -45,11 +45,20 @@ pub enum Relation {
 
     #[sea_orm(has_many = "super::oauth::access_token::Entity")]
     OAuth2AccessToken,
+
+    #[sea_orm(has_many = "super::role::Entity")]
+    Role,
 }
 
 impl Related<super::account::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Account.def()
+    }
+}
+
+impl Related<super::role::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Role.def()
     }
 }
 
