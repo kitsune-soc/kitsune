@@ -8,6 +8,7 @@ use serde_json::{json, Value};
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
+pub mod collection;
 pub mod helper;
 pub mod object;
 
