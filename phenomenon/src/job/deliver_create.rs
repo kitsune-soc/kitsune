@@ -1,35 +1,27 @@
 use crate::{
     activitypub::Deliverer,
-    db::model::{
-        account, follow, mention,
-        post::{self, Visibility},
-        user,
-    },
+    db::model::{account, post, user},
     error::Result,
     mapping::IntoActivityPub,
+    resolve::InboxResolver,
     state::Zustand,
 };
 use chrono::Utc;
-use futures_util::{future::Either, stream::FuturesUnordered, StreamExt, TryStreamExt};
+use futures_util::{stream::FuturesUnordered, StreamExt, TryStreamExt};
 use phenomenon_type::ap::{helper::StringOrObject, Activity, ActivityType, BaseObject};
-use sea_orm::{prelude::*, QuerySelect};
+use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
-#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
-enum InboxQuery {
-    InboxUrl,
-}
-
 #[derive(Deserialize, Serialize)]
-pub struct DeliveryContext {
-    post_id: Uuid,
+pub struct CreateDeliveryContext {
+    pub post_id: Uuid,
 }
 
 #[instrument(skip_all, fields(post_id = %ctx.post_id))]
-pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -> Result<()> {
+pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: CreateDeliveryContext) -> Result<()> {
     let Some((post, Some(account))) = post::Entity::find_by_id(ctx.post_id)
         .find_also_related(account::Entity)
         .one(&state.db_conn)
@@ -58,28 +50,11 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: DeliveryContext) -
         object: StringOrObject::Object(object),
     };
 
-    let mentioned_inbox_stream = post
-        .find_linked(mention::MentionedAccounts)
-        .select_only()
-        .column(account::Column::InboxUrl)
-        .into_values::<String, InboxQuery>()
-        .stream(&state.db_conn)
-        .await?;
-
-    let mut inbox_stream = if post.visibility == Visibility::MentionOnly {
-        Either::Left(mentioned_inbox_stream)
-    } else {
-        let follower_inbox_stream = account
-            .find_linked(follow::Followers)
-            .select_only()
-            .column(account::Column::InboxUrl)
-            .into_values::<_, InboxQuery>()
-            .stream(&state.db_conn)
-            .await?;
-
-        Either::Right(mentioned_inbox_stream.chain(follower_inbox_stream))
-    }
-    .try_chunks(MAX_CONCURRENT_REQUESTS);
+    let inbox_resolver = InboxResolver::new(state.db_conn.clone());
+    let mut inbox_stream = inbox_resolver
+        .resolve(&post)
+        .await?
+        .try_chunks(MAX_CONCURRENT_REQUESTS);
 
     // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
     while let Some(inbox_chunk) = inbox_stream.next().await.transpose().map_err(|err| err.1)? {
