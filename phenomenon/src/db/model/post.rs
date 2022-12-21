@@ -45,6 +45,10 @@ impl Visibility {
             Self::MentionOnly
         }
     }
+
+    pub fn to_string(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
 }
 
 #[derive(
@@ -87,13 +91,37 @@ pub enum Relation {
     )]
     Account,
 
+    #[sea_orm(has_many = "super::favourite::Entity")]
+    Favourite,
+
     #[sea_orm(has_many = "super::mention::Entity")]
     Mention,
+
+    #[sea_orm(has_many = "super::repost::Entity")]
+    Repost,
 }
 
 impl Related<super::account::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Account.def()
+    }
+}
+
+impl Related<super::favourite::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Favourite.def()
+    }
+}
+
+impl Related<super::mention::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Mention.def()
+    }
+}
+
+impl Related<super::repost::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Repost.def()
     }
 }
 
