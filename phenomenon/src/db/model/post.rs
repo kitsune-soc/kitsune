@@ -46,7 +46,9 @@ impl Visibility {
         }
     }
 
-    pub fn to_string(&self) -> String {
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn json_repr(&self) -> String {
         serde_json::to_string(self).unwrap()
     }
 }

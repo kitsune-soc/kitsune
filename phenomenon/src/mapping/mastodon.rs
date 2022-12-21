@@ -141,7 +141,7 @@ impl IntoMastodon for post::Model {
             in_reply_to_id: None,
             sensitive: self.is_sensitive,
             spoiler_text: self.subject,
-            visibility: self.visibility.to_string(),
+            visibility: self.visibility.json_repr(),
             uri: self.url.clone(),
             url: self.url,
             replies_count: 0,
