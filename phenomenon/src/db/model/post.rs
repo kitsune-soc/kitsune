@@ -11,6 +11,7 @@ use uuid::Uuid;
     Clone,
     Copy,
     Debug,
+    Default,
     Deserialize,
     Enum,
     EnumIter,
@@ -24,6 +25,7 @@ use uuid::Uuid;
 #[sea_orm(rs_type = "i32", db_type = "Integer")]
 #[serde(rename_all = "camelCase")]
 pub enum Visibility {
+    #[default]
     Public = 0,
     Unlisted = 1,
     FollowerOnly = 2,

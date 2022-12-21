@@ -101,19 +101,20 @@ where
         let mut content = content.clone();
         let mut mentioned_account_ids = Vec::new();
         for mention in mention_data {
-            if let Some(account) = self
-                .fetch_account(mention.username, mention.domain)
-                .await
-                .ok()
-                .flatten()
-            {
-                mentioned_account_ids.push(account.id);
+            match self.fetch_account(mention.username, mention.domain).await {
+                Ok(Some(account)) => {
+                    mentioned_account_ids.push(account.id);
 
-                let formatted_link = format!(
-                    "<a class=\"mention\" href=\"{}\">{}</a>",
-                    account.url, mention.full_mention
-                );
-                content = content.replace(mention.full_mention, &formatted_link);
+                    let formatted_link = format!(
+                        "<a class=\"mention\" href=\"{}\">{}</a>",
+                        account.url, mention.full_mention
+                    );
+                    content = content.replace(mention.full_mention, &formatted_link);
+                }
+                Err(err) => {
+                    debug!(error = %err, "Failed to resolve mention");
+                }
+                _ => (),
             }
         }
 
