@@ -1,5 +1,9 @@
 use crate::{
-    db::model::{account, follow, user},
+    db::model::{
+        account, follow,
+        post::{self, Visibility},
+        user,
+    },
     error::{Error, Result},
     state::Zustand,
 };
@@ -25,20 +29,21 @@ pub async fn get(
         return Err(Error::UserNotFound);
     };
 
-    let following_count = account
-        .find_linked(follow::Following)
+    let public_post_count = account
+        .find_related(post::Entity)
+        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .count(&state.db_conn)
         .await?;
 
     let id = format!(
-        "https://{}/users/{}/following",
+        "https://{}/users/{}/outbox",
         state.config.domain, account.username
     );
     Ok(Json(Collection {
         context: ap_context(),
         id,
         r#type: CollectionType::OrderedCollection,
-        total_items: following_count,
+        total_items: public_post_count,
         first: None,
         last: None,
     }))

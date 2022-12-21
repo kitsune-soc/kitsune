@@ -11,6 +11,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 mod followers;
 mod following;
 mod inbox;
+mod outbox;
 
 async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Result<Response> {
     let Some(account) = account::Entity::find()
@@ -29,4 +30,5 @@ pub fn routes() -> Router<Zustand> {
         .route("/:username/followers", routing::get(followers::get))
         .route("/:username/following", routing::get(following::get))
         .route("/:username/inbox", post(inbox::post))
+        .route("/:username/outbox", routing::get(outbox::get))
 }
