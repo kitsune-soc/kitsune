@@ -8,7 +8,9 @@ use axum::{
 use http::StatusCode;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
-pub mod inbox;
+mod followers;
+mod following;
+mod inbox;
 
 async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Result<Response> {
     let Some(account) = account::Entity::find()
@@ -24,5 +26,7 @@ async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Resu
 pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:username", routing::get(get))
+        .route("/:username/followers", routing::get(followers::get))
+        .route("/:username/following", routing::get(following::get))
         .route("/:username/inbox", post(inbox::post))
 }
