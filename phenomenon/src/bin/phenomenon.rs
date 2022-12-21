@@ -27,7 +27,6 @@ async fn main() {
         config: config.clone(),
         db_conn: conn.clone(),
         fetcher: Fetcher::with_redis_cache(conn, redis_conn.clone()),
-        redis_conn: redis_conn.clone(),
         webfinger: Webfinger::with_redis_cache(redis_conn),
     };
 

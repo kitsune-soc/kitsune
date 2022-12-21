@@ -126,6 +126,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct NoopCache;
 
 #[async_trait]

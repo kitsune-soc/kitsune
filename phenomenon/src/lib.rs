@@ -20,6 +20,7 @@ pub mod error;
 pub mod http;
 pub mod job;
 pub mod mapping;
+pub mod resolve;
 pub mod sanitize;
 pub mod state;
 pub mod util;

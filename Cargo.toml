@@ -7,7 +7,7 @@ strip = true
 
 [workspace]
 members = [
-    "migration", 
+    "migration",
     "phenomenon",
     "phenomenon-http-signatures",
     "phenomenon-type",

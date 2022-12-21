@@ -12,7 +12,7 @@ pub struct Model {
     pub state: JobState,
     pub context: JsonValue,
     pub run_at: DateTime<Utc>,
-    pub fail_count: u64,
+    pub fail_count: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

@@ -1,4 +1,4 @@
-use self::{catch_panic::CatchPanic, deliver_activity::DeliveryContext};
+use self::{catch_panic::CatchPanic, deliver_create::CreateDeliveryContext};
 use crate::{
     activitypub::Deliverer,
     db::model::job,
@@ -8,25 +8,25 @@ use crate::{
 use chrono::Utc;
 use once_cell::sync::Lazy;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DeriveActiveEnum, EntityTrait, EnumIter,
-    IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DeriveActiveEnum, EntityTrait,
+    EnumIter, IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 mod catch_panic;
-mod deliver_activity;
+pub mod deliver_create;
 
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(10);
 static LINEAR_BACKOFF_DURATION: Lazy<chrono::Duration> = Lazy::new(|| chrono::Duration::minutes(1)); // One minute
 
 #[derive(Deserialize, Serialize)]
 pub enum Job {
-    DeliverActivity(DeliveryContext),
+    DeliverCreate(CreateDeliveryContext),
 }
 
 #[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
-#[sea_orm(rs_type = "u64", db_type = "BigUnsigned")]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
 pub enum JobState {
     Queued = 0,
     Running = 1,
@@ -37,7 +37,7 @@ pub enum JobState {
 async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
     let txn = db_conn.begin().await?;
 
-    let Some(mut job) = job::Entity::find()
+    let Some(job) = job::Entity::find()
         .filter(
             job::Column::State.eq(JobState::Queued)
                 .or(job::Column::State.eq(JobState::Failed))
@@ -57,9 +57,10 @@ async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
         return Ok(None);
     };
 
-    job.state = JobState::Running;
-    job.updated_at = Utc::now();
-    job.clone().into_active_model().update(&txn).await?;
+    let mut update_job = job.into_active_model();
+    update_job.state = ActiveValue::Set(JobState::Running);
+    update_job.updated_at = ActiveValue::Set(Utc::now());
+    let job = update_job.update(&txn).await?;
 
     txn.commit().await?;
 
@@ -79,7 +80,7 @@ pub async fn run(state: Zustand) {
             found_job = true;
         }
 
-        let mut db_job = match get_job(&state.db_conn).await {
+        let db_job = match get_job(&state.db_conn).await {
             Ok(Some(job)) => job,
             Ok(None) => {
                 found_job = false;
@@ -96,39 +97,33 @@ pub async fn run(state: Zustand) {
 
         let execution_result = CatchPanic::new(async {
             match job {
-                Job::DeliverActivity(ctx) => {
-                    self::deliver_activity::run(&state, &deliverer, ctx).await
-                }
+                Job::DeliverCreate(ctx) => self::deliver_create::run(&state, &deliverer, ctx).await,
             }
         })
         .await;
 
+        if let Ok(Err(ref err)) = execution_result {
+            error!(error = %err, "Job execution failed");
+        }
+
+        let mut update_model = db_job.clone().into_active_model();
+        #[allow(clippy::cast_possible_truncation)]
         match execution_result {
-            Ok(Err(err)) => {
-                error!(error = %err, "Job execution failed");
-
-                db_job.state = JobState::Failed;
-                db_job.fail_count += 1;
-                db_job.run_at =
-                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32));
-                db_job.updated_at = Utc::now();
-            }
-            Err(..) => {
-                error!("Job execution panicked");
-
-                db_job.state = JobState::Failed;
-                db_job.fail_count += 1;
-                db_job.run_at =
-                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32));
-                db_job.updated_at = Utc::now();
+            Ok(Err(..)) | Err(..) => {
+                update_model.state = ActiveValue::Set(JobState::Failed);
+                update_model.fail_count = ActiveValue::Set(db_job.fail_count + 1);
+                update_model.run_at = ActiveValue::Set(
+                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32)),
+                );
+                update_model.updated_at = ActiveValue::Set(Utc::now());
             }
             _ => {
-                db_job.state = JobState::Succeeded;
-                db_job.updated_at = Utc::now();
+                update_model.state = ActiveValue::Set(JobState::Succeeded);
+                update_model.updated_at = ActiveValue::Set(Utc::now());
             }
         }
 
-        if let Err(err) = db_job.into_active_model().update(&state.db_conn).await {
+        if let Err(err) = update_model.update(&state.db_conn).await {
             error!(error = %err, "Failed to update job information");
         }
     }
