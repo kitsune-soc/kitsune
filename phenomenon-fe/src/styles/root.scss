@@ -2,6 +2,7 @@
 
 * {
   font-family: Play;
+  box-sizing: inherit;
 }
 
 :root {
@@ -17,6 +18,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  box-sizing: border-box;
 }
 
 a {
@@ -36,7 +39,8 @@ h1 {
 }
 
 ::-webkit-scrollbar {
-  width: 0.7em;
+  width: 0.666em;
+  height: 0.666em;
 }
 
 ::-webkit-scrollbar-track {

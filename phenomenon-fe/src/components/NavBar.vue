@@ -56,6 +56,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: .5px solid $shade1dark;
+    
+    &-links {
+      @media only screen and (max-width: 850px) {
+        display: none;
+        // HAMBURGER MENU
+      }
+    }
 
     &-element {
       display: inline-block;
