@@ -3,11 +3,9 @@
     <!-- ADD BACKGROUND IMAGE AS A <img> ELEMENT -->
     <div class="main-container">
       <div class="main-intro">
-        <h2 
-        
-        class="main-intro-header">
-        Kitsune
-        <!-- {{ result.instance.domain }} -->
+        <h2 class="main-intro-header">
+          <img style="height: 80px;" src="/header.svg" />
+          <!-- {{ result.instance.domain }} -->
         </h2>
         <p class="main-intro-description">
           Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -17,7 +15,9 @@
           five centuries, but also the leap into electronic typesetting,
           remaining essentially unchanged.
         </p>
-        <router-link class="main-intro-more" to="/about">Learn more</router-link>
+        <router-link class="main-intro-more" to="/about"
+          >Learn more</router-link
+        >
       </div>
       <Forms />
     </div>
@@ -42,6 +42,8 @@
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
+  @use '../styles/fonts' as *;
+
   .main {
     &-container {
       display: flex;
@@ -79,6 +81,7 @@
 
       &-header {
         font-size: 42px;
+        font-family: BlockZone;
         font-weight: bold;
         color: $shade2light;
       }
