@@ -5,10 +5,12 @@ use phenomenon::{
     db::{
         self,
         model::{
+            job,
             role::{self, Role},
             user,
         },
     },
+    job::JobState,
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
@@ -48,6 +50,12 @@ enum RoleSubcommand {
 
 #[derive(Subcommand)]
 enum AppSubcommand {
+    /// Clear succeeded jobs from database
+    ///
+    /// Succeeded jobs are kept in the database so administrators can aggregate some nice statistics.  
+    /// However, they can fill up your database and aren't essential to anything.
+    ClearSucceededJobs,
+
     /// Manage roles for local users
     #[clap(subcommand)]
     Role(RoleSubcommand),
@@ -125,6 +133,20 @@ async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) ->
     Ok(())
 }
 
+async fn clear_completed_jobs(db_conn: DatabaseConnection) -> Result<()> {
+    let delete_result = job::Entity::delete_many()
+        .filter(job::Column::State.eq(JobState::Succeeded))
+        .exec(&db_conn)
+        .await?;
+
+    println!(
+        "Deleted {} succeeded jobs from the database",
+        delete_result.rows_affected
+    );
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
@@ -135,6 +157,7 @@ async fn main() -> Result<()> {
     let cmd = App::parse();
 
     match cmd.subcommand {
+        AppSubcommand::ClearSucceededJobs => clear_completed_jobs(db_conn).await?,
         AppSubcommand::Role(RoleSubcommand::Add { username, role }) => {
             add_role(db_conn, &username, role).await?
         }
