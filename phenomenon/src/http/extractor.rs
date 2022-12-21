@@ -16,7 +16,7 @@ use http::{request::Parts, StatusCode};
 use phenomenon_http_signatures::Request;
 use phenomenon_type::ap::Activity;
 use rsa::pkcs8::Document;
-use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
+use sea_orm::{ColumnTrait, QueryFilter, Related};
 use serde::de::DeserializeOwned;
 
 #[derive(Clone)]
@@ -38,10 +38,11 @@ impl FromRequestParts<Zustand> for AuthExtactor {
         if let Ok(TypedHeader(Authorization::<Bearer>(bearer_token))) =
             parts.extract_with_state(state).await
         {
-            let Some((_token, user)) =
-                access_token::Entity::find_by_id(bearer_token.token().into())
+            let Some((user, Some(account))) =
+                <access_token::Entity as Related<user::Entity>>::find_related()
+                    .filter(access_token::Column::Token.eq(bearer_token.token()))
                     .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
-                    .find_also_related(user::Entity)
+                    .find_also_related(account::Entity)
                     .one(&state.db_conn)
                     .await
                     .map_err(Error::from)?
@@ -49,17 +50,7 @@ impl FromRequestParts<Zustand> for AuthExtactor {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             };
 
-            if let Some(user) = user {
-                let account = user
-                    .find_related(account::Entity)
-                    .one(&state.db_conn)
-                    .await
-                    .map_err(Error::from)?;
-
-                Ok(Self(account.map(|account| UserData { account, user })))
-            } else {
-                Ok(Self(None))
-            }
+            Ok(Self(Some(UserData { account, user })))
         } else {
             Ok(Self(None))
         }
