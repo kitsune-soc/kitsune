@@ -153,7 +153,7 @@ mod test {
             .await
             .expect("Failed to resolve mentions");
 
-        assert_eq!(content, "Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
+        assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
         let mentioned_account = account::Entity::find_by_id(mentioned_account_ids[0])
