@@ -5,6 +5,7 @@ use crate::{
         user,
     },
     error::{Error, Result},
+    mapping::IntoActivity,
     state::Zustand,
 };
 use axum::{
@@ -12,6 +13,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use futures_util::{stream, StreamExt, TryStreamExt};
 use phenomenon_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
@@ -75,6 +77,13 @@ pub async fn get(
             "{base_url}?page=true&max_id={}",
             posts.last().map_or(Uuid::nil(), |post| post.id)
         );
+        let ordered_items = stream::iter(posts)
+            .then(|post| post.into_activity(&state))
+            .and_then(
+                |activity| async move { serde_json::to_value(&activity).map_err(Error::from) },
+            )
+            .try_collect()
+            .await?;
 
         Ok(Json(CollectionPage {
             context: ap_context(),
@@ -83,7 +92,7 @@ pub async fn get(
             prev,
             next,
             part_of: base_url,
-            ordered_items: Vec::new(),
+            ordered_items,
         })
         .into_response())
     } else {
