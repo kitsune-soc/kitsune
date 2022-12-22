@@ -1,4 +1,4 @@
-use crate::{db::model::account, error::Result, mapping::IntoActivityPub, state::Zustand};
+use crate::{db::model::account, error::Result, mapping::IntoObject, state::Zustand};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
@@ -21,7 +21,7 @@ async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Resu
             return Ok(StatusCode::NOT_FOUND.into_response());
         };
 
-    Ok(Json(account.into_activitypub(&state).await?).into_response())
+    Ok(Json(account.into_object(&state).await?).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {
