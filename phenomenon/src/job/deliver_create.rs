@@ -2,13 +2,11 @@ use crate::{
     activitypub::Deliverer,
     db::model::{account, post, user},
     error::Result,
-    mapping::IntoActivityPub,
+    mapping::IntoActivity,
     resolve::InboxResolver,
     state::Zustand,
 };
-use chrono::Utc;
 use futures_util::{stream::FuturesUnordered, StreamExt, TryStreamExt};
-use phenomenon_type::ap::{helper::StringOrObject, Activity, ActivityType, BaseObject};
 use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -36,25 +34,12 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: CreateDeliveryCont
         .await?
         .expect("[Bug] Trying to deliver activity for account with no associated user");
 
-    let object = post.clone().into_activitypub(state).await?;
-    let activity = Activity {
-        r#type: ActivityType::Create,
-        rest: BaseObject {
-            id: format!("{}#create", object.id()),
-            attributed_to: Some(StringOrObject::String(account.url.clone())),
-            published: Utc::now(),
-            to: object.to().to_vec(),
-            cc: object.cc().to_vec(),
-            ..Default::default()
-        },
-        object: StringOrObject::Object(object),
-    };
-
     let inbox_resolver = InboxResolver::new(state.db_conn.clone());
     let mut inbox_stream = inbox_resolver
         .resolve(&post)
         .await?
         .try_chunks(MAX_CONCURRENT_REQUESTS);
+    let activity = post.into_activity(state).await?;
 
     // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
     while let Some(inbox_chunk) = inbox_stream.next().await.transpose().map_err(|err| err.1)? {

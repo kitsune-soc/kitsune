@@ -74,7 +74,7 @@ where
     /// # Returns
     ///
     /// - List of mentioned accounts
-    /// - Content with the mentions replaced by links with the class `mention`
+    /// - Content with the mentions replaced by links
     ///
     /// # Panics
     ///
@@ -109,10 +109,8 @@ where
             {
                 mentioned_account_ids.push(account.id);
 
-                let formatted_link = format!(
-                    "<a class=\"mention\" href=\"{}\">{}</a>",
-                    account.url, mention.full_mention
-                );
+                let formatted_link =
+                    format!("<a href=\"{}\">{}</a>", account.url, mention.full_mention);
                 content = content.replace(mention.full_mention, &formatted_link);
             }
         }

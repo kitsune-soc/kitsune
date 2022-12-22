@@ -42,4 +42,15 @@ impl Linked for Followers {
     }
 }
 
+pub struct Following;
+
+impl Linked for Following {
+    type FromEntity = super::account::Entity;
+    type ToEntity = super::account::Entity;
+
+    fn link(&self) -> Vec<sea_orm::LinkDef> {
+        vec![Relation::Follower.def().rev(), Relation::Account.def()]
+    }
+}
+
 impl ActiveModelBehavior for ActiveModel {}
