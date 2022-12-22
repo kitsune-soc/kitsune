@@ -31,7 +31,6 @@ pub struct AuthorizeQuery {
     response_type: String,
     client_id: Uuid,
     redirect_uri: String,
-    scope: Option<String>,
     state: Option<String>,
 }
 

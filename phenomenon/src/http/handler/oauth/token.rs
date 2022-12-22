@@ -51,7 +51,6 @@ pub struct ClientCredentialsData {
 pub struct PasswordData {
     username: String,
     password: String,
-    scope: String,
 }
 
 #[derive(Deserialize)]
@@ -59,7 +58,6 @@ pub struct RefreshTokenData {
     client_id: Uuid,
     client_secret: String,
     refresh_token: String,
-    scope: Option<String>,
 }
 
 #[derive(Deserialize)]
