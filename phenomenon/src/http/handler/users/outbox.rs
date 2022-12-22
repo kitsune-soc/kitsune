@@ -1,6 +1,6 @@
 use crate::{
     db::model::{
-        account, follow,
+        account,
         post::{self, Visibility},
         user,
     },
