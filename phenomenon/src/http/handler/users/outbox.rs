@@ -48,7 +48,7 @@ pub async fn get(
         return Err(Error::UserNotFound);
     };
 
-    let base_url = format!("https://{}/users/{}/outbox", state.config.domain, username);
+    let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
     let base_query = account
         .find_related(post::Entity)
         .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
