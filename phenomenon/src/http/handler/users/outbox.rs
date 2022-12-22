@@ -8,7 +8,7 @@ use crate::{
     state::Zustand,
 };
 use axum::{
-    extract::{Path, Query, State},
+    extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
     Json,
 };
@@ -34,6 +34,7 @@ pub struct OutboxQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
@@ -51,18 +52,11 @@ pub async fn get(
         .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
 
     if query.page {
-        let mut id = format!("{base_url}?page=true");
         let mut page_query = base_query;
         if let Some(max_id) = query.max_id {
-            id.push_str("&max_id=");
-            id.push_str(&max_id.to_string());
-
             page_query = page_query.filter(post::Column::Id.lt(max_id));
         }
         if let Some(min_id) = query.min_id {
-            id.push_str("&min_id=");
-            id.push_str(&min_id.to_string());
-
             page_query = page_query.filter(post::Column::Id.gt(min_id));
         }
 
@@ -72,6 +66,7 @@ pub async fn get(
             .all(&state.db_conn)
             .await?;
 
+        let id = format!("{}{}", state.config.domain, original_uri);
         let prev = format!(
             "{base_url}?page=true&min_id={}",
             posts.first().map_or(Uuid::max(), |post| post.id)
