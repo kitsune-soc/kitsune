@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
 pub enum CollectionType {
     #[default]
     OrderedCollection,
@@ -21,7 +20,6 @@ pub struct Collection {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
 pub enum PageType {
     #[default]
     OrderedCollectionPage,
