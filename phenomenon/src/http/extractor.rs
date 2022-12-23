@@ -25,7 +25,7 @@ pub struct UserData {
     pub user: user::Model,
 }
 
-pub struct AuthExtactor(pub Option<UserData>);
+pub struct AuthExtactor(pub UserData);
 
 #[async_trait]
 impl FromRequestParts<Zustand> for AuthExtactor {
@@ -35,25 +35,24 @@ impl FromRequestParts<Zustand> for AuthExtactor {
         parts: &mut Parts,
         state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
-        if let Ok(TypedHeader(Authorization::<Bearer>(bearer_token))) =
-            parts.extract_with_state(state).await
-        {
-            let Some((user, Some(account))) =
-                <access_token::Entity as Related<user::Entity>>::find_related()
-                    .filter(access_token::Column::Token.eq(bearer_token.token()))
-                    .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
-                    .find_also_related(account::Entity)
-                    .one(&state.db_conn)
-                    .await
-                    .map_err(Error::from)?
-            else {
-                return Err(StatusCode::UNAUTHORIZED.into_response());
-            };
+        let TypedHeader(Authorization::<Bearer>(bearer_token)) = parts
+            .extract_with_state(state)
+            .await
+            .map_err(IntoResponse::into_response)?;
 
-            Ok(Self(Some(UserData { account, user })))
-        } else {
-            Ok(Self(None))
-        }
+        let Some((user, Some(account))) =
+            <access_token::Entity as Related<user::Entity>>::find_related()
+                .filter(access_token::Column::Token.eq(bearer_token.token()))
+                .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
+                .find_also_related(account::Entity)
+                .one(&state.db_conn)
+                .await
+                .map_err(Error::from)?
+        else {
+            return Err(StatusCode::UNAUTHORIZED.into_response());
+        };
+
+        Ok(Self(UserData { account, user }))
     }
 }
 

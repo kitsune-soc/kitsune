@@ -2,10 +2,13 @@ use crate::{
     db::model::{
         job, mention,
         post::{self, Visibility},
+        role::{self, Role},
     },
     error::Result,
     http::extractor::{AuthExtactor, FormOrJson},
-    job::{deliver_create::CreateDeliveryContext, Job, JobState},
+    job::{
+        deliver_create::CreateDeliveryContext, deliver_delete::DeleteDeliveryContext, Job, JobState,
+    },
     mapping::IntoMastodon,
     resolve::MentionResolver,
     sanitize::CleanHtmlExt,
@@ -15,15 +18,15 @@ use axum::{
     debug_handler,
     extract::{Path, State},
     response::{IntoResponse, Response},
-    routing::{get, post},
-    Json, Router,
+    routing, Json, Router,
 };
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::StatusCode;
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait, PaginatorTrait,
+    QueryFilter, TransactionTrait,
 };
 use serde::Deserialize;
 use uuid::Uuid;
@@ -39,7 +42,47 @@ struct CreateForm {
 }
 
 #[debug_handler(state = Zustand)]
-async fn get_handler(
+async fn delete(
+    State(state): State<Zustand>,
+    AuthExtactor(user_data): AuthExtactor,
+    Path(id): Path<Uuid>,
+) -> Result<Response> {
+    let Some(post) = post::Entity::find_by_id(id).one(&state.db_conn).await? else {
+        return Ok(StatusCode::NOT_FOUND.into_response());
+    };
+
+    if post.account_id != user_data.account.id {
+        let admin_role_count = user_data
+            .user
+            .find_related(role::Entity)
+            .filter(role::Column::Role.eq(Role::Admin))
+            .count(&state.db_conn)
+            .await?;
+
+        if admin_role_count == 0 {
+            return Ok(StatusCode::UNAUTHORIZED.into_response());
+        }
+    }
+
+    let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
+    job::Model {
+        id: Uuid::now_v7(),
+        state: JobState::Queued,
+        run_at: Utc::now(),
+        context: serde_json::to_value(job_context).unwrap(),
+        fail_count: 0,
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+    }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
+
+    Ok(StatusCode::OK.into_response())
+}
+
+#[debug_handler(state = Zustand)]
+async fn get(
     State(state): State<Zustand>,
     AuthExtactor(_account): AuthExtactor,
     Path(id): Path<Uuid>,
@@ -61,14 +104,11 @@ async fn get_handler(
 }
 
 #[debug_handler(state = Zustand)]
-async fn post_handler(
+async fn post(
     State(state): State<Zustand>,
     AuthExtactor(user_data): AuthExtactor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
-    let Some(user_data) = user_data else {
-        return Ok(StatusCode::UNAUTHORIZED.into_response());
-    };
     let content = {
         let parser = Parser::new_ext(&form.status, Options::all());
         let mut buf = String::new();
@@ -146,6 +186,6 @@ async fn post_handler(
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
-        .route("/", post(post_handler))
-        .route("/:id", get(get_handler))
+        .route("/", routing::post(post))
+        .route("/:id", routing::get(get).delete(delete))
 }

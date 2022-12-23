@@ -1,4 +1,7 @@
-use self::{catch_panic::CatchPanic, deliver_create::CreateDeliveryContext};
+use self::{
+    catch_panic::CatchPanic, deliver_create::CreateDeliveryContext,
+    deliver_delete::DeleteDeliveryContext,
+};
 use crate::{
     activitypub::Deliverer,
     db::model::job,
@@ -15,14 +18,18 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 mod catch_panic;
-pub mod deliver_create;
 
+pub mod deliver_create;
+pub mod deliver_delete;
+
+const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(10);
 static LINEAR_BACKOFF_DURATION: Lazy<chrono::Duration> = Lazy::new(|| chrono::Duration::minutes(1)); // One minute
 
 #[derive(Deserialize, Serialize)]
 pub enum Job {
     DeliverCreate(CreateDeliveryContext),
+    DeliverDelete(DeleteDeliveryContext),
 }
 
 #[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
@@ -98,6 +105,7 @@ pub async fn run(state: Zustand) {
         let execution_result = CatchPanic::new(async {
             match job {
                 Job::DeliverCreate(ctx) => self::deliver_create::run(&state, &deliverer, ctx).await,
+                Job::DeliverDelete(ctx) => self::deliver_delete::run(&state, &deliverer, ctx).await,
             }
         })
         .await;
