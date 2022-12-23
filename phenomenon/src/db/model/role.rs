@@ -9,7 +9,6 @@ use uuid::Uuid;
 #[sea_orm(rs_type = "i32", db_type = "Integer")]
 pub enum Role {
     Admin = 0,
-    Moderator = 1,
 }
 
 #[derive(Clone, Debug, DeriveEntityModel, Eq, PartialEq)]

@@ -4,7 +4,7 @@ use crate::{
     state::Zustand,
 };
 use axum::{
-    extract::{Path, State},
+    extract::{OriginalUri, Path, State},
     Json,
 };
 use phenomenon_type::ap::{
@@ -15,6 +15,7 @@ use sea_orm::{ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, Related};
 
 pub async fn get(
     State(state): State<Zustand>,
+    OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
 ) -> Result<Json<Collection>> {
     let Some(account) = <user::Entity as Related<account::Entity>>::find_related()
@@ -30,10 +31,7 @@ pub async fn get(
         .count(&state.db_conn)
         .await?;
 
-    let id = format!(
-        "https://{}/users/{}/followers",
-        state.config.domain, account.username
-    );
+    let id = format!("https://{}{}", state.config.domain, original_uri.path());
     Ok(Json(Collection {
         context: ap_context(),
         id,

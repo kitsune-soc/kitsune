@@ -71,11 +71,17 @@ impl Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::favourite::Entity")]
+    Favourite,
+
     #[sea_orm(has_many = "super::media_attachment::Entity")]
     MediaAttachment,
 
     #[sea_orm(has_many = "super::post::Entity")]
     Post,
+
+    #[sea_orm(has_many = "super::repost::Entity")]
+    Repost,
 
     #[sea_orm(
         belongs_to = "super::user::Entity",

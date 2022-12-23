@@ -4,6 +4,7 @@ use sea_orm_migration::prelude::*;
 #[derive(Iden)]
 pub enum Favourites {
     Table,
+    Id,
     AccountId,
     PostId,
     Url,
@@ -21,6 +22,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .if_not_exists()
                     .table(Favourites::Table)
+                    .col(ColumnDef::new(Favourites::Id).uuid().primary_key())
                     .col(ColumnDef::new(Favourites::AccountId).uuid().not_null())
                     .col(ColumnDef::new(Favourites::PostId).uuid().not_null())
                     .col(
@@ -34,10 +36,11 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
-                    .primary_key(
+                    .index(
                         Index::create()
                             .col(Favourites::AccountId)
-                            .col(Favourites::PostId),
+                            .col(Favourites::PostId)
+                            .unique(),
                     )
                     .foreign_key(
                         ForeignKey::create()

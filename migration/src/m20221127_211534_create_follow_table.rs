@@ -4,6 +4,7 @@ use sea_orm_migration::prelude::*;
 #[derive(Iden)]
 pub enum AccountsFollowers {
     Table,
+    Id,
     AccountId,
     FollowerId,
     ApprovedAt,
@@ -22,6 +23,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(AccountsFollowers::Table)
+                    .col(ColumnDef::new(AccountsFollowers::Id).uuid().primary_key())
                     .col(
                         ColumnDef::new(AccountsFollowers::AccountId)
                             .uuid()
@@ -49,10 +51,11 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
-                    .primary_key(
+                    .index(
                         Index::create()
                             .col(AccountsFollowers::AccountId)
-                            .col(AccountsFollowers::FollowerId),
+                            .col(AccountsFollowers::FollowerId)
+                            .unique(),
                     )
                     .foreign_key(
                         ForeignKey::create()

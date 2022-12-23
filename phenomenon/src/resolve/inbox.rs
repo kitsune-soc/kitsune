@@ -1,18 +1,16 @@
 use crate::{
-    db::model::{
-        account, follow, mention,
-        post::{self, Visibility},
+    db::{
+        model::{
+            account, follow, mention,
+            post::{self, Visibility},
+        },
+        InboxUrlQuery,
     },
     error::Result,
 };
 use futures_util::{future::Either, Stream, StreamExt};
 use migration::DbErr;
-use sea_orm::{prelude::*, QuerySelect};
-
-#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
-enum InboxQuery {
-    InboxUrl,
-}
+use sea_orm::{DatabaseConnection, ModelTrait, QuerySelect};
 
 pub struct InboxResolver {
     db_conn: DatabaseConnection,
@@ -38,7 +36,7 @@ impl InboxResolver {
             .find_linked(mention::MentionedAccounts)
             .select_only()
             .column(account::Column::InboxUrl)
-            .into_values::<String, InboxQuery>()
+            .into_values::<String, InboxUrlQuery>()
             .stream(&self.db_conn)
             .await?;
 
@@ -49,7 +47,7 @@ impl InboxResolver {
                 .find_linked(follow::Followers)
                 .select_only()
                 .column(account::Column::InboxUrl)
-                .into_values::<_, InboxQuery>()
+                .into_values::<_, InboxUrlQuery>()
                 .stream(&self.db_conn)
                 .await?;
 

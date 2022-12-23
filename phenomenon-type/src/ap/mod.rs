@@ -93,6 +93,7 @@ pub struct BaseObject {
     #[serde(rename = "@context")]
     pub context: Value,
     pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub attributed_to: Option<StringOrObject<Box<Actor>>>,
     #[serde(default)]
     pub sensitive: bool,

@@ -11,6 +11,7 @@ use uuid::Uuid;
     Clone,
     Copy,
     Debug,
+    Default,
     Deserialize,
     Enum,
     EnumIter,
@@ -24,6 +25,7 @@ use uuid::Uuid;
 #[sea_orm(rs_type = "i32", db_type = "Integer")]
 #[serde(rename_all = "camelCase")]
 pub enum Visibility {
+    #[default]
     Public = 0,
     Unlisted = 1,
     FollowerOnly = 2,
@@ -44,6 +46,12 @@ impl Visibility {
         } else {
             Self::MentionOnly
         }
+    }
+
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn json_repr(&self) -> String {
+        serde_json::to_string(self).unwrap()
     }
 }
 
@@ -87,13 +95,37 @@ pub enum Relation {
     )]
     Account,
 
+    #[sea_orm(has_many = "super::favourite::Entity")]
+    Favourite,
+
     #[sea_orm(has_many = "super::mention::Entity")]
     Mention,
+
+    #[sea_orm(has_many = "super::repost::Entity")]
+    Repost,
 }
 
 impl Related<super::account::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Account.def()
+    }
+}
+
+impl Related<super::favourite::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Favourite.def()
+    }
+}
+
+impl Related<super::mention::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Mention.def()
+    }
+}
+
+impl Related<super::repost::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Repost.def()
     }
 }
 

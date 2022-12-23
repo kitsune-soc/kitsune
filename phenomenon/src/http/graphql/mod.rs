@@ -36,12 +36,12 @@ impl ContextExt for &'_ Context<'_> {
 #[debug_handler(state = Zustand)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
-    AuthExtactor(user_data): AuthExtactor,
+    user_data: Option<AuthExtactor>,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
     let mut req = req.into_inner();
     if let Some(user_data) = user_data {
-        req = req.data(user_data);
+        req = req.data(user_data.0);
     }
 
     schema.execute_batch(req).await.into()

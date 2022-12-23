@@ -79,6 +79,7 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
         let followed_user = state.fetcher.fetch_actor(&url).await?;
 
         follow::Model {
+            id: Uuid::now_v7(),
             account_id: followed_user.id,
             follower_id: account.id,
             approved_at: None,
