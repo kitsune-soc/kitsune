@@ -31,6 +31,8 @@ use sea_orm::{
 use serde::Deserialize;
 use uuid::Uuid;
 
+mod favourite;
+
 #[derive(Deserialize)]
 struct CreateForm {
     status: String,
@@ -188,4 +190,5 @@ pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).delete(delete))
+        .route("/:id/favourite", routing::post(favourite::post))
 }

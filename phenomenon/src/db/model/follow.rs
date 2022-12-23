@@ -5,8 +5,8 @@ use sea_orm::prelude::*;
 #[sea_orm(table_name = "accounts_followers")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
     pub account_id: Uuid,
-    #[sea_orm(primary_key, auto_increment = false)]
     pub follower_id: Uuid,
     pub approved_at: Option<DateTime<Utc>>,
     pub url: String,

@@ -1,6 +1,6 @@
 use self::{
     catch_panic::CatchPanic, deliver_create::CreateDeliveryContext,
-    deliver_delete::DeleteDeliveryContext,
+    deliver_delete::DeleteDeliveryContext, deliver_favourite::FavouriteDeliveryContext,
 };
 use crate::{
     activitypub::Deliverer,
@@ -21,6 +21,7 @@ mod catch_panic;
 
 pub mod deliver_create;
 pub mod deliver_delete;
+pub mod deliver_favourite;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(10);
@@ -30,6 +31,7 @@ static LINEAR_BACKOFF_DURATION: Lazy<chrono::Duration> = Lazy::new(|| chrono::Du
 pub enum Job {
     DeliverCreate(CreateDeliveryContext),
     DeliverDelete(DeleteDeliveryContext),
+    DeliverFavourite(FavouriteDeliveryContext),
 }
 
 #[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
@@ -106,6 +108,9 @@ pub async fn run(state: Zustand) {
             match job {
                 Job::DeliverCreate(ctx) => self::deliver_create::run(&state, &deliverer, ctx).await,
                 Job::DeliverDelete(ctx) => self::deliver_delete::run(&state, &deliverer, ctx).await,
+                Job::DeliverFavourite(ctx) => {
+                    self::deliver_favourite::run(&state, &deliverer, ctx).await
+                }
             }
         })
         .await;
