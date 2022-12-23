@@ -38,6 +38,10 @@ pub async fn run(
         return Ok(());
     };
 
+    favourite::Entity::delete_by_id(favourite.id)
+        .exec(&state.db_conn)
+        .await?;
+
     let inbox_url = favourite
         .find_linked(favourite::FavouritedPostAuthor)
         .select_only()
