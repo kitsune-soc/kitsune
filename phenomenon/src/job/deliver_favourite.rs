@@ -1,23 +1,20 @@
-use sea_orm::{prelude::*, QuerySelect};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
 use crate::{
     activitypub::Deliverer,
-    db::model::{account, favourite, user},
+    db::{
+        model::{account, favourite, user},
+        InboxUrlQuery,
+    },
     error::Result,
     mapping::IntoActivity,
     state::Zustand,
 };
+use sea_orm::{prelude::*, QuerySelect};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Deserialize, Serialize)]
 pub struct FavouriteDeliveryContext {
     pub favourite_id: Uuid,
-}
-
-#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
-enum InboxUrlQuery {
-    InboxUrl,
 }
 
 pub async fn run(

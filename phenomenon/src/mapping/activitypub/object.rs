@@ -1,7 +1,10 @@
 use crate::{
-    db::model::{
-        account, media_attachment, mention,
-        post::{self, Visibility},
+    db::{
+        model::{
+            account, media_attachment, mention,
+            post::{self, Visibility},
+        },
+        UrlQuery,
     },
     error::{Error, Result},
     state::Zustand,
@@ -16,11 +19,6 @@ use phenomenon_type::ap::{
 };
 use sea_orm::{prelude::*, QuerySelect};
 use std::str::FromStr;
-
-#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
-enum UrlQuery {
-    Url,
-}
 
 #[async_trait]
 pub trait IntoObject {

@@ -1,8 +1,18 @@
 use crate::error::Result;
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{prelude::*, Database};
 
 pub mod model;
+
+#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
+pub enum InboxUrlQuery {
+    InboxUrl,
+}
+
+#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
+pub enum UrlQuery {
+    Url,
+}
 
 /// Connect to a database and run the migrations
 ///

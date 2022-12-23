@@ -1,6 +1,9 @@
 use super::IntoObject;
 use crate::{
-    db::model::{account, favourite, post},
+    db::{
+        model::{account, favourite, post},
+        UrlQuery,
+    },
     error::Result,
     state::Zustand,
 };
@@ -9,12 +12,7 @@ use chrono::Utc;
 use phenomenon_type::ap::{
     ap_context, helper::StringOrObject, Activity, ActivityType, BaseObject, PUBLIC_IDENTIFIER,
 };
-use sea_orm::{prelude::*, QuerySelect};
-
-#[derive(Copy, Clone, Debug, DeriveColumn, EnumIter)]
-enum UrlQuery {
-    Url,
-}
+use sea_orm::{ModelTrait, QuerySelect};
 
 #[async_trait]
 pub trait IntoActivity {
@@ -114,8 +112,11 @@ impl IntoActivity for post::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let account = self
+        let account_url = self
             .find_related(account::Entity)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<String, UrlQuery>()
             .one(&state.db_conn)
             .await?
             .expect("[Bug] Post without associated account");
@@ -128,7 +129,7 @@ impl IntoActivity for post::Model {
             rest: BaseObject {
                 context: ap_context(),
                 id: format!("{}/activity", object.id()),
-                attributed_to: Some(StringOrObject::String(account.url.clone())),
+                attributed_to: Some(StringOrObject::String(account_url)),
                 sensitive: false,
                 published: created_at,
                 to: object.to().to_vec(),
