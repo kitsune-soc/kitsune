@@ -1,6 +1,9 @@
 use self::{
-    catch_panic::CatchPanic, deliver_create::CreateDeliveryContext,
-    deliver_delete::DeleteDeliveryContext, deliver_favourite::FavouriteDeliveryContext,
+    catch_panic::CatchPanic,
+    deliver::{
+        create::CreateDeliveryContext, delete::DeleteDeliveryContext,
+        favourite::FavouriteDeliveryContext, unfavourite::UnfavouriteDeliveryContext,
+    },
 };
 use crate::{
     activitypub::Deliverer,
@@ -19,9 +22,7 @@ use std::time::Duration;
 
 mod catch_panic;
 
-pub mod deliver_create;
-pub mod deliver_delete;
-pub mod deliver_favourite;
+pub mod deliver;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(10);
@@ -32,6 +33,7 @@ pub enum Job {
     DeliverCreate(CreateDeliveryContext),
     DeliverDelete(DeleteDeliveryContext),
     DeliverFavourite(FavouriteDeliveryContext),
+    DeliverUnfavourite(UnfavouriteDeliveryContext),
 }
 
 #[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
@@ -106,10 +108,17 @@ pub async fn run(state: Zustand) {
 
         let execution_result = CatchPanic::new(async {
             match job {
-                Job::DeliverCreate(ctx) => self::deliver_create::run(&state, &deliverer, ctx).await,
-                Job::DeliverDelete(ctx) => self::deliver_delete::run(&state, &deliverer, ctx).await,
+                Job::DeliverCreate(ctx) => {
+                    self::deliver::create::run(&state, &deliverer, ctx).await
+                }
+                Job::DeliverDelete(ctx) => {
+                    self::deliver::delete::run(&state, &deliverer, ctx).await
+                }
                 Job::DeliverFavourite(ctx) => {
-                    self::deliver_favourite::run(&state, &deliverer, ctx).await
+                    self::deliver::favourite::run(&state, &deliverer, ctx).await
+                }
+                Job::DeliverUnfavourite(ctx) => {
+                    self::deliver::unfavourite::run(&state, &deliverer, ctx).await
                 }
             }
         })

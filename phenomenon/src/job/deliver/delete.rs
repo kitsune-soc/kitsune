@@ -1,4 +1,4 @@
-use super::MAX_CONCURRENT_REQUESTS;
+use crate::job::MAX_CONCURRENT_REQUESTS;
 use crate::{
     activitypub::Deliverer,
     db::model::{account, post, user},

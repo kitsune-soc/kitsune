@@ -2,7 +2,7 @@ use crate::{
     db::model::{favourite, job, post},
     error::Result,
     http::extractor::AuthExtactor,
-    job::{deliver_favourite::FavouriteDeliveryContext, Job, JobState},
+    job::{deliver::favourite::FavouriteDeliveryContext, Job, JobState},
     mapping::IntoMastodon,
     state::Zustand,
 };

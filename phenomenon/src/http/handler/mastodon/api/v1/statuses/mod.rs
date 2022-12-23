@@ -7,7 +7,8 @@ use crate::{
     error::Result,
     http::extractor::{AuthExtactor, FormOrJson},
     job::{
-        deliver_create::CreateDeliveryContext, deliver_delete::DeleteDeliveryContext, Job, JobState,
+        deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
+        Job, JobState,
     },
     mapping::IntoMastodon,
     resolve::MentionResolver,
@@ -32,6 +33,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 mod favourite;
+mod unfavourite;
 
 #[derive(Deserialize)]
 struct CreateForm {
@@ -191,4 +193,5 @@ pub fn routes() -> Router<Zustand> {
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).delete(delete))
         .route("/:id/favourite", routing::post(favourite::post))
+        .route("/:id/unfavourite", routing::post(unfavourite::post))
 }
