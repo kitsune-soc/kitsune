@@ -1,7 +1,7 @@
 use super::IntoObject;
 use crate::{
     db::{
-        model::{account, favourite, post},
+        model::{account, favourite, post, repost},
         UrlQuery,
     },
     error::Result,
@@ -154,6 +154,89 @@ impl IntoActivity for post::Model {
                 cc: object.cc().to_vec(),
             },
             object: StringOrObject::String(object.id().to_string()),
+        })
+    }
+}
+
+#[async_trait]
+impl IntoActivity for repost::Model {
+    type Output = Activity;
+    type NegateOutput = Activity;
+
+    async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
+        let account_url = self
+            .find_related(account::Entity)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Repost without associated account");
+
+        let post_url = self
+            .find_related(post::Entity)
+            .select_only()
+            .column(post::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Repost without associated post");
+
+        let author_account_url = self
+            .find_linked(repost::RepostedPostAuthor)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Post without related account");
+
+        Ok(Activity {
+            r#type: ActivityType::Announce,
+            object: StringOrObject::String(post_url),
+            rest: BaseObject {
+                context: ap_context(),
+                id: self.url,
+                attributed_to: Some(StringOrObject::String(account_url)),
+                sensitive: false,
+                published: self.created_at,
+                to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
+                cc: vec![],
+            },
+        })
+    }
+
+    async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
+        let account_url = self
+            .find_related(account::Entity)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Repost without associated account");
+
+        let author_account_url = self
+            .find_linked(repost::RepostedPostAuthor)
+            .select_only()
+            .column(account::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Post without related account");
+
+        Ok(Activity {
+            r#type: ActivityType::Undo,
+            rest: BaseObject {
+                context: ap_context(),
+                id: format!("{}#undo", self.url),
+                attributed_to: Some(StringOrObject::String(account_url)),
+                sensitive: false,
+                published: self.created_at,
+                to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
+                cc: vec![],
+            },
+            object: StringOrObject::String(self.url),
         })
     }
 }
