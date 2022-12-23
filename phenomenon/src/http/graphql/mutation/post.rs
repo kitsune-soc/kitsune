@@ -5,7 +5,7 @@ use crate::{
     },
     error::Error as ServerError,
     http::graphql::ContextExt,
-    job::{deliver_create::CreateDeliveryContext, Job, JobState},
+    job::{deliver::create::CreateDeliveryContext, Job, JobState},
     resolve::MentionResolver,
     sanitize::CleanHtmlExt,
 };
