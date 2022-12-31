@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-stream = "0.3.3"
 futures-util = "0.3.25"
 pest = "2.5.2"
 pest_derive = "2.5.2"

@@ -2413,7 +2413,6 @@ dependencies = [
 name = "post-lexer"
 version = "0.1.0"
 dependencies = [
- "async-stream",
  "futures-util",
  "pest",
  "pest_derive",

@@ -1,7 +1,6 @@
 #![forbid(rust_2018_idioms)]
 
-use async_stream::stream;
-use futures_util::{future::BoxFuture, pin_mut, Stream, StreamExt};
+use futures_util::{future::BoxFuture, pin_mut, stream, Stream, StreamExt};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
 use std::{borrow::Cow, error::Error};
@@ -53,11 +52,7 @@ impl Transformer {
     where
         E: Iterator<Item = Element<'a>>,
     {
-        stream! {
-            for elem in elems {
-                yield (self.transformation)(elem).await;
-            }
-        }
+        stream::iter(elems).then(self.transformation)
     }
 }
 
