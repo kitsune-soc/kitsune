@@ -20,20 +20,26 @@ component_postfix = {
 
 emote = { 
     ":" 
-    ~ (LETTER | NUMBER | DASH_PUNCTUATION)+ 
+    ~ emote_content 
     ~ ":" 
+}
+
+emote_content = {
+    (LETTER | NUMBER | DASH_PUNCTUATION)+
 }
 
 hashtag = { 
     component_prefix 
     ~ "#" 
     ~ hashtag_content 
-    ~ (component_postfix | !(LETTER | NUMBER)) 
+    ~ (component_postfix | !hashtag_content) 
 }
 
 hashtag_content = {
-    (!component_postfix 
-    ~ (LETTER | NUMBER)+)+ 
+    (
+        !component_postfix 
+        ~ (LETTER | NUMBER)+
+    )+ 
 }
 
 mention = {
@@ -45,12 +51,18 @@ mention = {
 }
 
 mention_domain = {
-    (!(component_postfix | ".") ~ ANY)+ 
+    (
+        !(component_postfix | ".") ~ ANY
+    )+ 
     ~ "." 
-    ~ (!component_postfix ~ ANY)+ 
+    ~ (
+        !component_postfix ~ ANY
+    )+ 
 }
 
 mention_username = { 
-    (!(component_postfix | "@") 
-    ~ ANY)+ 
+    (
+        !(component_postfix | "@") 
+        ~ ANY
+    )+ 
 }

@@ -22,6 +22,10 @@ mod test {
         let emote1 = token_iter.next().unwrap();
         assert_eq!(emote1.as_rule(), Rule::emote);
         assert_eq!(emote1.as_str(), ":blobfoxcoffee:");
+        let mut emote1 = emote1.into_inner();
+        let emote1_content = emote1.next().unwrap();
+        assert_eq!(emote1_content.as_rule(), Rule::emote_content);
+        assert_eq!(emote1_content.as_str(), "blobfoxcoffee");
 
         let text2 = token_iter.next().unwrap();
         assert_eq!(text2.as_rule(), Rule::text);
@@ -30,6 +34,10 @@ mod test {
         let emote2 = token_iter.next().unwrap();
         assert_eq!(emote2.as_rule(), Rule::emote);
         assert_eq!(emote2.as_str(), ":blobcatpeek:");
+        let mut emote2 = emote2.into_inner();
+        let emote2_content = emote2.next().unwrap();
+        assert_eq!(emote2_content.as_rule(), Rule::emote_content);
+        assert_eq!(emote2_content.as_str(), "blobcatpeek");
     }
 
     #[test]
@@ -104,17 +112,35 @@ mod test {
         assert_eq!(mention1.as_str(), " @桐生@friday.night");
 
         let mut mention1 = mention1.into_inner();
-        let mention_prefix = mention1.next().unwrap();
-        assert_eq!(mention_prefix.as_rule(), Rule::component_prefix);
-        assert_eq!(mention_prefix.as_str(), " ");
-        let mention_username1 = mention1.next().unwrap();
-        assert_eq!(mention_username1.as_rule(), Rule::mention_username);
-        assert_eq!(mention_username1.as_str(), "桐生");
-        let mention_domain1 = mention1.next().unwrap();
-        assert_eq!(mention_domain1.as_rule(), Rule::mention_domain);
-        assert_eq!(mention_domain1.as_str(), "friday.night");
-        let mention_postfix = mention1.next().unwrap();
-        assert_eq!(mention_postfix.as_rule(), Rule::component_postfix);
-        assert_eq!(mention_postfix.as_str(), "");
+        let mention1_prefix = mention1.next().unwrap();
+        assert_eq!(mention1_prefix.as_rule(), Rule::component_prefix);
+        assert_eq!(mention1_prefix.as_str(), " ");
+        let mention1_username = mention1.next().unwrap();
+        assert_eq!(mention1_username.as_rule(), Rule::mention_username);
+        assert_eq!(mention1_username.as_str(), "桐生");
+        let mention1_domain = mention1.next().unwrap();
+        assert_eq!(mention1_domain.as_rule(), Rule::mention_domain);
+        assert_eq!(mention1_domain.as_str(), "friday.night");
+        let mention1_postfix = mention1.next().unwrap();
+        assert_eq!(mention1_postfix.as_rule(), Rule::component_postfix);
+        assert_eq!(mention1_postfix.as_str(), "");
+
+        let mention2 = token_iter.next().unwrap();
+        assert_eq!(mention2.as_rule(), Rule::mention);
+        assert_eq!(mention2.as_str(), " @真島");
+        let mut mention2 = mention2.into_inner();
+        let mention2_prefix = mention2.next().unwrap();
+        assert_eq!(mention2_prefix.as_rule(), Rule::component_prefix);
+        assert_eq!(mention2_prefix.as_str(), " ");
+        let mention2_username = mention2.next().unwrap();
+        assert_eq!(mention2_username.as_rule(), Rule::mention_username);
+        assert_eq!(mention2_username.as_str(), "真島");
+        let mention2_postfix = mention2.next().unwrap();
+        assert_eq!(mention2_postfix.as_rule(), Rule::component_postfix);
+        assert_eq!(mention2_postfix.as_str(), "");
+
+        let text2 = token_iter.next().unwrap();
+        assert_eq!(text2.as_rule(), Rule::text);
+        assert_eq!(text2.as_str(), " ! ");
     }
 }
