@@ -14,8 +14,8 @@ component_prefix = {
     (NEWLINE | SOI | WHITE_SPACE)
 }
 
-component_postfix = { 
-    &(EOI | WHITE_SPACE)
+component_postfix = _{ 
+    &(EOI | NEWLINE | WHITE_SPACE)
 }
 
 emote = { 

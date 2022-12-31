@@ -17,13 +17,11 @@ fn parse_hashtag() {
     let mut hashtag1 = hashtag1.into_inner();
     let hashtag1_prefix = hashtag1.next().unwrap();
     let hashtag1_content = hashtag1.next().unwrap();
-    let hashtag1_postfix = hashtag1.next().unwrap();
 
     assert_eq!(hashtag1_prefix.as_rule(), Rule::component_prefix);
     assert_eq!(hashtag1_prefix.as_str(), " ");
     assert_eq!(hashtag1_content.as_rule(), Rule::hashtag_content);
     assert_eq!(hashtag1_content.as_str(), "lexer");
-    assert_eq!(hashtag1_postfix.as_rule(), Rule::component_postfix);
 
     let text2 = token_iter.next().unwrap();
     assert_eq!(text2.as_rule(), Rule::text);

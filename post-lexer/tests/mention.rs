@@ -24,9 +24,6 @@ fn parse_mention() {
     let mention1_domain = mention1.next().unwrap();
     assert_eq!(mention1_domain.as_rule(), Rule::mention_domain);
     assert_eq!(mention1_domain.as_str(), "friday.night");
-    let mention1_postfix = mention1.next().unwrap();
-    assert_eq!(mention1_postfix.as_rule(), Rule::component_postfix);
-    assert_eq!(mention1_postfix.as_str(), "");
 
     let mention2 = token_iter.next().unwrap();
     assert_eq!(mention2.as_rule(), Rule::mention);
@@ -38,9 +35,6 @@ fn parse_mention() {
     let mention2_username = mention2.next().unwrap();
     assert_eq!(mention2_username.as_rule(), Rule::mention_username);
     assert_eq!(mention2_username.as_str(), "真島");
-    let mention2_postfix = mention2.next().unwrap();
-    assert_eq!(mention2_postfix.as_rule(), Rule::component_postfix);
-    assert_eq!(mention2_postfix.as_str(), "");
 
     let text2 = token_iter.next().unwrap();
     assert_eq!(text2.as_rule(), Rule::text);
