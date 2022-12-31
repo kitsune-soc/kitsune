@@ -1,33 +1,27 @@
 use crate::{
     activitypub::Fetcher,
     cache::Cache,
-    consts::MENTION_REGEX,
     db::model::{account, post},
     error::{Error, Result},
     webfinger::Webfinger,
 };
-use fancy_regex::Match;
-use itertools::Itertools;
+use parking_lot::Mutex;
+use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use std::{borrow::Cow, collections::HashSet, mem, sync::Arc};
 use uuid::Uuid;
 
-struct MentionData<'a> {
-    full_mention: &'a str,
-    username: &'a str,
-    domain: Option<&'a str>,
-}
-
-pub struct MentionResolver<FPC, FUC, WC> {
+pub struct PostResolver<FPC, FUC, WC> {
     db_conn: DatabaseConnection,
     fetcher: Fetcher<FPC, FUC>,
     webfinger: Webfinger<WC>,
 }
 
-impl<FPC, FUC, WC> MentionResolver<FPC, FUC, WC>
+impl<FPC, FUC, WC> PostResolver<FPC, FUC, WC>
 where
-    FPC: Cache<str, post::Model>,
-    FUC: Cache<str, account::Model>,
-    WC: Cache<str, String>,
+    FPC: Cache<str, post::Model> + Send + Sync,
+    FUC: Cache<str, account::Model> + Send + Sync,
+    WC: Cache<str, String> + Send + Sync,
 {
     pub fn new(
         db_conn: DatabaseConnection,
@@ -69,6 +63,39 @@ where
         }
     }
 
+    async fn transform<'a>(
+        &'a self,
+        element: Element<'a>,
+        mentioned_accounts: Arc<Mutex<HashSet<Uuid>>>,
+    ) -> Result<Element<'a>, BoxError> {
+        let element = match element {
+            Element::Mention(mention) => {
+                if let Some(account) = self
+                    .fetch_account(&mention.username, mention.domain.as_deref())
+                    .await?
+                {
+                    mentioned_accounts.lock().insert(account.id);
+
+                    Element::Html(Html {
+                        tag: Cow::Borrowed("a"),
+                        attributes: vec![(Cow::Borrowed("href"), Cow::Owned(account.url))],
+                        content: Box::new(Element::Mention(mention)),
+                    })
+                } else {
+                    Element::Mention(mention)
+                }
+            }
+            Element::Link(link) => Element::Html(Html {
+                tag: Cow::Borrowed("a"),
+                attributes: vec![(Cow::Borrowed("href"), link.content.clone())],
+                content: Box::new(Element::Link(link)),
+            }),
+            elem => elem,
+        };
+
+        Ok(element)
+    }
+
     /// Resolve the mentions inside a post
     ///
     /// # Returns
@@ -79,50 +106,26 @@ where
     /// # Panics
     ///
     /// This should never panic
-    pub async fn resolve(&self, content: String) -> Result<(Vec<Uuid>, String)> {
-        let mention_data = MENTION_REGEX
-            .captures_iter(&content)
-            .filter_map(|capture| {
-                let capture = capture.ok()?;
+    pub async fn resolve(&self, content: &str) -> Result<(Vec<Uuid>, String)> {
+        let mentioned_account_ids = Arc::new(Mutex::new(HashSet::new()));
+        let transformer = Transformer::new(|elem| {
+            let mentioned_account_ids = Arc::clone(&mentioned_account_ids);
+            self.transform(elem, mentioned_account_ids)
+        });
 
-                // Call to `.get` needed to satisfy lifetime requirements
-                let full_mention = capture.get(0).unwrap().as_str();
-                let username = capture.get(1).unwrap().as_str();
-                let domain = capture.get(2).as_ref().map(Match::as_str);
+        let content = transformer
+            .transform(content)
+            .await
+            .map_err(Error::PostProcessing)?;
 
-                Some(MentionData {
-                    full_mention,
-                    username,
-                    domain,
-                })
-            })
-            .unique_by(|mention_data| mention_data.full_mention);
-
-        let mut content = content.clone();
-        let mut mentioned_account_ids = Vec::new();
-        for mention in mention_data {
-            match self.fetch_account(mention.username, mention.domain).await {
-                Ok(Some(account)) => {
-                    mentioned_account_ids.push(account.id);
-
-                    let formatted_link =
-                        format!("<a href=\"{}\">{}</a>", account.url, mention.full_mention);
-                    content = content.replace(mention.full_mention, &formatted_link);
-                }
-                Err(err) => {
-                    debug!(error = %err, "Failed to resolve mention");
-                }
-                _ => (),
-            }
-        }
-
-        Ok((mentioned_account_ids, content))
+        let mentioned_account_ids = mem::take(&mut *mentioned_account_ids.lock());
+        Ok((mentioned_account_ids.into_iter().collect(), content))
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::MentionResolver;
+    use super::PostResolver;
     use crate::{activitypub::Fetcher, cache::NoopCache, db::model::account, webfinger::Webfinger};
     use migration::{Migrator, MigratorTrait};
     use sea_orm::{Database, DatabaseConnection, EntityTrait};
@@ -143,13 +146,13 @@ mod test {
         let db_conn = db_conn().await;
         let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
-        let mention_resolver = MentionResolver::new(
+        let mention_resolver = PostResolver::new(
             db_conn.clone(),
             Fetcher::new(db_conn.clone(), NoopCache, NoopCache),
             Webfinger::new(NoopCache),
         );
         let (mentioned_account_ids, content) = mention_resolver
-            .resolve(post.to_string())
+            .resolve(post)
             .await
             .expect("Failed to resolve mentions");
 

@@ -71,6 +71,9 @@ pub enum Error {
     Pkcs8(#[from] pkcs8::Error),
 
     #[error(transparent)]
+    PostProcessing(post_process::BoxError),
+
+    #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
 
     #[error(transparent)]

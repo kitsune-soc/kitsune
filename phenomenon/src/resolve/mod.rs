@@ -1,5 +1,5 @@
 mod inbox;
-mod mention;
+mod post;
 
 pub use self::inbox::InboxResolver;
-pub use self::mention::MentionResolver;
+pub use self::post::PostResolver;

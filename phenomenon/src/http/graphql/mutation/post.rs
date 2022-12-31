@@ -6,7 +6,7 @@ use crate::{
     error::Error as ServerError,
     http::graphql::ContextExt,
     job::{deliver::create::CreateDeliveryContext, Job, JobState},
-    resolve::MentionResolver,
+    resolve::PostResolver,
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result};
@@ -42,12 +42,12 @@ impl PostMutation {
         };
 
         // TODO: Cache this resolver somewhere
-        let mention_resolver = MentionResolver::new(
+        let mention_resolver = PostResolver::new(
             state.db_conn.clone(),
             state.fetcher.clone(),
             state.webfinger.clone(),
         );
-        let (mentioned_account_ids, content) = mention_resolver.resolve(content).await?;
+        let (mentioned_account_ids, content) = mention_resolver.resolve(&content).await?;
 
         let id = Uuid::now_v7();
         let account_id = user_data.account.id;
