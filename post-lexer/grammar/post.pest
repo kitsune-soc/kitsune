@@ -3,7 +3,7 @@ post = _{
 }
 
 component = _{ 
-    emote | hashtag | mention 
+    emote | hashtag | link | mention 
 }
 
 text = { 
@@ -40,6 +40,21 @@ hashtag_content = {
         !component_postfix 
         ~ (LETTER | NUMBER)+
     )+ 
+}
+
+link = {
+    link_schema
+    ~ "://"
+    ~ link_content
+    ~ component_postfix
+}
+
+link_content = {
+    (!component_postfix ~ ANY)+
+}
+
+link_schema = {
+    (ASCII_ALPHA | "+" | "-" | ".")+
 }
 
 mention = {

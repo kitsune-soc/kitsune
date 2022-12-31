@@ -92,6 +92,9 @@ pub enum Element<'a> {
     /// Raw HTML
     Html(Html<'a>),
 
+    /// Link
+    Link(Link<'a>),
+
     /// Mention
     Mention(Mention<'a>),
 
@@ -147,6 +150,16 @@ impl<'a> Element<'a> {
             Rule::text => vec![Self::Text(Text {
                 content: Cow::Borrowed(pair.as_str()),
             })],
+            Rule::link => {
+                let mut link = pair.into_inner();
+                let schema = link.next().unwrap();
+                let content = link.next().unwrap();
+
+                vec![Self::Link(Link {
+                    schema: Cow::Borrowed(schema.as_str()),
+                    content: Cow::Borrowed(content.as_str()),
+                })]
+            }
             _ => unreachable!(),
         })
     }
@@ -158,6 +171,7 @@ impl Render for Element<'_> {
             Self::Emote(emote) => emote.render(out),
             Self::Hashtag(hashtag) => hashtag.render(out),
             Self::Html(html) => html.render(out),
+            Self::Link(link) => link.render(out),
             Self::Mention(mention) => mention.render(out),
             Self::Text(text) => text.render(out),
         }
@@ -226,6 +240,24 @@ impl Render for Html<'_> {
         out.push_str("</");
         out.push_str(&self.tag);
         out.push('>');
+    }
+}
+
+/// Link
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Link<'a> {
+    /// Schema
+    pub schema: Cow<'a, str>,
+
+    /// Content
+    pub content: Cow<'a, str>,
+}
+
+impl Render for Link<'_> {
+    fn render(&self, out: &mut String) {
+        out.push_str(&self.schema);
+        out.push_str("://");
+        out.push_str(&self.content);
     }
 }
 
