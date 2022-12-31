@@ -1,5 +1,6 @@
 use pest::Parser;
 use post_lexer::{PostParser, Rule};
+use pretty_assertions::assert_eq;
 
 #[test]
 fn parse_hashtag() {

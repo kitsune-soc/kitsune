@@ -1,0 +1,63 @@
+use futures_util::FutureExt;
+use post_lexer::{Element, Html, PostTransformer, Transformer};
+use pretty_assertions::assert_eq;
+use std::borrow::Cow;
+
+#[tokio::test]
+async fn link_transformation() {
+    let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
+    let transformer = PostTransformer::new(Transformer::new(|elem| {
+        async move {
+            let transformed = match elem {
+                Element::Emote(emote) => Element::Html(Html {
+                    tag: Cow::Borrowed("a"),
+                    attributes: vec![(
+                        Cow::Borrowed("href"),
+                        Cow::Owned(format!("https://example.com/emote/{}", emote.content)),
+                    )],
+                    content: Box::new(Element::Emote(emote)),
+                }),
+                Element::Hashtag(hashtag) => Element::Html(Html {
+                    tag: Cow::Borrowed("a"),
+                    attributes: vec![(
+                        Cow::Borrowed("href"),
+                        Cow::Owned(format!("https://example.com/hashtag/{}", hashtag.content)),
+                    )],
+                    content: Box::new(Element::Hashtag(hashtag)),
+                }),
+                Element::Mention(mention) => Element::Html(Html {
+                    tag: Cow::Borrowed("a"),
+                    attributes: vec![(
+                        Cow::Borrowed("href"),
+                        Cow::Owned(format!(
+                            "https://example.com/mention/{}/{}",
+                            mention.username,
+                            mention.domain.as_deref().unwrap_or_default()
+                        )),
+                    )],
+                    content: Box::new(Element::Mention(mention)),
+                }),
+                elem => elem,
+            };
+
+            Ok(transformed)
+        }
+        .boxed()
+    }));
+    let transformed = transformer.transform(text).await.unwrap();
+
+    assert_eq!(
+        transformed,
+        "<a href=\"https://example.com/mention/真島/goro.org\">@真島@goro.org</a> how are you doing? <a href=\"https://example.com/emote/friday-night\">:friday-night:</a> <a href=\"https://example.com/hashtag/龍が如く0\">#龍が如く0</a>"
+    );
+}
+
+#[tokio::test]
+async fn noop_transformation() {
+    let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
+    let transformer =
+        PostTransformer::new(Transformer::new(|elem| async move { Ok(elem) }.boxed()));
+    let transformed = transformer.transform(text).await.unwrap();
+
+    assert_eq!(text, transformed);
+}
