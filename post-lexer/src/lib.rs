@@ -34,7 +34,7 @@ mod test {
 
     #[test]
     fn parse_hashtag() {
-        let text = "why am i building a #lexer for #posts?";
+        let text = "why am i building a #lexer for #posts? #龍が如く0";
         let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");
 
         let text1 = token_iter.next().unwrap();
@@ -76,6 +76,18 @@ mod test {
         let text3 = token_iter.next().unwrap();
         assert_eq!(text3.as_rule(), Rule::text);
         assert_eq!(text3.as_str(), "?");
+
+        let hashtag3 = token_iter.next().unwrap();
+        assert_eq!(hashtag3.as_rule(), Rule::hashtag);
+        assert_eq!(hashtag3.as_str(), " #龍が如く0");
+
+        let mut hashtag3 = hashtag3.into_inner();
+        let hashtag3_prefix = hashtag3.next().unwrap();
+        assert_eq!(hashtag3_prefix.as_rule(), Rule::component_prefix);
+        assert_eq!(hashtag3_prefix.as_str(), " ");
+        let hashtag3_content = hashtag3.next().unwrap();
+        assert_eq!(hashtag3_content.as_rule(), Rule::hashtag_content);
+        assert_eq!(hashtag3_content.as_str(), "龍が如く0");
     }
 
     #[test]
