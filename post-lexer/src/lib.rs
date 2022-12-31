@@ -1,11 +1,21 @@
+//!
+//! Parser and transformer intended for usage in the Kitsune social media server
+//!
+//! **Important**: None of the texts are protected against XSS attacks. Keep that in mind.
+//!
+
 #![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
 
 use futures_util::{future::BoxFuture, pin_mut, stream, StreamExt};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
 use std::{borrow::Cow, error::Error};
 
+/// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
+
+/// Result type with the error branch defaulting to [`BoxError`]
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Pest-based parser
@@ -13,16 +23,29 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 #[grammar = "../grammar/post.pest"]
 pub struct PostParser;
 
+/// Post transformer
+///
+/// Transforms elements of a post into other elements
 #[derive(Clone)]
 pub struct Transformer {
     transformation: fn(Element<'_>) -> BoxFuture<'_, Result<Element<'_>>>,
 }
 
 impl Transformer {
+    /// Create a new transformer from a transformation function
     pub fn new(transformation: fn(Element<'_>) -> BoxFuture<'_, Result<Element<'_>>>) -> Self {
         Self { transformation }
     }
 
+    /// Transform a post
+    ///
+    /// # Errors
+    ///
+    /// - Transformation of an element fails
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please submit an issue
     pub async fn transform(&self, text: &str) -> Result<String> {
         let pairs = PostParser::parse(Rule::post, text).unwrap();
         let elements = Element::from_pairs(pairs);
@@ -39,17 +62,31 @@ impl Transformer {
     }
 }
 
+/// Elements of a post
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Element<'a> {
+    /// Emote
     Emote(Emote<'a>),
+
+    /// Hashtag
     Hashtag(Hashtag<'a>),
+
+    /// Raw HTML
     Html(Html<'a>),
+
+    /// Mention
     Mention(Mention<'a>),
+
+    /// Text
     Text(Text<'a>),
 }
 
 impl<'a> Element<'a> {
     /// Generate a bunch of elements from their `Pairs` representation
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it ever does, please submit an issue.
     pub fn from_pairs(pairs: Pairs<'a, Rule>) -> impl Iterator<Item = Element<'a>> {
         pairs.flat_map(|pair| match pair.as_rule() {
             Rule::emote => {
@@ -96,6 +133,7 @@ impl<'a> Element<'a> {
         })
     }
 
+    /// Render an element into its string representation
     pub fn render(self, out: &mut String) {
         match self {
             Self::Emote(emote) => emote.render(out),
@@ -107,12 +145,15 @@ impl<'a> Element<'a> {
     }
 }
 
+/// Emote data
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Emote<'a> {
+    /// Name of an emote
     pub content: Cow<'a, str>,
 }
 
 impl Emote<'_> {
+    /// Render an emote into its string representation
     pub fn render(self, out: &mut String) {
         out.push(':');
         out.push_str(&self.content);
@@ -120,26 +161,36 @@ impl Emote<'_> {
     }
 }
 
+/// Hashtag
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Hashtag<'a> {
+    /// Hashtag name
     pub content: Cow<'a, str>,
 }
 
 impl Hashtag<'_> {
+    /// Render a hashtag into its string representation
     pub fn render(self, out: &mut String) {
         out.push('#');
         out.push_str(&self.content);
     }
 }
 
+/// Raw HTML
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Html<'a> {
+    /// Tag name
     pub tag: Cow<'a, str>,
+
+    /// Tag attributes
     pub attributes: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+
+    /// Tag contents
     pub content: Box<Element<'a>>,
 }
 
 impl Html<'_> {
+    /// Render some HTML into its string representation
     pub fn render(self, out: &mut String) {
         out.push('<');
         out.push_str(&self.tag);
@@ -162,13 +213,18 @@ impl Html<'_> {
     }
 }
 
+/// Mention
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Mention<'a> {
+    /// Username component
     pub username: Cow<'a, str>,
+
+    /// Domain component
     pub domain: Option<Cow<'a, str>>,
 }
 
 impl Mention<'_> {
+    /// Render a mention into its string representation
     pub fn render(self, out: &mut String) {
         out.push('@');
         out.push_str(&self.username);
@@ -180,12 +236,15 @@ impl Mention<'_> {
     }
 }
 
+/// Text
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Text<'a> {
+    /// Text contents
     pub content: Cow<'a, str>,
 }
 
 impl Text<'_> {
+    /// Render text into its string representation
     pub fn render(self, out: &mut String) {
         out.push_str(&self.content);
     }
