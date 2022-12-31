@@ -1,12 +1,12 @@
 use futures_util::FutureExt;
-use post_lexer::{Element, Html, PostTransformer, Transformer};
+use post_lexer::{Element, Html, Transformer};
 use pretty_assertions::assert_eq;
 use std::borrow::Cow;
 
 #[tokio::test]
 async fn link_transformation() {
     let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
-    let transformer = PostTransformer::new(Transformer::new(|elem| {
+    let transformer = Transformer::new(|elem| {
         async move {
             let transformed = match elem {
                 Element::Emote(emote) => Element::Html(Html {
@@ -43,7 +43,7 @@ async fn link_transformation() {
             Ok(transformed)
         }
         .boxed()
-    }));
+    });
     let transformed = transformer.transform(text).await.unwrap();
 
     assert_eq!(
@@ -55,8 +55,7 @@ async fn link_transformation() {
 #[tokio::test]
 async fn noop_transformation() {
     let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
-    let transformer =
-        PostTransformer::new(Transformer::new(|elem| async move { Ok(elem) }.boxed()));
+    let transformer = Transformer::new(|elem| async move { Ok(elem) }.boxed());
     let transformed = transformer.transform(text).await.unwrap();
 
     assert_eq!(text, transformed);

@@ -1,6 +1,6 @@
 #![forbid(rust_2018_idioms)]
 
-use futures_util::{future::BoxFuture, pin_mut, stream, Stream, StreamExt};
+use futures_util::{future::BoxFuture, pin_mut, stream, StreamExt};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
 use std::{borrow::Cow, error::Error};
@@ -13,31 +13,6 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 #[grammar = "../grammar/post.pest"]
 pub struct PostParser;
 
-pub struct PostTransformer {
-    transformer: Transformer,
-}
-
-impl PostTransformer {
-    pub fn new(transformer: Transformer) -> Self {
-        Self { transformer }
-    }
-
-    pub async fn transform(&self, text: &str) -> Result<String> {
-        let pairs = PostParser::parse(Rule::post, text).unwrap();
-        let elements = Element::from_pairs(pairs);
-        let transformed = self.transformer.transform(elements);
-
-        pin_mut!(transformed);
-
-        let mut out = String::new();
-        while let Some(elem) = transformed.next().await.transpose()? {
-            elem.render(&mut out);
-        }
-
-        Ok(out)
-    }
-}
-
 #[derive(Clone)]
 pub struct Transformer {
     transformation: fn(Element<'_>) -> BoxFuture<'_, Result<Element<'_>>>,
@@ -48,11 +23,19 @@ impl Transformer {
         Self { transformation }
     }
 
-    pub fn transform<'a, E>(&'a self, elems: E) -> impl Stream<Item = Result<Element<'a>>>
-    where
-        E: Iterator<Item = Element<'a>>,
-    {
-        stream::iter(elems).then(self.transformation)
+    pub async fn transform(&self, text: &str) -> Result<String> {
+        let pairs = PostParser::parse(Rule::post, text).unwrap();
+        let elements = Element::from_pairs(pairs);
+        let transformed = stream::iter(elements).then(self.transformation);
+
+        pin_mut!(transformed);
+
+        let mut out = String::new();
+        while let Some(elem) = transformed.next().await.transpose()? {
+            elem.render(&mut out);
+        }
+
+        Ok(out)
     }
 }
 
