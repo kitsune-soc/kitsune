@@ -11,4 +11,5 @@ members = [
     "phenomenon",
     "phenomenon-http-signatures",
     "phenomenon-type",
+    "post-lexer",
 ]

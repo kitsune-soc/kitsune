@@ -1,0 +1,56 @@
+post = _{ 
+    (text | component)* 
+}
+
+component = _{ 
+    emote | hashtag | mention 
+}
+
+text = { 
+    (!component ~ ANY)+ 
+}
+
+component_prefix = { 
+    (NEWLINE | SOI | WHITE_SPACE)
+}
+
+component_postfix = { 
+    &(EOI | WHITE_SPACE)
+}
+
+emote = { 
+    ":" 
+    ~ (LETTER | NUMBER | DASH_PUNCTUATION)+ 
+    ~ ":" 
+}
+
+hashtag = { 
+    component_prefix 
+    ~ "#" 
+    ~ hashtag_content 
+    ~ (component_postfix | !(LETTER | NUMBER)) 
+}
+
+hashtag_content = {
+    (!component_postfix 
+    ~ (LETTER | NUMBER)+)+ 
+}
+
+mention = {
+    component_prefix 
+    ~ "@" 
+    ~ mention_username 
+    ~ ("@" ~ mention_domain)? 
+    ~ component_postfix 
+}
+
+mention_domain = {
+    (!(component_postfix | ".") ~ ANY)+ 
+    ~ "." 
+    ~ (!component_postfix ~ ANY)+ 
+}
+
+mention_username = { 
+    (!(component_postfix | "@") 
+    ~ ANY)+ 
+}
