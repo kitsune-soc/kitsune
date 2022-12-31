@@ -74,6 +74,12 @@ where
     }
 }
 
+/// Render something into a string
+pub trait Render {
+    /// Render the element into its string representation
+    fn render(&self, out: &mut String);
+}
+
 /// Elements of a post
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Element<'a> {
@@ -144,9 +150,10 @@ impl<'a> Element<'a> {
             _ => unreachable!(),
         })
     }
+}
 
-    /// Render an element into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Element<'_> {
+    fn render(&self, out: &mut String) {
         match self {
             Self::Emote(emote) => emote.render(out),
             Self::Hashtag(hashtag) => hashtag.render(out),
@@ -164,9 +171,8 @@ pub struct Emote<'a> {
     pub content: Cow<'a, str>,
 }
 
-impl Emote<'_> {
-    /// Render an emote into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Emote<'_> {
+    fn render(&self, out: &mut String) {
         out.push(':');
         out.push_str(&self.content);
         out.push(':');
@@ -180,9 +186,8 @@ pub struct Hashtag<'a> {
     pub content: Cow<'a, str>,
 }
 
-impl Hashtag<'_> {
-    /// Render a hashtag into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Hashtag<'_> {
+    fn render(&self, out: &mut String) {
         out.push('#');
         out.push_str(&self.content);
     }
@@ -201,17 +206,16 @@ pub struct Html<'a> {
     pub content: Box<Element<'a>>,
 }
 
-impl Html<'_> {
-    /// Render some HTML into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Html<'_> {
+    fn render(&self, out: &mut String) {
         out.push('<');
         out.push_str(&self.tag);
 
-        for (name, value) in self.attributes {
+        for (name, value) in &self.attributes {
             out.push(' ');
-            out.push_str(&name);
+            out.push_str(name);
             out.push_str("=\"");
-            out.push_str(&value);
+            out.push_str(value);
             out.push('"');
         }
 
@@ -235,15 +239,14 @@ pub struct Mention<'a> {
     pub domain: Option<Cow<'a, str>>,
 }
 
-impl Mention<'_> {
-    /// Render a mention into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Mention<'_> {
+    fn render(&self, out: &mut String) {
         out.push('@');
         out.push_str(&self.username);
 
-        if let Some(domain) = self.domain {
+        if let Some(ref domain) = self.domain {
             out.push('@');
-            out.push_str(&domain);
+            out.push_str(domain);
         }
     }
 }
@@ -255,9 +258,8 @@ pub struct Text<'a> {
     pub content: Cow<'a, str>,
 }
 
-impl Text<'_> {
-    /// Render text into its string representation
-    pub fn render(self, out: &mut String) {
+impl Render for Text<'_> {
+    fn render(&self, out: &mut String) {
         out.push_str(&self.content);
     }
 }
