@@ -1,5 +1,5 @@
 use futures_util::future;
-use post_lexer::{Element, Html, Transformer};
+use post_process::{Element, Html, Transformer};
 use pretty_assertions::assert_eq;
 use std::borrow::Cow;
 

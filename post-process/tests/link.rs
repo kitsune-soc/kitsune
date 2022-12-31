@@ -1,5 +1,5 @@
 use pest::Parser;
-use post_lexer::{PostParser, Rule};
+use post_process::{PostParser, Rule};
 use pretty_assertions::assert_eq;
 
 #[test]

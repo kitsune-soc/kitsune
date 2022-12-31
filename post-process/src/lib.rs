@@ -151,13 +151,8 @@ impl<'a> Element<'a> {
                 content: Cow::Borrowed(pair.as_str()),
             })],
             Rule::link => {
-                let mut link = pair.into_inner();
-                let schema = link.next().unwrap();
-                let content = link.next().unwrap();
-
                 vec![Self::Link(Link {
-                    schema: Cow::Borrowed(schema.as_str()),
-                    content: Cow::Borrowed(content.as_str()),
+                    content: Cow::Borrowed(pair.as_str()),
                 })]
             }
             _ => unreachable!(),
@@ -246,17 +241,12 @@ impl Render for Html<'_> {
 /// Link
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Link<'a> {
-    /// Schema
-    pub schema: Cow<'a, str>,
-
     /// Content
     pub content: Cow<'a, str>,
 }
 
 impl Render for Link<'_> {
     fn render(&self, out: &mut String) {
-        out.push_str(&self.schema);
-        out.push_str("://");
         out.push_str(&self.content);
     }
 }
