@@ -7,10 +7,10 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use futures_util::{future::BoxFuture, pin_mut, stream, StreamExt};
+use futures_util::{pin_mut, stream, StreamExt};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
-use std::{borrow::Cow, error::Error};
+use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -27,14 +27,26 @@ pub struct PostParser;
 ///
 /// Transforms elements of a post into other elements
 #[derive(Clone)]
-pub struct Transformer {
-    transformation: fn(Element<'_>) -> BoxFuture<'_, Result<Element<'_>>>,
+pub struct Transformer<'a, F, Fut>
+where
+    F: Fn(Element<'a>) -> Fut,
+    Fut: Future<Output = Result<Element<'a>>> + Send,
+{
+    transformation: F,
+    _fut: PhantomData<&'a Fut>,
 }
 
-impl Transformer {
+impl<'a, F, Fut> Transformer<'a, F, Fut>
+where
+    F: Fn(Element<'a>) -> Fut,
+    Fut: Future<Output = Result<Element<'a>>> + Send,
+{
     /// Create a new transformer from a transformation function
-    pub fn new(transformation: fn(Element<'_>) -> BoxFuture<'_, Result<Element<'_>>>) -> Self {
-        Self { transformation }
+    pub fn new(transformation: F) -> Self {
+        Self {
+            transformation,
+            _fut: PhantomData,
+        }
     }
 
     /// Transform a post
@@ -46,10 +58,10 @@ impl Transformer {
     /// # Panics
     ///
     /// This should never panic. If it does, please submit an issue
-    pub async fn transform(&self, text: &str) -> Result<String> {
+    pub async fn transform(&self, text: &'a str) -> Result<String> {
         let pairs = PostParser::parse(Rule::post, text).unwrap();
         let elements = Element::from_pairs(pairs);
-        let transformed = stream::iter(elements).then(self.transformation);
+        let transformed = stream::iter(elements).then(&self.transformation);
 
         pin_mut!(transformed);
 
