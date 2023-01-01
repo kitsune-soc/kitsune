@@ -3,6 +3,12 @@ use post_process::{PostParser, Rule};
 use pretty_assertions::assert_eq;
 
 #[test]
+fn invalid_hashtag() {
+    let text = "##invalid";
+    assert!(PostParser::parse(Rule::hashtag, text).is_err());
+}
+
+#[test]
 fn parse_hashtag() {
     let text = "why am i building a #lexer for #posts? #龍が如く0";
     let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");
