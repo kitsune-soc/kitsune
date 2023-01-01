@@ -5,7 +5,6 @@ use crate::{
     error::{Error, Result},
     webfinger::Webfinger,
 };
-use futures_util::FutureExt;
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
@@ -111,7 +110,7 @@ where
         let mentioned_account_ids = Arc::new(Mutex::new(HashSet::new()));
         let transformer = Transformer::new(|elem| {
             let mentioned_account_ids = Arc::clone(&mentioned_account_ids);
-            self.transform(elem, mentioned_account_ids).boxed()
+            self.transform(elem, mentioned_account_ids)
         });
 
         let content = transformer

@@ -7,10 +7,10 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use futures_util::{future::BoxFuture, pin_mut, stream, StreamExt};
+use futures_util::{pin_mut, stream, StreamExt};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
-use std::{borrow::Cow, error::Error, marker::PhantomData};
+use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -27,17 +27,19 @@ pub struct PostParser;
 ///
 /// Transforms elements of a post into other elements
 #[derive(Clone)]
-pub struct Transformer<'a, F>
+pub struct Transformer<'a, F, T>
 where
-    F: Fn(Element<'a>) -> BoxFuture<'a, Result<Element<'a>>>,
+    F: Fn(Element<'a>) -> T,
+    T: Future<Output = Result<Element<'a>>>,
 {
     transformation: F,
     _lt: PhantomData<&'a ()>,
 }
 
-impl<'a, F> Transformer<'a, F>
+impl<'a, F, T> Transformer<'a, F, T>
 where
-    F: Fn(Element<'a>) -> BoxFuture<'_, Result<Element<'a>>>,
+    F: Fn(Element<'a>) -> T,
+    T: Future<Output = Result<Element<'a>>>,
 {
     /// Create a new transformer from a transformation function
     pub fn new(transformation: F) -> Self {
