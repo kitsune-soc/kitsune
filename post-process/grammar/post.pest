@@ -10,12 +10,20 @@ text = {
     (!component ~ ANY)+ 
 }
 
+component_idents = {
+    "@" | "#"
+}
+
+component_separator_chars = {
+    !component_idents ~ (MARK | PUNCTUATION | SYMBOL)
+}
+
 component_prefix = { 
-    (NEWLINE | SOI | WHITE_SPACE)
+    (NEWLINE | SOI | WHITE_SPACE | component_separator_chars)
 }
 
 component_postfix = _{ 
-    &(EOI | NEWLINE | WHITE_SPACE)
+    &(component_separator_chars* ~ EOI | NEWLINE | WHITE_SPACE)
 }
 
 emote = { 
@@ -46,11 +54,15 @@ link = {
     link_schema
     ~ "://"
     ~ link_content
-    ~ component_postfix
+    ~ link_postfix
 }
 
 link_content = {
-    (!component_postfix ~ ANY)+
+    (!link_postfix ~ ANY)+
+}
+
+link_postfix = _{
+    &(EOI | NEWLINE | WHITE_SPACE)
 }
 
 link_schema = {
@@ -67,11 +79,11 @@ mention = {
 
 mention_domain = {
     (
-        !(component_postfix | ".") ~ ANY
+        !(component_idents | component_postfix | ".") ~ ANY
     )+ 
     ~ "." 
     ~ (
-        !component_postfix ~ ANY
+        !(component_idents | component_postfix) ~ ANY
     )+ 
 }
 

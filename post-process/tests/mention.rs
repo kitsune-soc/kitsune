@@ -3,6 +3,21 @@ use post_process::{PostParser, Rule};
 use pretty_assertions::assert_eq;
 
 #[test]
+fn invalid_mention() {
+    let text = "@test@hello.world@tes";
+    assert!(PostParser::parse(Rule::mention, text).is_err());
+
+    let text = "@test@hello.world@tes hello";
+    let mut token_iter = PostParser::parse(Rule::post, text).unwrap();
+
+    let text1 = token_iter.next().unwrap();
+    assert_eq!(text1.as_rule(), Rule::text);
+    assert_eq!(text1.as_str(), "@test@hello.world@tes hello");
+
+    assert!(token_iter.next().is_none());
+}
+
+#[test]
 fn parse_mention() {
     let text = "hello @桐生@friday.night @真島 ! ";
     let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");

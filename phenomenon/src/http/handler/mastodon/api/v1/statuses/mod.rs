@@ -88,7 +88,7 @@ async fn delete(
 #[debug_handler(state = Zustand)]
 async fn get(
     State(state): State<Zustand>,
-    AuthExtactor(_account): AuthExtactor,
+    _user_data: Option<AuthExtactor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let Some(post) = post::Entity::find()
