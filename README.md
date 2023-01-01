@@ -13,7 +13,7 @@ So, as long as this disclaimer is here, make sure to double check all the change
 
 ## Installation
 
-Besides the binary, you need the following services to run Kitsune:
+Besides the binary, you need the following things to run Kitsune:
 
 - Redis (for caching)
 - Meilisearch (for full-text search)
