@@ -4,6 +4,7 @@ use sea_orm_migration::prelude::*;
 #[derive(Iden)]
 pub enum Reposts {
     Table,
+    Id,
     AccountId,
     PostId,
     Url,
@@ -21,6 +22,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .if_not_exists()
                     .table(Reposts::Table)
+                    .col(ColumnDef::new(Reposts::Id).uuid().primary_key())
                     .col(ColumnDef::new(Reposts::AccountId).uuid().not_null())
                     .col(ColumnDef::new(Reposts::PostId).uuid().not_null())
                     .col(ColumnDef::new(Reposts::Url).text().not_null().unique_key())
@@ -29,7 +31,12 @@ impl MigrationTrait for Migration {
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
-                    .primary_key(Index::create().col(Reposts::AccountId).col(Reposts::PostId))
+                    .index(
+                        Index::create()
+                            .col(Reposts::AccountId)
+                            .col(Reposts::PostId)
+                            .unique(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .from_col(Reposts::AccountId)
