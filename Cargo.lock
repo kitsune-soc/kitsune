@@ -1704,6 +1704,80 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune"
+version = "0.1.0-UTA"
+dependencies = [
+ "ammonia",
+ "argon2",
+ "askama",
+ "async-graphql",
+ "async-graphql-axum",
+ "async-trait",
+ "axum",
+ "base64 0.20.0",
+ "blurhash-ng",
+ "chrono",
+ "clap",
+ "deadpool-redis",
+ "derive_builder 0.12.0",
+ "dotenvy",
+ "envy",
+ "fancy-regex 0.10.0",
+ "futures-util",
+ "headers",
+ "hex",
+ "http",
+ "image",
+ "itertools",
+ "kitsune-http-signatures",
+ "kitsune-type",
+ "migration",
+ "mime",
+ "mime_guess",
+ "once_cell",
+ "pin-project-lite",
+ "pulldown-cmark",
+ "rand",
+ "rayon",
+ "redis",
+ "reqwest",
+ "rsa",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "zxcvbn",
+]
+
+[[package]]
+name = "kitsune-http-signatures"
+version = "0.1.0"
+dependencies = [
+ "base64 0.20.0",
+ "http",
+ "ring",
+ "thiserror",
+]
+
+[[package]]
+name = "kitsune-type"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2164,80 +2238,6 @@ checksum = "cc8bed3549e0f9b0a2a78bf7c0018237a2cdf085eecbbc048e52612438e4e9d0"
 dependencies = [
  "thiserror",
  "ucd-trie",
-]
-
-[[package]]
-name = "phenomenon"
-version = "0.1.0-UTA"
-dependencies = [
- "ammonia",
- "argon2",
- "askama",
- "async-graphql",
- "async-graphql-axum",
- "async-trait",
- "axum",
- "base64 0.20.0",
- "blurhash-ng",
- "chrono",
- "clap",
- "deadpool-redis",
- "derive_builder 0.12.0",
- "dotenvy",
- "envy",
- "fancy-regex 0.10.0",
- "futures-util",
- "headers",
- "hex",
- "http",
- "image",
- "itertools",
- "migration",
- "mime",
- "mime_guess",
- "once_cell",
- "phenomenon-http-signatures",
- "phenomenon-type",
- "pin-project-lite",
- "pulldown-cmark",
- "rand",
- "rayon",
- "redis",
- "reqwest",
- "rsa",
- "sea-orm",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
- "tokio",
- "tokio-util",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
- "zxcvbn",
-]
-
-[[package]]
-name = "phenomenon-http-signatures"
-version = "0.1.0"
-dependencies = [
- "base64 0.20.0",
- "http",
- "ring",
- "thiserror",
-]
-
-[[package]]
-name = "phenomenon-type"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "uuid",
 ]
 
 [[package]]

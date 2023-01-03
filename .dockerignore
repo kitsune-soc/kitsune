@@ -1,5 +1,5 @@
 **/node_modules
 target/
-phenomenon-fe/
+kitsune-fe/
 Dockerfile.dev
 Dockerfile.prod
