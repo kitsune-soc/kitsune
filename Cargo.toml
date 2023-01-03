@@ -8,8 +8,8 @@ strip = true
 [workspace]
 members = [
     "migration",
-    "phenomenon",
-    "phenomenon-http-signatures",
-    "phenomenon-type",
+    "kitsune",
+    "kitsune-http-signatures",
+    "kitsune-type",
     "post-process",
 ]

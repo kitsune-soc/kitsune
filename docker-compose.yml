@@ -2,13 +2,13 @@ version: '3.1'
 
 services:
   backend:
-    image: phenomenon
+    image: kitsune
     ports:
       - "5000:5000"
     networks:
       - backend
     environment:
-      DATABASE_URL: postgres://phenomenon:password@db/phenomenon
+      DATABASE_URL: postgres://kitsune:password@db/kitsune
       DOMAIN: example.com
       PORT: 5000
       JOB_WORKERS: 1
@@ -18,8 +18,8 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: phenomenon
-      POSTGRES_USER: phenomenon
+      POSTGRES_DB: kitsune
+      POSTGRES_USER: kitsune
       POSTGRES_PASSWORD: password
     networks:
       - backend

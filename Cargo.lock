@@ -1710,6 +1710,81 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune"
+version = "0.1.0-UTA"
+dependencies = [
+ "ammonia",
+ "argon2",
+ "askama",
+ "async-graphql",
+ "async-graphql-axum",
+ "async-trait",
+ "axum",
+ "base64 0.20.0",
+ "blurhash-ng",
+ "chrono",
+ "clap",
+ "deadpool-redis",
+ "derive_builder 0.12.0",
+ "dotenvy",
+ "envy",
+ "futures-util",
+ "headers",
+ "hex",
+ "http",
+ "image",
+ "itertools",
+ "kitsune-http-signatures",
+ "kitsune-type",
+ "migration",
+ "mime",
+ "mime_guess",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "pin-project-lite",
+ "post-process",
+ "pulldown-cmark",
+ "rand",
+ "rayon",
+ "redis",
+ "reqwest",
+ "rsa",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "zxcvbn",
+]
+
+[[package]]
+name = "kitsune-http-signatures"
+version = "0.1.0"
+dependencies = [
+ "base64 0.20.0",
+ "http",
+ "ring",
+ "thiserror",
+]
+
+[[package]]
+name = "kitsune-type"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1931,9 +2006,9 @@ checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
 
 [[package]]
 name = "nom"
-version = "7.1.1"
+version = "7.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
+checksum = "e5507769c4919c998e69e49c839d9dc6e693ede4cc4290d6ad8b41d4f09c548c"
 dependencies = [
  "memchr",
  "minimal-lexical",
@@ -2213,81 +2288,6 @@ dependencies = [
  "once_cell",
  "pest",
  "sha1",
-]
-
-[[package]]
-name = "phenomenon"
-version = "0.1.0-UTA"
-dependencies = [
- "ammonia",
- "argon2",
- "askama",
- "async-graphql",
- "async-graphql-axum",
- "async-trait",
- "axum",
- "base64 0.20.0",
- "blurhash-ng",
- "chrono",
- "clap",
- "deadpool-redis",
- "derive_builder 0.12.0",
- "dotenvy",
- "envy",
- "futures-util",
- "headers",
- "hex",
- "http",
- "image",
- "itertools",
- "migration",
- "mime",
- "mime_guess",
- "once_cell",
- "parking_lot 0.12.1",
- "phenomenon-http-signatures",
- "phenomenon-type",
- "pin-project-lite",
- "post-process",
- "pulldown-cmark",
- "rand",
- "rayon",
- "redis",
- "reqwest",
- "rsa",
- "sea-orm",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
- "tokio",
- "tokio-util",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
- "zxcvbn",
-]
-
-[[package]]
-name = "phenomenon-http-signatures"
-version = "0.1.0"
-dependencies = [
- "base64 0.20.0",
- "http",
- "ring",
- "thiserror",
-]
-
-[[package]]
-name = "phenomenon-type"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "uuid",
 ]
 
 [[package]]
