@@ -19,7 +19,7 @@ fn invalid_mention() {
 
 #[test]
 fn parse_mention() {
-    let text = "hello @桐生@friday.night @真島 ! ";
+    let text = "hello @桐生@friday.night @真島! ";
     let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");
 
     let text1 = token_iter.next().unwrap();
@@ -54,5 +54,5 @@ fn parse_mention() {
 
     let text2 = token_iter.next().unwrap();
     assert_eq!(text2.as_rule(), Rule::text);
-    assert_eq!(text2.as_str(), " ! ");
+    assert_eq!(text2.as_str(), "! ");
 }
