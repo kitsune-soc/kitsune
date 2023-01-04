@@ -8,7 +8,7 @@ use crate::{
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
-use std::{borrow::Cow, collections::HashSet, mem, sync::Arc};
+use std::{borrow::Cow, collections::HashSet, mem};
 use uuid::Uuid;
 
 pub struct PostResolver<FPC, FUC, WC> {
@@ -66,7 +66,7 @@ where
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
-        mentioned_accounts: Arc<Mutex<HashSet<Uuid>>>,
+        mentioned_accounts: &Mutex<HashSet<Uuid>>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -107,11 +107,8 @@ where
     ///
     /// This should never panic
     pub async fn resolve(&self, content: &str) -> Result<(Vec<Uuid>, String)> {
-        let mentioned_account_ids = Arc::new(Mutex::new(HashSet::new()));
-        let transformer = Transformer::new(|elem| {
-            let mentioned_account_ids = Arc::clone(&mentioned_account_ids);
-            self.transform(elem, mentioned_account_ids)
-        });
+        let mentioned_account_ids = Mutex::new(HashSet::new());
+        let transformer = Transformer::new(|elem| self.transform(elem, &mentioned_account_ids));
 
         let content = transformer
             .transform(content)
