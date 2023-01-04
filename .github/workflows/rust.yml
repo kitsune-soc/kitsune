@@ -28,7 +28,7 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: nix develop -c cargo hack check --feature-powerset --all
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack check --feature-powerset --all
 
   clippy:
     name: Clippy
@@ -46,7 +46,7 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: nix develop -c cargo clippy --all-features -- -D warnings
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo clippy --all-features -- -D warnings
 
   fmt:
     name: Formatting
@@ -56,7 +56,7 @@ jobs:
       - uses: mtoohey31/cache-flake-attrs@v2
         with:
           key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
-      - run: nix develop -c cargo fmt --all -- --check
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo fmt --all -- --check
   
   test:
     name: Test
@@ -74,4 +74,4 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: nix develop -c cargo test --all-features -- --show-output
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output
