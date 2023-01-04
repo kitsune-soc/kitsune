@@ -19,9 +19,9 @@ pub struct PostResolver<FPC, FUC, WC> {
 
 impl<FPC, FUC, WC> PostResolver<FPC, FUC, WC>
 where
-    FPC: Cache<str, post::Model> + Send + Sync,
-    FUC: Cache<str, account::Model> + Send + Sync,
-    WC: Cache<str, String> + Send + Sync,
+    FPC: Cache<str, post::Model>,
+    FUC: Cache<str, account::Model>,
+    WC: Cache<str, String>,
 {
     pub fn new(
         db_conn: DatabaseConnection,
