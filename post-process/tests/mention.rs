@@ -6,7 +6,16 @@ use pretty_assertions::assert_eq;
 fn invalid_mention() {
     let text = "@test@hello.world@tes";
     assert!(PostParser::parse(Rule::mention, text).is_err());
+}
 
+#[test]
+fn another_invalid_mention() {
+    let text = "@ test@hello.world";
+    assert!(PostParser::parse(Rule::mention, text).is_err());
+}
+
+#[test]
+fn weird_invalid_mention() {
     let text = "@test@hello.world@tes hello";
     let mut token_iter = PostParser::parse(Rule::post, text).unwrap();
 

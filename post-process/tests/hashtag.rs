@@ -9,6 +9,19 @@ fn invalid_hashtag() {
 }
 
 #[test]
+fn weird_tags() {
+    let text = "#invalid#tag";
+    let mut token_iter = PostParser::parse(Rule::post, text).unwrap();
+    let hashtag = token_iter.next().unwrap();
+    assert_eq!(hashtag.as_rule(), Rule::hashtag);
+    assert_eq!(hashtag.as_str(), "#invalid");
+
+    let text = token_iter.next().unwrap();
+    assert_eq!(text.as_rule(), Rule::text);
+    assert_eq!(text.as_str(), "#tag");
+}
+
+#[test]
 fn parse_hashtag() {
     let text = "why am i building a #lexer for #posts? #龍が如く0";
     let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");
