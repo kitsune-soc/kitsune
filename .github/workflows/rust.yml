@@ -18,13 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v18
-      - uses: john-shaffer/cache@sudo-tar
+      - uses: mtoohey31/cache-flake-attrs@v2
         with:
-          path: |
-            ~/nix-db-dump
-            /nix/store
-            /nix/var/nix/profiles
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/flake.lock') }}
+          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - uses: taiki-e/install-action@cargo-hack
       - uses: actions/cache@v3
         with:
@@ -42,13 +38,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v18
-      - uses: john-shaffer/cache@sudo-tar
+      - uses: mtoohey31/cache-flake-attrs@v2
         with:
-          path: |
-            ~/nix-db-dump
-            /nix/store
-            /nix/var/nix/profiles
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/flake.lock') }}
+          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - uses: actions/cache@v3
         with:
           path: |
@@ -64,13 +56,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v18
-      - uses: john-shaffer/cache@sudo-tar
+      - uses: mtoohey31/cache-flake-attrs@v2
         with:
-          path: |
-            ~/nix-db-dump
-            /nix/store
-            /nix/var/nix/profiles
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/flake.lock') }}
+          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - run: nix develop -c cargo fmt --all -- --check
   
   test:
@@ -80,13 +68,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v18
-      - uses: john-shaffer/cache@sudo-tar
+      - uses: mtoohey31/cache-flake-attrs@v2
         with:
-          path: |
-            ~/nix-db-dump
-            /nix/store
-            /nix/var/nix/profiles
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/flake.lock') }}
+          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - uses: actions/cache@v3
         with:
           path: |
