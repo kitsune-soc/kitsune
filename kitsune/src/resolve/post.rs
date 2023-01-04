@@ -128,6 +128,7 @@ mod test {
     use super::PostResolver;
     use crate::{activitypub::Fetcher, cache::NoopCache, db::model::account, webfinger::Webfinger};
     use migration::{Migrator, MigratorTrait};
+    use pretty_assertions::assert_eq;
     use sea_orm::{Database, DatabaseConnection, EntityTrait};
 
     async fn db_conn() -> DatabaseConnection {

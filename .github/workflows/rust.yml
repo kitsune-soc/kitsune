@@ -28,6 +28,7 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack check --feature-powerset --all
 
   clippy:
@@ -46,6 +47,7 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo clippy --all-features -- -D warnings
 
   fmt:
@@ -74,4 +76,5 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output

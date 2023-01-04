@@ -1743,6 +1743,7 @@ dependencies = [
  "parking_lot 0.12.1",
  "pin-project-lite",
  "post-process",
+ "pretty_assertions",
  "pulldown-cmark",
  "rand",
  "rayon",
