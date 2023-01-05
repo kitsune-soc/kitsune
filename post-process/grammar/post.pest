@@ -28,8 +28,8 @@ component_prefix = {
 
 component_postfix = _{ 
     &(
-        (!component_idents ~ non_component_chars)+ ~ component_separator_chars 
-        | component_separator_chars
+        (!component_idents ~ non_component_chars)* 
+        ~ component_separator_chars 
     )
 }
 
