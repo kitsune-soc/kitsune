@@ -23,7 +23,7 @@ non_component_chars = {
 }
 
 component_prefix = { 
-    NEWLINE | SOI | WHITE_SPACE | non_component_chars
+    NEWLINE | SOI | WHITE_SPACE
 }
 
 component_postfix = _{ 
@@ -86,17 +86,17 @@ mention = {
 
 mention_domain = {
     (
-        !(component_idents | component_postfix | ".") ~ ANY
+        !(non_component_chars | component_postfix | ".") ~ ANY
     )+ 
     ~ "." 
     ~ (
-        !(component_idents | component_postfix) ~ ANY
+        !(non_component_chars | component_postfix) ~ ANY
     )+ 
 }
 
 mention_username = { 
     (
-        !(component_idents | component_postfix) 
+        !(component_postfix | non_component_chars) 
         ~ ANY
     )+ 
 }
