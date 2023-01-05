@@ -11,4 +11,5 @@ members = [
     "kitsune",
     "kitsune-http-signatures",
     "kitsune-type",
+    "post-process",
 ]

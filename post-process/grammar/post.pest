@@ -1,0 +1,102 @@
+post = _{ 
+    (text | component)* 
+}
+
+component = _{ 
+    emote | hashtag | link | mention 
+}
+
+text = { 
+    (!component ~ ANY)+ 
+}
+
+component_idents = {
+    "@" | "#"
+}
+
+component_separator_chars = {
+    EOI | NEWLINE | WHITE_SPACE
+}
+
+non_component_chars = {
+    MARK | PUNCTUATION | SYMBOL
+}
+
+component_prefix = { 
+    NEWLINE | SOI | WHITE_SPACE
+}
+
+component_postfix = _{ 
+    &(
+        (!component_idents ~ non_component_chars)* 
+        ~ component_separator_chars 
+    )
+}
+
+emote = { 
+    ":" 
+    ~ emote_content 
+    ~ ":" 
+}
+
+emote_content = {
+    (LETTER | NUMBER | DASH_PUNCTUATION)+
+}
+
+hashtag = { 
+    component_prefix 
+    ~ "#" 
+    ~ hashtag_content 
+    ~ (component_postfix | !hashtag_content) 
+}
+
+hashtag_content = {
+    (
+        !component_postfix 
+        ~ (LETTER | NUMBER)+
+    )+ 
+}
+
+link = {
+    link_schema
+    ~ "://"
+    ~ link_content
+    ~ link_postfix
+}
+
+link_content = {
+    (!link_postfix ~ ANY)+
+}
+
+link_postfix = _{
+    &(EOI | NEWLINE | WHITE_SPACE)
+}
+
+link_schema = {
+    (ASCII_ALPHA | "+" | "-" | ".")+
+}
+
+mention = {
+    component_prefix 
+    ~ "@" 
+    ~ mention_username 
+    ~ ("@" ~ mention_domain)? 
+    ~ component_postfix 
+}
+
+mention_domain = {
+    (
+        !(non_component_chars | component_postfix) ~ ANY
+    )+ 
+    ~ "." 
+    ~ (
+        "."? ~ !(non_component_chars | component_postfix) ~ ANY
+    )+ 
+}
+
+mention_username = { 
+    (
+        !(component_postfix | non_component_chars) 
+        ~ ANY
+    )+ 
+}

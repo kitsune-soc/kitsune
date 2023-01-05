@@ -226,6 +226,7 @@ where
 mod test {
     use crate::{activitypub::Fetcher, cache::NoopCache, db::model::account};
     use migration::{Migrator, MigratorTrait};
+    use pretty_assertions::assert_eq;
     use sea_orm::{Database, DatabaseConnection, ModelTrait};
 
     async fn prepare_db() -> DatabaseConnection {
