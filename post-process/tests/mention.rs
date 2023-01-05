@@ -25,6 +25,14 @@ fn invalid_mention() {
 }
 
 #[test]
+fn subdomain_mention() {
+    let text = "@test@social.hello.world";
+    let mut token_iter = PostParser::parse(Rule::mention, text).unwrap();
+    let mention = token_iter.next().unwrap();
+    assert_eq!(mention.as_str(), "@test@social.hello.world");
+}
+
+#[test]
 fn parse_mention() {
     let text = "hello @桐生@friday.night @真島! ";
     let mut token_iter = PostParser::parse(Rule::post, text).expect("Failed to parse post");

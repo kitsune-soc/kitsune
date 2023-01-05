@@ -86,11 +86,11 @@ mention = {
 
 mention_domain = {
     (
-        !(non_component_chars | component_postfix | ".") ~ ANY
+        !(non_component_chars | component_postfix) ~ ANY
     )+ 
     ~ "." 
     ~ (
-        !(non_component_chars | component_postfix) ~ ANY
+        "."? ~ !(non_component_chars | component_postfix) ~ ANY
     )+ 
 }
 
