@@ -65,7 +65,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
-tokio = { version = "1.23.0", features = ["full"] }
+tokio = { version = "1.23.1", features = ["full"] }
 tokio-util = { version = "0.7.4", features = ["compat"] }
 tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
