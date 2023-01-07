@@ -11,7 +11,7 @@ use crate::{
         Job, JobState,
     },
     mapping::IntoMastodon,
-    resolve::MentionResolver,
+    resolve::PostResolver,
     sanitize::CleanHtmlExt,
     state::Zustand,
 };
@@ -88,7 +88,7 @@ async fn delete(
 #[debug_handler(state = Zustand)]
 async fn get(
     State(state): State<Zustand>,
-    AuthExtactor(_account): AuthExtactor,
+    _user_data: Option<AuthExtactor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let Some(post) = post::Entity::find()
@@ -122,12 +122,12 @@ async fn post(
     };
 
     // TODO: Cache this resolver somewhere
-    let mention_resolver = MentionResolver::new(
+    let mention_resolver = PostResolver::new(
         state.db_conn.clone(),
         state.fetcher.clone(),
         state.webfinger.clone(),
     );
-    let (mentioned_account_ids, content) = mention_resolver.resolve(content).await?;
+    let (mentioned_account_ids, content) = mention_resolver.resolve(&content).await?;
 
     let id = Uuid::now_v7();
     let account_id = user_data.account.id;

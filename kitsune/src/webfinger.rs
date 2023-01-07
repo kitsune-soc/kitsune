@@ -81,6 +81,7 @@ where
 mod test {
     use super::{Resource, Webfinger};
     use crate::cache::NoopCache;
+    use pretty_assertions::assert_eq;
 
     const GARGRON_WEBFINGER_RESOURCE: &str = r#"
     {
