@@ -12,10 +12,13 @@ use axum::{
 };
 use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
-use http::{request::Parts, StatusCode};
-use kitsune_http_signatures::Request;
+use http::{request::Parts, Request, StatusCode};
+use kitsune_http_signatures::{
+    ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
+    HttpSigner,
+};
 use kitsune_type::ap::Activity;
-use rsa::pkcs8::Document;
+use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
 use sea_orm::{ColumnTrait, QueryFilter, Related};
 use serde::de::DeserializeOwned;
 
@@ -116,17 +119,26 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         let remote_user = state.fetcher.fetch_actor(ap_id).await?;
         let (_tag, public_key) =
             Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
+        let public_key: SubjectPublicKeyInfo<'_> = public_key.decode_msg().map_err(Error::from)?;
+        let public_key = UnparsedPublicKey::new(
+            &RSA_PKCS1_2048_8192_SHA256,
+            public_key.subject_public_key.to_vec(),
+        );
 
-        let is_valid = crate::blocking::cpu(move || {
-            let request = Request {
-                headers: &headers,
-                method: &method,
-                uri: &uri,
-            };
+        let mut dummy_request = Request::builder().uri(uri).method(method);
+        *dummy_request.headers_mut().unwrap() = headers;
+        let (parts, _) = dummy_request.body(()).unwrap().into_parts();
 
-            kitsune_http_signatures::verify(request, public_key.as_bytes()).map_err(Error::from)
-        })
-        .await??;
+        let is_valid = HttpSigner::builder()
+            .parts(&parts)
+            .build()
+            .unwrap()
+            .verify(|_key_id| async move {
+                // TODO: Select from the database by key ID
+                Ok(public_key)
+            })
+            .await
+            .is_ok();
 
         if !is_valid {
             return Err(StatusCode::UNAUTHORIZED.into_response());
