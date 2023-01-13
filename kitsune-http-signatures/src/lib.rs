@@ -23,6 +23,7 @@ use std::{
     future::Future,
     time::{Duration, SystemTime},
 };
+use tokio::sync::oneshot;
 use util::UnixTimestampExt;
 
 pub use crate::error::Error;
@@ -243,10 +244,14 @@ impl HttpSigner<'_> {
             expires,
         };
         let stringified_signature_string: String = signature_string.try_into()?;
-        let signature = tokio::task::spawn_blocking(move || {
-            key.key.sign(stringified_signature_string.as_bytes())
-        })
-        .await?;
+
+        let (sender, receiver) = oneshot::channel();
+        rayon::spawn(move || {
+            sender
+                .send(key.key.sign(stringified_signature_string.as_bytes()))
+                .ok();
+        });
+        let signature = receiver.await?;
 
         let signature_header = SignatureHeader {
             key_id: key.key_id,
@@ -321,13 +326,16 @@ impl HttpVerifier<'_> {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        tokio::task::spawn_blocking(move || {
-            public_key.verify(
-                stringified_signature_string.as_bytes(),
-                &signature_header.signature,
-            )
-        })
-        .await??;
+        let (sender, receiver) = oneshot::channel();
+        rayon::spawn(move || {
+            sender
+                .send(public_key.verify(
+                    stringified_signature_string.as_bytes(),
+                    &signature_header.signature,
+                ))
+                .ok();
+        });
+        receiver.await??;
 
         Ok(())
     }

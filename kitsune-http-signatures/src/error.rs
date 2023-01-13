@@ -5,7 +5,7 @@ use http::header::{InvalidHeaderName, InvalidHeaderValue, ToStrError};
 use ring::error::Unspecified;
 use std::{num::ParseIntError, time::SystemTimeError};
 use thiserror::Error;
-use tokio::task::JoinError;
+use tokio::sync::oneshot::error::RecvError;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -37,7 +37,7 @@ pub enum Error {
     InvalidSignatureHeader,
 
     #[error(transparent)]
-    TaskJoin(#[from] JoinError),
+    OneshotRecv(#[from] RecvError),
 
     #[error(transparent)]
     ParseInt(#[from] ParseIntError),
