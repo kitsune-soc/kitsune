@@ -23,6 +23,7 @@ use std::{
     future::Future,
     time::{Duration, SystemTime},
 };
+use util::UnixTimestampExt;
 
 pub use crate::error::Error;
 pub use ring;
@@ -37,7 +38,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 static SIGNATURE: HeaderName = HeaderName::from_static("signature");
 
 /// Components of the signature
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SignatureComponent<'a> {
     /// Request target (path and query)
     RequestTarget,
@@ -132,6 +133,7 @@ where
 
 #[allow(dead_code)] // shush.
 struct SignatureString<'a> {
+    pub algorithm: &'a str,
     pub components: &'a [SignatureComponent<'a>],
     pub parts: &'a Parts,
     pub created: Option<SystemTime>,
@@ -142,18 +144,35 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
     type Error = Error;
 
     fn try_from(value: SignatureString<'a>) -> Result<Self, Self::Error> {
+        // Error out if the used algorithm isn't "hs2019" but it uses the "(created)"/"(expires)" pseudo-headers
+        if value.algorithm != "hs2019"
+            && (value.components.contains(&SignatureComponent::Created)
+                || value.components.contains(&SignatureComponent::Expires))
+        {
+            return Err(Error::InvalidSignatureHeader);
+        }
+
         let signature_string = value
             .components
             .iter()
-            // Ugly. The signature string isn't supposed to contain created and expires components
-            .filter(|component| {
-                !matches!(
-                    component,
-                    SignatureComponent::Created | SignatureComponent::Expires,
-                )
-            })
             .map(|component| {
                 let component = match component {
+                    SignatureComponent::Created => {
+                        let timestamp = value
+                            .created
+                            .ok_or(Error::MissingComponent)?
+                            .to_unix_timestamp()?;
+
+                        format!("(created): {timestamp}")
+                    }
+                    SignatureComponent::Expires => {
+                        let timestamp = value
+                            .expires
+                            .ok_or(Error::MissingComponent)?
+                            .to_unix_timestamp()?;
+
+                        format!("(expires): {timestamp}")
+                    }
                     SignatureComponent::RequestTarget => format!(
                         "(request-target): {} {}",
                         value.parts.method.as_str().to_lowercase(),
@@ -169,7 +188,6 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 
                         format!("{}: {}", header_name.to_lowercase(), header_value)
                     }
-                    _ => unreachable!(),
                 };
                 Ok(component)
             })
@@ -185,6 +203,10 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 pub struct HttpSigner<'a> {
     /// HTTP request parts
     parts: &'a Parts,
+
+    /// Include the creation timestamp into the signing header
+    #[builder(default)]
+    include_creation_timestamp: bool,
 
     /// Duration in which the signature expires
     #[builder(default, setter(strip_option))]
@@ -208,12 +230,13 @@ impl HttpSigner<'_> {
     where
         K: SigningKey + Send + 'static,
     {
-        let created = Some(SystemTime::now());
+        let created = self.include_creation_timestamp.then(SystemTime::now);
         let expires = self
             .expires_in
             .map(|expires_in| SystemTime::now() + expires_in);
 
         let signature_string = SignatureString {
+            algorithm: "hs2019",
             components: &components,
             parts: self.parts,
             created,
@@ -290,6 +313,7 @@ impl HttpVerifier<'_> {
             .map_err(Error::GetKey)?;
 
         let signature_string = SignatureString {
+            algorithm: signature_header.algorithm.unwrap_or("hs2019"),
             components: &signature_header.signature_components,
             created: signature_header.created,
             expires: signature_header.expires,

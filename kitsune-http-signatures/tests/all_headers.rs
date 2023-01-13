@@ -3,7 +3,9 @@ use kitsune_http_signatures::HttpVerifier;
 
 mod data;
 
-#[tokio::test]
+// This is a broken test vector
+// It should produce an error according to the specification, but according to the test vectors it should just omit the "(created)"/"(expires)" pseudo-headers
+//#[tokio::test]
 async fn all_headers() {
     let mut parts = self::data::get_parts();
     parts.headers.insert(
