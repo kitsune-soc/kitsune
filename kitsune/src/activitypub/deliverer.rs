@@ -3,6 +3,7 @@ use crate::{
     db::model::{account, user},
     error::{Error, Result},
 };
+use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Request, Uri};
 use kitsune_http_signatures::{
@@ -34,7 +35,7 @@ impl Deliverer {
         activity: &Activity,
     ) -> Result<()> {
         let body = serde_json::to_string(&activity)?;
-        let body_digest = base64::encode(Sha256::digest(body.as_bytes()));
+        let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 
         let mut request = self
