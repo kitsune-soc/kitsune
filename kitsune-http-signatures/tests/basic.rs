@@ -1,5 +1,5 @@
 use http::HeaderValue;
-use kitsune_http_signatures::HttpSigner;
+use kitsune_http_signatures::HttpVerifier;
 
 mod data;
 
@@ -13,7 +13,7 @@ async fn basic_signature() {
         ),
     );
     let public_key = self::data::get_public_key();
-    let signer = HttpSigner::builder().parts(&parts).build().unwrap();
+    let signer = HttpVerifier::builder().parts(&parts).build().unwrap();
 
     signer
         .verify(move |key_id| {

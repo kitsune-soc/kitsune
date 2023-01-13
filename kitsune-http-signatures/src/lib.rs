@@ -180,19 +180,13 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
     }
 }
 
-/// HTTP signer/verifier
-///
-/// The name is a bit unfortunate. It not only signs, it also verifies
+/// HTTP signer
 #[derive(Builder, Clone)]
 pub struct HttpSigner<'a> {
     /// HTTP request parts
     parts: &'a Parts,
 
-    /// Check whether the signature is expired. Only important if you wanna verify something
-    #[builder(default = "true")]
-    check_expiration: bool,
-
-    /// Duration in which the signature expires. Only important if you wanna sign something
+    /// Duration in which the signature expires
     #[builder(default, setter(strip_option))]
     expires_in: Option<Duration>,
 }
@@ -246,7 +240,27 @@ impl HttpSigner<'_> {
             HeaderValue::from_str(&stringified_signature_header)?,
         ))
     }
+}
 
+/// HTTP verifier
+#[derive(Builder, Clone)]
+pub struct HttpVerifier<'a> {
+    /// HTTP request parts
+    parts: &'a Parts,
+
+    /// Check whether the signature is expired
+    #[builder(default = "true")]
+    check_expiration: bool,
+}
+
+impl<'a> HttpVerifier<'a> {
+    /// Return a builder for the HTTP verifier
+    pub fn builder() -> HttpVerifierBuilder<'a> {
+        HttpVerifierBuilder::default()
+    }
+}
+
+impl HttpVerifier<'_> {
     /// Verify an HTTP signature
     ///
     /// `key_fn` is a function that obtains a public key (in its DER representation) based in its key ID

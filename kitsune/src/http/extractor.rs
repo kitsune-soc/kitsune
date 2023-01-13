@@ -15,7 +15,7 @@ use headers::{authorization::Bearer, Authorization, ContentType};
 use http::{request::Parts, Request, StatusCode};
 use kitsune_http_signatures::{
     ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
-    HttpSigner,
+    HttpVerifier,
 };
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
@@ -129,7 +129,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         *dummy_request.headers_mut().unwrap() = headers;
         let (parts, _) = dummy_request.body(()).unwrap().into_parts();
 
-        let is_valid = HttpSigner::builder()
+        let is_valid = HttpVerifier::builder()
             .parts(&parts)
             .build()
             .unwrap()
