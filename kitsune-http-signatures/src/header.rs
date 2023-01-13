@@ -1,4 +1,4 @@
-use crate::{util::UnixTimestampExt, Result, SignatureComponent};
+use crate::{util::UnixTimestampExt, Error, Result, SignatureComponent};
 use base64::{engine::general_purpose, Engine};
 use derive_builder::Builder;
 use std::time::{SystemTime, SystemTimeError};
@@ -47,7 +47,7 @@ impl<'a> SignatureHeader<'a> {
             };
         }
 
-        Ok(builder.build().unwrap())
+        builder.build().map_err(Error::from)
     }
 }
 

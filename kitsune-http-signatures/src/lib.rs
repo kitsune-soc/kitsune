@@ -1,3 +1,12 @@
+//!
+//! HTTP signatures library
+//!
+//! Only supports asymmetric signing schemes (aka. no HMAC and such)
+//!
+
+#![forbid(rust_2018_idioms, unsafe_code)]
+#![deny(missing_docs)]
+
 use crate::header::SignatureHeader;
 use derive_builder::Builder;
 use http::{
@@ -27,16 +36,24 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 static SIGNATURE: HeaderName = HeaderName::from_static("signature");
 
+/// Components of the signature
 #[derive(Clone)]
 pub enum SignatureComponent<'a> {
+    /// Request target (path and query)
     RequestTarget,
+
+    /// Timestamp the signature was created
     Created,
+
+    /// Timestamp the signature expires
     Expires,
+
+    /// Header of the request
     Header(&'a str),
 }
 
 impl<'a> SignatureComponent<'a> {
-    pub fn parse(raw: &'a str) -> Result<Self, InvalidHeaderName> {
+    fn parse(raw: &'a str) -> Result<Self, InvalidHeaderName> {
         let component = match raw {
             "(request-target)" => Self::RequestTarget,
             "(created)" => Self::Created,
@@ -46,7 +63,7 @@ impl<'a> SignatureComponent<'a> {
         Ok(component)
     }
 
-    pub fn as_str(&self) -> &str {
+    fn as_str(&self) -> &str {
         match self {
             Self::RequestTarget => "(request-target)",
             Self::Created => "(created)",
@@ -56,21 +73,10 @@ impl<'a> SignatureComponent<'a> {
     }
 }
 
-/// Cryptographic key
-///
-/// Depending on the context its used in, it either represents a private or a public key
-#[derive(Builder, Clone)]
-#[builder(pattern = "owned")]
-pub struct PrivateKey<'a, K>
-where
-    K: SigningKey,
-{
-    key_id: &'a str,
-    key: K,
-}
-
+/// Trait representing a signing key
 // TODO: Maybe replace with usage of RustCrypto `signature` traits via `ring-compat`
 pub trait SigningKey {
+    /// Sign the provided message and return the signature in its byte representation
     fn sign(&self, msg: &[u8]) -> Vec<u8>;
 }
 
@@ -98,10 +104,27 @@ impl SigningKey for RsaKeyPair {
     }
 }
 
+/// Cryptographic key
+///
+/// Depending on the context its used in, it either represents a private or a public key
+#[derive(Builder, Clone)]
+#[builder(pattern = "owned")]
+pub struct PrivateKey<'a, K>
+where
+    K: SigningKey,
+{
+    /// Unique identifier of the key
+    key_id: &'a str,
+
+    /// Signing key
+    key: K,
+}
+
 impl<'a, K> PrivateKey<'a, K>
 where
     K: SigningKey,
 {
+    /// Return a builder of the private key
     pub fn builder() -> PrivateKeyBuilder<'a, K> {
         PrivateKeyBuilder::default()
     }
@@ -157,6 +180,9 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
     }
 }
 
+/// HTTP signer/verifier
+///
+/// The name is a bit unfortunate. It not only signs, it also verifies
 #[derive(Builder, Clone)]
 pub struct HttpSigner<'a> {
     /// HTTP request parts
@@ -172,12 +198,14 @@ pub struct HttpSigner<'a> {
 }
 
 impl<'a> HttpSigner<'a> {
+    /// Return a builder for the HTTP signer
     pub fn builder() -> HttpSignerBuilder<'a> {
         HttpSignerBuilder::default()
     }
 }
 
 impl HttpSigner<'_> {
+    /// Sign an HTTP request
     pub async fn sign<K>(
         &self,
         key: PrivateKey<'_, K>,
