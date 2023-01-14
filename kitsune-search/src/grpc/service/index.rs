@@ -1,5 +1,6 @@
 use crate::grpc::proto::index::{
-    index_server::Index, AddIndexRequest, AddIndexResponse, RemoveIndexRequest, RemoveIndexResponse,
+    index_server::Index, AddIndexRequest, AddIndexResponse, RemoveIndexRequest,
+    RemoveIndexResponse, ResetRequest, ResetResponse,
 };
 use tonic::{async_trait, Request, Response};
 
@@ -18,6 +19,10 @@ impl Index for IndexService {
         &self,
         req: Request<RemoveIndexRequest>,
     ) -> tonic::Result<Response<RemoveIndexResponse>> {
+        todo!();
+    }
+
+    async fn reset(&self, req: Request<ResetRequest>) -> tonic::Result<Response<ResetResponse>> {
         todo!();
     }
 }

@@ -3,19 +3,35 @@ syntax = "proto3";
 package kitsune.index;
 
 message AddIndexRequest {
+    // Unique identifier of the entry (UUID)
     bytes id = 1;
+
+    // Data of the entry
     string data = 2;
 }
 
 message AddIndexResponse {}
 
 message RemoveIndexRequest {
+    // Unique identifier of the entry (UUID)
     bytes id = 1;
 }
 
 message RemoveIndexResponse {}
 
+message ResetRequest {}
+
+message ResetResponse {}
+
 service Index {
+    // Add a document to the search index
     rpc Add(AddIndexRequest) returns (AddIndexResponse);
+
+    // Remove a document from the search index
     rpc Remove(RemoveIndexRequest) returns (RemoveIndexResponse);
+
+    // Reset the entire index
+    //
+    // Warning: This is a major destructive operation. It will delete all entries of the index.
+    rpc Reset(ResetRequest) returns (ResetResponse);
 }
