@@ -16,6 +16,7 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
     let writer = search_index.index.writer(config.memory_arena_size).unwrap();
 
     Server::builder()
+        .layer(AddExtensionLayer::new(config.clone()))
         .layer(AddExtensionLayer::new(search_index))
         .layer(TraceLayer::new_for_grpc())
         .add_service(IndexServer::new(IndexService {

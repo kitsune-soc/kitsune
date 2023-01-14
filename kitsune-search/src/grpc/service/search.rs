@@ -1,4 +1,5 @@
 use crate::{
+    config::Configuration,
     grpc::proto::search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
     search::SearchIndex,
 };
@@ -12,11 +13,12 @@ pub struct SearchService {
 #[async_trait]
 impl Search for SearchService {
     async fn search(&self, req: Request<SearchRequest>) -> tonic::Result<Response<SearchResponse>> {
+        let config = req.extensions().get::<Configuration>().unwrap();
         let index = req.extensions().get::<SearchIndex>().unwrap();
         let searcher = self.reader.searcher();
 
         let term = Term::from_field_text(index.schema.data, &req.get_ref().query);
-        let query = FuzzyTermQuery::new(term, 2, true);
+        let query = FuzzyTermQuery::new(term, config.levenshtein_distance, true);
         let result = match searcher.search(
             &query,
             &TopDocs::with_limit(20).and_offset(req.get_ref().offset as usize),
