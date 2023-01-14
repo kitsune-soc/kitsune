@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package kitsune.search;
+
+message SearchResult {
+    bytes id = 1;
+}
+
+message SearchRequest {
+    string query = 1;
+}
+
+message SearchResponse {
+    repeated SearchResult result = 1;
+}
+
+service Search {
+    rpc Search(SearchRequest) returns (SearchResponse);
+}

@@ -10,6 +10,7 @@ members = [
     "migration",
     "kitsune",
     "kitsune-http-signatures",
+    "kitsune-search",
     "kitsune-type",
     "post-process",
 ]

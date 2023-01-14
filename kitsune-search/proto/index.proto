@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package kitsune.index;
+
+message AddIndexRequest {
+    bytes id = 1;
+    string data = 2;
+}
+
+message AddIndexResponse {}
+
+message RemoveIndexRequest {
+    bytes id = 1;
+}
+
+message RemoveIndexResponse {}
+
+service Index {
+    rpc Add(AddIndexRequest) returns (AddIndexResponse);
+    rpc Remove(RemoveIndexRequest) returns (RemoveIndexResponse);
+}
