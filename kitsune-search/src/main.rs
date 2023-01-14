@@ -10,6 +10,7 @@ use std::future;
 
 mod config;
 mod grpc;
+mod search;
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +20,8 @@ async fn main() {
     let config: Configuration = envy::from_env().unwrap();
     info!(port = config.port, "Starting up Kitsune search");
 
-    tokio::spawn(self::grpc::start(config));
+    let index = self::search::prepare_index(&config).unwrap();
+    tokio::spawn(self::grpc::start(config, index));
 
     future::pending::<()>().await;
 }

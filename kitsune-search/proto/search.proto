@@ -10,6 +10,9 @@ message SearchResult {
 message SearchRequest {
     // Query for searching through the entries
     string query = 1;
+
+    // Offset
+    uint64 offset = 2;
 }
 
 message SearchResponse {
