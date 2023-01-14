@@ -1,3 +1,4 @@
+use human_size::Size;
 use serde::Deserialize;
 use std::path::PathBuf;
 
@@ -5,6 +6,6 @@ use std::path::PathBuf;
 pub struct Configuration {
     pub index_dir_path: PathBuf,
     pub levenshtein_distance: u8,
-    pub memory_arena_size: usize,
+    pub memory_arena_size: Size,
     pub port: u16,
 }

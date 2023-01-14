@@ -12,13 +12,25 @@ mod service;
 
 #[instrument(skip_all)]
 pub async fn start(config: Configuration, search_index: SearchIndex) {
+    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+    health_reporter
+        .set_serving::<IndexServer<IndexService>>()
+        .await;
+    health_reporter
+        .set_serving::<SearchServer<SearchService>>()
+        .await;
+
     let reader = search_index.index.reader().unwrap();
-    let writer = search_index.index.writer(config.memory_arena_size).unwrap();
+    let writer = search_index
+        .index
+        .writer(config.memory_arena_size.to_bytes() as usize)
+        .unwrap();
 
     Server::builder()
         .layer(AddExtensionLayer::new(config.clone()))
         .layer(AddExtensionLayer::new(search_index))
         .layer(TraceLayer::new_for_grpc())
+        .add_service(health_service)
         .add_service(IndexServer::new(IndexService {
             writer: Mutex::new(writer),
         }))

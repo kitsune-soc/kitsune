@@ -1647,6 +1647,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
+name = "human-size"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62eef4964b4e1c2d66981a5646d893768fd15d96957aae5e0e85c632503e9724"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "humansize"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1921,12 +1930,14 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "envy",
+ "human-size",
  "prost",
  "serde",
  "tantivy",
  "tokio",
  "tonic",
  "tonic-build",
+ "tonic-health",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -4134,6 +4145,20 @@ dependencies = [
  "prost-build",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "tonic-health"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a88aee666ef3a4d1ee46218bbc8e5f69bcf9cc27bf2e871d6b724d83f56d179f"
+dependencies = [
+ "async-stream",
+ "bytes",
+ "prost",
+ "tokio",
+ "tokio-stream",
+ "tonic",
 ]
 
 [[package]]
