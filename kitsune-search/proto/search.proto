@@ -2,9 +2,16 @@ syntax = "proto3";
 
 package kitsune.search;
 
+// --- Start: Message definitions ---
+
 message SearchResult {
-    // Unique identifier of the search entry
-    bytes id = 1;
+    oneof index {
+        // Unique identifier of an account entry
+        bytes account_id = 1;
+
+        // Unique identifier of a post entry
+        bytes post_id = 2;
+    }
 }
 
 message SearchRequest {
@@ -19,6 +26,8 @@ message SearchResponse {
     // List of search results
     repeated SearchResult result = 1;
 }
+
+// --- End: Message definitions ---
 
 service Search {
     // Search through all the entries

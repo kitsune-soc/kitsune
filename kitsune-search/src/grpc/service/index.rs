@@ -45,7 +45,7 @@ impl Index for IndexService {
         let index = req.extensions().get::<SearchIndex>().unwrap();
         let mut writer = self.writer.lock().await;
 
-        let term = Term::from_field_bytes(index.schema.id, &req.get_ref().id);
+        let term = Term::from_field_bytes(index.schema.id, &req.get_ref().index_id);
         writer.delete_term(term);
 
         if let Err(e) = writer.prepare_commit().unwrap().commit_future().await {

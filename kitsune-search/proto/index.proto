@@ -2,26 +2,72 @@ syntax = "proto3";
 
 package kitsune.index;
 
-message AddIndexRequest {
-    // Unique identifier of the entry (UUID)
+// --- Start: Type definitions ---
+
+enum SearchIndex {
+    // Account search index
+    Account = 0;
+
+    // Post search index
+    Post = 1;
+}
+
+// --- End: Type definitions ---
+
+// --- Start: Message definitions ---
+
+message AddAccountIndex {
+    // Unique identifier of the account (UUID)
     bytes id = 1;
 
-    // Data of the entry
-    string data = 2;
+    // Display name
+    optional string display_name = 2;
+
+    // Username
+    string username = 3;
+
+    // Description
+    optional string description = 4;
+}
+
+message AddPostIndex {
+    // Unique identifier of the post (UUID)
+    bytes id = 1;
+
+    // Subject 
+    optional string subject = 2;
+
+    // Content
+    string content = 3;
+}
+
+message AddIndexRequest {
+    oneof index_data {
+        AddAccountIndex account = 1;
+        AddPostIndex post = 2;
+    }
 }
 
 message AddIndexResponse {}
 
 message RemoveIndexRequest {
     // Unique identifier of the entry (UUID)
-    bytes id = 1;
+    oneof index_id {
+        bytes account_id = 1;
+        bytes post = 2;
+    }
 }
 
 message RemoveIndexResponse {}
 
-message ResetRequest {}
+message ResetRequest {
+    // Search index that should be reset
+    SearchIndex index = 1;
+}
 
 message ResetResponse {}
+
+// --- End: Message definitions ---
 
 service Index {
     // Add a document to the search index
