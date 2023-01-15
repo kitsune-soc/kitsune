@@ -2,24 +2,24 @@ syntax = "proto3";
 
 package kitsune.search;
 
+import "common.proto";
+
 // --- Start: Message definitions ---
 
 message SearchResult {
-    oneof index {
-        // Unique identifier of an account entry
-        bytes account_id = 1;
-
-        // Unique identifier of a post entry
-        bytes post_id = 2;
-    }
+    // Unique identifier of the entry
+    bytes id = 2;
 }
 
 message SearchRequest {
+    // Search index to search through
+    kitsune.common.SearchIndex index = 1;
+
     // Query for searching through the entries
-    string query = 1;
+    string query = 2;
 
     // Offset
-    uint64 offset = 2;
+    uint64 offset = 3;
 }
 
 message SearchResponse {

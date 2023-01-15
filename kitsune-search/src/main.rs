@@ -9,12 +9,8 @@
 #[macro_use]
 extern crate tracing;
 
-use self::config::Configuration;
+use kitsune_search::{config::Configuration, search::SearchIndex};
 use std::future;
-
-mod config;
-mod grpc;
-mod search;
 
 #[tokio::main]
 async fn main() {
@@ -24,8 +20,8 @@ async fn main() {
     let config: Configuration = envy::from_env().unwrap();
     info!(port = config.port, "Starting up Kitsune search");
 
-    let index = self::search::prepare_index(&config).unwrap();
-    tokio::spawn(self::grpc::start(config, index));
+    let index = SearchIndex::prepare(&config).unwrap();
+    tokio::spawn(kitsune_search::grpc::start(config, index));
 
     future::pending::<()>().await;
 }

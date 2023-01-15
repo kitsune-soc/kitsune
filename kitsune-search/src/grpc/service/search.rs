@@ -1,13 +1,19 @@
 use crate::{
     config::Configuration,
-    grpc::proto::search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
-    search::SearchIndex,
+    grpc::proto::{
+        common::SearchIndex as GrpcSearchIndex,
+        search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
+    },
+    search::{schema::PrepareQuery, SearchIndex},
 };
-use tantivy::{collector::TopDocs, query::FuzzyTermQuery, IndexReader, Term};
+use tantivy::{collector::TopDocs, IndexReader};
 use tonic::{async_trait, Request, Response, Status};
 
+const PAGE_LIMIT: usize = 20;
+
 pub struct SearchService {
-    pub reader: IndexReader,
+    pub account: IndexReader,
+    pub post: IndexReader,
 }
 
 #[async_trait]
@@ -15,13 +21,29 @@ impl Search for SearchService {
     async fn search(&self, req: Request<SearchRequest>) -> tonic::Result<Response<SearchResponse>> {
         let config = req.extensions().get::<Configuration>().unwrap();
         let index = req.extensions().get::<SearchIndex>().unwrap();
-        let searcher = self.reader.searcher();
 
-        let term = Term::from_field_text(index.schema.data, &req.get_ref().query);
-        let query = FuzzyTermQuery::new(term, config.levenshtein_distance, true);
+        let (query, searcher, id_field) = match req.get_ref().index() {
+            GrpcSearchIndex::Account => (
+                index
+                    .schemas
+                    .account
+                    .prepare_query(&req.get_ref().query, config.levenshtein_distance),
+                self.account.searcher(),
+                index.schemas.account.id,
+            ),
+            GrpcSearchIndex::Post => (
+                index
+                    .schemas
+                    .post
+                    .prepare_query(&req.get_ref().query, config.levenshtein_distance),
+                self.post.searcher(),
+                index.schemas.post.id,
+            ),
+        };
+
         let result = match searcher.search(
             &query,
-            &TopDocs::with_limit(20).and_offset(req.get_ref().offset as usize),
+            &TopDocs::with_limit(PAGE_LIMIT).and_offset(req.get_ref().offset as usize),
         ) {
             Ok(result) => result,
             Err(e) => return Err(Status::internal(e.to_string())),
@@ -33,7 +55,7 @@ impl Search for SearchService {
                 searcher
                     .doc(addr)
                     .map(|doc| {
-                        doc.get_first(index.schema.id)
+                        doc.get_first(id_field)
                             .unwrap()
                             .as_bytes()
                             .unwrap()

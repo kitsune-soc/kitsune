@@ -1,48 +1,59 @@
 use std::fs;
 
+use self::schema::{AccountSchema, PostSchema};
 use crate::config::Configuration;
-use tantivy::{
-    directory::MmapDirectory,
-    schema::{Field, Schema, STORED, TEXT},
-    Index,
-};
+use tantivy::{directory::MmapDirectory, Index};
 
-mod schema;
+pub mod schema;
+
+#[derive(Clone)]
+pub struct SearchIndicies {
+    pub account: Index,
+    pub post: Index,
+}
+
+#[derive(Clone, Default)]
+pub struct SearchSchemas {
+    pub account: AccountSchema,
+    pub post: PostSchema,
+}
 
 #[derive(Clone)]
 pub struct SearchIndex {
-    pub index: Index,
-    pub schema: SearchSchema,
+    pub indicies: SearchIndicies,
+    pub schemas: SearchSchemas,
 }
 
-#[derive(Clone)]
-pub struct SearchSchema {
-    pub id: Field,
-    pub data: Field,
-    pub tantivy_schema: Schema,
-}
+impl SearchIndex {
+    pub fn prepare(config: &Configuration) -> tantivy::Result<Self> {
+        let search_schemas = SearchSchemas::default();
 
-pub fn prepare_index(config: &Configuration) -> tantivy::Result<SearchIndex> {
-    let mut schema = Schema::builder();
-    let id = schema.add_bytes_field("id", STORED);
-    let data = schema.add_text_field("data", TEXT);
-    let schema = schema.build();
+        let account_index_dir = config.index_dir_path.join("account");
+        let post_index_dir = config.index_dir_path.join("post");
 
-    let search_schema = SearchSchema {
-        id,
-        data,
-        tantivy_schema: schema.clone(),
-    };
+        if !account_index_dir.exists() {
+            fs::create_dir_all(&account_index_dir)?;
+        }
+        if !post_index_dir.exists() {
+            fs::create_dir_all(&post_index_dir)?;
+        }
 
-    if !config.index_dir_path.exists() {
-        fs::create_dir(&config.index_dir_path).ok();
+        let account_directory = MmapDirectory::open(account_index_dir)?;
+        let account_index = Index::open_or_create(
+            account_directory,
+            search_schemas.account.tantivy_schema.clone(),
+        )?;
+
+        let post_directory = MmapDirectory::open(post_index_dir)?;
+        let post_index =
+            Index::open_or_create(post_directory, search_schemas.post.tantivy_schema.clone())?;
+
+        Ok(Self {
+            indicies: SearchIndicies {
+                account: account_index,
+                post: post_index,
+            },
+            schemas: search_schemas,
+        })
     }
-
-    let directory = MmapDirectory::open(&config.index_dir_path)?;
-    let index = Index::open_or_create(directory, schema)?;
-
-    Ok(SearchIndex {
-        index,
-        schema: search_schema,
-    })
 }

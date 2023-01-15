@@ -22,3 +22,7 @@ tracing-subscriber = "0.3.16"
 tonic-build = "0.8.4"
 
 [features]
+
+[dev-dependencies]
+rand = "0.8.5"
+tempdir = "0.3.7"

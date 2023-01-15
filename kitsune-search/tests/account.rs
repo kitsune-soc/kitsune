@@ -1,0 +1,70 @@
+use self::common::TestClient;
+use kitsune_search::grpc::proto::{
+    common::SearchIndex,
+    index::{add_index_request::IndexData, AddAccountIndex, AddIndexRequest, RemoveIndexRequest},
+    search::SearchRequest,
+};
+use std::time::Duration;
+
+mod common;
+
+#[tokio::test]
+async fn index_search_remove() {
+    let mut test_client = TestClient::create().await;
+
+    let id: [u8; 24] = rand::random();
+    test_client
+        .index
+        .add(AddIndexRequest {
+            index_data: Some(IndexData::Account(AddAccountIndex {
+                id: id.to_vec(),
+                display_name: Some("name".into()),
+                username: "cool_username".into(),
+                description: Some("Really cool test account. Very important".into()),
+            })),
+        })
+        .await
+        .unwrap();
+
+    tokio::time::sleep(Duration::from_secs(1)).await; // Wait until the write as propagated to the reader
+
+    let response = test_client
+        .search
+        .search(SearchRequest {
+            index: SearchIndex::Account.into(),
+            query: "tset".into(),
+            offset: 0,
+        })
+        .await
+        .unwrap()
+        .into_inner();
+
+    assert_eq!(response.result.len(), 1);
+    assert_eq!(response.result[0].id, id);
+
+    // -- Remove the account from the index --
+
+    test_client
+        .index
+        .remove(RemoveIndexRequest {
+            index: SearchIndex::Account.into(),
+            id: id.to_vec(),
+        })
+        .await
+        .unwrap();
+
+    tokio::time::sleep(Duration::from_secs(1)).await; // Wait until the write as propagated to the reader
+
+    let response = test_client
+        .search
+        .search(SearchRequest {
+            index: SearchIndex::Account.into(),
+            query: "tset".into(),
+            offset: 0,
+        })
+        .await
+        .unwrap()
+        .into_inner();
+
+    assert!(response.result.is_empty(), "{response:#?}");
+}

@@ -2,17 +2,7 @@ syntax = "proto3";
 
 package kitsune.index;
 
-// --- Start: Type definitions ---
-
-enum SearchIndex {
-    // Account search index
-    Account = 0;
-
-    // Post search index
-    Post = 1;
-}
-
-// --- End: Type definitions ---
+import "common.proto";
 
 // --- Start: Message definitions ---
 
@@ -51,18 +41,18 @@ message AddIndexRequest {
 message AddIndexResponse {}
 
 message RemoveIndexRequest {
+    // Index from which an entry should get removed
+    kitsune.common.SearchIndex index = 1;
+
     // Unique identifier of the entry (UUID)
-    oneof index_id {
-        bytes account_id = 1;
-        bytes post = 2;
-    }
+    bytes id = 2;
 }
 
 message RemoveIndexResponse {}
 
 message ResetRequest {
     // Search index that should be reset
-    SearchIndex index = 1;
+    kitsune.common.SearchIndex index = 1;
 }
 
 message ResetResponse {}

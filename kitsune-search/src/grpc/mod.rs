@@ -7,8 +7,8 @@ use tokio::sync::Mutex;
 use tonic::transport::Server;
 use tower_http::{add_extension::AddExtensionLayer, trace::TraceLayer};
 
-mod proto;
-mod service;
+pub mod proto;
+pub mod service;
 
 #[instrument(skip_all)]
 pub async fn start(config: Configuration, search_index: SearchIndex) {
@@ -20,9 +20,17 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
         .set_serving::<SearchServer<SearchService>>()
         .await;
 
-    let reader = search_index.index.reader().unwrap();
-    let writer = search_index
-        .index
+    let account_reader = search_index.indicies.account.reader().unwrap();
+    let account_writer = search_index
+        .indicies
+        .account
+        .writer(config.memory_arena_size.to_bytes() as usize)
+        .unwrap();
+
+    let post_reader = search_index.indicies.post.reader().unwrap();
+    let post_writer = search_index
+        .indicies
+        .post
         .writer(config.memory_arena_size.to_bytes() as usize)
         .unwrap();
 
@@ -32,9 +40,13 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
         .layer(TraceLayer::new_for_grpc())
         .add_service(health_service)
         .add_service(IndexServer::new(IndexService {
-            writer: Mutex::new(writer),
+            account: Mutex::new(account_writer),
+            post: Mutex::new(post_writer),
         }))
-        .add_service(SearchServer::new(SearchService { reader }))
+        .add_service(SearchServer::new(SearchService {
+            account: account_reader,
+            post: post_reader,
+        }))
         .serve(([0, 0, 0, 0], config.port).into())
         .await
         .unwrap();
