@@ -55,7 +55,7 @@ impl Search for SearchService {
 
         let documents = match results
             .into_iter()
-            .map(|(_score, addr)| {
+            .map(|(score, addr)| {
                 searcher.doc(addr).map(|doc| {
                     let id = doc
                         .get_first(id_field)
@@ -64,7 +64,7 @@ impl Search for SearchService {
                         .unwrap()
                         .to_vec();
 
-                    SearchResult { id }
+                    SearchResult { id, score }
                 })
             })
             .collect()

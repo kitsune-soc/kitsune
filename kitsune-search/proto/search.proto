@@ -8,7 +8,10 @@ import "common.proto";
 
 message SearchResult {
     // Unique identifier of the entry
-    bytes id = 2;
+    bytes id = 1;
+
+    // Score of the result
+    float score = 2;
 }
 
 message SearchRequest {
