@@ -8,4 +8,5 @@ pub struct Configuration {
     pub levenshtein_distance: u8,
     pub memory_arena_size: Size,
     pub port: u16,
+    pub read_only: bool,
 }

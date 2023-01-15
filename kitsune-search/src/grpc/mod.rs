@@ -18,28 +18,34 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
         .await;
 
     let account_reader = search_index.indicies.account.reader().unwrap();
-    let account_writer = search_index
-        .indicies
-        .account
-        .writer(config.memory_arena_size.to_bytes() as usize)
-        .unwrap();
-
     let post_reader = search_index.indicies.post.reader().unwrap();
-    let post_writer = search_index
-        .indicies
-        .post
-        .writer(config.memory_arena_size.to_bytes() as usize)
-        .unwrap();
 
-    Server::builder()
+    let mut server = Server::builder()
         .layer(AddExtensionLayer::new(config.clone()))
-        .layer(AddExtensionLayer::new(search_index))
+        .layer(AddExtensionLayer::new(search_index.clone()))
         .layer(TraceLayer::new_for_grpc())
-        .add_service(health_service)
-        .add_service(IndexServer::new(IndexService {
+        .add_service(health_service);
+
+    if !config.read_only {
+        let account_writer = search_index
+            .indicies
+            .account
+            .writer(config.memory_arena_size.to_bytes() as usize)
+            .unwrap();
+
+        let post_writer = search_index
+            .indicies
+            .post
+            .writer(config.memory_arena_size.to_bytes() as usize)
+            .unwrap();
+
+        server = server.add_service(IndexServer::new(IndexService {
             account: Mutex::new(account_writer),
             post: Mutex::new(post_writer),
-        }))
+        }));
+    }
+
+    server
         .add_service(SearchServer::new(SearchService {
             account: account_reader,
             post: post_reader,

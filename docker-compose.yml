@@ -25,6 +25,7 @@ services:
       LEVENSHTEIN_DISTANCE: 2
       MEMORY_ARENA_SIZE: 3MB
       PORT: 8080
+      READ_ONLY: false
       RUST_LOG: debug
     volumes:
       - search-index:/app/search-index

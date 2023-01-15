@@ -20,6 +20,7 @@ impl TestClient {
             levenshtein_distance: 2,
             memory_arena_size: "3MB".parse().unwrap(),
             port,
+            read_only: false,
         };
 
         let search_index = SearchIndex::prepare(&config).unwrap();
