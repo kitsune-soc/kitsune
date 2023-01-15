@@ -18,7 +18,7 @@ message SearchRequest {
     // Query for searching through the entries
     string query = 2;
 
-    // Page number
+    // Page number (beginning at 0)
     uint64 page = 3;
 }
 
@@ -26,7 +26,7 @@ message SearchResponse {
     // List of search results
     repeated SearchResult result = 1;
 
-    // Current page
+    // Current page (beginning at 0)
     uint64 page = 2;
 
     // Total pages

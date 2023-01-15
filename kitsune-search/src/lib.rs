@@ -12,3 +12,4 @@ extern crate tracing;
 pub mod config;
 pub mod grpc;
 pub mod search;
+pub mod util;

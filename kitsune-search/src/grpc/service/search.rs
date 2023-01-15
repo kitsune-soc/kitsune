@@ -76,7 +76,7 @@ impl Search for SearchService {
         Ok(Response::new(SearchResponse {
             result: documents,
             page: req.get_ref().page,
-            total_pages: (count / PAGE_LIMIT) as u64,
+            total_pages: crate::util::div_ceil(count, PAGE_LIMIT) as u64,
         }))
     }
 }
