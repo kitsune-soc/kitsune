@@ -108,11 +108,16 @@ impl SearchService {
         Ok(())
     }
 
-    pub async fn search(&mut self, index: SearchIndex, query: String) -> Result<SearchResponse> {
+    pub async fn search(
+        &mut self,
+        index: SearchIndex,
+        query: String,
+        page: Option<u64>,
+    ) -> Result<SearchResponse> {
         let request = SearchRequest {
             index: index.into(),
             query,
-            page: 0,
+            page: page.unwrap_or(0),
         };
 
         Ok(self.searcher.search(request).await?.into_inner())
