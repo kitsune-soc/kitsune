@@ -1,12 +1,10 @@
-use crate::{
-    grpc::proto::{
-        common::SearchIndex as GrpcSearchIndex,
-        index::{
-            add_index_request::IndexData, index_server::Index, AddIndexRequest, AddIndexResponse,
-            RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
-        },
+use crate::search::SearchIndex;
+use kitsune_search_proto::{
+    common::SearchIndex as GrpcSearchIndex,
+    index::{
+        add_index_request::IndexData, index_server::Index, AddIndexRequest, AddIndexResponse,
+        RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
     },
-    search::SearchIndex,
 };
 use tantivy::{Document, IndexWriter, Term};
 use tokio::sync::Mutex;

@@ -1,10 +1,10 @@
 use crate::{
     config::Configuration,
-    grpc::proto::{
-        common::SearchIndex as GrpcSearchIndex,
-        search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
-    },
     search::{schema::PrepareQuery, SearchIndex},
+};
+use kitsune_search_proto::{
+    common::SearchIndex as GrpcSearchIndex,
+    search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
 };
 use tantivy::{
     collector::{Count, TopDocs},

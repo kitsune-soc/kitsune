@@ -1,13 +1,10 @@
-use self::{
-    proto::{index::index_server::IndexServer, search::search_server::SearchServer},
-    service::{IndexService, SearchService},
-};
+use self::service::{IndexService, SearchService};
 use crate::{config::Configuration, search::SearchIndex};
+use kitsune_search_proto::{index::index_server::IndexServer, search::search_server::SearchServer};
 use tokio::sync::Mutex;
 use tonic::transport::Server;
 use tower_http::{add_extension::AddExtensionLayer, trace::TraceLayer};
 
-pub mod proto;
 pub mod service;
 
 #[instrument(skip_all)]

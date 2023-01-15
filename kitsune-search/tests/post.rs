@@ -1,6 +1,6 @@
 use self::common::TestClient;
 use futures_util::stream;
-use kitsune_search::grpc::proto::{
+use kitsune_search_proto::{
     common::SearchIndex,
     index::{add_index_request::IndexData, AddIndexRequest, AddPostIndex, RemoveIndexRequest},
     search::SearchRequest,

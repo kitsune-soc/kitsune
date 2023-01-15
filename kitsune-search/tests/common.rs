@@ -1,8 +1,5 @@
-use kitsune_search::{
-    config::Configuration,
-    grpc::proto::{index::index_client::IndexClient, search::search_client::SearchClient},
-    search::SearchIndex,
-};
+use kitsune_search::{config::Configuration, search::SearchIndex};
+use kitsune_search_proto::{index::index_client::IndexClient, search::search_client::SearchClient};
 use rand::Rng;
 use tempdir::TempDir;
 use tonic::transport::Channel;

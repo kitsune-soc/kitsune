@@ -1938,6 +1938,7 @@ dependencies = [
  "envy",
  "futures-util",
  "human-size",
+ "kitsune-search-proto",
  "prost",
  "rand 0.8.5",
  "serde",
@@ -1945,11 +1946,19 @@ dependencies = [
  "tempdir",
  "tokio",
  "tonic",
- "tonic-build",
  "tonic-health",
  "tower-http",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kitsune-search-proto"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]
