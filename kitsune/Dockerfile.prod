@@ -1,0 +1,11 @@
+FROM rust:1-alpine AS build
+RUN rustup default nightly
+RUN apk add --no-cache musl-dev
+COPY . /build
+WORKDIR /build
+RUN cargo -Z sparse-registry build --release
+
+FROM alpine:latest
+WORKDIR /app
+COPY --from=build /build/target/release/kitsune .
+CMD ["/app/kitsune"]

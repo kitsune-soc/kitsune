@@ -3,7 +3,7 @@ use std::fs;
 use crate::config::Configuration;
 use tantivy::{
     directory::MmapDirectory,
-    schema::{Field, Schema, INDEXED, STORED, TEXT},
+    schema::{Field, Schema, STORED, TEXT},
     Index,
 };
 
@@ -24,7 +24,7 @@ pub struct SearchSchema {
 
 pub fn prepare_index(config: &Configuration) -> tantivy::Result<SearchIndex> {
     let mut schema = Schema::builder();
-    let id = schema.add_bytes_field("id", INDEXED | STORED);
+    let id = schema.add_bytes_field("id", STORED);
     let data = schema.add_text_field("data", TEXT);
     let schema = schema.build();
 
