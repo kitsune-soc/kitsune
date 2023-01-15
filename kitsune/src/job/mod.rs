@@ -134,9 +134,8 @@ pub async fn run(state: Zustand) {
             Ok(Err(..)) | Err(..) => {
                 update_model.state = ActiveValue::Set(JobState::Failed);
                 update_model.fail_count = ActiveValue::Set(db_job.fail_count + 1);
-                update_model.run_at = ActiveValue::Set(
-                    Utc::now() + (*LINEAR_BACKOFF_DURATION * (db_job.fail_count as i32)),
-                );
+                update_model.run_at =
+                    ActiveValue::Set(Utc::now() + (*LINEAR_BACKOFF_DURATION * db_job.fail_count));
                 update_model.updated_at = ActiveValue::Set(Utc::now());
             }
             _ => {

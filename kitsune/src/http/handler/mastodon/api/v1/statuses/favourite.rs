@@ -28,7 +28,7 @@ pub async fn post(
     };
 
     let id = Uuid::now_v7();
-    let url = format!("https://{}/favourites/{}", state.config.domain, id);
+    let url = format!("https://{}/favourites/{id}", state.config.domain);
     let favourite = favourite::Model {
         id,
         account_id: user_data.account.id,
