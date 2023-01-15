@@ -18,13 +18,19 @@ message SearchRequest {
     // Query for searching through the entries
     string query = 2;
 
-    // Offset
-    uint64 offset = 3;
+    // Page number
+    uint64 page = 3;
 }
 
 message SearchResponse {
     // List of search results
     repeated SearchResult result = 1;
+
+    // Current page
+    uint64 page = 2;
+
+    // Total pages
+    uint64 total_pages = 3;
 }
 
 // --- End: Message definitions ---

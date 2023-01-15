@@ -33,7 +33,7 @@ async fn index_search_remove() {
         .search(SearchRequest {
             index: SearchIndex::Account.into(),
             query: "tset".into(),
-            offset: 0,
+            page: 0,
         })
         .await
         .unwrap()
@@ -60,7 +60,7 @@ async fn index_search_remove() {
         .search(SearchRequest {
             index: SearchIndex::Account.into(),
             query: "tset".into(),
-            offset: 0,
+            page: 0,
         })
         .await
         .unwrap()

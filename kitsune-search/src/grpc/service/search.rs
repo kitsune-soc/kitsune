@@ -6,9 +6,13 @@ use crate::{
     },
     search::{schema::PrepareQuery, SearchIndex},
 };
-use tantivy::{collector::TopDocs, IndexReader};
+use tantivy::{
+    collector::{Count, TopDocs},
+    IndexReader,
+};
 use tonic::{async_trait, Request, Response, Status};
 
+/// Results per page
 const PAGE_LIMIT: usize = 20;
 
 pub struct SearchService {
@@ -41,15 +45,15 @@ impl Search for SearchService {
             ),
         };
 
-        let result = match searcher.search(
-            &query,
-            &TopDocs::with_limit(PAGE_LIMIT).and_offset(req.get_ref().offset as usize),
-        ) {
+        let top_docs_collector =
+            TopDocs::with_limit(PAGE_LIMIT).and_offset((req.get_ref().page as usize) * PAGE_LIMIT);
+
+        let (count, results) = match searcher.search(&query, &(Count, top_docs_collector)) {
             Ok(result) => result,
             Err(e) => return Err(Status::internal(e.to_string())),
         };
 
-        let documents = match result
+        let documents = match results
             .into_iter()
             .map(|(_score, addr)| {
                 searcher
@@ -69,6 +73,10 @@ impl Search for SearchService {
             Err(err) => return Err(Status::internal(err.to_string())),
         };
 
-        Ok(Response::new(SearchResponse { result: documents }))
+        Ok(Response::new(SearchResponse {
+            result: documents,
+            page: req.get_ref().page,
+            total_pages: (count / PAGE_LIMIT) as u64,
+        }))
     }
 }

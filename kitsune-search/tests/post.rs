@@ -1,11 +1,10 @@
-use std::time::Duration;
-
 use self::common::TestClient;
 use kitsune_search::grpc::proto::{
     common::SearchIndex,
     index::{add_index_request::IndexData, AddIndexRequest, AddPostIndex, RemoveIndexRequest},
     search::SearchRequest,
 };
+use std::time::Duration;
 
 mod common;
 
@@ -63,7 +62,7 @@ async fn index_search_remove() {
         .search(SearchRequest {
             index: SearchIndex::Post.into(),
             query: "lroem".into(),
-            offset: 0,
+            page: 0,
         })
         .await
         .unwrap()
@@ -90,7 +89,7 @@ async fn index_search_remove() {
         .search(SearchRequest {
             index: SearchIndex::Post.into(),
             query: "lroem".into(),
-            offset: 0,
+            page: 0,
         })
         .await
         .unwrap()
