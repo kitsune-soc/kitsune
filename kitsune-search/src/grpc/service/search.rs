@@ -13,7 +13,7 @@ use tantivy::{
 use tonic::{async_trait, Request, Response, Status};
 
 /// Results per page
-const PAGE_LIMIT: usize = 20;
+const PER_PAGE: usize = 20;
 
 pub struct SearchService {
     pub account: IndexReader,
@@ -46,7 +46,7 @@ impl Search for SearchService {
         };
 
         let top_docs_collector =
-            TopDocs::with_limit(PAGE_LIMIT).and_offset((req.get_ref().page as usize) * PAGE_LIMIT);
+            TopDocs::with_limit(PER_PAGE).and_offset((req.get_ref().page as usize) * PER_PAGE);
 
         let (count, results) = match searcher.search(&query, &(Count, top_docs_collector)) {
             Ok(result) => result,
@@ -56,18 +56,18 @@ impl Search for SearchService {
         let documents = match results
             .into_iter()
             .map(|(_score, addr)| {
-                searcher
-                    .doc(addr)
-                    .map(|doc| {
-                        doc.get_first(id_field)
-                            .unwrap()
-                            .as_bytes()
-                            .unwrap()
-                            .to_vec()
-                    })
-                    .map(|id| SearchResult { id })
+                searcher.doc(addr).map(|doc| {
+                    let id = doc
+                        .get_first(id_field)
+                        .unwrap()
+                        .as_bytes()
+                        .unwrap()
+                        .to_vec();
+
+                    SearchResult { id }
+                })
             })
-            .collect::<Result<Vec<_>, _>>()
+            .collect()
         {
             Ok(docs) => docs,
             Err(err) => return Err(Status::internal(err.to_string())),
@@ -76,7 +76,7 @@ impl Search for SearchService {
         Ok(Response::new(SearchResponse {
             result: documents,
             page: req.get_ref().page,
-            total_pages: crate::util::div_ceil(count, PAGE_LIMIT) as u64,
+            total_pages: crate::util::div_ceil(count, PER_PAGE) as u64,
         }))
     }
 }
