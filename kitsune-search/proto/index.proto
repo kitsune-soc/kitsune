@@ -61,10 +61,10 @@ message ResetResponse {}
 
 service Index {
     // Add a document to the search index
-    rpc Add(AddIndexRequest) returns (AddIndexResponse);
+    rpc Add(stream AddIndexRequest) returns (AddIndexResponse);
 
     // Remove a document from the search index
-    rpc Remove(RemoveIndexRequest) returns (RemoveIndexResponse);
+    rpc Remove(stream RemoveIndexRequest) returns (RemoveIndexResponse);
 
     // Reset the entire index
     //

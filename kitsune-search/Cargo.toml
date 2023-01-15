@@ -24,5 +24,6 @@ tonic-build = "0.8.4"
 [features]
 
 [dev-dependencies]
+futures-util = { version = "0.3.25", default-features = false }
 rand = "0.8.5"
 tempdir = "0.3.7"

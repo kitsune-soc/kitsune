@@ -1,10 +1,11 @@
 use self::common::TestClient;
+use futures_util::stream;
 use kitsune_search::grpc::proto::{
     common::SearchIndex,
     index::{add_index_request::IndexData, AddIndexRequest, AddPostIndex, RemoveIndexRequest},
     search::SearchRequest,
 };
-use std::time::Duration;
+use std::{future, time::Duration};
 
 mod common;
 
@@ -45,13 +46,13 @@ async fn index_search_remove() {
     let id: [u8; 24] = rand::random();
     test_client
         .index
-        .add(AddIndexRequest {
+        .add(stream::once(future::ready(AddIndexRequest {
             index_data: Some(IndexData::Post(AddPostIndex {
                 id: id.to_vec(),
                 subject: None,
                 content: POST_CONTENT.to_string(),
             })),
-        })
+        })))
         .await
         .unwrap();
 
@@ -75,10 +76,10 @@ async fn index_search_remove() {
 
     test_client
         .index
-        .remove(RemoveIndexRequest {
+        .remove(stream::once(future::ready(RemoveIndexRequest {
             index: SearchIndex::Post.into(),
             id: id.to_vec(),
-        })
+        })))
         .await
         .unwrap();
 

@@ -1936,6 +1936,7 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "envy",
+ "futures-util",
  "human-size",
  "prost",
  "rand 0.8.5",

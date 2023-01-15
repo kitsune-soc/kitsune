@@ -3,6 +3,8 @@
 #![allow(
     forbidden_lint_groups,
     clippy::cast_possible_truncation,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
     clippy::module_name_repetitions
 )]
 
