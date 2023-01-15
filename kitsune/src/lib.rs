@@ -22,6 +22,7 @@ pub mod job;
 pub mod mapping;
 pub mod resolve;
 pub mod sanitize;
+pub mod search;
 pub mod state;
 pub mod util;
 pub mod webfinger;

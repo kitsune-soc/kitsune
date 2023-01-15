@@ -41,6 +41,7 @@ image = "0.24.5"
 itertools = "0.10.5"
 kitsune-type = { path = "../kitsune-type" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-search-proto = { path = "../kitsune-search/proto" }
 migration = { path = "../migration" }
 mime = "0.3.16"
 mime_guess = "2.0.4"
@@ -67,6 +68,7 @@ sha2 = "0.10.6"
 thiserror = "1.0.38"
 tokio = { version = "1.24.1", features = ["full"] }
 tokio-util = { version = "0.7.4", features = ["compat"] }
+tonic = "0.8.3"
 tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
