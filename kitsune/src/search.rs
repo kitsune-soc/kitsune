@@ -3,7 +3,6 @@ use crate::{
     error::Result,
 };
 use futures_util::stream;
-use http::Uri;
 use kitsune_search_proto::{
     common::SearchIndex,
     index::{
@@ -12,8 +11,8 @@ use kitsune_search_proto::{
     },
     search::{search_client::SearchClient, SearchRequest, SearchResponse},
 };
-use std::{future, str::FromStr};
-use tonic::transport::Channel;
+use std::future;
+use tonic::transport::{Channel, Endpoint};
 
 pub enum SearchItem {
     Account(account::Model),
@@ -39,12 +38,21 @@ pub struct SearchService {
 }
 
 impl SearchService {
-    pub async fn new(endpoint: &str) -> Result<Self> {
-        let channel = Channel::builder(Uri::from_str(endpoint)?).connect().await?;
+    pub async fn new(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
+        let index_channel = Endpoint::from_shared(index_endpoint.to_string())?
+            .connect()
+            .await?;
+
+        let search_endpoints: Vec<Endpoint> = search_endpoints
+            .iter()
+            .cloned()
+            .map(Endpoint::from_shared)
+            .collect::<Result<_, tonic::transport::Error>>()?;
+        let search_channel = Channel::balance_list(search_endpoints.into_iter());
 
         Ok(Self {
-            searcher: SearchClient::new(channel.clone()),
-            indexer: IndexClient::new(channel),
+            searcher: SearchClient::new(search_channel),
+            indexer: IndexClient::new(index_channel),
         })
     }
 

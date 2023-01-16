@@ -44,9 +44,6 @@ pub enum Error {
     HttpSignature(#[from] kitsune_http_signatures::Error),
 
     #[error(transparent)]
-    InvalidUri(#[from] http::uri::InvalidUri),
-
-    #[error(transparent)]
     KeyRejected(#[from] kitsune_http_signatures::ring::error::KeyRejected),
 
     #[error("Malformed ActivityPub object")]
