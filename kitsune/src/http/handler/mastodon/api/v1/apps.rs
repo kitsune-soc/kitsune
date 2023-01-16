@@ -1,8 +1,8 @@
 use crate::{
-    db::model::oauth::application, error::Result, http::extractor::FormOrJson,
+    db::model::oauth::application, error::Result, http::extractor::FormOrJson, state::Zustand,
     util::generate_secret,
 };
-use axum::{extract::State, Json};
+use axum::{extract::State, routing, Json, Router};
 use chrono::Utc;
 use kitsune_type::mastodon::App;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
@@ -15,7 +15,7 @@ pub struct AppForm {
     redirect_uris: String,
 }
 
-pub async fn post(
+async fn post(
     State(db_conn): State<DatabaseConnection>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
@@ -38,4 +38,8 @@ pub async fn post(
         client_id: application.id,
         client_secret: application.secret,
     }))
+}
+
+pub fn routes() -> Router<Zustand> {
+    Router::new().route("/", routing::post(post))
 }

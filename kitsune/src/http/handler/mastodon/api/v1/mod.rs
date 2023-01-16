@@ -1,8 +1,5 @@
 use crate::state::Zustand;
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::Router;
 
 mod accounts;
 mod apps;
@@ -11,8 +8,8 @@ mod statuses;
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
-        .route("/apps", post(apps::post))
-        .route("/instance", get(instance::get))
+        .nest("/apps", apps::routes())
+        .nest("/instance", instance::routes())
         .nest("/accounts", accounts::routes())
         .nest("/statuses", statuses::routes())
 }

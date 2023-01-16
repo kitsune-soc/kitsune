@@ -4,6 +4,7 @@
 
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
+#![allow(forbidden_lint_groups)]
 
 /// Common types
 pub mod common {

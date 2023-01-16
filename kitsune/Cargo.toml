@@ -25,6 +25,7 @@ async-graphql = { version = "5.0.5", features = [
 async-graphql-axum = "5.0.5"
 async-trait = "0.1.61"
 axum = { version = "0.6.2", features = ["headers", "macros"] }
+axum-extra = { version = "0.4.2", features = ["query"] }
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
