@@ -4,7 +4,6 @@
 
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
-#![warn(clippy::all, clippy::pedantic)]
 
 /// Common types
 pub mod common {
