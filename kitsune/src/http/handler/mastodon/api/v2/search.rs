@@ -1,7 +1,17 @@
-use crate::{error::Result, state::Zustand};
-use axum::{debug_handler, extract::State, routing, Json, Router};
+use crate::{
+    error::{Error, Result},
+    state::Zustand,
+};
+use axum::{
+    debug_handler,
+    extract::State,
+    response::{IntoResponse, Response},
+    routing, Json, Router,
+};
 use axum_extra::extract::Query;
-use kitsune_search_proto::{common::SearchIndex, search::SearchResponse};
+use futures_util::{stream, StreamExt, TryStreamExt};
+use http::StatusCode;
+use kitsune_search_proto::{common::SearchIndex, search::SearchResult};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -36,13 +46,30 @@ struct SearchQuery {
 async fn get(
     State(mut state): State<Zustand>,
     Query(query): Query<SearchQuery>,
-) -> Result<Json<SearchResponse>> {
-    let response = state
-        .search_service
-        .search(SearchIndex::Post, query.query, None)
-        .await?;
+) -> Result<Response> {
+    let indices = if let Some(r#type) = query.r#type {
+        let index = match r#type {
+            SearchType::Accounts => SearchIndex::Account,
+            SearchType::Statuses => SearchIndex::Post,
+            SearchType::Hashtags => return Ok(StatusCode::BAD_REQUEST.into_response()),
+        };
 
-    Ok(Json(response))
+        vec![index]
+    } else {
+        vec![SearchIndex::Account, SearchIndex::Post]
+    };
+
+    let mut results = Vec::new();
+    for index in indices {
+        let mut response = state
+            .search_service
+            .search(index, query.query.clone(), None)
+            .await?;
+
+        results.append(&mut response.result);
+    }
+
+    Ok(Json(results).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {
