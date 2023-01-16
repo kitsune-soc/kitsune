@@ -21,17 +21,17 @@ pub struct IndexService {
 
 impl IndexService {
     async fn add_document(&self, req: AddIndexRequest, index: &SearchIndex) -> tonic::Result<()> {
-        let (writer, document) = match &req.index_data {
+        let (writer, document) = match req.index_data {
             Some(IndexData::Account(data)) => {
                 let account_schema = &index.schemas.account;
                 let mut document = Document::new();
-                document.add_bytes(account_schema.id, data.id.as_slice());
-                document.add_text(account_schema.username, &data.username);
+                document.add_bytes(account_schema.id, data.id);
+                document.add_text(account_schema.username, data.username);
 
-                if let Some(ref display_name) = data.display_name {
+                if let Some(display_name) = data.display_name {
                     document.add_text(account_schema.display_name, display_name);
                 }
-                if let Some(ref description) = data.description {
+                if let Some(description) = data.description {
                     document.add_text(account_schema.description, description);
                 }
 
@@ -40,10 +40,10 @@ impl IndexService {
             Some(IndexData::Post(data)) => {
                 let post_schema = &index.schemas.post;
                 let mut document = Document::new();
-                document.add_bytes(post_schema.id, data.id.as_slice());
-                document.add_text(post_schema.content, &data.content);
+                document.add_bytes(post_schema.id, data.id);
+                document.add_text(post_schema.content, data.content);
 
-                if let Some(ref subject) = data.subject {
+                if let Some(subject) = data.subject {
                     document.add_text(post_schema.subject, subject);
                 }
 
