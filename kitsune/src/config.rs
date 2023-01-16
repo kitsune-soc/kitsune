@@ -18,6 +18,8 @@ pub struct Configuration {
     pub job_workers: NonZeroUsize,
     pub port: u16,
     pub redis_url: String,
+    pub search_servers: Vec<String>,
+    pub search_index_server: String,
     #[serde(default = "default_upload_dir")]
     pub upload_dir: PathBuf,
 }
@@ -31,6 +33,8 @@ impl Default for Configuration {
             job_workers: NonZeroUsize::new(1).unwrap(),
             port: u16::default(),
             redis_url: String::default(),
+            search_servers: Vec::default(),
+            search_index_server: String::default(),
             upload_dir: PathBuf::default(),
         }
     }

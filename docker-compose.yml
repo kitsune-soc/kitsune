@@ -14,7 +14,10 @@ services:
       JOB_WORKERS: 1
       REDIS_URL: redis://redis:6379
       RUST_LOG: debug
-      SEARCH_SERVER: http://backend-search:8080
+      SEARCH_SERVERS: http://backend-search:8080
+      SEARCH_INDEX_SERVER: http://backend-search:8080
+    volumes:
+      - upload-data:/app/uploads
 
   backend-search:
     image: kitsune-search
@@ -52,3 +55,4 @@ networks:
 volumes:
   db-data:
   search-index:
+  upload-data:
