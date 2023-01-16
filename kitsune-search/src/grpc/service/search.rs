@@ -47,13 +47,11 @@ impl Search for SearchService {
 
         let top_docs_collector =
             TopDocs::with_limit(PER_PAGE).and_offset((req.get_ref().page as usize) * PER_PAGE);
+        let (count, results) = searcher
+            .search(&query, &(Count, top_docs_collector))
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        let (count, results) = match searcher.search(&query, &(Count, top_docs_collector)) {
-            Ok(result) => result,
-            Err(e) => return Err(Status::internal(e.to_string())),
-        };
-
-        let documents = match results
+        let documents = results
             .into_iter()
             .map(|(score, addr)| {
                 searcher.doc(addr).map(|doc| {
@@ -67,11 +65,8 @@ impl Search for SearchService {
                     SearchResult { id, score }
                 })
             })
-            .collect()
-        {
-            Ok(docs) => docs,
-            Err(err) => return Err(Status::internal(err.to_string())),
-        };
+            .collect::<Result<_, _>>()
+            .map_err(|err| Status::internal(err.to_string()))?;
 
         Ok(Response::new(SearchResponse {
             result: documents,

@@ -52,37 +52,31 @@ impl IndexService {
             None => return Err(Status::invalid_argument("missing index data")),
         };
 
-        if let Err(e) = writer.add_document(document) {
-            return Err(Status::internal(e.to_string()));
-        }
+        writer
+            .add_document(document)
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(())
     }
 
     async fn commit_all(&self) -> tonic::Result<()> {
-        if let Err(e) = self
-            .account
+        self.account
             .write()
             .await
             .prepare_commit()
             .unwrap()
             .commit_future()
             .await
-        {
-            return Err(Status::internal(e.to_string()));
-        }
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        if let Err(e) = self
-            .post
+        self.post
             .write()
             .await
             .prepare_commit()
             .unwrap()
             .commit_future()
             .await
-        {
-            return Err(Status::internal(e.to_string()));
-        }
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(())
     }
@@ -146,12 +140,16 @@ impl Index for IndexService {
             GrpcSearchIndex::Post => self.post.write().await,
         };
 
-        if let Err(e) = writer.delete_all_documents() {
-            return Err(Status::internal(e.to_string()));
-        }
-        if let Err(e) = writer.prepare_commit().unwrap().commit_future().await {
-            return Err(Status::internal(e.to_string()));
-        }
+        writer
+            .delete_all_documents()
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        writer
+            .prepare_commit()
+            .unwrap()
+            .commit_future()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(ResetResponse {}))
     }
