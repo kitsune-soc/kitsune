@@ -13,7 +13,7 @@ use tantivy::{
 use tonic::{async_trait, Request, Response, Status};
 
 /// Results per page
-const PER_PAGE: usize = 20;
+const RESULTS_PER_PAGE: usize = 20;
 
 pub struct SearchService {
     pub account: IndexReader,
@@ -45,8 +45,8 @@ impl Search for SearchService {
             ),
         };
 
-        let top_docs_collector =
-            TopDocs::with_limit(PER_PAGE).and_offset((req.get_ref().page as usize) * PER_PAGE);
+        let top_docs_collector = TopDocs::with_limit(RESULTS_PER_PAGE)
+            .and_offset((req.get_ref().page as usize) * RESULTS_PER_PAGE);
         let (count, results) = searcher
             .search(&query, &(Count, top_docs_collector))
             .map_err(|e| Status::internal(e.to_string()))?;
@@ -71,7 +71,7 @@ impl Search for SearchService {
         Ok(Response::new(SearchResponse {
             result: documents,
             page: req.get_ref().page,
-            total_pages: crate::util::div_ceil(count, PER_PAGE) as u64,
+            total_pages: crate::util::div_ceil(count, RESULTS_PER_PAGE) as u64,
         }))
     }
 }
