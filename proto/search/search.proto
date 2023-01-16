@@ -6,6 +6,7 @@ import "common.proto";
 
 // --- Start: Message definitions ---
 
+// One result of a search
 message SearchResult {
     // Unique identifier of the entry
     bytes id = 1;
@@ -14,6 +15,7 @@ message SearchResult {
     float score = 2;
 }
 
+// Request to query the search index 
 message SearchRequest {
     // Search index to search through
     kitsune.common.SearchIndex index = 1;
@@ -25,6 +27,7 @@ message SearchRequest {
     uint64 page = 3;
 }
 
+// Response to a search request
 message SearchResponse {
     // List of search results
     repeated SearchResult result = 1;
@@ -38,6 +41,7 @@ message SearchResponse {
 
 // --- End: Message definitions ---
 
+// Search service
 service Search {
     // Search through all the entries
     rpc Search(SearchRequest) returns (SearchResponse);

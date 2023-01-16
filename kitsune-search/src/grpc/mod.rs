@@ -1,3 +1,7 @@
+//!
+//! gRPC service
+//!
+
 use self::service::{IndexService, SearchService};
 use crate::{config::Configuration, search::SearchIndex};
 use kitsune_search_proto::{index::index_server::IndexServer, search::search_server::SearchServer};
@@ -7,6 +11,7 @@ use tower_http::{add_extension::AddExtensionLayer, trace::TraceLayer};
 
 pub mod service;
 
+/// Start the search (and possibly index) gRPC service
 #[instrument(skip_all)]
 pub async fn start(config: Configuration, search_index: SearchIndex) {
     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
@@ -17,8 +22,8 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
         .set_serving::<SearchServer<SearchService>>()
         .await;
 
-    let account_reader = search_index.indicies.account.reader().unwrap();
-    let post_reader = search_index.indicies.post.reader().unwrap();
+    let account_reader = search_index.indices.account.reader().unwrap();
+    let post_reader = search_index.indices.post.reader().unwrap();
 
     let mut server = Server::builder()
         .layer(AddExtensionLayer::new(config.clone()))
@@ -28,13 +33,13 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
 
     if !config.read_only {
         let account_writer = search_index
-            .indicies
+            .indices
             .account
             .writer(config.memory_arena_size.to_bytes() as usize)
             .unwrap();
 
         let post_writer = search_index
-            .indicies
+            .indices
             .post
             .writer(config.memory_arena_size.to_bytes() as usize)
             .unwrap();

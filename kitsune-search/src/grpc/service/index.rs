@@ -3,7 +3,7 @@ use futures_util::TryStreamExt;
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
     index::{
-        add_index_request::IndexData, index_server::Index, AddIndexRequest, AddIndexResponse,
+        add_index_request::IndexEntity, index_server::Index, AddIndexRequest, AddIndexResponse,
         RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
     },
 };
@@ -14,15 +14,19 @@ use tonic::{async_trait, Request, Response, Status, Streaming};
 /// Maximum amount of documents that get concurrently indexed
 const MAX_CONCURRENT_INDEXING: usize = 50;
 
+/// Index service
 pub struct IndexService {
+    /// Writer of the account index
     pub account: RwLock<IndexWriter>,
+
+    /// Writer of the post index
     pub post: RwLock<IndexWriter>,
 }
 
 impl IndexService {
     async fn add_document(&self, req: AddIndexRequest, index: &SearchIndex) -> tonic::Result<()> {
-        let (writer, document) = match req.index_data {
-            Some(IndexData::Account(data)) => {
+        let (writer, document) = match req.index_entity {
+            Some(IndexEntity::Account(data)) => {
                 let account_schema = &index.schemas.account;
                 let mut document = Document::new();
                 document.add_bytes(account_schema.id, data.id);
@@ -37,7 +41,7 @@ impl IndexService {
 
                 (self.account.read().await, document)
             }
-            Some(IndexData::Post(data)) => {
+            Some(IndexEntity::Post(data)) => {
                 let post_schema = &index.schemas.post;
                 let mut document = Document::new();
                 document.add_bytes(post_schema.id, data.id);

@@ -4,6 +4,7 @@ package kitsune.common;
 
 // --- Start: Type definitions ---
 
+// Search index
 enum SearchIndex {
     // Account search index
     Account = 0;

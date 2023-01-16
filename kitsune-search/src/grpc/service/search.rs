@@ -15,8 +15,12 @@ use tonic::{async_trait, Request, Response, Status};
 /// Results per page
 const RESULTS_PER_PAGE: usize = 20;
 
+/// Search service
 pub struct SearchService {
+    /// Reader of the account index
     pub account: IndexReader,
+
+    /// Reader of the post index
     pub post: IndexReader,
 }
 

@@ -7,8 +7,8 @@ use http::Uri;
 use kitsune_search_proto::{
     common::SearchIndex,
     index::{
-        add_index_request::IndexData, index_client::IndexClient, AddAccountIndex, AddIndexRequest,
-        AddPostIndex, RemoveIndexRequest, ResetRequest,
+        add_index_request::IndexEntity, index_client::IndexClient, AddAccountIndex,
+        AddIndexRequest, AddPostIndex, RemoveIndexRequest, ResetRequest,
     },
     search::{search_client::SearchClient, SearchRequest, SearchResponse},
 };
@@ -54,7 +54,7 @@ impl SearchService {
     {
         let request = match item.into() {
             SearchItem::Account(account) => AddIndexRequest {
-                index_data: Some(IndexData::Account(AddAccountIndex {
+                index_entity: Some(IndexEntity::Account(AddAccountIndex {
                     id: account.id.as_bytes().to_vec(),
                     display_name: account.display_name,
                     username: account.username,
@@ -62,7 +62,7 @@ impl SearchService {
                 })),
             },
             SearchItem::Post(post) => AddIndexRequest {
-                index_data: Some(IndexData::Post(AddPostIndex {
+                index_entity: Some(IndexEntity::Post(AddPostIndex {
                     id: post.id.as_bytes().to_vec(),
                     subject: post.subject,
                     content: post.content,

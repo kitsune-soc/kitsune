@@ -1,21 +1,38 @@
+//!
+//! Schemas managed by the service
+//!
+
 use tantivy::{
     query::{BooleanQuery, FuzzyTermQuery, Query},
     schema::{Field, Schema, INDEXED, STORED, STRING, TEXT},
     Term,
 };
 
+/// Trait for preparing a tantivy query for some schema
 pub trait PrepareQuery {
+    /// Type of the returned query
     type Query: Query;
 
+    /// Prepare a tantivy query
     fn prepare_query(&self, query: &str, levenshtein_distance: u8) -> Self::Query;
 }
 
+/// Account search schema
 #[derive(Clone)]
 pub struct AccountSchema {
+    /// ID field (contains a UUID)
     pub id: Field,
+
+    /// Display name field (might be empty)
     pub display_name: Field,
+
+    /// Username field
     pub username: Field,
+
+    /// Description (or bio, etc.) field (might be empty)
     pub description: Field,
+
+    /// The underlying tantivy schema with the above defined fields
     pub tantivy_schema: Schema,
 }
 
@@ -64,11 +81,19 @@ impl PrepareQuery for AccountSchema {
     }
 }
 
+/// Post search schema
 #[derive(Clone)]
 pub struct PostSchema {
+    /// ID field (contains a UUID)
     pub id: Field,
+
+    /// Subject field (might be empty)
     pub subject: Field,
+
+    /// Content field
     pub content: Field,
+
+    /// The underlying tantivy schema with the above defined fields
     pub tantivy_schema: Schema,
 }
 

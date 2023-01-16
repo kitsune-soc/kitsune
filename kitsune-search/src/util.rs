@@ -1,3 +1,7 @@
+//!
+//! Utility functions
+//!
+
 /// Vendored until [rust-lang/rust#88581](https://github.com/rust-lang/rust/issues/88581) is stabilised
 #[must_use]
 pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {

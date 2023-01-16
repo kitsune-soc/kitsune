@@ -1,3 +1,7 @@
+//!
+//! Services provided by the gRPC server
+//!
+
 mod index;
 mod search;
 

@@ -2,7 +2,7 @@ use self::common::TestClient;
 use futures_util::stream;
 use kitsune_search_proto::{
     common::SearchIndex,
-    index::{add_index_request::IndexData, AddAccountIndex, AddIndexRequest, RemoveIndexRequest},
+    index::{add_index_request::IndexEntity, AddAccountIndex, AddIndexRequest, RemoveIndexRequest},
     search::SearchRequest,
 };
 use std::{future, time::Duration};
@@ -17,7 +17,7 @@ async fn index_search_remove() {
     test_client
         .index
         .add(stream::once(future::ready(AddIndexRequest {
-            index_data: Some(IndexData::Account(AddAccountIndex {
+            index_entity: Some(IndexEntity::Account(AddAccountIndex {
                 id: id.to_vec(),
                 display_name: Some("name".into()),
                 username: "cool_username".into(),

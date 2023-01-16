@@ -1,30 +1,48 @@
-use std::fs;
+//!
+//! Search index management
+//!
 
 use self::schema::{AccountSchema, PostSchema};
 use crate::config::Configuration;
+use std::fs;
 use tantivy::{directory::MmapDirectory, Index};
 
 pub mod schema;
 
+/// Collection of the managed search indices
 #[derive(Clone)]
-pub struct SearchIndicies {
+pub struct SearchIndices {
+    /// Account search index
     pub account: Index,
+
+    /// Post search index
     pub post: Index,
 }
 
+/// Collections of the schemas of the managed search indices
 #[derive(Clone, Default)]
 pub struct SearchSchemas {
+    /// Account search index schema
     pub account: AccountSchema,
+
+    /// Post search index schema
     pub post: PostSchema,
 }
 
+/// The overarching search index
+///
+/// Contains all the managed schemas and indices
 #[derive(Clone)]
 pub struct SearchIndex {
-    pub indicies: SearchIndicies,
+    /// Managed indices
+    pub indices: SearchIndices,
+
+    /// Managed schemas
     pub schemas: SearchSchemas,
 }
 
 impl SearchIndex {
+    /// Create or open a search index
     pub fn prepare(config: &Configuration) -> tantivy::Result<Self> {
         let search_schemas = SearchSchemas::default();
 
@@ -49,7 +67,7 @@ impl SearchIndex {
             Index::open_or_create(post_directory, search_schemas.post.tantivy_schema.clone())?;
 
         Ok(Self {
-            indicies: SearchIndicies {
+            indices: SearchIndices {
                 account: account_index,
                 post: post_index,
             },
