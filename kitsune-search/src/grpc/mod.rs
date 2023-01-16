@@ -1,7 +1,7 @@
 use self::service::{IndexService, SearchService};
 use crate::{config::Configuration, search::SearchIndex};
 use kitsune_search_proto::{index::index_server::IndexServer, search::search_server::SearchServer};
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use tonic::transport::Server;
 use tower_http::{add_extension::AddExtensionLayer, trace::TraceLayer};
 
@@ -40,8 +40,8 @@ pub async fn start(config: Configuration, search_index: SearchIndex) {
             .unwrap();
 
         server = server.add_service(IndexServer::new(IndexService {
-            account: Mutex::new(account_writer),
-            post: Mutex::new(post_writer),
+            account: RwLock::new(account_writer),
+            post: RwLock::new(post_writer),
         }));
     }
 
