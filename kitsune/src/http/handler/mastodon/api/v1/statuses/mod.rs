@@ -47,7 +47,7 @@ struct CreateForm {
 
 #[debug_handler(state = Zustand)]
 async fn delete(
-    State(state): State<Zustand>,
+    State(mut state): State<Zustand>,
     AuthExtactor(user_data): AuthExtactor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
@@ -81,6 +81,8 @@ async fn delete(
     .into_active_model()
     .insert(&state.db_conn)
     .await?;
+
+    state.search_service.remove_from_index(post).await?;
 
     Ok(StatusCode::OK.into_response())
 }

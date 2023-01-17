@@ -5,7 +5,10 @@ use crate::{
     },
     error::Error as ServerError,
     http::graphql::ContextExt,
-    job::{deliver::create::CreateDeliveryContext, Job, JobState},
+    job::{
+        deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
+        Job, JobState,
+    },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
 };
@@ -114,6 +117,7 @@ impl PostMutation {
 
     pub async fn delete_post(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
         let state = ctx.state();
+        let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
 
         let post = post::Entity::find_by_id(id)
@@ -122,9 +126,21 @@ impl PostMutation {
             .await?
             .ok_or_else(|| Error::new("Post not found"))?;
 
-        // TODO: Send out delete activity
+        let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
+        job::Model {
+            id: Uuid::now_v7(),
+            state: JobState::Queued,
+            run_at: Utc::now(),
+            context: serde_json::to_value(job_context).unwrap(),
+            fail_count: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+        .into_active_model()
+        .insert(&state.db_conn)
+        .await?;
 
-        post.delete(&state.db_conn).await?;
+        search_service.remove_from_index(post).await?;
 
         Ok(id)
     }
