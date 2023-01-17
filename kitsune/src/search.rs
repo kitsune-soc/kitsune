@@ -10,7 +10,7 @@ use kitsune_search_proto::{
         add_index_request::IndexEntity, index_client::IndexClient, AddAccountIndex,
         AddIndexRequest, AddPostIndex, RemoveIndexRequest, ResetRequest,
     },
-    search::{search_client::SearchClient, SearchRequest, SearchResponse},
+    search::{search_client::SearchClient, SearchRequest, SearchResult},
 };
 use std::future;
 use tonic::transport::{Channel, Endpoint};
@@ -59,7 +59,7 @@ pub trait SearchService: Clone + Send + 'static {
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<SearchResponse>;
+    ) -> Result<Vec<SearchResult>>;
 }
 
 /// Search service
@@ -161,7 +161,7 @@ impl SearchService for GrpcSearchService {
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<SearchResponse> {
+    ) -> Result<Vec<SearchResult>> {
         let request = SearchRequest {
             index: index.into(),
             query,
@@ -171,7 +171,7 @@ impl SearchService for GrpcSearchService {
             min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
         };
 
-        Ok(self.searcher.search(request).await?.into_inner())
+        Ok(self.searcher.search(request).await?.into_inner().results)
     }
 }
 
@@ -209,7 +209,7 @@ impl SearchService for NoopSearchService {
         _offset: u64,
         _min_id: Option<Uuid>,
         _max_id: Option<Uuid>,
-    ) -> Result<SearchResponse> {
-        Ok(SearchResponse { result: Vec::new() })
+    ) -> Result<Vec<SearchResult>> {
+        Ok(Vec::new())
     }
 }

@@ -39,7 +39,7 @@ message SearchRequest {
 // Response to a search request
 message SearchResponse {
     // List of search results
-    repeated SearchResult result = 1;
+    repeated SearchResult results = 1;
 }
 
 // --- End: Message definitions ---

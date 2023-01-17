@@ -72,8 +72,8 @@ async fn index_search_remove() {
         .unwrap()
         .into_inner();
 
-    assert_eq!(response.result.len(), 1);
-    assert_eq!(response.result[0].id, id);
+    assert_eq!(response.results.len(), 1);
+    assert_eq!(response.results[0].id, id);
 
     // -- Remove post from the index --
 
@@ -102,5 +102,5 @@ async fn index_search_remove() {
         .unwrap()
         .into_inner();
 
-    assert!(response.result.is_empty());
+    assert!(response.results.is_empty());
 }

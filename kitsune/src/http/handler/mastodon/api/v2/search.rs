@@ -1,4 +1,10 @@
-use crate::{error::Result, search::SearchService, state::Zustand};
+use crate::{
+    db::model::{account, post},
+    error::Result,
+    mapping::IntoMastodon,
+    search::SearchService,
+    state::Zustand,
+};
 use axum::{
     debug_handler,
     extract::State,
@@ -8,6 +14,8 @@ use axum::{
 use axum_extra::extract::Query;
 use http::StatusCode;
 use kitsune_search_proto::common::SearchIndex;
+use kitsune_type::mastodon::SearchResult;
+use sea_orm::EntityTrait;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -55,9 +63,9 @@ async fn get(
         vec![SearchIndex::Account, SearchIndex::Post]
     };
 
-    let mut results = Vec::new();
+    let mut search_result = SearchResult::default();
     for index in indices {
-        let mut response = state
+        let results = state
             .search_service
             .search(
                 index,
@@ -69,10 +77,40 @@ async fn get(
             )
             .await?;
 
-        results.append(&mut response.result);
+        for result in results {
+            let id = Uuid::from_bytes(
+                result
+                    .id
+                    .try_into()
+                    .expect("[Bug] Non-UUID indexed in search index"),
+            );
+
+            match index {
+                SearchIndex::Account => {
+                    let account = account::Entity::find_by_id(id)
+                        .one(&state.db_conn)
+                        .await?
+                        .expect("[Bug] Account indexed in search not in database");
+
+                    search_result
+                        .accounts
+                        .push(account.into_mastodon(&state).await?);
+                }
+                SearchIndex::Post => {
+                    let post = post::Entity::find_by_id(id)
+                        .one(&state.db_conn)
+                        .await?
+                        .expect("[Bug] Post indexed in search not in database");
+
+                    search_result
+                        .statuses
+                        .push(post.into_mastodon(&state).await?);
+                }
+            }
+        }
     }
 
-    Ok(Json(results).into_response())
+    Ok(Json(search_result).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {

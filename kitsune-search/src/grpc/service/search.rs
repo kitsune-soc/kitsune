@@ -79,6 +79,6 @@ impl Search for SearchService {
             .collect::<Result<_, _>>()
             .map_err(|err| Status::internal(err.to_string()))?;
 
-        Ok(Response::new(SearchResponse { result: documents }))
+        Ok(Response::new(SearchResponse { results: documents }))
     }
 }
