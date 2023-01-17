@@ -29,13 +29,11 @@ impl Search for SearchService {
             req.get_ref()
                 .min_id
                 .as_deref()
-                .map(Bound::Included)
-                .unwrap_or(Bound::Unbounded),
+                .map_or(Bound::Unbounded, Bound::Included),
             req.get_ref()
                 .max_id
                 .as_deref()
-                .map(Bound::Included)
-                .unwrap_or(Bound::Unbounded),
+                .map_or(Bound::Unbounded, Bound::Included),
         );
         let (query, searcher, id_field) = match req.get_ref().index() {
             GrpcSearchIndex::Account => (
