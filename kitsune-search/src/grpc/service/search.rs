@@ -6,14 +6,9 @@ use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
     search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
 };
-use tantivy::{
-    collector::{Count, TopDocs},
-    IndexReader,
-};
+use std::ops::Bound;
+use tantivy::{collector::TopDocs, IndexReader};
 use tonic::{async_trait, Request, Response, Status};
-
-/// Results per page
-const RESULTS_PER_PAGE: usize = 20;
 
 /// Search service
 pub struct SearchService {
@@ -30,29 +25,46 @@ impl Search for SearchService {
         let config = req.extensions().get::<Configuration>().unwrap();
         let index = req.extensions().get::<SearchIndex>().unwrap();
 
+        let bounds = match req.get_ref().indices {
+            Some(ref indices) => (
+                indices
+                    .min_id
+                    .as_deref()
+                    .map(Bound::Included)
+                    .unwrap_or(Bound::Unbounded),
+                indices
+                    .max_id
+                    .as_deref()
+                    .map(Bound::Included)
+                    .unwrap_or(Bound::Unbounded),
+            ),
+            None => (Bound::Unbounded, Bound::Unbounded),
+        };
         let (query, searcher, id_field) = match req.get_ref().index() {
             GrpcSearchIndex::Account => (
-                index
-                    .schemas
-                    .account
-                    .prepare_query(&req.get_ref().query, config.levenshtein_distance),
+                index.schemas.account.prepare_query(
+                    &req.get_ref().query,
+                    bounds,
+                    config.levenshtein_distance,
+                ),
                 self.account.searcher(),
                 index.schemas.account.id,
             ),
             GrpcSearchIndex::Post => (
-                index
-                    .schemas
-                    .post
-                    .prepare_query(&req.get_ref().query, config.levenshtein_distance),
+                index.schemas.post.prepare_query(
+                    &req.get_ref().query,
+                    bounds,
+                    config.levenshtein_distance,
+                ),
                 self.post.searcher(),
                 index.schemas.post.id,
             ),
         };
 
-        let top_docs_collector = TopDocs::with_limit(RESULTS_PER_PAGE)
-            .and_offset((req.get_ref().page as usize) * RESULTS_PER_PAGE);
-        let (count, results) = searcher
-            .search(&query, &(Count, top_docs_collector))
+        let top_docs_collector = TopDocs::with_limit(req.get_ref().max_results as usize)
+            .and_offset(req.get_ref().offset as usize);
+        let results = searcher
+            .search(&query, &top_docs_collector)
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let documents = results
@@ -72,10 +84,6 @@ impl Search for SearchService {
             .collect::<Result<_, _>>()
             .map_err(|err| Status::internal(err.to_string()))?;
 
-        Ok(Response::new(SearchResponse {
-            result: documents,
-            page: req.get_ref().page,
-            total_pages: crate::util::div_ceil(count, RESULTS_PER_PAGE) as u64,
-        }))
+        Ok(Response::new(SearchResponse { result: documents }))
     }
 }

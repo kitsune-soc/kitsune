@@ -15,6 +15,15 @@ message SearchResult {
     float score = 2;
 }
 
+// Index-based pagination
+message IndexPagination {
+    // Minimum ID
+    optional bytes min_id = 1;
+
+    // Maximum ID
+    optional bytes max_id = 2;
+}
+
 // Request to query the search index 
 message SearchRequest {
     // Search index to search through
@@ -23,20 +32,20 @@ message SearchRequest {
     // Query for searching through the entries
     string query = 2;
 
-    // Page number (beginning at 0)
-    uint64 page = 3;
+    // Maximum number of results
+    uint64 max_results = 3;
+
+    // Index-based pagination
+    IndexPagination indices = 4;
+
+    // Offset
+    uint64 offset = 5;
 }
 
 // Response to a search request
 message SearchResponse {
     // List of search results
     repeated SearchResult result = 1;
-
-    // Current page (beginning at 0)
-    uint64 page = 2;
-
-    // Total pages
-    uint64 total_pages = 3;
 }
 
 // --- End: Message definitions ---

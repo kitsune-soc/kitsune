@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::{error::Result, state::Zustand};
 use axum::{
     debug_handler,
     extract::State,
@@ -9,9 +6,8 @@ use axum::{
     routing, Json, Router,
 };
 use axum_extra::extract::Query;
-use futures_util::{stream, StreamExt, TryStreamExt};
 use http::StatusCode;
-use kitsune_search_proto::{common::SearchIndex, search::SearchResult};
+use kitsune_search_proto::common::SearchIndex;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -32,8 +28,8 @@ struct SearchQuery {
     #[serde(rename = "q")]
     query: String,
     r#type: Option<SearchType>,
-    #[serde(default)]
-    resolve: bool,
+    /*#[serde(default)]
+    resolve: bool,*/
     max_id: Option<Uuid>,
     min_id: Option<Uuid>,
     #[serde(default = "default_page_limit")]
@@ -63,7 +59,14 @@ async fn get(
     for index in indices {
         let mut response = state
             .search_service
-            .search(index, query.query.clone(), None)
+            .search(
+                index,
+                query.query.clone(),
+                query.limit,
+                query.offset,
+                query.min_id,
+                query.max_id,
+            )
             .await?;
 
         results.append(&mut response.result);

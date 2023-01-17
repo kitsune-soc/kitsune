@@ -9,10 +9,11 @@ use kitsune_search_proto::{
         add_index_request::IndexEntity, index_client::IndexClient, AddAccountIndex,
         AddIndexRequest, AddPostIndex, RemoveIndexRequest, ResetRequest,
     },
-    search::{search_client::SearchClient, SearchRequest, SearchResponse},
+    search::{search_client::SearchClient, IndexPagination, SearchRequest, SearchResponse},
 };
 use std::future;
 use tonic::transport::{Channel, Endpoint};
+use uuid::Uuid;
 
 pub enum SearchItem {
     Account(account::Model),
@@ -120,12 +121,20 @@ impl SearchService {
         &mut self,
         index: SearchIndex,
         query: String,
-        page: Option<u64>,
+        max_results: u64,
+        offset: u64,
+        min_id: Option<Uuid>,
+        max_id: Option<Uuid>,
     ) -> Result<SearchResponse> {
         let request = SearchRequest {
             index: index.into(),
             query,
-            page: page.unwrap_or(0),
+            max_results,
+            offset,
+            indices: Some(IndexPagination {
+                max_id: min_id.as_ref().map(|id| id.as_bytes().to_vec()),
+                min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
+            }),
         };
 
         Ok(self.searcher.search(request).await?.into_inner())

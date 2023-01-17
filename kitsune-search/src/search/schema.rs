@@ -2,11 +2,27 @@
 //! Schemas managed by the service
 //!
 
+use crate::util::BoundExt;
+use std::ops::Bound;
 use tantivy::{
-    query::{BooleanQuery, FuzzyTermQuery, Query},
-    schema::{Field, Schema, INDEXED, STORED, STRING, TEXT},
+    query::{BooleanQuery, FuzzyTermQuery, Query, RangeQuery},
+    schema::{Field, Schema, Type, INDEXED, STORED, STRING, TEXT},
     Term,
 };
+
+/// Bounds alias used in the [`PrepareQuery`] trait
+pub type Bounds<'a> = (Bound<&'a [u8]>, Bound<&'a [u8]>);
+
+fn prepare_range_query(field: Field, (left, right): Bounds<'_>) -> RangeQuery {
+    // We vendored the exactly same API, there will be no change in behaviour
+    #[allow(unstable_name_collisions)]
+    let (left, right) = (
+        left.map(|val| Term::from_field_bytes(field, val)),
+        right.map(|val| Term::from_field_bytes(field, val)),
+    );
+
+    RangeQuery::new_term_bounds(field, Type::Bytes, &left, &right)
+}
 
 /// Trait for preparing a tantivy query for some schema
 pub trait PrepareQuery {
@@ -14,7 +30,12 @@ pub trait PrepareQuery {
     type Query: Query;
 
     /// Prepare a tantivy query
-    fn prepare_query(&self, query: &str, levenshtein_distance: u8) -> Self::Query;
+    fn prepare_query(
+        &self,
+        query: &str,
+        id_bounds: Bounds<'_>,
+        levenshtein_distance: u8,
+    ) -> Self::Query;
 }
 
 /// Account search schema
@@ -58,7 +79,12 @@ impl Default for AccountSchema {
 impl PrepareQuery for AccountSchema {
     type Query = BooleanQuery;
 
-    fn prepare_query(&self, query: &str, levenshtein_distance: u8) -> Self::Query {
+    fn prepare_query(
+        &self,
+        query: &str,
+        id_bounds: Bounds<'_>,
+        levenshtein_distance: u8,
+    ) -> Self::Query {
         let queries: Vec<Box<dyn Query + 'static>> = vec![
             Box::new(FuzzyTermQuery::new(
                 Term::from_field_text(self.display_name, query),
@@ -77,7 +103,10 @@ impl PrepareQuery for AccountSchema {
             )),
         ];
 
-        BooleanQuery::union(queries)
+        BooleanQuery::intersection(vec![
+            Box::new(BooleanQuery::union(queries)),
+            Box::new(prepare_range_query(self.id, id_bounds)),
+        ])
     }
 }
 
@@ -117,7 +146,12 @@ impl Default for PostSchema {
 impl PrepareQuery for PostSchema {
     type Query = BooleanQuery;
 
-    fn prepare_query(&self, query: &str, levenshtein_distance: u8) -> Self::Query {
+    fn prepare_query(
+        &self,
+        query: &str,
+        id_bounds: Bounds<'_>,
+        levenshtein_distance: u8,
+    ) -> Self::Query {
         let queries: Vec<Box<dyn Query + 'static>> = vec![
             Box::new(FuzzyTermQuery::new(
                 Term::from_field_text(self.subject, query),
@@ -131,6 +165,9 @@ impl PrepareQuery for PostSchema {
             )),
         ];
 
-        BooleanQuery::union(queries)
+        BooleanQuery::intersection(vec![
+            Box::new(BooleanQuery::union(queries)),
+            Box::new(prepare_range_query(self.id, id_bounds)),
+        ])
     }
 }
