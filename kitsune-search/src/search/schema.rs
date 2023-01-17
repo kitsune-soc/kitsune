@@ -6,7 +6,7 @@ use crate::util::BoundExt;
 use std::ops::Bound;
 use tantivy::{
     query::{BooleanQuery, FuzzyTermQuery, Query, RangeQuery},
-    schema::{Field, Schema, Type, INDEXED, STORED, STRING, TEXT},
+    schema::{Field, Schema, Type, FAST, INDEXED, STORED, STRING, TEXT},
     Term,
 };
 
@@ -60,10 +60,10 @@ pub struct AccountSchema {
 impl Default for AccountSchema {
     fn default() -> Self {
         let mut builder = Schema::builder();
-        let id = builder.add_bytes_field("id", INDEXED | STORED);
-        let display_name = builder.add_text_field("display_name", TEXT);
-        let username = builder.add_text_field("username", STRING);
-        let description = builder.add_text_field("description", TEXT);
+        let id = builder.add_bytes_field("id", FAST | INDEXED | STORED);
+        let display_name = builder.add_text_field("display_name", FAST | TEXT);
+        let username = builder.add_text_field("username", FAST | STRING);
+        let description = builder.add_text_field("description", FAST | TEXT);
         let tantivy_schema = builder.build();
 
         Self {
@@ -129,9 +129,9 @@ pub struct PostSchema {
 impl Default for PostSchema {
     fn default() -> Self {
         let mut builder = Schema::builder();
-        let id = builder.add_bytes_field("id", INDEXED | STORED);
-        let subject = builder.add_text_field("subject", TEXT);
-        let content = builder.add_text_field("content", TEXT);
+        let id = builder.add_bytes_field("id", FAST | INDEXED | STORED);
+        let subject = builder.add_text_field("subject", FAST | TEXT);
+        let content = builder.add_text_field("content", FAST | TEXT);
         let tantivy_schema = builder.build();
 
         Self {
