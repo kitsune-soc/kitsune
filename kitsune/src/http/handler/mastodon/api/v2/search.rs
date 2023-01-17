@@ -1,4 +1,4 @@
-use crate::{error::Result, state::Zustand};
+use crate::{error::Result, search::SearchService, state::Zustand};
 use axum::{
     debug_handler,
     extract::State,

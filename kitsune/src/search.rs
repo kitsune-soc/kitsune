@@ -2,6 +2,7 @@ use crate::{
     db::model::{account, post},
     error::Result,
 };
+use async_trait::async_trait;
 use futures_util::stream;
 use kitsune_search_proto::{
     common::SearchIndex,
@@ -32,13 +33,45 @@ impl From<post::Model> for SearchItem {
     }
 }
 
+#[async_trait]
+pub trait SearchService: Clone + Send + 'static {
+    /// Add an item to the index
+    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send;
+
+    /// Remove an item from the index
+    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send;
+
+    /// Reset a search index
+    ///
+    /// **WARNING**: This is a major destructive operation
+    async fn reset_index(&mut self, index: SearchIndex) -> Result<()>;
+
+    /// Search through a search index
+    async fn search(
+        &mut self,
+        index: SearchIndex,
+        query: String,
+        max_results: u64,
+        offset: u64,
+        min_id: Option<Uuid>,
+        max_id: Option<Uuid>,
+    ) -> Result<SearchResponse>;
+}
+
+/// Search service
+///
+/// Connects to the `kitsune-search` backend via gRPC
 #[derive(Clone)]
-pub struct SearchService {
+pub struct GrpcSearchService {
     searcher: SearchClient<Channel>,
     indexer: IndexClient<Channel>,
 }
 
-impl SearchService {
+impl GrpcSearchService {
     pub async fn new(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
         let index_channel = Endpoint::from_shared(index_endpoint.to_string())?
             .connect()
@@ -56,10 +89,13 @@ impl SearchService {
             indexer: IndexClient::new(index_channel),
         })
     }
+}
 
-    pub async fn add_to_index<I>(&mut self, item: I) -> Result<()>
+#[async_trait]
+impl SearchService for GrpcSearchService {
+    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
     where
-        I: Into<SearchItem>,
+        I: Into<SearchItem> + Send,
     {
         let request = match item.into() {
             SearchItem::Account(account) => AddIndexRequest {
@@ -86,9 +122,9 @@ impl SearchService {
         Ok(())
     }
 
-    pub async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
+    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
     where
-        I: Into<SearchItem>,
+        I: Into<SearchItem> + Send,
     {
         let request = match item.into() {
             SearchItem::Account(account) => RemoveIndexRequest {
@@ -108,7 +144,7 @@ impl SearchService {
         Ok(())
     }
 
-    pub async fn reset_index(&mut self, index: SearchIndex) -> Result<()> {
+    async fn reset_index(&mut self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
             index: index.into(),
         };
@@ -117,7 +153,7 @@ impl SearchService {
         Ok(())
     }
 
-    pub async fn search(
+    async fn search(
         &mut self,
         index: SearchIndex,
         query: String,
@@ -136,5 +172,44 @@ impl SearchService {
         };
 
         Ok(self.searcher.search(request).await?.into_inner())
+    }
+}
+
+/// Dummy search service
+///
+/// Always returns `Ok(())`/an empty list
+#[derive(Clone)]
+pub struct NoopSearchService;
+
+#[async_trait]
+impl SearchService for NoopSearchService {
+    async fn add_to_index<I>(&mut self, _item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send,
+    {
+        Ok(())
+    }
+
+    async fn remove_from_index<I>(&mut self, _item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send,
+    {
+        Ok(())
+    }
+
+    async fn reset_index(&mut self, _index: SearchIndex) -> Result<()> {
+        Ok(())
+    }
+
+    async fn search(
+        &mut self,
+        _index: SearchIndex,
+        _query: String,
+        _max_results: u64,
+        _offset: u64,
+        _min_id: Option<Uuid>,
+        _max_id: Option<Uuid>,
+    ) -> Result<SearchResponse> {
+        Ok(SearchResponse { result: Vec::new() })
     }
 }

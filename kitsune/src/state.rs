@@ -1,5 +1,5 @@
 use crate::{
-    activitypub::Fetcher, config::Configuration, search::SearchService, webfinger::Webfinger,
+    activitypub::Fetcher, config::Configuration, search::GrpcSearchService, webfinger::Webfinger,
 };
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
@@ -13,6 +13,6 @@ pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub fetcher: Fetcher,
-    pub search_service: SearchService,
+    pub search_service: GrpcSearchService,
     pub webfinger: Webfinger,
 }

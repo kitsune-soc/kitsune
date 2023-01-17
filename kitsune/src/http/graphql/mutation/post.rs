@@ -11,14 +11,14 @@ use crate::{
     },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
+    search::SearchService,
 };
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use futures_util::FutureExt;
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
-    TransactionTrait,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
 };
 use uuid::Uuid;
 

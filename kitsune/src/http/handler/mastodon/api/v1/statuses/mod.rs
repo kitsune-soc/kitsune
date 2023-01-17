@@ -13,6 +13,7 @@ use crate::{
     mapping::IntoMastodon,
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
+    search::SearchService,
     state::Zustand,
 };
 use axum::{

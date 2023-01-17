@@ -7,6 +7,7 @@ use crate::{
     },
     error::{Error, Result},
     sanitize::CleanHtmlExt,
+    search::{GrpcSearchService, SearchService},
 };
 use chrono::Utc;
 use futures_util::FutureExt;
@@ -24,9 +25,14 @@ use uuid::{Timestamp, Uuid};
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 
 #[derive(Clone)]
-pub struct Fetcher<PC = RedisCache<str, post::Model>, UC = RedisCache<str, account::Model>> {
+pub struct Fetcher<
+    S = GrpcSearchService,
+    PC = RedisCache<str, post::Model>,
+    UC = RedisCache<str, account::Model>,
+> {
     client: Client,
     db_conn: DatabaseConnection,
+    search_service: S,
 
     // Caches
     post_cache: PC,
@@ -35,23 +41,34 @@ pub struct Fetcher<PC = RedisCache<str, post::Model>, UC = RedisCache<str, accou
 
 impl Fetcher {
     #[must_use]
-    pub fn with_redis_cache(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
+    pub fn with_defaults(
+        db_conn: DatabaseConnection,
+        search_service: GrpcSearchService,
+        redis_conn: deadpool_redis::Pool,
+    ) -> Self {
         Self::new(
             db_conn,
+            search_service,
             RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
             RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION),
         )
     }
 }
 
-impl<PC, UC> Fetcher<PC, UC>
+impl<S, PC, UC> Fetcher<S, PC, UC>
 where
+    S: SearchService,
     PC: Cache<str, post::Model>,
     UC: Cache<str, account::Model>,
 {
     #[allow(clippy::missing_panics_doc)] // Invariants are covered. Won't panic.
     #[must_use]
-    pub fn new(db_conn: DatabaseConnection, post_cache: PC, user_cache: UC) -> Self {
+    pub fn new(
+        db_conn: DatabaseConnection,
+        search_service: S,
+        post_cache: PC,
+        user_cache: UC,
+    ) -> Self {
         let mut default_headers = HeaderMap::new();
         default_headers.insert(
             "Accept",
@@ -65,6 +82,7 @@ where
                 .build()
                 .unwrap(),
             db_conn,
+            search_service,
             post_cache,
             user_cache,
         }
@@ -88,6 +106,7 @@ where
             return Ok(user);
         }
 
+        let mut search_service = self.search_service.clone();
         let url = Url::parse(url)?;
         let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
         actor.clean_html();
@@ -160,15 +179,17 @@ where
                         None
                     };
 
-                    account::ActiveModel {
+                    let account = account::ActiveModel {
                         id: ActiveValue::Set(account.id),
                         avatar_id: avatar_id.into_active_value(),
                         header_id: header_id.into_active_value(),
                         ..Default::default()
                     }
                     .update(tx)
-                    .await
-                    .map_err(Error::from)
+                    .await?;
+                    search_service.add_to_index(account.clone()).await?;
+
+                    Ok(account)
                 }
                 .boxed()
             })
@@ -204,7 +225,7 @@ where
             note.rest.published.timestamp_subsec_nanos(),
         );
 
-        post::Model {
+        let post = post::Model {
             id: Uuid::new_v7(uuid_timestamp),
             account_id: user.id,
             subject: note.subject,
@@ -217,14 +238,24 @@ where
         }
         .into_active_model()
         .insert(&self.db_conn)
-        .await
-        .map_err(Error::from)
+        .await?;
+
+        if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
+            self.search_service
+                .clone()
+                .add_to_index(post.clone())
+                .await?;
+        }
+
+        Ok(post)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{activitypub::Fetcher, cache::NoopCache, db::model::account};
+    use crate::{
+        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
+    };
     use migration::{Migrator, MigratorTrait};
     use pretty_assertions::assert_eq;
     use sea_orm::{Database, DatabaseConnection, ModelTrait};
@@ -243,7 +274,7 @@ mod test {
     #[tokio::test]
     async fn fetch_actor() {
         let db_conn = prepare_db().await;
-        let fetcher = Fetcher::new(db_conn, NoopCache, NoopCache);
+        let fetcher = Fetcher::new(db_conn, NoopSearchService, NoopCache, NoopCache);
 
         let user = fetcher
             .fetch_actor("https://corteximplant.com/users/0x0")
@@ -259,7 +290,7 @@ mod test {
     #[tokio::test]
     async fn fetch_note() {
         let db_conn = prepare_db().await;
-        let fetcher = Fetcher::new(db_conn.clone(), NoopCache, NoopCache);
+        let fetcher = Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache);
 
         let note = fetcher
             .fetch_note("https://corteximplant.com/@0x0/109501674056556919")
