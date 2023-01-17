@@ -68,7 +68,7 @@ pub async fn get(
             .all(&state.db_conn)
             .await?;
 
-        let id = format!("{}{}", state.config.domain, original_uri);
+        let id = format!("{}{original_uri}", state.config.domain);
         let prev = format!(
             "{base_url}?page=true&min_id={}",
             posts.first().map_or(Uuid::max(), |post| post.id)

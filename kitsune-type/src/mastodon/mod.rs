@@ -4,11 +4,13 @@ use uuid::Uuid;
 pub mod account;
 pub mod instance;
 pub mod media_attachment;
+pub mod search;
 pub mod status;
 
 pub use self::account::Account;
 pub use self::instance::Instance;
 pub use self::media_attachment::MediaAttachment;
+pub use self::search::SearchResult;
 pub use self::status::Status;
 
 #[derive(Deserialize, Serialize)]

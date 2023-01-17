@@ -17,6 +17,7 @@
                     buildInputs = with pkgs; [
                         nodejs
                         postgresql_15
+                        protobuf
                         redis
                         rust-bin.stable.latest.default
                         sqlite

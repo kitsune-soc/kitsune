@@ -13,10 +13,9 @@ So, as long as this disclaimer is here, make sure to double check all the change
 
 ## Installation
 
-Besides the binary, you need the following things to run Kitsune:
+Besides the binaries, you need the following things to run Kitsune:
 
 - Redis (for caching)
-- Meilisearch (for full-text search)
 - (optional) a database server (either PostgreSQL or MySQL/MariaDB; you can use SQLite instead)
 - NGINX (as a reverse-proxy)
 - TLS certificate (we recommend a free one from "Let's Encrypt")
@@ -25,8 +24,7 @@ There are no good installation docs at the moment, but the installation itself i
 
 1. Rename `.env.example` to `.env`, change the values to fit your needs. 
 2. The reverse proxy config is pretty vanilla, just forward the traffic. 
-3. Check the Meilisearch docs on how to configure it correctly. 
-4. The Redis installation is expected to be in a single-node configuration.
+3. The Redis installation is expected to be in a single-node configuration.
 
 We're sure you can figure it out.
 

@@ -62,7 +62,7 @@ jobs:
   
   test:
     name: Test
-    needs: [fmt, check, clippy]
+    needs: [fmt, check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

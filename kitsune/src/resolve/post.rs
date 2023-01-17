@@ -3,6 +3,7 @@ use crate::{
     cache::Cache,
     db::model::{account, post},
     error::{Error, Result},
+    search::SearchService,
     webfinger::Webfinger,
 };
 use parking_lot::Mutex;
@@ -11,21 +12,22 @@ use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::{borrow::Cow, collections::HashSet, mem};
 use uuid::Uuid;
 
-pub struct PostResolver<FPC, FUC, WC> {
+pub struct PostResolver<FS, FPC, FUC, WC> {
     db_conn: DatabaseConnection,
-    fetcher: Fetcher<FPC, FUC>,
+    fetcher: Fetcher<FS, FPC, FUC>,
     webfinger: Webfinger<WC>,
 }
 
-impl<FPC, FUC, WC> PostResolver<FPC, FUC, WC>
+impl<FS, FPC, FUC, WC> PostResolver<FS, FPC, FUC, WC>
 where
+    FS: SearchService,
     FPC: Cache<str, post::Model>,
     FUC: Cache<str, account::Model>,
     WC: Cache<str, String>,
 {
     pub fn new(
         db_conn: DatabaseConnection,
-        fetcher: Fetcher<FPC, FUC>,
+        fetcher: Fetcher<FS, FPC, FUC>,
         webfinger: Webfinger<WC>,
     ) -> Self {
         Self {
@@ -123,7 +125,10 @@ where
 #[cfg(test)]
 mod test {
     use super::PostResolver;
-    use crate::{activitypub::Fetcher, cache::NoopCache, db::model::account, webfinger::Webfinger};
+    use crate::{
+        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
+        webfinger::Webfinger,
+    };
     use migration::{Migrator, MigratorTrait};
     use pretty_assertions::assert_eq;
     use sea_orm::{Database, DatabaseConnection, EntityTrait};
@@ -146,7 +151,7 @@ mod test {
 
         let mention_resolver = PostResolver::new(
             db_conn.clone(),
-            Fetcher::new(db_conn.clone(), NoopCache, NoopCache),
+            Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache),
             Webfinger::new(NoopCache),
         );
         let (mentioned_account_ids, content) = mention_resolver

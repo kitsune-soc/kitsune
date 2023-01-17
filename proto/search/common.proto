@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package kitsune.common;
+
+// --- Start: Type definitions ---
+
+// Search index
+enum SearchIndex {
+    // Account search index
+    Account = 0;
+
+    // Post search index
+    Post = 1;
+}
+
+// --- End: Type definitions ---

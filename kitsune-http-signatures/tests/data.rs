@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use http::{request::Parts, Method, Request, Uri};
 use pkcs8::{der::Decode, Document, SubjectPublicKeyInfo};
 use ring::signature::{

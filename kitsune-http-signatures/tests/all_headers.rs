@@ -5,7 +5,8 @@ mod data;
 
 // This is a broken test vector
 // It should produce an error according to the specification, but according to the test vectors it should just omit the "(created)"/"(expires)" pseudo-headers
-//#[tokio::test]
+#[tokio::test]
+#[ignore = "Test vector is broken"]
 async fn all_headers() {
     let mut parts = self::data::get_parts();
     parts.headers.insert(

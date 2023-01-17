@@ -13,6 +13,7 @@ use crate::{
     mapping::IntoMastodon,
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
+    search::SearchService,
     state::Zustand,
 };
 use axum::{
@@ -47,7 +48,7 @@ struct CreateForm {
 
 #[debug_handler(state = Zustand)]
 async fn delete(
-    State(state): State<Zustand>,
+    State(mut state): State<Zustand>,
     AuthExtactor(user_data): AuthExtactor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
@@ -82,6 +83,8 @@ async fn delete(
     .insert(&state.db_conn)
     .await?;
 
+    state.search_service.remove_from_index(post).await?;
+
     Ok(StatusCode::OK.into_response())
 }
 
@@ -113,6 +116,7 @@ async fn post(
     AuthExtactor(user_data): AuthExtactor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
+    let mut search_service = state.search_service.clone();
     let content = {
         let parser = Parser::new_ext(&form.status, Options::all());
         let mut buf = String::new();
@@ -176,6 +180,11 @@ async fn post(
                 .into_active_model()
                 .insert(tx)
                 .await?;
+
+                if form.visibility == Visibility::Public || form.visibility == Visibility::Unlisted
+                {
+                    search_service.add_to_index(post.clone()).await?;
+                }
 
                 Ok(post)
             }
