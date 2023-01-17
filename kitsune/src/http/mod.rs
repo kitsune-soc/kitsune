@@ -28,6 +28,8 @@ pub async fn run(state: Zustand, port: u16) {
         tmp
     };
 
+    // This warning will come up if the server is compiled without the Mastodon API compatibility
+    #[allow(unused_mut)]
     let mut router = Router::new()
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
