@@ -64,7 +64,8 @@ async fn index_search_remove() {
             index: SearchIndex::Post.into(),
             query: "lroem".into(),
             max_results: 20,
-            indices: None,
+            min_id: None,
+            max_id: None,
             offset: 0,
         })
         .await
@@ -93,7 +94,8 @@ async fn index_search_remove() {
             index: SearchIndex::Post.into(),
             query: "lroem".into(),
             max_results: 20,
-            indices: None,
+            min_id: None,
+            max_id: None,
             offset: 0,
         })
         .await

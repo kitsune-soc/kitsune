@@ -25,21 +25,18 @@ impl Search for SearchService {
         let config = req.extensions().get::<Configuration>().unwrap();
         let index = req.extensions().get::<SearchIndex>().unwrap();
 
-        let bounds = match req.get_ref().indices {
-            Some(ref indices) => (
-                indices
-                    .min_id
-                    .as_deref()
-                    .map(Bound::Included)
-                    .unwrap_or(Bound::Unbounded),
-                indices
-                    .max_id
-                    .as_deref()
-                    .map(Bound::Included)
-                    .unwrap_or(Bound::Unbounded),
-            ),
-            None => (Bound::Unbounded, Bound::Unbounded),
-        };
+        let bounds = (
+            req.get_ref()
+                .min_id
+                .as_deref()
+                .map(Bound::Included)
+                .unwrap_or(Bound::Unbounded),
+            req.get_ref()
+                .max_id
+                .as_deref()
+                .map(Bound::Included)
+                .unwrap_or(Bound::Unbounded),
+        );
         let (query, searcher, id_field) = match req.get_ref().index() {
             GrpcSearchIndex::Account => (
                 index.schemas.account.prepare_query(

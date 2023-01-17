@@ -15,15 +15,6 @@ message SearchResult {
     float score = 2;
 }
 
-// Index-based pagination
-message IndexPagination {
-    // Minimum ID
-    optional bytes min_id = 1;
-
-    // Maximum ID
-    optional bytes max_id = 2;
-}
-
 // Request to query the search index 
 message SearchRequest {
     // Search index to search through
@@ -35,11 +26,14 @@ message SearchRequest {
     // Maximum number of results
     uint64 max_results = 3;
 
-    // Index-based pagination
-    IndexPagination indices = 4;
+    // Minimum ID
+    optional bytes min_id = 4;
+
+    // Maximum ID
+    optional bytes max_id = 5;
 
     // Offset
-    uint64 offset = 5;
+    uint64 offset = 6;
 }
 
 // Response to a search request

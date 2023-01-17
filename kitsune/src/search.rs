@@ -9,7 +9,7 @@ use kitsune_search_proto::{
         add_index_request::IndexEntity, index_client::IndexClient, AddAccountIndex,
         AddIndexRequest, AddPostIndex, RemoveIndexRequest, ResetRequest,
     },
-    search::{search_client::SearchClient, IndexPagination, SearchRequest, SearchResponse},
+    search::{search_client::SearchClient, SearchRequest, SearchResponse},
 };
 use std::future;
 use tonic::transport::{Channel, Endpoint};
@@ -131,10 +131,8 @@ impl SearchService {
             query,
             max_results,
             offset,
-            indices: Some(IndexPagination {
-                max_id: min_id.as_ref().map(|id| id.as_bytes().to_vec()),
-                min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
-            }),
+            max_id: min_id.as_ref().map(|id| id.as_bytes().to_vec()),
+            min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
         };
 
         Ok(self.searcher.search(request).await?.into_inner())
