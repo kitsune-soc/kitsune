@@ -10,7 +10,6 @@
 extern crate tracing;
 
 use kitsune_search::{config::Configuration, search::SearchIndex};
-use std::future;
 
 #[tokio::main]
 async fn main() {
@@ -21,7 +20,5 @@ async fn main() {
     info!(port = config.port, "Starting up Kitsune search");
 
     let index = SearchIndex::prepare(&config).unwrap();
-    tokio::spawn(kitsune_search::grpc::start(config, index));
-
-    future::pending::<()>().await;
+    kitsune_search::grpc::start(config, index).await;
 }
