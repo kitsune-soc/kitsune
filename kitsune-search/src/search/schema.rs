@@ -11,8 +11,11 @@ use tantivy::{
 };
 
 /// Bounds alias used in the [`PrepareQuery`] trait
+///
+/// Contains the lower and upper bound of a byte slice range
 pub type Bounds<'a> = (Bound<&'a [u8]>, Bound<&'a [u8]>);
 
+/// Prepare a range query that matches the provided byte field with some lower and upper bounds
 fn prepare_range_query(field: Field, (left, right): Bounds<'_>) -> RangeQuery {
     // We vendored the exactly same API, there will be no change in behaviour
     #[allow(unstable_name_collisions)]
