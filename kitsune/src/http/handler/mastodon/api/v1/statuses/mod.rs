@@ -113,6 +113,7 @@ async fn post(
     AuthExtactor(user_data): AuthExtactor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
+    let mut search_service = state.search_service.clone();
     let content = {
         let parser = Parser::new_ext(&form.status, Options::all());
         let mut buf = String::new();
@@ -176,6 +177,11 @@ async fn post(
                 .into_active_model()
                 .insert(tx)
                 .await?;
+
+                if form.visibility == Visibility::Public || form.visibility == Visibility::Unlisted
+                {
+                    search_service.add_to_index(post.clone()).await?;
+                }
 
                 Ok(post)
             }

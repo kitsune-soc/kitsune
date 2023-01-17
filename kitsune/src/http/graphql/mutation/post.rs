@@ -32,7 +32,9 @@ impl PostMutation {
         visibility: Visibility,
     ) -> Result<post::Model> {
         let state = ctx.state();
+        let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
+
         let content = {
             let parser = Parser::new_ext(&content, Options::all());
             let mut buf = String::new();
@@ -97,6 +99,10 @@ impl PostMutation {
                     .into_active_model()
                     .insert(tx)
                     .await?;
+
+                    if visibility == Visibility::Public || visibility == Visibility::Unlisted {
+                        search_service.add_to_index(post.clone()).await?;
+                    }
 
                     Ok::<_, ServerError>(post)
                 }
