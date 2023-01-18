@@ -87,7 +87,7 @@ where
         let key = self.compute_key(key);
 
         debug!(%key, "Fetching cache entry");
-        if let Some(serialised) = conn.get::<_, Option<String>>(key).await? {
+        if let Some(serialised) = conn.get::<_, Option<String>>(&key).await? {
             let deserialised = serde_json::from_str(&serialised)?;
             Ok(Some(deserialised))
         } else {

@@ -132,6 +132,8 @@ pub async fn run(state: Zustand) {
         #[allow(clippy::cast_possible_truncation)]
         match execution_result {
             Ok(Err(..)) | Err(..) => {
+                increment_counter!("failed_jobs");
+
                 update_model.state = ActiveValue::Set(JobState::Failed);
                 update_model.fail_count = ActiveValue::Set(db_job.fail_count + 1);
                 update_model.run_at =
@@ -139,6 +141,8 @@ pub async fn run(state: Zustand) {
                 update_model.updated_at = ActiveValue::Set(Utc::now());
             }
             _ => {
+                increment_counter!("succeeded_jobs");
+
                 update_model.state = ActiveValue::Set(JobState::Succeeded);
                 update_model.updated_at = ActiveValue::Set(Utc::now());
             }
