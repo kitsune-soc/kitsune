@@ -7,19 +7,17 @@ use kitsune::{
     state::Zustand, webfinger::Webfinger,
 };
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
+use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
+use metrics_util::layers::Layer;
 use std::future;
+use tracing_subscriber::{layer::SubscriberExt, Registry};
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
-    tracing_subscriber::fmt::init();
-
     let config: Configuration = envy::from_env().expect("Failed to parse configuration");
-    let conn = self::db::connect(&config.database_url)
-        .await
-        .expect("Failed to connect to database");
 
-    PrometheusBuilder::new()
+    let (prometheus_recorder, server_future) = PrometheusBuilder::new()
         // Some defaults that would have been set by the `axum-prometheus` crate
         .set_buckets_for_metric(
             Matcher::Full(AXUM_HTTP_REQUESTS_DURATION_SECONDS.to_string()),
@@ -27,8 +25,21 @@ async fn main() {
         )
         .unwrap()
         .with_http_listener(([0, 0, 0, 0], config.prometheus_port))
-        .install()
-        .expect("Failed to install Prometheus metrics recorder");
+        .build()
+        .unwrap();
+    tokio::spawn(server_future);
+
+    let subscriber = Registry::default()
+        .with(tracing_subscriber::fmt::layer())
+        .with(MetricsLayer::new());
+    tracing::subscriber::set_global_default(subscriber).unwrap();
+
+    let recorder = TracingContextLayer::all().layer(prometheus_recorder);
+    metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
+
+    let conn = self::db::connect(&config.database_url)
+        .await
+        .expect("Failed to connect to database");
 
     let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
         .expect("Failed to build Redis pool manager");

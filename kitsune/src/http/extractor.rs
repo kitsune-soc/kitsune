@@ -18,6 +18,7 @@ use kitsune_http_signatures::{
     HttpVerifier,
 };
 use kitsune_type::ap::Activity;
+use mime::Mime;
 use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
 use sea_orm::{ColumnTrait, QueryFilter, Related};
 use serde::de::DeserializeOwned;
@@ -78,7 +79,10 @@ where
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let content = if content_type == ContentType::form_url_encoded() {
+        let content = if Mime::from(content_type)
+            .as_ref()
+            .starts_with(mime::APPLICATION_WWW_FORM_URLENCODED.as_ref())
+        {
             Form::from_request(req, state)
                 .await
                 .map_err(IntoResponse::into_response)?
