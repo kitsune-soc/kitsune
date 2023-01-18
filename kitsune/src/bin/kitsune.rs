@@ -8,9 +8,10 @@ use kitsune::{
 };
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
-use metrics_util::layers::Layer;
-use std::future;
-use tracing_subscriber::{layer::SubscriberExt, Registry};
+use metrics_util::layers::Layer as _;
+use std::{env, future};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
 #[tokio::main]
 async fn main() {
@@ -29,8 +30,12 @@ async fn main() {
         .unwrap();
     tokio::spawn(server_future);
 
+    let env_filter = env::var("RUST_LOG").map_or_else(
+        |_| Targets::default().with_default(LevelFilter::INFO),
+        |targets| targets.parse().expect("Failed to parse RUST_LOG value"),
+    );
     let subscriber = Registry::default()
-        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_filter(env_filter))
         .with(MetricsLayer::new());
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
