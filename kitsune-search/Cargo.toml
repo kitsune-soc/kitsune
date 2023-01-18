@@ -16,7 +16,7 @@ metrics-util = "0.14.0"
 prost = "0.11.6"
 serde = { version = "1.0.152", features = ["derive"] }
 tantivy = "0.19.1"
-tokio = { version = "1.24.1", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
 tonic = "0.8.3"
 tonic-health = "0.8.0"
 tower-http = { version = "0.3.5", features = ["add-extension", "trace"] }
