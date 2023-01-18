@@ -1,10 +1,12 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
     activitypub::Fetcher, config::Configuration, db, http, job, search::GrpcSearchService,
     state::Zustand, webfinger::Webfinger,
 };
+use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use std::future;
 
 #[tokio::main]
@@ -16,6 +18,17 @@ async fn main() {
     let conn = self::db::connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
+
+    PrometheusBuilder::new()
+        // Some defaults that would have been set by the `axum-prometheus` crate
+        .set_buckets_for_metric(
+            Matcher::Full(AXUM_HTTP_REQUESTS_DURATION_SECONDS.to_string()),
+            SECONDS_DURATION_BUCKETS,
+        )
+        .unwrap()
+        .with_http_listener(([0, 0, 0, 0], config.prometheus_port))
+        .install()
+        .expect("Failed to install Prometheus metrics recorder");
 
     let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
         .expect("Failed to build Redis pool manager");
