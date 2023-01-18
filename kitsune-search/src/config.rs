@@ -6,6 +6,10 @@ use human_size::Size;
 use serde::Deserialize;
 use std::path::PathBuf;
 
+fn default_prometheus_port() -> u16 {
+    9000
+}
+
 /// Configuration values
 #[derive(Clone, Deserialize)]
 pub struct Configuration {
@@ -24,6 +28,12 @@ pub struct Configuration {
 
     /// Port on which the gRPC server is listening on
     pub port: u16,
+
+    /// Port on which the Prometheus exporter is listening on
+    ///
+    /// Defaults to 9000
+    #[serde(default = "default_prometheus_port")]
+    pub prometheus_port: u16,
 
     /// Run this node in read-only mode
     ///

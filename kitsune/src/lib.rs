@@ -8,6 +8,9 @@
 )]
 
 #[macro_use]
+extern crate metrics;
+
+#[macro_use]
 extern crate tracing;
 
 pub mod activitypub;

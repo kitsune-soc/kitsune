@@ -20,6 +20,7 @@ impl TestClient {
             levenshtein_distance: 2,
             memory_arena_size: "3MB".parse().unwrap(),
             port,
+            prometheus_port: 0, // Doesn't matter. No Prometheus server gets started
             read_only: false,
         };
 

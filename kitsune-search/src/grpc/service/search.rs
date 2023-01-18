@@ -79,6 +79,8 @@ impl Search for SearchService {
             .collect::<Result<_, _>>()
             .map_err(|err| Status::internal(err.to_string()))?;
 
+        increment_counter!("served_search_requests");
+
         Ok(Response::new(SearchResponse { results: documents }))
     }
 }

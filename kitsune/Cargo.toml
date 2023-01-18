@@ -26,6 +26,7 @@ async-graphql-axum = "5.0.5"
 async-trait = "0.1.61"
 axum = { version = "0.6.2", features = ["headers", "macros"] }
 axum-extra = { version = "0.4.2", features = ["query"] }
+axum-prometheus = "0.3.0"
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
@@ -43,6 +44,10 @@ itertools = "0.10.5"
 kitsune-type = { path = "../kitsune-type" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-search-proto = { path = "../kitsune-search/proto" }
+metrics = "0.20.1"
+metrics-exporter-prometheus = "0.11.0"
+metrics-tracing-context = "0.12.0"
+metrics-util = "0.14.0"
 migration = { path = "../migration" }
 mime = "0.3.16"
 mime_guess = "2.0.4"
@@ -58,7 +63,7 @@ reqwest = { version = "0.11.13", default-features = false, features = [
     "json",
     "rustls-tls-native-roots",
 ] }
-rsa = "0.7.2"
+rsa = "0.8.0"
 sea-orm = { version = "0.10.6", features = [
     "runtime-tokio-rustls",
     "sqlx-postgres",
@@ -67,7 +72,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
-tokio = { version = "1.24.1", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
 tokio-util = { version = "0.7.4", features = ["compat"] }
 tonic = "0.8.3"
 tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }

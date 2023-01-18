@@ -1,6 +1,7 @@
 use self::handler::{oauth, posts, users, well_known};
 use crate::state::Zustand;
 use axum::{http::StatusCode, routing::get_service, Router};
+use axum_prometheus::PrometheusMetricLayer;
 use std::io;
 use tower_http::{
     cors::CorsLayer,
@@ -55,6 +56,8 @@ pub async fn run(state: Zustand, port: u16) {
             get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
                 .handle_error(handle_error),
         )
+        // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
+        .layer(PrometheusMetricLayer::new())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state);

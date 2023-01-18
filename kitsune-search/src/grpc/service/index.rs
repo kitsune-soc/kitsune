@@ -39,6 +39,8 @@ impl IndexService {
                     document.add_text(account_schema.description, description);
                 }
 
+                increment_counter!("added_documents", "index" => GrpcSearchIndex::Account.as_str_name());
+
                 (self.account.read().await, document)
             }
             Some(IndexEntity::Post(data)) => {
@@ -50,6 +52,8 @@ impl IndexService {
                 if let Some(subject) = data.subject {
                     document.add_text(post_schema.subject, subject);
                 }
+
+                increment_counter!("added_documents", "index" => GrpcSearchIndex::Post.as_str_name());
 
                 (self.post.read().await, document)
             }
@@ -91,8 +95,16 @@ impl IndexService {
         index: &SearchIndex,
     ) -> tonic::Result<()> {
         let (writer, id_field) = match req.index() {
-            GrpcSearchIndex::Account => (self.account.read().await, index.schemas.account.id),
-            GrpcSearchIndex::Post => (self.post.read().await, index.schemas.post.id),
+            GrpcSearchIndex::Account => {
+                increment_counter!("removed_documents", "index" => GrpcSearchIndex::Account.as_str_name());
+
+                (self.account.read().await, index.schemas.account.id)
+            }
+            GrpcSearchIndex::Post => {
+                increment_counter!("removed_documents", "index" => GrpcSearchIndex::Post.as_str_name());
+
+                (self.post.read().await, index.schemas.post.id)
+            }
         };
 
         let term = Term::from_field_bytes(id_field, &req.id);

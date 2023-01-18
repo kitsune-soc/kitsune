@@ -5,6 +5,10 @@ fn default_frontend_dir() -> PathBuf {
     "kitsune-fe/dist".into()
 }
 
+fn default_prometheus_port() -> u16 {
+    9000
+}
+
 fn default_upload_dir() -> PathBuf {
     "uploads".into()
 }
@@ -17,6 +21,8 @@ pub struct Configuration {
     pub frontend_dir: PathBuf,
     pub job_workers: NonZeroUsize,
     pub port: u16,
+    #[serde(default = "default_prometheus_port")]
+    pub prometheus_port: u16,
     pub redis_url: String,
     pub search_index_server: String,
     pub search_servers: Vec<String>,
@@ -29,13 +35,14 @@ impl Default for Configuration {
         Self {
             database_url: String::default(),
             domain: String::default(),
-            frontend_dir: PathBuf::default(),
+            frontend_dir: default_frontend_dir(),
             job_workers: NonZeroUsize::new(1).unwrap(),
             port: u16::default(),
+            prometheus_port: default_prometheus_port(),
             redis_url: String::default(),
             search_index_server: String::default(),
             search_servers: Vec::default(),
-            upload_dir: PathBuf::default(),
+            upload_dir: default_upload_dir(),
         }
     }
 }

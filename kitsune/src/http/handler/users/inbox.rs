@@ -100,6 +100,7 @@ pub async fn post(
     State(state): State<Zustand>,
     SignedActivity(activity): SignedActivity,
 ) -> Result<()> {
+    increment_counter!("received_activities");
     // TODO: Insert activity into database
 
     match activity.r#type {
