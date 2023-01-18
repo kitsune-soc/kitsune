@@ -43,6 +43,9 @@ pub enum Error {
     #[error(transparent)]
     HttpSignature(#[from] kitsune_http_signatures::Error),
 
+    #[error(transparent)]
+    KeyRejected(#[from] kitsune_http_signatures::ring::error::KeyRejected),
+
     #[error("Malformed ActivityPub object")]
     MalformedApObject,
 
@@ -78,6 +81,12 @@ pub enum Error {
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
+
+    #[error(transparent)]
+    TonicStatus(#[from] tonic::Status),
+
+    #[error(transparent)]
+    TonicTransport(#[from] tonic::transport::Error),
 
     #[error("Unsupported media type")]
     UnsupportedMediaType,

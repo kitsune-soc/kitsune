@@ -3,14 +3,14 @@ use crate::{
     error::Result,
     state::Zustand,
 };
-use axum::{extract::State, Json};
+use axum::{extract::State, routing, Json, Router};
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
 };
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect};
 
-pub async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
+async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
     let user_count = user::Entity::find().count(&state.db_conn).await?;
 
     let domain_count = account::Entity::find()
@@ -37,4 +37,8 @@ pub async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
             status_count: 0,
         },
     }))
+}
+
+pub fn routes() -> Router<Zustand> {
+    Router::new().route("/", routing::get(get))
 }

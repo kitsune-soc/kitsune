@@ -3,12 +3,14 @@ use crate::{
     db::model::{account, user},
     error::{Error, Result},
 };
+use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
-use http::Uri;
-use kitsune_http_signatures::Request;
+use http::{Request, Uri};
+use kitsune_http_signatures::{
+    ring::signature::RsaKeyPair, HttpSigner, PrivateKey, SignatureComponent,
+};
 use kitsune_type::ap::Activity;
 use reqwest::Client;
-use rsa::pkcs8::{self, SecretDocument};
 use sha2::{Digest, Sha256};
 
 /// Delivers ActivityPub activities
@@ -32,10 +34,8 @@ impl Deliverer {
         user: &user::Model,
         activity: &Activity,
     ) -> Result<()> {
-        let (_label, private_key) =
-            SecretDocument::from_pem(&user.private_key).map_err(pkcs8::Error::from)?;
         let body = serde_json::to_string(&activity)?;
-        let body_digest = base64::encode(Sha256::digest(body.as_bytes()));
+        let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 
         let mut request = self
@@ -50,25 +50,32 @@ impl Deliverer {
         let uri =
             Uri::try_from(request.url().as_str()).expect("[Bug] Invalid URI stored in url::Url");
         let method = request.method().clone();
-        let private_key = private_key.clone();
 
-        let signature_header = crate::blocking::cpu(move || {
-            let request = Request {
-                headers: &headers,
-                uri: &uri,
-                method: &method,
-            };
+        let mut dummy_request = Request::builder().uri(uri).method(method);
+        *dummy_request.headers_mut().unwrap() = headers;
+        let dummy_request = dummy_request.body(()).unwrap();
+        let private_key = PrivateKey::builder()
+            .key_id(&key_id)
+            .key(RsaKeyPair::from_pkcs8(user.private_key.as_bytes())?)
+            .build()
+            .unwrap();
 
-            kitsune_http_signatures::sign(
-                request,
-                &["(request-target)", "digest", "date"],
-                &key_id,
-                private_key.as_bytes(),
+        let (parts, _body) = dummy_request.into_parts();
+        let (header_name, header_value) = HttpSigner::builder()
+            .parts(&parts)
+            .build()
+            .unwrap()
+            .sign(
+                private_key,
+                vec![
+                    SignatureComponent::RequestTarget,
+                    SignatureComponent::Header("digest"),
+                    SignatureComponent::Header("date"),
+                ],
             )
-        })
-        .await??;
+            .await?;
 
-        request.headers_mut().insert("Signature", signature_header);
+        request.headers_mut().insert(header_name, header_value);
         if !self.client.execute(request).await?.status().is_success() {
             todo!("return error");
         }

@@ -106,7 +106,7 @@ impl AuthMutation {
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-        let url = format!("https://{}/users/{}", state.config.domain, username);
+        let url = format!("https://{}/users/{username}", state.config.domain);
         let followers_url = format!("{url}/followers");
         let inbox_url = format!("{url}/inbox");
 

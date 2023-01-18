@@ -15,20 +15,21 @@ path = "src/bin/kitsune-cli.rs"
 ammonia = "3.3.0"
 argon2 = { version = "0.4.1", features = ["std"] }
 askama = "0.11.1"
-async-graphql = { version = "5.0.4", features = [
+async-graphql = { version = "5.0.5", features = [
     "chrono",
     "email-validator",
     "tracing",
     "unblock",
     "uuid",
 ] }
-async-graphql-axum = "5.0.4"
-async-trait = "0.1.60"
-axum = { version = "0.6.1", features = ["headers", "macros"] }
-base64 = "0.20.0"
+async-graphql-axum = "5.0.5"
+async-trait = "0.1.61"
+axum = { version = "0.6.2", features = ["headers", "macros"] }
+axum-extra = { version = "0.4.2", features = ["query"] }
+base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
-clap = { version = "4.0.32", features = ["derive"] }
+clap = { version = "4.1.1", features = ["derive"] }
 deadpool-redis = "0.11.1"
 derive_builder = "0.12.0"
 dotenvy = "0.15.6"
@@ -41,6 +42,7 @@ image = "0.24.5"
 itertools = "0.10.5"
 kitsune-type = { path = "../kitsune-type" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-search-proto = { path = "../kitsune-search/proto" }
 migration = { path = "../migration" }
 mime = "0.3.16"
 mime_guess = "2.0.4"
@@ -51,7 +53,7 @@ post-process = { path = "../post-process" }
 pulldown-cmark = { version = "0.9.2", features = ["simd"] }
 rand = "0.8.5"
 rayon = "1.6.1"
-redis = "0.22.1"
+redis = "0.22.2"
 reqwest = { version = "0.11.13", default-features = false, features = [
     "json",
     "rustls-tls-native-roots",
@@ -65,8 +67,9 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
-tokio = { version = "1.23.1", features = ["full"] }
+tokio = { version = "1.24.1", features = ["full"] }
 tokio-util = { version = "0.7.4", features = ["compat"] }
+tonic = "0.8.3"
 tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
