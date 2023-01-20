@@ -17,6 +17,9 @@ use std::env;
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
