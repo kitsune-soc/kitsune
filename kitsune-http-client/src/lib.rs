@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![forbid(rust_2018_idioms)]
+#![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]
 
@@ -9,23 +9,17 @@ use hyper::{
     client::HttpConnector,
     header::{HeaderName, USER_AGENT},
     http::{self, HeaderValue},
-    service::Service,
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
 };
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use serde::de::DeserializeOwned;
-use std::{
-    error::Error as StdError,
-    fmt,
-    ops::{Deref, DerefMut},
-    time::Duration,
-};
+use std::{error::Error as StdError, fmt, sync::Mutex, time::Duration};
 use tower::{
     layer::util::Identity,
     util::{BoxCloneService, Either},
-    BoxError, ServiceBuilder, ServiceExt,
+    BoxError, Service, ServiceBuilder, ServiceExt,
 };
 use tower_http::{
     decompression::DecompressionLayer, follow_redirect::FollowRedirectLayer,
@@ -143,18 +137,16 @@ impl ClientBuilder {
             |duration| Either::A(TimeoutLayer::new(duration)),
         );
 
-        unsafe {
-            Client {
-                default_headers: self.default_headers,
-                inner: UnsafeSyncWrapper::new(BoxCloneService::new(
-                    ServiceBuilder::new()
-                        .layer(content_length_limit)
-                        .layer(FollowRedirectLayer::new())
-                        .layer(DecompressionLayer::default())
-                        .layer(timeout)
-                        .service(client),
-                )),
-            }
+        Client {
+            default_headers: self.default_headers,
+            inner: Mutex::new(BoxCloneService::new(
+                ServiceBuilder::new()
+                    .layer(content_length_limit)
+                    .layer(FollowRedirectLayer::new())
+                    .layer(DecompressionLayer::default())
+                    .layer(timeout)
+                    .service(client),
+            )),
         }
     }
 }
@@ -172,12 +164,9 @@ impl Default for ClientBuilder {
 }
 
 /// An opinionated HTTP client
-#[derive(Clone)]
 pub struct Client {
     default_headers: HeaderMap,
-    inner: UnsafeSyncWrapper<
-        BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>,
-    >,
+    inner: Mutex<BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>>,
 }
 
 impl Client {
@@ -195,7 +184,8 @@ impl Client {
     /// Execute an HTTP request
     pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
-        let response = self.inner.clone().ready().await?.call(req).await?;
+        let mut service = { self.inner.lock().unwrap().clone() };
+        let response = service.ready().await?.call(req).await?;
 
         Ok(Response { inner: response })
     }
@@ -282,30 +272,3 @@ impl Response {
         self.inner.version()
     }
 }
-
-#[derive(Clone)]
-struct UnsafeSyncWrapper<T> {
-    inner: T,
-}
-
-impl<T> UnsafeSyncWrapper<T> {
-    pub unsafe fn new(inner: T) -> Self {
-        Self { inner }
-    }
-}
-
-impl<T> Deref for UnsafeSyncWrapper<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<T> DerefMut for UnsafeSyncWrapper<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-unsafe impl<T> Sync for UnsafeSyncWrapper<T> {}
