@@ -9,6 +9,7 @@ strip = true
 members = [
     "migration",
     "kitsune",
+    "kitsune-http-client",
     "kitsune-http-signatures",
     "kitsune-search",
     "kitsune-search/proto",
