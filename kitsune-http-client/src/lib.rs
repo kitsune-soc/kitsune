@@ -3,6 +3,7 @@
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use self::util::BoxCloneService;
 use http_body::{combinators::BoxBody, Limited};
 use hyper::{
     body::Bytes,
@@ -15,21 +16,14 @@ use hyper::{
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use serde::de::DeserializeOwned;
-use std::{
-    error::Error as StdError,
-    fmt,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tower::{
-    layer::util::Identity,
-    util::{BoxCloneService, Either},
-    BoxError, Service, ServiceBuilder, ServiceExt,
-};
+use std::{error::Error as StdError, fmt, time::Duration};
+use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
     decompression::DecompressionLayer, follow_redirect::FollowRedirectLayer,
     map_response_body::MapResponseBodyLayer, timeout::TimeoutLayer,
 };
+
+mod util;
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
@@ -144,14 +138,14 @@ impl ClientBuilder {
 
         Client {
             default_headers: self.default_headers,
-            inner: Arc::new(Mutex::new(BoxCloneService::new(
+            inner: BoxCloneService::new(
                 ServiceBuilder::new()
                     .layer(content_length_limit)
                     .layer(FollowRedirectLayer::new())
                     .layer(DecompressionLayer::default())
                     .layer(timeout)
                     .service(client),
-            ))),
+            ),
         }
     }
 }
@@ -172,9 +166,7 @@ impl Default for ClientBuilder {
 /// An opinionated HTTP client
 pub struct Client {
     default_headers: HeaderMap,
-    inner: Arc<
-        Mutex<BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>>,
-    >,
+    inner: BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>,
 }
 
 impl Client {
@@ -192,8 +184,7 @@ impl Client {
     /// Execute an HTTP request
     pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
-        let mut service = { self.inner.lock().unwrap().clone() };
-        let response = service.ready().await?.call(req).await?;
+        let response = self.inner.clone().ready().await?.call(req).await?;
 
         Ok(Response { inner: response })
     }
