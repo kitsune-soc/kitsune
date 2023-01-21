@@ -3,8 +3,8 @@ use crate::{
     consts::USER_AGENT,
     error::Result,
 };
-use http::{HeaderMap, HeaderValue};
-use reqwest::Client;
+use http::HeaderValue;
+use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -43,16 +43,14 @@ where
     #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
     #[must_use]
     pub fn new(cache: C) -> Self {
-        let mut headers = HeaderMap::new();
-        headers.insert("Accept", HeaderValue::from_static("application/jrd+json"));
-
         Self {
             cache,
             client: Client::builder()
-                .default_headers(headers)
+                .default_header("Accept", HeaderValue::from_static("application/jrd+json"))
+                .unwrap()
                 .user_agent(USER_AGENT)
-                .build()
-                .unwrap(),
+                .unwrap()
+                .build(),
         }
     }
 
@@ -63,7 +61,7 @@ where
         }
 
         let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
-        let resource: Resource = self.client.get(webfinger_url).send().await?.json().await?;
+        let resource: Resource = self.client.get(webfinger_url).await?.json().await?;
         let Some(ap_id) = resource
             .links
             .into_iter()
