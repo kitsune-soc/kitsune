@@ -15,7 +15,12 @@ use hyper::{
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use serde::de::DeserializeOwned;
-use std::{error::Error as StdError, fmt, sync::Mutex, time::Duration};
+use std::{
+    error::Error as StdError,
+    fmt,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 use tower::{
     layer::util::Identity,
     util::{BoxCloneService, Either},
@@ -139,14 +144,14 @@ impl ClientBuilder {
 
         Client {
             default_headers: self.default_headers,
-            inner: Mutex::new(BoxCloneService::new(
+            inner: Arc::new(Mutex::new(BoxCloneService::new(
                 ServiceBuilder::new()
                     .layer(content_length_limit)
                     .layer(FollowRedirectLayer::new())
                     .layer(DecompressionLayer::default())
                     .layer(timeout)
                     .service(client),
-            )),
+            ))),
         }
     }
 }
@@ -163,10 +168,13 @@ impl Default for ClientBuilder {
     }
 }
 
+#[derive(Clone)]
 /// An opinionated HTTP client
 pub struct Client {
     default_headers: HeaderMap,
-    inner: Mutex<BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>>,
+    inner: Arc<
+        Mutex<BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>>,
+    >,
 }
 
 impl Client {
