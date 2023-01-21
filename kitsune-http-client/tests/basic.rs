@@ -3,7 +3,7 @@ use kitsune_http_client::Client;
 
 #[tokio::test]
 async fn basic_request() {
-    let mut client = Client::builder().build();
+    let client = Client::builder().build();
     let req = Request::builder()
         .uri("https://rust-lang.org")
         .body(Body::empty())

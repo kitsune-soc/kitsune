@@ -41,6 +41,12 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
+    Http(#[from] http::Error),
+
+    #[error(transparent)]
+    HttpClient(#[from] kitsune_http_client::Error),
+
+    #[error(transparent)]
     HttpSignature(#[from] kitsune_http_signatures::Error),
 
     #[error(transparent)]
@@ -75,9 +81,6 @@ pub enum Error {
 
     #[error(transparent)]
     PostProcessing(post_process::BoxError),
-
-    #[error(transparent)]
-    Reqwest(#[from] reqwest::Error),
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),

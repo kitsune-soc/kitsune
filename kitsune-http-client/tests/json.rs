@@ -4,7 +4,7 @@ use serde_json::Value;
 
 #[tokio::test]
 async fn json_request() {
-    let mut client = Client::builder()
+    let client = Client::builder()
         .default_header("Accept", "application/activity+json")
         .unwrap()
         .build();

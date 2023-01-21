@@ -11,9 +11,9 @@ use crate::{
 };
 use chrono::Utc;
 use futures_util::FutureExt;
-use http::{HeaderMap, HeaderValue};
+use http::HeaderValue;
+use kitsune_http_client::Client;
 use kitsune_type::ap::object::{Actor, Note};
-use reqwest::Client;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     IntoActiveValue, QueryFilter, TransactionTrait,
@@ -69,18 +69,16 @@ where
         post_cache: PC,
         user_cache: UC,
     ) -> Self {
-        let mut default_headers = HeaderMap::new();
-        default_headers.insert(
-            "Accept",
-            HeaderValue::from_static("application/activity+json"),
-        );
-
         Self {
             client: Client::builder()
-                .default_headers(default_headers)
+                .default_header(
+                    "Accept",
+                    HeaderValue::from_static("application/activity+json"),
+                )
+                .unwrap()
                 .user_agent(USER_AGENT)
-                .build()
-                .unwrap(),
+                .unwrap()
+                .build(),
             db_conn,
             search_service,
             post_cache,
@@ -108,7 +106,7 @@ where
 
         let mut search_service = self.search_service.clone();
         let url = Url::parse(url)?;
-        let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
+        let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
         self.db_conn
@@ -210,7 +208,8 @@ where
             return Ok(post);
         }
 
-        let mut note: Note = self.client.get(url).send().await?.json().await?;
+        let url = Url::parse(url)?;
+        let mut note: Note = self.client.get(url.as_str()).await?.json().await?;
         note.clean_html();
 
         let user = self

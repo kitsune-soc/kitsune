@@ -5,12 +5,10 @@ use crate::{
 };
 use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
-use http::{Request, Uri};
-use kitsune_http_signatures::{
-    ring::signature::RsaKeyPair, HttpSigner, PrivateKey, SignatureComponent,
-};
+use http::{Method, Request};
+use kitsune_http_client::Client;
+use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
-use reqwest::Client;
 use sha2::{Digest, Sha256};
 
 /// Delivers ActivityPub activities
@@ -38,45 +36,26 @@ impl Deliverer {
         let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 
-        let mut request = self
-            .client
-            .get(inbox_url)
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri(inbox_url)
             .header("Digest", &digest_header)
-            .body(body.clone())
-            .build()?;
+            .body(body.clone().into())?;
 
         let key_id = format!("{}#main-key", account.url);
-        let headers = request.headers().clone();
-        let uri =
-            Uri::try_from(request.url().as_str()).expect("[Bug] Invalid URI stored in url::Url");
-        let method = request.method().clone();
-
-        let mut dummy_request = Request::builder().uri(uri).method(method);
-        *dummy_request.headers_mut().unwrap() = headers;
-        let dummy_request = dummy_request.body(()).unwrap();
         let private_key = PrivateKey::builder()
             .key_id(&key_id)
             .key(RsaKeyPair::from_pkcs8(user.private_key.as_bytes())?)
             .build()
             .unwrap();
 
-        let (parts, _body) = dummy_request.into_parts();
-        let (header_name, header_value) = HttpSigner::builder()
-            .parts(&parts)
-            .build()
-            .unwrap()
-            .sign(
-                private_key,
-                vec![
-                    SignatureComponent::RequestTarget,
-                    SignatureComponent::Header("digest"),
-                    SignatureComponent::Header("date"),
-                ],
-            )
-            .await?;
-
-        request.headers_mut().insert(header_name, header_value);
-        if !self.client.execute(request).await?.status().is_success() {
+        if !self
+            .client
+            .execute_signed(request, private_key)
+            .await?
+            .status()
+            .is_success()
+        {
             todo!("return error");
         }
 
@@ -116,7 +95,7 @@ impl Deliverer {
 impl Default for Deliverer {
     fn default() -> Self {
         Self {
-            client: Client::builder().user_agent(USER_AGENT).build().unwrap(),
+            client: Client::builder().user_agent(USER_AGENT).unwrap().build(),
         }
     }
 }

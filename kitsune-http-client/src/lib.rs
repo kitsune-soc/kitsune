@@ -1,21 +1,30 @@
 #![doc = include_str!("../README.md")]
-#![forbid(rust_2018_idioms, unsafe_code)]
+#![forbid(rust_2018_idioms)]
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use http_body::{combinators::UnsyncBoxBody, Limited};
+use http_body::{combinators::BoxBody, Limited};
 use hyper::{
-    body::Bytes, client::HttpConnector, header::HeaderName, http::HeaderValue, service::Service,
-    Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode,
+    body::Bytes,
+    client::HttpConnector,
+    header::{HeaderName, USER_AGENT},
+    http::{self, HeaderValue},
+    service::Service,
+    Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
 };
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use serde::de::DeserializeOwned;
-use std::time::Duration;
+use std::{
+    error::Error as StdError,
+    fmt,
+    ops::{Deref, DerefMut},
+    time::Duration,
+};
 use tower::{
     layer::util::Identity,
-    util::{BoxService, Either},
+    util::{BoxCloneService, Either},
     BoxError, ServiceBuilder, ServiceExt,
 };
 use tower_http::{
@@ -23,10 +32,34 @@ use tower_http::{
     map_response_body::MapResponseBodyLayer, timeout::TimeoutLayer,
 };
 
-type Result<T, E = BoxError> = std::result::Result<T, E>;
+type Result<T, E = Error> = std::result::Result<T, E>;
+
+/// Client error type
+pub struct Error {
+    inner: BoxError,
+}
+
+impl From<BoxError> for Error {
+    fn from(value: BoxError) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl StdError for Error {}
 
 /// Builder for the HTTP client
-#[derive(Default)]
 pub struct ClientBuilder {
     content_length_limit: Option<usize>,
     default_headers: HeaderMap,
@@ -55,11 +88,22 @@ impl ClientBuilder {
         V::Error: Into<BoxError>,
     {
         self.default_headers.insert(
-            key.try_into().map_err(Into::into)?,
+            key.try_into().map_err(|e| Error { inner: e.into() })?,
             value.try_into().map_err(Into::into)?,
         );
 
         Ok(self)
+    }
+
+    /// Set the User-Agent header
+    ///
+    /// Defaults to `kitsune-http-client`
+    pub fn user_agent<V>(self, value: V) -> Result<Self>
+    where
+        V: TryInto<HeaderValue>,
+        V::Error: Into<BoxError>,
+    {
+        self.default_header(USER_AGENT, value)
     }
 
     /// Set a timeout
@@ -87,10 +131,10 @@ impl ClientBuilder {
             HyperClient::builder().build(connector);
 
         let content_length_limit = self.content_length_limit.map_or_else(
-            || Either::B(MapResponseBodyLayer::new(UnsyncBoxBody::new)),
+            || Either::B(MapResponseBodyLayer::new(BoxBody::new)),
             |limit| {
                 Either::A(MapResponseBodyLayer::new(move |body| {
-                    UnsyncBoxBody::new(Limited::new(body, limit))
+                    BoxBody::new(Limited::new(body, limit))
                 }))
             },
         );
@@ -99,24 +143,41 @@ impl ClientBuilder {
             |duration| Either::A(TimeoutLayer::new(duration)),
         );
 
-        Client {
-            default_headers: self.default_headers,
-            inner: BoxService::new(
-                ServiceBuilder::new()
-                    .layer(content_length_limit)
-                    .layer(FollowRedirectLayer::new())
-                    .layer(DecompressionLayer::default())
-                    .layer(timeout)
-                    .service(client),
-            ),
+        unsafe {
+            Client {
+                default_headers: self.default_headers,
+                inner: UnsafeSyncWrapper::new(BoxCloneService::new(
+                    ServiceBuilder::new()
+                        .layer(content_length_limit)
+                        .layer(FollowRedirectLayer::new())
+                        .layer(DecompressionLayer::default())
+                        .layer(timeout)
+                        .service(client),
+                )),
+            }
         }
     }
 }
 
+impl Default for ClientBuilder {
+    fn default() -> Self {
+        let builder = ClientBuilder {
+            content_length_limit: Option::default(),
+            default_headers: HeaderMap::default(),
+            timeout: Option::default(),
+        };
+
+        builder.user_agent("kitsune-http-client").unwrap()
+    }
+}
+
 /// An opinionated HTTP client
+#[derive(Clone)]
 pub struct Client {
     default_headers: HeaderMap,
-    inner: BoxService<Request<Body>, HyperResponse<UnsyncBoxBody<Bytes, BoxError>>, BoxError>,
+    inner: UnsafeSyncWrapper<
+        BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>,
+    >,
 }
 
 impl Client {
@@ -132,16 +193,16 @@ impl Client {
     }
 
     /// Execute an HTTP request
-    pub async fn execute(&mut self, req: Request<Body>) -> Result<Response> {
+    pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
-        let response = self.inner.ready().await?.call(req).await?;
+        let response = self.inner.clone().ready().await?.call(req).await?;
 
         Ok(Response { inner: response })
     }
 
     /// Sign an HTTP request via HTTP signatures and execute it
     pub async fn execute_signed<K>(
-        &mut self,
+        &self,
         req: Request<Body>,
         private_key: PrivateKey<'_, K>,
     ) -> Result<Response>
@@ -162,10 +223,25 @@ impl Client {
                     SignatureComponent::Header("Digest"),
                 ],
             )
-            .await?;
+            .await
+            .map_err(BoxError::from)?;
 
         parts.headers.insert(name, value);
         let req = Request::from_parts(parts, body);
+
+        self.execute(req).await
+    }
+
+    /// Shorthand for creating a GET request
+    pub async fn get<U>(&self, uri: U) -> Result<Response>
+    where
+        Uri: TryFrom<U>,
+        <Uri as TryFrom<U>>::Error: Into<http::Error>,
+    {
+        let req = Request::builder()
+            .uri(uri)
+            .body(Body::empty())
+            .map_err(BoxError::from)?;
 
         self.execute(req).await
     }
@@ -173,13 +249,13 @@ impl Client {
 
 /// HTTP response
 pub struct Response {
-    inner: HyperResponse<UnsyncBoxBody<Bytes, BoxError>>,
+    inner: HyperResponse<BoxBody<Bytes, BoxError>>,
 }
 
 impl Response {
     /// Read the body into a `Bytes`
     pub async fn bytes(self) -> Result<Bytes> {
-        hyper::body::to_bytes(self.inner).await
+        hyper::body::to_bytes(self.inner).await.map_err(Into::into)
     }
 
     /// Get a reference to the headers
@@ -193,7 +269,7 @@ impl Response {
         T: DeserializeOwned,
     {
         let bytes = self.bytes().await?;
-        serde_json::from_slice(&bytes).map_err(Into::into)
+        Ok(serde_json::from_slice(&bytes).map_err(BoxError::from)?)
     }
 
     /// Get the status of the request
@@ -206,3 +282,30 @@ impl Response {
         self.inner.version()
     }
 }
+
+#[derive(Clone)]
+struct UnsafeSyncWrapper<T> {
+    inner: T,
+}
+
+impl<T> UnsafeSyncWrapper<T> {
+    pub unsafe fn new(inner: T) -> Self {
+        Self { inner }
+    }
+}
+
+impl<T> Deref for UnsafeSyncWrapper<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> DerefMut for UnsafeSyncWrapper<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+unsafe impl<T> Sync for UnsafeSyncWrapper<T> {}
