@@ -28,7 +28,7 @@ mod util;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Default body limit of 1MB
-const DEFAULT_BODY_LIMIT: usize = 1 * 1024 * 1024;
+const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
 
 /// Client error type
 pub struct Error {
