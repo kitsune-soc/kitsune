@@ -63,6 +63,7 @@ impl ClientBuilder {
     /// Set the content length limit
     ///
     /// This is enforced at the body level, regardless of whether the `Content-Type` header is set or not
+    #[must_use]
     pub fn content_length_limit(self, content_length_limit: usize) -> Self {
         Self {
             content_length_limit: Some(content_length_limit),
@@ -73,6 +74,11 @@ impl ClientBuilder {
     /// Set a default header
     ///
     /// These headers are added to every HTTP request that is sent via this client
+    ///
+    /// # Errors
+    ///
+    /// - The header name failed to convert
+    /// - The header value failed to convert
     pub fn default_header<K, V>(mut self, key: K, value: V) -> Result<Self>
     where
         K: TryInto<HeaderName>,
@@ -91,6 +97,10 @@ impl ClientBuilder {
     /// Set the User-Agent header
     ///
     /// Defaults to `kitsune-http-client`
+    ///
+    /// # Errors
+    ///
+    /// - The header value failed to convert
     pub fn user_agent<V>(self, value: V) -> Result<Self>
     where
         V: TryInto<HeaderValue>,
@@ -102,6 +112,7 @@ impl ClientBuilder {
     /// Set a timeout
     ///
     /// By default there is no timeout
+    #[must_use]
     pub fn timeout(self, timeout: Duration) -> Self {
         Self {
             timeout: Some(timeout),
@@ -112,6 +123,7 @@ impl ClientBuilder {
     /// Build the HTTP client
     ///
     /// Yes, this operation is infallible
+    #[must_use]
     pub fn build(self) -> Client {
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()
@@ -171,6 +183,7 @@ pub struct Client {
 
 impl Client {
     /// Build a new client
+    #[must_use]
     pub fn builder() -> ClientBuilder {
         ClientBuilder::default()
     }
@@ -182,6 +195,11 @@ impl Client {
     }
 
     /// Execute an HTTP request
+    ///
+    /// # Errors
+    ///
+    /// - The inner client service isn't ready
+    /// - The request failed
     pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
         let response = self.inner.clone().ready().await?.call(req).await?;
@@ -190,6 +208,15 @@ impl Client {
     }
 
     /// Sign an HTTP request via HTTP signatures and execute it
+    ///
+    /// # Errors
+    ///
+    /// - Signing the request failed
+    /// - Executing the request failed
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub async fn execute_signed<K>(
         &self,
         req: Request<Body>,
@@ -222,6 +249,11 @@ impl Client {
     }
 
     /// Shorthand for creating a GET request
+    ///
+    /// # Errors
+    ///
+    /// - Creating the request with the provided URL failed
+    /// - Request execution failed
     pub async fn get<U>(&self, uri: U) -> Result<Response>
     where
         Uri: TryFrom<U>,
@@ -243,16 +275,26 @@ pub struct Response {
 
 impl Response {
     /// Read the body into a `Bytes`
+    ///
+    /// # Errors
+    ///
+    /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
         hyper::body::to_bytes(self.inner).await.map_err(Into::into)
     }
 
     /// Get a reference to the headers
+    #[must_use]
     pub fn headers(&self) -> &HeaderMap {
         self.inner.headers()
     }
 
     /// Read the body and deserialise it as JSON into a `serde` enabled structure
+    ///
+    /// # Errors
+    ///
+    /// - Reading the body from the remote failed
+    /// - Deserialising the body into the structure failed
     pub async fn json<T>(self) -> Result<T>
     where
         T: DeserializeOwned,
@@ -262,11 +304,13 @@ impl Response {
     }
 
     /// Get the status of the request
+    #[must_use]
     pub fn status(&self) -> StatusCode {
         self.inner.status()
     }
 
     /// Get the HTTP version the client used
+    #[must_use]
     pub fn version(&self) -> Version {
         self.inner.version()
     }
