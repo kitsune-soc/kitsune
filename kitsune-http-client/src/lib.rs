@@ -9,7 +9,7 @@ use http_body::{combinators::BoxBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, DATE, USER_AGENT},
+    header::{HeaderName, DATE, HOST, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -195,12 +195,18 @@ impl Client {
     }
 
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
+        req.headers_mut()
+            .extend(self.default_headers.clone().into_iter());
         req.headers_mut().insert(
             DATE,
             HeaderValue::from_str(Utc::now().to_rfc2822().as_str()).unwrap(),
         );
-        req.headers_mut()
-            .extend(self.default_headers.clone().into_iter());
+
+        if let Some(host) = req.uri().host() {
+            let value = HeaderValue::from_str(host).unwrap();
+            req.headers_mut().insert(HOST, value);
+        }
+
         req
     }
 
@@ -251,6 +257,7 @@ impl Client {
                     SignatureComponent::Expires,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
+                    SignatureComponent::Header("Host"),
                 ],
                 private_key,
             )
