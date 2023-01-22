@@ -49,6 +49,12 @@ impl<'a> SignatureHeader<'a> {
 
         builder.build().map_err(Error::from)
     }
+
+    pub fn components_include_date_header(&self) -> bool {
+        self.signature_components
+            .iter()
+            .any(|component| component.as_str().to_lowercase() == "date")
+    }
 }
 
 impl TryFrom<SignatureHeader<'_>> for String {

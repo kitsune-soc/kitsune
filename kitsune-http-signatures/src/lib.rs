@@ -8,9 +8,10 @@
 #![deny(missing_docs)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
+use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use http::{
-    header::{HeaderName, InvalidHeaderName},
+    header::{HeaderName, InvalidHeaderName, DATE},
     request::Parts,
     HeaderValue,
 };
@@ -19,6 +20,7 @@ use ring::{
     signature::{EcdsaKeyPair, Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_SHA256},
 };
 use std::{
+    cmp::min,
     error::Error as StdError,
     future::Future,
     time::{Duration, SystemTime},
@@ -275,8 +277,20 @@ impl Default for HttpSigner {
 #[derive(Builder, Clone)]
 pub struct HttpVerifier {
     /// Check whether the signature is expired
+    ///
+    /// This just does a basic check if the `(expires)` header exists.
+    /// If you want a more aggressive check, use [`enforce_expiration`]
     #[builder(default = "true")]
     check_expiration: bool,
+
+    /// Enforce the signature not being older than this specified duration
+    ///
+    /// - If the signature doesn't contain an `(created)` or `Date` header, the signature will be rejected
+    /// - If the signature contains an `(expires)` header, we enforce the shorter one
+    ///
+    /// Defaults to 5 minutes
+    #[builder(default = "Some(Duration::from_secs(5 * 60))")]
+    enforce_expiration: Option<Duration>,
 }
 
 impl HttpVerifier {
@@ -304,6 +318,51 @@ impl HttpVerifier {
 
         if let Some(ref expires) = signature_header.expires {
             if self.check_expiration && *expires < SystemTime::now() {
+                return Err(Error::ExpiredSignature);
+            }
+        }
+
+        if let Some(enforced_duration) = self.enforce_expiration {
+            // Try to read one of the signed "created at" timestamps
+            // If the signature doesn't contain any signed timestamps, reject the signature as invalid
+            let signed_created = if signature_header
+                .signature_components
+                .contains(&SignatureComponent::Created)
+            {
+                signature_header
+                    .created
+                    .ok_or(Error::InvalidSignatureHeader)?
+                    .into()
+            } else if signature_header.components_include_date_header() {
+                let date_header = parts
+                    .headers
+                    .get(DATE)
+                    .ok_or(Error::InvalidSignatureHeader)?;
+
+                DateTime::parse_from_rfc2822(date_header.to_str()?)?.with_timezone(&Utc)
+            } else {
+                return Err(Error::InvalidSignatureHeader);
+            };
+
+            // Determine when the signature is considered expired
+            let expires_at: DateTime<Utc> = {
+                let enforced_expires_at =
+                    signed_created + chrono::Duration::from_std(enforced_duration)?;
+
+                // The signature either expires
+                //
+                // - When the `(expires)` pseudo-header tells us it is expired
+                // - Our implementation considers the signature expired according to the setting
+                //
+                // Whichever is true first
+                signature_header
+                    .expires
+                    .map_or(enforced_expires_at, |expires| {
+                        min(expires.into(), enforced_expires_at)
+                    })
+            };
+
+            if Utc::now() >= expires_at {
                 return Err(Error::ExpiredSignature);
             }
         }

@@ -2057,6 +2057,7 @@ name = "kitsune-http-signatures"
 version = "0.1.0"
 dependencies = [
  "base64 0.21.0",
+ "chrono",
  "derive_builder 0.12.0",
  "http",
  "pem",
