@@ -39,7 +39,10 @@ async fn sign_some() {
 
     parts.headers.insert(name, value);
 
-    let verifier = HttpVerifier::builder().build().unwrap();
+    let verifier = HttpVerifier::builder()
+        .enforce_expiration(None)
+        .build()
+        .unwrap();
     verifier
         .verify(&parts, |key_id| {
             assert_eq!(key_id, "Test");
