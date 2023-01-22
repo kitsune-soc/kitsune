@@ -248,6 +248,7 @@ impl Client {
                 vec![
                     SignatureComponent::RequestTarget,
                     SignatureComponent::Created,
+                    SignatureComponent::Expires,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
                 ],
