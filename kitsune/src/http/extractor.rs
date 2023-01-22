@@ -134,9 +134,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             public_key.subject_public_key.to_vec(),
         );
 
-        let is_valid = HttpVerifier::builder()
-            .build()
-            .unwrap()
+        let is_valid = HttpVerifier::default()
             .verify(&parts, |_key_id| async move {
                 // TODO: Select from the database by key ID
                 Ok(public_key)

@@ -232,9 +232,7 @@ impl Client {
     {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
-        let http_signer = HttpSigner::builder().build().unwrap();
-
-        let (name, value) = http_signer
+        let (name, value) = HttpSigner::default()
             .sign(
                 &parts,
                 vec![
