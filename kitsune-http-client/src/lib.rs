@@ -239,7 +239,10 @@ impl Client {
     {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
-        let (name, value) = HttpSigner::default()
+        let (name, value) = HttpSigner::builder()
+            .expires_in(Duration::from_secs(5 * 60)) // Make the signature expire in 5 minutes
+            .build()
+            .unwrap()
             .sign(
                 &parts,
                 vec![
