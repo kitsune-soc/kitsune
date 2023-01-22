@@ -4,11 +4,12 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use self::util::BoxCloneService;
+use chrono::Utc;
 use http_body::{combinators::BoxBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, USER_AGENT},
+    header::{HeaderName, DATE, HOST, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -196,6 +197,16 @@ impl Client {
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
         req.headers_mut()
             .extend(self.default_headers.clone().into_iter());
+        req.headers_mut().insert(
+            DATE,
+            HeaderValue::from_str(Utc::now().to_rfc2822().as_str()).unwrap(),
+        );
+
+        if let Some(host) = req.uri().host() {
+            let value = HeaderValue::from_str(host).unwrap();
+            req.headers_mut().insert(HOST, value);
+        }
+
         req
     }
 
@@ -213,6 +224,8 @@ impl Client {
     }
 
     /// Sign an HTTP request via HTTP signatures and execute it
+    ///
+    /// The headers need to include a `Digest` header, otherwise this function will error out.
     ///
     /// # Errors
     ///
@@ -232,25 +245,27 @@ impl Client {
     {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
-        let http_signer = HttpSigner::builder().parts(&parts).build().unwrap();
-
-        let (name, value) = http_signer
+        let (name, value) = HttpSigner::builder()
+            .expires_in(Duration::from_secs(5 * 60)) // Make the signature expire in 5 minutes
+            .build()
+            .unwrap()
             .sign(
-                private_key,
+                &parts,
                 vec![
                     SignatureComponent::RequestTarget,
                     SignatureComponent::Created,
+                    SignatureComponent::Expires,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
+                    SignatureComponent::Header("Host"),
                 ],
+                private_key,
             )
             .await
             .map_err(BoxError::from)?;
 
         parts.headers.insert(name, value);
-        let req = Request::from_parts(parts, body);
-
-        self.execute(req).await
+        self.execute(Request::from_parts(parts, body)).await
     }
 
     /// Shorthand for creating a GET request

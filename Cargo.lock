@@ -1994,6 +1994,7 @@ dependencies = [
  "headers",
  "hex",
  "http",
+ "hyper",
  "image",
  "itertools",
  "kitsune-http-client",
@@ -2038,6 +2039,7 @@ dependencies = [
 name = "kitsune-http-client"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "derive_builder 0.12.0",
  "http-body",
  "hyper",
@@ -2055,6 +2057,7 @@ name = "kitsune-http-signatures"
 version = "0.1.0"
 dependencies = [
  "base64 0.21.0",
+ "chrono",
  "derive_builder 0.12.0",
  "http",
  "pem",
