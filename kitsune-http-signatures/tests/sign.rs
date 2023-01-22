@@ -18,15 +18,16 @@ async fn sign_some() {
         .unwrap();
 
     let mut parts = get_parts();
-    let signer = HttpSigner::builder().parts(&parts).build().unwrap();
+    let signer = HttpSigner::builder().build().unwrap();
     let (name, value) = signer
         .sign(
-            private_key,
+            &parts,
             vec![
                 SignatureComponent::RequestTarget,
                 SignatureComponent::Header("Digest"),
                 SignatureComponent::Header("Date"),
             ],
+            private_key,
         )
         .await
         .unwrap();
@@ -38,9 +39,9 @@ async fn sign_some() {
 
     parts.headers.insert(name, value);
 
-    let verifier = HttpVerifier::builder().parts(&parts).build().unwrap();
+    let verifier = HttpVerifier::builder().build().unwrap();
     verifier
-        .verify(|key_id| {
+        .verify(&parts, |key_id| {
             assert_eq!(key_id, "Test");
             async { Ok(public_key) }
         })

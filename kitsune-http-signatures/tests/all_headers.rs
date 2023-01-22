@@ -17,13 +17,12 @@ async fn all_headers() {
     );
     let public_key = self::data::get_public_key();
     let signer = HttpVerifier::builder()
-        .parts(&parts)
         .check_expiration(false)
         .build()
         .unwrap();
 
     signer
-        .verify(move |key_id| {
+        .verify(&parts, move |key_id| {
             let key_id = key_id.to_string();
 
             async move {

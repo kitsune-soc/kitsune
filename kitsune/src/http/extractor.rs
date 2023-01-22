@@ -12,7 +12,7 @@ use axum::{
 };
 use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
-use http::{request::Parts, Request, StatusCode};
+use http::{request::Parts, StatusCode};
 use kitsune_http_signatures::{
     ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
     HttpVerifier,
@@ -108,12 +108,19 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         req: http::Request<Body>,
         state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
-        let headers = req.headers().clone();
-        let method = req.method().clone();
-        let uri = req.uri().clone();
+        let (parts, body) = req
+            .with_limited_body()
+            .expect("[Bug] Payload size of inbox not limited")
+            .into_parts();
 
-        let Json(activity): Json<Activity> =
-            req.extract().await.map_err(IntoResponse::into_response)?;
+        let body = match hyper::body::to_bytes(body).await {
+            Ok(bytes) => bytes,
+            Err(err) => {
+                debug!(error = %err, "Failed to buffer body");
+                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+            }
+        };
+        let activity: Activity = serde_json::from_slice(&body).map_err(Error::from)?;
 
         let ap_id = activity
             .rest
@@ -129,15 +136,10 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             public_key.subject_public_key.to_vec(),
         );
 
-        let mut dummy_request = Request::builder().uri(uri).method(method);
-        *dummy_request.headers_mut().unwrap() = headers;
-        let (parts, _) = dummy_request.body(()).unwrap().into_parts();
-
         let is_valid = HttpVerifier::builder()
-            .parts(&parts)
             .build()
             .unwrap()
-            .verify(|_key_id| async move {
+            .verify(&parts, |_key_id| async move {
                 // TODO: Select from the database by key ID
                 Ok(public_key)
             })

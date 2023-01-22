@@ -1994,6 +1994,7 @@ dependencies = [
  "headers",
  "hex",
  "http",
+ "hyper",
  "image",
  "itertools",
  "kitsune-http-client",

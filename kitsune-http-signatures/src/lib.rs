@@ -7,7 +7,7 @@
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
 
-use crate::header::SignatureHeader;
+use crate::{header::SignatureHeader, util::UnixTimestampExt};
 use derive_builder::Builder;
 use http::{
     header::{HeaderName, InvalidHeaderName},
@@ -24,7 +24,6 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::sync::oneshot;
-use util::UnixTimestampExt;
 
 pub use crate::error::Error;
 pub use ring;
@@ -201,10 +200,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 
 /// HTTP signer
 #[derive(Builder, Clone)]
-pub struct HttpSigner<'a> {
-    /// HTTP request parts
-    parts: &'a Parts,
-
+pub struct HttpSigner {
     /// Include the creation timestamp into the signing header
     #[builder(default)]
     include_creation_timestamp: bool,
@@ -214,19 +210,18 @@ pub struct HttpSigner<'a> {
     expires_in: Option<Duration>,
 }
 
-impl<'a> HttpSigner<'a> {
+impl HttpSigner {
     /// Return a builder for the HTTP signer
-    pub fn builder() -> HttpSignerBuilder<'a> {
+    pub fn builder() -> HttpSignerBuilder {
         HttpSignerBuilder::default()
     }
-}
 
-impl HttpSigner<'_> {
     /// Sign an HTTP request
     pub async fn sign<K>(
         &self,
-        key: PrivateKey<'_, K>,
+        parts: &Parts,
         components: Vec<SignatureComponent<'_>>,
+        key: PrivateKey<'_, K>,
     ) -> Result<(HeaderName, HeaderValue)>
     where
         K: SigningKey + Send + 'static,
@@ -239,7 +234,7 @@ impl HttpSigner<'_> {
         let signature_string = SignatureString {
             algorithm: "hs2019",
             components: &components,
-            parts: self.parts,
+            parts,
             created,
             expires,
         };
@@ -270,36 +265,36 @@ impl HttpSigner<'_> {
     }
 }
 
+impl Default for HttpSigner {
+    fn default() -> Self {
+        Self::builder().build().unwrap()
+    }
+}
+
 /// HTTP verifier
 #[derive(Builder, Clone)]
-pub struct HttpVerifier<'a> {
-    /// HTTP request parts
-    parts: &'a Parts,
-
+pub struct HttpVerifier {
     /// Check whether the signature is expired
     #[builder(default = "true")]
     check_expiration: bool,
 }
 
-impl<'a> HttpVerifier<'a> {
+impl HttpVerifier {
     /// Return a builder for the HTTP verifier
-    pub fn builder() -> HttpVerifierBuilder<'a> {
+    pub fn builder() -> HttpVerifierBuilder {
         HttpVerifierBuilder::default()
     }
-}
 
-impl HttpVerifier<'_> {
     /// Verify an HTTP signature
     ///
     /// `key_fn` is a function that obtains a public key (in its DER representation) based in its key ID
-    pub async fn verify<F, Fut, B>(&self, key_fn: F) -> Result<()>
+    pub async fn verify<F, Fut, B>(&self, parts: &Parts, key_fn: F) -> Result<()>
     where
         F: FnOnce(&'_ str) -> Fut,
         Fut: Future<Output = Result<UnparsedPublicKey<B>, BoxError>>,
         B: AsRef<[u8]> + Send + 'static,
     {
-        let header = self
-            .parts
+        let header = parts
             .headers
             .get(&SIGNATURE)
             .ok_or(Error::MissingSignatureHeader)?;
@@ -322,7 +317,7 @@ impl HttpVerifier<'_> {
             components: &signature_header.signature_components,
             created: signature_header.created,
             expires: signature_header.expires,
-            parts: self.parts,
+            parts,
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
@@ -338,5 +333,11 @@ impl HttpVerifier<'_> {
         receiver.await??;
 
         Ok(())
+    }
+}
+
+impl Default for HttpVerifier {
+    fn default() -> Self {
+        Self::builder().build().unwrap()
     }
 }

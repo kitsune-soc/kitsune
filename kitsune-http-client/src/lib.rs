@@ -232,17 +232,18 @@ impl Client {
     {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
-        let http_signer = HttpSigner::builder().parts(&parts).build().unwrap();
+        let http_signer = HttpSigner::builder().build().unwrap();
 
         let (name, value) = http_signer
             .sign(
-                private_key,
+                &parts,
                 vec![
                     SignatureComponent::RequestTarget,
                     SignatureComponent::Created,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
                 ],
+                private_key,
             )
             .await
             .map_err(BoxError::from)?;
