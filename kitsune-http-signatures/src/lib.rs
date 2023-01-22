@@ -319,7 +319,7 @@ impl HttpVerifier {
         }
 
         if let Some(enforced_duration) = self.enforce_expiration {
-            if signature_header.is_expired_strict(&parts, enforced_duration)? {
+            if signature_header.is_expired_strict(parts, enforced_duration)? {
                 return Err(Error::ExpiredSignature);
             }
         }
