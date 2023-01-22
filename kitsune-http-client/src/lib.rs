@@ -254,9 +254,7 @@ impl Client {
             .map_err(BoxError::from)?;
 
         parts.headers.insert(name, value);
-        let req = Request::from_parts(parts, body);
-
-        self.execute(req).await
+        self.execute(Request::from_parts(parts, body)).await
     }
 
     /// Shorthand for creating a GET request
