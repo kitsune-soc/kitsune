@@ -4,11 +4,12 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use self::util::BoxCloneService;
+use chrono::Utc;
 use http_body::{combinators::BoxBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, USER_AGENT},
+    header::{HeaderName, DATE, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -194,6 +195,10 @@ impl Client {
     }
 
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
+        req.headers_mut().insert(
+            DATE,
+            HeaderValue::from_str(Utc::now().to_rfc2822().as_str()).unwrap(),
+        );
         req.headers_mut()
             .extend(self.default_headers.clone().into_iter());
         req
@@ -213,6 +218,8 @@ impl Client {
     }
 
     /// Sign an HTTP request via HTTP signatures and execute it
+    ///
+    /// The headers need to include a `Digest` header, otherwise this function will error out.
     ///
     /// # Errors
     ///
