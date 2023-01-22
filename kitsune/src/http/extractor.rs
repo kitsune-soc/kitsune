@@ -113,15 +113,13 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .expect("[Bug] Payload size of inbox not limited")
             .into_parts();
 
-        let body = match hyper::body::to_bytes(body).await {
-            Ok(bytes) => bytes,
+        let activity: Activity = match hyper::body::to_bytes(body).await {
+            Ok(bytes) => serde_json::from_slice(&bytes).map_err(Error::from)?,
             Err(err) => {
                 debug!(error = %err, "Failed to buffer body");
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
             }
         };
-        let activity: Activity = serde_json::from_slice(&body).map_err(Error::from)?;
-
         let ap_id = activity
             .rest
             .attributed_to()
