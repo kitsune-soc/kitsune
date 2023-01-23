@@ -1,7 +1,7 @@
 use crate::{
     db::model::{favourite, job, post},
     error::Result,
-    http::extractor::AuthExtactor,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
     job::{deliver::unfavourite::UnfavouriteDeliveryContext, Job, JobState},
     mapping::IntoMastodon,
     state::Zustand,
@@ -22,7 +22,7 @@ use uuid::Uuid;
 #[debug_handler(state = Zustand)]
 pub async fn post(
     State(state): State<Zustand>,
-    AuthExtactor(user_data): AuthExtactor,
+    AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let Some(post) = post::Entity::find_by_id(id).one(&state.db_conn).await? else {

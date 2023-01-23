@@ -23,17 +23,27 @@ use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
 use sea_orm::{ColumnTrait, QueryFilter, Related};
 use serde::de::DeserializeOwned;
 
+/// Mastodon-specific auth extractor alias
+///
+/// Mastodon won't let access token expire ever. I don't know why, but they just don't.
+/// Instead of hacking some special case for the Mastodon API into our database schema, we just don't enforce token expiration.
+pub type MastodonAuthExtractor = AuthExtractor<false>;
+
 #[derive(Clone)]
 pub struct UserData {
     pub account: account::Model,
     pub user: user::Model,
 }
 
-pub struct AuthExtactor<const ENFORCE_EXPIRATION: bool = false>(pub UserData);
+/// Extract the account and user from the request
+///
+/// The const generics parameter `ENFORCE_EXPIRATION` lets you toggle whether the extractor should ignore the expiration date.
+/// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
+pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
 
 #[async_trait]
 impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
-    for AuthExtactor<ENFORCE_EXPIRATION>
+    for AuthExtractor<ENFORCE_EXPIRATION>
 {
     type Rejection = Response;
 

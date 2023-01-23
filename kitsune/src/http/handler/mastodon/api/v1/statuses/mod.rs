@@ -5,7 +5,7 @@ use crate::{
         role::{self, Role},
     },
     error::Result,
-    http::extractor::{AuthExtactor, FormOrJson},
+    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     job::{
         deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
         Job, JobState,
@@ -51,7 +51,7 @@ struct CreateForm {
 #[debug_handler(state = Zustand)]
 async fn delete(
     State(mut state): State<Zustand>,
-    AuthExtactor(user_data): AuthExtactor,
+    AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let Some(post) = post::Entity::find_by_id(id).one(&state.db_conn).await? else {
@@ -93,7 +93,7 @@ async fn delete(
 #[debug_handler(state = Zustand)]
 async fn get(
     State(state): State<Zustand>,
-    _user_data: Option<AuthExtactor>,
+    _user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let Some(post) = post::Entity::find()
@@ -115,7 +115,7 @@ async fn get(
 #[debug_handler(state = Zustand)]
 async fn post(
     State(state): State<Zustand>,
-    AuthExtactor(user_data): AuthExtactor,
+    AuthExtractor(user_data): MastodonAuthExtractor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
     let mut search_service = state.search_service.clone();
