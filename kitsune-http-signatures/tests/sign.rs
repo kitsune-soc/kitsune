@@ -44,9 +44,9 @@ async fn sign_some() {
         .build()
         .unwrap();
     verifier
-        .verify(&parts, |key_id| {
+        .verify(&parts, |key_id| async move {
             assert_eq!(key_id, "Test");
-            async { Ok(public_key) }
+            Ok(public_key)
         })
         .await
         .unwrap();

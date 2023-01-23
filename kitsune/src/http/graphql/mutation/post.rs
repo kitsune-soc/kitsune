@@ -65,6 +65,7 @@ impl PostMutation {
                     let post = post::Model {
                         id,
                         account_id,
+                        in_reply_to_id: None,
                         subject: None,
                         content,
                         is_sensitive,

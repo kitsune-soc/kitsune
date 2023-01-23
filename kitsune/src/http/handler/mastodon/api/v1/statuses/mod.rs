@@ -33,12 +33,14 @@ use sea_orm::{
 use serde::Deserialize;
 use uuid::Uuid;
 
+mod context;
 mod favourite;
 mod unfavourite;
 
 #[derive(Deserialize)]
 struct CreateForm {
     status: String,
+    in_reply_to_id: Option<Uuid>,
     #[serde(default)]
     sensitive: bool,
     spoiler_text: Option<String>,
@@ -141,9 +143,17 @@ async fn post(
         .db_conn
         .transaction(move |tx| {
             async move {
+                let in_reply_to_id = if let Some(in_reply_to_id) = form.in_reply_to_id {
+                    (post::Entity::find_by_id(in_reply_to_id).count(tx).await? != 0)
+                        .then_some(in_reply_to_id)
+                } else {
+                    None
+                };
+
                 let post = post::Model {
                     id,
                     account_id,
+                    in_reply_to_id,
                     subject: form.spoiler_text,
                     content,
                     is_sensitive: form.sensitive,
@@ -201,6 +211,7 @@ pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).delete(delete))
+        .route("/:id/context", routing::get(context::get))
         .route("/:id/favourite", routing::post(favourite::post))
         .route("/:id/unfavourite", routing::post(unfavourite::post))
 }

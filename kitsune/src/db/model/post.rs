@@ -65,6 +65,8 @@ pub struct Model {
     pub id: Uuid,
     #[graphql(skip)]
     pub account_id: Uuid,
+    #[graphql(skip)]
+    pub in_reply_to_id: Option<Uuid>,
     pub is_sensitive: bool,
     #[sea_orm(nullable)]
     pub subject: Option<String>,
@@ -98,6 +100,9 @@ pub enum Relation {
     #[sea_orm(has_many = "super::favourite::Entity")]
     Favourite,
 
+    #[sea_orm(belongs_to = "Entity", from = "Column::InReplyToId", to = "Column::Id")]
+    InReplyTo,
+
     #[sea_orm(has_many = "super::mention::Entity")]
     Mention,
 
@@ -130,3 +135,14 @@ impl Related<super::repost::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub struct InReplyTo;
+
+impl Linked for InReplyTo {
+    type FromEntity = Entity;
+    type ToEntity = Entity;
+
+    fn link(&self) -> Vec<RelationDef> {
+        vec![Relation::InReplyTo.def()]
+    }
+}

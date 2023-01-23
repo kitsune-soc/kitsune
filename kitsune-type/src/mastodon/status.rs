@@ -1,7 +1,14 @@
 use super::{Account, MediaAttachment};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use uuid::Uuid;
+
+#[derive(Deserialize, Serialize)]
+pub struct Context {
+    pub ancestors: VecDeque<Status>,
+    pub descendants: Vec<Status>,
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct Mention {

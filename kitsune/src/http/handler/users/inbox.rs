@@ -28,6 +28,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
             post::Model {
                 id: Uuid::now_v7(),
                 account_id: account.id,
+                in_reply_to_id: None, // TODO: Actually fill this
                 subject: note.subject,
                 content: note.content,
                 is_sensitive: note.rest.sensitive,

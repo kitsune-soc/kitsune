@@ -95,6 +95,8 @@ pub struct BaseObject {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributed_to: Option<StringOrObject<Box<Actor>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub in_reply_to: Option<String>,
     #[serde(default)]
     pub sensitive: bool,
     pub published: DateTime<Utc>,
@@ -120,12 +122,13 @@ impl Default for BaseObject {
     fn default() -> Self {
         Self {
             context: ap_context(),
-            id: String::new(),
-            attributed_to: None,
-            sensitive: false,
+            id: String::default(),
+            attributed_to: Option::default(),
+            in_reply_to: Option::default(),
+            sensitive: bool::default(),
             published: Utc::now(),
-            to: Vec::new(),
-            cc: Vec::new(),
+            to: Vec::default(),
+            cc: Vec::default(),
         }
     }
 }
