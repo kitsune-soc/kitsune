@@ -29,10 +29,12 @@ pub struct UserData {
     pub user: user::Model,
 }
 
-pub struct AuthExtactor(pub UserData);
+pub struct AuthExtactor<const ENFORCE_EXPIRATION: bool = false>(pub UserData);
 
 #[async_trait]
-impl FromRequestParts<Zustand> for AuthExtactor {
+impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
+    for AuthExtactor<ENFORCE_EXPIRATION>
+{
     type Rejection = Response;
 
     async fn from_request_parts(
@@ -44,14 +46,20 @@ impl FromRequestParts<Zustand> for AuthExtactor {
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let Some((user, Some(account))) =
+        let mut user_account_query =
             <access_token::Entity as Related<user::Entity>>::find_related()
-                .filter(access_token::Column::Token.eq(bearer_token.token()))
-                .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
                 .find_also_related(account::Entity)
-                .one(&state.db_conn)
-                .await
-                .map_err(Error::from)?
+                .filter(access_token::Column::Token.eq(bearer_token.token()));
+
+        if ENFORCE_EXPIRATION {
+            user_account_query =
+                user_account_query.filter(access_token::Column::ExpiredAt.gt(Utc::now()));
+        }
+
+        let Some((user, Some(account))) = user_account_query
+            .one(&state.db_conn)
+            .await
+            .map_err(Error::from)?
         else {
             return Err(StatusCode::UNAUTHORIZED.into_response());
         };
