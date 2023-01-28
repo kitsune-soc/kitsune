@@ -1,4 +1,9 @@
-use crate::{db::model::post, error::Result, mapping::IntoMastodon, state::Zustand};
+use crate::{
+    db::model::post::{self, Visibility},
+    error::Result,
+    mapping::IntoMastodon,
+    state::Zustand,
+};
 use async_recursion::async_recursion;
 use axum::{
     debug_handler,
@@ -20,6 +25,7 @@ async fn get_ancestors(
 ) -> Result<()> {
     if let Some(in_reply_to) = post
         .find_linked(post::InReplyTo)
+        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .one(&state.db_conn)
         .await?
     {
@@ -38,6 +44,7 @@ async fn get_descendants(
 ) -> Result<()> {
     let subdescendants = post::Entity::find()
         .filter(post::Column::InReplyToId.eq(post.id))
+        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .all(&state.db_conn)
         .await?;
 

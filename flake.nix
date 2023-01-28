@@ -16,7 +16,7 @@
                 devShells.default = pkgs.mkShell {
                     buildInputs = with pkgs; [
                         nodejs
-                        postgresql_15
+                        #postgresql_15
                         protobuf
                         redis
                         rust-bin.stable.latest.default
