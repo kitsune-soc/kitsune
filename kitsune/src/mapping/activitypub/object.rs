@@ -60,6 +60,14 @@ impl IntoObject for post::Model {
             .await?
             .expect("[Bug] No user associated with post");
 
+        let in_reply_to = self
+            .find_linked(post::InReplyTo)
+            .select_only()
+            .column(post::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?;
+
         let mut mentioned: Vec<String> = self
             .find_linked(mention::MentionedAccounts)
             .select_only()
@@ -89,6 +97,7 @@ impl IntoObject for post::Model {
                 context: ap_context(),
                 id: self.url,
                 attributed_to: Some(StringOrObject::String(account.url)),
+                in_reply_to,
                 sensitive: self.is_sensitive,
                 published: self.created_at,
                 to,

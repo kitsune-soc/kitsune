@@ -22,13 +22,9 @@ async fn all_headers() {
         .unwrap();
 
     signer
-        .verify(&parts, move |key_id| {
-            let key_id = key_id.to_string();
-
-            async move {
-                assert_eq!(key_id, "Test");
-                Ok(public_key)
-            }
+        .verify(&parts, move |key_id| async move {
+            assert_eq!(key_id, "Test");
+            Ok(public_key)
         })
         .await
         .unwrap();

@@ -300,10 +300,10 @@ impl HttpVerifier {
     /// Verify an HTTP signature
     ///
     /// `key_fn` is a function that obtains a public key (in its DER representation) based in its key ID
-    pub async fn verify<F, Fut, B>(&self, parts: &Parts, key_fn: F) -> Result<()>
+    pub async fn verify<'a, F, Fut, B>(&self, parts: &'a Parts, key_fn: F) -> Result<()>
     where
-        F: FnOnce(&'_ str) -> Fut,
-        Fut: Future<Output = Result<UnparsedPublicKey<B>, BoxError>>,
+        F: FnOnce(&'a str) -> Fut,
+        Fut: Future<Output = Result<UnparsedPublicKey<B>, BoxError>> + 'a,
         B: AsRef<[u8]> + Send + 'static,
     {
         let header = parts

@@ -9,6 +9,7 @@ use crate::{
     sanitize::CleanHtmlExt,
     search::{GrpcSearchService, SearchService},
 };
+use async_recursion::async_recursion;
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::HeaderValue;
@@ -23,6 +24,7 @@ use url::Url;
 use uuid::{Timestamp, Uuid};
 
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
+const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
 #[derive(Clone)]
 pub struct Fetcher<
@@ -195,9 +197,14 @@ where
             .map_err(Error::from)
     }
 
-    pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
+    #[async_recursion(?Send)]
+    async fn fetch_note_inner(&self, url: &str, call_depth: u32) -> Result<Option<post::Model>> {
+        if call_depth > MAX_FETCH_DEPTH {
+            return Ok(None);
+        }
+
         if let Some(post) = self.post_cache.get(url).await? {
-            return Ok(post);
+            return Ok(Some(post));
         }
 
         if let Some(post) = post::Entity::find()
@@ -205,7 +212,7 @@ where
             .one(&self.db_conn)
             .await?
         {
-            return Ok(post);
+            return Ok(Some(post));
         }
 
         let url = Url::parse(url)?;
@@ -224,9 +231,18 @@ where
             note.rest.published.timestamp_subsec_nanos(),
         );
 
+        let in_reply_to_id = if let Some(in_reply_to) = note.rest.in_reply_to {
+            self.fetch_note_inner(&in_reply_to, call_depth + 1)
+                .await?
+                .map(|post| post.id)
+        } else {
+            None
+        };
+
         let post = post::Model {
             id: Uuid::new_v7(uuid_timestamp),
             account_id: user.id,
+            in_reply_to_id,
             subject: note.subject,
             content: note.content,
             is_sensitive: note.rest.sensitive,
@@ -246,7 +262,14 @@ where
                 .await?;
         }
 
-        Ok(post)
+        Ok(Some(post))
+    }
+
+    pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
+        self.fetch_note_inner(url, 0)
+            .await
+            .transpose()
+            .expect("[Bug] Highest level fetch returned a `None`")
     }
 }
 

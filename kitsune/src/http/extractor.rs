@@ -23,16 +23,28 @@ use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
 use sea_orm::{ColumnTrait, QueryFilter, Related};
 use serde::de::DeserializeOwned;
 
+/// Mastodon-specific auth extractor alias
+///
+/// Mastodon won't let access token expire ever. I don't know why, but they just don't.
+/// Instead of hacking some special case for the Mastodon API into our database schema, we just don't enforce token expiration.
+pub type MastodonAuthExtractor = AuthExtractor<false>;
+
 #[derive(Clone)]
 pub struct UserData {
     pub account: account::Model,
     pub user: user::Model,
 }
 
-pub struct AuthExtactor(pub UserData);
+/// Extract the account and user from the request
+///
+/// The const generics parameter `ENFORCE_EXPIRATION` lets you toggle whether the extractor should ignore the expiration date.
+/// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
+pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
 
 #[async_trait]
-impl FromRequestParts<Zustand> for AuthExtactor {
+impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
+    for AuthExtractor<ENFORCE_EXPIRATION>
+{
     type Rejection = Response;
 
     async fn from_request_parts(
@@ -44,14 +56,20 @@ impl FromRequestParts<Zustand> for AuthExtactor {
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let Some((user, Some(account))) =
+        let mut user_account_query =
             <access_token::Entity as Related<user::Entity>>::find_related()
-                .filter(access_token::Column::Token.eq(bearer_token.token()))
-                .filter(access_token::Column::ExpiredAt.gt(Utc::now()))
                 .find_also_related(account::Entity)
-                .one(&state.db_conn)
-                .await
-                .map_err(Error::from)?
+                .filter(access_token::Column::Token.eq(bearer_token.token()));
+
+        if ENFORCE_EXPIRATION {
+            user_account_query =
+                user_account_query.filter(access_token::Column::ExpiredAt.gt(Utc::now()));
+        }
+
+        let Some((user, Some(account))) = user_account_query
+            .one(&state.db_conn)
+            .await
+            .map_err(Error::from)?
         else {
             return Err(StatusCode::UNAUTHORIZED.into_response());
         };

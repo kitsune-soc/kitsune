@@ -1,5 +1,5 @@
 use self::{mutation::RootMutation, query::RootQuery};
-use super::extractor::{AuthExtactor, UserData};
+use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
@@ -36,7 +36,7 @@ impl ContextExt for &'_ Context<'_> {
 #[debug_handler(state = Zustand)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
-    user_data: Option<AuthExtactor>,
+    user_data: Option<AuthExtractor<true>>,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
     let mut req = req.into_inner();

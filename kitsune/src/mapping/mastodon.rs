@@ -138,7 +138,7 @@ impl IntoMastodon for post::Model {
             id: self.id,
             created_at: self.created_at,
             in_reply_to_account_id: None,
-            in_reply_to_id: None,
+            in_reply_to_id: self.in_reply_to_id,
             sensitive: self.is_sensitive,
             spoiler_text: self.subject,
             visibility: self.visibility.json_repr(),
