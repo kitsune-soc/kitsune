@@ -1,4 +1,5 @@
 use crate::search::SearchIndex;
+use autometrics::autometrics;
 use futures_util::TryStreamExt;
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
@@ -115,6 +116,7 @@ impl IndexService {
 }
 
 #[async_trait]
+#[autometrics(track_concurrency)]
 impl Index for IndexService {
     async fn add(
         &self,

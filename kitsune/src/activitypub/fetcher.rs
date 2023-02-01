@@ -10,6 +10,7 @@ use crate::{
     search::{GrpcSearchService, SearchService},
 };
 use async_recursion::async_recursion;
+use autometrics::autometrics;
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::HeaderValue;
@@ -93,6 +94,8 @@ where
     /// # Panics
     ///
     /// - Panics if the URL doesn't contain a host section
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
     pub async fn fetch_actor(&self, url: &str) -> Result<account::Model> {
         if let Some(user) = self.user_cache.get(url).await? {
             return Ok(user);
@@ -265,6 +268,8 @@ where
         Ok(Some(post))
     }
 
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
     pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
         self.fetch_note_inner(url, 0)
             .await

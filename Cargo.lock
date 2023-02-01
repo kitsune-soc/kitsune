@@ -374,6 +374,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "autometrics"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9da2704b27562ca666c0261e1141fb6486b6aa51e45e9c1e1199f6b0e165971"
+dependencies = [
+ "autometrics-macros",
+ "const_format",
+ "metrics",
+]
+
+[[package]]
+name = "autometrics-macros"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13bb5395bc7b3f24f56e6064d8ad76a75ef179a2ff463d87b154782472433074"
+dependencies = [
+ "percent-encoding",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "axum"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -823,6 +846,26 @@ name = "const-oid"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cec318a675afcb6a1ea1d4340e2d377e56e47c266f28043ceccbf4412ddfdd3b"
+
+[[package]]
+name = "const_format"
+version = "0.2.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7309d9b4d3d2c0641e018d449232f2e28f1b22933c137f157d3dbc14228b8c0e"
+dependencies = [
+ "const_format_proc_macros",
+]
+
+[[package]]
+name = "const_format_proc_macros"
+version = "0.2.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d897f47bf7270cf70d370f8f98c1abb6d2d4cf60a6845d30e05bfb90c6568650"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-xid",
+]
 
 [[package]]
 name = "core-foundation"
@@ -1991,6 +2034,7 @@ dependencies = [
  "async-graphql-axum",
  "async-recursion",
  "async-trait",
+ "autometrics",
  "axum",
  "axum-extra",
  "axum-prometheus",
@@ -2084,6 +2128,7 @@ dependencies = [
 name = "kitsune-search"
 version = "0.1.0"
 dependencies = [
+ "autometrics",
  "dotenvy",
  "envy",
  "futures-util",
@@ -4751,6 +4796,12 @@ name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
+
+[[package]]
+name = "unicode-xid"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 
 [[package]]
 name = "unicode_categories"
