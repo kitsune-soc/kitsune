@@ -93,6 +93,7 @@ impl GrpcSearchService {
 
 #[async_trait]
 impl SearchService for GrpcSearchService {
+    #[instrument(skip_all)]
     async fn add_to_index<I>(&mut self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
@@ -122,6 +123,7 @@ impl SearchService for GrpcSearchService {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
@@ -144,6 +146,7 @@ impl SearchService for GrpcSearchService {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     async fn reset_index(&mut self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
             index: index.into(),
@@ -153,6 +156,7 @@ impl SearchService for GrpcSearchService {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     async fn search(
         &mut self,
         index: SearchIndex,

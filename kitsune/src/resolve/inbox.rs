@@ -22,6 +22,7 @@ impl InboxResolver {
         Self { db_conn }
     }
 
+    #[instrument(skip_all, fields(post_id = %post.id))]
     pub async fn resolve(
         &self,
         post: &post::Model,

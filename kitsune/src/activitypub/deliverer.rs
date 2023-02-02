@@ -3,6 +3,7 @@ use crate::{
     db::model::{account, user},
     error::{Error, Result},
 };
+use autometrics::autometrics;
 use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
@@ -25,6 +26,8 @@ impl Deliverer {
     /// # Panics
     ///
     /// - Panics in case the inbox URL isn't actually a valid URL
+    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.rest.id))]
+    #[autometrics(track_concurrency)]
     pub async fn deliver(
         &self,
         inbox_url: &str,

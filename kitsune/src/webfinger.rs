@@ -3,6 +3,7 @@ use crate::{
     consts::USER_AGENT,
     error::Result,
 };
+use autometrics::autometrics;
 use http::HeaderValue;
 use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
@@ -54,6 +55,8 @@ where
         }
     }
 
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
     pub async fn fetch_actor_url(&self, username: &str, domain: &str) -> Result<Option<String>> {
         let acct = format!("acct:{username}@{domain}");
         if let Some(ap_id) = self.cache.get(&acct).await? {

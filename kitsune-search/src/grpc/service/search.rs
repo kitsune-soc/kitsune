@@ -2,6 +2,7 @@ use crate::{
     config::Configuration,
     search::{schema::PrepareQuery, SearchIndex},
 };
+use autometrics::autometrics;
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
     search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
@@ -20,6 +21,7 @@ pub struct SearchService {
 }
 
 #[async_trait]
+#[autometrics(track_concurrency)]
 impl Search for SearchService {
     async fn search(&self, req: Request<SearchRequest>) -> tonic::Result<Response<SearchResponse>> {
         let config = req.extensions().get::<Configuration>().unwrap();

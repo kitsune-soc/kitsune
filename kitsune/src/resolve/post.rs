@@ -108,6 +108,7 @@ where
     /// # Panics
     ///
     /// This should never panic
+    #[instrument(skip_all)]
     pub async fn resolve(&self, content: &str) -> Result<(Vec<Uuid>, String)> {
         let mentioned_account_ids = Mutex::new(HashSet::new());
         let transformer = Transformer::new(|elem| self.transform(elem, &mentioned_account_ids));
