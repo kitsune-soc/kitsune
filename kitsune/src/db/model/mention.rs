@@ -15,17 +15,6 @@ impl Related<super::post::Entity> for Entity {
     }
 }
 
-pub struct MentionedAccounts;
-
-impl Linked for MentionedAccounts {
-    type FromEntity = super::post::Entity;
-    type ToEntity = super::account::Entity;
-
-    fn link(&self) -> Vec<sea_orm::LinkDef> {
-        vec![Relation::Post.def().rev(), Relation::Account.def()]
-    }
-}
-
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(

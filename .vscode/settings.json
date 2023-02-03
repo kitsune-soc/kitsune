@@ -1,4 +1,5 @@
 {
     "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
-    "rust-analyzer.cargo.buildScripts.enable": true
+    "rust-analyzer.cargo.buildScripts.enable": true,
+    "editor.formatOnSave": true
 }

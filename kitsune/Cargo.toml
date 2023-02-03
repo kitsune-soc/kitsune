@@ -25,7 +25,9 @@ async-graphql = { version = "5.0.5", features = [
 async-graphql-axum = "5.0.5"
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
-autometrics = { version = "0.2.3", default-features = false, features = ["metrics"] }
+autometrics = { version = "0.2.3", default-features = false, features = [
+    "metrics",
+] }
 axum = { version = "0.6.4", features = ["headers", "macros"] }
 axum-extra = { version = "0.4.2", features = ["query"] }
 axum-prometheus = "0.3.0"
@@ -52,7 +54,6 @@ metrics = "0.20.1"
 metrics-exporter-prometheus = "0.11.0"
 metrics-tracing-context = "0.13.0"
 metrics-util = "0.14.0"
-migration = { path = "../migration" }
 mimalloc = "0.1.34"
 mime = "0.3.16"
 mime_guess = "2.0.4"

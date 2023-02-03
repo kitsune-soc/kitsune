@@ -29,18 +29,6 @@ pub enum Relation {
     Post,
 }
 
-/// Find the author of the favourited post
-pub struct RepostedPostAuthor;
-
-impl Linked for RepostedPostAuthor {
-    type FromEntity = Entity;
-    type ToEntity = super::account::Entity;
-
-    fn link(&self) -> Vec<sea_orm::LinkDef> {
-        vec![Relation::Post.def(), super::post::Relation::Account.def()]
-    }
-}
-
 impl Related<super::account::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Account.def()

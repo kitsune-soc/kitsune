@@ -135,14 +135,3 @@ impl Related<super::repost::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-pub struct InReplyTo;
-
-impl Linked for InReplyTo {
-    type FromEntity = Entity;
-    type ToEntity = Entity;
-
-    fn link(&self) -> Vec<RelationDef> {
-        vec![Relation::InReplyTo.def()]
-    }
-}

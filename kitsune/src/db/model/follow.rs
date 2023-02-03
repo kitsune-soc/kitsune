@@ -31,26 +31,4 @@ pub enum Relation {
     Follower,
 }
 
-pub struct Followers;
-
-impl Linked for Followers {
-    type FromEntity = super::account::Entity;
-    type ToEntity = super::account::Entity;
-
-    fn link(&self) -> Vec<sea_orm::LinkDef> {
-        vec![Relation::Account.def().rev(), Relation::Follower.def()]
-    }
-}
-
-pub struct Following;
-
-impl Linked for Following {
-    type FromEntity = super::account::Entity;
-    type ToEntity = super::account::Entity;
-
-    fn link(&self) -> Vec<sea_orm::LinkDef> {
-        vec![Relation::Follower.def().rev(), Relation::Account.def()]
-    }
-}
-
 impl ActiveModelBehavior for ActiveModel {}
