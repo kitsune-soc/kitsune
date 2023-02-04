@@ -8,6 +8,7 @@ strip = true
 [workspace]
 members = [
     "kitsune",
+    "kitsune-cli",
     "kitsune-db",
     "kitsune-db/migration",
     "kitsune-http-client",

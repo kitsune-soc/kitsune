@@ -3,14 +3,6 @@ name = "kitsune"
 version = "0.1.0-UTA"
 edition = "2021"
 
-[[bin]]
-name = "kitsune"
-path = "src/bin/kitsune.rs"
-
-[[bin]]
-name = "kitsune-cli"
-path = "src/bin/kitsune-cli.rs"
-
 [dependencies]
 ammonia = "3.3.0"
 argon2 = { version = "0.4.1", features = ["std"] }
@@ -34,7 +26,6 @@ axum-prometheus = "0.3.0"
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
-clap = { version = "4.1.4", features = ["derive"] }
 deadpool-redis = "0.11.1"
 derive_builder = "0.12.0"
 dotenvy = "0.15.6"

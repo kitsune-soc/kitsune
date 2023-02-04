@@ -97,7 +97,7 @@ impl IntoActivity for favourites::Model {
                 attributed_to: Some(StringOrObject::String(account_url)),
                 in_reply_to: None,
                 sensitive: false,
-                published: Utc::now().into(),
+                published: Utc::now(),
                 to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
                 cc: vec![],
             },
