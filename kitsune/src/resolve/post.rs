@@ -1,11 +1,11 @@
 use crate::{
     activitypub::Fetcher,
     cache::Cache,
-    db::model::{account, post},
     error::{Error, Result},
     search::SearchService,
     webfinger::Webfinger,
 };
+use kitsune_db::entity::{accounts, posts};
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
@@ -21,8 +21,8 @@ pub struct PostResolver<FS, FPC, FUC, WC> {
 impl<FS, FPC, FUC, WC> PostResolver<FS, FPC, FUC, WC>
 where
     FS: SearchService,
-    FPC: Cache<str, post::Model>,
-    FUC: Cache<str, account::Model>,
+    FPC: Cache<str, posts::Model>,
+    FUC: Cache<str, accounts::Model>,
     WC: Cache<str, String>,
 {
     pub fn new(
@@ -41,7 +41,7 @@ where
         &self,
         username: &str,
         domain: Option<&str>,
-    ) -> Result<Option<account::Model>> {
+    ) -> Result<Option<accounts::Model>> {
         if let Some(domain) = domain {
             let Some(actor_url) = self.webfinger.fetch_actor_url(username, domain).await? else {
                 return Ok(None)
@@ -53,11 +53,11 @@ where
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            account::Entity::find()
+            accounts::Entity::find()
                 .filter(
-                    account::Column::Username
+                    accounts::Column::Username
                         .eq(username)
-                        .and(account::Column::Domain.is_null()),
+                        .and(accounts::Column::Domain.is_null()),
                 )
                 .one(&self.db_conn)
                 .await
@@ -127,27 +127,15 @@ where
 mod test {
     use super::PostResolver;
     use crate::{
-        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
-        webfinger::Webfinger,
+        activitypub::Fetcher, cache::NoopCache, search::NoopSearchService, webfinger::Webfinger,
     };
-    use migration::{Migrator, MigratorTrait};
+    use kitsune_db::entity::accounts;
     use pretty_assertions::assert_eq;
-    use sea_orm::{Database, DatabaseConnection, EntityTrait};
-
-    async fn db_conn() -> DatabaseConnection {
-        let db_conn = Database::connect("sqlite::memory:")
-            .await
-            .expect("Failed to connect to in-memory SQLite");
-        Migrator::up(&db_conn, None)
-            .await
-            .expect("Failed to migrate database");
-
-        db_conn
-    }
+    use sea_orm::EntityTrait;
 
     #[tokio::test]
     async fn parse_mentions() {
-        let db_conn = db_conn().await;
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
         let mention_resolver = PostResolver::new(
@@ -163,7 +151,7 @@ mod test {
         assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
-        let mentioned_account = account::Entity::find_by_id(mentioned_account_ids[0])
+        let mentioned_account = accounts::Entity::find_by_id(mentioned_account_ids[0])
             .one(&db_conn)
             .await
             .ok()

@@ -1,9 +1,5 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
-    db::model::{
-        oauth::{application, authorization_code},
-        user,
-    },
     error::{Error, Result},
     state::Zustand,
     util::generate_secret,
@@ -17,6 +13,7 @@ use axum::{
 };
 use chrono::Utc;
 use http::StatusCode;
+use kitsune_db::entity::{oauth2_applications, oauth2_authorization_codes, users};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
 use serde::Deserialize;
 use std::str::FromStr;
@@ -63,8 +60,8 @@ pub async fn get(
         return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
     }
 
-    let application = application::Entity::find_by_id(query.client_id)
-        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
+    let application = oauth2_applications::Entity::find_by_id(query.client_id)
+        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
         .one(&state.db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
@@ -84,14 +81,14 @@ pub async fn post(
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
-    let user = user::Entity::find()
-        .filter(user::Column::Username.eq(form.username))
+    let user = users::Entity::find()
+        .filter(users::Column::Username.eq(form.username))
         .one(&state.db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
 
-    let application = application::Entity::find_by_id(query.client_id)
-        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
+    let application = oauth2_applications::Entity::find_by_id(query.client_id)
+        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
         .one(&state.db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
@@ -112,12 +109,12 @@ pub async fn post(
         return Err(Error::PasswordMismatch);
     }
 
-    let authorization_code = authorization_code::Model {
+    let authorization_code = oauth2_authorization_codes::Model {
         code: generate_secret(),
         application_id: application.id,
         user_id: user.id,
-        created_at: Utc::now(),
-        expired_at: Utc::now() + *TOKEN_VALID_DURATION,
+        created_at: Utc::now().into(),
+        expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
     }
     .into_active_model()
     .insert(&state.db_conn)

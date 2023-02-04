@@ -9,7 +9,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-pub mod graphql;
+//pub mod graphql;
 
 mod extractor;
 mod handler;
@@ -51,7 +51,7 @@ pub async fn run(state: Zustand, port: u16) {
     }
 
     let router = router
-        .merge(graphql::routes(state.clone()))
+        //.merge(graphql::routes(state.clone()))
         .fallback_service(
             get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
                 .handle_error(handle_error),

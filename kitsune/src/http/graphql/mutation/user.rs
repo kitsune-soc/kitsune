@@ -16,10 +16,10 @@ impl UserMutation {
         avatar: Option<Upload>,
         header: Option<Upload>,
         locked: Option<bool>,
-    ) -> Result<account::Model> {
+    ) -> Result<accounts::Model> {
         let state = ctx.state();
         let user_data = ctx.user_data()?;
-        let mut active_user = account::ActiveModel {
+        let mut active_user = accounts::ActiveModel {
             id: ActiveValue::Set(user_data.account.id),
             ..Default::default()
         };

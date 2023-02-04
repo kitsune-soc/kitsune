@@ -43,9 +43,10 @@ futures-util = "0.3.26"
 headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.8"
-hyper = "0.14.23"
+hyper = "0.14.24"
 image = "0.24.5"
 itertools = "0.10.5"
+kitsune-db = { path = "../kitsune-db" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }

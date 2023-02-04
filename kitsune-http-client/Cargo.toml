@@ -7,7 +7,7 @@ edition = "2021"
 chrono = "0.4.23"
 derive_builder = "0.12.0"
 http-body = "0.4.5"
-hyper = { version = "0.14.23", features = [
+hyper = { version = "0.14.24", features = [
     "client",
     "http1",
     "http2",

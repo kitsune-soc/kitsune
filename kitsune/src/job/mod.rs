@@ -7,15 +7,16 @@ use self::{
 };
 use crate::{
     activitypub::Deliverer,
-    db::model::job,
     error::{Error, Result},
     state::Zustand,
 };
 use chrono::Utc;
+use kitsune_db::custom::JobState;
+use kitsune_db::entity::jobs;
 use once_cell::sync::Lazy;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DeriveActiveEnum, EntityTrait,
-    EnumIter, IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -36,21 +37,21 @@ pub enum Job {
     DeliverUnfavourite(UnfavouriteDeliveryContext),
 }
 
-async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
+async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<jobs::Model>> {
     let txn = db_conn.begin().await?;
 
-    let Some(job) = job::Entity::find()
+    let Some(job) = jobs::Entity::find()
         .filter(
-            job::Column::State.eq(JobState::Queued)
-                .or(job::Column::State.eq(JobState::Failed))
-                .and(job::Column::RunAt.lte(Utc::now()))
+            jobs::Column::State.eq(JobState::Queued)
+                .or(jobs::Column::State.eq(JobState::Failed))
+                .and(jobs::Column::RunAt.lte(Utc::now()))
                 // Re-execute job if it has been running for longer than an hour (probably the worker crashed or something)
                 .or(
-                    job::Column::State.eq(JobState::Running)
-                        .and(job::Column::UpdatedAt.lt(Utc::now() - chrono::Duration::hours(1))),
+                    jobs::Column::State.eq(JobState::Running)
+                        .and(jobs::Column::UpdatedAt.lt(Utc::now() - chrono::Duration::hours(1))),
                 ),
         )
-        .order_by_asc(job::Column::CreatedAt)
+        .order_by_asc(jobs::Column::CreatedAt)
         .lock_exclusive()
         .one(&txn)
         .await
@@ -61,7 +62,7 @@ async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
 
     let mut update_job = job.into_active_model();
     update_job.state = ActiveValue::Set(JobState::Running);
-    update_job.updated_at = ActiveValue::Set(Utc::now());
+    update_job.updated_at = ActiveValue::Set(Utc::now().into());
     let job = update_job.update(&txn).await?;
 
     txn.commit().await?;
@@ -127,15 +128,16 @@ pub async fn run(state: Zustand) {
 
                 update_model.state = ActiveValue::Set(JobState::Failed);
                 update_model.fail_count = ActiveValue::Set(db_job.fail_count + 1);
-                update_model.run_at =
-                    ActiveValue::Set(Utc::now() + (*LINEAR_BACKOFF_DURATION * db_job.fail_count));
-                update_model.updated_at = ActiveValue::Set(Utc::now());
+                update_model.run_at = ActiveValue::Set(
+                    (Utc::now() + (*LINEAR_BACKOFF_DURATION * db_job.fail_count)).into(),
+                );
+                update_model.updated_at = ActiveValue::Set(Utc::now().into());
             }
             _ => {
                 increment_counter!("succeeded_jobs");
 
                 update_model.state = ActiveValue::Set(JobState::Succeeded);
-                update_model.updated_at = ActiveValue::Set(Utc::now());
+                update_model.updated_at = ActiveValue::Set(Utc::now().into());
             }
         }
 

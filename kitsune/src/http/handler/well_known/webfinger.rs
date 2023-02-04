@@ -1,5 +1,4 @@
 use crate::{
-    db::model::account,
     error::Result,
     state::Zustand,
     webfinger::{Link, Resource},
@@ -10,6 +9,7 @@ use axum::{
     Json,
 };
 use http::StatusCode;
+use kitsune_db::entity::accounts;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
@@ -31,10 +31,10 @@ pub async fn get(
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let Some(account) = account::Entity::find()
+    let Some(account) = accounts::Entity::find()
         .filter(
-            account::Column::Username.eq(username)
-                .and(account::Column::Domain.is_null()),
+            accounts::Column::Username.eq(username)
+                .and(accounts::Column::Domain.is_null()),
         )
         .one(&state.db_conn)
         .await?

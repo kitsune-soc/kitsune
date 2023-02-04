@@ -70,8 +70,8 @@ struct App {
 }
 
 async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = user::Entity::find()
-        .filter(user::Column::Username.eq(username))
+    let Some(user) = users::Entity::find()
+        .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
     else {
@@ -93,8 +93,8 @@ async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Re
 }
 
 async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
-    let Some(user) = user::Entity::find()
-        .filter(user::Column::Username.eq(username))
+    let Some(user) = users::Entity::find()
+        .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
     else {
@@ -112,8 +112,8 @@ async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
 }
 
 async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = user::Entity::find()
-        .filter(user::Column::Username.eq(username))
+    let Some(user) = users::Entity::find()
+        .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
     else {

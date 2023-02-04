@@ -66,13 +66,13 @@ impl AuthMutation {
         #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
         #[graphql(validator(email))] email: String,
         #[graphql(secret, validator(custom = "PasswordValidator"))] password: String,
-    ) -> Result<user::Model> {
+    ) -> Result<users::Model> {
         let state = ctx.state();
 
         // These queries provide a better user experience than just a random 500 error
         // They are also fine from a performance standpoint since both, the username and the email field, are indexed
-        let is_username_taken = user::Entity::find()
-            .filter(user::Column::Username.eq(username.as_str()))
+        let is_username_taken = users::Entity::find()
+            .filter(users::Column::Username.eq(username.as_str()))
             .one(&state.db_conn)
             .await?
             .is_some();
@@ -80,8 +80,8 @@ impl AuthMutation {
             return Err(Error::new("Username already taken"));
         }
 
-        let is_email_used = user::Entity::find()
-            .filter(user::Column::Email.eq(email.as_str()))
+        let is_email_used = users::Entity::find()
+            .filter(users::Column::Email.eq(email.as_str()))
             .one(&state.db_conn)
             .await?
             .is_some();
@@ -114,7 +114,7 @@ impl AuthMutation {
             .db_conn
             .transaction(|tx| {
                 async move {
-                    let new_account = account::Model {
+                    let new_account = accounts::Model {
                         id: Uuid::now_v7(),
                         avatar_id: None,
                         header_id: None,
@@ -134,7 +134,7 @@ impl AuthMutation {
                     .insert(tx)
                     .await?;
 
-                    let new_user = user::Model {
+                    let new_user = users::Model {
                         id: Uuid::now_v7(),
                         account_id: new_account.id,
                         username,

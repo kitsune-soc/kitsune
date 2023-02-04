@@ -1,7 +1,7 @@
 use crate::{
     db::model::{
         job, mention,
-        post::{self, Visibility},
+        posts::{self, Visibility},
     },
     error::Error as ServerError,
     http::graphql::ContextExt,
@@ -33,7 +33,7 @@ impl PostMutation {
         content: String,
         is_sensitive: bool,
         visibility: Visibility,
-    ) -> Result<post::Model> {
+    ) -> Result<posts::Model> {
         let state = ctx.state();
         let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
@@ -62,7 +62,7 @@ impl PostMutation {
             .db_conn
             .transaction(move |tx| {
                 async move {
-                    let post = post::Model {
+                    let post = posts::Model {
                         id,
                         account_id,
                         in_reply_to_id: None,
@@ -121,8 +121,8 @@ impl PostMutation {
         let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
 
-        let post = post::Entity::find_by_id(id)
-            .filter(post::Column::AccountId.eq(user_data.account.id))
+        let post = posts::Entity::find_by_id(id)
+            .filter(posts::Column::AccountId.eq(user_data.account.id))
             .one(&state.db_conn)
             .await?
             .ok_or_else(|| Error::new("Post not found"))?;

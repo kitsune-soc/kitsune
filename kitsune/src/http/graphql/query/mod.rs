@@ -1,4 +1,4 @@
-use self::{post::PostQuery, user::UserQuery};
+use self::{posts::PostQuery, users::UserQuery};
 use async_graphql::MergedObject;
 
 mod post;

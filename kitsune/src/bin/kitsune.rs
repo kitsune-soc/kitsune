@@ -3,7 +3,7 @@
 
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
-    activitypub::Fetcher, config::Configuration, db, http, job, search::GrpcSearchService,
+    activitypub::Fetcher, config::Configuration, http, job, search::GrpcSearchService,
     state::Zustand, webfinger::Webfinger,
 };
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
@@ -62,7 +62,7 @@ async fn main() {
     let recorder = TracingContextLayer::all().layer(prometheus_recorder);
     metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
 
-    let conn = self::db::connect(&config.database_url)
+    let conn = kitsune_db::connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
 

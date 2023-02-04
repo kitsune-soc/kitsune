@@ -1,12 +1,8 @@
-use crate::{
-    activitypub::Deliverer,
-    db::{
-        model::{account, favourite, user},
-        InboxUrlQuery,
-    },
-    error::Result,
-    mapping::IntoActivity,
-    state::Zustand,
+use crate::{activitypub::Deliverer, error::Result, mapping::IntoActivity, state::Zustand};
+use kitsune_db::{
+    column::InboxUrlQuery,
+    entity::{accounts, favourites, users},
+    link::FavouritedPostAuthor,
 };
 use sea_orm::{prelude::*, QuerySelect};
 use serde::{Deserialize, Serialize};
@@ -22,7 +18,7 @@ pub async fn run(
     deliverer: &Deliverer,
     ctx: FavouriteDeliveryContext,
 ) -> Result<()> {
-    let Some(favourite) = favourite::Entity::find_by_id(ctx.favourite_id)
+    let Some(favourite) = favourites::Entity::find_by_id(ctx.favourite_id)
         .one(&state.db_conn)
         .await?
     else {
@@ -30,8 +26,8 @@ pub async fn run(
     };
 
     let Some((account, Some(user))) = favourite
-        .find_related(account::Entity)
-        .find_also_related(user::Entity)
+        .find_related(accounts::Entity)
+        .find_also_related(users::Entity)
         .one(&state.db_conn)
         .await?
     else {
@@ -39,9 +35,9 @@ pub async fn run(
     };
 
     let inbox_url = favourite
-        .find_linked(favourite::FavouritedPostAuthor)
+        .find_linked(FavouritedPostAuthor)
         .select_only()
-        .column(account::Column::InboxUrl)
+        .column(accounts::Column::InboxUrl)
         .into_values::<String, InboxUrlQuery>()
         .one(&state.db_conn)
         .await?

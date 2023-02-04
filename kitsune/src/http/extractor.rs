@@ -1,8 +1,4 @@
-use crate::{
-    db::model::{account, oauth::access_token, user},
-    error::Error,
-    state::Zustand,
-};
+use crate::{error::Error, state::Zustand};
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -13,6 +9,7 @@ use axum::{
 use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
 use http::{request::Parts, StatusCode};
+use kitsune_db::entity::{accounts, oauth2_access_tokens, users};
 use kitsune_http_signatures::{
     ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
     HttpVerifier,
@@ -31,8 +28,8 @@ pub type MastodonAuthExtractor = AuthExtractor<false>;
 
 #[derive(Clone)]
 pub struct UserData {
-    pub account: account::Model,
-    pub user: user::Model,
+    pub account: accounts::Model,
+    pub user: users::Model,
 }
 
 /// Extract the account and user from the request
@@ -57,13 +54,13 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
             .map_err(IntoResponse::into_response)?;
 
         let mut user_account_query =
-            <access_token::Entity as Related<user::Entity>>::find_related()
-                .find_also_related(account::Entity)
-                .filter(access_token::Column::Token.eq(bearer_token.token()));
+            <oauth2_access_tokens::Entity as Related<users::Entity>>::find_related()
+                .find_also_related(accounts::Entity)
+                .filter(oauth2_access_tokens::Column::Token.eq(bearer_token.token()));
 
         if ENFORCE_EXPIRATION {
             user_account_query =
-                user_account_query.filter(access_token::Column::ExpiredAt.gt(Utc::now()));
+                user_account_query.filter(oauth2_access_tokens::Column::ExpiredAt.gt(Utc::now()));
         }
 
         let Some((user, Some(account))) = user_account_query
