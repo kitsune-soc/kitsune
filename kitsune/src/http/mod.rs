@@ -9,9 +9,8 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-//pub mod graphql;
-
 mod extractor;
+mod graphql;
 mod handler;
 
 #[allow(clippy::unused_async)]

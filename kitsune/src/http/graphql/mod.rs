@@ -16,6 +16,7 @@ type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 
 mod mutation;
 mod query;
+mod types;
 
 pub trait ContextExt {
     fn state(&self) -> &Zustand;

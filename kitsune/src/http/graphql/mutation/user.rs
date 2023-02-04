@@ -1,6 +1,10 @@
 use super::handle_upload;
-use crate::{db::model::account, http::graphql::ContextExt, sanitize::CleanHtmlExt};
+use crate::{
+    http::graphql::{types::Account, ContextExt},
+    sanitize::CleanHtmlExt,
+};
 use async_graphql::{Context, Error, Object, Result, Upload};
+use kitsune_db::entity::accounts;
 use sea_orm::{ActiveModelTrait, ActiveValue};
 
 #[derive(Default)]
@@ -16,7 +20,7 @@ impl UserMutation {
         avatar: Option<Upload>,
         header: Option<Upload>,
         locked: Option<bool>,
-    ) -> Result<accounts::Model> {
+    ) -> Result<Account> {
         let state = ctx.state();
         let user_data = ctx.user_data()?;
         let mut active_user = accounts::ActiveModel {
@@ -59,6 +63,7 @@ impl UserMutation {
         active_user
             .update(&state.db_conn)
             .await
+            .map(Into::into)
             .map_err(Error::from)
     }
 }

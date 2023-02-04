@@ -1,13 +1,16 @@
 use crate::{
-    db::model::{account, oauth::application, user},
     error::Error as ServerError,
-    http::graphql::ContextExt,
+    http::graphql::{
+        types::{Oauth2Application, User},
+        ContextExt,
+    },
     util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use async_graphql::{Context, CustomValidator, Error, InputValueError, Object, Result};
 use chrono::Utc;
 use futures_util::FutureExt;
+use kitsune_db::entity::{accounts, oauth2_applications, users};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
@@ -46,18 +49,19 @@ impl AuthMutation {
         ctx: &Context<'_>,
         name: String,
         redirect_uri: String,
-    ) -> Result<application::Model> {
-        Ok(application::Model {
+    ) -> Result<Oauth2Application> {
+        Ok(oauth2_applications::Model {
             id: Uuid::now_v7(),
             secret: generate_secret(),
             name,
             redirect_uri,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
         }
         .into_active_model()
         .insert(&ctx.state().db_conn)
-        .await?)
+        .await
+        .map(Into::into)?)
     }
 
     pub async fn register_user(
@@ -66,7 +70,7 @@ impl AuthMutation {
         #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
         #[graphql(validator(email))] email: String,
         #[graphql(secret, validator(custom = "PasswordValidator"))] password: String,
-    ) -> Result<users::Model> {
+    ) -> Result<User> {
         let state = ctx.state();
 
         // These queries provide a better user experience than just a random 500 error
@@ -127,8 +131,8 @@ impl AuthMutation {
                         followers_url,
                         inbox_url,
                         public_key: public_key_str,
-                        created_at: Utc::now(),
-                        updated_at: Utc::now(),
+                        created_at: Utc::now().into(),
+                        updated_at: Utc::now().into(),
                     }
                     .into_active_model()
                     .insert(tx)
@@ -141,8 +145,8 @@ impl AuthMutation {
                         email,
                         password: hashed_password?,
                         private_key: private_key_str.to_string(),
-                        created_at: Utc::now(),
-                        updated_at: Utc::now(),
+                        created_at: Utc::now().into(),
+                        updated_at: Utc::now().into(),
                     }
                     .into_active_model()
                     .insert(tx)
@@ -154,6 +158,6 @@ impl AuthMutation {
             })
             .await?;
 
-        Ok(new_user)
+        Ok(new_user.into())
     }
 }
