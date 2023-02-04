@@ -1,7 +1,10 @@
 use crate::{activitypub::Deliverer, error::Result, mapping::IntoActivity, state::Zustand};
 use kitsune_db::{
     column::InboxUrlQuery,
-    entity::{accounts, favourites, users},
+    entity::{
+        accounts,
+        prelude::{Accounts, Favourites, Users},
+    },
     link::FavouritedPostAuthor,
 };
 use sea_orm::{prelude::*, QuerySelect};
@@ -18,7 +21,7 @@ pub async fn run(
     deliverer: &Deliverer,
     ctx: UnfavouriteDeliveryContext,
 ) -> Result<()> {
-    let Some(favourite) = favourites::Entity::find_by_id(ctx.favourite_id)
+    let Some(favourite) = Favourites::find_by_id(ctx.favourite_id)
         .one(&state.db_conn)
         .await?
     else {
@@ -26,15 +29,15 @@ pub async fn run(
     };
 
     let Some((account, Some(user))) = favourite
-        .find_related(accounts::Entity)
-        .find_also_related(users::Entity)
+        .find_related(Accounts)
+        .find_also_related(Users)
         .one(&state.db_conn)
         .await?
     else {
         return Ok(());
     };
 
-    favourites::Entity::delete_by_id(favourite.id)
+    Favourites::delete_by_id(favourite.id)
         .exec(&state.db_conn)
         .await?;
 

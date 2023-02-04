@@ -11,8 +11,8 @@ use crate::{
     state::Zustand,
 };
 use chrono::Utc;
-use kitsune_db::custom::JobState;
 use kitsune_db::entity::jobs;
+use kitsune_db::{custom::JobState, entity::prelude::Jobs};
 use once_cell::sync::Lazy;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
@@ -40,7 +40,7 @@ pub enum Job {
 async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<jobs::Model>> {
     let txn = db_conn.begin().await?;
 
-    let Some(job) = jobs::Entity::find()
+    let Some(job) = Jobs::find()
         .filter(
             jobs::Column::State.eq(JobState::Queued)
                 .or(jobs::Column::State.eq(JobState::Failed))

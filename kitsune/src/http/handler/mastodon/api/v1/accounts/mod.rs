@@ -5,14 +5,14 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_db::entity::accounts;
+use kitsune_db::entity::prelude::Accounts;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 
 mod verify_credentials;
 
 async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(account) = accounts::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(account) = Accounts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 

@@ -22,7 +22,11 @@ use futures_util::FutureExt;
 use http::StatusCode;
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
-    entity::{jobs, posts, posts_mentions, users_roles},
+    entity::{
+        jobs, posts, posts_mentions,
+        prelude::{Posts, UsersRoles},
+        users_roles,
+    },
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
@@ -53,14 +57,14 @@ async fn delete(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = posts::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(post) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
     if post.account_id != user_data.account.id {
         let admin_role_count = user_data
             .user
-            .find_related(users_roles::Entity)
+            .find_related(UsersRoles)
             .filter(users_roles::Column::Role.eq(Role::Administrator))
             .count(&state.db_conn)
             .await?;
@@ -95,7 +99,7 @@ async fn get(
     _user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = posts::Entity::find()
+    let Some(post) = Posts::find()
         .filter(posts::Column::Id.eq(id))
         .filter(
             posts::Column::Visibility
@@ -143,7 +147,7 @@ async fn post(
         .transaction(move |tx| {
             async move {
                 let in_reply_to_id = if let Some(in_reply_to_id) = form.in_reply_to_id {
-                    (posts::Entity::find_by_id(in_reply_to_id).count(tx).await? != 0)
+                    (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
                         .then_some(in_reply_to_id)
                 } else {
                     None

@@ -10,7 +10,7 @@ use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use async_graphql::{Context, CustomValidator, Error, InputValueError, Object, Result};
 use chrono::Utc;
 use futures_util::FutureExt;
-use kitsune_db::entity::{accounts, oauth2_applications, users};
+use kitsune_db::entity::{accounts, oauth2_applications, prelude::Users, users};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
@@ -75,7 +75,7 @@ impl AuthMutation {
 
         // These queries provide a better user experience than just a random 500 error
         // They are also fine from a performance standpoint since both, the username and the email field, are indexed
-        let is_username_taken = users::Entity::find()
+        let is_username_taken = Users::find()
             .filter(users::Column::Username.eq(username.as_str()))
             .one(&state.db_conn)
             .await?
@@ -84,7 +84,7 @@ impl AuthMutation {
             return Err(Error::new("Username already taken"));
         }
 
-        let is_email_used = users::Entity::find()
+        let is_email_used = Users::find()
             .filter(users::Column::Email.eq(email.as_str()))
             .one(&state.db_conn)
             .await?

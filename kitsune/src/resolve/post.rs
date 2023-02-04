@@ -5,7 +5,7 @@ use crate::{
     search::SearchService,
     webfinger::Webfinger,
 };
-use kitsune_db::entity::{accounts, posts};
+use kitsune_db::entity::{accounts, posts, prelude::Accounts};
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
@@ -53,7 +53,7 @@ where
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            accounts::Entity::find()
+            Accounts::find()
                 .filter(
                     accounts::Column::Username
                         .eq(username)
@@ -129,7 +129,7 @@ mod test {
     use crate::{
         activitypub::Fetcher, cache::NoopCache, search::NoopSearchService, webfinger::Webfinger,
     };
-    use kitsune_db::entity::accounts;
+    use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;
 
@@ -151,7 +151,7 @@ mod test {
         assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
-        let mentioned_account = accounts::Entity::find_by_id(mentioned_account_ids[0])
+        let mentioned_account = Accounts::find_by_id(mentioned_account_ids[0])
             .one(&db_conn)
             .await
             .ok()

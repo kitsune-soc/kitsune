@@ -1,6 +1,9 @@
 use crate::{error::Result, state::Zustand};
 use axum::{extract::State, routing, Json, Router};
-use kitsune_db::entity::{accounts, users};
+use kitsune_db::entity::{
+    accounts,
+    prelude::{Accounts, Users},
+};
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
@@ -8,9 +11,9 @@ use kitsune_type::mastodon::{
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect};
 
 async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
-    let user_count = users::Entity::find().count(&state.db_conn).await?;
+    let user_count = Users::find().count(&state.db_conn).await?;
 
-    let domain_count = accounts::Entity::find()
+    let domain_count = Accounts::find()
         .filter(accounts::Column::Domain.is_not_null())
         .select_only()
         .column(accounts::Column::Domain)

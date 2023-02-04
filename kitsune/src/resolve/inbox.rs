@@ -3,10 +3,10 @@ use futures_util::{future::Either, Stream, StreamExt};
 use kitsune_db::{
     column::InboxUrlQuery,
     custom::Visibility,
-    entity::{accounts, posts},
+    entity::{accounts, posts, prelude::Accounts},
     link::{Followers, MentionedAccounts},
 };
-use sea_orm::{DatabaseConnection, DbErr, ModelTrait, QuerySelect};
+use sea_orm::{DatabaseConnection, DbErr, EntityTrait, ModelTrait, QuerySelect};
 
 pub struct InboxResolver {
     db_conn: DatabaseConnection,
@@ -23,8 +23,7 @@ impl InboxResolver {
         &self,
         post: &posts::Model,
     ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
-        let account = post
-            .find_related(accounts::Entity)
+        let account = Accounts::find_by_id(post.account_id)
             .one(&self.db_conn)
             .await?
             .expect("[Bug] Post without associated account");

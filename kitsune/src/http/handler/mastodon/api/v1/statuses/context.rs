@@ -7,7 +7,11 @@ use axum::{
     Json,
 };
 use http::StatusCode;
-use kitsune_db::{custom::Visibility, entity::posts, link::InReplyTo};
+use kitsune_db::{
+    custom::Visibility,
+    entity::{posts, prelude::Posts},
+    link::InReplyTo,
+};
 use kitsune_type::mastodon::{status::Context, Status};
 use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use std::collections::VecDeque;
@@ -38,7 +42,7 @@ async fn get_descendants(
     post: &posts::Model,
     descendants: &mut Vec<Status>,
 ) -> Result<()> {
-    let subdescendants = posts::Entity::find()
+    let subdescendants = Posts::find()
         .filter(posts::Column::InReplyToId.eq(post.id))
         .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .all(&state.db_conn)
@@ -54,7 +58,7 @@ async fn get_descendants(
 
 #[debug_handler]
 pub async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(genesis) = posts::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(genesis) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 

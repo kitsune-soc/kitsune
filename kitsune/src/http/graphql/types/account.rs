@@ -3,8 +3,8 @@ use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use kitsune_db::entity::{
-    accounts, media_attachments,
-    prelude::{Accounts, Posts},
+    accounts,
+    prelude::{Accounts, MediaAttachments, Posts},
 };
 use sea_orm::{EntityTrait, QueryFilter};
 use uuid::Uuid;
@@ -29,7 +29,7 @@ pub struct Account {
 impl Account {
     pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
         if let Some(avatar_id) = self.avatar_id {
-            media_attachments::Entity::find_by_id(avatar_id)
+            MediaAttachments::find_by_id(avatar_id)
                 .one(&ctx.state().db_conn)
                 .await
                 .map(|attachment| attachment.map(Into::into))
@@ -41,7 +41,7 @@ impl Account {
 
     pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
         if let Some(header_id) = self.header_id {
-            media_attachments::Entity::find_by_id(header_id)
+            MediaAttachments::find_by_id(header_id)
                 .one(&ctx.state().db_conn)
                 .await
                 .map(|attachment| attachment.map(Into::into))

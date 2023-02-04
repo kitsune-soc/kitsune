@@ -12,7 +12,10 @@ use futures_util::FutureExt;
 use http::HeaderValue;
 use kitsune_db::{
     custom::Visibility,
-    entity::{accounts, media_attachments, posts},
+    entity::{
+        accounts, media_attachments, posts,
+        prelude::{Accounts, Posts},
+    },
 };
 use kitsune_http_client::Client;
 use kitsune_type::ap::object::{Actor, Note};
@@ -101,7 +104,7 @@ where
             return Ok(user);
         }
 
-        if let Some(user) = accounts::Entity::find()
+        if let Some(user) = Accounts::find()
             .filter(accounts::Column::Url.eq(url))
             .one(&self.db_conn)
             .await?
@@ -210,7 +213,7 @@ where
             return Ok(Some(post));
         }
 
-        if let Some(post) = posts::Entity::find()
+        if let Some(post) = Posts::find()
             .filter(posts::Column::Url.eq(url))
             .one(&self.db_conn)
             .await?
@@ -281,9 +284,9 @@ where
 #[cfg(test)]
 mod test {
     use crate::{activitypub::Fetcher, cache::NoopCache, search::NoopSearchService};
-    use kitsune_db::entity::accounts;
+    use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
-    use sea_orm::ModelTrait;
+    use sea_orm::EntityTrait;
 
     #[tokio::test]
     async fn fetch_actor() {
@@ -315,8 +318,7 @@ mod test {
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"
         );
 
-        let author = note
-            .find_related(accounts::Entity)
+        let author = Accounts::find_by_id(note.account_id)
             .one(&db_conn)
             .await
             .ok()

@@ -17,7 +17,7 @@ use chrono::Utc;
 use futures_util::FutureExt;
 use kitsune_db::{
     custom::JobState,
-    entity::{jobs, posts, posts_mentions},
+    entity::{jobs, posts, posts_mentions, prelude::Posts},
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
@@ -125,7 +125,7 @@ impl PostMutation {
         let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
 
-        let post = posts::Entity::find_by_id(id)
+        let post = Posts::find_by_id(id)
             .filter(posts::Column::AccountId.eq(user_data.account.id))
             .one(&state.db_conn)
             .await?

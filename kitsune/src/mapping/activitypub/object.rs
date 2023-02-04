@@ -6,7 +6,10 @@ use async_trait::async_trait;
 use kitsune_db::{
     column::UrlQuery,
     custom::Visibility,
-    entity::{accounts, media_attachments, posts},
+    entity::{
+        accounts, media_attachments, posts,
+        prelude::{Accounts, MediaAttachments},
+    },
     link::{InReplyTo, MentionedAccounts},
 };
 use kitsune_type::ap::{
@@ -54,7 +57,7 @@ impl IntoObject for posts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let account = accounts::Entity::find_by_id(self.account_id)
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] No user associated with post");
@@ -113,7 +116,7 @@ impl IntoObject for accounts::Model {
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = media_attachments::Entity::find_by_id(avatar_id)
+            let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");
@@ -122,7 +125,7 @@ impl IntoObject for accounts::Model {
             None
         };
         let image = if let Some(header_id) = self.header_id {
-            let media_attachment = media_attachments::Entity::find_by_id(header_id)
+            let media_attachment = MediaAttachments::find_by_id(header_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");

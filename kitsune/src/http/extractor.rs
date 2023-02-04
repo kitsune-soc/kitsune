@@ -9,7 +9,11 @@ use axum::{
 use chrono::Utc;
 use headers::{authorization::Bearer, Authorization, ContentType};
 use http::{request::Parts, StatusCode};
-use kitsune_db::entity::{accounts, oauth2_access_tokens, users};
+use kitsune_db::entity::{
+    accounts, oauth2_access_tokens,
+    prelude::{Accounts, Oauth2AccessTokens, Users},
+    users,
+};
 use kitsune_http_signatures::{
     ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
     HttpVerifier,
@@ -53,10 +57,9 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let mut user_account_query =
-            <oauth2_access_tokens::Entity as Related<users::Entity>>::find_related()
-                .find_also_related(accounts::Entity)
-                .filter(oauth2_access_tokens::Column::Token.eq(bearer_token.token()));
+        let mut user_account_query = <Oauth2AccessTokens as Related<Users>>::find_related()
+            .find_also_related(Accounts)
+            .filter(oauth2_access_tokens::Column::Token.eq(bearer_token.token()));
 
         if ENFORCE_EXPIRATION {
             user_account_query =

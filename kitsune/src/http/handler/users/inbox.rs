@@ -3,7 +3,10 @@ use axum::{debug_handler, extract::State};
 use chrono::Utc;
 use kitsune_db::{
     custom::Visibility,
-    entity::{accounts, accounts_followers, posts},
+    entity::{
+        accounts, accounts_followers, posts,
+        prelude::{Accounts, Posts},
+    },
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
 use sea_orm::{
@@ -12,7 +15,7 @@ use sea_orm::{
 use uuid::Uuid;
 
 async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = accounts::Entity::find()
+    let account = Accounts::find()
         .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?
@@ -46,14 +49,14 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
 }
 
 async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = accounts::Entity::find()
+    let account = Accounts::find()
         .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?
         .unwrap();
 
     if let Some(url) = activity.object.into_string() {
-        posts::Entity::delete(posts::ActiveModel {
+        Posts::delete(posts::ActiveModel {
             account_id: ActiveValue::Set(account.id),
             url: ActiveValue::Set(url),
             ..Default::default()
@@ -66,7 +69,7 @@ async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
 }
 
 async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = accounts::Entity::find()
+    let account = Accounts::find()
         .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
         .one(&state.db_conn)
         .await?

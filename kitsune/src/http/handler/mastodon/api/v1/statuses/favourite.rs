@@ -15,7 +15,7 @@ use chrono::Utc;
 use http::StatusCode;
 use kitsune_db::{
     custom::JobState,
-    entity::{favourites, jobs, posts},
+    entity::{favourites, jobs, prelude::Posts},
 };
 use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel};
 use uuid::Uuid;
@@ -26,7 +26,7 @@ pub async fn post(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = posts::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(post) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 

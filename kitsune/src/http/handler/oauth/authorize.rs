@@ -13,7 +13,11 @@ use axum::{
 };
 use chrono::Utc;
 use http::StatusCode;
-use kitsune_db::entity::{oauth2_applications, oauth2_authorization_codes, users};
+use kitsune_db::entity::{
+    oauth2_applications, oauth2_authorization_codes,
+    prelude::{Oauth2Applications, Users},
+    users,
+};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
 use serde::Deserialize;
 use std::str::FromStr;
@@ -60,7 +64,7 @@ pub async fn get(
         return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
     }
 
-    let application = oauth2_applications::Entity::find_by_id(query.client_id)
+    let application = Oauth2Applications::find_by_id(query.client_id)
         .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
         .one(&state.db_conn)
         .await?
@@ -81,13 +85,13 @@ pub async fn post(
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
-    let user = users::Entity::find()
+    let user = Users::find()
         .filter(users::Column::Username.eq(form.username))
         .one(&state.db_conn)
         .await?
         .ok_or(Error::UserNotFound)?;
 
-    let application = oauth2_applications::Entity::find_by_id(query.client_id)
+    let application = Oauth2Applications::find_by_id(query.client_id)
         .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
         .one(&state.db_conn)
         .await?

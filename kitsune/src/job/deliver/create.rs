@@ -4,7 +4,7 @@ use crate::{
     state::Zustand,
 };
 use futures_util::TryStreamExt;
-use kitsune_db::entity::{accounts, posts, users};
+use kitsune_db::entity::prelude::{Accounts, Posts, Users};
 use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -16,8 +16,8 @@ pub struct CreateDeliveryContext {
 
 #[instrument(skip_all, fields(post_id = %ctx.post_id))]
 pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: CreateDeliveryContext) -> Result<()> {
-    let Some((post, Some(account))) = posts::Entity::find_by_id(ctx.post_id)
-        .find_also_related(accounts::Entity)
+    let Some((post, Some(account))) = Posts::find_by_id(ctx.post_id)
+        .find_also_related(Accounts)
         .one(&state.db_conn)
         .await?
     else {
@@ -25,7 +25,7 @@ pub async fn run(state: &Zustand, deliverer: &Deliverer, ctx: CreateDeliveryCont
     };
 
     let user = account
-        .find_related(users::Entity)
+        .find_related(Users)
         .one(&state.db_conn)
         .await?
         .expect("[Bug] Trying to deliver activity for account with no associated user");

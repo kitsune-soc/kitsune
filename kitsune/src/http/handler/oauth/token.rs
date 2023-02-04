@@ -15,6 +15,10 @@ use futures_util::FutureExt;
 use http::StatusCode;
 use kitsune_db::entity::{
     oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes, oauth2_refresh_tokens,
+    prelude::{
+        Oauth2AccessTokens, Oauth2Applications, Oauth2AuthorizationCodes, Oauth2RefreshTokens,
+        Users,
+    },
     users,
 };
 use sea_orm::{
@@ -78,8 +82,8 @@ async fn get_application<C>(
 where
     C: ConnectionTrait,
 {
-    let mut query = oauth2_applications::Entity::find_by_id(id)
-        .filter(oauth2_applications::Column::Secret.eq(secret));
+    let mut query =
+        Oauth2Applications::find_by_id(id).filter(oauth2_applications::Column::Secret.eq(secret));
     if let Some(redirect_uri) = redirect_uri {
         query = query.filter(oauth2_applications::Column::RedirectUri.eq(redirect_uri));
     }
@@ -95,9 +99,9 @@ async fn authorization_code(
     data: AuthorizationCodeData,
 ) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
-        oauth2_authorization_codes::Entity::find_by_id(data.code)
+        Oauth2AuthorizationCodes::find_by_id(data.code)
             .filter(oauth2_authorization_codes::Column::ExpiredAt.gt(Utc::now()))
-            .find_also_related(users::Entity)
+            .find_also_related(Users)
             .one(&db_conn)
             .await?
     else {
@@ -204,7 +208,7 @@ async fn client_credentials(
 }
 
 async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Result<Response> {
-    let user = users::Entity::find()
+    let user = Users::find()
         .filter(users::Column::Username.eq(data.username))
         .one(&db_conn)
         .await?
@@ -248,9 +252,9 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
 
 async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> Result<Response> {
     let Some((refresh_token, Some(access_token))) =
-        oauth2_refresh_tokens::Entity::find_by_id(data.refresh_token)
+        Oauth2RefreshTokens::find_by_id(data.refresh_token)
             .filter(oauth2_access_tokens::Column::ApplicationId.is_not_null())
-            .find_also_related(oauth2_access_tokens::Entity)
+            .find_also_related(Oauth2AccessTokens)
             .one(&db_conn)
             .await?
     else {
@@ -283,7 +287,7 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
                 .update(tx)
                 .await?;
 
-                oauth2_access_tokens::Entity::delete_by_id(access_token.token)
+                Oauth2AccessTokens::delete_by_id(access_token.token)
                     .exec(tx)
                     .await?;
 

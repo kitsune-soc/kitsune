@@ -7,7 +7,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use http::StatusCode;
-use kitsune_db::entity::{accounts, posts};
+use kitsune_db::entity::prelude::{Accounts, Posts};
 use kitsune_search_proto::common::SearchIndex;
 use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
@@ -82,7 +82,7 @@ async fn get(
 
             match index {
                 SearchIndex::Account => {
-                    let account = accounts::Entity::find_by_id(id)
+                    let account = Accounts::find_by_id(id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Account indexed in search not in database");
@@ -92,7 +92,7 @@ async fn get(
                         .push(account.into_mastodon(&state).await?);
                 }
                 SearchIndex::Post => {
-                    let post = posts::Entity::find_by_id(id)
+                    let post = Posts::find_by_id(id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Post indexed in search not in database");

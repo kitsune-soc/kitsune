@@ -15,7 +15,10 @@ use chrono::Utc;
 use http::StatusCode;
 use kitsune_db::{
     custom::JobState,
-    entity::{favourites, jobs, posts},
+    entity::{
+        favourites, jobs,
+        prelude::{Favourites, Posts},
+    },
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
@@ -28,12 +31,12 @@ pub async fn post(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = posts::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(post) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
     if let Some(favourite) = post
-        .find_related(favourites::Entity)
+        .find_related(Favourites)
         .filter(favourites::Column::AccountId.eq(user_data.account.id))
         .one(&state.db_conn)
         .await?

@@ -4,13 +4,17 @@ use async_trait::async_trait;
 use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
-    entity::{accounts, favourites, posts, reposts},
+    entity::{
+        accounts, favourites, posts,
+        prelude::{Accounts, Posts},
+        reposts,
+    },
     link::{FavouritedPostAuthor, RepostedPostAuthor},
 };
 use kitsune_type::ap::{
     ap_context, helper::StringOrObject, Activity, ActivityType, BaseObject, PUBLIC_IDENTIFIER,
 };
-use sea_orm::{ModelTrait, QuerySelect};
+use sea_orm::{EntityTrait, ModelTrait, QuerySelect};
 
 #[async_trait]
 pub trait IntoActivity {
@@ -28,7 +32,7 @@ impl IntoActivity for favourites::Model {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let account_url = self
-            .find_related(accounts::Entity)
+            .find_related(Accounts)
             .select_only()
             .column(accounts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -46,7 +50,7 @@ impl IntoActivity for favourites::Model {
             .expect("[Bug] Post without related account");
 
         let post_url = self
-            .find_related(posts::Entity)
+            .find_related(Posts)
             .select_only()
             .column(posts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -72,7 +76,7 @@ impl IntoActivity for favourites::Model {
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let account_url = self
-            .find_related(accounts::Entity)
+            .find_related(Accounts)
             .select_only()
             .column(accounts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -112,8 +116,7 @@ impl IntoActivity for posts::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let account_url = self
-            .find_related(accounts::Entity)
+        let account_url = Accounts::find_by_id(self.account_id)
             .select_only()
             .column(accounts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -167,7 +170,7 @@ impl IntoActivity for reposts::Model {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let account_url = self
-            .find_related(accounts::Entity)
+            .find_related(Accounts)
             .select_only()
             .column(accounts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -176,7 +179,7 @@ impl IntoActivity for reposts::Model {
             .expect("[Bug] Repost without associated account");
 
         let post_url = self
-            .find_related(posts::Entity)
+            .find_related(Posts)
             .select_only()
             .column(posts::Column::Url)
             .into_values::<String, UrlQuery>()
@@ -211,7 +214,7 @@ impl IntoActivity for reposts::Model {
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let account_url = self
-            .find_related(accounts::Entity)
+            .find_related(Accounts)
             .select_only()
             .column(accounts::Column::Url)
             .into_values::<String, UrlQuery>()

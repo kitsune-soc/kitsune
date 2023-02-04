@@ -11,14 +11,18 @@ use axum::{
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
     custom::Visibility,
-    entity::{accounts, posts, users},
+    entity::{
+        posts,
+        prelude::{Accounts, Posts, Users},
+        users,
+    },
 };
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
 use sea_orm::{
-    ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
+    ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -39,7 +43,7 @@ pub async fn get(
     Path(username): Path<String>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = <users::Entity as Related<accounts::Entity>>::find_related()
+    let Some(account) = <Users as Related<Accounts>>::find_related()
         .filter(users::Column::Username.eq(username.as_str()))
         .one(&state.db_conn)
         .await?
@@ -48,8 +52,8 @@ pub async fn get(
     };
 
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
-    let base_query = account
-        .find_related(posts::Entity)
+    let base_query = Posts::find()
+        .belongs_to(&account)
         .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
 
     if query.page {

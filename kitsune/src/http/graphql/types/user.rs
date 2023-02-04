@@ -2,7 +2,10 @@ use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
 use chrono::{DateTime, Utc};
-use kitsune_db::entity::{accounts, users};
+use kitsune_db::entity::{
+    prelude::{Accounts, Users},
+    users,
+};
 use sea_orm::{EntityTrait, ModelTrait};
 use uuid::Uuid;
 
@@ -21,12 +24,12 @@ pub struct User {
 #[ComplexObject]
 impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Option<Account>> {
-        let user = users::Entity::find_by_id(self.id)
+        let user = Users::find_by_id(self.id)
             .one(&ctx.state().db_conn)
             .await?
             .expect("[Bug] User without associated account");
 
-        user.find_related(accounts::Entity)
+        user.find_related(Accounts)
             .one(&ctx.state().db_conn)
             .await
             .map(|account| account.map(Into::into))

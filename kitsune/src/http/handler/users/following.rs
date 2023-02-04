@@ -7,7 +7,10 @@ use axum::{
     Json,
 };
 use kitsune_db::{
-    entity::{accounts, users},
+    entity::{
+        prelude::{Accounts, Users},
+        users,
+    },
     link::Following,
 };
 use kitsune_type::ap::{
@@ -21,7 +24,7 @@ pub async fn get(
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
 ) -> Result<Json<Collection>> {
-    let Some(account) = <users::Entity as Related<accounts::Entity>>::find_related()
+    let Some(account) = <Users as Related<Accounts>>::find_related()
         .filter(users::Column::Username.eq(username))
         .one(&state.db_conn)
         .await?

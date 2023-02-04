@@ -2,7 +2,7 @@ use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
-use kitsune_db::entity::{accounts, media_attachments};
+use kitsune_db::entity::{media_attachments, prelude::Accounts};
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 
@@ -22,7 +22,7 @@ pub struct MediaAttachment {
 #[ComplexObject]
 impl MediaAttachment {
     pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Option<Account>> {
-        accounts::Entity::find_by_id(self.account_id)
+        Accounts::find_by_id(self.account_id)
             .one(&ctx.state().db_conn)
             .await
             .map(|account| account.map(Into::into))
