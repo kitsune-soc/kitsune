@@ -9,8 +9,10 @@
 //! Also, please generate the entities from a Postgres database. Postgres will generate the most accurate entities.
 //!
 
+#![forbid(rust_2018_idioms)]
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]
+#![allow(forbidden_lint_groups)]
 
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection, DbErr};
