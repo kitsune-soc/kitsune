@@ -1,12 +1,12 @@
 use crate::{
     consts::USER_AGENT,
-    db::model::{account, user},
     error::{Error, Result},
 };
 use autometrics::autometrics;
 use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
+use kitsune_db::entity::{accounts, users};
 use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
@@ -31,8 +31,8 @@ impl Deliverer {
     pub async fn deliver(
         &self,
         inbox_url: &str,
-        account: &account::Model,
-        user: &user::Model,
+        account: &accounts::Model,
+        user: &users::Model,
         activity: &Activity,
     ) -> Result<()> {
         let body = serde_json::to_string(&activity)?;
@@ -67,8 +67,8 @@ impl Deliverer {
 
     pub async fn deliver_many<S, E>(
         &self,
-        account: &account::Model,
-        user: &user::Model,
+        account: &accounts::Model,
+        user: &users::Model,
         activity: &Activity,
         inbox_stream: S,
     ) -> Result<()>

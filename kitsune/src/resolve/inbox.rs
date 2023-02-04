@@ -1,16 +1,12 @@
-use crate::{
-    db::{
-        model::{
-            account, follow, mention,
-            post::{self, Visibility},
-        },
-        InboxUrlQuery,
-    },
-    error::Result,
-};
+use crate::error::Result;
 use futures_util::{future::Either, Stream, StreamExt};
-use migration::DbErr;
-use sea_orm::{DatabaseConnection, ModelTrait, QuerySelect};
+use kitsune_db::{
+    column::InboxUrlQuery,
+    custom::Visibility,
+    entity::{accounts, posts, prelude::Accounts},
+    link::{Followers, MentionedAccounts},
+};
+use sea_orm::{DatabaseConnection, DbErr, EntityTrait, ModelTrait, QuerySelect};
 
 pub struct InboxResolver {
     db_conn: DatabaseConnection,
@@ -25,18 +21,17 @@ impl InboxResolver {
     #[instrument(skip_all, fields(post_id = %post.id))]
     pub async fn resolve(
         &self,
-        post: &post::Model,
+        post: &posts::Model,
     ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
-        let account = post
-            .find_related(account::Entity)
+        let account = Accounts::find_by_id(post.account_id)
             .one(&self.db_conn)
             .await?
             .expect("[Bug] Post without associated account");
 
         let mentioned_inbox_stream = post
-            .find_linked(mention::MentionedAccounts)
+            .find_linked(MentionedAccounts)
             .select_only()
-            .column(account::Column::InboxUrl)
+            .column(accounts::Column::InboxUrl)
             .into_values::<String, InboxUrlQuery>()
             .stream(&self.db_conn)
             .await?;
@@ -45,9 +40,9 @@ impl InboxResolver {
             Either::Left(mentioned_inbox_stream)
         } else {
             let follower_inbox_stream = account
-                .find_linked(follow::Followers)
+                .find_linked(Followers)
                 .select_only()
-                .column(account::Column::InboxUrl)
+                .column(accounts::Column::InboxUrl)
                 .into_values::<_, InboxUrlQuery>()
                 .stream(&self.db_conn)
                 .await?;

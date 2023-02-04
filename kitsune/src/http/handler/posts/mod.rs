@@ -1,9 +1,4 @@
-use crate::{
-    db::model::post::{self, Visibility},
-    error::Result,
-    mapping::IntoObject,
-    state::Zustand,
-};
+use crate::{error::Result, mapping::IntoObject, state::Zustand};
 use axum::{
     debug_handler,
     extract::Path,
@@ -12,6 +7,10 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
+use kitsune_db::{
+    custom::Visibility,
+    entity::{posts, prelude::Posts},
+};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
@@ -19,8 +18,8 @@ mod activity;
 
 #[debug_handler]
 async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(post) = post::Entity::find_by_id(id)
-        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
+    let Some(post) = Posts::find_by_id(id)
+        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .one(&state.db_conn)
         .await?
     else {

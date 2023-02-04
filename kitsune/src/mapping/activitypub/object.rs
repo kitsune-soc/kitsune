@@ -1,15 +1,17 @@
 use crate::{
-    db::{
-        model::{
-            account, media_attachment, mention,
-            post::{self, Visibility},
-        },
-        UrlQuery,
-    },
     error::{Error, Result},
     state::Zustand,
 };
 use async_trait::async_trait;
+use kitsune_db::{
+    column::UrlQuery,
+    custom::Visibility,
+    entity::{
+        accounts, media_attachments, posts,
+        prelude::{Accounts, MediaAttachments},
+    },
+    link::{InReplyTo, MentionedAccounts},
+};
 use kitsune_type::ap::{
     ap_context,
     helper::StringOrObject,
@@ -28,7 +30,7 @@ pub trait IntoObject {
 }
 
 #[async_trait]
-impl IntoObject for media_attachment::Model {
+impl IntoObject for media_attachments::Model {
     type Output = MediaAttachment;
 
     async fn into_object(self, _state: &Zustand) -> Result<Self::Output> {
@@ -51,27 +53,27 @@ impl IntoObject for media_attachment::Model {
 }
 
 #[async_trait]
-impl IntoObject for post::Model {
+impl IntoObject for posts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let account = account::Entity::find_by_id(self.account_id)
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] No user associated with post");
 
         let in_reply_to = self
-            .find_linked(post::InReplyTo)
+            .find_linked(InReplyTo)
             .select_only()
-            .column(post::Column::Url)
+            .column(posts::Column::Url)
             .into_values::<String, UrlQuery>()
             .one(&state.db_conn)
             .await?;
 
         let mut mentioned: Vec<String> = self
-            .find_linked(mention::MentionedAccounts)
+            .find_linked(MentionedAccounts)
             .select_only()
-            .column(account::Column::Url)
+            .column(accounts::Column::Url)
             .into_values::<_, UrlQuery>()
             .all(&state.db_conn)
             .await?;
@@ -99,7 +101,7 @@ impl IntoObject for post::Model {
                 attributed_to: Some(StringOrObject::String(account.url)),
                 in_reply_to,
                 sensitive: self.is_sensitive,
-                published: self.created_at,
+                published: self.created_at.into(),
                 to,
                 cc,
             },
@@ -108,13 +110,13 @@ impl IntoObject for post::Model {
 }
 
 #[async_trait]
-impl IntoObject for account::Model {
+impl IntoObject for accounts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
+            let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");
@@ -123,7 +125,7 @@ impl IntoObject for account::Model {
             None
         };
         let image = if let Some(header_id) = self.header_id {
-            let media_attachment = media_attachment::Entity::find_by_id(header_id)
+            let media_attachment = MediaAttachments::find_by_id(header_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");
@@ -149,7 +151,7 @@ impl IntoObject for account::Model {
             following: following_url,
             rest: BaseObject {
                 id: self.url.clone(),
-                published: self.created_at,
+                published: self.created_at.into(),
                 ..Default::default()
             },
             public_key: PublicKey {

@@ -1,9 +1,4 @@
 use crate::{
-    db::model::{
-        account,
-        post::{self, Visibility},
-        user,
-    },
     error::{Error, Result},
     mapping::IntoActivity,
     state::Zustand,
@@ -14,12 +9,20 @@ use axum::{
     Json,
 };
 use futures_util::{stream, StreamExt, TryStreamExt};
+use kitsune_db::{
+    custom::Visibility,
+    entity::{
+        posts,
+        prelude::{Accounts, Posts, Users},
+        users,
+    },
+};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
 use sea_orm::{
-    ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
+    ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -40,8 +43,8 @@ pub async fn get(
     Path(username): Path<String>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = <user::Entity as Related<account::Entity>>::find_related()
-        .filter(user::Column::Username.eq(username.as_str()))
+    let Some(account) = <Users as Related<Accounts>>::find_related()
+        .filter(users::Column::Username.eq(username.as_str()))
         .one(&state.db_conn)
         .await?
     else {
@@ -49,22 +52,22 @@ pub async fn get(
     };
 
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
-    let base_query = account
-        .find_related(post::Entity)
-        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
+    let base_query = Posts::find()
+        .belongs_to(&account)
+        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
 
     if query.page {
         let mut page_query = base_query;
         if let Some(max_id) = query.max_id {
-            page_query = page_query.filter(post::Column::Id.lt(max_id));
+            page_query = page_query.filter(posts::Column::Id.lt(max_id));
         }
         if let Some(min_id) = query.min_id {
-            page_query = page_query.filter(post::Column::Id.gt(min_id));
+            page_query = page_query.filter(posts::Column::Id.gt(min_id));
         }
 
         let posts = page_query
             .limit(ACTIVITIES_PER_PAGE)
-            .order_by_desc(post::Column::Id)
+            .order_by_desc(posts::Column::Id)
             .all(&state.db_conn)
             .await?;
 

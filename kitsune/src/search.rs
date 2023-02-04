@@ -1,9 +1,7 @@
-use crate::{
-    db::model::{account, post},
-    error::Result,
-};
+use crate::error::Result;
 use async_trait::async_trait;
 use futures_util::stream;
+use kitsune_db::entity::{accounts, posts};
 use kitsune_search_proto::{
     common::SearchIndex,
     index::{
@@ -17,18 +15,18 @@ use tonic::transport::{Channel, Endpoint};
 use uuid::Uuid;
 
 pub enum SearchItem {
-    Account(account::Model),
-    Post(post::Model),
+    Account(accounts::Model),
+    Post(posts::Model),
 }
 
-impl From<account::Model> for SearchItem {
-    fn from(account: account::Model) -> Self {
+impl From<accounts::Model> for SearchItem {
+    fn from(account: accounts::Model) -> Self {
         Self::Account(account)
     }
 }
 
-impl From<post::Model> for SearchItem {
-    fn from(post: post::Model) -> Self {
+impl From<posts::Model> for SearchItem {
+    fn from(post: posts::Model) -> Self {
         Self::Post(post)
     }
 }

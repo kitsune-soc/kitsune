@@ -1,8 +1,8 @@
-use self::{post::PostQuery, user::UserQuery};
+use self::{account::AccountQuery, post::PostQuery};
 use async_graphql::MergedObject;
 
+mod account;
 mod post;
-mod user;
 
 #[derive(Default, MergedObject)]
-pub struct RootQuery(PostQuery, UserQuery);
+pub struct RootQuery(AccountQuery, PostQuery);

@@ -1,10 +1,4 @@
-use crate::{
-    db::model::{account, post},
-    error::Result,
-    mapping::IntoMastodon,
-    search::SearchService,
-    state::Zustand,
-};
+use crate::{error::Result, mapping::IntoMastodon, search::SearchService, state::Zustand};
 use axum::{
     debug_handler,
     extract::State,
@@ -13,6 +7,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use http::StatusCode;
+use kitsune_db::entity::prelude::{Accounts, Posts};
 use kitsune_search_proto::common::SearchIndex;
 use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
@@ -87,7 +82,7 @@ async fn get(
 
             match index {
                 SearchIndex::Account => {
-                    let account = account::Entity::find_by_id(id)
+                    let account = Accounts::find_by_id(id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Account indexed in search not in database");
@@ -97,7 +92,7 @@ async fn get(
                         .push(account.into_mastodon(&state).await?);
                 }
                 SearchIndex::Post => {
-                    let post = post::Entity::find_by_id(id)
+                    let post = Posts::find_by_id(id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Post indexed in search not in database");

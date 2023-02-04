@@ -1,14 +1,9 @@
 use crate::{
-    db::model::{
-        job, mention,
-        post::{self, Visibility},
-        role::{self, Role},
-    },
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     job::{
         deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
-        Job, JobState,
+        Job,
     },
     mapping::IntoMastodon,
     resolve::PostResolver,
@@ -25,6 +20,14 @@ use axum::{
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::StatusCode;
+use kitsune_db::{
+    custom::{JobState, Role, Visibility},
+    entity::{
+        jobs, posts, posts_mentions,
+        prelude::{Posts, UsersRoles},
+        users_roles,
+    },
+};
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait, PaginatorTrait,
@@ -54,15 +57,15 @@ async fn delete(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = post::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(post) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
     if post.account_id != user_data.account.id {
         let admin_role_count = user_data
             .user
-            .find_related(role::Entity)
-            .filter(role::Column::Role.eq(Role::Admin))
+            .find_related(UsersRoles)
+            .filter(users_roles::Column::Role.eq(Role::Administrator))
             .count(&state.db_conn)
             .await?;
 
@@ -72,14 +75,14 @@ async fn delete(
     }
 
     let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
-    job::Model {
+    jobs::Model {
         id: Uuid::now_v7(),
         state: JobState::Queued,
-        run_at: Utc::now(),
+        run_at: Utc::now().into(),
         context: serde_json::to_value(job_context).unwrap(),
         fail_count: 0,
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
+        created_at: Utc::now().into(),
+        updated_at: Utc::now().into(),
     }
     .into_active_model()
     .insert(&state.db_conn)
@@ -96,12 +99,12 @@ async fn get(
     _user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = post::Entity::find()
-        .filter(post::Column::Id.eq(id))
+    let Some(post) = Posts::find()
+        .filter(posts::Column::Id.eq(id))
         .filter(
-            post::Column::Visibility
+            posts::Column::Visibility
                 .eq(Visibility::Public)
-                .or(post::Column::Visibility.eq(Visibility::Unlisted))
+                .or(posts::Column::Visibility.eq(Visibility::Unlisted))
         )
         .one(&state.db_conn)
         .await?
@@ -144,13 +147,13 @@ async fn post(
         .transaction(move |tx| {
             async move {
                 let in_reply_to_id = if let Some(in_reply_to_id) = form.in_reply_to_id {
-                    (post::Entity::find_by_id(in_reply_to_id).count(tx).await? != 0)
+                    (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
                         .then_some(in_reply_to_id)
                 } else {
                     None
                 };
 
-                let post = post::Model {
+                let post = posts::Model {
                     id,
                     account_id,
                     in_reply_to_id,
@@ -159,15 +162,15 @@ async fn post(
                     is_sensitive: form.sensitive,
                     visibility: form.visibility,
                     url,
-                    created_at: Utc::now(),
-                    updated_at: Utc::now(),
+                    created_at: Utc::now().into(),
+                    updated_at: Utc::now().into(),
                 }
                 .into_active_model()
                 .insert(tx)
                 .await?;
 
                 for account_id in mentioned_account_ids {
-                    mention::Model {
+                    posts_mentions::Model {
                         account_id,
                         post_id: post.id,
                     }
@@ -178,14 +181,14 @@ async fn post(
 
                 let job_context = Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
 
-                job::Model {
+                jobs::Model {
                     id: Uuid::now_v7(),
                     state: JobState::Queued,
-                    run_at: Utc::now(),
+                    run_at: Utc::now().into(),
                     context: serde_json::to_value(job_context).unwrap(),
                     fail_count: 0,
-                    created_at: Utc::now(),
-                    updated_at: Utc::now(),
+                    created_at: Utc::now().into(),
+                    updated_at: Utc::now().into(),
                 }
                 .into_active_model()
                 .insert(tx)

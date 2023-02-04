@@ -1,9 +1,4 @@
-use crate::{
-    db::model::post::{self, Visibility},
-    error::Result,
-    mapping::IntoMastodon,
-    state::Zustand,
-};
+use crate::{error::Result, mapping::IntoMastodon, state::Zustand};
 use async_recursion::async_recursion;
 use axum::{
     debug_handler,
@@ -12,6 +7,11 @@ use axum::{
     Json,
 };
 use http::StatusCode;
+use kitsune_db::{
+    custom::Visibility,
+    entity::{posts, prelude::Posts},
+    link::InReplyTo,
+};
 use kitsune_type::mastodon::{status::Context, Status};
 use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use std::collections::VecDeque;
@@ -20,12 +20,12 @@ use uuid::Uuid;
 #[async_recursion]
 async fn get_ancestors(
     state: &Zustand,
-    post: &post::Model,
+    post: &posts::Model,
     ancestors: &mut VecDeque<Status>,
 ) -> Result<()> {
     if let Some(in_reply_to) = post
-        .find_linked(post::InReplyTo)
-        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
+        .find_linked(InReplyTo)
+        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .one(&state.db_conn)
         .await?
     {
@@ -39,12 +39,12 @@ async fn get_ancestors(
 #[async_recursion]
 async fn get_descendants(
     state: &Zustand,
-    post: &post::Model,
+    post: &posts::Model,
     descendants: &mut Vec<Status>,
 ) -> Result<()> {
-    let subdescendants = post::Entity::find()
-        .filter(post::Column::InReplyToId.eq(post.id))
-        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
+    let subdescendants = Posts::find()
+        .filter(posts::Column::InReplyToId.eq(post.id))
+        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
         .all(&state.db_conn)
         .await?;
 
@@ -58,7 +58,7 @@ async fn get_descendants(
 
 #[debug_handler]
 pub async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(genesis) = post::Entity::find_by_id(id).one(&state.db_conn).await? else {
+    let Some(genesis) = Posts::find_by_id(id).one(&state.db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 

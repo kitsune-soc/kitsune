@@ -1,4 +1,4 @@
-use crate::{db::model::account, error::Result, mapping::IntoObject, state::Zustand};
+use crate::{error::Result, mapping::IntoObject, state::Zustand};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
@@ -6,6 +6,7 @@ use axum::{
     Json, Router,
 };
 use http::StatusCode;
+use kitsune_db::entity::{accounts, prelude::Accounts};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 mod followers;
@@ -14,8 +15,8 @@ mod inbox;
 mod outbox;
 
 async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Result<Response> {
-    let Some(account) = account::Entity::find()
-        .filter(account::Column::Username.eq(username).and(account::Column::Domain.is_null()))
+    let Some(account) = Accounts::find()
+        .filter(accounts::Column::Username.eq(username).and(accounts::Column::Domain.is_null()))
         .one(&state.db_conn)
         .await? else {
             return Ok(StatusCode::NOT_FOUND.into_response());

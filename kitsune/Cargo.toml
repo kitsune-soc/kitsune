@@ -3,14 +3,6 @@ name = "kitsune"
 version = "0.1.0-UTA"
 edition = "2021"
 
-[[bin]]
-name = "kitsune"
-path = "src/bin/kitsune.rs"
-
-[[bin]]
-name = "kitsune-cli"
-path = "src/bin/kitsune-cli.rs"
-
 [dependencies]
 ammonia = "3.3.0"
 argon2 = { version = "0.4.1", features = ["std"] }
@@ -25,14 +17,15 @@ async-graphql = { version = "5.0.5", features = [
 async-graphql-axum = "5.0.5"
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
-autometrics = { version = "0.2.3", default-features = false, features = ["metrics"] }
+autometrics = { version = "0.2.3", default-features = false, features = [
+    "metrics",
+] }
 axum = { version = "0.6.4", features = ["headers", "macros"] }
 axum-extra = { version = "0.4.2", features = ["query"] }
 axum-prometheus = "0.3.0"
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
-clap = { version = "4.1.4", features = ["derive"] }
 deadpool-redis = "0.11.1"
 derive_builder = "0.12.0"
 dotenvy = "0.15.6"
@@ -41,9 +34,10 @@ futures-util = "0.3.26"
 headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.8"
-hyper = "0.14.23"
+hyper = "0.14.24"
 image = "0.24.5"
 itertools = "0.10.5"
+kitsune-db = { path = "../kitsune-db" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
@@ -52,7 +46,6 @@ metrics = "0.20.1"
 metrics-exporter-prometheus = "0.11.0"
 metrics-tracing-context = "0.13.0"
 metrics-util = "0.14.0"
-migration = { path = "../migration" }
 mimalloc = "0.1.34"
 mime = "0.3.16"
 mime_guess = "2.0.4"

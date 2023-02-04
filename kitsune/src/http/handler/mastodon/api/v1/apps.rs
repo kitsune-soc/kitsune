@@ -1,9 +1,7 @@
-use crate::{
-    db::model::oauth::application, error::Result, http::extractor::FormOrJson, state::Zustand,
-    util::generate_secret,
-};
+use crate::{error::Result, http::extractor::FormOrJson, state::Zustand, util::generate_secret};
 use axum::{extract::State, routing, Json, Router};
 use chrono::Utc;
+use kitsune_db::entity::oauth2_applications;
 use kitsune_type::mastodon::App;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use serde::Deserialize;
@@ -19,13 +17,13 @@ async fn post(
     State(db_conn): State<DatabaseConnection>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
-    let application = application::Model {
+    let application = oauth2_applications::Model {
         id: Uuid::now_v7(),
         name: form.client_name,
         secret: generate_secret(),
         redirect_uri: form.redirect_uris,
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
+        created_at: Utc::now().into(),
+        updated_at: Utc::now().into(),
     }
     .into_active_model()
     .insert(&db_conn)

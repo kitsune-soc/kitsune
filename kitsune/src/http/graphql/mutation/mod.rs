@@ -1,8 +1,9 @@
 use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
-use crate::{db::model::media_attachment, http::graphql::ContextExt};
+use crate::http::graphql::ContextExt;
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use chrono::Utc;
 use image::{EncodableLayout, GenericImageView};
+use kitsune_db::entity::media_attachments;
 use mime::Mime;
 use sea_orm::{ActiveModelTrait, IntoActiveModel};
 use std::{
@@ -48,7 +49,7 @@ async fn handle_upload(
     ctx: &Context<'_>,
     file: Upload,
     description: Option<String>,
-) -> Result<media_attachment::Model> {
+) -> Result<media_attachments::Model> {
     let state = ctx.state();
     let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;
@@ -96,14 +97,14 @@ async fn handle_upload(
         None
     };
 
-    Ok(media_attachment::Model {
+    Ok(media_attachments::Model {
         id: Uuid::now_v7(),
         account_id: user_data.account.id,
         blurhash,
         content_type: content_type.to_string(),
         description,
         url,
-        created_at: Utc::now(),
+        created_at: Utc::now().into(),
     }
     .into_active_model()
     .insert(&state.db_conn)

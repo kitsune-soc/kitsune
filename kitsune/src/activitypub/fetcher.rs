@@ -1,10 +1,6 @@
 use crate::{
     cache::{Cache, RedisCache},
     consts::USER_AGENT,
-    db::model::{
-        account, media_attachment,
-        post::{self, Visibility},
-    },
     error::{Error, Result},
     sanitize::CleanHtmlExt,
     search::{GrpcSearchService, SearchService},
@@ -14,6 +10,13 @@ use autometrics::autometrics;
 use chrono::Utc;
 use futures_util::FutureExt;
 use http::HeaderValue;
+use kitsune_db::{
+    custom::Visibility,
+    entity::{
+        accounts, media_attachments, posts,
+        prelude::{Accounts, Posts},
+    },
+};
 use kitsune_http_client::Client;
 use kitsune_type::ap::object::{Actor, Note};
 use sea_orm::{
@@ -30,8 +33,8 @@ const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. P
 #[derive(Clone)]
 pub struct Fetcher<
     S = GrpcSearchService,
-    PC = RedisCache<str, post::Model>,
-    UC = RedisCache<str, account::Model>,
+    PC = RedisCache<str, posts::Model>,
+    UC = RedisCache<str, accounts::Model>,
 > {
     client: Client,
     db_conn: DatabaseConnection,
@@ -61,8 +64,8 @@ impl Fetcher {
 impl<S, PC, UC> Fetcher<S, PC, UC>
 where
     S: SearchService,
-    PC: Cache<str, post::Model>,
-    UC: Cache<str, account::Model>,
+    PC: Cache<str, posts::Model>,
+    UC: Cache<str, accounts::Model>,
 {
     #[allow(clippy::missing_panics_doc)] // Invariants are covered. Won't panic.
     #[must_use]
@@ -96,13 +99,13 @@ where
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_actor(&self, url: &str) -> Result<account::Model> {
+    pub async fn fetch_actor(&self, url: &str) -> Result<accounts::Model> {
         if let Some(user) = self.user_cache.get(url).await? {
             return Ok(user);
         }
 
-        if let Some(user) = account::Entity::find()
-            .filter(account::Column::Url.eq(url))
+        if let Some(user) = Accounts::find()
+            .filter(accounts::Column::Url.eq(url))
             .one(&self.db_conn)
             .await?
         {
@@ -124,7 +127,7 @@ where
                 );
 
                 async move {
-                    let account = account::Model {
+                    let account = accounts::Model {
                         id: Uuid::new_v7(uuid_timestamp),
                         avatar_id: None,
                         header_id: None,
@@ -137,22 +140,22 @@ where
                         followers_url: actor.followers,
                         inbox_url: actor.inbox,
                         public_key: actor.public_key.public_key_pem,
-                        created_at: actor.rest.published,
-                        updated_at: Utc::now(),
+                        created_at: actor.rest.published.into(),
+                        updated_at: Utc::now().into(),
                     }
                     .into_active_model()
                     .insert(tx)
                     .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
-                        let media_attachment = media_attachment::Model {
+                        let media_attachment = media_attachments::Model {
                             id: Uuid::now_v7(),
                             account_id: account.id,
                             description: icon.name,
                             content_type: icon.media_type,
                             blurhash: icon.blurhash,
                             url: icon.url,
-                            created_at: Utc::now(),
+                            created_at: Utc::now().into(),
                         }
                         .into_active_model()
                         .insert(tx)
@@ -164,14 +167,14 @@ where
                     };
 
                     let header_id = if let Some(image) = actor.image {
-                        let media_attachment = media_attachment::Model {
+                        let media_attachment = media_attachments::Model {
                             id: Uuid::now_v7(),
                             account_id: account.id,
                             description: image.name,
                             content_type: image.media_type,
                             blurhash: image.blurhash,
                             url: image.url,
-                            created_at: Utc::now(),
+                            created_at: Utc::now().into(),
                         }
                         .into_active_model()
                         .insert(tx)
@@ -182,7 +185,7 @@ where
                         None
                     };
 
-                    let account = account::ActiveModel {
+                    let account = accounts::ActiveModel {
                         id: ActiveValue::Set(account.id),
                         avatar_id: avatar_id.into_active_value(),
                         header_id: header_id.into_active_value(),
@@ -201,7 +204,7 @@ where
     }
 
     #[async_recursion(?Send)]
-    async fn fetch_note_inner(&self, url: &str, call_depth: u32) -> Result<Option<post::Model>> {
+    async fn fetch_note_inner(&self, url: &str, call_depth: u32) -> Result<Option<posts::Model>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);
         }
@@ -210,8 +213,8 @@ where
             return Ok(Some(post));
         }
 
-        if let Some(post) = post::Entity::find()
-            .filter(post::Column::Url.eq(url))
+        if let Some(post) = Posts::find()
+            .filter(posts::Column::Url.eq(url))
             .one(&self.db_conn)
             .await?
         {
@@ -242,7 +245,7 @@ where
             None
         };
 
-        let post = post::Model {
+        let post = posts::Model {
             id: Uuid::new_v7(uuid_timestamp),
             account_id: user.id,
             in_reply_to_id,
@@ -251,8 +254,8 @@ where
             is_sensitive: note.rest.sensitive,
             visibility,
             url: note.rest.id,
-            created_at: note.rest.published,
-            updated_at: Utc::now(),
+            created_at: note.rest.published.into(),
+            updated_at: Utc::now().into(),
         }
         .into_active_model()
         .insert(&self.db_conn)
@@ -270,7 +273,7 @@ where
 
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
+    pub async fn fetch_note(&self, url: &str) -> Result<posts::Model> {
         self.fetch_note_inner(url, 0)
             .await
             .transpose()
@@ -280,27 +283,14 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
-    };
-    use migration::{Migrator, MigratorTrait};
+    use crate::{activitypub::Fetcher, cache::NoopCache, search::NoopSearchService};
+    use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
-    use sea_orm::{Database, DatabaseConnection, ModelTrait};
-
-    async fn prepare_db() -> DatabaseConnection {
-        let db_conn = Database::connect("sqlite::memory:")
-            .await
-            .expect("Database connection");
-        Migrator::up(&db_conn, None)
-            .await
-            .expect("Database migration");
-
-        db_conn
-    }
+    use sea_orm::EntityTrait;
 
     #[tokio::test]
     async fn fetch_actor() {
-        let db_conn = prepare_db().await;
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::new(db_conn, NoopSearchService, NoopCache, NoopCache);
 
         let user = fetcher
@@ -316,7 +306,7 @@ mod test {
 
     #[tokio::test]
     async fn fetch_note() {
-        let db_conn = prepare_db().await;
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache);
 
         let note = fetcher
@@ -328,8 +318,7 @@ mod test {
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"
         );
 
-        let author = note
-            .find_related(account::Entity)
+        let author = Accounts::find_by_id(note.account_id)
             .one(&db_conn)
             .await
             .ok()

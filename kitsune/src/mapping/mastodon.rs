@@ -1,10 +1,13 @@
 use crate::{
-    db::model::{account, favourite, media_attachment, mention, post, repost},
     error::{Error, Result},
     state::Zustand,
 };
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
+use kitsune_db::entity::{
+    accounts, posts, posts_mentions,
+    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions, Reposts},
+};
 use kitsune_type::mastodon::{account::Source, status::Mention, Account, Status};
 use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter};
 
@@ -16,12 +19,12 @@ pub trait IntoMastodon {
 }
 
 #[async_trait]
-impl IntoMastodon for account::Model {
+impl IntoMastodon for accounts::Model {
     type Output = Account;
 
     async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
-        let statuses_count = post::Entity::find()
-            .filter(post::Column::AccountId.eq(self.id))
+        let statuses_count = Posts::find()
+            .filter(posts::Column::AccountId.eq(self.id))
             .count(&state.db_conn)
             .await?;
         let mut acct = self.username.clone();
@@ -31,7 +34,7 @@ impl IntoMastodon for account::Model {
         }
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
+            let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] User profile picture missing");
@@ -41,7 +44,7 @@ impl IntoMastodon for account::Model {
         };
 
         let header = if let Some(header_id) = self.header_id {
-            let media_attachment = media_attachment::Entity::find_by_id(header_id)
+            let media_attachment = MediaAttachments::find_by_id(header_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] User header image missing");
@@ -55,7 +58,7 @@ impl IntoMastodon for account::Model {
             acct,
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
-            created_at: self.created_at,
+            created_at: self.created_at.into(),
             locked: self.locked,
             note: self.note.unwrap_or_default(),
             url: self.url,
@@ -78,11 +81,11 @@ impl IntoMastodon for account::Model {
 }
 
 #[async_trait]
-impl IntoMastodon for mention::Model {
+impl IntoMastodon for posts_mentions::Model {
     type Output = Mention;
 
     async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
-        let account = account::Entity::find_by_id(self.account_id)
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] Mention without associated account");
@@ -103,30 +106,23 @@ impl IntoMastodon for mention::Model {
 }
 
 #[async_trait]
-impl IntoMastodon for post::Model {
+impl IntoMastodon for posts::Model {
     type Output = Status;
 
     async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
-        let account = self
-            .find_related(account::Entity)
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] Post without associated account")
             .into_mastodon(state)
             .await?;
 
-        let reblog_count = self
-            .find_related(repost::Entity)
-            .count(&state.db_conn)
-            .await?;
+        let reblog_count = self.find_related(Reposts).count(&state.db_conn).await?;
 
-        let favourites_count = self
-            .find_related(favourite::Entity)
-            .count(&state.db_conn)
-            .await?;
+        let favourites_count = self.find_related(Favourites).count(&state.db_conn).await?;
 
-        let mentions = self
-            .find_related(mention::Entity)
+        let mentions = PostsMentions::find()
+            .belongs_to(&self)
             .stream(&state.db_conn)
             .await?
             .map_err(Error::from)
@@ -136,7 +132,7 @@ impl IntoMastodon for post::Model {
 
         Ok(Status {
             id: self.id,
-            created_at: self.created_at,
+            created_at: self.created_at.into(),
             in_reply_to_account_id: None,
             in_reply_to_id: self.in_reply_to_id,
             sensitive: self.is_sensitive,

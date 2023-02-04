@@ -1,13 +1,12 @@
 use crate::{
-    db::model::{
-        job, mention,
-        post::{self, Visibility},
-    },
     error::Error as ServerError,
-    http::graphql::ContextExt,
+    http::graphql::{
+        types::{Post, Visibility},
+        ContextExt,
+    },
     job::{
         deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
-        Job, JobState,
+        Job,
     },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
@@ -16,6 +15,10 @@ use crate::{
 use async_graphql::{Context, Error, Object, Result};
 use chrono::Utc;
 use futures_util::FutureExt;
+use kitsune_db::{
+    custom::JobState,
+    entity::{jobs, posts, posts_mentions, prelude::Posts},
+};
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
@@ -33,7 +36,7 @@ impl PostMutation {
         content: String,
         is_sensitive: bool,
         visibility: Visibility,
-    ) -> Result<post::Model> {
+    ) -> Result<Post> {
         let state = ctx.state();
         let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
@@ -62,24 +65,24 @@ impl PostMutation {
             .db_conn
             .transaction(move |tx| {
                 async move {
-                    let post = post::Model {
+                    let post = posts::Model {
                         id,
                         account_id,
                         in_reply_to_id: None,
                         subject: None,
                         content,
                         is_sensitive,
-                        visibility,
+                        visibility: visibility.into(),
                         url,
-                        created_at: Utc::now(),
-                        updated_at: Utc::now(),
+                        created_at: Utc::now().into(),
+                        updated_at: Utc::now().into(),
                     }
                     .into_active_model()
                     .insert(tx)
                     .await?;
 
                     for account_id in mentioned_account_ids {
-                        mention::Model {
+                        posts_mentions::Model {
                             account_id,
                             post_id: post.id,
                         }
@@ -91,14 +94,14 @@ impl PostMutation {
                     let job_context =
                         Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
 
-                    job::Model {
+                    jobs::Model {
                         id: Uuid::now_v7(),
                         state: JobState::Queued,
-                        run_at: Utc::now(),
+                        run_at: Utc::now().into(),
                         context: serde_json::to_value(job_context).unwrap(),
                         fail_count: 0,
-                        created_at: Utc::now(),
-                        updated_at: Utc::now(),
+                        created_at: Utc::now().into(),
+                        updated_at: Utc::now().into(),
                     }
                     .into_active_model()
                     .insert(tx)
@@ -113,6 +116,7 @@ impl PostMutation {
                 .boxed()
             })
             .await
+            .map(Into::into)
             .map_err(Error::from)
     }
 
@@ -121,21 +125,21 @@ impl PostMutation {
         let mut search_service = state.search_service.clone();
         let user_data = ctx.user_data()?;
 
-        let post = post::Entity::find_by_id(id)
-            .filter(post::Column::AccountId.eq(user_data.account.id))
+        let post = Posts::find_by_id(id)
+            .filter(posts::Column::AccountId.eq(user_data.account.id))
             .one(&state.db_conn)
             .await?
             .ok_or_else(|| Error::new("Post not found"))?;
 
         let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
-        job::Model {
+        jobs::Model {
             id: Uuid::now_v7(),
             state: JobState::Queued,
-            run_at: Utc::now(),
+            run_at: Utc::now().into(),
             context: serde_json::to_value(job_context).unwrap(),
             fail_count: 0,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
         }
         .into_active_model()
         .insert(&state.db_conn)
