@@ -1,3 +1,7 @@
+//!
+//! `SeaORM` links defining more complicated relationships, usually spanning across multiple tables
+//!
+
 mod favourited_post_author;
 mod followers;
 mod following;

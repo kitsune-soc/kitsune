@@ -21,4 +21,5 @@ features = [
   # "sqlx-postgres",         # `DATABASE_DRIVER` feature
   "runtime-tokio-rustls",
   "sqlx-postgres",
+  "sqlx-sqlite",
 ]

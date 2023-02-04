@@ -2252,7 +2252,11 @@ dependencies = [
 name = "kitsune-db"
 version = "0.1.0"
 dependencies = [
+ "kitsune-type",
+ "migration",
  "sea-orm",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

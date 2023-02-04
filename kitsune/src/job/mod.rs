@@ -36,15 +36,6 @@ pub enum Job {
     DeliverUnfavourite(UnfavouriteDeliveryContext),
 }
 
-#[derive(Clone, Debug, DeriveActiveEnum, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
-#[sea_orm(rs_type = "i32", db_type = "Integer")]
-pub enum JobState {
-    Queued = 0,
-    Running = 1,
-    Failed = 2,
-    Succeeded = 3,
-}
-
 async fn get_job(db_conn: &DatabaseConnection) -> Result<Option<job::Model>> {
     let txn = db_conn.begin().await?;
 
