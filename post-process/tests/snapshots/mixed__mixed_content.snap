@@ -1,0 +1,118 @@
+---
+source: post-process/tests/mixed.rs
+expression: "PostParser::parse(Rule::post, &post).unwrap()"
+input_file: post-process/tests/input/mixed/mixed_content_1
+---
+[
+    Pair {
+        rule: text,
+        span: Span {
+            str: "hey,",
+            start: 0,
+            end: 4,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: mention,
+        span: Span {
+            str: " @真島",
+            start: 4,
+            end: 12,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: " ",
+                    start: 4,
+                    end: 5,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "真島",
+                    start: 6,
+                    end: 12,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: " looking good..",
+            start: 12,
+            end: 27,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: hashtag,
+        span: Span {
+            str: " #龍が如く7",
+            start: 27,
+            end: 42,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: " ",
+                    start: 27,
+                    end: 28,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: hashtag_content,
+                span: Span {
+                    str: "龍が如く7",
+                    start: 29,
+                    end: 42,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: " ",
+            start: 42,
+            end: 43,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: link,
+        span: Span {
+            str: "https://upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
+            start: 43,
+            end: 108,
+        },
+        inner: [
+            Pair {
+                rule: link_schema,
+                span: Span {
+                    str: "https",
+                    start: 43,
+                    end: 48,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: link_content,
+                span: Span {
+                    str: "upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
+                    start: 51,
+                    end: 108,
+                },
+                inner: [],
+            },
+        ],
+    },
+]
