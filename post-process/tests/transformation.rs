@@ -41,12 +41,8 @@ async fn link_transformation() {
 
         Ok(transformed)
     });
-    let transformed = transformer.transform(text).await.unwrap();
 
-    assert_eq!(
-        transformed,
-        r#"<a href="https://example.com/mention/真島/goro.org">@真島@goro.org</a> how are you doing? <a href="https://example.com/emote/friday-night">:friday-night:</a> <a href="https://example.com/hashtag/龍が如く0">#龍が如く0</a>"#
-    );
+    insta::assert_snapshot!(transformer.transform(text).await.unwrap());
 }
 
 #[tokio::test]

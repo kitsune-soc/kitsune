@@ -1,0 +1,63 @@
+---
+source: post-process/tests/emote.rs
+expression: "PostParser::parse(Rule::post, &post).unwrap()"
+input_file: post-process/tests/input/emote/full_post_1
+---
+[
+    Pair {
+        rule: text,
+        span: Span {
+            str: "hello ",
+            start: 0,
+            end: 6,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: emote,
+        span: Span {
+            str: ":blobfoxcoffee:",
+            start: 6,
+            end: 21,
+        },
+        inner: [
+            Pair {
+                rule: emote_content,
+                span: Span {
+                    str: "blobfoxcoffee",
+                    start: 7,
+                    end: 20,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: " how are you doing?",
+            start: 21,
+            end: 40,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: emote,
+        span: Span {
+            str: ":blobcatpeek:",
+            start: 40,
+            end: 53,
+        },
+        inner: [
+            Pair {
+                rule: emote_content,
+                span: Span {
+                    str: "blobcatpeek",
+                    start: 41,
+                    end: 52,
+                },
+                inner: [],
+            },
+        ],
+    },
+]
