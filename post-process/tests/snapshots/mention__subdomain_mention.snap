@@ -1,0 +1,44 @@
+---
+source: post-process/tests/mention.rs
+expression: "PostParser::parse(Rule::mention, &mention).unwrap()"
+input_file: post-process/tests/input/mention/subdomain_1
+---
+[
+    Pair {
+        rule: mention,
+        span: Span {
+            str: "@test@social.hello.world",
+            start: 0,
+            end: 24,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: "",
+                    start: 0,
+                    end: 0,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "test",
+                    start: 1,
+                    end: 5,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_domain,
+                span: Span {
+                    str: "social.hello.world",
+                    start: 6,
+                    end: 24,
+                },
+                inner: [],
+            },
+        ],
+    },
+]
