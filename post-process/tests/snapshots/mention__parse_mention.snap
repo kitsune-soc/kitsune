@@ -1,0 +1,90 @@
+---
+source: post-process/tests/mention.rs
+expression: "PostParser::parse(Rule::post, &post).unwrap()"
+input_file: post-process/tests/input/mention/full_post_1
+---
+[
+    Pair {
+        rule: text,
+        span: Span {
+            str: "hello",
+            start: 0,
+            end: 5,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: mention,
+        span: Span {
+            str: " @桐生@friday.night",
+            start: 5,
+            end: 26,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: " ",
+                    start: 5,
+                    end: 6,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "桐生",
+                    start: 7,
+                    end: 13,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_domain,
+                span: Span {
+                    str: "friday.night",
+                    start: 14,
+                    end: 26,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: mention,
+        span: Span {
+            str: " @真島",
+            start: 26,
+            end: 34,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: " ",
+                    start: 26,
+                    end: 27,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "真島",
+                    start: 28,
+                    end: 34,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: "! ",
+            start: 34,
+            end: 36,
+        },
+        inner: [],
+    },
+]
