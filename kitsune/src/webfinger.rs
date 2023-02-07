@@ -67,7 +67,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::{Resource, Webfinger};
+    use super::Webfinger;
     use crate::cache::NoopCache;
     use pretty_assertions::assert_eq;
 
