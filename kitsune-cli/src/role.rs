@@ -3,7 +3,10 @@ use chrono::Utc;
 use clap::{Args, Subcommand, ValueEnum};
 use kitsune_db::{
     custom::Role as DbRole,
-    entity::{users, users_roles},
+    entity::{
+        prelude::{Users, UsersRoles},
+        users, users_roles,
+    },
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
@@ -52,7 +55,7 @@ impl From<Role> for DbRole {
 }
 
 async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = users::Entity::find()
+    let Some(user) = Users::find()
         .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
@@ -75,7 +78,7 @@ async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Re
 }
 
 async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
-    let Some(user) = users::Entity::find()
+    let Some(user) = Users::find()
         .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
@@ -83,7 +86,7 @@ async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
         eprintln!("User \"{username}\" not found!");
         return Ok(());
     };
-    let roles = user.find_related(users_roles::Entity).all(&db_conn).await?;
+    let roles = user.find_related(UsersRoles).all(&db_conn).await?;
 
     println!("User \"{username}\" has the following roles:");
     for role in roles {
@@ -94,7 +97,7 @@ async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
 }
 
 async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = users::Entity::find()
+    let Some(user) = Users::find()
         .filter(users::Column::Username.eq(username))
         .one(&db_conn)
         .await?
@@ -103,7 +106,7 @@ async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) ->
         return Ok(());
     };
 
-    users_roles::Entity::delete_many()
+    UsersRoles::delete_many()
         .filter(
             users_roles::Column::Role
                 .eq(DbRole::from(role))

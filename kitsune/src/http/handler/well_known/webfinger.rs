@@ -1,8 +1,4 @@
-use crate::{
-    error::Result,
-    state::Zustand,
-    webfinger::{Link, Resource},
-};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Response},
@@ -10,6 +6,7 @@ use axum::{
 };
 use http::StatusCode;
 use kitsune_db::entity::{accounts, prelude::Accounts};
+use kitsune_type::webfinger::{Link, Resource};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 

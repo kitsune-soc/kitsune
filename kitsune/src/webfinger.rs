@@ -6,23 +6,10 @@ use crate::{
 use autometrics::autometrics;
 use http::HeaderValue;
 use kitsune_http_client::Client;
-use serde::{Deserialize, Serialize};
+use kitsune_type::webfinger::Resource;
 use std::time::Duration;
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
-
-#[derive(Deserialize, Serialize)]
-pub struct Link {
-    pub rel: String,
-    pub href: Option<String>,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Resource {
-    pub subject: String,
-    pub aliases: Vec<String>,
-    pub links: Vec<Link>,
-}
 
 #[derive(Clone)]
 pub struct Webfinger<C = RedisCache<str, String>> {
