@@ -1,24 +1,21 @@
-use crate::{
-    error::Result,
-    state::Zustand,
-    webfinger::{Link, Resource},
-};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Response},
-    Json,
+    routing, Json, Router,
 };
 use http::StatusCode;
 use kitsune_db::entity::{accounts, prelude::Accounts};
+use kitsune_type::webfinger::{Link, Resource};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct WebfingerQuery {
+struct WebfingerQuery {
     resource: String,
 }
 
-pub async fn get(
+async fn get(
     State(state): State<Zustand>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
@@ -51,4 +48,8 @@ pub async fn get(
         }],
     })
     .into_response())
+}
+
+pub fn routes() -> Router<Zustand> {
+    Router::new().route("/", routing::get(get))
 }

@@ -2,6 +2,8 @@
 name = "kitsune"
 version = "0.1.0-UTA"
 edition = "2021"
+repository = "https://github.com/kitsune-soc/kitsune"
+homepage = "https://kitsune-soc.github.io"
 
 [dependencies]
 ammonia = "3.3.0"
@@ -17,7 +19,7 @@ async-graphql = { version = "5.0.5", features = [
 async-graphql-axum = "5.0.5"
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
-autometrics = { version = "0.2.3", default-features = false, features = [
+autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
 axum = { version = "0.6.4", features = ["headers", "macros"] }
@@ -58,12 +60,12 @@ rand = "0.8.5"
 rayon = "1.6.1"
 redis = "0.22.3"
 rsa = "0.8.1"
-sea-orm = { version = "0.10.7", features = [
+sea-orm = { version = "0.11.0", features = [
     "runtime-tokio-rustls",
     "sqlx-postgres",
 ] }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
+serde_json = "1.0.93"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
 tokio = { version = "1.25.0", features = ["full"] }
@@ -78,7 +80,7 @@ zxcvbn = "2.2.1"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
-sea-orm = { version = "0.10.7", features = ["sqlx-sqlite"] }
+sea-orm = { version = "0.11.0", features = ["sqlx-sqlite"] }
 
 [features]
 default = ["mastodon-api"]

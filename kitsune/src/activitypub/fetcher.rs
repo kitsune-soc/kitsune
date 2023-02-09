@@ -253,6 +253,7 @@ where
             content: note.content,
             is_sensitive: note.rest.sensitive,
             visibility,
+            is_local: false,
             url: note.rest.id,
             created_at: note.rest.published.into(),
             updated_at: Utc::now().into(),

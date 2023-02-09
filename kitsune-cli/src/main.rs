@@ -1,6 +1,9 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
-use kitsune_db::{custom::JobState, entity::jobs};
+use kitsune_db::{
+    custom::JobState,
+    entity::{jobs, prelude::Jobs},
+};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::error::Error;
 
@@ -31,7 +34,7 @@ struct App {
 }
 
 async fn clear_completed_jobs(db_conn: DatabaseConnection) -> Result<()> {
-    let delete_result = jobs::Entity::delete_many()
+    let delete_result = Jobs::delete_many()
         .filter(jobs::Column::State.eq(JobState::Succeeded))
         .exec(&db_conn)
         .await?;

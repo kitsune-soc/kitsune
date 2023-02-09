@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 kitsune-type = { path = "../kitsune-type" }
 migration = { path = "migration" }
-sea-orm = "0.10.7"
+sea-orm = "0.11.0"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
+serde_json = "1.0.93"
