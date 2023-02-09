@@ -29,6 +29,7 @@ pub enum Posts {
     Subject,
     Content,
     Visibility,
+    IsLocal,
     Url,
     CreatedAt,
     UpdatedAt,
@@ -147,6 +148,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posts::Subject).text())
                     .col(ColumnDef::new(Posts::Content).text().not_null())
                     .col(ColumnDef::new(Posts::Visibility).integer().not_null())
+                    .col(ColumnDef::new(Posts::IsLocal).boolean().not_null())
                     .col(ColumnDef::new(Posts::Url).text().not_null().unique_key())
                     .col(
                         ColumnDef::new(Posts::CreatedAt)

@@ -73,6 +73,7 @@ impl PostMutation {
                         content,
                         is_sensitive,
                         visibility: visibility.into(),
+                        is_local: true,
                         url,
                         created_at: Utc::now().into(),
                         updated_at: Utc::now().into(),

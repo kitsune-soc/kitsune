@@ -161,6 +161,7 @@ async fn post(
                     content,
                     is_sensitive: form.sensitive,
                     visibility: form.visibility,
+                    is_local: true,
                     url,
                     created_at: Utc::now().into(),
                     updated_at: Utc::now().into(),

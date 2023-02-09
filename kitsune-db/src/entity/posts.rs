@@ -17,6 +17,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub content: String,
     pub visibility: Visibility,
+    pub is_local: bool,
     #[sea_orm(column_type = "Text", unique)]
     pub url: String,
     pub created_at: DateTimeWithTimeZone,

@@ -1,16 +1,22 @@
 use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
-use kitsune_db::entity::prelude::{Posts, Users};
+use kitsune_db::entity::{
+    posts,
+    prelude::{Posts, Users},
+};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
-use sea_orm::{EntityTrait, PaginatorTrait};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde_json::Value;
 
 #[debug_handler]
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
     let total = Users::find().count(&state.db_conn).await?;
-    let local_posts = Posts::find().count(&state.db_conn).await?; // TODO: actually filter out local posts
+    let local_posts = Posts::find()
+        .filter(posts::Column::IsLocal.eq(true))
+        .count(&state.db_conn)
+        .await?;
 
     Ok(Json(TwoOne {
         version: Version::TwoOne,
