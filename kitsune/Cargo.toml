@@ -19,7 +19,7 @@ async-graphql = { version = "5.0.5", features = [
 async-graphql-axum = "5.0.5"
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
-autometrics = { version = "0.2.3", default-features = false, features = [
+autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
 axum = { version = "0.6.4", features = ["headers", "macros"] }
@@ -65,7 +65,7 @@ sea-orm = { version = "0.11.0", features = [
     "sqlx-postgres",
 ] }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.92"
+serde_json = "1.0.93"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
 tokio = { version = "1.25.0", features = ["full"] }
