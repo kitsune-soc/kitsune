@@ -1,11 +1,12 @@
 use crate::{
     activitypub::Fetcher,
     config::Configuration,
-    service::{post::PostService, search::GrpcSearchService},
+    service::{post::PostService, search::SearchService},
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
+use std::sync::Arc;
 
 /// Service collection
 ///
@@ -14,7 +15,7 @@ use sea_orm::DatabaseConnection;
 #[derive(Clone)]
 pub struct Service {
     pub post: PostService,
-    pub search: GrpcSearchService,
+    pub search: Arc<dyn SearchService + Send + Sync>,
 }
 
 /// Application state

@@ -1,6 +1,6 @@
-use super::search::{GrpcSearchService, SearchService};
+use super::search::SearchService;
 use crate::{
-    cache::{Cache, RedisCache},
+    cache::Cache,
     config::Configuration,
     error::{ApiError, Result},
     job::{
@@ -26,6 +26,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     PaginatorTrait, QueryFilter, TransactionTrait,
 };
+use std::sync::Arc;
 use uuid::Uuid;
 
 #[derive(Clone, Builder)]
@@ -92,10 +93,10 @@ impl DeletePost {
 #[derive(Builder, Clone)]
 #[builder(pattern = "owned")]
 pub struct PostService<
-    S = GrpcSearchService,
-    FPC = RedisCache<str, posts::Model>,
-    FUC = RedisCache<str, accounts::Model>,
-    WC = RedisCache<str, String>,
+    S = Arc<dyn SearchService + Send + Sync>,
+    FPC = Arc<dyn Cache<str, posts::Model> + Send + Sync>,
+    FUC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
+    WC = Arc<dyn Cache<str, String> + Send + Sync>,
 > {
     config: Configuration,
     db_conn: DatabaseConnection,
@@ -199,7 +200,9 @@ where
         if create_post.visibility == Visibility::Public
             || create_post.visibility == Visibility::Unlisted
         {
-            self.search_service.add_to_index(post.clone()).await?;
+            self.search_service
+                .add_to_index(post.clone().into())
+                .await?;
         }
 
         Ok(post)
@@ -244,7 +247,7 @@ where
         .insert(&self.db_conn)
         .await?;
 
-        self.search_service.remove_from_index(post).await?;
+        self.search_service.remove_from_index(post.into()).await?;
 
         Ok(())
     }

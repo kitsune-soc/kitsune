@@ -34,14 +34,10 @@ impl From<posts::Model> for SearchItem {
 #[async_trait]
 pub trait SearchService {
     /// Add an item to the index
-    async fn add_to_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send;
+    async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
     /// Remove an item from the index
-    async fn remove_from_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send;
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()>;
 
     /// Reset a search index
     ///
@@ -61,21 +57,12 @@ pub trait SearchService {
 }
 
 #[async_trait]
-impl<T> SearchService for Arc<T>
-where
-    T: SearchService + Send + Sync,
-{
-    async fn add_to_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+impl SearchService for Arc<dyn SearchService + Send + Sync> {
+    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         self.deref().add_to_index(item).await
     }
 
-    async fn remove_from_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
         self.deref().remove_from_index(item).await
     }
 
@@ -130,11 +117,8 @@ impl GrpcSearchService {
 #[async_trait]
 impl SearchService for GrpcSearchService {
     #[instrument(skip_all)]
-    async fn add_to_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
-        let request = match item.into() {
+    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
+        let request = match item {
             SearchItem::Account(account) => AddIndexRequest {
                 index_entity: Some(IndexEntity::Account(AddAccountIndex {
                     id: account.id.as_bytes().to_vec(),
@@ -161,11 +145,8 @@ impl SearchService for GrpcSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn remove_from_index<I>(&self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
-        let request = match item.into() {
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
+        let request = match item {
             SearchItem::Account(account) => RemoveIndexRequest {
                 index: SearchIndex::Account.into(),
                 id: account.id.as_bytes().to_vec(),
@@ -231,17 +212,11 @@ pub struct NoopSearchService;
 
 #[async_trait]
 impl SearchService for NoopSearchService {
-    async fn add_to_index<I>(&self, _item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+    async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }
 
-    async fn remove_from_index<I>(&self, _item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }
 

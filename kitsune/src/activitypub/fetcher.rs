@@ -23,7 +23,7 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     IntoActiveValue, QueryFilter, TransactionTrait,
 };
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
@@ -32,9 +32,9 @@ const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. P
 
 #[derive(Clone)]
 pub struct Fetcher<
-    S = GrpcSearchService,
-    PC = RedisCache<str, posts::Model>,
-    UC = RedisCache<str, accounts::Model>,
+    S = Arc<dyn SearchService + Send + Sync>,
+    PC = Arc<dyn Cache<str, posts::Model> + Send + Sync>,
+    UC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
 > {
     client: Client,
     db_conn: DatabaseConnection,
@@ -54,9 +54,13 @@ impl Fetcher {
     ) -> Self {
         Self::new(
             db_conn,
-            search_service,
-            RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
-            RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION),
+            Arc::new(search_service),
+            Arc::new(RedisCache::new(
+                redis_conn.clone(),
+                "fetcher-post",
+                CACHE_DURATION,
+            )),
+            Arc::new(RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION)),
         )
     }
 }
@@ -199,7 +203,9 @@ where
                 .boxed()
             })
             .await?;
-        self.search_service.add_to_index(account.clone()).await?;
+        self.search_service
+            .add_to_index(account.clone().into())
+            .await?;
 
         Ok(account)
     }
@@ -264,7 +270,9 @@ where
         .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service.add_to_index(post.clone()).await?;
+            self.search_service
+                .add_to_index(post.clone().into())
+                .await?;
         }
 
         Ok(Some(post))

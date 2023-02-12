@@ -14,7 +14,7 @@ use kitsune::{
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
-use std::{env, future};
+use std::{env, future, sync::Arc};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
@@ -83,14 +83,14 @@ async fn main() {
             .expect("Failed to connect to the search servers");
 
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
-    let webfinger = Webfinger::with_redis_cache(redis_conn);
+    let webfinger = Webfinger::with_defaults(redis_conn);
 
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .config(config.clone())
         .db_conn(conn.clone())
         .post_resolver(post_resolver)
-        .search_service(search_service.clone())
+        .search_service(Arc::new(search_service.clone()))
         .build()
         .unwrap();
 
@@ -99,7 +99,7 @@ async fn main() {
         db_conn: conn,
         fetcher,
         service: Service {
-            search: search_service,
+            search: Arc::new(search_service),
             post: post_service,
         },
         webfinger,

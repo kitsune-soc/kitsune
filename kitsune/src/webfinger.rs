@@ -7,20 +7,24 @@ use autometrics::autometrics;
 use http::HeaderValue;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
 
 #[derive(Clone)]
-pub struct Webfinger<C = RedisCache<str, String>> {
+pub struct Webfinger<C = Arc<dyn Cache<str, String> + Send + Sync>> {
     cache: C,
     client: Client,
 }
 
 impl Webfinger {
     #[must_use]
-    pub fn with_redis_cache(redis_conn: deadpool_redis::Pool) -> Self {
-        Self::new(RedisCache::new(redis_conn, "webfinger", CACHE_DURATION))
+    pub fn with_defaults(redis_conn: deadpool_redis::Pool) -> Self {
+        Self::new(Arc::new(RedisCache::new(
+            redis_conn,
+            "webfinger",
+            CACHE_DURATION,
+        )))
     }
 }
 
