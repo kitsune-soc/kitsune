@@ -1,9 +1,8 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
-    job::{deliver::delete::DeleteDeliveryContext, Job},
     mapping::IntoMastodon,
-    service::{post::CreatePost, search::SearchService},
+    service::post::{CreatePost, DeletePost},
     state::Zustand,
 };
 use axum::{
@@ -12,20 +11,12 @@ use axum::{
     response::{IntoResponse, Response},
     routing, Json, Router,
 };
-use chrono::Utc;
 use http::StatusCode;
 use kitsune_db::{
-    custom::{JobState, Role, Visibility},
-    entity::{
-        jobs, posts,
-        prelude::{Posts, UsersRoles},
-        users_roles,
-    },
+    custom::Visibility,
+    entity::{posts, prelude::Posts},
 };
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait, PaginatorTrait,
-    QueryFilter,
-};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -50,38 +41,14 @@ async fn delete(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = Posts::find_by_id(id).one(&state.db_conn).await? else {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    };
+    let delete_post = DeletePost::builder()
+        .account_id(user_data.account.id)
+        .user_id(user_data.user.id)
+        .post_id(id)
+        .build()
+        .unwrap();
 
-    if post.account_id != user_data.account.id {
-        let admin_role_count = user_data
-            .user
-            .find_related(UsersRoles)
-            .filter(users_roles::Column::Role.eq(Role::Administrator))
-            .count(&state.db_conn)
-            .await?;
-
-        if admin_role_count == 0 {
-            return Ok(StatusCode::UNAUTHORIZED.into_response());
-        }
-    }
-
-    let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
-    jobs::Model {
-        id: Uuid::now_v7(),
-        state: JobState::Queued,
-        run_at: Utc::now().into(),
-        context: serde_json::to_value(job_context).unwrap(),
-        fail_count: 0,
-        created_at: Utc::now().into(),
-        updated_at: Utc::now().into(),
-    }
-    .into_active_model()
-    .insert(&state.db_conn)
-    .await?;
-
-    state.service.search.remove_from_index(post).await?;
+    state.service.post.delete(delete_post).await?;
 
     Ok(StatusCode::OK.into_response())
 }

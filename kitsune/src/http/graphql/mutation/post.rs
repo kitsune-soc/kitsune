@@ -3,16 +3,9 @@ use crate::{
         types::{Post, Visibility},
         ContextExt,
     },
-    job::{deliver::delete::DeleteDeliveryContext, Job},
-    service::{post::CreatePost, search::SearchService},
+    service::post::{CreatePost, DeletePost},
 };
-use async_graphql::{Context, Error, Object, Result};
-use chrono::Utc;
-use kitsune_db::{
-    custom::JobState,
-    entity::{jobs, posts, prelude::Posts},
-};
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use async_graphql::{Context, Object, Result};
 use uuid::Uuid;
 
 #[derive(Default)]
@@ -47,26 +40,14 @@ impl PostMutation {
         let state = ctx.state();
         let user_data = ctx.user_data()?;
 
-        let post = Posts::find_by_id(id)
-            .filter(posts::Column::AccountId.eq(user_data.account.id))
-            .one(&state.db_conn)
-            .await?
-            .ok_or_else(|| Error::new("Post not found"))?;
+        let delete_post = DeletePost::builder()
+            .account_id(user_data.account.id)
+            .user_id(user_data.user.id)
+            .post_id(id)
+            .build()
+            .unwrap();
 
-        let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
-        jobs::Model {
-            id: Uuid::now_v7(),
-            state: JobState::Queued,
-            run_at: Utc::now().into(),
-            context: serde_json::to_value(job_context).unwrap(),
-            fail_count: 0,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?;
-        state.service.search.remove_from_index(post).await?;
+        state.service.post.delete(delete_post).await?;
 
         Ok(id)
     }

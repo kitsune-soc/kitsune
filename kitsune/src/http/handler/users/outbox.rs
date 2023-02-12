@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     mapping::IntoActivity,
     state::Zustand,
 };
@@ -48,7 +48,7 @@ pub async fn get(
         .one(&state.db_conn)
         .await?
     else {
-        return Err(Error::UserNotFound);
+        return Err(ApiError::NotFound.into());
     };
 
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());

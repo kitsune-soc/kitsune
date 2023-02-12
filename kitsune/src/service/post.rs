@@ -2,8 +2,11 @@ use super::search::{GrpcSearchService, SearchService};
 use crate::{
     cache::{Cache, RedisCache},
     config::Configuration,
-    error::Result,
-    job::{deliver::create::CreateDeliveryContext, Job},
+    error::{ApiError, Result},
+    job::{
+        deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
+        Job,
+    },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
 };
@@ -11,13 +14,17 @@ use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::FutureExt;
 use kitsune_db::{
-    custom::{JobState, Visibility},
-    entity::{accounts, jobs, posts, posts_mentions, prelude::Posts},
+    custom::{JobState, Role, Visibility},
+    entity::{
+        accounts, jobs, posts, posts_mentions,
+        prelude::{Posts, UsersRoles},
+        users_roles,
+    },
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait,
-    TransactionTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    PaginatorTrait, QueryFilter, TransactionTrait,
 };
 use uuid::Uuid;
 
@@ -63,6 +70,25 @@ impl CreatePost {
     }
 }
 
+#[derive(Clone, Builder)]
+pub struct DeletePost {
+    /// ID of the account that is associated with the user
+    account_id: Uuid,
+
+    /// ID of the user that requests the deletion
+    user_id: Uuid,
+
+    /// ID of the post that is supposed to be deleted
+    post_id: Uuid,
+}
+
+impl DeletePost {
+    #[must_use]
+    pub fn builder() -> DeletePostBuilder {
+        DeletePostBuilder::default()
+    }
+}
+
 #[derive(Builder, Clone)]
 #[builder(pattern = "owned")]
 pub struct PostService<
@@ -98,8 +124,10 @@ where
         let content = {
             let parser = Parser::new_ext(&create_post.content, Options::all());
             let mut buf = String::new();
+
             html::push_html(&mut buf, parser);
             buf.clean_html();
+
             buf
         };
 
@@ -175,5 +203,49 @@ where
         }
 
         Ok(post)
+    }
+
+    /// Delete a post an deliver the deletion request
+    ///
+    /// # Panics
+    ///
+    /// This should never ever panic. If it does, open a bug report.
+    pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
+        let Some(post) = Posts::find_by_id(delete_post.post_id)
+            .one(&self.db_conn)
+            .await?
+        else {
+            return Err(ApiError::NotFound.into());
+        };
+
+        if post.account_id != delete_post.account_id {
+            let admin_role_count = UsersRoles::find()
+                .filter(users_roles::Column::UserId.eq(delete_post.user_id))
+                .filter(users_roles::Column::Role.eq(Role::Administrator))
+                .count(&self.db_conn)
+                .await?;
+
+            if admin_role_count == 0 {
+                return Err(ApiError::Unauthorised.into());
+            }
+        }
+
+        let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
+        jobs::Model {
+            id: Uuid::now_v7(),
+            state: JobState::Queued,
+            run_at: Utc::now().into(),
+            context: serde_json::to_value(job_context).unwrap(),
+            fail_count: 0,
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
+        }
+        .into_active_model()
+        .insert(&self.db_conn)
+        .await?;
+
+        self.search_service.remove_from_index(post).await?;
+
+        Ok(())
     }
 }
