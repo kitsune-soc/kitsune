@@ -32,25 +32,25 @@ impl From<posts::Model> for SearchItem {
 }
 
 #[async_trait]
-pub trait SearchService: Clone + Send + 'static {
+pub trait SearchService: Send + 'static {
     /// Add an item to the index
-    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
+    async fn add_to_index<I>(&self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send;
 
     /// Remove an item from the index
-    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
+    async fn remove_from_index<I>(&self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send;
 
     /// Reset a search index
     ///
     /// **WARNING**: This is a major destructive operation
-    async fn reset_index(&mut self, index: SearchIndex) -> Result<()>;
+    async fn reset_index(&self, index: SearchIndex) -> Result<()>;
 
     /// Search through a search index
     async fn search(
-        &mut self,
+        &self,
         index: SearchIndex,
         query: String,
         max_results: u64,
@@ -92,7 +92,7 @@ impl GrpcSearchService {
 #[async_trait]
 impl SearchService for GrpcSearchService {
     #[instrument(skip_all)]
-    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
+    async fn add_to_index<I>(&self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
     {
@@ -115,6 +115,7 @@ impl SearchService for GrpcSearchService {
         };
 
         self.indexer
+            .clone()
             .add(stream::once(future::ready(request)))
             .await?;
 
@@ -122,7 +123,7 @@ impl SearchService for GrpcSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
+    async fn remove_from_index<I>(&self, item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
     {
@@ -138,6 +139,7 @@ impl SearchService for GrpcSearchService {
         };
 
         self.indexer
+            .clone()
             .remove(stream::once(future::ready(request)))
             .await?;
 
@@ -145,18 +147,18 @@ impl SearchService for GrpcSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn reset_index(&mut self, index: SearchIndex) -> Result<()> {
+    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
             index: index.into(),
         };
-        self.indexer.reset(request).await?;
+        self.indexer.clone().reset(request).await?;
 
         Ok(())
     }
 
     #[instrument(skip_all)]
     async fn search(
-        &mut self,
+        &self,
         index: SearchIndex,
         query: String,
         max_results: u64,
@@ -173,7 +175,13 @@ impl SearchService for GrpcSearchService {
             min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
         };
 
-        Ok(self.searcher.search(request).await?.into_inner().results)
+        Ok(self
+            .searcher
+            .clone()
+            .search(request)
+            .await?
+            .into_inner()
+            .results)
     }
 }
 
@@ -185,26 +193,26 @@ pub struct NoopSearchService;
 
 #[async_trait]
 impl SearchService for NoopSearchService {
-    async fn add_to_index<I>(&mut self, _item: I) -> Result<()>
+    async fn add_to_index<I>(&self, _item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
     {
         Ok(())
     }
 
-    async fn remove_from_index<I>(&mut self, _item: I) -> Result<()>
+    async fn remove_from_index<I>(&self, _item: I) -> Result<()>
     where
         I: Into<SearchItem> + Send,
     {
         Ok(())
     }
 
-    async fn reset_index(&mut self, _index: SearchIndex) -> Result<()> {
+    async fn reset_index(&self, _index: SearchIndex) -> Result<()> {
         Ok(())
     }
 
     async fn search(
-        &mut self,
+        &self,
         _index: SearchIndex,
         _query: String,
         _max_results: u64,

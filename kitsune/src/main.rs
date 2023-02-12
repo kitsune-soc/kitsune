@@ -3,8 +3,13 @@
 
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
-    activitypub::Fetcher, config::Configuration, http, job, search::GrpcSearchService,
-    state::Zustand, webfinger::Webfinger,
+    activitypub::Fetcher,
+    config::Configuration,
+    http, job,
+    resolve::PostResolver,
+    service::{post::PostService, search::GrpcSearchService},
+    state::{Service, Zustand},
+    webfinger::Webfinger,
 };
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
@@ -77,12 +82,27 @@ async fn main() {
             .await
             .expect("Failed to connect to the search servers");
 
+    let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
+    let webfinger = Webfinger::with_redis_cache(redis_conn);
+
+    let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
+    let post_service = PostService::builder()
+        .config(config.clone())
+        .db_conn(conn.clone())
+        .post_resolver(post_resolver)
+        .search_service(search_service.clone())
+        .build()
+        .unwrap();
+
     let state = Zustand {
         config: config.clone(),
-        db_conn: conn.clone(),
-        fetcher: Fetcher::with_defaults(conn, search_service.clone(), redis_conn.clone()),
-        search_service,
-        webfinger: Webfinger::with_redis_cache(redis_conn),
+        db_conn: conn,
+        fetcher,
+        service: Service {
+            search: search_service,
+            post: post_service,
+        },
+        webfinger,
     };
 
     tokio::spawn(self::http::run(state.clone(), config.port));

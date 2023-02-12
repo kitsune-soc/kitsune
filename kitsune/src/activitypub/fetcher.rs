@@ -3,7 +3,7 @@ use crate::{
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    search::{GrpcSearchService, SearchService},
+    service::search::{GrpcSearchService, SearchService},
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -112,12 +112,12 @@ where
             return Ok(user);
         }
 
-        let mut search_service = self.search_service.clone();
         let url = Url::parse(url)?;
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        self.db_conn
+        let account = self
+            .db_conn
             .transaction(|tx| {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
@@ -193,14 +193,15 @@ where
                     }
                     .update(tx)
                     .await?;
-                    search_service.add_to_index(account.clone()).await?;
 
                     Ok(account)
                 }
                 .boxed()
             })
-            .await
-            .map_err(Error::from)
+            .await?;
+        self.search_service.add_to_index(account.clone()).await?;
+
+        Ok(account)
     }
 
     #[async_recursion(?Send)]
@@ -263,10 +264,7 @@ where
         .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
-                .clone()
-                .add_to_index(post.clone())
-                .await?;
+            self.search_service.add_to_index(post.clone()).await?;
         }
 
         Ok(Some(post))
@@ -284,7 +282,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{activitypub::Fetcher, cache::NoopCache, search::NoopSearchService};
+    use crate::{activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService};
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;

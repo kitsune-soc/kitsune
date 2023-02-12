@@ -2,7 +2,7 @@ use crate::{
     activitypub::Fetcher,
     cache::Cache,
     error::{Error, Result},
-    search::SearchService,
+    service::search::SearchService,
     webfinger::Webfinger,
 };
 use kitsune_db::entity::{accounts, posts, prelude::Accounts};
@@ -12,6 +12,7 @@ use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::{borrow::Cow, collections::HashSet, mem};
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct PostResolver<FS, FPC, FUC, WC> {
     db_conn: DatabaseConnection,
     fetcher: Fetcher<FS, FPC, FUC>,
@@ -127,7 +128,8 @@ where
 mod test {
     use super::PostResolver;
     use crate::{
-        activitypub::Fetcher, cache::NoopCache, search::NoopSearchService, webfinger::Webfinger,
+        activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService,
+        webfinger::Webfinger,
     };
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
