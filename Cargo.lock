@@ -242,9 +242,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "5.0.5"
+version = "5.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c7c1f9bf1a875b047e97404d16313b3dde09ea06d0639800c9657138e38a441"
+checksum = "692d27c9d6fbb7afafd092706cbb3e4a2087297e10e1f0ca82b3f950f31d9258"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -280,9 +280,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-axum"
-version = "5.0.5"
+version = "5.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7376168771050c81d948df67fdabccf0ed9a238e565c6ca8065af6eccc570d84"
+checksum = "d1d0502d50c842311407a919501536e1741442da26f664e3f3e5b93f8683edd3"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -297,9 +297,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "5.0.5"
+version = "5.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "381ed1575c53cfc864013932bb5a5df05c21802781dfa6dd27c57068eac9a80d"
+checksum = "ec10e63a513389190e9f8f32453bfcfeef271e25e841d61905985f838a5345eb"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -313,9 +313,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "5.0.5"
+version = "5.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41a7ec217e184ca3034c806957842afb28914f894b69cb5a76b4a57e64f44506"
+checksum = "c79500e9bed6b3cf5e1d3960264b7dbc275dd45b56a3f919c30f0cbbf3ea9cba"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -325,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "5.0.5"
+version = "5.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e294ef57859c27d31a9bb23edf1db948f7534445df30115d8672314f65451858"
+checksum = "e14fde4382b75c27fafcaca59b423d4530f73e7f62f41bfa38e8f249026d22ed"
 dependencies = [
  "bytes",
  "indexmap",
@@ -496,14 +496,14 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.6.4"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5694b64066a2459918d8074c2ce0d5a88f409431994c2356617c8ae0c4721fc"
+checksum = "4e246206a63c9830e118d12c894f56a82033da1a2361f5544deeee3df85c99d9"
 dependencies = [
  "async-trait",
  "axum-core",
  "axum-macros",
- "base64 0.20.0",
+ "base64 0.21.0",
  "bitflags",
  "bytes",
  "futures-util",
@@ -551,9 +551,9 @@ dependencies = [
 
 [[package]]
 name = "axum-extra"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9a320103719de37b7b4da4c8eb629d4573f6bcfd3dfe80d3208806895ccf81d"
+checksum = "51227033e4d3acad15c879092ac8a228532707b5db5ff2628f638334f63e1b7a"
 dependencies = [
  "axum",
  "bytes",
@@ -572,9 +572,9 @@ dependencies = [
 
 [[package]]
 name = "axum-macros"
-version = "0.3.2"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dbcf61bed07d554bd5c225cd07bc41b793eab63e79c6f0ceac7e1aed2f1c670"
+checksum = "5fbf955307ff8addb48d2399393c9e2740dd491537ec562b66ab364fc4a38841"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
@@ -622,12 +622,6 @@ name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
-
-[[package]]
-name = "base64"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
 
 [[package]]
 name = "base64"
@@ -4142,9 +4136,9 @@ dependencies = [
 
 [[package]]
 name = "serde_html_form"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d051fb33111db0e81673ed8c55db741952a19ad81dc584960c8aec836498ba5"
+checksum = "53192e38d5c88564b924dbe9b60865ecbb71b81d38c4e61c817cffd3e36ef696"
 dependencies = [
  "form_urlencoded",
  "indexmap",
@@ -4506,9 +4500,9 @@ checksum = "2047c6ded9c721764247e62cd3b03c09ffc529b2ba5b10ec482ae507a4a70160"
 
 [[package]]
 name = "tantivy"
-version = "0.19.1"
+version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "513d4e19dc483209aa0ff9dc40d831f5bfa529917ae836b6fc1f01113ec84dc7"
+checksum = "5bb26a6b22c84d8be41d99a14016d6f04d30d8d31a2ea411a8ab553af5cc490d"
 dependencies = [
  "aho-corasick",
  "arc-swap",
@@ -4823,9 +4817,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.4"
+version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bb2e075f03b3d66d8d8785356224ba688d2906a371015e225beeb65ca92c740"
+checksum = "5427d89453009325de0d8f342c9490009f76e999cb7672d77e46267448f7e6b2"
 dependencies = [
  "bytes",
  "futures-core",
