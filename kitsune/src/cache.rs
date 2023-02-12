@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use derive_builder::Builder;
 use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fmt::Display, marker::PhantomData, time::Duration};
+use std::{fmt::Display, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
 
 type CacheResult<T, E = CacheError> = Result<T, E>;
 
@@ -15,6 +15,25 @@ where
     async fn delete(&self, key: &K) -> CacheResult<()>;
     async fn get(&self, key: &K) -> CacheResult<Option<V>>;
     async fn set(&self, key: &K, value: &V) -> CacheResult<()>;
+}
+
+#[async_trait]
+impl<K, V> Cache<K, V> for Arc<dyn Cache<K, V> + Send + Sync>
+where
+    K: Send + Sync + ?Sized,
+    V: Send + Sync,
+{
+    async fn delete(&self, key: &K) -> CacheResult<()> {
+        self.deref().delete(key).await
+    }
+
+    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
+        self.deref().get(key).await
+    }
+
+    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
+        self.deref().set(key, value).await
+    }
 }
 
 #[derive(Builder)]

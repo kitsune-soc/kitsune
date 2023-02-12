@@ -1,6 +1,6 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     state::Zustand,
     util::generate_secret,
 };
@@ -89,7 +89,7 @@ pub async fn post(
         .filter(users::Column::Username.eq(form.username))
         .one(&state.db_conn)
         .await?
-        .ok_or(Error::UserNotFound)?;
+        .ok_or(ApiError::NotFound)?;
 
     let application = Oauth2Applications::find_by_id(query.client_id)
         .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))

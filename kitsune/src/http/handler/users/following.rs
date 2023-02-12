@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::{ApiError, Result},
     state::Zustand,
 };
 use axum::{
@@ -29,7 +29,7 @@ pub async fn get(
         .one(&state.db_conn)
         .await?
     else {
-        return Err(Error::UserNotFound);
+        return Err(ApiError::NotFound.into());
     };
 
     let following_count = account.find_linked(Following).count(&state.db_conn).await?;

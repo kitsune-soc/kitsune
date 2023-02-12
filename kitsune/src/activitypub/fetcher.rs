@@ -3,7 +3,7 @@ use crate::{
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    search::{GrpcSearchService, SearchService},
+    service::search::{GrpcSearchService, SearchService},
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -23,7 +23,7 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     IntoActiveValue, QueryFilter, TransactionTrait,
 };
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
@@ -32,9 +32,9 @@ const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. P
 
 #[derive(Clone)]
 pub struct Fetcher<
-    S = GrpcSearchService,
-    PC = RedisCache<str, posts::Model>,
-    UC = RedisCache<str, accounts::Model>,
+    S = Arc<dyn SearchService + Send + Sync>,
+    PC = Arc<dyn Cache<str, posts::Model> + Send + Sync>,
+    UC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
 > {
     client: Client,
     db_conn: DatabaseConnection,
@@ -54,9 +54,13 @@ impl Fetcher {
     ) -> Self {
         Self::new(
             db_conn,
-            search_service,
-            RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
-            RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION),
+            Arc::new(search_service),
+            Arc::new(RedisCache::new(
+                redis_conn.clone(),
+                "fetcher-post",
+                CACHE_DURATION,
+            )),
+            Arc::new(RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION)),
         )
     }
 }
@@ -112,12 +116,12 @@ where
             return Ok(user);
         }
 
-        let mut search_service = self.search_service.clone();
         let url = Url::parse(url)?;
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        self.db_conn
+        let account = self
+            .db_conn
             .transaction(|tx| {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
@@ -193,14 +197,17 @@ where
                     }
                     .update(tx)
                     .await?;
-                    search_service.add_to_index(account.clone()).await?;
 
                     Ok(account)
                 }
                 .boxed()
             })
-            .await
-            .map_err(Error::from)
+            .await?;
+        self.search_service
+            .add_to_index(account.clone().into())
+            .await?;
+
+        Ok(account)
     }
 
     #[async_recursion(?Send)]
@@ -264,8 +271,7 @@ where
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
             self.search_service
-                .clone()
-                .add_to_index(post.clone())
+                .add_to_index(post.clone().into())
                 .await?;
         }
 
@@ -284,7 +290,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{activitypub::Fetcher, cache::NoopCache, search::NoopSearchService};
+    use crate::{activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService};
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;

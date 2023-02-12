@@ -14,6 +14,18 @@ use tokio::sync::oneshot;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("Not found")]
+    NotFound,
+
+    #[error("Unauthorised")]
+    Unauthorised,
+
+    #[error("Unsupported media type")]
+    UnsupportedMediaType,
+}
+
+#[derive(Debug, Error)]
 pub enum CacheError {
     #[error(transparent)]
     Pool(#[from] PoolError),
@@ -28,6 +40,9 @@ pub enum CacheError {
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
+    #[error(transparent)]
+    Api(#[from] ApiError),
+
     #[error("Broken database record encountered")]
     BrokenRecord,
 
@@ -91,17 +106,11 @@ pub enum Error {
     #[error(transparent)]
     TonicTransport(#[from] tonic::transport::Error),
 
-    #[error("Unsupported media type")]
-    UnsupportedMediaType,
-
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
 
     #[error(transparent)]
     Uuid(#[from] uuid::Error),
-
-    #[error("User not found")]
-    UserNotFound,
 }
 
 impl From<Error> for Response {
@@ -125,10 +134,13 @@ impl IntoResponse for Error {
             Self::Database(sea_orm::DbErr::RecordNotFound(..)) => {
                 StatusCode::NOT_FOUND.into_response()
             }
-            err @ (Self::OAuthApplicationNotFound | Self::UserNotFound) => {
+            err @ Self::Api(ApiError::NotFound) => {
+                (StatusCode::NOT_FOUND, err.to_string()).into_response()
+            }
+            err @ Self::OAuthApplicationNotFound => {
                 (StatusCode::BAD_REQUEST, err.to_string()).into_response()
             }
-            err @ Self::PasswordMismatch => {
+            err @ (Self::Api(ApiError::Unauthorised) | Self::PasswordMismatch) => {
                 (StatusCode::UNAUTHORIZED, err.to_string()).into_response()
             }
             err => {

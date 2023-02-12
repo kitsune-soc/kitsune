@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::{ApiError, Result},
     state::Zustand,
 };
 use async_trait::async_trait;
@@ -34,12 +34,13 @@ impl IntoObject for media_attachments::Model {
     type Output = MediaAttachment;
 
     async fn into_object(self, _state: &Zustand) -> Result<Self::Output> {
-        let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
+        let mime =
+            Mime::from_str(&self.content_type).map_err(|_| ApiError::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
             mime::AUDIO => MediaAttachmentType::Audio,
             mime::IMAGE => MediaAttachmentType::Image,
             mime::VIDEO => MediaAttachmentType::Video,
-            _ => return Err(Error::UnsupportedMediaType),
+            _ => return Err(ApiError::UnsupportedMediaType.into()),
         };
 
         Ok(MediaAttachment {

@@ -9,21 +9,21 @@ homepage = "https://kitsune-soc.github.io"
 ammonia = "3.3.0"
 argon2 = { version = "0.4.1", features = ["std"] }
 askama = "0.11.1"
-async-graphql = { version = "5.0.5", features = [
+async-graphql = { version = "5.0.6", features = [
     "chrono",
     "email-validator",
     "tracing",
     "unblock",
     "uuid",
 ] }
-async-graphql-axum = "5.0.5"
+async-graphql-axum = "5.0.6"
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
-axum = { version = "0.6.4", features = ["headers", "macros"] }
-axum-extra = { version = "0.4.2", features = ["query"] }
+axum = { version = "0.6.6", features = ["headers", "macros"] }
+axum-extra = { version = "0.5.0", features = ["query"] }
 axum-prometheus = "0.3.0"
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
@@ -69,7 +69,7 @@ serde_json = "1.0.93"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
 tokio = { version = "1.25.0", features = ["full"] }
-tokio-util = { version = "0.7.4", features = ["compat"] }
+tokio-util = { version = "0.7.7", features = ["compat"] }
 tonic = "0.8.3"
 tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"

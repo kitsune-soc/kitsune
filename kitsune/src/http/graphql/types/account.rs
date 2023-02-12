@@ -3,10 +3,10 @@ use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use kitsune_db::entity::{
-    accounts,
+    accounts, posts,
     prelude::{Accounts, MediaAttachments, Posts},
 };
-use sea_orm::{EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
@@ -58,7 +58,7 @@ impl Account {
             .ok_or_else(|| Error::new("User not present"))?;
 
         Posts::find()
-            .belongs_to(&account)
+            .filter(posts::Column::AccountId.eq(account.id))
             .all(&ctx.state().db_conn)
             .await
             .map(|posts| posts.into_iter().map(Into::into).collect())

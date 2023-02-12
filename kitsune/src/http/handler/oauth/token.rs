@@ -1,6 +1,6 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     http::extractor::FormOrJson,
     util::{generate_secret, AccessTokenTtl},
 };
@@ -212,7 +212,7 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
         .filter(users::Column::Username.eq(data.username))
         .one(&db_conn)
         .await?
-        .ok_or(Error::UserNotFound)?;
+        .ok_or(ApiError::NotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(&user.password)?;

@@ -10,7 +10,7 @@ use kitsune_search_proto::{
     },
     search::{search_client::SearchClient, SearchRequest, SearchResult},
 };
-use std::future;
+use std::{future, ops::Deref, sync::Arc};
 use tonic::transport::{Channel, Endpoint};
 use uuid::Uuid;
 
@@ -32,25 +32,21 @@ impl From<posts::Model> for SearchItem {
 }
 
 #[async_trait]
-pub trait SearchService: Clone + Send + 'static {
+pub trait SearchService {
     /// Add an item to the index
-    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send;
+    async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
     /// Remove an item from the index
-    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send;
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()>;
 
     /// Reset a search index
     ///
     /// **WARNING**: This is a major destructive operation
-    async fn reset_index(&mut self, index: SearchIndex) -> Result<()>;
+    async fn reset_index(&self, index: SearchIndex) -> Result<()>;
 
     /// Search through a search index
     async fn search(
-        &mut self,
+        &self,
         index: SearchIndex,
         query: String,
         max_results: u64,
@@ -58,6 +54,35 @@ pub trait SearchService: Clone + Send + 'static {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>>;
+}
+
+#[async_trait]
+impl SearchService for Arc<dyn SearchService + Send + Sync> {
+    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
+        self.deref().add_to_index(item).await
+    }
+
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
+        self.deref().remove_from_index(item).await
+    }
+
+    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
+        self.deref().reset_index(index).await
+    }
+
+    async fn search(
+        &self,
+        index: SearchIndex,
+        query: String,
+        max_results: u64,
+        offset: u64,
+        min_id: Option<Uuid>,
+        max_id: Option<Uuid>,
+    ) -> Result<Vec<SearchResult>> {
+        self.deref()
+            .search(index, query, max_results, offset, min_id, max_id)
+            .await
+    }
 }
 
 /// Search service
@@ -92,11 +117,8 @@ impl GrpcSearchService {
 #[async_trait]
 impl SearchService for GrpcSearchService {
     #[instrument(skip_all)]
-    async fn add_to_index<I>(&mut self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
-        let request = match item.into() {
+    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
+        let request = match item {
             SearchItem::Account(account) => AddIndexRequest {
                 index_entity: Some(IndexEntity::Account(AddAccountIndex {
                     id: account.id.as_bytes().to_vec(),
@@ -115,6 +137,7 @@ impl SearchService for GrpcSearchService {
         };
 
         self.indexer
+            .clone()
             .add(stream::once(future::ready(request)))
             .await?;
 
@@ -122,11 +145,8 @@ impl SearchService for GrpcSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn remove_from_index<I>(&mut self, item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
-        let request = match item.into() {
+    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
+        let request = match item {
             SearchItem::Account(account) => RemoveIndexRequest {
                 index: SearchIndex::Account.into(),
                 id: account.id.as_bytes().to_vec(),
@@ -138,6 +158,7 @@ impl SearchService for GrpcSearchService {
         };
 
         self.indexer
+            .clone()
             .remove(stream::once(future::ready(request)))
             .await?;
 
@@ -145,18 +166,18 @@ impl SearchService for GrpcSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn reset_index(&mut self, index: SearchIndex) -> Result<()> {
+    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
             index: index.into(),
         };
-        self.indexer.reset(request).await?;
+        self.indexer.clone().reset(request).await?;
 
         Ok(())
     }
 
     #[instrument(skip_all)]
     async fn search(
-        &mut self,
+        &self,
         index: SearchIndex,
         query: String,
         max_results: u64,
@@ -173,7 +194,13 @@ impl SearchService for GrpcSearchService {
             min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
         };
 
-        Ok(self.searcher.search(request).await?.into_inner().results)
+        Ok(self
+            .searcher
+            .clone()
+            .search(request)
+            .await?
+            .into_inner()
+            .results)
     }
 }
 
@@ -185,26 +212,20 @@ pub struct NoopSearchService;
 
 #[async_trait]
 impl SearchService for NoopSearchService {
-    async fn add_to_index<I>(&mut self, _item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+    async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }
 
-    async fn remove_from_index<I>(&mut self, _item: I) -> Result<()>
-    where
-        I: Into<SearchItem> + Send,
-    {
+    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }
 
-    async fn reset_index(&mut self, _index: SearchIndex) -> Result<()> {
+    async fn reset_index(&self, _index: SearchIndex) -> Result<()> {
         Ok(())
     }
 
     async fn search(
-        &mut self,
+        &self,
         _index: SearchIndex,
         _query: String,
         _max_results: u64,
