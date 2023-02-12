@@ -10,7 +10,7 @@ use kitsune_search_proto::{
     },
     search::{search_client::SearchClient, SearchRequest, SearchResult},
 };
-use std::future;
+use std::{future, ops::Deref, sync::Arc};
 use tonic::transport::{Channel, Endpoint};
 use uuid::Uuid;
 
@@ -58,6 +58,44 @@ pub trait SearchService: Send + 'static {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>>;
+}
+
+#[async_trait]
+impl<T> SearchService for Arc<T>
+where
+    T: SearchService + Sync,
+{
+    async fn add_to_index<I>(&self, item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send,
+    {
+        self.deref().add_to_index(item).await
+    }
+
+    async fn remove_from_index<I>(&self, item: I) -> Result<()>
+    where
+        I: Into<SearchItem> + Send,
+    {
+        self.deref().remove_from_index(item).await
+    }
+
+    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
+        self.deref().reset_index(index).await
+    }
+
+    async fn search(
+        &self,
+        index: SearchIndex,
+        query: String,
+        max_results: u64,
+        offset: u64,
+        min_id: Option<Uuid>,
+        max_id: Option<Uuid>,
+    ) -> Result<Vec<SearchResult>> {
+        self.deref()
+            .search(index, query, max_results, offset, min_id, max_id)
+            .await
+    }
 }
 
 /// Search service
