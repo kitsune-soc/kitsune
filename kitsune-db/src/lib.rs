@@ -16,6 +16,7 @@
 
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection, DbErr};
+use tracing_log::LogTracer;
 
 pub mod column;
 pub mod custom;
@@ -30,6 +31,8 @@ pub mod link;
 /// - Connection could not be established
 /// - Running the migration failed
 pub async fn connect(db_url: &str) -> Result<DatabaseConnection, DbErr> {
+    LogTracer::init().ok();
+
     let conn = Database::connect(db_url).await?;
     Migrator::up(&conn, None).await?;
     Ok(conn)

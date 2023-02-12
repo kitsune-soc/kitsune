@@ -122,7 +122,7 @@ impl IntoMastodon for posts::Model {
         let favourites_count = self.find_related(Favourites).count(&state.db_conn).await?;
 
         let mentions = PostsMentions::find()
-            .belongs_to(&self)
+            .filter(posts_mentions::Column::PostId.eq(self.id))
             .stream(&state.db_conn)
             .await?
             .map_err(Error::from)

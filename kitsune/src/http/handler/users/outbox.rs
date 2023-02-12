@@ -53,7 +53,7 @@ pub async fn get(
 
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
     let base_query = Posts::find()
-        .belongs_to(&account)
+        .filter(posts::Column::AccountId.eq(account.id))
         .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
 
     if query.page {
