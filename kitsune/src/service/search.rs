@@ -32,7 +32,7 @@ impl From<posts::Model> for SearchItem {
 }
 
 #[async_trait]
-pub trait SearchService: Send + 'static {
+pub trait SearchService {
     /// Add an item to the index
     async fn add_to_index<I>(&self, item: I) -> Result<()>
     where
@@ -63,7 +63,7 @@ pub trait SearchService: Send + 'static {
 #[async_trait]
 impl<T> SearchService for Arc<T>
 where
-    T: SearchService + Sync,
+    T: SearchService + Send + Sync,
 {
     async fn add_to_index<I>(&self, item: I) -> Result<()>
     where
