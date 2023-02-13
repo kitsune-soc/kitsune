@@ -25,7 +25,7 @@ use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
     sea_query::{Expr, IntoCondition},
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, JoinType,
-    PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, TransactionTrait,
+    PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, Select, TransactionTrait,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -261,63 +261,66 @@ where
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> Result<Option<posts::Model>> {
-        let mut post_query = Posts::find_by_id(id);
-        let mut post_filter = posts::Column::Visibility
-            .eq(Visibility::Public)
-            .or(posts::Column::Visibility.eq(Visibility::Unlisted));
+        let post_query = Posts::find_by_id(id);
+        let post_query = add_permission_checks(post_query, fetching_account_id);
 
-        if let Some(fetching_account_id) = fetching_account_id {
-            // The post is owned by the user
-            post_filter = post_filter.or(posts::Column::AccountId.eq(fetching_account_id));
-
-            // Post is follower-only, and the user is following the author
-            post_query = post_query.join(
-                JoinType::LeftJoin,
-                posts::Relation::Accounts
-                    .def()
-                    .on_condition(move |posts_left, accounts_right| {
-                        Expr::col((posts_left, posts::Column::Visibility))
-                            .eq(Visibility::FollowerOnly)
-                            .and(
-                                Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
-                                    AccountsFollowers::find()
-                                        .filter(
-                                            accounts_followers::Column::FollowerId
-                                                .eq(fetching_account_id),
-                                        )
-                                        .filter(
-                                            accounts_followers::Column::ApprovedAt.is_not_null(),
-                                        )
-                                        .select_only()
-                                        .column(accounts_followers::Column::AccountId)
-                                        .into_query(),
-                                ),
-                            )
-                            .into_condition()
-                    }),
-            );
-
-            // Post is mention-only, and user is mentioned in the post
-            post_query = post_query.join(
-                JoinType::LeftJoin,
-                posts_mentions::Relation::Posts.def().rev().on_condition(
-                    move |posts_left, mentions_right| {
-                        Expr::col((posts_left, posts::Column::Visibility))
-                            .eq(Visibility::MentionOnly)
-                            .and(
-                                Expr::col((mentions_right, posts_mentions::Column::AccountId))
-                                    .eq(fetching_account_id),
-                            )
-                            .into_condition()
-                    },
-                ),
-            );
-        }
-
-        post_query
-            .filter(post_filter)
-            .one(&self.db_conn)
-            .await
-            .map_err(Error::from)
+        post_query.one(&self.db_conn).await.map_err(Error::from)
     }
+}
+
+fn add_permission_checks(
+    mut select_query: Select<Posts>,
+    fetching_account_id: Option<Uuid>,
+) -> Select<Posts> {
+    let mut post_filter = posts::Column::Visibility
+        .eq(Visibility::Public)
+        .or(posts::Column::Visibility.eq(Visibility::Unlisted));
+
+    if let Some(fetching_account_id) = fetching_account_id {
+        // The post is owned by the user
+        post_filter = post_filter.or(posts::Column::AccountId.eq(fetching_account_id));
+
+        // Post is follower-only, and the user is following the author
+        select_query = select_query.join(
+            JoinType::LeftJoin,
+            posts::Relation::Accounts
+                .def()
+                .on_condition(move |posts_left, accounts_right| {
+                    Expr::col((posts_left, posts::Column::Visibility))
+                        .eq(Visibility::FollowerOnly)
+                        .and(
+                            Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
+                                AccountsFollowers::find()
+                                    .filter(
+                                        accounts_followers::Column::FollowerId
+                                            .eq(fetching_account_id),
+                                    )
+                                    .filter(accounts_followers::Column::ApprovedAt.is_not_null())
+                                    .select_only()
+                                    .column(accounts_followers::Column::AccountId)
+                                    .into_query(),
+                            ),
+                        )
+                        .into_condition()
+                }),
+        );
+
+        // Post is mention-only, and user is mentioned in the post
+        select_query = select_query.join(
+            JoinType::LeftJoin,
+            posts_mentions::Relation::Posts.def().rev().on_condition(
+                move |posts_left, mentions_right| {
+                    Expr::col((posts_left, posts::Column::Visibility))
+                        .eq(Visibility::MentionOnly)
+                        .and(
+                            Expr::col((mentions_right, posts_mentions::Column::AccountId))
+                                .eq(fetching_account_id),
+                        )
+                        .into_condition()
+                },
+            ),
+        );
+    }
+
+    select_query.filter(post_filter)
 }
