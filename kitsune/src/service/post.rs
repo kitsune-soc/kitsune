@@ -285,6 +285,9 @@ where
                                             accounts_followers::Column::FollowerId
                                                 .eq(fetching_account_id),
                                         )
+                                        .filter(
+                                            accounts_followers::Column::ApprovedAt.is_not_null(),
+                                        )
                                         .select_only()
                                         .column(accounts_followers::Column::AccountId)
                                         .into_query(),
