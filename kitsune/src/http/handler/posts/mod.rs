@@ -7,20 +7,16 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_db::{
-    custom::Visibility,
-    entity::{posts, prelude::Posts},
-};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
 mod activity;
 
 #[debug_handler]
 async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(post) = Posts::find_by_id(id)
-        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]))
-        .one(&state.db_conn)
+    let Some(post) = state
+        .service
+        .post
+        .get_by_id(id, None)
         .await?
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());

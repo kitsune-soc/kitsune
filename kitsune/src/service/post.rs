@@ -2,7 +2,7 @@ use super::search::SearchService;
 use crate::{
     cache::Cache,
     config::Configuration,
-    error::{ApiError, Result},
+    error::{ApiError, Error, Result},
     job::{
         deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
         Job,
@@ -16,15 +16,16 @@ use futures_util::FutureExt;
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, jobs, posts, posts_mentions,
-        prelude::{Posts, UsersRoles},
+        accounts, accounts_followers, jobs, posts, posts_mentions,
+        prelude::{AccountsFollowers, Posts, UsersRoles},
         users_roles,
     },
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    PaginatorTrait, QueryFilter, TransactionTrait,
+    sea_query::{Expr, IntoCondition},
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, JoinType,
+    PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, TransactionTrait,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -250,5 +251,72 @@ where
         self.search_service.remove_from_index(post.into()).await?;
 
         Ok(())
+    }
+
+    /// Get a service by its ID
+    ///
+    /// Does checks whether the user is allowed to fetch the post
+    pub async fn get_by_id(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> Result<Option<posts::Model>> {
+        let mut post_query = Posts::find_by_id(id);
+        let mut post_filter = posts::Column::Visibility
+            .eq(Visibility::Public)
+            .or(posts::Column::Visibility.eq(Visibility::Unlisted));
+
+        if let Some(fetching_account_id) = fetching_account_id {
+            // The post is owned by the user
+            post_filter = post_filter.or(posts::Column::AccountId.eq(fetching_account_id));
+
+            // Post is follower-only, and the user is following the author
+            post_query = post_query.join(
+                JoinType::LeftJoin,
+                posts::Relation::Accounts
+                    .def()
+                    .on_condition(move |posts_left, accounts_right| {
+                        Expr::col((posts_left, posts::Column::Visibility))
+                            .eq(Visibility::FollowerOnly)
+                            .and(
+                                Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
+                                    AccountsFollowers::find()
+                                        .filter(
+                                            accounts_followers::Column::FollowerId
+                                                .eq(fetching_account_id),
+                                        )
+                                        .select_only()
+                                        .column(accounts_followers::Column::AccountId)
+                                        .into_query(),
+                                ),
+                            )
+                            .into_condition()
+                    }),
+            );
+
+            // Post is mention-only, and user is mentioned in the post
+            post_query = post_query.join(
+                JoinType::LeftJoin,
+                posts_mentions::Relation::Posts.def().rev().on_condition(
+                    move |posts_left, mentions_right| {
+                        Expr::col((posts_left, posts::Column::Visibility))
+                            .eq(Visibility::MentionOnly)
+                            .and(
+                                Expr::col((mentions_right, posts_mentions::Column::AccountId))
+                                    .eq(fetching_account_id),
+                            )
+                            .into_condition()
+                    },
+                ),
+            );
+
+            // Post is
+        }
+
+        post_query
+            .filter(post_filter)
+            .one(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 }

@@ -2313,7 +2313,6 @@ dependencies = [
  "migration",
  "sea-orm",
  "serde",
- "serde_json",
  "tracing-log",
 ]
 

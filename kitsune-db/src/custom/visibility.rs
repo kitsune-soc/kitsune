@@ -1,5 +1,8 @@
 use crate::entity::accounts;
-use kitsune_type::ap::{helper::CcTo, Privacy};
+use kitsune_type::{
+    ap::{helper::CcTo, Privacy},
+    mastodon::status::Visibility as MastodonVisibility,
+};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -50,11 +53,26 @@ impl Visibility {
             Self::MentionOnly
         }
     }
+}
 
-    /// Convert the visibility into its JSON representation
-    #[must_use]
-    #[allow(clippy::missing_panics_doc)]
-    pub fn json_repr(&self) -> String {
-        serde_json::to_string(self).unwrap()
+impl From<MastodonVisibility> for Visibility {
+    fn from(value: MastodonVisibility) -> Self {
+        match value {
+            MastodonVisibility::Public => Self::Public,
+            MastodonVisibility::Unlisted => Self::Unlisted,
+            MastodonVisibility::Private => Self::FollowerOnly,
+            MastodonVisibility::Direct => Self::MentionOnly,
+        }
+    }
+}
+
+impl From<Visibility> for MastodonVisibility {
+    fn from(value: Visibility) -> Self {
+        match value {
+            Visibility::Public => Self::Public,
+            Visibility::Unlisted => Self::Unlisted,
+            Visibility::FollowerOnly => Self::Private,
+            Visibility::MentionOnly => Self::Direct,
+        }
     }
 }

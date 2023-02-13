@@ -18,6 +18,16 @@ pub struct Mention {
     pub acct: String,
 }
 
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Visibility {
+    #[default]
+    Public,
+    Unlisted,
+    Private,
+    Direct,
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Status {
     pub id: Uuid,
@@ -26,7 +36,7 @@ pub struct Status {
     pub in_reply_to_account_id: Option<Uuid>,
     pub sensitive: bool,
     pub spoiler_text: Option<String>,
-    pub visibility: String,
+    pub visibility: Visibility,
     pub uri: String,
     pub url: String,
     pub replies_count: u64,
