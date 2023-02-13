@@ -312,8 +312,6 @@ where
                     },
                 ),
             );
-
-            // Post is
         }
 
         post_query
