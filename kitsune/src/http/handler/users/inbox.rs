@@ -1,6 +1,7 @@
 use crate::{error::Result, http::extractor::SignedActivity, state::Zustand};
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
+use futures_util::future::OptionFuture;
 use kitsune_db::{
     custom::Visibility,
     entity::{accounts, accounts_followers, posts, prelude::Posts},
@@ -18,12 +19,15 @@ async fn create_activity(
 
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
-            let in_reply_to_id = if let Some(in_reply_to) = note.rest.in_reply_to {
-                let note = state.fetcher.fetch_note(&in_reply_to).await?;
-                Some(note.id)
-            } else {
-                None
-            };
+            let in_reply_to_id = OptionFuture::from(
+                note.rest
+                    .in_reply_to
+                    .as_ref()
+                    .map(|post_url| state.fetcher.fetch_note(post_url)),
+            )
+            .await
+            .transpose()?
+            .map(|in_reply_to| in_reply_to.id);
 
             posts::Model {
                 id: Uuid::now_v7(),
