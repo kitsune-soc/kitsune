@@ -52,14 +52,13 @@ impl Deliverer {
             .build()
             .unwrap();
 
-        if !self
-            .client
-            .execute_signed(request, private_key)
-            .await?
-            .status()
-            .is_success()
-        {
-            todo!("return error");
+        let response = self.client.execute_signed(request, private_key).await?;
+        if !response.status().is_success() {
+            error!(
+                status_code = %response.status(),
+                %inbox_url,
+                "failed to deliver activity",
+            );
         }
 
         Ok(())

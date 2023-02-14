@@ -47,7 +47,8 @@ async fn create_activity(
             .await?;
         }
         None | Some(Object::Person(..)) => {
-            // TODO: Handle rest of the cases
+            // Right now, we refuse to save anything but a note
+            // If we receive a user or just a URL to a resource, we don't care
         }
     }
 
