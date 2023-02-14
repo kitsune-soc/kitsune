@@ -63,15 +63,13 @@ async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
         .await?
         .unwrap();
 
-    if let Some(url) = activity.object.into_string() {
-        Posts::delete(posts::ActiveModel {
-            account_id: ActiveValue::Set(account.id),
-            url: ActiveValue::Set(url),
-            ..Default::default()
-        })
-        .exec(&state.db_conn)
-        .await?;
-    }
+    Posts::delete(posts::ActiveModel {
+        account_id: ActiveValue::Set(account.id),
+        url: ActiveValue::Set(activity.object().to_string()),
+        ..Default::default()
+    })
+    .exec(&state.db_conn)
+    .await?;
 
     Ok(())
 }
@@ -83,22 +81,20 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
         .await?
         .unwrap();
 
-    if let Some(url) = activity.object.into_string() {
-        let followed_user = state.fetcher.fetch_actor(&url).await?;
+    let followed_user = state.fetcher.fetch_actor(activity.object()).await?;
 
-        accounts_followers::Model {
-            id: Uuid::now_v7(),
-            account_id: followed_user.id,
-            follower_id: account.id,
-            approved_at: None,
-            url: activity.rest.id,
-            created_at: activity.rest.published.into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?;
+    accounts_followers::Model {
+        id: Uuid::now_v7(),
+        account_id: followed_user.id,
+        follower_id: account.id,
+        approved_at: None,
+        url: activity.rest.id,
+        created_at: activity.rest.published.into(),
+        updated_at: Utc::now().into(),
     }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
 
     Ok(())
 }
