@@ -78,7 +78,10 @@ pub struct DeletePost {
     account_id: Uuid,
 
     /// ID of the user that requests the deletion
-    user_id: Uuid,
+    ///
+    /// Defaults to none
+    #[builder(default, setter(strip_option))]
+    user_id: Option<Uuid>,
 
     /// ID of the post that is supposed to be deleted
     post_id: Uuid,
@@ -223,13 +226,17 @@ where
         };
 
         if post.account_id != delete_post.account_id {
-            let admin_role_count = UsersRoles::find()
-                .filter(users_roles::Column::UserId.eq(delete_post.user_id))
-                .filter(users_roles::Column::Role.eq(Role::Administrator))
-                .count(&self.db_conn)
-                .await?;
+            if let Some(user_id) = delete_post.user_id {
+                let admin_role_count = UsersRoles::find()
+                    .filter(users_roles::Column::UserId.eq(user_id))
+                    .filter(users_roles::Column::Role.eq(Role::Administrator))
+                    .count(&self.db_conn)
+                    .await?;
 
-            if admin_role_count == 0 {
+                if admin_role_count == 0 {
+                    return Err(ApiError::Unauthorised.into());
+                }
+            } else {
                 return Err(ApiError::Unauthorised.into());
             }
         }

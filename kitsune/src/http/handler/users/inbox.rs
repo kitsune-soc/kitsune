@@ -24,10 +24,17 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
 
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
+            let in_reply_to_id = if let Some(in_reply_to) = note.rest.in_reply_to {
+                let note = state.fetcher.fetch_note(&in_reply_to).await?;
+                Some(note.id)
+            } else {
+                None
+            };
+
             posts::Model {
                 id: Uuid::now_v7(),
                 account_id: account.id,
-                in_reply_to_id: None, // TODO: Actually fill this
+                in_reply_to_id,
                 subject: note.subject,
                 content: note.content,
                 is_sensitive: note.rest.sensitive,

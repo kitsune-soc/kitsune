@@ -210,7 +210,7 @@ where
         Ok(account)
     }
 
-    #[async_recursion(?Send)]
+    #[async_recursion]
     async fn fetch_note_inner(&self, url: &str, call_depth: u32) -> Result<Option<posts::Model>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);
