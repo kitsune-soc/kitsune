@@ -4,7 +4,10 @@ use crate::{
     config::Configuration,
     error::{ApiError, Error, Result},
     job::{
-        deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
+        deliver::{
+            create::CreateDeliveryContext, delete::DeleteDeliveryContext,
+            favourite::FavouriteDeliveryContext,
+        },
         Job,
     },
     resolve::PostResolver,
@@ -16,7 +19,7 @@ use futures_util::FutureExt;
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, accounts_followers, jobs, posts, posts_mentions,
+        accounts, accounts_followers, favourites, jobs, posts, posts_mentions,
         prelude::{AccountsFollowers, Posts, UsersRoles},
         users_roles,
     },
@@ -258,6 +261,57 @@ where
         self.search_service.remove_from_index(post.into()).await?;
 
         Ok(())
+    }
+
+    /// Favourite a post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, create a bug report.
+    pub async fn favourite(
+        &self,
+        post_id: Uuid,
+        favouriting_account_id: Uuid,
+    ) -> Result<posts::Model> {
+        let post_query = Posts::find_by_id(post_id);
+        let Some(post) = add_permission_checks(post_query, Some(favouriting_account_id))
+            .one(&self.db_conn)
+            .await?
+        else {
+            return Err(ApiError::NotFound.into());
+        };
+
+        let id = Uuid::now_v7();
+        let url = format!("https://{}/favourites/{id}", self.config.domain);
+        let favourite = favourites::Model {
+            id,
+            account_id: favouriting_account_id,
+            post_id: post.id,
+            url,
+            created_at: Utc::now().into(),
+        }
+        .into_active_model()
+        .insert(&self.db_conn)
+        .await?;
+
+        let context = Job::DeliverFavourite(FavouriteDeliveryContext {
+            favourite_id: favourite.id,
+        });
+
+        jobs::Model {
+            id: Uuid::now_v7(),
+            state: JobState::Queued,
+            run_at: Utc::now().into(),
+            context: serde_json::to_value(context).unwrap(),
+            fail_count: 0,
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
+        }
+        .into_active_model()
+        .insert(&self.db_conn)
+        .await?;
+
+        Ok(post)
     }
 
     /// Get a service by its ID
