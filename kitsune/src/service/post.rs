@@ -13,9 +13,10 @@ use crate::{
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
 };
+use async_stream::try_stream;
 use chrono::Utc;
 use derive_builder::Builder;
-use futures_util::FutureExt;
+use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
@@ -23,12 +24,14 @@ use kitsune_db::{
         prelude::{AccountsFollowers, Posts, UsersRoles},
         users_roles,
     },
+    link::InReplyTo,
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
     sea_query::{Expr, IntoCondition},
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, JoinType,
-    PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, Select, TransactionTrait,
+    ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, Select,
+    TransactionTrait,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -314,7 +317,7 @@ where
         Ok(post)
     }
 
-    /// Get a service by its ID
+    /// Get a post by its ID
     ///
     /// Does checks whether the user is allowed to fetch the post
     pub async fn get_by_id(
@@ -326,6 +329,55 @@ where
         let post_query = add_permission_checks(post_query, fetching_account_id);
 
         post_query.one(&self.db_conn).await.map_err(Error::from)
+    }
+
+    /// Get the ancestors of the post
+    pub fn get_ancestors(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> impl Stream<Item = Result<posts::Model>> + '_ {
+        try_stream! {
+            let mut last_post = self.get_by_id(id, fetching_account_id).await?;
+
+            while let Some(post) = last_post.take() {
+                let post_query = post.find_linked(InReplyTo);
+                let post_query = add_permission_checks(post_query, fetching_account_id);
+                let post = post_query.one(&self.db_conn).await?;
+
+                if let Some(ref post) = post {
+                    yield post.clone();
+                }
+
+                last_post = post;
+            }
+        }
+    }
+
+    /// Get the descendants of the post
+    pub fn get_descendants(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> BoxStream<'_, Result<posts::Model>> {
+        try_stream! {
+            let descendant_query = Posts::find().filter(posts::Column::InReplyToId.eq(id));
+            let descendant_query = add_permission_checks(descendant_query, fetching_account_id);
+            let descendant_stream = descendant_query.stream(&self.db_conn).await?;
+
+            for await descendant in descendant_stream {
+                let descendant = descendant?;
+                let descendant_id = descendant.id;
+
+                yield descendant;
+
+                let sub_descendants = self.get_descendants(descendant_id, fetching_account_id);
+                for await sub_descendant in sub_descendants {
+                    yield sub_descendant?;
+                }
+            }
+        }
+        .boxed()
     }
 }
 

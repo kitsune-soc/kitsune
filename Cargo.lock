@@ -2232,6 +2232,7 @@ dependencies = [
  "async-graphql",
  "async-graphql-axum",
  "async-recursion",
+ "async-stream",
  "async-trait",
  "autometrics",
  "axum",
