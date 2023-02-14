@@ -116,7 +116,7 @@ where
     }
 }
 
-pub struct SignedActivity(pub Activity);
+pub struct SignedActivity(pub accounts::Model, pub Activity);
 
 #[async_trait]
 impl FromRequest<Zustand, Body> for SignedActivity {
@@ -164,6 +164,6 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             return Err(StatusCode::UNAUTHORIZED.into_response());
         }
 
-        Ok(Self(activity))
+        Ok(Self(remote_user, activity))
     }
 }

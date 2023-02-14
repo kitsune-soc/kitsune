@@ -3,24 +3,18 @@ use axum::{debug_handler, extract::State};
 use chrono::Utc;
 use kitsune_db::{
     custom::Visibility,
-    entity::{
-        accounts, accounts_followers, posts,
-        prelude::{Accounts, Posts},
-    },
+    entity::{accounts, accounts_followers, posts, prelude::Posts},
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, IntoActiveModel};
 use uuid::Uuid;
 
-async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
-    let visibility = Visibility::from_activitypub(&account, &activity);
+async fn create_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
+    let visibility = Visibility::from_activitypub(&author, &activity);
 
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
@@ -33,7 +27,7 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
 
             posts::Model {
                 id: Uuid::now_v7(),
-                account_id: account.id,
+                account_id: author.id,
                 in_reply_to_id,
                 subject: note.subject,
                 content: note.content,
@@ -56,15 +50,13 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
     Ok(())
 }
 
-async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
-
+async fn delete_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
     Posts::delete(posts::ActiveModel {
-        account_id: ActiveValue::Set(account.id),
+        account_id: ActiveValue::Set(author.id),
         url: ActiveValue::Set(activity.object().to_string()),
         ..Default::default()
     })
@@ -74,19 +66,17 @@ async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
     Ok(())
 }
 
-async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
-
+async fn follow_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object()).await?;
 
     accounts_followers::Model {
         id: Uuid::now_v7(),
         account_id: followed_user.id,
-        follower_id: account.id,
+        follower_id: author.id,
         approved_at: None,
         url: activity.rest.id,
         created_at: activity.rest.published.into(),
@@ -102,18 +92,17 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
 #[debug_handler]
 pub async fn post(
     State(state): State<Zustand>,
-    SignedActivity(activity): SignedActivity,
+    SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {
     increment_counter!("received_activities");
-    // TODO: Insert activity into database
 
     match activity.r#type {
         ActivityType::Accept => todo!(),
         ActivityType::Announce => todo!(),
         ActivityType::Block => todo!(),
-        ActivityType::Create => create_activity(&state, activity).await,
-        ActivityType::Delete => delete_activity(&state, activity).await,
-        ActivityType::Follow => follow_activity(&state, activity).await,
+        ActivityType::Create => create_activity(&state, author, activity).await,
+        ActivityType::Delete => delete_activity(&state, author, activity).await,
+        ActivityType::Follow => follow_activity(&state, author, activity).await,
         ActivityType::Like => todo!(),
         ActivityType::Reject => todo!(),
         ActivityType::Undo => todo!(),
