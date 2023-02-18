@@ -1,6 +1,7 @@
 use crate::{
     error::{ApiError, Error, Result},
     mapping::IntoActivity,
+    service::account::GetPosts,
     state::Zustand,
 };
 use axum::{
@@ -21,13 +22,11 @@ use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
-use sea_orm::{
-    ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
-};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, Related};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-const ACTIVITIES_PER_PAGE: u64 = 10;
+const ACTIVITIES_PER_PAGE: usize = 10;
 
 #[derive(Deserialize, Serialize)]
 pub struct OutboxQuery {
@@ -57,18 +56,22 @@ pub async fn get(
         .add_permission_checks(None);
 
     if query.page {
-        let mut page_query = base_query;
+        let mut get_posts = GetPosts::builder().account_id(account.id).clone();
         if let Some(max_id) = query.max_id {
-            page_query = page_query.filter(posts::Column::Id.lt(max_id));
+            get_posts.max_id(max_id);
         }
         if let Some(min_id) = query.min_id {
-            page_query = page_query.filter(posts::Column::Id.gt(min_id));
+            get_posts.min_id(min_id);
         }
+        let get_posts = get_posts.build().unwrap();
 
-        let posts = page_query
-            .limit(ACTIVITIES_PER_PAGE)
-            .order_by_desc(posts::Column::Id)
-            .all(&state.db_conn)
+        let posts: Vec<posts::Model> = state
+            .service
+            .account
+            .get_posts(get_posts)
+            .await?
+            .take(ACTIVITIES_PER_PAGE)
+            .try_collect()
             .await?;
 
         let id = format!("{}{original_uri}", state.config.domain);

@@ -7,7 +7,7 @@ use kitsune::{
     config::Configuration,
     http, job,
     resolve::PostResolver,
-    service::{post::PostService, search::GrpcSearchService},
+    service::{account::AccountService, post::PostService, search::GrpcSearchService},
     state::{Service, Zustand},
     webfinger::Webfinger,
 };
@@ -85,6 +85,11 @@ async fn main() {
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
     let webfinger = Webfinger::with_defaults(redis_conn);
 
+    let account_service = AccountService::builder()
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .config(config.clone())
@@ -99,6 +104,7 @@ async fn main() {
         db_conn: conn,
         fetcher,
         service: Service {
+            account: account_service,
             search: Arc::new(search_service),
             post: post_service,
         },
