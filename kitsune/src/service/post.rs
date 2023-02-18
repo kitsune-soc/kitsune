@@ -20,18 +20,17 @@ use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, accounts_followers, favourites, jobs, posts, posts_mentions,
-        prelude::{AccountsFollowers, Posts, UsersRoles},
+        accounts, favourites, jobs, posts, posts_mentions,
+        prelude::{Posts, UsersRoles},
         users_roles,
     },
     link::InReplyTo,
+    r#trait::PostPermissionCheckExt,
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    sea_query::{Expr, IntoCondition},
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, JoinType,
-    ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, QueryTrait, RelationTrait, Select,
-    TransactionTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
+    PaginatorTrait, QueryFilter, TransactionTrait,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -276,8 +275,8 @@ where
         post_id: Uuid,
         favouriting_account_id: Uuid,
     ) -> Result<posts::Model> {
-        let post_query = Posts::find_by_id(post_id);
-        let Some(post) = add_permission_checks(post_query, Some(favouriting_account_id))
+        let Some(post) = Posts::find_by_id(post_id)
+            .add_permission_checks(Some(favouriting_account_id))
             .one(&self.db_conn)
             .await?
         else {
@@ -325,10 +324,11 @@ where
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> Result<Option<posts::Model>> {
-        let post_query = Posts::find_by_id(id);
-        let post_query = add_permission_checks(post_query, fetching_account_id);
-
-        post_query.one(&self.db_conn).await.map_err(Error::from)
+        Posts::find_by_id(id)
+            .add_permission_checks(fetching_account_id)
+            .one(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 
     /// Get the ancestors of the post
@@ -341,9 +341,11 @@ where
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
 
             while let Some(post) = last_post.take() {
-                let post_query = post.find_linked(InReplyTo);
-                let post_query = add_permission_checks(post_query, fetching_account_id);
-                let post = post_query.one(&self.db_conn).await?;
+                let post = post
+                    .find_linked(InReplyTo)
+                    .add_permission_checks(fetching_account_id)
+                    .one(&self.db_conn)
+                    .await?;
 
                 if let Some(ref post) = post {
                     yield post.clone();
@@ -361,9 +363,11 @@ where
         fetching_account_id: Option<Uuid>,
     ) -> BoxStream<'_, Result<posts::Model>> {
         try_stream! {
-            let descendant_query = Posts::find().filter(posts::Column::InReplyToId.eq(id));
-            let descendant_query = add_permission_checks(descendant_query, fetching_account_id);
-            let descendant_stream = descendant_query.stream(&self.db_conn).await?;
+            let descendant_stream = Posts::find()
+                .filter(posts::Column::InReplyToId.eq(id))
+                .add_permission_checks(fetching_account_id)
+                .stream(&self.db_conn)
+                .await?;
 
             for await descendant in descendant_stream {
                 let descendant = descendant?;
@@ -379,61 +383,4 @@ where
         }
         .boxed()
     }
-}
-
-fn add_permission_checks(
-    mut select_query: Select<Posts>,
-    fetching_account_id: Option<Uuid>,
-) -> Select<Posts> {
-    let mut post_filter = posts::Column::Visibility
-        .eq(Visibility::Public)
-        .or(posts::Column::Visibility.eq(Visibility::Unlisted));
-
-    if let Some(fetching_account_id) = fetching_account_id {
-        // The post is owned by the user
-        post_filter = post_filter.or(posts::Column::AccountId.eq(fetching_account_id));
-
-        // Post is follower-only, and the user is following the author
-        select_query = select_query.join(
-            JoinType::LeftJoin,
-            posts::Relation::Accounts
-                .def()
-                .on_condition(move |posts_left, accounts_right| {
-                    Expr::col((posts_left, posts::Column::Visibility))
-                        .eq(Visibility::FollowerOnly)
-                        .and(
-                            Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
-                                AccountsFollowers::find()
-                                    .filter(
-                                        accounts_followers::Column::FollowerId
-                                            .eq(fetching_account_id),
-                                    )
-                                    .filter(accounts_followers::Column::ApprovedAt.is_not_null())
-                                    .select_only()
-                                    .column(accounts_followers::Column::AccountId)
-                                    .into_query(),
-                            ),
-                        )
-                        .into_condition()
-                }),
-        );
-
-        // Post is mention-only, and user is mentioned in the post
-        select_query = select_query.join(
-            JoinType::LeftJoin,
-            posts_mentions::Relation::Posts.def().rev().on_condition(
-                move |posts_left, mentions_right| {
-                    Expr::col((posts_left, posts::Column::Visibility))
-                        .eq(Visibility::MentionOnly)
-                        .and(
-                            Expr::col((mentions_right, posts_mentions::Column::AccountId))
-                                .eq(fetching_account_id),
-                        )
-                        .into_condition()
-                },
-            ),
-        );
-    }
-
-    select_query.filter(post_filter)
 }

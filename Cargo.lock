@@ -2315,6 +2315,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "tracing-log",
+ "uuid",
 ]
 
 [[package]]
