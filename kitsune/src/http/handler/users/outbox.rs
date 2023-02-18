@@ -51,9 +51,6 @@ pub async fn get(
     };
 
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
-    let base_query = Posts::find()
-        .filter(posts::Column::AccountId.eq(account.id))
-        .add_permission_checks(None);
 
     if query.page {
         let mut get_posts = GetPosts::builder().account_id(account.id).clone();
@@ -102,7 +99,12 @@ pub async fn get(
         })
         .into_response())
     } else {
-        let public_post_count = base_query.count(&state.db_conn).await?;
+        let public_post_count = Posts::find()
+            .filter(posts::Column::AccountId.eq(account.id))
+            .add_permission_checks(None)
+            .count(&state.db_conn)
+            .await?;
+
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
 
