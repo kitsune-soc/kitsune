@@ -76,7 +76,7 @@ async fn follow_activity(
     author: accounts::Model,
     activity: Activity,
 ) -> Result<()> {
-    let followed_user = state.fetcher.fetch_actor(activity.object()).await?;
+    let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
 
     accounts_followers::Model {
         id: Uuid::now_v7(),

@@ -8,6 +8,7 @@ use crate::{
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use chrono::Utc;
+use derive_builder::Builder;
 use futures_util::FutureExt;
 use http::HeaderValue;
 use kitsune_db::{
@@ -29,6 +30,34 @@ use uuid::{Timestamp, Uuid};
 
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
+
+#[derive(Builder, Clone, Debug)]
+/// Options passed to the fetcher
+pub struct FetchOptions<'a> {
+    /// Refetch the ActivityPub entity
+    ///
+    /// This is mainly used to refresh possibly stale actors
+    ///
+    /// Default: false
+    #[builder(default = "false")]
+    refetch: bool,
+
+    /// URL of the ActivityPub entity
+    url: &'a str,
+}
+
+impl<'a> FetchOptions<'a> {
+    #[must_use]
+    pub fn builder() -> FetchOptionsBuilder<'a> {
+        FetchOptionsBuilder::default()
+    }
+}
+
+impl<'a> From<&'a str> for FetchOptions<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::builder().url(value).build().unwrap()
+    }
+}
 
 #[derive(Clone)]
 pub struct Fetcher<
@@ -103,20 +132,23 @@ where
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_actor(&self, url: &str) -> Result<accounts::Model> {
-        if let Some(user) = self.user_cache.get(url).await? {
-            return Ok(user);
+    pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<accounts::Model> {
+        // Obviously we can't hit the cache nor the database if we wanna refetch the actor
+        if !opts.refetch {
+            if let Some(user) = self.user_cache.get(opts.url).await? {
+                return Ok(user);
+            }
+
+            if let Some(user) = Accounts::find()
+                .filter(accounts::Column::Url.eq(opts.url))
+                .one(&self.db_conn)
+                .await?
+            {
+                return Ok(user);
+            }
         }
 
-        if let Some(user) = Accounts::find()
-            .filter(accounts::Column::Url.eq(url))
-            .one(&self.db_conn)
-            .await?
-        {
-            return Ok(user);
-        }
-
-        let url = Url::parse(url)?;
+        let url = Url::parse(opts.url)?;
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
@@ -233,7 +265,12 @@ where
         note.clean_html();
 
         let user = self
-            .fetch_actor(note.rest.attributed_to().ok_or(Error::MalformedApObject)?)
+            .fetch_actor(
+                note.rest
+                    .attributed_to()
+                    .map(FetchOptions::from)
+                    .ok_or(Error::MalformedApObject)?,
+            )
             .await?;
         let visibility = Visibility::from_activitypub(&user, &note);
 
@@ -301,7 +338,7 @@ mod test {
         let fetcher = Fetcher::new(db_conn, NoopSearchService, NoopCache, NoopCache);
 
         let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0")
+            .fetch_actor("https://corteximplant.com/users/0x0".into())
             .await
             .expect("Fetch actor");
 
