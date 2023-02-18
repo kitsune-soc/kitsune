@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.23"
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 dotenvy = "0.15.6"
 envy = "0.4.2"
 kitsune-db = { version = "0.1.0", path = "../kitsune-db" }

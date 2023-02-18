@@ -18,14 +18,14 @@ async-graphql = { version = "5.0.6", features = [
 ] }
 async-graphql-axum = "5.0.6"
 async-recursion = "1.0.2"
-async-stream = "0.3.3"
+async-stream = "0.3.4"
 async-trait = "0.1.64"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
-axum = { version = "0.6.6", features = ["headers", "macros"] }
+axum = { version = "0.6.7", features = ["headers", "macros"] }
 axum-extra = { version = "0.5.0", features = ["query"] }
-axum-prometheus = "0.3.0"
+axum-prometheus = "0.3.1"
 base64 = "0.21.0"
 blurhash-ng = "0.1.2"
 chrono = "0.4.23"
@@ -36,7 +36,7 @@ envy = "0.4.2"
 futures-util = "0.3.26"
 headers = "0.3.8"
 hex = "0.4.3"
-http = "0.2.8"
+http = "0.2.9"
 hyper = "0.14.24"
 image = "0.24.5"
 itertools = "0.10.5"
@@ -52,7 +52,7 @@ metrics-util = "0.14.0"
 mimalloc = "0.1.34"
 mime = "0.3.16"
 mime_guess = "2.0.4"
-once_cell = "1.17.0"
+once_cell = "1.17.1"
 parking_lot = "0.12.1"
 pin-project-lite = "0.2.9"
 post-process = { path = "../post-process" }
