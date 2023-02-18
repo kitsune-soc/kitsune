@@ -10,12 +10,12 @@ use axum::{
 };
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    custom::Visibility,
     entity::{
         posts,
         prelude::{Accounts, Posts, Users},
         users,
     },
+    r#trait::PostPermissionCheckExt,
 };
 use kitsune_type::ap::{
     ap_context,
@@ -54,7 +54,7 @@ pub async fn get(
     let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
     let base_query = Posts::find()
         .filter(posts::Column::AccountId.eq(account.id))
-        .filter(posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
+        .add_permission_checks(None);
 
     if query.page {
         let mut page_query = base_query;
