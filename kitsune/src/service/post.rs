@@ -6,7 +6,7 @@ use crate::{
     job::{
         deliver::{
             create::CreateDeliveryContext, delete::DeleteDeliveryContext,
-            favourite::FavouriteDeliveryContext,
+            favourite::FavouriteDeliveryContext, unfavourite::UnfavouriteDeliveryContext,
         },
         Job,
     },
@@ -21,7 +21,7 @@ use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
         accounts, favourites, jobs, posts, posts_mentions,
-        prelude::{Posts, UsersRoles},
+        prelude::{Favourites, Posts, UsersRoles},
         users_roles,
     },
     link::InReplyTo,
@@ -312,6 +312,50 @@ where
         .into_active_model()
         .insert(&self.db_conn)
         .await?;
+
+        Ok(post)
+    }
+
+    /// Unfavourite a post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open a bug report.
+    pub async fn unfavourite(
+        &self,
+        post_id: Uuid,
+        favouriting_account_id: Uuid,
+    ) -> Result<posts::Model> {
+        let Some(post) = self
+            .get_by_id(post_id, Some(favouriting_account_id))
+            .await?
+        else {
+            return Err(ApiError::NotFound.into());
+        };
+
+        if let Some(favourite) = post
+            .find_related(Favourites)
+            .filter(favourites::Column::AccountId.eq(favouriting_account_id))
+            .one(&self.db_conn)
+            .await?
+        {
+            let context = Job::DeliverUnfavourite(UnfavouriteDeliveryContext {
+                favourite_id: favourite.id,
+            });
+
+            jobs::Model {
+                id: Uuid::now_v7(),
+                state: JobState::Queued,
+                run_at: Utc::now().into(),
+                context: serde_json::to_value(context).unwrap(),
+                fail_count: 0,
+                created_at: Utc::now().into(),
+                updated_at: Utc::now().into(),
+            }
+            .into_active_model()
+            .insert(&self.db_conn)
+            .await?;
+        }
 
         Ok(post)
     }
