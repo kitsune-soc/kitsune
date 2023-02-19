@@ -27,6 +27,13 @@ pub struct GetHome {
     min_id: Option<Uuid>,
 }
 
+impl GetHome {
+    #[must_use]
+    pub fn builder() -> GetHomeBuilder {
+        GetHomeBuilder::default()
+    }
+}
+
 #[derive(Builder, Clone)]
 pub struct GetPublic {
     #[builder(default, setter(strip_option))]
