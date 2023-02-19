@@ -141,25 +141,31 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
 }
 
 async fn reject_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    AccountsFollowers::delete_many()
-        .filter(accounts_followers::Column::Url.eq(activity.object()))
-        .exec(&state.db_conn)
-        .await?;
+    AccountsFollowers::delete(accounts_followers::ActiveModel {
+        url: ActiveValue::Set(activity.object().into()),
+        ..Default::default()
+    })
+    .exec(&state.db_conn)
+    .await?;
 
     Ok(())
 }
 
 async fn undo_activity(state: &Zustand, activity: Activity) -> Result<()> {
     // An undo activity can apply for likes and follows
-    Favourites::delete_many()
-        .filter(favourites::Column::Url.eq(activity.object()))
-        .exec(&state.db_conn)
-        .await?;
+    Favourites::delete(favourites::ActiveModel {
+        url: ActiveValue::Set(activity.object().into()),
+        ..Default::default()
+    })
+    .exec(&state.db_conn)
+    .await?;
 
-    AccountsFollowers::delete_many()
-        .filter(accounts_followers::Column::Url.eq(activity.object()))
-        .exec(&state.db_conn)
-        .await?;
+    AccountsFollowers::delete(accounts_followers::ActiveModel {
+        url: ActiveValue::Set(activity.object().into()),
+        ..Default::default()
+    })
+    .exec(&state.db_conn)
+    .await?;
 
     Ok(())
 }
