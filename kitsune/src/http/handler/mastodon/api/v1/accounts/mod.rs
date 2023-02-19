@@ -9,6 +9,7 @@ use kitsune_db::entity::prelude::Accounts;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 
+mod statuses;
 mod verify_credentials;
 
 async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
@@ -22,5 +23,6 @@ async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Respo
 pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:id", routing::get(get))
+        .route("/:id/statuses", routing::get(statuses::get))
         .route("/verify_credentials", routing::get(verify_credentials::get))
 }
