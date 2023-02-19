@@ -5,7 +5,7 @@ use kitsune_db::{
     entity::{posts, prelude::Posts},
     r#trait::PostPermissionCheckExt,
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
 use uuid::Uuid;
 
 #[derive(Builder, Clone)]
@@ -48,7 +48,9 @@ impl TimelineService {
         &self,
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
-        let mut query = Posts::find().add_permission_checks(get_public.fetching_account_id);
+        let mut query = Posts::find()
+            .add_permission_checks(get_public.fetching_account_id)
+            .order_by_desc(posts::Column::CreatedAt);
 
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::Column::Id.lt(max_id));
