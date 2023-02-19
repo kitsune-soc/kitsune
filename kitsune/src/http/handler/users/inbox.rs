@@ -1,33 +1,38 @@
 use crate::{error::Result, http::extractor::SignedActivity, state::Zustand};
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
+use futures_util::future::OptionFuture;
 use kitsune_db::{
     custom::Visibility,
-    entity::{
-        accounts, accounts_followers, posts,
-        prelude::{Accounts, Posts},
-    },
+    entity::{accounts, accounts_followers, posts, prelude::Posts},
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, IntoActiveModel};
 use uuid::Uuid;
 
-async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
-    let visibility = Visibility::from_activitypub(&account, &activity);
+async fn create_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
+    let visibility = Visibility::from_activitypub(&author, &activity);
 
     match activity.object.into_object() {
         Some(Object::Note(note)) => {
+            let in_reply_to_id = OptionFuture::from(
+                note.rest
+                    .in_reply_to
+                    .as_ref()
+                    .map(|post_url| state.fetcher.fetch_note(post_url)),
+            )
+            .await
+            .transpose()?
+            .map(|in_reply_to| in_reply_to.id);
+
             posts::Model {
                 id: Uuid::now_v7(),
-                account_id: account.id,
-                in_reply_to_id: None, // TODO: Actually fill this
+                account_id: author.id,
+                in_reply_to_id,
                 subject: note.subject,
                 content: note.content,
                 is_sensitive: note.rest.sensitive,
@@ -42,56 +47,49 @@ async fn create_activity(state: &Zustand, activity: Activity) -> Result<()> {
             .await?;
         }
         None | Some(Object::Person(..)) => {
-            // TODO: Handle rest of the cases
+            // Right now, we refuse to save anything but a note
+            // If we receive a user or just a URL to a resource, we don't care
         }
     }
 
     Ok(())
 }
 
-async fn delete_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
-
-    if let Some(url) = activity.object.into_string() {
-        Posts::delete(posts::ActiveModel {
-            account_id: ActiveValue::Set(account.id),
-            url: ActiveValue::Set(url),
-            ..Default::default()
-        })
-        .exec(&state.db_conn)
-        .await?;
-    }
+async fn delete_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
+    Posts::delete(posts::ActiveModel {
+        account_id: ActiveValue::Set(author.id),
+        url: ActiveValue::Set(activity.object().to_string()),
+        ..Default::default()
+    })
+    .exec(&state.db_conn)
+    .await?;
 
     Ok(())
 }
 
-async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let account = Accounts::find()
-        .filter(accounts::Column::Url.eq(activity.rest.attributed_to().unwrap()))
-        .one(&state.db_conn)
-        .await?
-        .unwrap();
+async fn follow_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
+    let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
 
-    if let Some(url) = activity.object.into_string() {
-        let followed_user = state.fetcher.fetch_actor(&url).await?;
-
-        accounts_followers::Model {
-            id: Uuid::now_v7(),
-            account_id: followed_user.id,
-            follower_id: account.id,
-            approved_at: None,
-            url: activity.rest.id,
-            created_at: activity.rest.published.into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&state.db_conn)
-        .await?;
+    accounts_followers::Model {
+        id: Uuid::now_v7(),
+        account_id: followed_user.id,
+        follower_id: author.id,
+        approved_at: None,
+        url: activity.rest.id,
+        created_at: activity.rest.published.into(),
+        updated_at: Utc::now().into(),
     }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
 
     Ok(())
 }
@@ -99,18 +97,17 @@ async fn follow_activity(state: &Zustand, activity: Activity) -> Result<()> {
 #[debug_handler]
 pub async fn post(
     State(state): State<Zustand>,
-    SignedActivity(activity): SignedActivity,
+    SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {
     increment_counter!("received_activities");
-    // TODO: Insert activity into database
 
     match activity.r#type {
         ActivityType::Accept => todo!(),
         ActivityType::Announce => todo!(),
         ActivityType::Block => todo!(),
-        ActivityType::Create => create_activity(&state, activity).await,
-        ActivityType::Delete => delete_activity(&state, activity).await,
-        ActivityType::Follow => follow_activity(&state, activity).await,
+        ActivityType::Create => create_activity(&state, author, activity).await,
+        ActivityType::Delete => delete_activity(&state, author, activity).await,
+        ActivityType::Follow => follow_activity(&state, author, activity).await,
         ActivityType::Like => todo!(),
         ActivityType::Reject => todo!(),
         ActivityType::Undo => todo!(),

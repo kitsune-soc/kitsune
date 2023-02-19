@@ -8,7 +8,7 @@ use std::{fmt::Display, marker::PhantomData, ops::Deref, sync::Arc, time::Durati
 type CacheResult<T, E = CacheError> = Result<T, E>;
 
 #[async_trait]
-pub trait Cache<K, V>
+pub trait Cache<K, V>: Send + Sync
 where
     K: ?Sized,
 {

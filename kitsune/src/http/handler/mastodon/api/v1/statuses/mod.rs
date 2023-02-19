@@ -12,11 +12,7 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_db::{
-    custom::Visibility,
-    entity::{posts, prelude::Posts},
-};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use kitsune_type::mastodon::status::Visibility;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -56,17 +52,14 @@ async fn delete(
 #[debug_handler(state = Zustand)]
 async fn get(
     State(state): State<Zustand>,
-    _user_data: Option<MastodonAuthExtractor>,
+    user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(post) = Posts::find()
-        .filter(posts::Column::Id.eq(id))
-        .filter(
-            posts::Column::Visibility
-                .eq(Visibility::Public)
-                .or(posts::Column::Visibility.eq(Visibility::Unlisted))
-        )
-        .one(&state.db_conn)
+    let account_id = user_data.map(|user_data| user_data.0.account.id);
+    let Some(post) = state
+        .service
+        .post
+        .get_by_id(id, account_id)
         .await?
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());
@@ -81,12 +74,11 @@ async fn post(
     AuthExtractor(user_data): MastodonAuthExtractor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
-    // TODO: Use the post service
     let mut create_post = CreatePost::builder()
         .author_id(user_data.account.id)
         .content(form.status)
         .sensitive(form.sensitive)
-        .visibility(form.visibility)
+        .visibility(form.visibility.into())
         .clone();
 
     if let Some(subject) = form.spoiler_text {

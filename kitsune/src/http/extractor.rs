@@ -1,4 +1,8 @@
-use crate::{error::Error, state::Zustand};
+use crate::{
+    activitypub::fetcher::FetchOptions,
+    error::{Error, Result},
+    state::Zustand,
+};
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -116,7 +120,7 @@ where
     }
 }
 
-pub struct SignedActivity(pub Activity);
+pub struct SignedActivity(pub accounts::Model, pub Activity);
 
 #[async_trait]
 impl FromRequest<Zustand, Body> for SignedActivity {
@@ -143,27 +147,42 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .attributed_to()
             .ok_or_else(|| StatusCode::BAD_REQUEST.into_response())?;
 
-        let remote_user = state.fetcher.fetch_actor(ap_id).await?;
-        let (_tag, public_key) =
-            Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
-        let public_key: SubjectPublicKeyInfo<'_> = public_key.decode_msg().map_err(Error::from)?;
-        let public_key = UnparsedPublicKey::new(
-            &RSA_PKCS1_2048_8192_SHA256,
-            public_key.subject_public_key.to_vec(),
-        );
+        let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
+        if !verify_signature(&parts, &remote_user).await? {
+            // Refetch the user and try again
+            // Maybe they rekeyed
 
-        let is_valid = HttpVerifier::default()
-            .verify(&parts, |_key_id| async move {
-                // TODO: Select from the database by key ID
-                Ok(public_key)
-            })
-            .await
-            .is_ok();
+            let opts = FetchOptions::builder()
+                .refetch(true)
+                .url(ap_id)
+                .build()
+                .unwrap();
+            let remote_user = state.fetcher.fetch_actor(opts).await?;
 
-        if !is_valid {
-            return Err(StatusCode::UNAUTHORIZED.into_response());
+            if !verify_signature(&parts, &remote_user).await? {
+                return Err(StatusCode::UNAUTHORIZED.into_response());
+            }
         }
 
-        Ok(Self(activity))
+        Ok(Self(remote_user, activity))
     }
+}
+
+async fn verify_signature(parts: &Parts, remote_user: &accounts::Model) -> Result<bool> {
+    let (_tag, public_key) = Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
+    let public_key: SubjectPublicKeyInfo<'_> = public_key.decode_msg().map_err(Error::from)?;
+    let public_key = UnparsedPublicKey::new(
+        &RSA_PKCS1_2048_8192_SHA256,
+        public_key.subject_public_key.to_vec(),
+    );
+
+    let is_valid = HttpVerifier::default()
+        .verify(parts, |_key_id| async move {
+            // TODO: Select from the database by key ID
+            Ok(public_key)
+        })
+        .await
+        .is_ok();
+
+    Ok(is_valid)
 }

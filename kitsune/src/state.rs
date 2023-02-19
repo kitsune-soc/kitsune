@@ -1,7 +1,10 @@
 use crate::{
     activitypub::Fetcher,
     config::Configuration,
-    service::{post::PostService, search::SearchService},
+    service::{
+        account::AccountService, oauth2::Oauth2Service, post::PostService, search::SearchService,
+        user::UserService,
+    },
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
@@ -14,8 +17,11 @@ use std::sync::Arc;
 /// These are things like the search service, post service, etc.
 #[derive(Clone)]
 pub struct Service {
+    pub account: AccountService,
+    pub oauth2: Oauth2Service,
     pub post: PostService,
     pub search: Arc<dyn SearchService + Send + Sync>,
+    pub user: UserService,
 }
 
 /// Application state

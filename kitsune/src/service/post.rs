@@ -2,28 +2,34 @@ use super::search::SearchService;
 use crate::{
     cache::Cache,
     config::Configuration,
-    error::{ApiError, Result},
+    error::{ApiError, Error, Result},
     job::{
-        deliver::{create::CreateDeliveryContext, delete::DeleteDeliveryContext},
+        deliver::{
+            create::CreateDeliveryContext, delete::DeleteDeliveryContext,
+            favourite::FavouriteDeliveryContext, unfavourite::UnfavouriteDeliveryContext,
+        },
         Job,
     },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
 };
+use async_stream::try_stream;
 use chrono::Utc;
 use derive_builder::Builder;
-use futures_util::FutureExt;
+use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, jobs, posts, posts_mentions,
-        prelude::{Posts, UsersRoles},
+        accounts, favourites, jobs, posts, posts_mentions,
+        prelude::{Favourites, Posts, UsersRoles},
         users_roles,
     },
+    link::InReplyTo,
+    r#trait::PostPermissionCheckExt,
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
     PaginatorTrait, QueryFilter, TransactionTrait,
 };
 use std::sync::Arc;
@@ -77,7 +83,10 @@ pub struct DeletePost {
     account_id: Uuid,
 
     /// ID of the user that requests the deletion
-    user_id: Uuid,
+    ///
+    /// Defaults to none
+    #[builder(default, setter(strip_option))]
+    user_id: Option<Uuid>,
 
     /// ID of the post that is supposed to be deleted
     post_id: Uuid,
@@ -222,13 +231,17 @@ where
         };
 
         if post.account_id != delete_post.account_id {
-            let admin_role_count = UsersRoles::find()
-                .filter(users_roles::Column::UserId.eq(delete_post.user_id))
-                .filter(users_roles::Column::Role.eq(Role::Administrator))
-                .count(&self.db_conn)
-                .await?;
+            if let Some(user_id) = delete_post.user_id {
+                let admin_role_count = UsersRoles::find()
+                    .filter(users_roles::Column::UserId.eq(user_id))
+                    .filter(users_roles::Column::Role.eq(Role::Administrator))
+                    .count(&self.db_conn)
+                    .await?;
 
-            if admin_role_count == 0 {
+                if admin_role_count == 0 {
+                    return Err(ApiError::Unauthorised.into());
+                }
+            } else {
                 return Err(ApiError::Unauthorised.into());
             }
         }
@@ -250,5 +263,168 @@ where
         self.search_service.remove_from_index(post.into()).await?;
 
         Ok(())
+    }
+
+    /// Favourite a post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, create a bug report.
+    pub async fn favourite(
+        &self,
+        post_id: Uuid,
+        favouriting_account_id: Uuid,
+    ) -> Result<posts::Model> {
+        let Some(post) = Posts::find_by_id(post_id)
+            .add_permission_checks(Some(favouriting_account_id))
+            .one(&self.db_conn)
+            .await?
+        else {
+            return Err(ApiError::NotFound.into());
+        };
+
+        let id = Uuid::now_v7();
+        let url = format!("https://{}/favourites/{id}", self.config.domain);
+        let favourite = favourites::Model {
+            id,
+            account_id: favouriting_account_id,
+            post_id: post.id,
+            url,
+            created_at: Utc::now().into(),
+        }
+        .into_active_model()
+        .insert(&self.db_conn)
+        .await?;
+
+        let context = Job::DeliverFavourite(FavouriteDeliveryContext {
+            favourite_id: favourite.id,
+        });
+
+        jobs::Model {
+            id: Uuid::now_v7(),
+            state: JobState::Queued,
+            run_at: Utc::now().into(),
+            context: serde_json::to_value(context).unwrap(),
+            fail_count: 0,
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
+        }
+        .into_active_model()
+        .insert(&self.db_conn)
+        .await?;
+
+        Ok(post)
+    }
+
+    /// Unfavourite a post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open a bug report.
+    pub async fn unfavourite(
+        &self,
+        post_id: Uuid,
+        favouriting_account_id: Uuid,
+    ) -> Result<posts::Model> {
+        let Some(post) = self
+            .get_by_id(post_id, Some(favouriting_account_id))
+            .await?
+        else {
+            return Err(ApiError::NotFound.into());
+        };
+
+        if let Some(favourite) = post
+            .find_related(Favourites)
+            .filter(favourites::Column::AccountId.eq(favouriting_account_id))
+            .one(&self.db_conn)
+            .await?
+        {
+            let context = Job::DeliverUnfavourite(UnfavouriteDeliveryContext {
+                favourite_id: favourite.id,
+            });
+
+            jobs::Model {
+                id: Uuid::now_v7(),
+                state: JobState::Queued,
+                run_at: Utc::now().into(),
+                context: serde_json::to_value(context).unwrap(),
+                fail_count: 0,
+                created_at: Utc::now().into(),
+                updated_at: Utc::now().into(),
+            }
+            .into_active_model()
+            .insert(&self.db_conn)
+            .await?;
+        }
+
+        Ok(post)
+    }
+
+    /// Get a post by its ID
+    ///
+    /// Does checks whether the user is allowed to fetch the post
+    pub async fn get_by_id(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> Result<Option<posts::Model>> {
+        Posts::find_by_id(id)
+            .add_permission_checks(fetching_account_id)
+            .one(&self.db_conn)
+            .await
+            .map_err(Error::from)
+    }
+
+    /// Get the ancestors of the post
+    pub fn get_ancestors(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> impl Stream<Item = Result<posts::Model>> + '_ {
+        try_stream! {
+            let mut last_post = self.get_by_id(id, fetching_account_id).await?;
+
+            while let Some(post) = last_post.take() {
+                let post = post
+                    .find_linked(InReplyTo)
+                    .add_permission_checks(fetching_account_id)
+                    .one(&self.db_conn)
+                    .await?;
+
+                if let Some(ref post) = post {
+                    yield post.clone();
+                }
+
+                last_post = post;
+            }
+        }
+    }
+
+    /// Get the descendants of the post
+    pub fn get_descendants(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> BoxStream<'_, Result<posts::Model>> {
+        try_stream! {
+            let descendant_stream = Posts::find()
+                .filter(posts::Column::InReplyToId.eq(id))
+                .add_permission_checks(fetching_account_id)
+                .stream(&self.db_conn)
+                .await?;
+
+            for await descendant in descendant_stream {
+                let descendant = descendant?;
+                let descendant_id = descendant.id;
+
+                yield descendant;
+
+                let sub_descendants = self.get_descendants(descendant_id, fetching_account_id);
+                for await sub_descendant in sub_descendants {
+                    yield sub_descendant?;
+                }
+            }
+        }
+        .boxed()
     }
 }

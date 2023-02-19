@@ -2,9 +2,12 @@ use super::MediaAttachment;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
 use chrono::{DateTime, Utc};
-use kitsune_db::entity::{
-    accounts, posts,
-    prelude::{Accounts, MediaAttachments, Posts},
+use kitsune_db::{
+    entity::{
+        accounts, posts,
+        prelude::{Accounts, MediaAttachments, Posts},
+    },
+    r#trait::PostPermissionCheckExt,
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
@@ -58,6 +61,7 @@ impl Account {
             .ok_or_else(|| Error::new("User not present"))?;
 
         Posts::find()
+            .add_permission_checks(None)
             .filter(posts::Column::AccountId.eq(account.id))
             .all(&ctx.state().db_conn)
             .await

@@ -1,4 +1,7 @@
-use crate::{error::Result, mapping::IntoMastodon, service::search::SearchService, state::Zustand};
+use crate::{
+    error::Result, http::extractor::MastodonAuthExtractor, mapping::IntoMastodon,
+    service::search::SearchService, state::Zustand,
+};
 use axum::{
     debug_handler,
     extract::State,
@@ -42,7 +45,11 @@ struct SearchQuery {
 }
 
 #[debug_handler]
-async fn get(State(state): State<Zustand>, Query(query): Query<SearchQuery>) -> Result<Response> {
+async fn get(
+    State(state): State<Zustand>,
+    _: MastodonAuthExtractor,
+    Query(query): Query<SearchQuery>,
+) -> Result<Response> {
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {
             SearchType::Accounts => SearchIndex::Account,

@@ -49,7 +49,7 @@ where
             };
 
             self.fetcher
-                .fetch_actor(&actor_url)
+                .fetch_actor(actor_url.as_str().into())
                 .await
                 .map(Some)
                 .map_err(Error::from)

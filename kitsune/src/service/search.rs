@@ -32,7 +32,7 @@ impl From<posts::Model> for SearchItem {
 }
 
 #[async_trait]
-pub trait SearchService {
+pub trait SearchService: Send + Sync {
     /// Add an item to the index
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 

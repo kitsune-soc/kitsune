@@ -7,7 +7,10 @@ use kitsune::{
     config::Configuration,
     http, job,
     resolve::PostResolver,
-    service::{post::PostService, search::GrpcSearchService},
+    service::{
+        account::AccountService, oauth2::Oauth2Service, post::PostService,
+        search::GrpcSearchService, user::UserService,
+    },
     state::{Service, Zustand},
     webfinger::Webfinger,
 };
@@ -85,6 +88,16 @@ async fn main() {
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
     let webfinger = Webfinger::with_defaults(redis_conn);
 
+    let account_service = AccountService::builder()
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
+    let oauth2_service = Oauth2Service::builder()
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .config(config.clone())
@@ -94,13 +107,22 @@ async fn main() {
         .build()
         .unwrap();
 
+    let user_service = UserService::builder()
+        .config(config.clone())
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
     let state = Zustand {
         config: config.clone(),
         db_conn: conn,
         fetcher,
         service: Service {
+            account: account_service,
+            oauth2: oauth2_service,
             search: Arc::new(search_service),
             post: post_service,
+            user: user_service,
         },
         webfinger,
     };
