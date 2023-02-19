@@ -9,7 +9,7 @@ use kitsune::{
     resolve::PostResolver,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
-        search::GrpcSearchService, user::UserService,
+        search::GrpcSearchService, timeline::TimelineService, user::UserService,
     },
     state::{Service, Zustand},
     webfinger::Webfinger,
@@ -107,6 +107,11 @@ async fn main() {
         .build()
         .unwrap();
 
+    let timeline_service = TimelineService::builder()
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
     let user_service = UserService::builder()
         .config(config.clone())
         .db_conn(conn.clone())
@@ -122,6 +127,7 @@ async fn main() {
             oauth2: oauth2_service,
             search: Arc::new(search_service),
             post: post_service,
+            timeline: timeline_service,
             user: user_service,
         },
         webfinger,
