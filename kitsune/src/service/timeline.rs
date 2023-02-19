@@ -117,7 +117,8 @@ impl TimelineService {
                             .into_condition()
                     },
                 ),
-            );
+            )
+            .order_by_desc(posts::Column::CreatedAt);
 
         if let Some(max_id) = get_home.max_id {
             query = query.filter(posts::Column::Id.lt(max_id));
