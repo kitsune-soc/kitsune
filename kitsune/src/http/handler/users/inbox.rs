@@ -4,11 +4,32 @@ use chrono::Utc;
 use futures_util::future::OptionFuture;
 use kitsune_db::{
     custom::Visibility,
-    entity::{accounts, accounts_followers, posts, prelude::Posts},
+    entity::{
+        accounts, accounts_followers, posts,
+        prelude::{AccountsFollowers, Posts},
+    },
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
-use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, IntoActiveModel};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
+};
 use uuid::Uuid;
+
+async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
+    let Some(follow_activity) = AccountsFollowers::find()
+        .filter(accounts_followers::Column::Url.eq(activity.object()))
+        .one(&state.db_conn)
+        .await?
+    else {
+        return Ok(());
+    };
+
+    let mut follow_activity: accounts_followers::ActiveModel = follow_activity.into();
+    follow_activity.approved_at = ActiveValue::Set(Some(Utc::now().into()));
+    follow_activity.update(&state.db_conn).await?;
+
+    Ok(())
+}
 
 async fn create_activity(
     state: &Zustand,
@@ -102,7 +123,7 @@ pub async fn post(
     increment_counter!("received_activities");
 
     match activity.r#type {
-        ActivityType::Accept => todo!(),
+        ActivityType::Accept => accept_activity(&state, activity).await,
         ActivityType::Announce => todo!(),
         ActivityType::Block => todo!(),
         ActivityType::Create => create_activity(&state, author, activity).await,
