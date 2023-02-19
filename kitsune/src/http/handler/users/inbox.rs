@@ -5,9 +5,10 @@ use futures_util::future::OptionFuture;
 use kitsune_db::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, posts,
-        prelude::{AccountsFollowers, Posts},
+        accounts, accounts_followers, favourites, posts,
+        prelude::{AccountsFollowers, Favourites, Posts},
     },
+    r#trait::PostPermissionCheckExt,
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
 use sea_orm::{
@@ -115,6 +116,54 @@ async fn follow_activity(
     Ok(())
 }
 
+async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activity) -> Result<()> {
+    let Some(post) = Posts::find()
+        .filter(posts::Column::Url.eq(activity.object()))
+        .add_permission_checks(Some(author.id))
+        .one(&state.db_conn)
+        .await?
+    else {
+        return Ok(());
+    };
+
+    favourites::Model {
+        id: Uuid::now_v7(),
+        account_id: author.id,
+        post_id: post.id,
+        url: activity.rest.id,
+        created_at: Utc::now().into(),
+    }
+    .into_active_model()
+    .insert(&state.db_conn)
+    .await?;
+
+    Ok(())
+}
+
+async fn reject_activity(state: &Zustand, activity: Activity) -> Result<()> {
+    AccountsFollowers::delete_many()
+        .filter(accounts_followers::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
+
+    Ok(())
+}
+
+async fn undo_activity(state: &Zustand, activity: Activity) -> Result<()> {
+    // An undo activity can apply for likes and follows
+    Favourites::delete_many()
+        .filter(favourites::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
+
+    AccountsFollowers::delete_many()
+        .filter(accounts_followers::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
+
+    Ok(())
+}
+
 #[debug_handler]
 pub async fn post(
     State(state): State<Zustand>,
@@ -129,9 +178,9 @@ pub async fn post(
         ActivityType::Create => create_activity(&state, author, activity).await,
         ActivityType::Delete => delete_activity(&state, author, activity).await,
         ActivityType::Follow => follow_activity(&state, author, activity).await,
-        ActivityType::Like => todo!(),
-        ActivityType::Reject => todo!(),
-        ActivityType::Undo => todo!(),
+        ActivityType::Like => like_activity(&state, author, activity).await,
+        ActivityType::Reject => reject_activity(&state, activity).await,
+        ActivityType::Undo => undo_activity(&state, activity).await,
         ActivityType::Update => todo!(),
     }
 }
