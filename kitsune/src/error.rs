@@ -5,7 +5,7 @@ use http::StatusCode;
 use redis::RedisError;
 use rsa::{
     pkcs1,
-    pkcs8::{self, der},
+    pkcs8::{self, der, spki},
 };
 use sea_orm::TransactionError;
 use thiserror::Error;
@@ -15,6 +15,9 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Email already taken")]
+    EmailTaken,
+
     #[error("Not found")]
     NotFound,
 
@@ -23,6 +26,9 @@ pub enum ApiError {
 
     #[error("Unsupported media type")]
     UnsupportedMediaType,
+
+    #[error("Username already taken")]
+    UsernameTaken,
 }
 
 #[derive(Debug, Error)]
@@ -99,6 +105,9 @@ pub enum Error {
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
+
+    #[error(transparent)]
+    Spki(#[from] spki::Error),
 
     #[error(transparent)]
     TonicStatus(#[from] tonic::Status),

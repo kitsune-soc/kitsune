@@ -7,7 +7,9 @@ use kitsune::{
     config::Configuration,
     http, job,
     resolve::PostResolver,
-    service::{account::AccountService, post::PostService, search::GrpcSearchService},
+    service::{
+        account::AccountService, post::PostService, search::GrpcSearchService, user::UserService,
+    },
     state::{Service, Zustand},
     webfinger::Webfinger,
 };
@@ -99,6 +101,12 @@ async fn main() {
         .build()
         .unwrap();
 
+    let user_service = UserService::builder()
+        .config(config.clone())
+        .db_conn(conn.clone())
+        .build()
+        .unwrap();
+
     let state = Zustand {
         config: config.clone(),
         db_conn: conn,
@@ -107,6 +115,7 @@ async fn main() {
             account: account_service,
             search: Arc::new(search_service),
             post: post_service,
+            user: user_service,
         },
         webfinger,
     };

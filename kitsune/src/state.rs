@@ -1,7 +1,9 @@
 use crate::{
     activitypub::Fetcher,
     config::Configuration,
-    service::{account::AccountService, post::PostService, search::SearchService},
+    service::{
+        account::AccountService, post::PostService, search::SearchService, user::UserService,
+    },
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
@@ -17,6 +19,7 @@ pub struct Service {
     pub account: AccountService,
     pub post: PostService,
     pub search: Arc<dyn SearchService + Send + Sync>,
+    pub user: UserService,
 }
 
 /// Application state

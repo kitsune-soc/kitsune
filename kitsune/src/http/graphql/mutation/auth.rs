@@ -1,23 +1,15 @@
 use crate::{
-    error::Error as ServerError,
     http::graphql::{
         types::{Oauth2Application, User},
         ContextExt,
     },
+    service::user::Register,
     util::generate_secret,
 };
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use async_graphql::{Context, CustomValidator, Error, InputValueError, Object, Result};
+use async_graphql::{Context, CustomValidator, InputValueError, Object, Result};
 use chrono::Utc;
-use futures_util::FutureExt;
-use kitsune_db::entity::{accounts, oauth2_applications, prelude::Users, users};
-use rsa::{
-    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
-    RsaPrivateKey,
-};
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
-};
+use kitsune_db::entity::oauth2_applications;
+use sea_orm::{ActiveModelTrait, IntoActiveModel};
 use uuid::Uuid;
 use zxcvbn::zxcvbn;
 
@@ -73,90 +65,13 @@ impl AuthMutation {
     ) -> Result<User> {
         let state = ctx.state();
 
-        // These queries provide a better user experience than just a random 500 error
-        // They are also fine from a performance standpoint since both, the username and the email field, are indexed
-        let is_username_taken = Users::find()
-            .filter(users::Column::Username.eq(username.as_str()))
-            .one(&state.db_conn)
-            .await?
-            .is_some();
-        if is_username_taken {
-            return Err(Error::new("Username already taken"));
-        }
-
-        let is_email_used = Users::find()
-            .filter(users::Column::Email.eq(email.as_str()))
-            .one(&state.db_conn)
-            .await?
-            .is_some();
-        if is_email_used {
-            return Err(Error::new("Email already in use"));
-        }
-
-        let hashed_password_fut = crate::blocking::cpu(move || {
-            let salt = SaltString::generate(rand::thread_rng());
-            let argon2 = Argon2::default();
-
-            argon2
-                .hash_password(password.as_bytes(), &salt)
-                .map(|hash| hash.to_string())
-        });
-        let private_key_fut =
-            crate::blocking::cpu(|| RsaPrivateKey::new(&mut rand::thread_rng(), 4096));
-
-        let (hashed_password, private_key) =
-            tokio::try_join!(hashed_password_fut, private_key_fut)?;
-        let private_key = private_key?;
-        let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
-        let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
-
-        let url = format!("https://{}/users/{username}", state.config.domain);
-        let followers_url = format!("{url}/followers");
-        let inbox_url = format!("{url}/inbox");
-
-        let new_user = state
-            .db_conn
-            .transaction(|tx| {
-                async move {
-                    let new_account = accounts::Model {
-                        id: Uuid::now_v7(),
-                        avatar_id: None,
-                        header_id: None,
-                        display_name: None,
-                        username: username.clone(),
-                        locked: false,
-                        note: None,
-                        domain: None,
-                        url,
-                        followers_url,
-                        inbox_url,
-                        public_key: public_key_str,
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
-                    .await?;
-
-                    let new_user = users::Model {
-                        id: Uuid::now_v7(),
-                        account_id: new_account.id,
-                        username,
-                        email,
-                        password: hashed_password?,
-                        private_key: private_key_str.to_string(),
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
-                    .await?;
-
-                    Ok::<_, ServerError>(new_user)
-                }
-                .boxed()
-            })
-            .await?;
+        let register = Register::builder()
+            .username(username)
+            .email(email)
+            .password(password)
+            .build()
+            .unwrap();
+        let new_user = state.service.user.register(register).await?;
 
         Ok(new_user.into())
     }

@@ -11,23 +11,23 @@ use uuid::Uuid;
 #[derive(Builder, Clone)]
 pub struct GetPosts {
     /// ID of the account whose posts are getting fetched
-    pub account_id: Uuid,
+    account_id: Uuid,
 
     /// ID of the account that is requesting the posts
     #[builder(default, setter(strip_option))]
-    pub fetching_account_id: Option<Uuid>,
+    fetching_account_id: Option<Uuid>,
 
     /// Smallest ID
     ///
     /// Used for pagination
     #[builder(default, setter(strip_option))]
-    pub min_id: Option<Uuid>,
+    min_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
     #[builder(default, setter(strip_option))]
-    pub max_id: Option<Uuid>,
+    max_id: Option<Uuid>,
 }
 
 impl GetPosts {
