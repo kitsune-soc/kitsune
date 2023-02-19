@@ -1,11 +1,9 @@
-use crate::{error::Result, http::extractor::FormOrJson, state::Zustand, util::generate_secret};
+use crate::{
+    error::Result, http::extractor::FormOrJson, service::oauth2::CreateApp, state::Zustand,
+};
 use axum::{extract::State, routing, Json, Router};
-use chrono::Utc;
-use kitsune_db::entity::oauth2_applications;
 use kitsune_type::mastodon::App;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use serde::Deserialize;
-use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct AppForm {
@@ -14,20 +12,15 @@ pub struct AppForm {
 }
 
 async fn post(
-    State(db_conn): State<DatabaseConnection>,
+    State(state): State<Zustand>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
-    let application = oauth2_applications::Model {
-        id: Uuid::now_v7(),
-        name: form.client_name,
-        secret: generate_secret(),
-        redirect_uri: form.redirect_uris,
-        created_at: Utc::now().into(),
-        updated_at: Utc::now().into(),
-    }
-    .into_active_model()
-    .insert(&db_conn)
-    .await?;
+    let create_app = CreateApp::builder()
+        .name(form.client_name)
+        .redirect_uris(form.redirect_uris)
+        .build()
+        .unwrap();
+    let application = state.service.oauth2.create_app(create_app).await?;
 
     Ok(Json(App {
         id: application.id,

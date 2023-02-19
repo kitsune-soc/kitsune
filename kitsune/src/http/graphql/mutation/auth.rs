@@ -3,14 +3,9 @@ use crate::{
         types::{Oauth2Application, User},
         ContextExt,
     },
-    service::user::Register,
-    util::generate_secret,
+    service::{oauth2::CreateApp, user::Register},
 };
 use async_graphql::{Context, CustomValidator, InputValueError, Object, Result};
-use chrono::Utc;
-use kitsune_db::entity::oauth2_applications;
-use sea_orm::{ActiveModelTrait, IntoActiveModel};
-use uuid::Uuid;
 use zxcvbn::zxcvbn;
 
 const MIN_PASSWORD_STRENGTH: u8 = 3;
@@ -42,18 +37,14 @@ impl AuthMutation {
         name: String,
         redirect_uri: String,
     ) -> Result<Oauth2Application> {
-        Ok(oauth2_applications::Model {
-            id: Uuid::now_v7(),
-            secret: generate_secret(),
-            name,
-            redirect_uri,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&ctx.state().db_conn)
-        .await
-        .map(Into::into)?)
+        let create_app = CreateApp::builder()
+            .name(name)
+            .redirect_uris(redirect_uri)
+            .build()
+            .unwrap();
+        let application = ctx.state().service.oauth2.create_app(create_app).await?;
+
+        Ok(application.into())
     }
 
     pub async fn register_user(

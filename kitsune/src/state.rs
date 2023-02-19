@@ -2,7 +2,8 @@ use crate::{
     activitypub::Fetcher,
     config::Configuration,
     service::{
-        account::AccountService, post::PostService, search::SearchService, user::UserService,
+        account::AccountService, oauth2::Oauth2Service, post::PostService, search::SearchService,
+        user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -17,6 +18,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct Service {
     pub account: AccountService,
+    pub oauth2: Oauth2Service,
     pub post: PostService,
     pub search: Arc<dyn SearchService + Send + Sync>,
     pub user: UserService,
