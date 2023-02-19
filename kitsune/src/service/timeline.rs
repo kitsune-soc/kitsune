@@ -2,11 +2,30 @@ use crate::error::{Error, Result};
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    entity::{posts, prelude::Posts},
+    custom::Visibility,
+    entity::{
+        accounts, accounts_followers, posts, posts_mentions,
+        prelude::{AccountsFollowers, Posts},
+    },
     r#trait::PostPermissionCheckExt,
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
+use sea_orm::{
+    sea_query::{Expr, IntoCondition},
+    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
+    QueryTrait, RelationTrait,
+};
 use uuid::Uuid;
+
+#[derive(Builder, Clone)]
+pub struct GetHome {
+    fetching_account_id: Uuid,
+
+    #[builder(default, setter(strip_option))]
+    max_id: Option<Uuid>,
+
+    #[builder(default, setter(strip_option))]
+    min_id: Option<Uuid>,
+}
 
 #[derive(Builder, Clone)]
 pub struct GetPublic {
@@ -42,6 +61,65 @@ impl TimelineService {
     #[must_use]
     pub fn builder() -> TimelineServiceBuilder {
         TimelineServiceBuilder::default()
+    }
+
+    pub async fn get_home(
+        &self,
+        get_home: GetHome,
+    ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+        let mut query = Posts::find()
+            // Post is owned by the user
+            .filter(posts::Column::AccountId.eq(get_home.fetching_account_id))
+            // User is following the author and the post is not a direct message
+            .join(
+                JoinType::LeftJoin,
+                posts::Relation::Accounts
+                    .def()
+                    .on_condition(move |posts_left, accounts_right| {
+                        Expr::col((posts_left, posts::Column::Visibility))
+                            .is_in([
+                                Visibility::Public,
+                                Visibility::Unlisted,
+                                Visibility::FollowerOnly,
+                            ])
+                            .and(
+                                Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
+                                    AccountsFollowers::find()
+                                        .filter(
+                                            accounts_followers::Column::FollowerId
+                                                .eq(get_home.fetching_account_id),
+                                        )
+                                        .filter(
+                                            accounts_followers::Column::ApprovedAt.is_not_null(),
+                                        )
+                                        .select_only()
+                                        .column(accounts_followers::Column::AccountId)
+                                        .into_query(),
+                                ),
+                            )
+                            .into_condition()
+                    }),
+            )
+            // User is mentioned in the post
+            .join(
+                JoinType::LeftJoin,
+                posts_mentions::Relation::Posts.def().rev().on_condition(
+                    move |_posts_left, mentions_right| {
+                        Expr::col((mentions_right, posts_mentions::Column::AccountId))
+                            .eq(get_home.fetching_account_id)
+                            .into_condition()
+                    },
+                ),
+            );
+
+        if let Some(max_id) = get_home.max_id {
+            query = query.filter(posts::Column::Id.lt(max_id));
+        }
+        if let Some(min_id) = get_home.min_id {
+            query = query.filter(posts::Column::Id.gt(min_id));
+        }
+
+        Ok(query.stream(&self.db_conn).await?.map_err(Error::from))
     }
 
     pub async fn get_public(
