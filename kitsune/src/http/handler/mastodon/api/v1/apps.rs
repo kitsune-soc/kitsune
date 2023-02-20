@@ -1,5 +1,8 @@
 use crate::{
-    error::Result, http::extractor::FormOrJson, service::oauth2::CreateApp, state::Zustand,
+    error::Result,
+    http::extractor::FormOrJson,
+    service::oauth2::{CreateApp, Oauth2Service},
+    state::Zustand,
 };
 use axum::{extract::State, routing, Json, Router};
 use kitsune_type::mastodon::App;
@@ -12,7 +15,7 @@ pub struct AppForm {
 }
 
 async fn post(
-    State(state): State<Zustand>,
+    State(oauth2): State<Oauth2Service>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
     let create_app = CreateApp::builder()
@@ -20,7 +23,7 @@ async fn post(
         .redirect_uris(form.redirect_uris)
         .build()
         .unwrap();
-    let application = state.service.oauth2.create_app(create_app).await?;
+    let application = oauth2.create_app(create_app).await?;
 
     Ok(Json(App {
         id: application.id,

@@ -2,14 +2,37 @@ use crate::{
     activitypub::Fetcher,
     config::Configuration,
     service::{
-        account::AccountService, oauth2::Oauth2Service, post::PostService, search::SearchService,
-        timeline::TimelineService, user::UserService,
+        account::AccountService, oauth2::Oauth2Service, post::PostService,
+        search::ArcSearchService, timeline::TimelineService, user::UserService,
     },
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
-use std::sync::Arc;
+
+macro_rules! impl_from_ref {
+    ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
+        $(
+            impl ::axum::extract::FromRef<$source> for $target {
+                fn from_ref(input: &$source) -> Self {
+                    #[allow(clippy::redundant_closure_call)]
+                    ($extract_impl)(input)
+                }
+            }
+        )+
+    };
+}
+
+impl_from_ref! {
+    Zustand;
+    [
+        AccountService => |input: &Zustand| input.service.account.clone(),
+        Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
+        PostService => |input: &Zustand| input.service.post.clone(),
+        ArcSearchService => |input: &Zustand| input.service.search.clone(),
+        TimelineService => |input: &Zustand| input.service.timeline.clone()
+    ]
+}
 
 /// Service collection
 ///
@@ -20,7 +43,7 @@ pub struct Service {
     pub account: AccountService,
     pub oauth2: Oauth2Service,
     pub post: PostService,
-    pub search: Arc<dyn SearchService + Send + Sync>,
+    pub search: ArcSearchService,
     pub timeline: TimelineService,
     pub user: UserService,
 }

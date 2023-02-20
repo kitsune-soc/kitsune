@@ -1,10 +1,8 @@
-use std::cmp::min;
-
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::IntoMastodon,
-    service::timeline::GetHome,
+    service::timeline::{GetHome, TimelineService},
     state::Zustand,
 };
 use axum::{
@@ -14,6 +12,7 @@ use axum::{
 use futures_util::{StreamExt, TryStreamExt};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
+use std::cmp::min;
 use uuid::Uuid;
 
 const MAX_LIMIT: usize = 40;
@@ -32,6 +31,7 @@ pub struct GetQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
 ) -> Result<Json<Vec<Status>>> {
@@ -49,9 +49,7 @@ pub async fn get(
     let limit = min(query.limit, MAX_LIMIT);
     let get_home = get_home.build().unwrap();
 
-    let statuses: Vec<Status> = state
-        .service
-        .timeline
+    let statuses: Vec<Status> = timeline
         .get_home(get_home)
         .await?
         .take(limit)
