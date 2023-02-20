@@ -1,6 +1,9 @@
 use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::IntoMastodon,
-    service::account::GetPosts, state::Zustand,
+    error::Result,
+    http::extractor::MastodonAuthExtractor,
+    mapping::IntoMastodon,
+    service::account::{AccountService, GetPosts},
+    state::Zustand,
 };
 use axum::{
     extract::{Path, Query, State},
@@ -28,6 +31,7 @@ pub struct GetQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(account): State<AccountService>,
     Path(account_id): Path<Uuid>,
     auth_data: Option<MastodonAuthExtractor>,
     Query(query): Query<GetQuery>,
@@ -48,9 +52,7 @@ pub async fn get(
     let get_posts = get_posts.build().unwrap();
     let limit = min(query.limit, MAX_LIMIT);
 
-    let statuses: Vec<Status> = state
-        .service
-        .account
+    let statuses: Vec<Status> = account
         .get_posts(get_posts)
         .await?
         .take(limit)

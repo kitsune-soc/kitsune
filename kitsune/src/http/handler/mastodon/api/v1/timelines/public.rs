@@ -1,4 +1,9 @@
-use crate::{error::Result, mapping::IntoMastodon, service::timeline::GetPublic, state::Zustand};
+use crate::{
+    error::Result,
+    mapping::IntoMastodon,
+    service::timeline::{GetPublic, TimelineService},
+    state::Zustand,
+};
 use axum::{
     extract::{Query, State},
     Json,
@@ -29,6 +34,7 @@ pub struct GetQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
 ) -> Result<Json<Vec<Status>>> {
     let mut get_public = GetPublic::builder()
@@ -46,9 +52,7 @@ pub async fn get(
     let limit = min(query.limit, MAX_LIMIT);
     let get_public = get_public.build().unwrap();
 
-    let statuses: Vec<Status> = state
-        .service
-        .timeline
+    let statuses: Vec<Status> = timeline
         .get_public(get_public)
         .await?
         .take(limit)

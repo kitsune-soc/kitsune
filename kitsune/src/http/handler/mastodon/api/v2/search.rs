@@ -1,6 +1,9 @@
 use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::IntoMastodon,
-    service::search::SearchService, state::Zustand,
+    error::Result,
+    http::extractor::MastodonAuthExtractor,
+    mapping::IntoMastodon,
+    service::search::{ArcSearchService, SearchService},
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -44,9 +47,10 @@ struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler]
+#[debug_handler(state = Zustand)]
 async fn get(
     State(state): State<Zustand>,
+    State(search): State<ArcSearchService>,
     _: MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Response> {
@@ -64,9 +68,7 @@ async fn get(
 
     let mut search_result = SearchResult::default();
     for index in indices {
-        let results = state
-            .service
-            .search
+        let results = search
             .search(
                 index,
                 query.query.clone(),
