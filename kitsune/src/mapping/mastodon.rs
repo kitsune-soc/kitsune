@@ -38,6 +38,7 @@ impl IntoMastodon for accounts::Model {
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] User profile picture missing");
+
             media_attachment.url
         } else {
             "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
@@ -48,6 +49,7 @@ impl IntoMastodon for accounts::Model {
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] User header image missing");
+
             media_attachment.url
         } else {
             "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()

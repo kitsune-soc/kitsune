@@ -218,6 +218,14 @@ impl MigrationTrait for Migration {
             .await?;
 
         manager
+            .drop_table(
+                Table::drop()
+                    .table(Oauth2AuthorizationCodes::Table)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
             .drop_table(Table::drop().table(Oauth2Applications::Table).to_owned())
             .await
     }
