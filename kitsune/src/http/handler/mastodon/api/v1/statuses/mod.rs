@@ -2,7 +2,7 @@ use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     mapping::IntoMastodon,
-    service::post::{CreatePost, DeletePost},
+    service::post::{CreatePost, DeletePost, PostService},
     state::Zustand,
 };
 use axum::{
@@ -33,7 +33,7 @@ struct CreateForm {
 
 #[debug_handler(state = Zustand)]
 async fn delete(
-    State(state): State<Zustand>,
+    State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
@@ -44,7 +44,7 @@ async fn delete(
         .build()
         .unwrap();
 
-    state.service.post.delete(delete_post).await?;
+    post.delete(delete_post).await?;
 
     Ok(StatusCode::OK.into_response())
 }
