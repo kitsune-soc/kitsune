@@ -7,7 +7,7 @@ use kitsune_db::{
         accounts, accounts_followers, posts, posts_mentions,
         prelude::{AccountsFollowers, Posts},
     },
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{
     sea_query::{Expr, IntoCondition},
@@ -70,6 +70,7 @@ impl TimelineService {
         TimelineServiceBuilder::default()
     }
 
+    /// Get a stream of posts that resemble the users home timeline
     pub async fn get_home(
         &self,
         get_home: GetHome,
@@ -130,12 +131,24 @@ impl TimelineService {
         Ok(query.stream(&self.db_conn).await?.map_err(Error::from))
     }
 
+    /// Get a stream of public posts
+    ///
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub async fn get_public(
         &self,
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(get_public.fetching_account_id)
+            .include_unlisted(false)
+            .build()
+            .unwrap();
+
         let mut query = Posts::find()
-            .add_permission_checks(get_public.fetching_account_id)
+            .add_permission_checks(permission_check)
             .order_by_desc(posts::Column::CreatedAt);
 
         if let Some(max_id) = get_public.max_id {

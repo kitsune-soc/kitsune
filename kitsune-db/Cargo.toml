@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+derive_builder = "0.12.0"
 kitsune-type = { path = "../kitsune-type" }
 migration = { path = "migration" }
 sea-orm = "0.11.0"

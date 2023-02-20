@@ -8,7 +8,7 @@ use kitsune_db::{
         accounts, accounts_followers, favourites, posts,
         prelude::{AccountsFollowers, Favourites, Posts},
     },
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use kitsune_type::ap::{Activity, ActivityType, Object};
 use sea_orm::{
@@ -117,9 +117,14 @@ async fn follow_activity(
 }
 
 async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activity) -> Result<()> {
+    let permission_check = PermissionCheck::builder()
+        .fetching_account_id(Some(author.id))
+        .build()
+        .unwrap();
+
     let Some(post) = Posts::find()
         .filter(posts::Column::Url.eq(activity.object()))
-        .add_permission_checks(Some(author.id))
+        .add_permission_checks(permission_check)
         .one(&state.db_conn)
         .await?
     else {

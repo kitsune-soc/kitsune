@@ -16,7 +16,7 @@ use kitsune_db::{
         prelude::{Accounts, Posts, Users},
         users,
     },
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use kitsune_type::ap::{
     ap_context,
@@ -101,7 +101,7 @@ pub async fn get(
     } else {
         let public_post_count = Posts::find()
             .filter(posts::Column::AccountId.eq(account.id))
-            .add_permission_checks(None)
+            .add_permission_checks(PermissionCheck::default())
             .count(&state.db_conn)
             .await?;
 

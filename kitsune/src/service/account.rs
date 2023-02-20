@@ -3,7 +3,7 @@ use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     entity::{posts, prelude::Posts},
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
 use uuid::Uuid;
@@ -49,13 +49,22 @@ impl AccountService {
     }
 
     /// Get a stream of posts owned by the user
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub async fn get_posts(
         &self,
         get_posts: GetPosts,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(get_posts.fetching_account_id)
+            .build()
+            .unwrap();
+
         let mut posts_query = Posts::find()
             .filter(posts::Column::AccountId.eq(get_posts.account_id))
-            .add_permission_checks(get_posts.fetching_account_id)
+            .add_permission_checks(permission_check)
             .order_by_desc(posts::Column::CreatedAt);
 
         if let Some(min_id) = get_posts.min_id {

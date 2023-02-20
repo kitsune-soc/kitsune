@@ -25,7 +25,7 @@ use kitsune_db::{
         users_roles,
     },
     link::InReplyTo,
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
@@ -275,8 +275,13 @@ where
         post_id: Uuid,
         favouriting_account_id: Uuid,
     ) -> Result<posts::Model> {
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(Some(favouriting_account_id))
+            .build()
+            .unwrap();
+
         let Some(post) = Posts::find_by_id(post_id)
-            .add_permission_checks(Some(favouriting_account_id))
+            .add_permission_checks(permission_check)
             .one(&self.db_conn)
             .await?
         else {
@@ -363,19 +368,32 @@ where
     /// Get a post by its ID
     ///
     /// Does checks whether the user is allowed to fetch the post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub async fn get_by_id(
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> Result<Option<posts::Model>> {
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(fetching_account_id)
+            .build()
+            .unwrap();
+
         Posts::find_by_id(id)
-            .add_permission_checks(fetching_account_id)
+            .add_permission_checks(permission_check)
             .one(&self.db_conn)
             .await
             .map_err(Error::from)
     }
 
     /// Get the ancestors of the post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub fn get_ancestors(
         &self,
         id: Uuid,
@@ -383,11 +401,15 @@ where
     ) -> impl Stream<Item = Result<posts::Model>> + '_ {
         try_stream! {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
+            let permission_check = PermissionCheck::builder()
+                .fetching_account_id(fetching_account_id)
+                .build()
+                .unwrap();
 
             while let Some(post) = last_post.take() {
                 let post = post
                     .find_linked(InReplyTo)
-                    .add_permission_checks(fetching_account_id)
+                    .add_permission_checks(permission_check.clone())
                     .one(&self.db_conn)
                     .await?;
 
@@ -401,15 +423,24 @@ where
     }
 
     /// Get the descendants of the post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
     pub fn get_descendants(
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> BoxStream<'_, Result<posts::Model>> {
         try_stream! {
+            let permission_check = PermissionCheck::builder()
+                .fetching_account_id(fetching_account_id)
+                .build()
+                .unwrap();
+
             let descendant_stream = Posts::find()
                 .filter(posts::Column::InReplyToId.eq(id))
-                .add_permission_checks(fetching_account_id)
+                .add_permission_checks(permission_check)
                 .stream(&self.db_conn)
                 .await?;
 
