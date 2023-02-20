@@ -9,8 +9,7 @@ use kitsune_db::{
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
 };
 use uuid::Uuid;
 
@@ -64,14 +63,16 @@ async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Re
         return Ok(());
     };
 
-    users_roles::Model {
-        id: Uuid::now_v7(),
-        user_id: user.id,
-        role: role.into(),
-        created_at: Utc::now().into(),
-    }
-    .into_active_model()
-    .insert(&db_conn)
+    UsersRoles::insert(
+        users_roles::Model {
+            id: Uuid::now_v7(),
+            user_id: user.id,
+            role: role.into(),
+            created_at: Utc::now().into(),
+        }
+        .into_active_model(),
+    )
+    .exec_without_returning(&db_conn)
     .await?;
 
     Ok(())

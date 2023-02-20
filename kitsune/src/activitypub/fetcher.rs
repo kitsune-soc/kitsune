@@ -15,7 +15,7 @@ use kitsune_db::{
     custom::Visibility,
     entity::{
         accounts, media_attachments, posts,
-        prelude::{Accounts, Posts},
+        prelude::{Accounts, MediaAttachments, Posts},
     },
 };
 use kitsune_http_client::Client;
@@ -200,39 +200,43 @@ where
                     .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
-                        let media_attachment = media_attachments::Model {
-                            id: Uuid::now_v7(),
-                            account_id: account.id,
-                            description: icon.name,
-                            content_type: icon.media_type,
-                            blurhash: icon.blurhash,
-                            url: icon.url,
-                            created_at: Utc::now().into(),
-                        }
-                        .into_active_model()
-                        .insert(tx)
+                        let insert_result = MediaAttachments::insert(
+                            media_attachments::Model {
+                                id: Uuid::now_v7(),
+                                account_id: account.id,
+                                description: icon.name,
+                                content_type: icon.media_type,
+                                blurhash: icon.blurhash,
+                                url: icon.url,
+                                created_at: Utc::now().into(),
+                            }
+                            .into_active_model(),
+                        )
+                        .exec(tx)
                         .await?;
 
-                        Some(media_attachment.id)
+                        Some(insert_result.last_insert_id)
                     } else {
                         None
                     };
 
                     let header_id = if let Some(image) = actor.image {
-                        let media_attachment = media_attachments::Model {
-                            id: Uuid::now_v7(),
-                            account_id: account.id,
-                            description: image.name,
-                            content_type: image.media_type,
-                            blurhash: image.blurhash,
-                            url: image.url,
-                            created_at: Utc::now().into(),
-                        }
-                        .into_active_model()
-                        .insert(tx)
+                        let insert_result = MediaAttachments::insert(
+                            media_attachments::Model {
+                                id: Uuid::now_v7(),
+                                account_id: account.id,
+                                description: image.name,
+                                content_type: image.media_type,
+                                blurhash: image.blurhash,
+                                url: image.url,
+                                created_at: Utc::now().into(),
+                            }
+                            .into_active_model(),
+                        )
+                        .exec(tx)
                         .await?;
 
-                        Some(media_attachment.id)
+                        Some(insert_result.last_insert_id)
                     } else {
                         None
                     };

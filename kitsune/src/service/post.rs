@@ -21,7 +21,7 @@ use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
         accounts, favourites, jobs, posts, posts_mentions,
-        prelude::{Favourites, Posts, UsersRoles},
+        prelude::{Favourites, Jobs, Posts, PostsMentions, UsersRoles},
         users_roles,
     },
     link::InReplyTo,
@@ -175,29 +175,33 @@ where
                     .await?;
 
                     for account_id in mentioned_account_ids {
-                        posts_mentions::Model {
-                            account_id,
-                            post_id: post.id,
-                        }
-                        .into_active_model()
-                        .insert(tx)
+                        PostsMentions::insert(
+                            posts_mentions::Model {
+                                account_id,
+                                post_id: post.id,
+                            }
+                            .into_active_model(),
+                        )
+                        .exec_without_returning(tx)
                         .await?;
                     }
 
                     let job_context =
                         Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
 
-                    jobs::Model {
-                        id: Uuid::now_v7(),
-                        state: JobState::Queued,
-                        run_at: Utc::now().into(),
-                        context: serde_json::to_value(job_context).unwrap(),
-                        fail_count: 0,
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
+                    Jobs::insert(
+                        jobs::Model {
+                            id: Uuid::now_v7(),
+                            state: JobState::Queued,
+                            run_at: Utc::now().into(),
+                            context: serde_json::to_value(job_context).unwrap(),
+                            fail_count: 0,
+                            created_at: Utc::now().into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .exec_without_returning(tx)
                     .await?;
 
                     Ok(post)
@@ -247,17 +251,19 @@ where
         }
 
         let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
-        jobs::Model {
-            id: Uuid::now_v7(),
-            state: JobState::Queued,
-            run_at: Utc::now().into(),
-            context: serde_json::to_value(job_context).unwrap(),
-            fail_count: 0,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
+        Jobs::insert(
+            jobs::Model {
+                id: Uuid::now_v7(),
+                state: JobState::Queued,
+                run_at: Utc::now().into(),
+                context: serde_json::to_value(job_context).unwrap(),
+                fail_count: 0,
+                created_at: Utc::now().into(),
+                updated_at: Utc::now().into(),
+            }
+            .into_active_model(),
+        )
+        .exec_without_returning(&self.db_conn)
         .await?;
 
         self.search_service.remove_from_index(post.into()).await?;
@@ -305,17 +311,19 @@ where
             favourite_id: favourite.id,
         });
 
-        jobs::Model {
-            id: Uuid::now_v7(),
-            state: JobState::Queued,
-            run_at: Utc::now().into(),
-            context: serde_json::to_value(context).unwrap(),
-            fail_count: 0,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
+        Jobs::insert(
+            jobs::Model {
+                id: Uuid::now_v7(),
+                state: JobState::Queued,
+                run_at: Utc::now().into(),
+                context: serde_json::to_value(context).unwrap(),
+                fail_count: 0,
+                created_at: Utc::now().into(),
+                updated_at: Utc::now().into(),
+            }
+            .into_active_model(),
+        )
+        .exec_without_returning(&self.db_conn)
         .await?;
 
         Ok(post)
@@ -348,17 +356,19 @@ where
                 favourite_id: favourite.id,
             });
 
-            jobs::Model {
-                id: Uuid::now_v7(),
-                state: JobState::Queued,
-                run_at: Utc::now().into(),
-                context: serde_json::to_value(context).unwrap(),
-                fail_count: 0,
-                created_at: Utc::now().into(),
-                updated_at: Utc::now().into(),
-            }
-            .into_active_model()
-            .insert(&self.db_conn)
+            Jobs::insert(
+                jobs::Model {
+                    id: Uuid::now_v7(),
+                    state: JobState::Queued,
+                    run_at: Utc::now().into(),
+                    context: serde_json::to_value(context).unwrap(),
+                    fail_count: 0,
+                    created_at: Utc::now().into(),
+                    updated_at: Utc::now().into(),
+                }
+                .into_active_model(),
+            )
+            .exec_without_returning(&self.db_conn)
             .await?;
         }
 

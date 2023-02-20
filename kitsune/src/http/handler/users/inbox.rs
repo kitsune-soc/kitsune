@@ -51,21 +51,23 @@ async fn create_activity(
             .transpose()?
             .map(|in_reply_to| in_reply_to.id);
 
-            posts::Model {
-                id: Uuid::now_v7(),
-                account_id: author.id,
-                in_reply_to_id,
-                subject: note.subject,
-                content: note.content,
-                is_sensitive: note.rest.sensitive,
-                visibility,
-                is_local: false,
-                url: note.rest.id,
-                created_at: note.rest.published.into(),
-                updated_at: Utc::now().into(),
-            }
-            .into_active_model()
-            .insert(&state.db_conn)
+            Posts::insert(
+                posts::Model {
+                    id: Uuid::now_v7(),
+                    account_id: author.id,
+                    in_reply_to_id,
+                    subject: note.subject,
+                    content: note.content,
+                    is_sensitive: note.rest.sensitive,
+                    visibility,
+                    is_local: false,
+                    url: note.rest.id,
+                    created_at: note.rest.published.into(),
+                    updated_at: Utc::now().into(),
+                }
+                .into_active_model(),
+            )
+            .exec_without_returning(&state.db_conn)
             .await?;
         }
         None | Some(Object::Person(..)) => {
@@ -100,17 +102,19 @@ async fn follow_activity(
 ) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
 
-    accounts_followers::Model {
-        id: Uuid::now_v7(),
-        account_id: followed_user.id,
-        follower_id: author.id,
-        approved_at: None,
-        url: activity.rest.id,
-        created_at: activity.rest.published.into(),
-        updated_at: Utc::now().into(),
-    }
-    .into_active_model()
-    .insert(&state.db_conn)
+    AccountsFollowers::insert(
+        accounts_followers::Model {
+            id: Uuid::now_v7(),
+            account_id: followed_user.id,
+            follower_id: author.id,
+            approved_at: None,
+            url: activity.rest.id,
+            created_at: activity.rest.published.into(),
+            updated_at: Utc::now().into(),
+        }
+        .into_active_model(),
+    )
+    .exec_without_returning(&state.db_conn)
     .await?;
 
     Ok(())
@@ -131,15 +135,17 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
         return Ok(());
     };
 
-    favourites::Model {
-        id: Uuid::now_v7(),
-        account_id: author.id,
-        post_id: post.id,
-        url: activity.rest.id,
-        created_at: Utc::now().into(),
-    }
-    .into_active_model()
-    .insert(&state.db_conn)
+    Favourites::insert(
+        favourites::Model {
+            id: Uuid::now_v7(),
+            account_id: author.id,
+            post_id: post.id,
+            url: activity.rest.id,
+            created_at: Utc::now().into(),
+        }
+        .into_active_model(),
+    )
+    .exec_without_returning(&state.db_conn)
     .await?;
 
     Ok(())
