@@ -37,9 +37,6 @@ impl GetHome {
 #[derive(Builder, Clone)]
 pub struct GetPublic {
     #[builder(default, setter(strip_option))]
-    fetching_account_id: Option<Uuid>,
-
-    #[builder(default, setter(strip_option))]
     max_id: Option<Uuid>,
 
     #[builder(default, setter(strip_option))]
@@ -142,7 +139,6 @@ impl TimelineService {
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
         let permission_check = PermissionCheck::builder()
-            .fetching_account_id(get_public.fetching_account_id)
             .include_unlisted(false)
             .build()
             .unwrap();

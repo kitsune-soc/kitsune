@@ -1,7 +1,4 @@
-use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::IntoMastodon,
-    service::timeline::GetPublic, state::Zustand,
-};
+use crate::{error::Result, mapping::IntoMastodon, service::timeline::GetPublic, state::Zustand};
 use axum::{
     extract::{Query, State},
     Json,
@@ -32,18 +29,13 @@ pub struct GetQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
-    auth_data: Option<MastodonAuthExtractor>,
     Query(query): Query<GetQuery>,
 ) -> Result<Json<Vec<Status>>> {
-    let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
     let mut get_public = GetPublic::builder()
         .only_local(query.local)
         .only_remote(query.remote)
         .clone();
 
-    if let Some(fetching_account_id) = fetching_account_id {
-        get_public.fetching_account_id(fetching_account_id);
-    }
     if let Some(max_id) = query.max_id {
         get_public.max_id(max_id);
     }
