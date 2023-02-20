@@ -3,7 +3,7 @@ use crate::{
     config::Configuration,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService, search::SearchService,
-        user::UserService,
+        timeline::TimelineService, user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -21,6 +21,7 @@ pub struct Service {
     pub oauth2: Oauth2Service,
     pub post: PostService,
     pub search: Arc<dyn SearchService + Send + Sync>,
+    pub timeline: TimelineService,
     pub user: UserService,
 }
 

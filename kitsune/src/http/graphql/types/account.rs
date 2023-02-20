@@ -7,7 +7,7 @@ use kitsune_db::{
         accounts, posts,
         prelude::{Accounts, MediaAttachments, Posts},
     },
-    r#trait::PostPermissionCheckExt,
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
@@ -61,7 +61,7 @@ impl Account {
             .ok_or_else(|| Error::new("User not present"))?;
 
         Posts::find()
-            .add_permission_checks(None)
+            .add_permission_checks(PermissionCheck::default())
             .filter(posts::Column::AccountId.eq(account.id))
             .all(&ctx.state().db_conn)
             .await

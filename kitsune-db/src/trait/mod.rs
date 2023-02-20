@@ -6,4 +6,4 @@
 
 mod post_permission_check;
 
-pub use self::post_permission_check::PostPermissionCheckExt;
+pub use self::post_permission_check::{PermissionCheck, PostPermissionCheckExt};
