@@ -21,8 +21,8 @@ use kitsune_db::{
 use kitsune_http_client::Client;
 use kitsune_type::ap::object::{Actor, Note};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    IntoActiveValue, QueryFilter, TransactionTrait,
+    sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
+    EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
 };
 use std::{sync::Arc, time::Duration};
 use url::Url;
@@ -163,24 +163,40 @@ where
                 );
 
                 async move {
-                    let account = accounts::Model {
-                        id: Uuid::new_v7(uuid_timestamp),
-                        avatar_id: None,
-                        header_id: None,
-                        display_name: actor.name,
-                        note: actor.subject,
-                        username: actor.preferred_username,
-                        locked: actor.manually_approves_followers,
-                        domain: Some(url.host_str().unwrap().into()),
-                        url: actor.rest.id,
-                        followers_url: actor.followers,
-                        inbox_url: actor.inbox,
-                        public_key: actor.public_key.public_key_pem,
-                        created_at: actor.rest.published.into(),
-                        updated_at: Utc::now().into(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
+                    let account = Accounts::insert(
+                        accounts::Model {
+                            id: Uuid::new_v7(uuid_timestamp),
+                            avatar_id: None,
+                            header_id: None,
+                            display_name: actor.name,
+                            note: actor.subject,
+                            username: actor.preferred_username,
+                            locked: actor.manually_approves_followers,
+                            local: false,
+                            domain: Some(url.host_str().unwrap().into()),
+                            url: actor.rest.id,
+                            followers_url: actor.followers,
+                            inbox_url: actor.inbox,
+                            public_key: actor.public_key.public_key_pem,
+                            created_at: actor.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .on_conflict(
+                        OnConflict::new()
+                            .update_columns([
+                                accounts::Column::AvatarId,
+                                accounts::Column::HeaderId,
+                                accounts::Column::DisplayName,
+                                accounts::Column::Note,
+                                accounts::Column::Locked,
+                                accounts::Column::PublicKey,
+                                accounts::Column::UpdatedAt,
+                            ])
+                            .clone(),
+                    )
+                    .exec_with_returning(tx)
                     .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {

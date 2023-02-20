@@ -102,6 +102,7 @@ impl UserService {
                         username: register.username.clone(),
                         locked: false,
                         note: None,
+                        local: true,
                         domain: None,
                         url,
                         followers_url,

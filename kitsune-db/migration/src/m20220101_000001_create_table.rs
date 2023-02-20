@@ -10,6 +10,7 @@ pub enum Accounts {
     Note,
     Username,
     Locked,
+    Local,
     Domain,
     Url,
     FollowersUrl,
@@ -64,6 +65,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Accounts::Note).text())
                     .col(ColumnDef::new(Accounts::Username).text().not_null())
                     .col(ColumnDef::new(Accounts::Locked).boolean().not_null())
+                    .col(ColumnDef::new(Accounts::Local).boolean().not_null())
                     .col(ColumnDef::new(Accounts::Domain).text())
                     .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
                     .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
