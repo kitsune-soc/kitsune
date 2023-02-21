@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use futures_util::StreamExt;
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
 use serde_json::{json, Value};
@@ -9,18 +11,39 @@ async fn main() {
         .unwrap();
     let hub = MessagingHub::new(redis_backend);
 
-    let emitter = hub.emitter("test".into());
     let consumer = hub.consumer::<Value>("test".into()).await.unwrap();
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 1: {:?}]", msg) }));
 
-    emitter
-        .emit(json!({
-            "hello": "world",
-            "who": ["are", "you", "?"]
-        }))
-        .await
-        .unwrap();
+    let consumer = hub.consumer::<Value>("test".into()).await.unwrap();
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 2: {:?}]", msg) }));
 
-    consumer
-        .for_each(|msg| async move { println!("{:#?}]", msg) })
-        .await;
+    let consumer = hub.consumer::<Value>("test2".into()).await.unwrap();
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 3: {:?}]", msg) }));
+
+    let consumer = hub.consumer::<Value>("test2".into()).await.unwrap();
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 4: {:?}]", msg) }));
+
+    for i in 1..=3 {
+        let emitter = hub.emitter("test".into());
+        emitter
+            .emit(json!({
+                "hello": "world",
+                "who": ["are", "you", "?"],
+                "message": i,
+            }))
+            .await
+            .unwrap();
+
+        let emitter = hub.emitter("test2".into());
+        emitter
+            .emit(json!({
+                "hello": "world",
+                "who": ["are", "you", "?"],
+                "message": i,
+            }))
+            .await
+            .unwrap();
+    }
+
+    tokio::time::sleep(Duration::from_secs(1)).await;
 }
