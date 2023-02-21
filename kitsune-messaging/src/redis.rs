@@ -9,11 +9,12 @@ use redis::{
     aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
 
 const BROADCAST_CAPACITY: usize = 10;
+const CONNECTION_RETRY_DELAY: Duration = Duration::from_secs(5);
 const REGISTRATION_QUEUE_SIZE: usize = 50;
 
 #[derive(Debug)]
@@ -70,10 +71,20 @@ impl MultiplexActor {
                                     );
                                 }
                             }
+                        } else {
+                            debug!(%pattern, "Failed to find correct receiver");
                         }
                     } else {
                         // Reconnect, because an ending stream isn't good..
-                        self.pubsub_conn = self.redis_client.get_async_connection().await.unwrap().into_pubsub();
+                        self.pubsub_conn = loop {
+                            match self.redis_client.get_async_connection().await {
+                                Ok(conn) => break conn.into_pubsub(),
+                                Err(err) => {
+                                    error!(error = %err, "Failed to connect to Redis instance");
+                                    tokio::time::sleep(CONNECTION_RETRY_DELAY).await;
+                                }
+                            }
+                        };
 
                         for key in self.mapping.keys() {
                             if let Err(err) = self.pubsub_conn.psubscribe(key).await {
