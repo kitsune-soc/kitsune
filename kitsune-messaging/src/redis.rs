@@ -1,3 +1,7 @@
+//!
+//! Redis implementation
+//!
+
 use crate::{MessagingBackend, Result};
 use async_trait::async_trait;
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
@@ -84,12 +88,18 @@ impl MultiplexActor {
     }
 }
 
+/// Implementation of the [`MessagingBackend`] trait for Redis PubSub
 pub struct RedisMessagingBackend {
     pub_connection: ConnectionManager,
     sub_actor: mpsc::Sender<RegistrationMessage>,
 }
 
 impl RedisMessagingBackend {
+    /// Create a new Redis PubSub backend
+    ///
+    /// # Errors
+    ///
+    /// - Failed to connect to the Redis instance
     pub async fn new(conn_string: &str) -> Result<Self, RedisError> {
         let client = redis::Client::open(conn_string)?;
         let sub_connection = client.get_async_connection().await?.into_pubsub();
