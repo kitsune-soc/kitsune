@@ -32,6 +32,7 @@ use serde::de::DeserializeOwned;
 ///
 /// Mastodon won't let access token expire ever. I don't know why, but they just don't.
 /// Instead of hacking some special case for the Mastodon API into our database schema, we just don't enforce token expiration.
+#[cfg(feature = "mastodon-api")]
 pub type MastodonAuthExtractor = AuthExtractor<false>;
 
 #[derive(Clone)]

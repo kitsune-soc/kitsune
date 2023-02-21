@@ -86,7 +86,7 @@ async fn main() {
             .expect("Failed to connect to the search servers");
 
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
-    let webfinger = Webfinger::with_defaults(redis_conn);
+    let webfinger = Webfinger::with_defaults(redis_conn.clone());
 
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
@@ -120,8 +120,10 @@ async fn main() {
 
     let state = Zustand {
         config: config.clone(),
-        db_conn: conn,
+        db_conn: conn.clone(),
         fetcher,
+        #[cfg(feature = "mastodon-api")]
+        mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(conn, redis_conn),
         service: Service {
             account: account_service,
             oauth2: oauth2_service,

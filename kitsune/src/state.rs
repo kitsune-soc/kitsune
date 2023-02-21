@@ -57,6 +57,8 @@ pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub fetcher: Fetcher,
+    #[cfg(feature = "mastodon-api")]
+    pub mastodon_mapper: crate::mapping::MastodonMapper,
     pub service: Service,
     pub webfinger: Webfinger,
 }

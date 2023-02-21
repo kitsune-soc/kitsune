@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::error::{Error, Result};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::entity::{
@@ -9,23 +6,38 @@ use kitsune_db::entity::{
     prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions, Reposts},
 };
 use kitsune_type::mastodon::{account::Source, status::Mention, Account, Status};
-use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter,
+};
+use serde::{de::DeserializeOwned, Serialize};
+use uuid::Uuid;
 
 #[async_trait]
 pub trait IntoMastodon {
-    type Output;
+    /// Mastodon API entity that gets returned
+    type Output: Clone + DeserializeOwned + Serialize;
 
-    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output>;
+    /// Unique identifier of the object
+    ///
+    /// Returning the primary key of the database should be fine (our IDs are v7 UUIDs)
+    fn id(&self) -> Option<Uuid>;
+
+    /// Map something to its Mastodon API equivalent
+    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output>;
 }
 
 #[async_trait]
 impl IntoMastodon for accounts::Model {
     type Output = Account;
 
-    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
+    fn id(&self) -> Option<Uuid> {
+        Some(self.id)
+    }
+
+    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
         let statuses_count = Posts::find()
             .filter(posts::Column::AccountId.eq(self.id))
-            .count(&state.db_conn)
+            .count(db_conn)
             .await?;
         let mut acct = self.username.clone();
         if let Some(domain) = self.domain {
@@ -35,7 +47,7 @@ impl IntoMastodon for accounts::Model {
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
             let media_attachment = MediaAttachments::find_by_id(avatar_id)
-                .one(&state.db_conn)
+                .one(db_conn)
                 .await?
                 .expect("[Bug] User profile picture missing");
 
@@ -46,7 +58,7 @@ impl IntoMastodon for accounts::Model {
 
         let header = if let Some(header_id) = self.header_id {
             let media_attachment = MediaAttachments::find_by_id(header_id)
-                .one(&state.db_conn)
+                .one(db_conn)
                 .await?
                 .expect("[Bug] User header image missing");
 
@@ -86,9 +98,13 @@ impl IntoMastodon for accounts::Model {
 impl IntoMastodon for posts_mentions::Model {
     type Output = Mention;
 
-    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
         let account = Accounts::find_by_id(self.account_id)
-            .one(&state.db_conn)
+            .one(db_conn)
             .await?
             .expect("[Bug] Mention without associated account");
 
@@ -111,24 +127,28 @@ impl IntoMastodon for posts_mentions::Model {
 impl IntoMastodon for posts::Model {
     type Output = Status;
 
-    async fn into_mastodon(self, state: &Zustand) -> Result<Self::Output> {
+    fn id(&self) -> Option<Uuid> {
+        Some(self.id)
+    }
+
+    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
         let account = Accounts::find_by_id(self.account_id)
-            .one(&state.db_conn)
+            .one(db_conn)
             .await?
             .expect("[Bug] Post without associated account")
-            .into_mastodon(state)
+            .into_mastodon(db_conn)
             .await?;
 
-        let reblog_count = self.find_related(Reposts).count(&state.db_conn).await?;
+        let reblog_count = self.find_related(Reposts).count(db_conn).await?;
 
-        let favourites_count = self.find_related(Favourites).count(&state.db_conn).await?;
+        let favourites_count = self.find_related(Favourites).count(db_conn).await?;
 
         let mentions = PostsMentions::find()
             .filter(posts_mentions::Column::PostId.eq(self.id))
-            .stream(&state.db_conn)
+            .stream(db_conn)
             .await?
             .map_err(Error::from)
-            .and_then(|mention| mention.into_mastodon(state))
+            .and_then(|mention| mention.into_mastodon(db_conn))
             .try_collect()
             .await?;
 

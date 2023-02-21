@@ -1,9 +1,8 @@
 use crate::{
     error::Result,
     http::extractor::MastodonAuthExtractor,
-    mapping::IntoMastodon,
+    mapping::MastodonMapper,
     service::account::{AccountService, GetPosts},
-    state::Zustand,
 };
 use axum::{
     extract::{Path, Query, State},
@@ -30,8 +29,8 @@ pub struct GetQuery {
 }
 
 pub async fn get(
-    State(state): State<Zustand>,
     State(account): State<AccountService>,
+    State(mastodon_mapper): State<MastodonMapper>,
     Path(account_id): Path<Uuid>,
     auth_data: Option<MastodonAuthExtractor>,
     Query(query): Query<GetQuery>,
@@ -56,7 +55,7 @@ pub async fn get(
         .get_posts(get_posts)
         .await?
         .take(limit)
-        .and_then(|post| post.into_mastodon(&state))
+        .and_then(|post| mastodon_mapper.map(post))
         .try_collect()
         .await?;
 

@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
-    mapping::IntoMastodon,
+    mapping::MastodonMapper,
     service::post::{CreatePost, DeletePost, PostService},
     state::Zustand,
 };
@@ -51,26 +51,23 @@ async fn delete(
 
 #[debug_handler(state = Zustand)]
 async fn get(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
+    State(post): State<PostService>,
     user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let account_id = user_data.map(|user_data| user_data.0.account.id);
-    let Some(post) = state
-        .service
-        .post
-        .get_by_id(id, account_id)
-        .await?
-    else {
+    let Some(post) = post.get_by_id(id, account_id).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
-    Ok(Json(post.into_mastodon(&state).await?).into_response())
+    Ok(Json(mastodon_mapper.map(post).await?).into_response())
 }
 
 #[debug_handler(state = Zustand)]
 async fn post(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
+    State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Response> {
@@ -88,12 +85,8 @@ async fn post(
         create_post.in_reply_to_id(in_reply_to_id);
     }
 
-    let status = state
-        .service
-        .post
-        .create(create_post.build().unwrap())
-        .await?
-        .into_mastodon(&state)
+    let status = mastodon_mapper
+        .map(post.create(create_post.build().unwrap()).await?)
         .await?;
 
     Ok(Json(status).into_response())

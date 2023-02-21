@@ -10,7 +10,7 @@ pub struct Context {
     pub descendants: Vec<Status>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Mention {
     pub id: Uuid,
     pub username: String,
@@ -18,7 +18,7 @@ pub struct Mention {
     pub acct: String,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Visibility {
     #[default]
@@ -28,7 +28,7 @@ pub enum Visibility {
     Direct,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Status {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,

@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    mapping::IntoMastodon,
+    mapping::MastodonMapper,
     service::post::PostService,
     state::Zustand,
 };
@@ -15,12 +15,12 @@ use uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
 pub async fn post(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let post = post.unfavourite(id, user_data.account.id).await?;
 
-    Ok(Json(post.into_mastodon(&state).await?).into_response())
+    Ok(Json(mastodon_mapper.map(post).await?).into_response())
 }
