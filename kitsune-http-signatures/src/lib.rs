@@ -131,7 +131,6 @@ where
     }
 }
 
-#[allow(dead_code)] // shush.
 struct SignatureString<'a> {
     pub algorithm: &'a str,
     pub components: &'a [SignatureComponent<'a>],

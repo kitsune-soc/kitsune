@@ -6,7 +6,11 @@ use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::FutureExt;
-use kitsune_db::entity::{accounts, prelude::Users, users};
+use kitsune_db::entity::{
+    accounts,
+    prelude::{Accounts, Users},
+    users,
+};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
@@ -94,29 +98,32 @@ impl UserService {
             .db_conn
             .transaction(|tx| {
                 async move {
-                    let new_account = accounts::Model {
-                        id: Uuid::now_v7(),
-                        avatar_id: None,
-                        header_id: None,
-                        display_name: None,
-                        username: register.username.clone(),
-                        locked: false,
-                        note: None,
-                        domain: None,
-                        url,
-                        followers_url,
-                        inbox_url,
-                        public_key: public_key_str,
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
+                    let insert_result = Accounts::insert(
+                        accounts::Model {
+                            id: Uuid::now_v7(),
+                            avatar_id: None,
+                            header_id: None,
+                            display_name: None,
+                            username: register.username.clone(),
+                            locked: false,
+                            note: None,
+                            local: true,
+                            domain: None,
+                            url,
+                            followers_url,
+                            inbox_url,
+                            public_key: public_key_str,
+                            created_at: Utc::now().into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .exec(tx)
                     .await?;
 
                     let new_user = users::Model {
                         id: Uuid::now_v7(),
-                        account_id: new_account.id,
+                        account_id: insert_result.last_insert_id,
                         username: register.username,
                         email: register.email,
                         password: hashed_password?,

@@ -23,7 +23,7 @@ pub trait ContextExt {
     fn user_data(&self) -> Result<&UserData>;
 }
 
-impl ContextExt for &'_ Context<'_> {
+impl ContextExt for &Context<'_> {
     fn state(&self) -> &Zustand {
         self.data().expect("[Bug] State missing in GraphQL context")
     }

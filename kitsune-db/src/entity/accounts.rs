@@ -15,6 +15,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub username: String,
     pub locked: bool,
+    pub local: bool,
     #[sea_orm(column_type = "Text", nullable)]
     pub domain: Option<String>,
     #[sea_orm(column_type = "Text", unique)]
