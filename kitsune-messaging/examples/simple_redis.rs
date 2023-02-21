@@ -1,8 +1,7 @@
-use std::time::Duration;
-
 use futures_util::StreamExt;
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
 use serde_json::{json, Value};
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() {

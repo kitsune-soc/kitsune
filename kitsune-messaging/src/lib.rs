@@ -25,6 +25,7 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 pub mod redis;
+pub mod tokio_broadcast;
 
 /// Messaging backend
 ///
