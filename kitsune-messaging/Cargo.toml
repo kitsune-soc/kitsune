@@ -7,7 +7,7 @@ edition = "2021"
 async-trait = "0.1.64"
 derive_builder = "0.12.0"
 futures-util = "0.3.26"
-redis = "0.22.3"
-tokio = { version = "1.25.0", features = ["rt"] }
+redis = { version = "0.22.3", features = ["aio", "tokio-comp"] }
+tokio = { version = "1.25.0", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.12", features = ["sync"] }
 tracing = "0.1.37"
