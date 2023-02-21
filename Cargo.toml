@@ -13,6 +13,7 @@ members = [
     "kitsune-db/migration",
     "kitsune-http-client",
     "kitsune-http-signatures",
+    "kitsune-messaging",
     "kitsune-search",
     "kitsune-search/proto",
     "kitsune-type",
