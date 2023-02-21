@@ -2,7 +2,7 @@ use crate::{MessagingBackend, Result};
 use async_trait::async_trait;
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
 use redis::{
-    aio::{Connection, PubSub},
+    aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
 };
 use std::collections::HashMap;
@@ -85,16 +85,16 @@ impl MultiplexActor {
 }
 
 pub struct RedisMessagingBackend {
-    pub_connection: Connection,
+    pub_connection: ConnectionManager,
     sub_actor: mpsc::Sender<RegistrationMessage>,
 }
 
 impl RedisMessagingBackend {
     pub async fn new(conn_string: &str) -> Result<Self, RedisError> {
         let client = redis::Client::open(conn_string)?;
-        let pub_connection = client.get_async_connection().await?;
         let sub_connection = client.get_async_connection().await?.into_pubsub();
         let sub_actor = MultiplexActor::spawn(sub_connection);
+        let pub_connection = ConnectionManager::new(client).await?;
 
         Ok(Self {
             pub_connection,
@@ -105,14 +105,15 @@ impl RedisMessagingBackend {
 
 #[async_trait]
 impl MessagingBackend for RedisMessagingBackend {
-    async fn enqueue(&mut self, channel_name: String, message: Vec<u8>) -> Result<()> {
+    async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()> {
         self.pub_connection
+            .clone()
             .publish(channel_name, message)
             .await
             .map_err(Into::into)
     }
 
-    async fn event_stream(
+    async fn message_stream(
         &self,
         channel_name: String,
     ) -> Result<BoxStream<'static, Result<Vec<u8>>>> {
