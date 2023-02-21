@@ -40,6 +40,7 @@ jobs:
       - uses: mtoohey31/cache-flake-attrs@v2
         with:
           key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
+      - uses: taiki-e/install-action@cargo-hack
       - uses: actions/cache@v3
         with:
           path: |
@@ -48,7 +49,7 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: rui314/setup-mold@v1
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo clippy --all-features -- -D warnings
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack --feature-powerset --all clippy -- -D warnings
 
   fmt:
     name: Formatting
