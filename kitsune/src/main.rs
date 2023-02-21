@@ -6,7 +6,6 @@ use kitsune::{
     activitypub::Fetcher,
     config::Configuration,
     http, job,
-    mapping::MastodonMapper,
     resolve::PostResolver,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
@@ -124,7 +123,7 @@ async fn main() {
         db_conn: conn.clone(),
         fetcher,
         #[cfg(feature = "mastodon-api")]
-        mastodon_mapper: MastodonMapper::with_defaults(conn, redis_conn),
+        mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(conn, redis_conn),
         service: Service {
             account: account_service,
             oauth2: oauth2_service,
