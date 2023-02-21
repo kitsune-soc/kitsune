@@ -1,6 +1,7 @@
 use crate::{
     activitypub::Fetcher,
     config::Configuration,
+    mapping::MastodonMapper,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
         search::ArcSearchService, timeline::TimelineService, user::UserService,
@@ -57,6 +58,7 @@ pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub fetcher: Fetcher,
+    pub mastodon_mapper: MastodonMapper,
     pub service: Service,
     pub webfinger: Webfinger,
 }

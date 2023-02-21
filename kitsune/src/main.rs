@@ -6,6 +6,7 @@ use kitsune::{
     activitypub::Fetcher,
     config::Configuration,
     http, job,
+    mapping::MastodonMapper,
     resolve::PostResolver,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
@@ -86,6 +87,7 @@ async fn main() {
             .expect("Failed to connect to the search servers");
 
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
+    let mastodon_mapper = MastodonMapper::with_defaults(conn.clone(), redis_conn.clone());
     let webfinger = Webfinger::with_defaults(redis_conn);
 
     let account_service = AccountService::builder()
@@ -122,6 +124,7 @@ async fn main() {
         config: config.clone(),
         db_conn: conn,
         fetcher,
+        mastodon_mapper,
         service: Service {
             account: account_service,
             oauth2: oauth2_service,

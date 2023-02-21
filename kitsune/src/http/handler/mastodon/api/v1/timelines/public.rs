@@ -1,8 +1,7 @@
 use crate::{
     error::Result,
-    mapping::IntoMastodon,
+    mapping::MastodonMapper,
     service::timeline::{GetPublic, TimelineService},
-    state::Zustand,
 };
 use axum::{
     extract::{Query, State},
@@ -33,7 +32,7 @@ pub struct GetQuery {
 }
 
 pub async fn get(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
 ) -> Result<Json<Vec<Status>>> {
@@ -56,7 +55,7 @@ pub async fn get(
         .get_public(get_public)
         .await?
         .take(limit)
-        .and_then(|post| post.into_mastodon(&state))
+        .and_then(|post| mastodon_mapper.map(post))
         .try_collect()
         .await?;
 

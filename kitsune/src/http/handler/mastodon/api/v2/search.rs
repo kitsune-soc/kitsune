@@ -1,7 +1,6 @@
 use crate::{
     error::Result,
     http::extractor::MastodonAuthExtractor,
-    mapping::IntoMastodon,
     service::search::{ArcSearchService, SearchService},
     state::Zustand,
 };
@@ -96,7 +95,7 @@ async fn get(
 
                     search_result
                         .accounts
-                        .push(account.into_mastodon(&state).await?);
+                        .push(state.mastodon_mapper.map(account).await?);
                 }
                 SearchIndex::Post => {
                     let post = Posts::find_by_id(id)
@@ -106,7 +105,7 @@ async fn get(
 
                     search_result
                         .statuses
-                        .push(post.into_mastodon(&state).await?);
+                        .push(state.mastodon_mapper.map(post).await?);
                 }
             }
         }

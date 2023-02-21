@@ -1,5 +1,5 @@
 use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::IntoMastodon,
+    error::Result, http::extractor::MastodonAuthExtractor, mapping::MastodonMapper,
     service::post::PostService, state::Zustand,
 };
 use axum::{
@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
 pub async fn get(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
     user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
@@ -25,14 +25,14 @@ pub async fn get(
     let ancestors = post
         .get_ancestors(id, account_id)
         .try_fold(VecDeque::new(), |mut acc, item| async {
-            acc.push_front(item.into_mastodon(&state).await?);
+            acc.push_front(mastodon_mapper.map(item).await?);
             Ok(acc)
         })
         .await?;
 
     let descendants = post
         .get_descendants(id, account_id)
-        .and_then(|post| post.into_mastodon(&state))
+        .and_then(|post| mastodon_mapper.map(post))
         .try_collect()
         .await?;
 

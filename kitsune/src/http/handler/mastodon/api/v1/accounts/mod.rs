@@ -1,4 +1,4 @@
-use crate::{error::Result, mapping::IntoMastodon, state::Zustand};
+use crate::{error::Result, mapping::MastodonMapper, state::Zustand};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
@@ -6,18 +6,22 @@ use axum::{
 };
 use http::StatusCode;
 use kitsune_db::entity::prelude::Accounts;
-use sea_orm::EntityTrait;
+use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
 mod statuses;
 mod verify_credentials;
 
-async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(account) = Accounts::find_by_id(id).one(&state.db_conn).await? else {
+async fn get(
+    State(db_conn): State<DatabaseConnection>,
+    State(mastodon_mapper): State<MastodonMapper>,
+    Path(id): Path<Uuid>,
+) -> Result<Response> {
+    let Some(account) = Accounts::find_by_id(id).one(&db_conn).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
-    Ok(Json(account.into_mastodon(&state).await?).into_response())
+    Ok(Json(mastodon_mapper.map(account).await?).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {

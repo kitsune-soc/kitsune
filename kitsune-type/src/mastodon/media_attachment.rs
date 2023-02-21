@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum MediaType {
     Unknown,
@@ -11,7 +11,7 @@ pub enum MediaType {
     Audio,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct MediaAttachment {
     pub id: Uuid,
     pub r#type: MediaType,

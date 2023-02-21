@@ -1,9 +1,8 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    mapping::IntoMastodon,
+    mapping::MastodonMapper,
     service::timeline::{GetHome, TimelineService},
-    state::Zustand,
 };
 use axum::{
     extract::{Query, State},
@@ -30,7 +29,7 @@ pub struct GetQuery {
 }
 
 pub async fn get(
-    State(state): State<Zustand>,
+    State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -53,7 +52,7 @@ pub async fn get(
         .get_home(get_home)
         .await?
         .take(limit)
-        .and_then(|post| post.into_mastodon(&state))
+        .and_then(|post| mastodon_mapper.map(post))
         .try_collect()
         .await?;
 
