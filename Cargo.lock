@@ -2360,6 +2360,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "futures-util",
+ "pin-project-lite",
  "redis",
  "serde",
  "serde_json",

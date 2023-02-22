@@ -7,16 +7,24 @@
 #![allow(
     clippy::doc_markdown,
     clippy::module_name_repetitions,
-    clippy::similar_names
+    clippy::similar_names,
+    forbidden_lint_groups
 )]
 
 #[macro_use]
 extern crate tracing;
 
 use async_trait::async_trait;
-use futures_util::{stream::BoxStream, Stream, TryStreamExt};
+use futures_util::{stream::BoxStream, Stream};
+use pin_project_lite::pin_project;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{error::Error, future, marker::PhantomData, sync::Arc};
+use std::{
+    error::Error,
+    marker::PhantomData,
+    pin::Pin,
+    sync::Arc,
+    task::{self, ready, Poll},
+};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -46,6 +54,51 @@ pub trait MessagingBackend {
     ) -> Result<BoxStream<'static, Result<Vec<u8>>>>;
 }
 
+pin_project! {
+    /// Consumer of messages
+    pub struct MessageConsumer<M> {
+        backend: Arc<dyn MessagingBackend + Send + Sync>,
+        channel_name: String,
+        #[pin]
+        inner: BoxStream<'static, Result<Vec<u8>>>,
+        _ty: PhantomData<M>,
+    }
+}
+
+impl<M> MessageConsumer<M> {
+    /// Reconnect the message consumer
+    ///
+    /// Use this if the stream ever ends and you think it really shouldn't
+    ///
+    /// # Errors
+    ///
+    /// - Reconnection failed
+    pub async fn reconnect(&mut self) -> Result<()> {
+        self.inner = self
+            .backend
+            .message_stream(self.channel_name.clone())
+            .await?;
+
+        Ok(())
+    }
+}
+
+impl<M> Stream for MessageConsumer<M>
+where
+    M: DeserializeOwned,
+{
+    type Item = Result<M>;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
+        let this = self.project();
+        match ready!(this.inner.poll_next(cx)) {
+            Some(Ok(msg)) => Poll::Ready(Some(serde_json::from_slice(&msg).map_err(Into::into))),
+            Some(Err(err)) => Poll::Ready(Some(Err(err))),
+            None => Poll::Ready(None),
+        }
+    }
+}
+
 /// Message emitter
 ///
 /// This is cheaply clonable. Interally it is a string for the channel name and an `Arc` referencing the backend.
@@ -58,7 +111,7 @@ pub struct MessageEmitter<M> {
 
 impl<M> MessageEmitter<M>
 where
-    M: Serialize,
+    M: DeserializeOwned + Serialize,
 {
     /// Emit a new message
     ///
@@ -69,6 +122,19 @@ where
     pub async fn emit(&self, message: M) -> Result<()> {
         let message = serde_json::to_vec(&message)?;
         self.backend.enqueue(&self.channel_name, message).await
+    }
+
+    /// Create a new consumer from the emitter
+    ///
+    /// # Errors
+    ///
+    /// - Failed to create consumer
+    pub async fn consumer(&self) -> Result<MessageConsumer<M>> {
+        MessagingHub {
+            backend: self.backend.clone(),
+        }
+        .consumer(self.channel_name.clone())
+        .await
     }
 }
 
@@ -100,15 +166,18 @@ impl MessagingHub {
     /// # Errors
     ///
     /// - Consumer failed to be created
-    pub async fn consumer<M>(&self, channel_name: String) -> Result<impl Stream<Item = Result<M>>>
+    pub async fn consumer<M>(&self, channel_name: String) -> Result<MessageConsumer<M>>
     where
-        M: DeserializeOwned + Send + 'static,
+        M: DeserializeOwned,
     {
-        Ok(self
-            .backend
-            .message_stream(channel_name)
-            .await?
-            .and_then(|msg| future::ready(serde_json::from_slice(&msg).map_err(BoxError::from))))
+        let message_stream = self.backend.message_stream(channel_name.clone()).await?;
+
+        Ok(MessageConsumer {
+            backend: self.backend.clone(),
+            channel_name,
+            inner: message_stream,
+            _ty: PhantomData,
+        })
     }
 
     /// Create a new emitter for a channel
