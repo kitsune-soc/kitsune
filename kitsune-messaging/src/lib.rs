@@ -67,7 +67,7 @@ pin_project! {
 
 impl<M> MessageConsumer<M>
 where
-    M: DeserializeOwned,
+    M: DeserializeOwned + Serialize,
 {
     /// Duplicate the message consumer
     ///
@@ -85,6 +85,15 @@ where
         }
         .consumer(self.channel_name.clone())
         .await
+    }
+
+    /// Create an emitter that emits messages to this consumer
+    #[must_use]
+    pub fn emitter(&self) -> MessageEmitter<M> {
+        MessagingHub {
+            backend: self.backend.clone(),
+        }
+        .emitter(self.channel_name.clone())
     }
 
     /// Reconnect the message consumer
@@ -134,17 +143,6 @@ impl<M> MessageEmitter<M>
 where
     M: DeserializeOwned + Serialize,
 {
-    /// Emit a new message
-    ///
-    /// # Errors
-    ///
-    /// - Message failed to serialise
-    /// - Message failed to enqueue
-    pub async fn emit(&self, message: M) -> Result<()> {
-        let message = serde_json::to_vec(&message)?;
-        self.backend.enqueue(&self.channel_name, message).await
-    }
-
     /// Create a new consumer from the emitter
     ///
     /// # Errors
@@ -156,6 +154,17 @@ where
         }
         .consumer(self.channel_name.clone())
         .await
+    }
+
+    /// Emit a new message
+    ///
+    /// # Errors
+    ///
+    /// - Message failed to serialise
+    /// - Message failed to enqueue
+    pub async fn emit(&self, message: M) -> Result<()> {
+        let message = serde_json::to_vec(&message)?;
+        self.backend.enqueue(&self.channel_name, message).await
     }
 }
 
@@ -189,7 +198,7 @@ impl MessagingHub {
     /// - Consumer failed to be created
     pub async fn consumer<M>(&self, channel_name: String) -> Result<MessageConsumer<M>>
     where
-        M: DeserializeOwned,
+        M: DeserializeOwned + Serialize,
     {
         let message_stream = self.backend.message_stream(channel_name.clone()).await?;
 
@@ -203,7 +212,10 @@ impl MessagingHub {
 
     /// Create a new emitter for a channel
     #[must_use]
-    pub fn emitter<M>(&self, channel_name: String) -> MessageEmitter<M> {
+    pub fn emitter<M>(&self, channel_name: String) -> MessageEmitter<M>
+    where
+        M: DeserializeOwned + Serialize,
+    {
         MessageEmitter {
             channel_name,
             backend: self.backend.clone(),
