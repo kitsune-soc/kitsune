@@ -65,7 +65,28 @@ pin_project! {
     }
 }
 
-impl<M> MessageConsumer<M> {
+impl<M> MessageConsumer<M>
+where
+    M: DeserializeOwned,
+{
+    /// Duplicate the message consumer
+    ///
+    /// This is essentially just creating another consumer.
+    /// Useful if you don't have access to the backend nor an emitter
+    ///
+    /// # Errors
+    ///
+    /// - Failed to create another consumer
+    ///
+    /// For more details, check [`MessagingHub::consumer`]
+    pub async fn duplicate(&self) -> Result<Self> {
+        MessagingHub {
+            backend: self.backend.clone(),
+        }
+        .consumer(self.channel_name.clone())
+        .await
+    }
+
     /// Reconnect the message consumer
     ///
     /// Use this if the stream ever ends and you think it really shouldn't
