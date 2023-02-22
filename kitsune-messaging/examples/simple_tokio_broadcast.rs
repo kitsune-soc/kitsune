@@ -3,7 +3,7 @@ use kitsune_messaging::{tokio_broadcast::TokioBroadcastMessagingBackend, Messagi
 use serde_json::{json, Value};
 use std::time::Duration;
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let tokio_broadcast_backend = TokioBroadcastMessagingBackend::default();
     let hub = MessagingHub::new(tokio_broadcast_backend);
