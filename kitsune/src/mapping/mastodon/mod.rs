@@ -77,7 +77,7 @@ pub struct MastodonMapper {
                         )
                         .build()
                         .unwrap()
-                        .spawn();"
+                        .spawn();",
         ),
         setter(name = "cache_invalidator", strip_option)
     )]
