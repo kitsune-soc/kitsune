@@ -7,4 +7,4 @@ pub use self::activitypub::IntoActivity;
 pub use self::activitypub::IntoObject;
 
 #[cfg(feature = "mastodon-api")]
-pub use self::mastodon::MastodonMapper;
+pub use self::mastodon::{MastodonMapper, MastodonMapperBuilder, MastodonMapperBuilderError};
