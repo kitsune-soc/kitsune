@@ -58,34 +58,38 @@ impl CacheInvalidationActor {
     }
 }
 
-#[derive(Clone)]
+#[derive(Builder, Clone)]
+#[builder(pattern = "owned")]
+#[allow(clippy::used_underscore_binding)]
 pub struct MastodonMapper {
+    #[builder(
+        field(
+            type = "Option<StatusEventConsumer>",
+            build = "CacheInvalidationActor::builder()
+                        .cache(
+                            self.mastodon_cache
+                                .clone()
+                                .ok_or(MastodonMapperBuilderError::UninitializedField(\"mastodon_cache\"))?
+                        )
+                        .event_consumer(
+                            self._cache_invalidator
+                                .ok_or(MastodonMapperBuilderError::UninitializedField(\"cache_invalidator\"))?
+                        )
+                        .build()
+                        .unwrap()
+                        .spawn();"
+        ),
+        setter(name = "cache_invalidator", strip_option)
+    )]
+    _cache_invalidator: (),
     db_conn: DatabaseConnection,
     mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
 }
 
 impl MastodonMapper {
-    /// Create a new Mastodon mapper
-    ///
-    /// # Panics
-    ///
-    /// This should never panic
-    pub fn new(
-        db_conn: DatabaseConnection,
-        mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
-        status_event_consumer: StatusEventConsumer,
-    ) -> Self {
-        CacheInvalidationActor::builder()
-            .cache(mastodon_cache.clone())
-            .event_consumer(status_event_consumer)
-            .build()
-            .unwrap()
-            .spawn();
-
-        Self {
-            db_conn,
-            mastodon_cache,
-        }
+    #[must_use]
+    pub fn builder() -> MastodonMapperBuilder {
+        MastodonMapperBuilder::default()
     }
 
     /// Create a mapper with some defaults
@@ -105,7 +109,12 @@ impl MastodonMapper {
             CACHE_TTL,
         ));
 
-        Self::new(db_conn, cache, event_consumer)
+        Self::builder()
+            .cache_invalidator(event_consumer)
+            .db_conn(db_conn)
+            .mastodon_cache(cache)
+            .build()
+            .unwrap()
     }
 
     /// Map some input into a Mastodon API entity
