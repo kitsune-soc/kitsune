@@ -2257,6 +2257,7 @@ dependencies = [
  "kitsune-db",
  "kitsune-http-client",
  "kitsune-http-signatures",
+ "kitsune-messaging",
  "kitsune-search-proto",
  "kitsune-type",
  "metrics",

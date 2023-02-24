@@ -3,6 +3,7 @@ use crate::{
     cache::Cache,
     config::Configuration,
     error::{ApiError, Error, Result},
+    event::{status::EventType, StatusEvent, StatusEventEmitter},
     job::{
         deliver::{
             create::CreateDeliveryContext, delete::DeleteDeliveryContext,
@@ -109,8 +110,9 @@ pub struct PostService<
 > {
     config: Configuration,
     db_conn: DatabaseConnection,
-    search_service: S,
     post_resolver: PostResolver<S, FPC, FUC, WC>,
+    search_service: S,
+    status_event_emitter: StatusEventEmitter,
 }
 
 impl<S, FPC, FUC, WC> PostService<S, FPC, FUC, WC>
@@ -218,6 +220,14 @@ where
                 .await?;
         }
 
+        self.status_event_emitter
+            .emit(StatusEvent {
+                r#type: EventType::Create,
+                status_id: post.id,
+            })
+            .await
+            .map_err(Error::Event)?;
+
         Ok(post)
     }
 
@@ -265,6 +275,14 @@ where
         )
         .exec_without_returning(&self.db_conn)
         .await?;
+
+        self.status_event_emitter
+            .emit(StatusEvent {
+                r#type: EventType::Delete,
+                status_id: post.id,
+            })
+            .await
+            .map_err(Error::Event)?;
 
         self.search_service.remove_from_index(post.into()).await?;
 

@@ -14,6 +14,7 @@ use kitsune::{
     state::{Service, Zustand},
     webfinger::Webfinger,
 };
+use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -39,13 +40,7 @@ const STARTUP_FIGLET: &str = r#"
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#;
 
-#[tokio::main]
-async fn main() {
-    println!("{STARTUP_FIGLET}");
-
-    dotenvy::dotenv().ok();
-    let config: Configuration = envy::from_env().expect("Failed to parse configuration");
-
+fn initialise_logging(config: &Configuration) {
     let (prometheus_recorder, server_future) = PrometheusBuilder::new()
         // Some defaults that would have been set by the `axum-prometheus` crate
         .set_buckets_for_metric(
@@ -69,6 +64,15 @@ async fn main() {
 
     let recorder = TracingContextLayer::all().layer(prometheus_recorder);
     metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
+}
+
+#[tokio::main]
+async fn main() {
+    println!("{STARTUP_FIGLET}");
+
+    dotenvy::dotenv().ok();
+    let config: Configuration = envy::from_env().expect("Failed to parse configuration");
+    initialise_logging(&config);
 
     let conn = kitsune_db::connect(&config.database_url)
         .await
@@ -79,6 +83,12 @@ async fn main() {
     let redis_conn = deadpool_redis::Pool::builder(redis_manager)
         .build()
         .expect("Failed to build Redis pool");
+
+    let redis_messaging_backend = RedisMessagingBackend::new(&config.redis_url)
+        .await
+        .expect("Failed to construct messaging backend");
+    let messaging_hub = MessagingHub::new(redis_messaging_backend);
+    let status_event_emitter = messaging_hub.emitter("event.status".into());
 
     let search_service =
         GrpcSearchService::new(&config.search_index_server, &config.search_servers)
@@ -104,6 +114,7 @@ async fn main() {
         .db_conn(conn.clone())
         .post_resolver(post_resolver)
         .search_service(Arc::new(search_service.clone()))
+        .status_event_emitter(status_event_emitter.clone())
         .build()
         .unwrap();
 
@@ -123,7 +134,14 @@ async fn main() {
         db_conn: conn.clone(),
         fetcher,
         #[cfg(feature = "mastodon-api")]
-        mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(conn, redis_conn),
+        mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(
+            conn,
+            redis_conn,
+            status_event_emitter
+                .consumer()
+                .await
+                .expect("Failed to register status event consumer"),
+        ),
         service: Service {
             account: account_service,
             oauth2: oauth2_service,

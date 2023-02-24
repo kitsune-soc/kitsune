@@ -2,8 +2,10 @@ use self::sealed::IntoMastodon;
 use crate::{
     cache::{Cache, RedisCache},
     error::Result,
+    event::{status::EventType, StatusEventConsumer},
 };
 use derive_builder::Builder;
+use futures_util::StreamExt;
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
 use std::{sync::Arc, time::Duration};
@@ -18,16 +20,72 @@ pub trait MapperMarker: IntoMastodon {}
 
 impl<T> MapperMarker for T where T: IntoMastodon {}
 
-#[derive(Builder, Clone)]
+#[derive(Builder)]
+#[builder(pattern = "owned")]
+struct CacheInvalidationActor {
+    cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
+    event_consumer: StatusEventConsumer,
+}
+
+impl CacheInvalidationActor {
+    #[must_use]
+    pub fn builder() -> CacheInvalidationActorBuilder {
+        CacheInvalidationActorBuilder::default()
+    }
+
+    async fn run(mut self) {
+        loop {
+            while let Some(event) = self.event_consumer.next().await {
+                let event = match event {
+                    Ok(event) => event,
+                    Err(err) => {
+                        error!(error = %err, "Failed to receive status event");
+                        continue;
+                    }
+                };
+
+                if matches!(event.r#type, EventType::Delete | EventType::Update) {
+                    if let Err(err) = self.cache.delete(&event.status_id).await {
+                        error!(error = %err, "Failed to remove entry from cache");
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn spawn(self) {
+        tokio::spawn(self.run());
+    }
+}
+
+#[derive(Clone)]
 pub struct MastodonMapper {
     db_conn: DatabaseConnection,
     mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
 }
 
 impl MastodonMapper {
-    #[must_use]
-    pub fn builder() -> MastodonMapperBuilder {
-        MastodonMapperBuilder::default()
+    /// Create a new Mastodon mapper
+    ///
+    /// # Panics
+    ///
+    /// This should never panic
+    pub fn new(
+        db_conn: DatabaseConnection,
+        mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
+        status_event_consumer: StatusEventConsumer,
+    ) -> Self {
+        CacheInvalidationActor::builder()
+            .cache(mastodon_cache.clone())
+            .event_consumer(status_event_consumer)
+            .build()
+            .unwrap()
+            .spawn();
+
+        Self {
+            db_conn,
+            mastodon_cache,
+        }
     }
 
     /// Create a mapper with some defaults
@@ -36,18 +94,18 @@ impl MastodonMapper {
     ///
     /// This should never panic.
     #[must_use]
-    pub fn with_defaults(db_conn: DatabaseConnection, redis_conn: deadpool_redis::Pool) -> Self {
+    pub fn with_defaults(
+        db_conn: DatabaseConnection,
+        redis_conn: deadpool_redis::Pool,
+        event_consumer: StatusEventConsumer,
+    ) -> Self {
         let cache = Arc::new(RedisCache::new(
             redis_conn,
             "MASTODON-ENTITY-CACHE",
             CACHE_TTL,
         ));
 
-        Self::builder()
-            .db_conn(db_conn)
-            .mastodon_cache(cache)
-            .build()
-            .unwrap()
+        Self::new(db_conn, cache, event_consumer)
     }
 
     /// Map some input into a Mastodon API entity

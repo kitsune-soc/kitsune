@@ -2,6 +2,7 @@ use argon2::password_hash;
 use axum::response::{IntoResponse, Response};
 use deadpool_redis::PoolError;
 use http::StatusCode;
+use kitsune_messaging::BoxError;
 use redis::RedisError;
 use rsa::{
     pkcs1,
@@ -60,6 +61,9 @@ pub enum Error {
 
     #[error(transparent)]
     Der(#[from] der::Error),
+
+    #[error(transparent)]
+    Event(BoxError),
 
     #[error(transparent)]
     Http(#[from] http::Error),
