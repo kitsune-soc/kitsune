@@ -50,6 +50,10 @@ impl CacheInvalidationActor {
                     }
                 }
             }
+
+            if let Err(err) = self.event_consumer.reconnect().await {
+                error!(error = %err, "Failed to reconnect to event source");
+            }
         }
     }
 
