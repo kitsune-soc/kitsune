@@ -3,12 +3,12 @@ use async_trait::async_trait;
 use futures_util::stream;
 use kitsune_db::entity::{accounts, posts};
 use kitsune_search_proto::{
-    common::SearchIndex,
+    common::SearchIndex as GrpcSearchIndex,
     index::{
         add_index_request::IndexEntity, index_client::IndexClient, AddAccountIndex,
         AddIndexRequest, AddPostIndex, RemoveIndexRequest, ResetRequest,
     },
-    search::{search_client::SearchClient, SearchRequest, SearchResult},
+    search::{search_client::SearchClient, SearchRequest, SearchResult as GrpcSearchResult},
 };
 use std::{future, ops::Deref, sync::Arc};
 use tonic::transport::{Channel, Endpoint};
@@ -30,6 +30,43 @@ impl From<accounts::Model> for SearchItem {
 impl From<posts::Model> for SearchItem {
     fn from(post: posts::Model) -> Self {
         Self::Post(post)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum SearchIndex {
+    Account,
+    Post,
+}
+
+impl From<SearchIndex> for GrpcSearchIndex {
+    fn from(value: SearchIndex) -> Self {
+        match value {
+            SearchIndex::Account => GrpcSearchIndex::Account,
+            SearchIndex::Post => GrpcSearchIndex::Post,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct SearchResult {
+    pub id: Uuid,
+    pub score: f32,
+}
+
+impl From<GrpcSearchResult> for SearchResult {
+    fn from(value: GrpcSearchResult) -> Self {
+        let id = Uuid::from_bytes(
+            value
+                .id
+                .try_into()
+                .expect("Received non-UUID from search service"),
+        );
+
+        Self {
+            id,
+            score: value.score,
+        }
     }
 }
 
@@ -150,11 +187,11 @@ impl SearchService for GrpcSearchService {
     async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
         let request = match item {
             SearchItem::Account(account) => RemoveIndexRequest {
-                index: SearchIndex::Account.into(),
+                index: GrpcSearchIndex::from(SearchIndex::Account).into(),
                 id: account.id.as_bytes().to_vec(),
             },
             SearchItem::Post(post) => RemoveIndexRequest {
-                index: SearchIndex::Post.into(),
+                index: GrpcSearchIndex::from(SearchIndex::Post).into(),
                 id: post.id.as_bytes().to_vec(),
             },
         };
@@ -170,7 +207,7 @@ impl SearchService for GrpcSearchService {
     #[instrument(skip_all)]
     async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
-            index: index.into(),
+            index: GrpcSearchIndex::from(index).into(),
         };
         self.indexer.clone().reset(request).await?;
 
@@ -188,7 +225,7 @@ impl SearchService for GrpcSearchService {
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
         let request = SearchRequest {
-            index: index.into(),
+            index: GrpcSearchIndex::from(index).into(),
             query,
             max_results,
             offset,
@@ -196,13 +233,18 @@ impl SearchService for GrpcSearchService {
             min_id: max_id.as_ref().map(|id| id.as_bytes().to_vec()),
         };
 
-        Ok(self
+        let results = self
             .searcher
             .clone()
             .search(request)
             .await?
             .into_inner()
-            .results)
+            .results
+            .into_iter()
+            .map(Into::into)
+            .collect();
+
+        Ok(results)
     }
 }
 

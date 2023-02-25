@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::MastodonAuthExtractor,
-    service::search::{ArcSearchService, SearchService},
+    service::search::{ArcSearchService, SearchIndex, SearchService},
     state::Zustand,
 };
 use axum::{
@@ -13,7 +13,6 @@ use axum::{
 use axum_extra::extract::Query;
 use http::StatusCode;
 use kitsune_db::entity::prelude::{Accounts, Posts};
-use kitsune_search_proto::common::SearchIndex;
 use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
 use serde::Deserialize;
@@ -79,16 +78,9 @@ async fn get(
             .await?;
 
         for result in results {
-            let id = Uuid::from_bytes(
-                result
-                    .id
-                    .try_into()
-                    .expect("[Bug] Non-UUID indexed in search index"),
-            );
-
             match index {
                 SearchIndex::Account => {
-                    let account = Accounts::find_by_id(id)
+                    let account = Accounts::find_by_id(result.id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Account indexed in search not in database");
@@ -98,7 +90,7 @@ async fn get(
                         .push(state.mastodon_mapper.map(account).await?);
                 }
                 SearchIndex::Post => {
-                    let post = Posts::find_by_id(id)
+                    let post = Posts::find_by_id(result.id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Post indexed in search not in database");
