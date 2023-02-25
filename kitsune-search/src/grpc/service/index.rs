@@ -8,6 +8,7 @@ use kitsune_search_proto::{
         RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
     },
 };
+use std::time::SystemTime;
 use tantivy::{Document, IndexWriter, Term};
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status, Streaming};
@@ -22,6 +23,13 @@ pub struct IndexService {
 
     /// Writer of the post index
     pub post: RwLock<IndexWriter>,
+}
+
+fn get_now_unix_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }
 
 impl IndexService {
@@ -40,6 +48,8 @@ impl IndexService {
                     document.add_text(account_schema.description, description);
                 }
 
+                document.add_u64(account_schema.indexed_at, get_now_unix_timestamp());
+
                 increment_counter!("added_documents", "index" => GrpcSearchIndex::Account.as_str_name());
 
                 (self.account.read().await, document)
@@ -53,6 +63,8 @@ impl IndexService {
                 if let Some(subject) = data.subject {
                     document.add_text(post_schema.subject, subject);
                 }
+
+                document.add_u64(post_schema.indexed_at, get_now_unix_timestamp());
 
                 increment_counter!("added_documents", "index" => GrpcSearchIndex::Post.as_str_name());
 
