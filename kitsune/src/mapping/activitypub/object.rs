@@ -94,7 +94,7 @@ impl IntoObject for posts::Model {
         to.append(&mut mentioned);
 
         Ok(Object::Note(Note {
-            subject: self.subject,
+            summary: self.subject,
             content: self.content,
             rest: BaseObject {
                 context: ap_context(),

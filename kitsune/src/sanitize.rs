@@ -18,8 +18,8 @@ impl CleanHtmlExt for Actor {
 
 impl CleanHtmlExt for Note {
     fn clean_html(&mut self) {
-        if let Some(ref mut subject) = self.subject {
-            subject.clean_html();
+        if let Some(ref mut summary) = self.summary {
+            summary.clean_html();
         }
 
         self.content.clean_html();
