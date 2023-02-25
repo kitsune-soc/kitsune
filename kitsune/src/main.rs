@@ -11,7 +11,7 @@ use kitsune::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
         search::GrpcSearchService, timeline::TimelineService, user::UserService,
     },
-    state::{Service, Zustand},
+    state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
@@ -132,6 +132,9 @@ async fn main() {
     let state = Zustand {
         config: config.clone(),
         db_conn: conn.clone(),
+        event_emitter: EventEmitter {
+            post: status_event_emitter.clone(),
+        },
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(

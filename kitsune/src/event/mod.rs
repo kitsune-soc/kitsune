@@ -1,8 +1,8 @@
 use kitsune_messaging::{MessageConsumer, MessageEmitter};
 
-pub use self::status::StatusEvent;
+pub use self::post::PostEvent;
 
-pub mod status;
+pub mod post;
 
-pub type StatusEventConsumer = MessageConsumer<StatusEvent>;
-pub type StatusEventEmitter = MessageEmitter<StatusEvent>;
+pub type PostEventConsumer = MessageConsumer<PostEvent>;
+pub type PostEventEmitter = MessageEmitter<PostEvent>;

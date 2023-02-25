@@ -1,6 +1,7 @@
 use crate::{
     activitypub::Fetcher,
     config::Configuration,
+    event::PostEventEmitter,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
         search::ArcSearchService, timeline::TimelineService, user::UserService,
@@ -34,6 +35,22 @@ impl_from_ref! {
     ]
 }
 
+impl_from_ref! {
+    Zustand;
+    [
+        PostEventEmitter => |input: &Zustand| input.event_emitter.post.clone()
+    ]
+}
+
+/// Emitter collection
+///
+/// This contains all the "emitters" that can emit events inside of Kitsune.
+/// Something like "a post has been created" or "an account has been followed".
+#[derive(Clone)]
+pub struct EventEmitter {
+    pub post: PostEventEmitter,
+}
+
 /// Service collection
 ///
 /// This contains all the "services" that Kitsune consists of.
@@ -56,6 +73,7 @@ pub struct Service {
 pub struct Zustand {
     pub config: Configuration,
     pub db_conn: DatabaseConnection,
+    pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: crate::mapping::MastodonMapper,

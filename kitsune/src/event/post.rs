@@ -10,7 +10,7 @@ pub enum EventType {
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct StatusEvent {
+pub struct PostEvent {
     pub r#type: EventType,
-    pub status_id: Uuid,
+    pub post_id: Uuid,
 }

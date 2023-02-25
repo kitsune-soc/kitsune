@@ -2,7 +2,7 @@ use self::sealed::IntoMastodon;
 use crate::{
     cache::{Cache, RedisCache},
     error::Result,
-    event::{status::EventType, StatusEventConsumer},
+    event::{post::EventType, PostEventConsumer},
 };
 use derive_builder::Builder;
 use futures_util::StreamExt;
@@ -24,7 +24,7 @@ impl<T> MapperMarker for T where T: IntoMastodon {}
 #[builder(pattern = "owned")]
 struct CacheInvalidationActor {
     cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
-    event_consumer: StatusEventConsumer,
+    event_consumer: PostEventConsumer,
 }
 
 impl CacheInvalidationActor {
@@ -45,7 +45,7 @@ impl CacheInvalidationActor {
                 };
 
                 if matches!(event.r#type, EventType::Delete | EventType::Update) {
-                    if let Err(err) = self.cache.delete(&event.status_id).await {
+                    if let Err(err) = self.cache.delete(&event.post_id).await {
                         error!(error = %err, "Failed to remove entry from cache");
                     }
                 }
@@ -68,7 +68,7 @@ impl CacheInvalidationActor {
 pub struct MastodonMapper {
     #[builder(
         field(
-            type = "Option<StatusEventConsumer>",
+            type = "Option<PostEventConsumer>",
             build = "CacheInvalidationActor::builder()
                         .cache(
                             self.mastodon_cache
@@ -105,7 +105,7 @@ impl MastodonMapper {
     pub fn with_defaults(
         db_conn: DatabaseConnection,
         redis_conn: deadpool_redis::Pool,
-        event_consumer: StatusEventConsumer,
+        event_consumer: PostEventConsumer,
     ) -> Self {
         let cache = Arc::new(RedisCache::new(
             redis_conn,
