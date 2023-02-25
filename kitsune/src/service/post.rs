@@ -3,6 +3,7 @@ use crate::{
     cache::Cache,
     config::Configuration,
     error::{ApiError, Error, Result},
+    event::{post::EventType, PostEvent, PostEventEmitter},
     job::{
         deliver::{
             create::CreateDeliveryContext, delete::DeleteDeliveryContext,
@@ -63,6 +64,12 @@ pub struct CreatePost {
     /// Content of the post
     content: String,
 
+    /// Process the content as a markdown document
+    ///
+    /// Defaults to true
+    #[builder(default = "true")]
+    process_markdown: bool,
+
     #[builder(default = "Visibility::Public")]
     /// Visibility of the post
     ///
@@ -109,8 +116,9 @@ pub struct PostService<
 > {
     config: Configuration,
     db_conn: DatabaseConnection,
-    search_service: S,
     post_resolver: PostResolver<S, FPC, FUC, WC>,
+    search_service: S,
+    status_event_emitter: PostEventEmitter,
 }
 
 impl<S, FPC, FUC, WC> PostService<S, FPC, FUC, WC>
@@ -131,15 +139,15 @@ where
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn create(&self, create_post: CreatePost) -> Result<posts::Model> {
-        let content = {
+        let mut content = if create_post.process_markdown {
             let parser = Parser::new_ext(&create_post.content, Options::all());
             let mut buf = String::new();
-
             html::push_html(&mut buf, parser);
-            buf.clean_html();
-
             buf
+        } else {
+            create_post.content
         };
+        content.clean_html();
 
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
 
@@ -218,6 +226,14 @@ where
                 .await?;
         }
 
+        self.status_event_emitter
+            .emit(PostEvent {
+                r#type: EventType::Create,
+                post_id: post.id,
+            })
+            .await
+            .map_err(Error::Event)?;
+
         Ok(post)
     }
 
@@ -265,6 +281,14 @@ where
         )
         .exec_without_returning(&self.db_conn)
         .await?;
+
+        self.status_event_emitter
+            .emit(PostEvent {
+                r#type: EventType::Delete,
+                post_id: post.id,
+            })
+            .await
+            .map_err(Error::Event)?;
 
         self.search_service.remove_from_index(post.into()).await?;
 

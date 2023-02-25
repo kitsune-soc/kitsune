@@ -1,4 +1,9 @@
-use crate::{error::Result, http::extractor::SignedActivity, state::Zustand};
+use crate::{
+    error::{Error, Result},
+    event::{post::EventType, PostEvent},
+    http::extractor::SignedActivity,
+    state::Zustand,
+};
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
 use futures_util::future::OptionFuture;
@@ -13,6 +18,7 @@ use kitsune_db::{
 use kitsune_type::ap::{Activity, ActivityType, Object};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
+    QuerySelect,
 };
 use uuid::Uuid;
 
@@ -51,7 +57,7 @@ async fn create_activity(
             .transpose()?
             .map(|in_reply_to| in_reply_to.id);
 
-            Posts::insert(
+            let new_post = Posts::insert(
                 posts::Model {
                     id: Uuid::now_v7(),
                     account_id: author.id,
@@ -67,8 +73,18 @@ async fn create_activity(
                 }
                 .into_active_model(),
             )
-            .exec_without_returning(&state.db_conn)
+            .exec(&state.db_conn)
             .await?;
+
+            state
+                .event_emitter
+                .post
+                .emit(PostEvent {
+                    r#type: EventType::Create,
+                    post_id: new_post.last_insert_id,
+                })
+                .await
+                .map_err(Error::Event)?;
         }
         None | Some(Object::Person(..)) => {
             // Right now, we refuse to save anything but a note
@@ -84,13 +100,29 @@ async fn delete_activity(
     author: accounts::Model,
     activity: Activity,
 ) -> Result<()> {
-    Posts::delete(posts::ActiveModel {
-        account_id: ActiveValue::Set(author.id),
-        url: ActiveValue::Set(activity.object().to_string()),
-        ..Default::default()
-    })
-    .exec(&state.db_conn)
-    .await?;
+    let Some((post_id,)): Option<(Uuid,)> = Posts::find()
+        .filter(posts::Column::AccountId.eq(author.id))
+        .filter(posts::Column::Url.eq(activity.object()))
+        .select_only()
+        .column(posts::Column::Id)
+        .into_tuple()
+        .one(&state.db_conn)
+        .await?
+    else {
+        return Ok(())
+    };
+
+    Posts::delete_by_id(post_id).exec(&state.db_conn).await?;
+
+    state
+        .event_emitter
+        .post
+        .emit(PostEvent {
+            r#type: EventType::Delete,
+            post_id,
+        })
+        .await
+        .map_err(Error::Event)?;
 
     Ok(())
 }

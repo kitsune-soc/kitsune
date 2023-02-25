@@ -19,6 +19,7 @@ pub mod cache;
 pub mod config;
 pub mod consts;
 pub mod error;
+pub mod event;
 pub mod http;
 pub mod job;
 pub mod mapping;

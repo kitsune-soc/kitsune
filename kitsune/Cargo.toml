@@ -41,10 +41,11 @@ hyper = "0.14.24"
 image = "0.24.5"
 itertools = "0.10.5"
 kitsune-db = { path = "../kitsune-db" }
-kitsune-type = { path = "../kitsune-type" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search-proto = { path = "../kitsune-search/proto" }
+kitsune-type = { path = "../kitsune-type" }
 metrics = "0.20.1"
 metrics-exporter-prometheus = "0.11.0"
 metrics-tracing-context = "0.13.0"
