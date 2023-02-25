@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 pub struct Link {
     pub rel: String,
+    pub r#type: Option<String>,
     pub href: Option<String>,
 }
 

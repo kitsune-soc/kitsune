@@ -44,6 +44,7 @@ async fn get(
         aliases: vec![account.url.clone()],
         links: vec![Link {
             rel: "self".into(),
+            r#type: Some("application/activity+json".into()),
             href: Some(account.url),
         }],
     })

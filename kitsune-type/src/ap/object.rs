@@ -50,7 +50,7 @@ pub struct PublicKey {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Note {
-    pub subject: Option<String>,
+    pub summary: Option<String>,
     pub content: String,
     #[serde(flatten)]
     pub rest: BaseObject,
