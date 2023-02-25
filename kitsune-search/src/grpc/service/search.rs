@@ -8,7 +8,7 @@ use kitsune_search_proto::{
     search::{search_server::Search, SearchRequest, SearchResponse, SearchResult},
 };
 use std::ops::Bound;
-use tantivy::{collector::TopDocs, IndexReader};
+use tantivy::{collector::TopDocs, DateTime, IndexReader};
 use tonic::{async_trait, Request, Response, Status};
 
 /// Search service
@@ -62,7 +62,7 @@ impl Search for SearchService {
 
         let top_docs_collector = TopDocs::with_limit(req.get_ref().max_results as usize)
             .and_offset(req.get_ref().offset as usize)
-            .order_by_fast_field::<u64>(indexed_at_field);
+            .order_by_fast_field::<DateTime>(indexed_at_field);
         let results = searcher
             .search(&query, &top_docs_collector)
             .map_err(|e| Status::internal(e.to_string()))?;

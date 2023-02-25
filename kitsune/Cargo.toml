@@ -23,7 +23,7 @@ async-trait = "0.1.64"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
-axum = { version = "0.6.7", features = ["headers", "macros"] }
+axum = { version = "0.6.8", features = ["headers", "macros"] }
 axum-extra = { version = "0.5.0", features = ["query"] }
 axum-prometheus = "0.3.1"
 base64 = "0.21.0"
@@ -73,7 +73,7 @@ thiserror = "1.0.38"
 tokio = { version = "1.25.0", features = ["full"] }
 tokio-util = { version = "0.7.7", features = ["compat"] }
 tonic = "0.8.3"
-tower-http = { version = "0.3.5", features = ["cors", "fs", "trace"] }
+tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 url = "2.3.1"

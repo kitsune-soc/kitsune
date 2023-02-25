@@ -70,7 +70,7 @@ impl Default for AccountSchema {
         let display_name = builder.add_text_field("display_name", FAST | TEXT);
         let username = builder.add_text_field("username", FAST | STRING);
         let description = builder.add_text_field("description", FAST | TEXT);
-        let indexed_at = builder.add_u64_field("indexed_at", FAST);
+        let indexed_at = builder.add_date_field("indexed_at", FAST);
         let tantivy_schema = builder.build();
 
         Self {
@@ -143,7 +143,7 @@ impl Default for PostSchema {
         let id = builder.add_bytes_field("id", FAST | INDEXED | STORED);
         let subject = builder.add_text_field("subject", FAST | TEXT);
         let content = builder.add_text_field("content", FAST | TEXT);
-        let indexed_at = builder.add_u64_field("indexed_at", FAST);
+        let indexed_at = builder.add_date_field("indexed_at", FAST);
         let tantivy_schema = builder.build();
 
         Self {
