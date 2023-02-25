@@ -8,7 +8,8 @@ use kitsune_search_proto::{
         RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
     },
 };
-use tantivy::{Document, IndexWriter, Term};
+use tantivy::{DateTime, Document, IndexWriter, Term};
+use time::OffsetDateTime;
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status, Streaming};
 
@@ -40,6 +41,11 @@ impl IndexService {
                     document.add_text(account_schema.description, description);
                 }
 
+                document.add_date(
+                    account_schema.indexed_at,
+                    DateTime::from_utc(OffsetDateTime::now_utc()),
+                );
+
                 increment_counter!("added_documents", "index" => GrpcSearchIndex::Account.as_str_name());
 
                 (self.account.read().await, document)
@@ -53,6 +59,11 @@ impl IndexService {
                 if let Some(subject) = data.subject {
                     document.add_text(post_schema.subject, subject);
                 }
+
+                document.add_date(
+                    post_schema.indexed_at,
+                    DateTime::from_utc(OffsetDateTime::now_utc()),
+                );
 
                 increment_counter!("added_documents", "index" => GrpcSearchIndex::Post.as_str_name());
 

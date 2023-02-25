@@ -1,8 +1,7 @@
 use self::handler::{nodeinfo, oauth, posts, users, well_known};
 use crate::state::Zustand;
-use axum::{http::StatusCode, routing::get_service, Router};
+use axum::{routing::get_service, Router};
 use axum_prometheus::PrometheusMetricLayer;
-use std::io;
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
@@ -12,12 +11,6 @@ use tower_http::{
 mod extractor;
 mod graphql;
 mod handler;
-
-#[allow(clippy::unused_async)]
-async fn handle_error(err: io::Error) -> StatusCode {
-    error!(error = %err, "Static file handler failed");
-    StatusCode::INTERNAL_SERVER_ERROR
-}
 
 #[instrument(skip(state))]
 pub async fn run(state: Zustand, port: u16) {
@@ -36,13 +29,10 @@ pub async fn run(state: Zustand, port: u16) {
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest_service(
-            "/public",
-            get_service(ServeDir::new("public")).handle_error(handle_error),
-        )
+        .nest_service("/public", get_service(ServeDir::new("public")))
         .nest_service(
             "/media",
-            get_service(ServeDir::new(&state.config.upload_dir)).handle_error(handle_error),
+            get_service(ServeDir::new(&state.config.upload_dir)),
         );
 
     #[cfg(feature = "mastodon-api")]
@@ -52,10 +42,9 @@ pub async fn run(state: Zustand, port: u16) {
 
     let router = router
         .merge(graphql::routes(state.clone()))
-        .fallback_service(
-            get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
-                .handle_error(handle_error),
-        )
+        .fallback_service(get_service(
+            ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
+        ))
         // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
         .layer(PrometheusMetricLayer::new())
         .layer(CorsLayer::permissive())

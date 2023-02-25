@@ -10,9 +10,6 @@ import "common.proto";
 message SearchResult {
     // Unique identifier of the entry
     bytes id = 1;
-
-    // Score of the result
-    float score = 2;
 }
 
 // Request to query the search index 

@@ -51,7 +51,6 @@ impl From<SearchIndex> for GrpcSearchIndex {
 #[derive(Clone, Copy)]
 pub struct SearchResult {
     pub id: Uuid,
-    pub score: f32,
 }
 
 impl From<GrpcSearchResult> for SearchResult {
@@ -63,10 +62,7 @@ impl From<GrpcSearchResult> for SearchResult {
                 .expect("Received non-UUID from search service"),
         );
 
-        Self {
-            id,
-            score: value.score,
-        }
+        Self { id }
     }
 }
 
