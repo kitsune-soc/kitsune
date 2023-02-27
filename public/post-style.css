@@ -1,0 +1,57 @@
+:root {
+    --dark1: #0f1026;
+    --dark2: #051c30;
+    --dark3: #042f40;
+    --shade1dark: #53a0c4;
+    --shade1light: #afd7fa;
+    --shade2dark: #935d7e;
+    --shade2light: #d68fbc;
+}
+
+:root {
+    background-color: var(--dark1);
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+a {
+    text-decoration: none;
+    color: var(--shade2light);
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.post {
+    border: 1px solid var(--shade2dark);
+    border-radius: 5px;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    background-color: var(--dark2);
+    width: 500px;
+    max-width: 90%;
+    min-height: 100px;
+}
+
+.account-info {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.account-info__names {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-picture {
+    width: 60px;
+}

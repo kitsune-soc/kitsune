@@ -42,14 +42,14 @@ pub struct AuthorizeForm {
 }
 
 #[derive(Template)]
-#[template(path = "authorize.html")]
+#[template(path = "oauth/authorize.html")]
 struct AuthorizePage {
     app_name: String,
     domain: String,
 }
 
 #[derive(Template)]
-#[template(path = "token.html")]
+#[template(path = "oauth/token.html")]
 struct ShowTokenPage {
     app_name: String,
     domain: String,

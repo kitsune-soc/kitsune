@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Post - Kitsune</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/public/post-style.css">
+</head>
+
+<body>
+    <div class="post">
+        <a href='{{ profile_url|escape("html") }}'>
+            <div class="account-info">
+                <img class="profile-picture" src='{{ profile_picture_url|escape("html") }}'
+                    alt="{{ display_name }}'s profile picture" />
+                <div class="account-info__names">
+                    <strong>{{ display_name }}</strong>
+                    {{ acct|escape("html") }}
+                </div>
+            </div>
+        </a>
+
+        <div class="post__content">
+            {{ content }}
+        </div>
+
+        <!-- TODO: Attachment grid -->
+    </div>
+
+    {% include "footer.html" %}
+</body>
+
+</html>
