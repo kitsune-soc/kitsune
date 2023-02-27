@@ -8,7 +8,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
     extract::{Query, State},
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
     Form,
 };
 use chrono::Utc;
@@ -70,14 +70,11 @@ pub async fn get(
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
 
-    let page = AuthorizePage {
+    Ok(AuthorizePage {
         app_name: application.name,
         domain: state.config.domain,
     }
-    .render()
-    .unwrap();
-
-    Ok(Html(page).into_response())
+    .into_response())
 }
 
 pub async fn post(
@@ -125,15 +122,12 @@ pub async fn post(
     .await?;
 
     if application.redirect_uri == SHOW_TOKEN_URI {
-        let page = ShowTokenPage {
+        Ok(ShowTokenPage {
             app_name: application.name,
             domain: state.config.domain,
             token: authorization_code.code,
         }
-        .render()
-        .unwrap();
-
-        Ok(Html(page).into_response())
+        .into_response())
     } else {
         let mut url = Url::from_str(&application.redirect_uri)?;
         url.query_pairs_mut()

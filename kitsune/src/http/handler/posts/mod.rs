@@ -1,28 +1,36 @@
-use crate::{error::Result, mapping::IntoObject, state::Zustand};
-use axum::{
-    debug_handler,
-    extract::Path,
-    extract::State,
-    response::{IntoResponse, Response},
-    routing, Json, Router,
+use crate::{
+    error::{ApiError, Result},
+    mapping::IntoObject,
+    state::Zustand,
 };
-use http::StatusCode;
+use axum::{debug_handler, extract::Path, extract::State, response::Html, routing, Json, Router};
+use kitsune_type::ap::Object;
 use uuid::Uuid;
 
 mod activity;
 
 #[debug_handler]
-async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
-    let Some(post) = state
+async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Json<Object>> {
+    let post = state
         .service
         .post
         .get_by_id(id, None)
         .await?
-    else {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    };
+        .ok_or(ApiError::NotFound)?;
 
-    Ok(Json(post.into_object(&state).await?).into_response())
+    Ok(Json(post.into_object(&state).await?))
+}
+
+#[debug_handler]
+async fn get_html(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Html<String>> {
+    let post = state
+        .service
+        .post
+        .get_by_id(id, None)
+        .await?
+        .ok_or(ApiError::NotFound)?;
+
+    todo!();
 }
 
 pub fn routes() -> Router<Zustand> {
