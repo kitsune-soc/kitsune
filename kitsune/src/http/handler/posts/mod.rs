@@ -9,7 +9,7 @@ use askama::Template;
 use axum::{debug_handler, extract::Path, extract::State, routing, Json, Router};
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    posts,
+    media_attachments, posts,
     prelude::{Accounts, MediaAttachments},
 };
 use kitsune_type::ap::Object;
@@ -28,6 +28,7 @@ struct PostComponent {
     profile_picture_url: String,
     content: String,
     url: String,
+    attachments: Vec<media_attachments::Model>,
 }
 
 impl PostComponent {
@@ -64,6 +65,7 @@ impl PostComponent {
             }),
             content: post.content,
             url: post.url,
+            attachments: vec![],
         })
     }
 }

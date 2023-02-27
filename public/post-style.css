@@ -30,6 +30,16 @@ body {
     min-height: 100px;
 }
 
+.post__attachments {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25em;
+}
+
+.post__attachments * {
+    width: 100%;
+}
+
 .post__url {
     color: white;
 }

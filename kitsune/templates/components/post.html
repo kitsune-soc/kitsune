@@ -16,5 +16,19 @@
         </div>
     </a>
 
-    <!-- TODO: Attachment grid -->
+    <div class="post__attachments">
+        {% for attachment in attachments %}
+        <div title='{{ attachment.description.as_deref().unwrap_or_default()|escape("html") }}'
+            href='{{ attachment.url.as_str()|escape("html") }}'>
+            {% if attachment.content_type.starts_with("audio") %}
+            <audio src='{{ attachment.url|escape("html") }}' />
+            {% else if attachment.content_type.starts_with("video") %}
+            <video src='{{ attachment.url|escape("html") }}' controls />
+            {% else %}
+            <img src='{{ attachment.url|escape("html") }}'
+                alt='{{ attachment.description.as_deref().unwrap_or_default()|escape("html") }}' />
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
 </div>
