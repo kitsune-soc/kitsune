@@ -27,6 +27,7 @@ struct PostComponent {
     profile_url: String,
     profile_picture_url: String,
     content: String,
+    url: String,
 }
 
 impl PostComponent {
@@ -62,6 +63,7 @@ impl PostComponent {
                 "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
             }),
             content: post.content,
+            url: post.url,
         })
     }
 }

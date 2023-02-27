@@ -10,9 +10,11 @@
         </div>
     </a>
 
-    <div class="post__content">
-        {{ content }}
-    </div>
+    <a class="post__url" href='{{ url|escape("html") }}'>
+        <div class="post__content">
+            {{ content }}
+        </div>
+    </a>
 
     <!-- TODO: Attachment grid -->
 </div>

@@ -30,6 +30,10 @@ body {
     min-height: 100px;
 }
 
+.post__url {
+    color: white;
+}
+
 .account-info {
     display: flex;
     gap: 0.5em;
