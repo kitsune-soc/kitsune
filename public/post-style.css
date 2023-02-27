@@ -1,14 +1,4 @@
 :root {
-    --dark1: #0f1026;
-    --dark2: #051c30;
-    --dark3: #042f40;
-    --shade1dark: #53a0c4;
-    --shade1light: #afd7fa;
-    --shade2dark: #935d7e;
-    --shade2light: #d68fbc;
-}
-
-:root {
     background-color: var(--dark1);
     color: white;
     font-family: 'Courier New', Courier, monospace;
@@ -35,8 +25,7 @@ body {
     border-radius: 5px;
     padding: 0.5em;
     margin: 0.5em 0;
-    background-color: var(--dark2);
-    width: 500px;
+    width: 600px;
     max-width: 90%;
     min-height: 100px;
 }

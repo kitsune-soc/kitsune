@@ -1,0 +1,18 @@
+<div class="post">
+    <a href='{{ profile_url|escape("html") }}'>
+        <div class="account-info">
+            <img class="profile-picture" src='{{ profile_picture_url|escape("html") }}'
+                alt="{{ display_name }}'s profile picture" />
+            <div class="account-info__names">
+                <strong>{{ display_name }}</strong>
+                {{ acct|escape("html") }}
+            </div>
+        </div>
+    </a>
+
+    <div class="post__content">
+        {{ content }}
+    </div>
+
+    <!-- TODO: Attachment grid -->
+</div>
