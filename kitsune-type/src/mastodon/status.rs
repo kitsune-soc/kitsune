@@ -46,4 +46,5 @@ pub struct Status {
     pub account: Account,
     pub media_attachments: Vec<MediaAttachment>,
     pub mentions: Vec<Mention>,
+    pub reblog: Option<Box<Status>>,
 }

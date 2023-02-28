@@ -7,7 +7,6 @@ mod m20221127_194924_create_media_attachment_tables;
 mod m20221127_211534_create_follow_table;
 mod m20221213_214258_create_mention_table;
 mod m20221213_215428_create_favourites_table;
-mod m20221213_220058_create_repost_table;
 mod m20221220_215922_create_roles_table;
 
 pub struct Migrator;
@@ -23,7 +22,6 @@ impl MigratorTrait for Migrator {
             Box::new(m20221127_211534_create_follow_table::Migration),
             Box::new(m20221213_214258_create_mention_table::Migration),
             Box::new(m20221213_215428_create_favourites_table::Migration),
-            Box::new(m20221213_220058_create_repost_table::Migration),
             Box::new(m20221220_215922_create_roles_table::Migration),
         ]
     }

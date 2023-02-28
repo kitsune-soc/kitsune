@@ -169,6 +169,7 @@ where
                         id,
                         account_id: create_post.author_id,
                         in_reply_to_id,
+                        reposted_post_id: None,
                         subject: create_post.subject,
                         content,
                         is_sensitive: create_post.sensitive,

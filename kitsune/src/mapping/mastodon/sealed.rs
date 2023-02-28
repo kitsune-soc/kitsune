@@ -1,9 +1,9 @@
 use crate::error::{Error, Result};
 use async_trait::async_trait;
-use futures_util::TryStreamExt;
+use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
     accounts, posts, posts_mentions,
-    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions, Reposts},
+    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions},
 };
 use kitsune_type::mastodon::{account::Source, status::Mention, Account, Status};
 use sea_orm::{
@@ -139,7 +139,10 @@ impl IntoMastodon for posts::Model {
             .into_mastodon(db_conn)
             .await?;
 
-        let reblog_count = self.find_related(Reposts).count(db_conn).await?;
+        let reblog_count = Posts::find()
+            .filter(posts::Column::RepostedPostId.eq(self.id))
+            .count(db_conn)
+            .await?;
 
         let favourites_count = self.find_related(Favourites).count(db_conn).await?;
 
@@ -151,6 +154,20 @@ impl IntoMastodon for posts::Model {
             .and_then(|mention| mention.into_mastodon(db_conn))
             .try_collect()
             .await?;
+
+        let reblog = OptionFuture::from(
+            OptionFuture::from(
+                self.reposted_post_id
+                    .map(|id| Posts::find_by_id(id).one(db_conn)),
+            )
+            .await
+            .transpose()?
+            .flatten()
+            .map(|post| post.into_mastodon(db_conn)),
+        )
+        .await
+        .transpose()?
+        .map(Box::new);
 
         Ok(Status {
             id: self.id,
@@ -169,6 +186,7 @@ impl IntoMastodon for posts::Model {
             account,
             media_attachments: Vec::new(),
             mentions,
+            reblog,
         })
     }
 }

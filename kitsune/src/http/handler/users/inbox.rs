@@ -62,6 +62,7 @@ async fn create_activity(
                     id: Uuid::now_v7(),
                     account_id: author.id,
                     in_reply_to_id,
+                    reposted_post_id: None,
                     subject: note.summary,
                     content: note.content,
                     is_sensitive: note.rest.sensitive,
