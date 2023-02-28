@@ -16,6 +16,7 @@ use kitsune_db::entity::prelude::{Accounts, Posts};
 use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
 use serde::Deserialize;
+use url::Url;
 use uuid::Uuid;
 
 fn default_page_limit() -> u64 {
@@ -100,6 +101,20 @@ async fn get(
                         .push(state.mastodon_mapper.map(post).await?);
                 }
             }
+        }
+    }
+
+    if Url::parse(&query.query).is_ok() {
+        if let Ok(account) = state.fetcher.fetch_actor(query.query.as_str().into()).await {
+            search_result
+                .accounts
+                .insert(0, state.mastodon_mapper.map(account).await?);
+        }
+
+        if let Ok(post) = state.fetcher.fetch_note(query.query.as_str()).await {
+            search_result
+                .statuses
+                .insert(0, state.mastodon_mapper.map(post).await?);
         }
     }
 
