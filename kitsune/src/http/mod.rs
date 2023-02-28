@@ -12,6 +12,7 @@ mod cond;
 mod extractor;
 mod graphql;
 mod handler;
+mod page;
 
 #[instrument(skip(state))]
 pub async fn run(state: Zustand, port: u16) {

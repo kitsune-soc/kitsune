@@ -1,83 +1,20 @@
 use crate::{
     error::{ApiError, Result},
-    http::cond,
+    http::{
+        cond,
+        page::{PostComponent, PostPage},
+    },
     mapping::IntoObject,
     service::post::PostService,
     state::Zustand,
 };
-use askama::Template;
 use axum::{debug_handler, extract::Path, extract::State, routing, Json, Router};
-use futures_util::{future::OptionFuture, TryStreamExt};
-use kitsune_db::entity::{
-    media_attachments, posts,
-    prelude::{Accounts, MediaAttachments},
-};
+use futures_util::TryStreamExt;
 use kitsune_type::ap::Object;
-use sea_orm::EntityTrait;
 use std::collections::VecDeque;
 use uuid::Uuid;
 
 mod activity;
-
-#[derive(Template)]
-#[template(path = "components/post.html", escape = "none")] // Make sure everything is escaped either on submission or in the template
-struct PostComponent {
-    display_name: String,
-    acct: String,
-    profile_url: String,
-    profile_picture_url: String,
-    content: String,
-    url: String,
-    attachments: Vec<media_attachments::Model>,
-}
-
-impl PostComponent {
-    pub async fn prepare(state: &Zustand, post: posts::Model) -> Result<Self> {
-        let author = Accounts::find_by_id(post.account_id)
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without author");
-
-        let profile_picture_url = OptionFuture::from(
-            author
-                .avatar_id
-                .map(|id| MediaAttachments::find_by_id(id).one(&state.db_conn)),
-        )
-        .await
-        .transpose()?
-        .flatten()
-        .map(|attachment| attachment.url);
-
-        let mut acct = format!("@{}", author.username);
-        if let Some(domain) = author.domain {
-            acct.push('@');
-            acct.push_str(&domain);
-        }
-
-        Ok(Self {
-            display_name: author
-                .display_name
-                .unwrap_or_else(|| author.username.clone()),
-            acct,
-            profile_url: author.url,
-            profile_picture_url: profile_picture_url.unwrap_or_else(|| {
-                "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
-            }),
-            content: post.content,
-            url: post.url,
-            attachments: vec![],
-        })
-    }
-}
-
-#[derive(Template)]
-#[template(path = "pages/posts.html", escape = "none")]
-struct PostPage {
-    ancestors: VecDeque<PostComponent>,
-    post: PostComponent,
-    descendants: Vec<PostComponent>,
-    version: &'static str,
-}
 
 #[debug_handler(state = Zustand)]
 async fn get_html(
