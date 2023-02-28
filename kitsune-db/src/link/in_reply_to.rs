@@ -9,6 +9,6 @@ impl Linked for InReplyTo {
     type ToEntity = posts::Entity;
 
     fn link(&self) -> Vec<RelationDef> {
-        vec![posts::Relation::SelfRef.def()]
+        vec![posts::Relation::SelfRef2.def()]
     }
 }

@@ -11,6 +11,5 @@ pub use super::oauth2_authorization_codes::Entity as Oauth2AuthorizationCodes;
 pub use super::oauth2_refresh_tokens::Entity as Oauth2RefreshTokens;
 pub use super::posts::Entity as Posts;
 pub use super::posts_mentions::Entity as PostsMentions;
-pub use super::reposts::Entity as Reposts;
 pub use super::users::Entity as Users;
 pub use super::users_roles::Entity as UsersRoles;

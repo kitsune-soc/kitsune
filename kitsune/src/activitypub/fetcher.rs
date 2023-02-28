@@ -313,6 +313,7 @@ where
             id: Uuid::new_v7(uuid_timestamp),
             account_id: user.id,
             in_reply_to_id,
+            reposted_post_id: None,
             subject: note.summary,
             content: note.content,
             is_sensitive: note.rest.sensitive,

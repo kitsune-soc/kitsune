@@ -54,8 +54,6 @@ pub enum Relation {
     MediaAttachments1,
     #[sea_orm(has_many = "super::posts::Entity")]
     Posts,
-    #[sea_orm(has_many = "super::reposts::Entity")]
-    Reposts,
     #[sea_orm(has_one = "super::users::Entity")]
     Users,
 }
@@ -63,12 +61,6 @@ pub enum Relation {
 impl Related<super::favourites::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Favourites.def()
-    }
-}
-
-impl Related<super::reposts::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Reposts.def()
     }
 }
 

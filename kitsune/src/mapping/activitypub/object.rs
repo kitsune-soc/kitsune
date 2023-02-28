@@ -1,11 +1,11 @@
 use crate::{
     error::{ApiError, Result},
     state::Zustand,
+    util::BaseToCc,
 };
 use async_trait::async_trait;
 use kitsune_db::{
     column::UrlQuery,
-    custom::Visibility,
     entity::{
         accounts, media_attachments, posts,
         prelude::{Accounts, MediaAttachments},
@@ -16,7 +16,7 @@ use kitsune_type::ap::{
     ap_context,
     helper::StringOrObject,
     object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
-    BaseObject, Object, PUBLIC_IDENTIFIER,
+    BaseObject, Object,
 };
 use mime::Mime;
 use sea_orm::{prelude::*, QuerySelect};
@@ -58,6 +58,13 @@ impl IntoObject for posts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+        // Right now a repost can't have content
+        // Therefore it's also not an object
+        // We just return en error here
+        if self.reposted_post_id.is_some() {
+            return Err(ApiError::NotFound.into());
+        }
+
         let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
@@ -79,18 +86,7 @@ impl IntoObject for posts::Model {
             .all(&state.db_conn)
             .await?;
 
-        let (mut to, cc) = match self.visibility {
-            Visibility::Public => (
-                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url],
-                vec![],
-            ),
-            Visibility::Unlisted => (
-                vec![account.followers_url],
-                vec![PUBLIC_IDENTIFIER.to_string()],
-            ),
-            Visibility::FollowerOnly => (vec![account.followers_url], vec![]),
-            Visibility::MentionOnly => (vec![], vec![]),
-        };
+        let (mut to, cc) = self.visibility.base_to_cc(&account);
         to.append(&mut mentioned);
 
         Ok(Object::Note(Note {

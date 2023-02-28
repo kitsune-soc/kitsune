@@ -26,6 +26,7 @@ pub enum Posts {
     Id,
     AccountId,
     InReplyToId,
+    RepostedPostId,
     IsSensitive,
     Subject,
     Content,
@@ -146,6 +147,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posts::Id).uuid().primary_key())
                     .col(ColumnDef::new(Posts::AccountId).uuid().not_null())
                     .col(ColumnDef::new(Posts::InReplyToId).uuid())
+                    .col(ColumnDef::new(Posts::RepostedPostId).uuid())
                     .col(ColumnDef::new(Posts::IsSensitive).boolean().not_null())
                     .col(ColumnDef::new(Posts::Subject).text())
                     .col(ColumnDef::new(Posts::Content).text().not_null())
@@ -174,6 +176,13 @@ impl MigrationTrait for Migration {
                             .from(Posts::Table, Posts::InReplyToId)
                             .to(Posts::Table, Posts::Id)
                             .on_delete(ForeignKeyAction::SetNull)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Posts::Table, Posts::RepostedPostId)
+                            .to(Posts::Table, Posts::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),

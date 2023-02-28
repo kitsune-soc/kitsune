@@ -11,6 +11,7 @@ pub struct Model {
     pub id: Uuid,
     pub account_id: Uuid,
     pub in_reply_to_id: Option<Uuid>,
+    pub reposted_post_id: Option<Uuid>,
     pub is_sensitive: bool,
     #[sea_orm(column_type = "Text", nullable)]
     pub subject: Option<String>,
@@ -43,20 +44,20 @@ pub enum Relation {
         on_update = "Cascade",
         on_delete = "SetNull"
     )]
-    SelfRef,
-    #[sea_orm(has_many = "super::reposts::Entity")]
-    Reposts,
+    SelfRef2,
+    #[sea_orm(
+        belongs_to = "Entity",
+        from = "Column::RepostedPostId",
+        to = "Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    SelfRef1,
 }
 
 impl Related<super::favourites::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Favourites.def()
-    }
-}
-
-impl Related<super::reposts::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Reposts.def()
     }
 }
 
