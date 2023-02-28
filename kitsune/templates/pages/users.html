@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{{ acct|escape("html") }} - Kitsune</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/public/colours.css" />
+    <link rel="stylesheet" href="/public/post-style.css" />
+    <link rel="stylesheet" href="/public/user-style.css" />
+</head>
+
+<body>
+    <div class="user__header">
+        <img class="user__profile-picture" src='{{ profile_picture_url|escape("html") }}' />
+        <div class="user__names">
+            <strong>{{ display_name }}</strong>
+            {{ acct|escape("html") }}
+        </div>
+        <p class="user__bio">{{ bio }}</p>
+    </div>
+    {% for post in posts %}
+    {{ post }}
+    {% endfor %}
+</body>
+
+</html>

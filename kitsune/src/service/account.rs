@@ -2,7 +2,10 @@ use crate::error::{Error, Result};
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    entity::{posts, prelude::Posts},
+    entity::{
+        accounts, posts,
+        prelude::{Accounts, Posts},
+    },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
@@ -46,6 +49,16 @@ impl AccountService {
     #[must_use]
     pub fn builder() -> AccountServiceBuilder {
         AccountServiceBuilder::default()
+    }
+
+    /// Get a local account by its username
+    pub async fn get_local_by_username(&self, username: &str) -> Result<Option<accounts::Model>> {
+        Accounts::find()
+            .filter(accounts::Column::Username.eq(username))
+            .filter(accounts::Column::Local.eq(true))
+            .one(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 
     /// Get a stream of posts owned by the user

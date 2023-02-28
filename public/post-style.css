@@ -1,0 +1,69 @@
+:root {
+    background-color: var(--dark1);
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+a {
+    text-decoration: none;
+    color: var(--shade2light);
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.post {
+    border: 1px solid var(--shade2dark);
+    border-radius: 5px;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    width: 600px;
+    max-width: 90%;
+    min-height: 100px;
+}
+
+.posts__main * {
+    background-color: var(--dark2);
+}
+
+.post__content {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.post__attachments {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25em;
+}
+
+.post__attachments * {
+    width: 100%;
+}
+
+.post__url {
+    color: white;
+}
+
+.account-info {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.account-info__names {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-picture {
+    width: 60px;
+}

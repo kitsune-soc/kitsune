@@ -1,33 +1,106 @@
-use crate::{error::Result, mapping::IntoObject, state::Zustand};
+use crate::{
+    error::{ApiError, Result},
+    http::{
+        cond,
+        page::{PostComponent, UserPage},
+    },
+    mapping::IntoObject,
+    service::account::{AccountService, GetPosts},
+    state::Zustand,
+};
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{IntoResponse, Response},
     routing::{self, post},
     Json, Router,
 };
-use http::StatusCode;
-use kitsune_db::entity::{accounts, prelude::Accounts};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use futures_util::{future::OptionFuture, TryStreamExt};
+use kitsune_db::entity::prelude::MediaAttachments;
+use sea_orm::EntityTrait;
+use serde::Deserialize;
+use uuid::Uuid;
 
 mod followers;
 mod following;
 mod inbox;
 mod outbox;
 
-async fn get(State(state): State<Zustand>, Path(username): Path<String>) -> Result<Response> {
-    let Some(account) = Accounts::find()
-        .filter(accounts::Column::Username.eq(username).and(accounts::Column::Domain.is_null()))
-        .one(&state.db_conn)
-        .await? else {
-            return Ok(StatusCode::NOT_FOUND.into_response());
-        };
+#[derive(Deserialize)]
+struct PageQuery {
+    min_id: Option<Uuid>,
+    max_id: Option<Uuid>,
+}
+
+async fn get_html(
+    State(state): State<Zustand>,
+    State(account_service): State<AccountService>,
+    Path(username): Path<String>,
+    Query(query): Query<PageQuery>,
+) -> Result<UserPage> {
+    let account = account_service
+        .get_local_by_username(&username)
+        .await?
+        .ok_or(ApiError::NotFound)?;
+
+    let mut get_posts = GetPosts::builder().account_id(account.id).clone();
+    if let Some(max_id) = query.max_id {
+        get_posts.max_id(max_id);
+    }
+    if let Some(min_id) = query.min_id {
+        get_posts.min_id(min_id);
+    }
+    let get_posts = get_posts.build().unwrap();
+
+    let posts = account_service
+        .get_posts(get_posts)
+        .await?
+        .and_then(|post| PostComponent::prepare(&state, post))
+        .try_collect()
+        .await?;
+
+    let mut acct = format!("@{}", account.username);
+    if let Some(domain) = account.domain {
+        acct.push('@');
+        acct.push_str(&domain);
+    }
+
+    let profile_picture_url = OptionFuture::from(
+        account
+            .avatar_id
+            .map(|id| MediaAttachments::find_by_id(id).one(&state.db_conn)),
+    )
+    .await
+    .transpose()?
+    .flatten()
+    .map(|attachment| attachment.url);
+
+    Ok(UserPage {
+        acct,
+        display_name: account.display_name.unwrap_or(account.username),
+        profile_picture_url: profile_picture_url
+            .unwrap_or_else(|| "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()),
+        bio: account.note.unwrap_or_default(),
+        posts,
+    })
+}
+
+async fn get(
+    State(state): State<Zustand>,
+    State(account_service): State<AccountService>,
+    Path(username): Path<String>,
+    _: Query<PageQuery>, // Needed to get the same types for the conditional routing
+) -> Result<Response> {
+    let account = account_service
+        .get_local_by_username(&username)
+        .await?
+        .ok_or(ApiError::NotFound)?;
 
     Ok(Json(account.into_object(&state).await?).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
-        .route("/:username", routing::get(get))
+        .route("/:username", routing::get(cond::html(get_html, get)))
         .route("/:username/followers", routing::get(followers::get))
         .route("/:username/following", routing::get(following::get))
         .route("/:username/inbox", post(inbox::post))

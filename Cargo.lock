@@ -139,6 +139,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "askama_axum"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "780920656d4e3c8fc3999c1059cb036416423376b814fe8690dbd8c04308aba1"
+dependencies = [
+ "askama",
+ "axum-core",
+ "http",
+]
+
+[[package]]
 name = "askama_derive"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2246,6 +2257,7 @@ dependencies = [
  "ammonia",
  "argon2",
  "askama",
+ "askama_axum",
  "async-graphql",
  "async-graphql-axum",
  "async-recursion",

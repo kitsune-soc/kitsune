@@ -8,7 +8,8 @@ homepage = "https://kitsune-soc.github.io"
 [dependencies]
 ammonia = "3.3.0"
 argon2 = { version = "0.4.1", features = ["std"] }
-askama = "0.11.1"
+askama = { version = "0.11.1", features = ["with-axum"] }
+askama_axum = "0.2.1"
 async-graphql = { version = "5.0.6", features = [
     "chrono",
     "email-validator",
