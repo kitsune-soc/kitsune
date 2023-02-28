@@ -1,10 +1,9 @@
 use super::IntoObject;
-use crate::{error::Result, state::Zustand};
+use crate::{error::Result, state::Zustand, util::BaseToCc};
 use async_trait::async_trait;
 use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
-    custom::Visibility,
     entity::{
         accounts, favourites, posts,
         prelude::{Accounts, Posts},
@@ -129,19 +128,7 @@ impl IntoActivity for posts::Model {
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Repost without associated post");
-
-            let (to, cc) = match self.visibility {
-                Visibility::Public => (
-                    vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url],
-                    vec![],
-                ),
-                Visibility::Unlisted => (
-                    vec![account.followers_url],
-                    vec![PUBLIC_IDENTIFIER.to_string()],
-                ),
-                Visibility::FollowerOnly => (vec![account.followers_url], vec![]),
-                Visibility::MentionOnly => (vec![], vec![]),
-            };
+            let (to, cc) = self.visibility.base_to_cc(&account);
 
             Ok(Activity {
                 r#type: ActivityType::Announce,
