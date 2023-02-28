@@ -184,7 +184,7 @@ where
                         .into_active_model(),
                     )
                     .on_conflict(
-                        OnConflict::new()
+                        OnConflict::column(accounts::Column::Url)
                             .update_columns([
                                 accounts::Column::AvatarId,
                                 accounts::Column::HeaderId,
@@ -277,6 +277,7 @@ where
             .one(&self.db_conn)
             .await?
         {
+            self.post_cache.set(url, &post).await?;
             return Ok(Some(post));
         }
 
@@ -309,22 +310,29 @@ where
             None
         };
 
-        let post = posts::Model {
-            id: Uuid::new_v7(uuid_timestamp),
-            account_id: user.id,
-            in_reply_to_id,
-            reposted_post_id: None,
-            subject: note.summary,
-            content: note.content,
-            is_sensitive: note.rest.sensitive,
-            visibility,
-            is_local: false,
-            url: note.rest.id,
-            created_at: note.rest.published.into(),
-            updated_at: Utc::now().into(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
+        let post = Posts::insert(
+            posts::Model {
+                id: Uuid::new_v7(uuid_timestamp),
+                account_id: user.id,
+                in_reply_to_id,
+                reposted_post_id: None,
+                subject: note.summary,
+                content: note.content,
+                is_sensitive: note.rest.sensitive,
+                visibility,
+                is_local: false,
+                url: note.rest.id.clone(),
+                created_at: note.rest.published.into(),
+                updated_at: Utc::now().into(),
+            }
+            .into_active_model(),
+        )
+        .on_conflict(
+            OnConflict::column(posts::Column::Url)
+                .update_columns([posts::Column::Content, posts::Column::Subject])
+                .clone(),
+        )
+        .exec_with_returning(&self.db_conn)
         .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
@@ -332,6 +340,8 @@ where
                 .add_to_index(post.clone().into())
                 .await?;
         }
+
+        self.post_cache.set(&note.rest.id, &post).await?;
 
         Ok(Some(post))
     }
