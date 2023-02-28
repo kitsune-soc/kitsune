@@ -58,6 +58,13 @@ impl IntoObject for posts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+        // Right now a repost can't have content
+        // Therefore it's also not an object
+        // We just return en error here
+        if self.reposted_post_id.is_some() {
+            return Err(ApiError::NotFound.into());
+        }
+
         let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?

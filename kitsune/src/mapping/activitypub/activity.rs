@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
+    custom::Visibility,
     entity::{
         accounts, favourites, posts,
         prelude::{Accounts, Posts},
@@ -115,33 +116,66 @@ impl IntoActivity for posts::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        // TODO: Decide type by `reposted_post_id` field
-
-        let account_url = Accounts::find_by_id(self.account_id)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
-            .expect("[Bug] Post without associated account");
+            .expect("[Bug] Post without author");
 
-        let created_at = self.created_at;
-        let object = self.into_object(state).await?;
+        if let Some(reposted_post_id) = self.reposted_post_id {
+            let reposted_post_url = Posts::find_by_id(reposted_post_id)
+                .select_only()
+                .column(posts::Column::Url)
+                .into_values::<String, UrlQuery>()
+                .one(&state.db_conn)
+                .await?
+                .expect("[Bug] Repost without associated post");
 
-        Ok(Activity {
-            r#type: ActivityType::Create,
-            rest: BaseObject {
-                context: ap_context(),
-                id: format!("{}/activity", object.id()),
-                attributed_to: Some(StringOrObject::String(account_url)),
-                in_reply_to: None,
-                sensitive: false,
-                published: created_at.into(),
-                to: object.to().to_vec(),
-                cc: object.cc().to_vec(),
-            },
-            object: StringOrObject::Object(object),
-        })
+            let (to, cc) = match self.visibility {
+                Visibility::Public => (
+                    vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url],
+                    vec![],
+                ),
+                Visibility::Unlisted => (
+                    vec![account.followers_url],
+                    vec![PUBLIC_IDENTIFIER.to_string()],
+                ),
+                Visibility::FollowerOnly => (vec![account.followers_url], vec![]),
+                Visibility::MentionOnly => (vec![], vec![]),
+            };
+
+            Ok(Activity {
+                r#type: ActivityType::Announce,
+                object: StringOrObject::String(reposted_post_url),
+                rest: BaseObject {
+                    context: ap_context(),
+                    id: format!("{}/activity", self.url),
+                    attributed_to: Some(StringOrObject::String(account.url)),
+                    in_reply_to: None,
+                    sensitive: false,
+                    published: self.created_at.into(),
+                    to,
+                    cc,
+                },
+            })
+        } else {
+            let created_at = self.created_at;
+            let object = self.into_object(state).await?;
+
+            Ok(Activity {
+                r#type: ActivityType::Create,
+                rest: BaseObject {
+                    context: ap_context(),
+                    id: format!("{}/activity", object.id()),
+                    attributed_to: Some(StringOrObject::String(account.url)),
+                    in_reply_to: None,
+                    sensitive: false,
+                    published: created_at.into(),
+                    to: object.to().to_vec(),
+                    cc: object.cc().to_vec(),
+                },
+                object: StringOrObject::Object(object),
+            })
+        }
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
