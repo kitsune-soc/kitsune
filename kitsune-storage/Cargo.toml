@@ -5,8 +5,14 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.64"
+aws-sdk-s3 = "0.24.0"
+aws-smithy-http = "0.54.4"
 bytes = "1.4.0"
 futures-util = "0.3.26"
+http = "0.2.9"
+http-body = "0.4.5"
+pin-project-lite = "0.2.9"
+sync_wrapper = "0.1.2"
 tokio = { version = "1.26.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.7", features = ["io"] }
 

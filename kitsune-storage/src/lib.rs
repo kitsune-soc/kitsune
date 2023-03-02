@@ -1,10 +1,11 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs, rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
+#![allow(forbidden_lint_groups)]
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures_util::{stream::BoxStream, Stream};
+use futures_util::stream::BoxStream;
 use std::error::Error;
 
 pub mod fs;
@@ -26,11 +27,7 @@ pub trait StorageBackend {
     async fn get<'a>(&'a self, path: &str) -> Result<BoxStream<'a, Result<Bytes>>>;
 
     /// Stream something onto the object storage
-    async fn put(
-        &self,
-        path: &str,
-        input_stream: &mut (dyn Stream<Item = Result<Bytes>> + Send + Unpin),
-    ) -> Result<()>;
+    async fn put(&self, path: &str, input_stream: BoxStream<'static, Result<Bytes>>) -> Result<()>;
 }
 
 #[cfg(test)]

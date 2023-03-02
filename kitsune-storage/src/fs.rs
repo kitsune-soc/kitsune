@@ -5,7 +5,7 @@
 use crate::{Result, StorageBackend};
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
+use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use tokio::{
     fs::{self, File},
@@ -43,7 +43,7 @@ impl StorageBackend for Storage {
     async fn put(
         &self,
         path: &str,
-        input_stream: &mut (dyn Stream<Item = Result<Bytes>> + Send + Unpin),
+        mut input_stream: BoxStream<'static, Result<Bytes>>,
     ) -> Result<()> {
         let mut file = File::create(self.storage_dir.join(path)).await?;
         while let Some(chunk) = input_stream.next().await.transpose()? {
@@ -57,7 +57,7 @@ impl StorageBackend for Storage {
 mod test {
     use crate::{fs::Storage, StorageBackend};
     use bytes::{BufMut, BytesMut};
-    use futures_util::{future, stream, TryStreamExt};
+    use futures_util::{future, stream, StreamExt, TryStreamExt};
     use std::str;
     use tempdir::TempDir;
 
@@ -106,7 +106,7 @@ mod test {
         storage
             .put(
                 "hello-world",
-                &mut stream::once(future::ok(TEST_TEXT.into())),
+                stream::once(future::ok(TEST_TEXT.into())).boxed(),
             )
             .await
             .unwrap();
