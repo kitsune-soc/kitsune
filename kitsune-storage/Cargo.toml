@@ -7,5 +7,9 @@ edition = "2021"
 async-trait = "0.1.64"
 bytes = "1.4.0"
 futures-util = "0.3.26"
-tokio = { version = "1.26.0", features = ["fs"] }
+tokio = { version = "1.26.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.7", features = ["io"] }
+
+[dev-dependencies]
+tempdir = "0.3.7"
+tokio = { version = "1.26.0", features = ["macros", "rt"] }

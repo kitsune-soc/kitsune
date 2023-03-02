@@ -8,6 +8,7 @@ use futures_util::{stream::BoxStream, Stream};
 use std::error::Error;
 
 pub mod fs;
+pub mod s3;
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
