@@ -9,12 +9,14 @@ use kitsune::{
     resolve::PostResolver,
     service::{
         account::AccountService, oauth2::Oauth2Service, post::PostService,
-        search::GrpcSearchService, timeline::TimelineService, user::UserService,
+        search::GrpcSearchService, timeline::TimelineService, upload::UploadService,
+        user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
+use kitsune_storage::fs::Storage as FsStorage;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -123,6 +125,12 @@ async fn main() {
         .build()
         .unwrap();
 
+    let upload_service = UploadService::builder()
+        .db_conn(conn.clone())
+        .storage_backend(Arc::new(FsStorage::new(config.upload_dir.clone())))
+        .build()
+        .unwrap();
+
     let user_service = UserService::builder()
         .config(config.clone())
         .db_conn(conn.clone())
@@ -151,6 +159,7 @@ async fn main() {
             search: Arc::new(search_service),
             post: post_service,
             timeline: timeline_service,
+            upload: upload_service,
             user: user_service,
         },
         webfinger,

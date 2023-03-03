@@ -19,7 +19,7 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
 #[async_trait]
-pub trait StorageBackend {
+pub trait StorageBackend: Send + Sync {
     /// Delete something from the object storage
     async fn delete(&self, path: &str) -> Result<()>;
 

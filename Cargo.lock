@@ -2635,6 +2635,7 @@ dependencies = [
  "kitsune-http-signatures",
  "kitsune-messaging",
  "kitsune-search-proto",
+ "kitsune-storage",
  "kitsune-type",
  "metrics",
  "metrics-exporter-prometheus",
