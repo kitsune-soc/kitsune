@@ -114,6 +114,9 @@ pub enum Error {
     Spki(#[from] spki::Error),
 
     #[error(transparent)]
+    Storage(kitsune_storage::BoxError),
+
+    #[error(transparent)]
     TonicStatus(#[from] tonic::Status),
 
     #[error(transparent)]
