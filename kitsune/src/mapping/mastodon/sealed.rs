@@ -5,14 +5,18 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    accounts, posts, posts_mentions,
-    prelude::{Accounts, Favourites, Posts, PostsMentions},
+    accounts, media_attachments, posts, posts_mentions,
+    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions},
 };
-use kitsune_type::mastodon::{account::Source, status::Mention, Account, Status};
+use kitsune_type::mastodon::{
+    account::Source, media_attachment::MediaType, status::Mention, Account, MediaAttachment, Status,
+};
+use mime::Mime;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use std::str::FromStr;
 use uuid::Uuid;
 
 #[derive(Clone, Copy)]
@@ -123,6 +127,37 @@ impl IntoMastodon for posts_mentions::Model {
 }
 
 #[async_trait]
+impl IntoMastodon for media_attachments::Model {
+    type Output = MediaAttachment;
+
+    fn id(&self) -> Option<Uuid> {
+        Some(self.id)
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let mime_type = Mime::from_str(&self.content_type).unwrap();
+        let r#type = match mime_type.type_() {
+            mime::AUDIO => MediaType::Audio,
+            mime::IMAGE => MediaType::Image,
+            mime::VIDEO => MediaType::Video,
+            _ => MediaType::Unknown,
+        };
+
+        let url = state.attachment_service.get_url(self.id).await?;
+
+        Ok(MediaAttachment {
+            id: self.id,
+            r#type,
+            url: url.clone(),
+            preview_url: url.clone(),
+            remote_url: url,
+            description: self.description.unwrap_or_default(),
+            blurhash: self.blurhash,
+        })
+    }
+}
+
+#[async_trait]
 impl IntoMastodon for posts::Model {
     type Output = Status;
 
@@ -144,6 +179,15 @@ impl IntoMastodon for posts::Model {
             .await?;
 
         let favourites_count = self.find_related(Favourites).count(state.db_conn).await?;
+
+        let media_attachments = self
+            .find_related(MediaAttachments)
+            .stream(state.db_conn)
+            .await?
+            .map_err(Error::from)
+            .and_then(|attachment| attachment.into_mastodon(state))
+            .try_collect()
+            .await?;
 
         let mentions = PostsMentions::find()
             .filter(posts_mentions::Column::PostId.eq(self.id))
@@ -183,7 +227,7 @@ impl IntoMastodon for posts::Model {
             favourites_count,
             content: self.content,
             account,
-            media_attachments: Vec::new(),
+            media_attachments,
             mentions,
             reblog,
         })

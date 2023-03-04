@@ -24,7 +24,7 @@ async-trait = "0.1.64"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
-axum = { version = "0.6.10", features = ["headers", "macros"] }
+axum = { version = "0.6.10", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.7.0", features = ["query"] }
 axum-prometheus = "0.3.1"
 base64 = "0.21.0"
