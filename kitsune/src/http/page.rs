@@ -1,9 +1,12 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::state::Zustand;
 use askama::Template;
-use futures_util::future::OptionFuture;
-use kitsune_db::entity::{posts, prelude::Accounts};
-use sea_orm::EntityTrait;
+use futures_util::{future::OptionFuture, TryStreamExt};
+use kitsune_db::entity::{
+    posts,
+    prelude::{Accounts, MediaAttachments},
+};
+use sea_orm::{EntityTrait, ModelTrait};
 use std::collections::VecDeque;
 
 pub struct MediaAttachment {
@@ -31,6 +34,23 @@ impl PostComponent {
             .await?
             .expect("[Bug] Post without author");
 
+        let attachments = post
+            .find_related(MediaAttachments)
+            .stream(&state.db_conn)
+            .await?
+            .map_err(Error::from)
+            .and_then(|attachment| async move {
+                let url = state.service.attachment.get_url(attachment.id).await?;
+
+                Ok(MediaAttachment {
+                    content_type: attachment.content_type,
+                    description: attachment.description,
+                    url,
+                })
+            })
+            .try_collect()
+            .await?;
+
         let profile_picture_url = OptionFuture::from(
             author
                 .avatar_id
@@ -46,6 +66,7 @@ impl PostComponent {
         }
 
         Ok(Self {
+            attachments,
             display_name: author
                 .display_name
                 .unwrap_or_else(|| author.username.clone()),
@@ -56,7 +77,6 @@ impl PostComponent {
             }),
             content: post.content,
             url: post.url,
-            attachments: vec![],
         })
     }
 }
