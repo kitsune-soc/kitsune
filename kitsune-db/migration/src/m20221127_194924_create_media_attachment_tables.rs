@@ -1,4 +1,4 @@
-use crate::m20220101_000001_create_table::Accounts;
+use crate::m20220101_000001_create_table::{Accounts, Posts};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
@@ -13,6 +13,13 @@ pub enum MediaAttachments {
     RemoteUrl,
     CreatedAt,
     UpdatedAt,
+}
+
+#[derive(Iden)]
+pub enum PostsMediaAttachments {
+    Table,
+    PostId,
+    MediaAttachmentId,
 }
 
 #[derive(DeriveMigrationName)]
@@ -54,6 +61,46 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .from_col(MediaAttachments::AccountId)
                             .to(Accounts::Table, Accounts::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(PostsMediaAttachments::Table)
+                    .col(
+                        ColumnDef::new(PostsMediaAttachments::PostId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(PostsMediaAttachments::MediaAttachmentId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .col(PostsMediaAttachments::PostId)
+                            .col(PostsMediaAttachments::MediaAttachmentId),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(PostsMediaAttachments::Table, PostsMediaAttachments::PostId)
+                            .to(Posts::Table, Posts::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(
+                                PostsMediaAttachments::Table,
+                                PostsMediaAttachments::MediaAttachmentId,
+                            )
+                            .to(MediaAttachments::Table, MediaAttachments::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -105,6 +152,10 @@ impl MigrationTrait for Migration {
                     .drop_column(Accounts::HeaderId)
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(PostsMediaAttachments::Table).to_owned())
             .await?;
 
         manager

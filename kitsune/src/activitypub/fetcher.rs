@@ -186,8 +186,6 @@ where
                     .on_conflict(
                         OnConflict::column(accounts::Column::Url)
                             .update_columns([
-                                accounts::Column::AvatarId,
-                                accounts::Column::HeaderId,
                                 accounts::Column::DisplayName,
                                 accounts::Column::Note,
                                 accounts::Column::Locked,
