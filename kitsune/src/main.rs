@@ -107,6 +107,7 @@ async fn main() {
     let attachment_service = AttachmentService::builder()
         .domain(config.domain.clone())
         .db_conn(conn.clone())
+        .media_proxy_enabled(config.media_proxy_enabled)
         .storage_backend(Arc::new(FsStorage::new(config.upload_dir.clone())))
         .build()
         .unwrap();

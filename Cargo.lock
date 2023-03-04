@@ -2614,10 +2614,12 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "derive_builder 0.12.0",
+ "futures-core",
  "http-body",
  "hyper",
  "hyper-rustls",
  "kitsune-http-signatures",
+ "pin-project-lite",
  "serde",
  "serde_json",
  "tokio",

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.23"
 derive_builder = "0.12.0"
+futures-core = "0.3.26"
 http-body = "0.4.5"
 hyper = { version = "0.14.24", features = [
     "client",
@@ -15,6 +16,7 @@ hyper = { version = "0.14.24", features = [
 ] }
 hyper-rustls = { version = "0.23.2", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+pin-project-lite = "0.2.9"
 serde = "1.0.152"
 serde_json = "1.0.93"
 tower = "0.4.13"

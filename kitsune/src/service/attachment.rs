@@ -4,6 +4,7 @@ use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
+use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, StorageBackend};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel};
 use std::sync::Arc;
@@ -29,6 +30,7 @@ impl<S> Upload<S> {
 
 #[derive(Builder, Clone)]
 pub struct AttachmentService {
+    client: Client,
     db_conn: DatabaseConnection,
     domain: String,
     media_proxy_enabled: bool,
@@ -64,21 +66,34 @@ impl AttachmentService {
         Ok(media_attachment.remote_url.unwrap())
     }
 
+    /// Return a stream that yields the file's contents
+    ///
+    /// # Panics
+    ///
+    /// This should never panic
     pub async fn stream_file(
         &self,
         media_attachment: &media_attachments::Model,
     ) -> Result<impl Stream<Item = Result<Bytes>>> {
-        let Some(ref file_path) = media_attachment.file_path else {
-            return Err(ApiError::NotFound.into());
-        };
+        if let Some(ref file_path) = media_attachment.file_path {
+            let stream = self
+                .storage_backend
+                .get(file_path.as_str())
+                .await
+                .map_err(Error::Storage)?;
 
-        let stream = self
-            .storage_backend
-            .get(file_path.as_str())
-            .await
-            .map_err(Error::Storage)?;
-
-        Ok(stream.map_err(Error::Storage))
+            Ok(stream.map_err(Error::Storage).left_stream())
+        } else if self.media_proxy_enabled {
+            Ok(self
+                .client
+                .get(media_attachment.remote_url.as_ref().unwrap())
+                .await?
+                .stream()
+                .map_err(Into::into)
+                .right_stream())
+        } else {
+            Err(ApiError::NotFound.into())
+        }
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<media_attachments::Model>
