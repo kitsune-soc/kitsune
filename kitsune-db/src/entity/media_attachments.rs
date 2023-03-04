@@ -41,4 +41,17 @@ impl Related<super::accounts::Entity> for Entity {
     }
 }
 
+impl Related<super::posts::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::posts_media_attachments::Relation::Posts.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(
+            super::posts_media_attachments::Relation::MediaAttachments
+                .def()
+                .rev(),
+        )
+    }
+}
+
 impl ActiveModelBehavior for ActiveModel {}

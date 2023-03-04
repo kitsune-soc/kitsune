@@ -22,6 +22,8 @@ mod unfavourite;
 
 #[derive(Deserialize)]
 struct CreateForm {
+    #[serde(default)]
+    media_ids: Vec<Uuid>,
     status: String,
     in_reply_to_id: Option<Uuid>,
     #[serde(default)]
@@ -74,6 +76,7 @@ async fn post(
     let mut create_post = CreatePost::builder()
         .author_id(user_data.account.id)
         .content(form.status)
+        .media_ids(form.media_ids)
         .sensitive(form.sensitive)
         .visibility(form.visibility.into())
         .clone();

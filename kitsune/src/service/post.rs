@@ -20,8 +20,12 @@ use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, favourites, jobs, posts, posts_mentions,
-        prelude::{Favourites, Jobs, Posts, PostsMentions, UsersRoles},
+        accounts, favourites, jobs, media_attachments, posts, posts_media_attachments,
+        posts_mentions,
+        prelude::{
+            Favourites, Jobs, MediaAttachments, Posts, PostsMediaAttachments, PostsMentions,
+            UsersRoles,
+        },
         users_roles,
     },
     link::InReplyTo,
@@ -29,8 +33,8 @@ use kitsune_db::{
 };
 use pulldown_cmark::{html, Options, Parser};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait,
-    PaginatorTrait, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
+    IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -47,6 +51,12 @@ pub struct CreatePost {
     /// This is validated. If you pass in an non-existent ID, it will be ignored.
     #[builder(default, setter(strip_option))]
     in_reply_to_id: Option<Uuid>,
+
+    /// IDs of the media attachments attached to this post
+    ///
+    /// These IDs are validated. If one of them doesn't exist, the post is rejected.
+    #[builder(default)]
+    media_ids: Vec<Uuid>,
 
     /// Mark this post as sensitive
     ///
@@ -132,6 +142,57 @@ where
         PostServiceBuilder::default()
     }
 
+    async fn process_media_attachments<C>(
+        conn: &C,
+        post_id: Uuid,
+        media_attachment_ids: &[Uuid],
+    ) -> Result<()>
+    where
+        C: ConnectionTrait,
+    {
+        if MediaAttachments::find()
+            .filter(media_attachments::Column::Id.is_in(media_attachment_ids.iter().copied()))
+            .count(conn)
+            .await?
+            != media_attachment_ids.len() as u64
+        {
+            return Err(ApiError::BadRequest.into());
+        }
+
+        PostsMediaAttachments::insert_many(media_attachment_ids.iter().map(|media_id| {
+            posts_media_attachments::Model {
+                post_id,
+                media_attachment_id: *media_id,
+            }
+            .into_active_model()
+        }))
+        .exec_without_returning(conn)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn process_mentions<C>(
+        conn: &C,
+        post_id: Uuid,
+        mentioned_account_ids: &[Uuid],
+    ) -> Result<()>
+    where
+        C: ConnectionTrait,
+    {
+        PostsMentions::insert_many(mentioned_account_ids.iter().map(|account_id| {
+            posts_mentions::Model {
+                account_id: *account_id,
+                post_id,
+            }
+            .into_active_model()
+        }))
+        .exec_without_returning(conn)
+        .await?;
+
+        Ok(())
+    }
+
     /// Create a new post and deliver it to the followers
     ///
     /// # Panics
@@ -182,17 +243,8 @@ where
                     .insert(tx)
                     .await?;
 
-                    for account_id in mentioned_account_ids {
-                        PostsMentions::insert(
-                            posts_mentions::Model {
-                                account_id,
-                                post_id: post.id,
-                            }
-                            .into_active_model(),
-                        )
-                        .exec_without_returning(tx)
-                        .await?;
-                    }
+                    Self::process_mentions(tx, post.id, &mentioned_account_ids).await?;
+                    Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
                     let job_context =
                         Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
