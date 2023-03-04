@@ -15,8 +15,10 @@ pub struct Model {
     pub description: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub blurhash: Option<String>,
-    #[sea_orm(column_type = "Text")]
-    pub url: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub file_path: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub remote_url: Option<String>,
     pub created_at: DateTimeWithTimeZone,
 }
 

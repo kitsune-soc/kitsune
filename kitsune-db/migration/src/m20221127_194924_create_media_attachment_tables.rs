@@ -9,7 +9,8 @@ pub enum MediaAttachments {
     ContentType,
     Description,
     Blurhash,
-    Url,
+    FilePath,
+    RemoteUrl,
     CreatedAt,
 }
 
@@ -36,7 +37,8 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(MediaAttachments::Description).text())
                     .col(ColumnDef::new(MediaAttachments::Blurhash).text())
-                    .col(ColumnDef::new(MediaAttachments::Url).text().not_null())
+                    .col(ColumnDef::new(MediaAttachments::FilePath).text())
+                    .col(ColumnDef::new(MediaAttachments::RemoteUrl).text())
                     .col(
                         ColumnDef::new(MediaAttachments::CreatedAt)
                             .timestamp_with_time_zone()
