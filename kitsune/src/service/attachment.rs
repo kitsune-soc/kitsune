@@ -61,7 +61,7 @@ impl AttachmentService {
     /// This should never panic
     pub async fn get_url(&self, id: Uuid) -> Result<String> {
         let media_attachment = self.get_by_id(id).await?;
-        if self.media_proxy_enabled || media_attachment.file_path.is_none() {
+        if self.media_proxy_enabled || media_attachment.file_path.is_some() {
             return Ok(format!("https://{}/media/{id}", self.domain));
         }
 
