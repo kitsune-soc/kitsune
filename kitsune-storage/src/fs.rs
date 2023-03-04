@@ -35,7 +35,7 @@ impl StorageBackend for Storage {
         Ok(())
     }
 
-    async fn get<'a>(&'a self, path: &str) -> Result<BoxStream<'a, Result<Bytes>>> {
+    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
         let file = File::open(self.storage_dir.join(path)).await?;
         Ok(ReaderStream::new(file).map_err(Into::into).boxed())
     }

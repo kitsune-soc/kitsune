@@ -1,9 +1,12 @@
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    service::attachment::AttachmentService,
+};
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
     accounts, posts, posts_mentions,
-    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions},
+    prelude::{Accounts, Favourites, Posts, PostsMentions},
 };
 use kitsune_type::mastodon::{account::Source, status::Mention, Account, Status};
 use sea_orm::{
@@ -11,6 +14,12 @@ use sea_orm::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use uuid::Uuid;
+
+#[derive(Clone, Copy)]
+pub struct MapperState<'a> {
+    pub attachment_service: &'a AttachmentService,
+    pub db_conn: &'a DatabaseConnection,
+}
 
 #[async_trait]
 pub trait IntoMastodon {
@@ -23,7 +32,7 @@ pub trait IntoMastodon {
     fn id(&self) -> Option<Uuid>;
 
     /// Map something to its Mastodon API equivalent
-    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output>;
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output>;
 }
 
 #[async_trait]
@@ -34,10 +43,10 @@ impl IntoMastodon for accounts::Model {
         Some(self.id)
     }
 
-    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let statuses_count = Posts::find()
             .filter(posts::Column::AccountId.eq(self.id))
-            .count(db_conn)
+            .count(state.db_conn)
             .await?;
         let mut acct = self.username.clone();
         if let Some(domain) = self.domain {
@@ -46,23 +55,13 @@ impl IntoMastodon for accounts::Model {
         }
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = MediaAttachments::find_by_id(avatar_id)
-                .one(db_conn)
-                .await?
-                .expect("[Bug] User profile picture missing");
-
-            media_attachment.url
+            state.attachment_service.get_url(avatar_id).await?
         } else {
             "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
         };
 
         let header = if let Some(header_id) = self.header_id {
-            let media_attachment = MediaAttachments::find_by_id(header_id)
-                .one(db_conn)
-                .await?
-                .expect("[Bug] User header image missing");
-
-            media_attachment.url
+            state.attachment_service.get_url(header_id).await?
         } else {
             "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
         };
@@ -102,9 +101,9 @@ impl IntoMastodon for posts_mentions::Model {
         None
     }
 
-    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let account = Accounts::find_by_id(self.account_id)
-            .one(db_conn)
+            .one(state.db_conn)
             .await?
             .expect("[Bug] Mention without associated account");
 
@@ -131,39 +130,39 @@ impl IntoMastodon for posts::Model {
         Some(self.id)
     }
 
-    async fn into_mastodon(self, db_conn: &DatabaseConnection) -> Result<Self::Output> {
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let account = Accounts::find_by_id(self.account_id)
-            .one(db_conn)
+            .one(state.db_conn)
             .await?
             .expect("[Bug] Post without associated account")
-            .into_mastodon(db_conn)
+            .into_mastodon(state)
             .await?;
 
         let reblog_count = Posts::find()
             .filter(posts::Column::RepostedPostId.eq(self.id))
-            .count(db_conn)
+            .count(state.db_conn)
             .await?;
 
-        let favourites_count = self.find_related(Favourites).count(db_conn).await?;
+        let favourites_count = self.find_related(Favourites).count(state.db_conn).await?;
 
         let mentions = PostsMentions::find()
             .filter(posts_mentions::Column::PostId.eq(self.id))
-            .stream(db_conn)
+            .stream(state.db_conn)
             .await?
             .map_err(Error::from)
-            .and_then(|mention| mention.into_mastodon(db_conn))
+            .and_then(|mention| mention.into_mastodon(state))
             .try_collect()
             .await?;
 
         let reblog = OptionFuture::from(
             OptionFuture::from(
                 self.reposted_post_id
-                    .map(|id| Posts::find_by_id(id).one(db_conn)),
+                    .map(|id| Posts::find_by_id(id).one(state.db_conn)),
             )
             .await
             .transpose()?
             .flatten()
-            .map(|post| post.into_mastodon(db_conn)),
+            .map(|post| post.into_mastodon(state)),
         )
         .await
         .transpose()?

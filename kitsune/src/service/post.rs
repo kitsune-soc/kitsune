@@ -1,7 +1,6 @@
 use super::search::SearchService;
 use crate::{
     cache::Cache,
-    config::Configuration,
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
     job::{
@@ -114,8 +113,8 @@ pub struct PostService<
     FUC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
     WC = Arc<dyn Cache<str, String> + Send + Sync>,
 > {
-    config: Configuration,
     db_conn: DatabaseConnection,
+    domain: String,
     post_resolver: PostResolver<S, FPC, FUC, WC>,
     search_service: S,
     status_event_emitter: PostEventEmitter,
@@ -152,7 +151,7 @@ where
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
 
         let id = Uuid::now_v7();
-        let url = format!("https://{}/posts/{id}", self.config.domain);
+        let url = format!("https://{}/posts/{id}", self.domain);
 
         let post = self
             .db_conn
@@ -320,7 +319,7 @@ where
         };
 
         let id = Uuid::now_v7();
-        let url = format!("https://{}/favourites/{id}", self.config.domain);
+        let url = format!("https://{}/favourites/{id}", self.domain);
         let favourite = favourites::Model {
             id,
             account_id: favouriting_account_id,

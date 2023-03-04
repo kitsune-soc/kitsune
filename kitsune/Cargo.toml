@@ -28,7 +28,6 @@ axum = { version = "0.6.10", features = ["headers", "macros"] }
 axum-extra = { version = "0.7.0", features = ["query"] }
 axum-prometheus = "0.3.1"
 base64 = "0.21.0"
-blurhash-ng = "0.1.2"
 bytes = "1.4.0"
 chrono = "0.4.23"
 deadpool-redis = "0.11.1"
@@ -40,7 +39,6 @@ headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.9"
 hyper = "0.14.24"
-image = "0.24.5"
 itertools = "0.10.5"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-http-client = { path = "../kitsune-http-client" }
@@ -74,7 +72,7 @@ serde_json = "1.0.93"
 sha2 = "0.10.6"
 thiserror = "1.0.38"
 tokio = { version = "1.26.0", features = ["full"] }
-tokio-util = { version = "0.7.7", features = ["compat"] }
+tokio-util = { version = "0.7.7", features = ["compat", "io"] }
 tonic = "0.8.3"
 tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"

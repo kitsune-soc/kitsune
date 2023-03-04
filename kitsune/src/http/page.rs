@@ -2,12 +2,15 @@ use crate::error::Result;
 use crate::state::Zustand;
 use askama::Template;
 use futures_util::future::OptionFuture;
-use kitsune_db::entity::{
-    media_attachments, posts,
-    prelude::{Accounts, MediaAttachments},
-};
+use kitsune_db::entity::{posts, prelude::Accounts};
 use sea_orm::EntityTrait;
 use std::collections::VecDeque;
+
+pub struct MediaAttachment {
+    pub content_type: String,
+    pub description: Option<String>,
+    pub url: String,
+}
 
 #[derive(Template)]
 #[template(path = "components/post.html", escape = "none")] // Make sure everything is escaped either on submission or in the template
@@ -18,7 +21,7 @@ pub struct PostComponent {
     pub profile_picture_url: String,
     pub content: String,
     pub url: String,
-    pub attachments: Vec<media_attachments::Model>,
+    pub attachments: Vec<MediaAttachment>,
 }
 
 impl PostComponent {
@@ -31,12 +34,10 @@ impl PostComponent {
         let profile_picture_url = OptionFuture::from(
             author
                 .avatar_id
-                .map(|id| MediaAttachments::find_by_id(id).one(&state.db_conn)),
+                .map(|id| state.service.attachment.get_url(id)),
         )
         .await
-        .transpose()?
-        .flatten()
-        .map(|attachment| attachment.url);
+        .transpose()?;
 
         let mut acct = format!("@{}", author.username);
         if let Some(domain) = author.domain {

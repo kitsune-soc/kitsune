@@ -77,7 +77,7 @@ impl StorageBackend for Storage {
         Ok(())
     }
 
-    async fn get<'a>(&'a self, path: &str) -> Result<BoxStream<'a, Result<Bytes>>> {
+    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
         let response = self
             .client
             .get_object()

@@ -1,7 +1,4 @@
-use crate::{
-    config::Configuration,
-    error::{ApiError, Error, Result},
-};
+use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
 use derive_builder::Builder;
@@ -42,8 +39,8 @@ impl Register {
 
 #[derive(Builder, Clone)]
 pub struct UserService {
-    config: Configuration,
     db_conn: DatabaseConnection,
+    domain: String,
 }
 
 impl UserService {
@@ -90,7 +87,7 @@ impl UserService {
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-        let url = format!("https://{}/users/{}", self.config.domain, register.username);
+        let url = format!("https://{}/users/{}", self.domain, register.username);
         let followers_url = format!("{url}/followers");
         let inbox_url = format!("{url}/inbox");
 

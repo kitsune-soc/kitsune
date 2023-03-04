@@ -24,7 +24,7 @@ pub trait StorageBackend: Send + Sync {
     async fn delete(&self, path: &str) -> Result<()>;
 
     /// Stream something from the object storage
-    async fn get<'a>(&'a self, path: &str) -> Result<BoxStream<'a, Result<Bytes>>>;
+    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>>;
 
     /// Stream something onto the object storage
     async fn put(&self, path: &str, input_stream: BoxStream<'static, Result<Bytes>>) -> Result<()>;
