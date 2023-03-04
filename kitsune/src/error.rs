@@ -80,6 +80,9 @@ pub enum Error {
     #[error("Malformed ActivityPub object")]
     MalformedApObject,
 
+    #[error(transparent)]
+    Mime(#[from] mime::FromStrError),
+
     #[error("OAuth application not found")]
     OAuthApplicationNotFound,
 
@@ -158,6 +161,9 @@ impl IntoResponse for Error {
             }
             err @ (Self::Api(ApiError::Unauthorised) | Self::PasswordMismatch) => {
                 (StatusCode::UNAUTHORIZED, err.to_string()).into_response()
+            }
+            err @ Self::Api(ApiError::UnsupportedMediaType) => {
+                (StatusCode::UNSUPPORTED_MEDIA_TYPE, err.to_string()).into_response()
             }
             err => {
                 error!(error = %err, "Error occurred in handler");

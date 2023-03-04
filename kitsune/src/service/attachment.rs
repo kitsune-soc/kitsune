@@ -10,6 +10,8 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel
 use std::sync::Arc;
 use uuid::Uuid;
 
+const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
+
 #[derive(Builder)]
 #[builder(pattern = "owned")]
 pub struct Upload<S> {
@@ -100,6 +102,11 @@ impl AttachmentService {
     where
         S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
     {
+        let content_type: mime::Mime = upload.content_type.parse()?;
+        if !ALLOWED_FILETYPES.contains(&content_type.type_()) {
+            return Err(ApiError::UnsupportedMediaType.into());
+        }
+
         self.storage_backend
             .put(&upload.path, upload.stream.boxed())
             .await

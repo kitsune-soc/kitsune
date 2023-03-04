@@ -11,10 +11,7 @@ mod auth;
 mod post;
 mod user;
 
-const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
-
 /// Saves the file into a user-configured subdirectory and returns a full URL to the file
-// TODO: Refactor this
 async fn handle_upload(
     ctx: &Context<'_>,
     file: Upload,
@@ -28,10 +25,6 @@ async fn handle_upload(
         .and_then(|content_type| Mime::from_str(content_type).ok())
         .or_else(|| mime_guess::from_path(&value.filename).first())
         .ok_or_else(|| Error::new("Failed to determine file type"))?;
-
-    if !ALLOWED_FILETYPES.contains(&content_type.type_()) {
-        return Err(Error::new("File type not allowed"));
-    }
 
     let stream = ReaderStream::new(value.into_async_read().compat()).map_err(Into::into);
     let mut upload = attachment::Upload::builder()
