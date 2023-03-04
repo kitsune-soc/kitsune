@@ -210,6 +210,7 @@ where
                                 file_path: None,
                                 remote_url: Some(icon.url),
                                 created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
                             }
                             .into_active_model(),
                         )
@@ -232,6 +233,7 @@ where
                                 file_path: None,
                                 remote_url: Some(image.url),
                                 created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
                             }
                             .into_active_model(),
                         )

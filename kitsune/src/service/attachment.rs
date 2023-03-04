@@ -121,6 +121,7 @@ impl AttachmentService {
             file_path: Some(upload.path),
             remote_url: None,
             created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
         }
         .into_active_model()
         .insert(&self.db_conn)

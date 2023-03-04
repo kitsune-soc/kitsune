@@ -12,6 +12,7 @@ pub enum MediaAttachments {
     FilePath,
     RemoteUrl,
     CreatedAt,
+    UpdatedAt,
 }
 
 #[derive(DeriveMigrationName)]
@@ -41,6 +42,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(MediaAttachments::RemoteUrl).text())
                     .col(
                         ColumnDef::new(MediaAttachments::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(MediaAttachments::UpdatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
