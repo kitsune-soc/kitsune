@@ -11,6 +11,10 @@ use axum::{
 };
 use futures_util::TryStreamExt;
 use kitsune_type::mastodon::MediaAttachment;
+use std::io::{Error as IoError, ErrorKind as IoErrorKind};
+use tempfile::tempfile;
+use tokio::{fs::File, io};
+use tokio_util::io::{ReaderStream, StreamReader};
 use uuid::Uuid;
 
 async fn get(
@@ -37,15 +41,27 @@ async fn post(
                     upload = upload.description(field.text().await?);
                 }
                 "file" => {
-                    let Some(content_type) = field.content_type() else {
+                    let Some(content_type) = field.content_type().map(ToString::to_string) else {
                         continue;
                     };
 
-                    upload = upload
-                        .content_type(content_type.to_string())
-                        .stream(field.map_err(Into::into));
+                    let tempfile = tempfile().map_err(|err| {
+                        error!(error = %err, "Failed to create temporary file");
+                        ApiError::InternalServerError
+                    })?;
+                    let mut tempfile = File::from_std(tempfile);
+                    let mut stream = StreamReader::new(
+                        field.map_err(|err| IoError::new(IoErrorKind::Other, err)),
+                    );
 
-                    break;
+                    if let Err(err) = io::copy_buf(&mut stream, &mut tempfile).await {
+                        error!(error = %err, "Failed to copy upload into temporary file");
+                        return Err(ApiError::InternalServerError.into());
+                    }
+
+                    upload = upload
+                        .content_type(content_type)
+                        .stream(ReaderStream::new(tempfile).map_err(Into::into));
                 }
                 _ => continue,
             }

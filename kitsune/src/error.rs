@@ -25,6 +25,9 @@ pub enum ApiError {
     #[error("Email already taken")]
     EmailTaken,
 
+    #[error("Internal server error")]
+    InternalServerError,
+
     #[error("Not found")]
     NotFound,
 
