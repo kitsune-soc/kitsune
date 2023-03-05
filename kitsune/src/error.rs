@@ -1,5 +1,8 @@
 use argon2::password_hash;
-use axum::response::{IntoResponse, Response};
+use axum::{
+    extract::multipart::MultipartError,
+    response::{IntoResponse, Response},
+};
 use deadpool_redis::PoolError;
 use http::StatusCode;
 use kitsune_messaging::BoxError;
@@ -85,6 +88,9 @@ pub enum Error {
 
     #[error(transparent)]
     Mime(#[from] mime::FromStrError),
+
+    #[error(transparent)]
+    Multipart(#[from] MultipartError),
 
     #[error("OAuth application not found")]
     OAuthApplicationNotFound,

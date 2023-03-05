@@ -19,6 +19,7 @@ pub struct Upload<S> {
     content_type: String,
     #[builder(default, setter(strip_option))]
     description: Option<String>,
+    #[builder(default = "Uuid::now_v7().to_string()")]
     path: String,
     stream: S,
 }
