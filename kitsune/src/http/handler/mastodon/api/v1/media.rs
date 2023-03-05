@@ -11,13 +11,13 @@ use axum::{
 };
 use futures_util::TryStreamExt;
 use kitsune_type::mastodon::MediaAttachment;
-use std::io::{Error as IoError, ErrorKind as IoErrorKind};
+use std::io::SeekFrom;
 use tempfile::tempfile;
 use tokio::{
     fs::File,
-    io::{self, AsyncWriteExt},
+    io::{AsyncSeekExt, AsyncWriteExt},
 };
-use tokio_util::io::{ReaderStream, StreamReader};
+use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 
 async fn get(
@@ -37,7 +37,7 @@ pub async fn post(
     mut multipart: Multipart,
 ) -> Result<Json<MediaAttachment>> {
     let mut upload = Upload::builder().account_id(user_data.account.id);
-    while let Some(field) = multipart.next_field().await? {
+    while let Some(mut field) = multipart.next_field().await? {
         if let Some(field_name) = field.name() {
             match field_name {
                 "description" => {
@@ -48,24 +48,17 @@ pub async fn post(
                         continue;
                     };
 
-                    let tempfile = tempfile().map_err(|err| {
-                        error!(error = %err, "Failed to create temporary file");
-                        ApiError::InternalServerError
-                    })?;
+                    let tempfile = tempfile().unwrap();
                     let mut tempfile = File::from_std(tempfile);
-                    let mut stream = StreamReader::new(
-                        field.map_err(|err| IoError::new(IoErrorKind::Other, err)),
-                    );
 
-                    if let Err(err) = io::copy(&mut stream, &mut tempfile).await {
-                        error!(error = ?err, "Failed to copy upload into temporary file");
-                        return Err(ApiError::InternalServerError.into());
+                    while let Some(chunk) = field.chunk().await? {
+                        if let Err(err) = tempfile.write_all(&chunk).await {
+                            error!(error = ?err, "Failed to write chunk to tempfile");
+                            return Err(ApiError::InternalServerError.into());
+                        }
                     }
 
-                    if let Err(err) = tempfile.flush().await {
-                        error!(error = ?err, "Failed to flush tempfile");
-                        return Err(ApiError::InternalServerError.into());
-                    }
+                    tempfile.seek(SeekFrom::Start(0)).await.unwrap();
 
                     upload = upload
                         .content_type(content_type)

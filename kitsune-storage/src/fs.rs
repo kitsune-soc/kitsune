@@ -49,6 +49,8 @@ impl StorageBackend for Storage {
         while let Some(chunk) = input_stream.next().await.transpose()? {
             file.write_all(&chunk).await?;
         }
+        file.flush().await?;
+
         Ok(())
     }
 }

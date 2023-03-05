@@ -150,6 +150,10 @@ where
     where
         C: ConnectionTrait,
     {
+        if media_attachment_ids.is_empty() {
+            return Ok(());
+        }
+
         if MediaAttachments::find()
             .filter(media_attachments::Column::Id.is_in(media_attachment_ids.iter().copied()))
             .count(conn)
@@ -180,6 +184,10 @@ where
     where
         C: ConnectionTrait,
     {
+        if mentioned_account_ids.is_empty() {
+            return Ok(());
+        }
+
         PostsMentions::insert_many(mentioned_account_ids.iter().map(|account_id| {
             posts_mentions::Model {
                 account_id: *account_id,
