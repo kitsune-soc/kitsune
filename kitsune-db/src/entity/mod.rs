@@ -12,6 +12,7 @@ pub mod oauth2_applications;
 pub mod oauth2_authorization_codes;
 pub mod oauth2_refresh_tokens;
 pub mod posts;
+pub mod posts_media_attachments;
 pub mod posts_mentions;
 pub mod users;
 pub mod users_roles;

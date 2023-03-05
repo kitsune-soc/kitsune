@@ -186,8 +186,6 @@ where
                     .on_conflict(
                         OnConflict::column(accounts::Column::Url)
                             .update_columns([
-                                accounts::Column::AvatarId,
-                                accounts::Column::HeaderId,
                                 accounts::Column::DisplayName,
                                 accounts::Column::Note,
                                 accounts::Column::Locked,
@@ -207,8 +205,10 @@ where
                                 description: icon.name,
                                 content_type: icon.media_type,
                                 blurhash: icon.blurhash,
-                                url: icon.url,
+                                file_path: None,
+                                remote_url: Some(icon.url),
                                 created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
                             }
                             .into_active_model(),
                         )
@@ -228,8 +228,10 @@ where
                                 description: image.name,
                                 content_type: image.media_type,
                                 blurhash: image.blurhash,
-                                url: image.url,
+                                file_path: None,
+                                remote_url: Some(image.url),
                                 created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
                             }
                             .into_active_model(),
                         )

@@ -8,13 +8,15 @@ use kitsune::{
     http, job,
     resolve::PostResolver,
     service::{
-        account::AccountService, oauth2::Oauth2Service, post::PostService,
-        search::GrpcSearchService, timeline::TimelineService, user::UserService,
+        account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
+        post::PostService, search::GrpcSearchService, timeline::TimelineService, user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
+use kitsune_http_client::Client;
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
+use kitsune_storage::fs::Storage as FsStorage;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -103,6 +105,25 @@ async fn main() {
         .build()
         .unwrap();
 
+    let attachment_service = AttachmentService::builder()
+        .client(
+            Client::builder()
+                .content_length_limit(None)
+                .user_agent(concat!(
+                    env!("CARGO_PKG_NAME"),
+                    "/",
+                    env!("CARGO_PKG_VERSION")
+                ))
+                .unwrap()
+                .build(),
+        )
+        .domain(config.domain.clone())
+        .db_conn(conn.clone())
+        .media_proxy_enabled(config.media_proxy_enabled)
+        .storage_backend(Arc::new(FsStorage::new(config.upload_dir.clone())))
+        .build()
+        .unwrap();
+
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
         .build()
@@ -110,8 +131,8 @@ async fn main() {
 
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
-        .config(config.clone())
         .db_conn(conn.clone())
+        .domain(config.domain.clone())
         .post_resolver(post_resolver)
         .search_service(Arc::new(search_service.clone()))
         .status_event_emitter(status_event_emitter.clone())
@@ -124,7 +145,7 @@ async fn main() {
         .unwrap();
 
     let user_service = UserService::builder()
-        .config(config.clone())
+        .domain(config.domain.clone())
         .db_conn(conn.clone())
         .build()
         .unwrap();
@@ -138,6 +159,7 @@ async fn main() {
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(
+            attachment_service.clone(),
             conn,
             redis_conn,
             status_event_emitter
@@ -151,6 +173,7 @@ async fn main() {
             search: Arc::new(search_service),
             post: post_service,
             timeline: timeline_service,
+            attachment: attachment_service,
             user: user_service,
         },
         webfinger,

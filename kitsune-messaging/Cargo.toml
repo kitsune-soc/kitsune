@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.64"
+async-trait = "0.1.65"
 futures-util = "0.3.26"
 pin-project-lite = "0.2.9"
 redis = { version = "0.22.3", features = [
@@ -14,6 +14,6 @@ redis = { version = "0.22.3", features = [
 ] }
 serde = "1.0.152"
 serde_json = "1.0.93"
-tokio = { version = "1.25.0", features = ["macros", "rt", "sync"] }
+tokio = { version = "1.26.0", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.12", features = ["sync"] }
 tracing = "0.1.37"

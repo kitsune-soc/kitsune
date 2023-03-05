@@ -1,8 +1,9 @@
-use self::sealed::IntoMastodon;
+use self::sealed::{IntoMastodon, MapperState};
 use crate::{
     cache::{Cache, RedisCache},
     error::Result,
     event::{post::EventType, PostEventConsumer},
+    service::attachment::AttachmentService,
 };
 use derive_builder::Builder;
 use futures_util::StreamExt;
@@ -86,6 +87,7 @@ pub struct MastodonMapper {
         setter(name = "cache_invalidator", strip_option)
     )]
     _cache_invalidator: (),
+    attachment_service: AttachmentService,
     db_conn: DatabaseConnection,
     mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
 }
@@ -103,6 +105,7 @@ impl MastodonMapper {
     /// This should never panic.
     #[must_use]
     pub fn with_defaults(
+        attachment_service: AttachmentService,
         db_conn: DatabaseConnection,
         redis_conn: deadpool_redis::Pool,
         event_consumer: PostEventConsumer,
@@ -114,11 +117,22 @@ impl MastodonMapper {
         ));
 
         Self::builder()
+            .attachment_service(attachment_service)
             .cache_invalidator(event_consumer)
             .db_conn(db_conn)
             .mastodon_cache(cache)
             .build()
             .unwrap()
+    }
+
+    /// Return a reference to a mapper state
+    ///
+    /// Passed down to the concrete mapping implementations
+    fn mapper_state(&self) -> MapperState<'_> {
+        MapperState {
+            attachment_service: &self.attachment_service,
+            db_conn: &self.db_conn,
+        }
     }
 
     /// Map some input into a Mastodon API entity
@@ -145,7 +159,7 @@ impl MastodonMapper {
             }
         }
 
-        let entity = input.into_mastodon(&self.db_conn).await?;
+        let entity = input.into_mastodon(self.mapper_state()).await?;
         if let Some(id) = input_id {
             let entity = serde_json::to_value(entity.clone()).unwrap();
             self.mastodon_cache.set(&id, &entity).await?;

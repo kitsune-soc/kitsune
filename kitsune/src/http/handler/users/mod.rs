@@ -5,7 +5,10 @@ use crate::{
         page::{PostComponent, UserPage},
     },
     mapping::IntoObject,
-    service::account::{AccountService, GetPosts},
+    service::{
+        account::{AccountService, GetPosts},
+        attachment::AttachmentService,
+    },
     state::Zustand,
 };
 use axum::{
@@ -15,8 +18,6 @@ use axum::{
     Json, Router,
 };
 use futures_util::{future::OptionFuture, TryStreamExt};
-use kitsune_db::entity::prelude::MediaAttachments;
-use sea_orm::EntityTrait;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -34,6 +35,7 @@ struct PageQuery {
 async fn get_html(
     State(state): State<Zustand>,
     State(account_service): State<AccountService>,
+    State(attachment_service): State<AttachmentService>,
     Path(username): Path<String>,
     Query(query): Query<PageQuery>,
 ) -> Result<UserPage> {
@@ -64,15 +66,10 @@ async fn get_html(
         acct.push_str(&domain);
     }
 
-    let profile_picture_url = OptionFuture::from(
-        account
-            .avatar_id
-            .map(|id| MediaAttachments::find_by_id(id).one(&state.db_conn)),
-    )
-    .await
-    .transpose()?
-    .flatten()
-    .map(|attachment| attachment.url);
+    let profile_picture_url =
+        OptionFuture::from(account.avatar_id.map(|id| attachment_service.get_url(id)))
+            .await
+            .transpose()?;
 
     Ok(UserPage {
         acct,
@@ -87,6 +84,7 @@ async fn get_html(
 async fn get(
     State(state): State<Zustand>,
     State(account_service): State<AccountService>,
+    _: State<AttachmentService>, // Needed to get the same types for the conditional routing
     Path(username): Path<String>,
     _: Query<PageQuery>, // Needed to get the same types for the conditional routing
 ) -> Result<Response> {

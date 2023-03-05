@@ -61,6 +61,15 @@ impl Related<super::favourites::Entity> for Entity {
     }
 }
 
+impl Related<super::media_attachments::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::posts_media_attachments::Relation::MediaAttachments.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::posts_media_attachments::Relation::Posts.def().rev())
+    }
+}
+
 impl Related<super::accounts::Entity> for Entity {
     fn to() -> RelationDef {
         super::posts_mentions::Relation::Accounts.def()

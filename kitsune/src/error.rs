@@ -1,5 +1,8 @@
 use argon2::password_hash;
-use axum::response::{IntoResponse, Response};
+use axum::{
+    extract::multipart::MultipartError,
+    response::{IntoResponse, Response},
+};
 use deadpool_redis::PoolError;
 use http::StatusCode;
 use kitsune_messaging::BoxError;
@@ -16,8 +19,14 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Bad request")]
+    BadRequest,
+
     #[error("Email already taken")]
     EmailTaken,
+
+    #[error("Internal server error")]
+    InternalServerError,
 
     #[error("Not found")]
     NotFound,
@@ -80,6 +89,12 @@ pub enum Error {
     #[error("Malformed ActivityPub object")]
     MalformedApObject,
 
+    #[error(transparent)]
+    Mime(#[from] mime::FromStrError),
+
+    #[error(transparent)]
+    Multipart(#[from] MultipartError),
+
     #[error("OAuth application not found")]
     OAuthApplicationNotFound,
 
@@ -112,6 +127,9 @@ pub enum Error {
 
     #[error(transparent)]
     Spki(#[from] spki::Error),
+
+    #[error(transparent)]
+    Storage(kitsune_storage::BoxError),
 
     #[error(transparent)]
     TonicStatus(#[from] tonic::Status),
@@ -155,6 +173,9 @@ impl IntoResponse for Error {
             }
             err @ (Self::Api(ApiError::Unauthorised) | Self::PasswordMismatch) => {
                 (StatusCode::UNAUTHORIZED, err.to_string()).into_response()
+            }
+            err @ Self::Api(ApiError::UnsupportedMediaType) => {
+                (StatusCode::UNSUPPORTED_MEDIA_TYPE, err.to_string()).into_response()
             }
             err => {
                 error!(error = %err, "Error occurred in handler");

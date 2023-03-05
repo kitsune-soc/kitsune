@@ -20,6 +20,8 @@ pub struct Configuration {
     #[serde(default = "default_frontend_dir")]
     pub frontend_dir: PathBuf,
     pub job_workers: NonZeroUsize,
+    #[serde(default)]
+    pub media_proxy_enabled: bool,
     pub port: u16,
     #[serde(default = "default_prometheus_port")]
     pub prometheus_port: u16,
@@ -37,6 +39,7 @@ impl Default for Configuration {
             domain: String::default(),
             frontend_dir: default_frontend_dir(),
             job_workers: NonZeroUsize::new(1).unwrap(),
+            media_proxy_enabled: bool::default(),
             port: u16::default(),
             prometheus_port: default_prometheus_port(),
             redis_url: String::default(),

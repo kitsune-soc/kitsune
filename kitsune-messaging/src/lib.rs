@@ -1,7 +1,4 @@
-//!
-//! Messaging abstraction for Kitsune
-//!
-
+#![doc = include_str!("../README.md")]
 #![forbid(missing_docs, rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(

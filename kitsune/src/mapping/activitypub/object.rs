@@ -33,7 +33,7 @@ pub trait IntoObject {
 impl IntoObject for media_attachments::Model {
     type Output = MediaAttachment;
 
-    async fn into_object(self, _state: &Zustand) -> Result<Self::Output> {
+    async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let mime =
             Mime::from_str(&self.content_type).map_err(|_| ApiError::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
@@ -42,13 +42,14 @@ impl IntoObject for media_attachments::Model {
             mime::VIDEO => MediaAttachmentType::Video,
             _ => return Err(ApiError::UnsupportedMediaType.into()),
         };
+        let url = state.service.attachment.get_url(self.id).await?;
 
         Ok(MediaAttachment {
             r#type,
             name: self.description,
             media_type: self.content_type,
             blurhash: self.blurhash,
-            url: self.url,
+            url,
         })
     }
 }

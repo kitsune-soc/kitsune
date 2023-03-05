@@ -15,9 +15,12 @@ pub struct Model {
     pub description: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub blurhash: Option<String>,
-    #[sea_orm(column_type = "Text")]
-    pub url: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub file_path: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub remote_url: Option<String>,
     pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -35,6 +38,19 @@ pub enum Relation {
 impl Related<super::accounts::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Accounts.def()
+    }
+}
+
+impl Related<super::posts::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::posts_media_attachments::Relation::Posts.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(
+            super::posts_media_attachments::Relation::MediaAttachments
+                .def()
+                .rev(),
+        )
     }
 }
 

@@ -2,10 +2,12 @@
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]
+#![allow(forbidden_lint_groups)]
 
 use self::util::BoxCloneService;
 use chrono::Utc;
-use http_body::{combinators::BoxBody, Limited};
+use futures_core::Stream;
+use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
@@ -16,8 +18,15 @@ use hyper::{
 };
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
+use pin_project_lite::pin_project;
 use serde::de::DeserializeOwned;
-use std::{error::Error as StdError, fmt, time::Duration};
+use std::{
+    error::Error as StdError,
+    fmt,
+    pin::Pin,
+    task::{self, Poll},
+    time::Duration,
+};
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
     decompression::DecompressionLayer, follow_redirect::FollowRedirectLayer,
@@ -30,6 +39,25 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
+
+pin_project! {
+    struct BodyStream<B> {
+        #[pin]
+        inner: B,
+    }
+}
+
+impl<B> Stream for BodyStream<B>
+where
+    B: HttpBody<Data = Bytes, Error = BoxError>,
+{
+    type Item = Result<Bytes>;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
+        let this = self.project();
+        this.inner.poll_data(cx).map_err(Into::into)
+    }
+}
 
 /// Client error type
 pub struct Error {
@@ -327,6 +355,13 @@ impl Response {
     #[must_use]
     pub fn status(&self) -> StatusCode {
         self.inner.status()
+    }
+
+    /// Stream the body
+    pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
+        BodyStream {
+            inner: self.inner.into_body(),
+        }
     }
 
     /// Get the HTTP version the client used

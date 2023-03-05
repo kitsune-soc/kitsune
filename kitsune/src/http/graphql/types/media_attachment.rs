@@ -15,7 +15,6 @@ pub struct MediaAttachment {
     pub content_type: String,
     pub description: Option<String>,
     pub blurhash: Option<String>,
-    pub url: String,
     pub created_at: DateTime<Utc>,
 }
 
@@ -28,6 +27,15 @@ impl MediaAttachment {
             .map(|account| account.map(Into::into))
             .map_err(Into::into)
     }
+
+    pub async fn url(&self, ctx: &Context<'_>) -> Result<String> {
+        ctx.state()
+            .service
+            .attachment
+            .get_url(self.id)
+            .await
+            .map_err(Into::into)
+    }
 }
 
 impl From<media_attachments::Model> for MediaAttachment {
@@ -38,7 +46,6 @@ impl From<media_attachments::Model> for MediaAttachment {
             content_type: value.content_type,
             description: value.description,
             blurhash: value.blurhash,
-            url: value.url,
             created_at: value.created_at.into(),
         }
     }

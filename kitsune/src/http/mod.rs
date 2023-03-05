@@ -1,4 +1,4 @@
-use self::handler::{nodeinfo, oauth, posts, users, well_known};
+use self::handler::{media, nodeinfo, oauth, posts, users, well_known};
 use crate::state::Zustand;
 use axum::{routing::get_service, Router};
 use axum_prometheus::PrometheusMetricLayer;
@@ -26,16 +26,13 @@ pub async fn run(state: Zustand, port: u16) {
     // This warning will come up if the server is compiled without the Mastodon API compatibility
     #[allow(unused_mut)]
     let mut router = Router::new()
+        .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
         .nest("/oauth", oauth::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest_service("/public", get_service(ServeDir::new("public")))
-        .nest_service(
-            "/media",
-            get_service(ServeDir::new(&state.config.upload_dir)),
-        );
+        .nest_service("/public", get_service(ServeDir::new("public")));
 
     #[cfg(feature = "mastodon-api")]
     {

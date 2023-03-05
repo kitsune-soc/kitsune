@@ -16,6 +16,7 @@ members = [
     "kitsune-messaging",
     "kitsune-search",
     "kitsune-search/proto",
+    "kitsune-storage",
     "kitsune-type",
     "post-process",
 ]

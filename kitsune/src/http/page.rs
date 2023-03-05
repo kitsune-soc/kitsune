@@ -1,13 +1,19 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::state::Zustand;
 use askama::Template;
-use futures_util::future::OptionFuture;
+use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    media_attachments, posts,
+    posts,
     prelude::{Accounts, MediaAttachments},
 };
-use sea_orm::EntityTrait;
+use sea_orm::{EntityTrait, ModelTrait};
 use std::collections::VecDeque;
+
+pub struct MediaAttachment {
+    pub content_type: String,
+    pub description: Option<String>,
+    pub url: String,
+}
 
 #[derive(Template)]
 #[template(path = "components/post.html", escape = "none")] // Make sure everything is escaped either on submission or in the template
@@ -18,7 +24,7 @@ pub struct PostComponent {
     pub profile_picture_url: String,
     pub content: String,
     pub url: String,
-    pub attachments: Vec<media_attachments::Model>,
+    pub attachments: Vec<MediaAttachment>,
 }
 
 impl PostComponent {
@@ -28,15 +34,30 @@ impl PostComponent {
             .await?
             .expect("[Bug] Post without author");
 
+        let attachments = post
+            .find_related(MediaAttachments)
+            .stream(&state.db_conn)
+            .await?
+            .map_err(Error::from)
+            .and_then(|attachment| async move {
+                let url = state.service.attachment.get_url(attachment.id).await?;
+
+                Ok(MediaAttachment {
+                    content_type: attachment.content_type,
+                    description: attachment.description,
+                    url,
+                })
+            })
+            .try_collect()
+            .await?;
+
         let profile_picture_url = OptionFuture::from(
             author
                 .avatar_id
-                .map(|id| MediaAttachments::find_by_id(id).one(&state.db_conn)),
+                .map(|id| state.service.attachment.get_url(id)),
         )
         .await
-        .transpose()?
-        .flatten()
-        .map(|attachment| attachment.url);
+        .transpose()?;
 
         let mut acct = format!("@{}", author.username);
         if let Some(domain) = author.domain {
@@ -45,6 +66,7 @@ impl PostComponent {
         }
 
         Ok(Self {
+            attachments,
             display_name: author
                 .display_name
                 .unwrap_or_else(|| author.username.clone()),
@@ -55,7 +77,6 @@ impl PostComponent {
             }),
             content: post.content,
             url: post.url,
-            attachments: vec![],
         })
     }
 }
