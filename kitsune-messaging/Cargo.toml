@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.64"
+async-trait = "0.1.65"
 futures-util = "0.3.26"
 pin-project-lite = "0.2.9"
 redis = { version = "0.22.3", features = [
