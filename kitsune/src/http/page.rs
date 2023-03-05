@@ -72,9 +72,8 @@ impl PostComponent {
                 .unwrap_or_else(|| author.username.clone()),
             acct,
             profile_url: author.url,
-            profile_picture_url: profile_picture_url.unwrap_or_else(|| {
-                "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
-            }),
+            profile_picture_url: profile_picture_url
+                .unwrap_or_else(|| state.config.default_avatar_url()),
             content: post.content,
             url: post.url,
         })

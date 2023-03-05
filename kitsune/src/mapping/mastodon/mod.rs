@@ -89,6 +89,7 @@ pub struct MastodonMapper {
     _cache_invalidator: (),
     attachment_service: AttachmentService,
     db_conn: DatabaseConnection,
+    default_avatar_url: String,
     mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
 }
 
@@ -107,6 +108,7 @@ impl MastodonMapper {
     pub fn with_defaults(
         attachment_service: AttachmentService,
         db_conn: DatabaseConnection,
+        default_avatar_url: String,
         redis_conn: deadpool_redis::Pool,
         event_consumer: PostEventConsumer,
     ) -> Self {
@@ -119,6 +121,7 @@ impl MastodonMapper {
         Self::builder()
             .attachment_service(attachment_service)
             .cache_invalidator(event_consumer)
+            .default_avatar_url(default_avatar_url)
             .db_conn(db_conn)
             .mastodon_cache(cache)
             .build()
@@ -132,6 +135,7 @@ impl MastodonMapper {
         MapperState {
             attachment_service: &self.attachment_service,
             db_conn: &self.db_conn,
+            default_avatar_url: &self.default_avatar_url,
         }
     }
 
