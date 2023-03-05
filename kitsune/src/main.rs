@@ -14,6 +14,7 @@ use kitsune::{
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
+use kitsune_http_client::Client;
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
 use kitsune_storage::fs::Storage as FsStorage;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
@@ -105,6 +106,17 @@ async fn main() {
         .unwrap();
 
     let attachment_service = AttachmentService::builder()
+        .client(
+            Client::builder()
+                .content_length_limit(None)
+                .user_agent(concat!(
+                    env!("CARGO_PKG_NAME"),
+                    "/",
+                    env!("CARGO_PKG_VERSION")
+                ))
+                .unwrap()
+                .build(),
+        )
         .domain(config.domain.clone())
         .db_conn(conn.clone())
         .media_proxy_enabled(config.media_proxy_enabled)
