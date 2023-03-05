@@ -28,11 +28,11 @@ impl_from_ref! {
     Zustand;
     [
         AccountService => |input: &Zustand| input.service.account.clone(),
+        AttachmentService => |input: &Zustand| input.service.attachment.clone(),
         Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         ArcSearchService => |input: &Zustand| input.service.search.clone(),
         TimelineService => |input: &Zustand| input.service.timeline.clone(),
-        AttachmentService => |input: &Zustand| input.service.attachment.clone(),
         UserService => |input: &Zustand| input.service.user.clone()
     ]
 }
