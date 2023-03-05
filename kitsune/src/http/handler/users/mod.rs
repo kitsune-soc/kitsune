@@ -75,7 +75,7 @@ async fn get_html(
         acct,
         display_name: account.display_name.unwrap_or(account.username),
         profile_picture_url: profile_picture_url
-            .unwrap_or_else(|| "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()),
+            .unwrap_or_else(|| state.config.default_avatar_url()),
         bio: account.note.unwrap_or_default(),
         posts,
     })

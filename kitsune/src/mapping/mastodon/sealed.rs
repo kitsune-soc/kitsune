@@ -22,6 +22,7 @@ use uuid::Uuid;
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {
     pub attachment_service: &'a AttachmentService,
+    pub default_avatar_url: &'a str,
     pub db_conn: &'a DatabaseConnection,
 }
 
@@ -61,14 +62,15 @@ impl IntoMastodon for accounts::Model {
         let avatar = if let Some(avatar_id) = self.avatar_id {
             state.attachment_service.get_url(avatar_id).await?
         } else {
-            "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
+            state.default_avatar_url.into()
         };
 
-        let header = if let Some(header_id) = self.header_id {
-            state.attachment_service.get_url(header_id).await?
-        } else {
-            "https://avatarfiles.alphacoders.com/267/thumb-267407.png".into()
-        };
+        let header = OptionFuture::from(
+            self.header_id
+                .map(|header_id| state.attachment_service.get_url(header_id)),
+        )
+        .await
+        .transpose()?;
 
         Ok(Account {
             id: self.id,

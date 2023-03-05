@@ -20,6 +20,7 @@ use kitsune_storage::fs::Storage as FsStorage;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
+use sea_orm::DatabaseConnection;
 use std::{env, future, sync::Arc};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
@@ -68,24 +69,11 @@ fn initialise_logging(config: &Configuration) {
     metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
 }
 
-#[tokio::main]
-async fn main() {
-    println!("{STARTUP_FIGLET}");
-
-    dotenvy::dotenv().ok();
-    let config: Configuration = envy::from_env().expect("Failed to parse configuration");
-    initialise_logging(&config);
-
-    let conn = kitsune_db::connect(&config.database_url)
-        .await
-        .expect("Failed to connect to database");
-
-    let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
-        .expect("Failed to build Redis pool manager");
-    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
-        .build()
-        .expect("Failed to build Redis pool");
-
+async fn initialise_state(
+    config: &Configuration,
+    conn: DatabaseConnection,
+    redis_conn: deadpool_redis::Pool,
+) -> Zustand {
     let redis_messaging_backend = RedisMessagingBackend::new(&config.redis_url)
         .await
         .expect("Failed to construct messaging backend");
@@ -150,23 +138,27 @@ async fn main() {
         .build()
         .unwrap();
 
-    let state = Zustand {
+    #[cfg(feature = "mastodon-api")]
+    let mastodon_mapper = kitsune::mapping::MastodonMapper::with_defaults(
+        attachment_service.clone(),
+        conn.clone(),
+        config.default_avatar_url(),
+        redis_conn,
+        status_event_emitter
+            .consumer()
+            .await
+            .expect("Failed to register status event consumer"),
+    );
+
+    Zustand {
         config: config.clone(),
-        db_conn: conn.clone(),
+        db_conn: conn,
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
         },
         fetcher,
         #[cfg(feature = "mastodon-api")]
-        mastodon_mapper: kitsune::mapping::MastodonMapper::with_defaults(
-            attachment_service.clone(),
-            conn,
-            redis_conn,
-            status_event_emitter
-                .consumer()
-                .await
-                .expect("Failed to register status event consumer"),
-        ),
+        mastodon_mapper,
         service: Service {
             account: account_service,
             oauth2: oauth2_service,
@@ -177,7 +169,28 @@ async fn main() {
             user: user_service,
         },
         webfinger,
-    };
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    println!("{STARTUP_FIGLET}");
+
+    dotenvy::dotenv().ok();
+    let config: Configuration = envy::from_env().expect("Failed to parse configuration");
+    initialise_logging(&config);
+
+    let conn = kitsune_db::connect(&config.database_url)
+        .await
+        .expect("Failed to connect to database");
+
+    let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
+        .expect("Failed to build Redis pool manager");
+    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
+        .build()
+        .expect("Failed to build Redis pool");
+
+    let state = initialise_state(&config, conn, redis_conn).await;
 
     tokio::spawn(self::http::run(state.clone(), config.port));
 
