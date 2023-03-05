@@ -13,7 +13,10 @@ use futures_util::TryStreamExt;
 use kitsune_type::mastodon::MediaAttachment;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 use tempfile::tempfile;
-use tokio::{fs::File, io};
+use tokio::{
+    fs::File,
+    io::{self, AsyncWriteExt},
+};
 use tokio_util::io::{ReaderStream, StreamReader};
 use uuid::Uuid;
 
@@ -27,7 +30,7 @@ async fn get(
     ))
 }
 
-async fn post(
+pub async fn post(
     State(attachment_service): State<AttachmentService>,
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -54,8 +57,13 @@ async fn post(
                         field.map_err(|err| IoError::new(IoErrorKind::Other, err)),
                     );
 
-                    if let Err(err) = io::copy_buf(&mut stream, &mut tempfile).await {
-                        error!(error = %err, "Failed to copy upload into temporary file");
+                    if let Err(err) = io::copy(&mut stream, &mut tempfile).await {
+                        error!(error = ?err, "Failed to copy upload into temporary file");
+                        return Err(ApiError::InternalServerError.into());
+                    }
+
+                    if let Err(err) = tempfile.flush().await {
+                        error!(error = ?err, "Failed to flush tempfile");
                         return Err(ApiError::InternalServerError.into());
                     }
 
@@ -74,5 +82,7 @@ async fn post(
 }
 
 pub fn routes() -> Router<Zustand> {
-    Router::new().route("/:id", routing::get(get).post(post))
+    Router::new()
+        .route("/", routing::post(post))
+        .route("/:id", routing::get(get))
 }

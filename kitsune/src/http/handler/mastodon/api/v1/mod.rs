@@ -4,9 +4,10 @@ use axum::Router;
 mod accounts;
 mod apps;
 mod instance;
-mod media;
 mod statuses;
 mod timelines;
+
+pub mod media;
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
