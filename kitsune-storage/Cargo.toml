@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.65"
+async-trait = "0.1.66"
 aws-sdk-s3 = "0.24.0"
 aws-smithy-http = "0.54.4"
 bytes = "1.4.0"

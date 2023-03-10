@@ -8,8 +8,8 @@ homepage = "https://kitsune-soc.github.io"
 [dependencies]
 ammonia = "3.3.0"
 argon2 = { version = "0.5.0", features = ["std"] }
-askama = { version = "0.11.1", features = ["with-axum"] }
-askama_axum = "0.2.1"
+askama = { version = "0.12.0", features = ["with-axum"] }
+askama_axum = "0.3.0"
 async-graphql = { version = "5.0.6", features = [
     "chrono",
     "email-validator",
@@ -20,7 +20,7 @@ async-graphql = { version = "5.0.6", features = [
 async-graphql-axum = "5.0.6"
 async-recursion = "1.0.2"
 async-stream = "0.3.4"
-async-trait = "0.1.65"
+async-trait = "0.1.66"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
@@ -67,11 +67,11 @@ sea-orm = { version = "0.11.0", features = [
     "runtime-tokio-rustls",
     "sqlx-postgres",
 ] }
-serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.93"
+serde = { version = "1.0.154", features = ["derive"] }
+serde_json = "1.0.94"
 sha2 = "0.10.6"
 tempfile = "3.4.0"
-thiserror = "1.0.38"
+thiserror = "1.0.39"
 tokio = { version = "1.26.0", features = ["full"] }
 tokio-util = { version = "0.7.7", features = ["compat", "io"] }
 tonic = "0.8.3"
