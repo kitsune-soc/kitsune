@@ -11,9 +11,12 @@ use mime::Mime;
 use serde::de::DeserializeOwned;
 
 pub use self::{
-    auth::{AuthExtractor, MastodonAuthExtractor, UserData},
+    auth::{AuthExtractor, UserData},
     signed_activity::SignedActivity,
 };
+
+#[cfg(feature = "mastodon-api")]
+pub use self::auth::MastodonAuthExtractor;
 
 mod auth;
 mod signed_activity;
