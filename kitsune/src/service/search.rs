@@ -14,7 +14,7 @@ use std::{future, ops::Deref, sync::Arc};
 use tonic::transport::{Channel, Endpoint};
 use uuid::Uuid;
 
-pub type ArcSearchService = Arc<dyn SearchService + Send + Sync>;
+pub type ArcSearchService = Arc<dyn SearchService>;
 
 pub enum SearchItem {
     Account(accounts::Model),

@@ -7,6 +7,8 @@ use std::{fmt::Display, marker::PhantomData, ops::Deref, sync::Arc, time::Durati
 
 type CacheResult<T, E = CacheError> = Result<T, E>;
 
+pub type ArcCache<K, V> = Arc<dyn Cache<K, V>>;
+
 #[async_trait]
 pub trait Cache<K, V>: Send + Sync
 where

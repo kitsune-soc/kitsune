@@ -1,5 +1,5 @@
 use crate::{
-    cache::{Cache, RedisCache},
+    cache::{ArcCache, RedisCache},
     consts::USER_AGENT,
     error::Result,
 };
@@ -12,8 +12,8 @@ use std::{sync::Arc, time::Duration};
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
 
 #[derive(Clone)]
-pub struct Webfinger<C = Arc<dyn Cache<str, String> + Send + Sync>> {
-    cache: C,
+pub struct Webfinger {
+    cache: ArcCache<str, String>,
     client: Client,
 }
 
@@ -28,13 +28,10 @@ impl Webfinger {
     }
 }
 
-impl<C> Webfinger<C>
-where
-    C: Cache<str, String>,
-{
+impl Webfinger {
     #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
     #[must_use]
-    pub fn new(cache: C) -> Self {
+    pub fn new(cache: ArcCache<str, String>) -> Self {
         Self {
             cache,
             client: Client::builder()
@@ -74,10 +71,11 @@ mod test {
     use super::Webfinger;
     use crate::cache::NoopCache;
     use pretty_assertions::assert_eq;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn fetch_qarnax_ap_id() {
-        let webfinger = Webfinger::new(NoopCache);
+        let webfinger = Webfinger::new(Arc::new(NoopCache));
         let ap_id = webfinger
             .fetch_actor_url("qarnax", "corteximplant.com")
             .await

@@ -1,6 +1,5 @@
-use super::search::SearchService;
+use super::search::ArcSearchService;
 use crate::{
-    cache::Cache,
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
     job::{
@@ -20,8 +19,7 @@ use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{JobState, Role, Visibility},
     entity::{
-        accounts, favourites, jobs, media_attachments, posts, posts_media_attachments,
-        posts_mentions,
+        favourites, jobs, media_attachments, posts, posts_media_attachments, posts_mentions,
         prelude::{
             Favourites, Jobs, MediaAttachments, Posts, PostsMediaAttachments, PostsMentions,
             UsersRoles,
@@ -36,7 +34,6 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
     IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
 };
-use std::sync::Arc;
 use uuid::Uuid;
 
 #[derive(Clone, Builder)]
@@ -117,28 +114,17 @@ impl DeletePost {
 
 #[derive(Builder, Clone)]
 #[builder(pattern = "owned")]
-pub struct PostService<
-    S = Arc<dyn SearchService + Send + Sync>,
-    FPC = Arc<dyn Cache<str, posts::Model> + Send + Sync>,
-    FUC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
-    WC = Arc<dyn Cache<str, String> + Send + Sync>,
-> {
+pub struct PostService {
     db_conn: DatabaseConnection,
     domain: String,
-    post_resolver: PostResolver<S, FPC, FUC, WC>,
-    search_service: S,
+    post_resolver: PostResolver,
+    search_service: ArcSearchService,
     status_event_emitter: PostEventEmitter,
 }
 
-impl<S, FPC, FUC, WC> PostService<S, FPC, FUC, WC>
-where
-    S: SearchService,
-    FPC: Cache<str, posts::Model>,
-    FUC: Cache<str, accounts::Model>,
-    WC: Cache<str, String>,
-{
+impl PostService {
     #[must_use]
-    pub fn builder() -> PostServiceBuilder<S, FPC, FUC, WC> {
+    pub fn builder() -> PostServiceBuilder {
         PostServiceBuilder::default()
     }
 
@@ -521,6 +507,7 @@ where
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
+    #[must_use]
     pub fn get_descendants(
         &self,
         id: Uuid,

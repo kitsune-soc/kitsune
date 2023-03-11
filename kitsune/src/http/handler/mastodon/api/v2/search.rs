@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::MastodonAuthExtractor,
-    service::search::{ArcSearchService, SearchIndex, SearchService},
+    service::search::{ArcSearchService, SearchIndex},
     state::Zustand,
 };
 use axum::{
