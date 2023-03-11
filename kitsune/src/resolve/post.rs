@@ -1,11 +1,9 @@
 use crate::{
     activitypub::Fetcher,
-    cache::Cache,
     error::{Error, Result},
-    service::search::SearchService,
     webfinger::Webfinger,
 };
-use kitsune_db::entity::{accounts, posts, prelude::Accounts};
+use kitsune_db::entity::{accounts, prelude::Accounts};
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
@@ -13,24 +11,15 @@ use std::{borrow::Cow, collections::HashSet, mem};
 use uuid::Uuid;
 
 #[derive(Clone)]
-pub struct PostResolver<FS, FPC, FUC, WC> {
+pub struct PostResolver {
     db_conn: DatabaseConnection,
-    fetcher: Fetcher<FS, FPC, FUC>,
-    webfinger: Webfinger<WC>,
+    fetcher: Fetcher,
+    webfinger: Webfinger,
 }
 
-impl<FS, FPC, FUC, WC> PostResolver<FS, FPC, FUC, WC>
-where
-    FS: SearchService,
-    FPC: Cache<str, posts::Model>,
-    FUC: Cache<str, accounts::Model>,
-    WC: Cache<str, String>,
-{
-    pub fn new(
-        db_conn: DatabaseConnection,
-        fetcher: Fetcher<FS, FPC, FUC>,
-        webfinger: Webfinger<WC>,
-    ) -> Self {
+impl PostResolver {
+    #[must_use]
+    pub fn new(db_conn: DatabaseConnection, fetcher: Fetcher, webfinger: Webfinger) -> Self {
         Self {
             db_conn,
             fetcher,
@@ -134,17 +123,26 @@ mod test {
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn parse_mentions() {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn.clone())
+            .search_service(Arc::new(NoopSearchService))
+            .post_cache(Arc::new(NoopCache))
+            .user_cache(Arc::new(NoopCache))
+            .build()
+            .unwrap();
         let mention_resolver = PostResolver::new(
             db_conn.clone(),
-            Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache),
-            Webfinger::new(NoopCache),
+            fetcher,
+            Webfinger::new(Arc::new(NoopCache)),
         );
+
         let (mentioned_account_ids, content) = mention_resolver
             .resolve(post)
             .await

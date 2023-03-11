@@ -1,9 +1,9 @@
 use crate::{
-    cache::{Cache, RedisCache},
+    cache::{ArcCache, RedisCache},
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    service::search::{GrpcSearchService, SearchService},
+    service::search::{ArcSearchService, GrpcSearchService},
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -59,70 +59,56 @@ impl<'a> From<&'a str> for FetchOptions<'a> {
     }
 }
 
-#[derive(Clone)]
-pub struct Fetcher<
-    S = Arc<dyn SearchService + Send + Sync>,
-    PC = Arc<dyn Cache<str, posts::Model> + Send + Sync>,
-    UC = Arc<dyn Cache<str, accounts::Model> + Send + Sync>,
-> {
+#[derive(Builder, Clone)]
+pub struct Fetcher {
+    #[builder(default = "
+        Client::builder()
+            .default_header(
+                \"Accept\",
+                HeaderValue::from_static(\"application/activity+json\"),
+            )
+            .unwrap()
+            .user_agent(USER_AGENT)
+            .unwrap()
+            .build()
+    ")]
     client: Client,
     db_conn: DatabaseConnection,
-    search_service: S,
+    search_service: ArcSearchService,
 
     // Caches
-    post_cache: PC,
-    user_cache: UC,
+    post_cache: ArcCache<str, posts::Model>,
+    user_cache: ArcCache<str, accounts::Model>,
 }
 
 impl Fetcher {
     #[must_use]
+    pub fn builder() -> FetcherBuilder {
+        FetcherBuilder::default()
+    }
+
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn with_defaults(
         db_conn: DatabaseConnection,
         search_service: GrpcSearchService,
         redis_conn: deadpool_redis::Pool,
     ) -> Self {
-        Self::new(
-            db_conn,
-            Arc::new(search_service),
-            Arc::new(RedisCache::new(
+        Self::builder()
+            .db_conn(db_conn)
+            .search_service(Arc::new(search_service))
+            .post_cache(Arc::new(RedisCache::new(
                 redis_conn.clone(),
                 "fetcher-post",
                 CACHE_DURATION,
-            )),
-            Arc::new(RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION)),
-        )
-    }
-}
-
-impl<S, PC, UC> Fetcher<S, PC, UC>
-where
-    S: SearchService,
-    PC: Cache<str, posts::Model>,
-    UC: Cache<str, accounts::Model>,
-{
-    #[allow(clippy::missing_panics_doc)] // Invariants are covered. Won't panic.
-    #[must_use]
-    pub fn new(
-        db_conn: DatabaseConnection,
-        search_service: S,
-        post_cache: PC,
-        user_cache: UC,
-    ) -> Self {
-        Self {
-            client: Client::builder()
-                .default_header(
-                    "Accept",
-                    HeaderValue::from_static("application/activity+json"),
-                )
-                .unwrap()
-                .user_agent(USER_AGENT)
-                .unwrap()
-                .build(),
-            db_conn,
-            search_service,
-            post_cache,
-            user_cache,
-        }
+            )))
+            .user_cache(Arc::new(RedisCache::new(
+                redis_conn,
+                "fetcher-user",
+                CACHE_DURATION,
+            )))
+            .build()
+            .unwrap()
     }
 
     /// Fetch an ActivityPub actor
@@ -364,11 +350,18 @@ mod test {
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn fetch_actor() {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
-        let fetcher = Fetcher::new(db_conn, NoopSearchService, NoopCache, NoopCache);
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .search_service(Arc::new(NoopSearchService))
+            .post_cache(Arc::new(NoopCache))
+            .user_cache(Arc::new(NoopCache))
+            .build()
+            .unwrap();
 
         let user = fetcher
             .fetch_actor("https://corteximplant.com/users/0x0".into())
@@ -384,7 +377,13 @@ mod test {
     #[tokio::test]
     async fn fetch_note() {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
-        let fetcher = Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache);
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn.clone())
+            .search_service(Arc::new(NoopSearchService))
+            .post_cache(Arc::new(NoopCache))
+            .user_cache(Arc::new(NoopCache))
+            .build()
+            .unwrap();
 
         let note = fetcher
             .fetch_note("https://corteximplant.com/@0x0/109501674056556919")
