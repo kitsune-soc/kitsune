@@ -1,6 +1,6 @@
 use self::sealed::{IntoMastodon, MapperState};
 use crate::{
-    cache::{Cache, RedisCache},
+    cache::{ArcCache, RedisCache},
     error::Result,
     event::{post::EventType, PostEventConsumer},
     service::attachment::AttachmentService,
@@ -24,7 +24,7 @@ impl<T> MapperMarker for T where T: IntoMastodon {}
 #[derive(Builder)]
 #[builder(pattern = "owned")]
 struct CacheInvalidationActor {
-    cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
+    cache: ArcCache<Uuid, Value>,
     event_consumer: PostEventConsumer,
 }
 
@@ -90,7 +90,7 @@ pub struct MastodonMapper {
     attachment_service: AttachmentService,
     db_conn: DatabaseConnection,
     default_avatar_url: String,
-    mastodon_cache: Arc<dyn Cache<Uuid, Value> + Send + Sync>,
+    mastodon_cache: ArcCache<Uuid, Value>,
 }
 
 impl MastodonMapper {
