@@ -1,5 +1,6 @@
 use crate::{
     error::{ApiError, Result},
+    service::url::UrlService,
     state::Zustand,
 };
 use axum::{
@@ -21,6 +22,7 @@ use sea_orm::{ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, Related};
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
 ) -> Result<Json<Collection>> {
@@ -34,7 +36,7 @@ pub async fn get(
 
     let following_count = account.find_linked(Following).count(&state.db_conn).await?;
 
-    let id = format!("https://{}{}", state.config.domain, original_uri.path());
+    let id = format!("{}{}", url_service.base_url(), original_uri.path());
     Ok(Json(Collection {
         context: ap_context(),
         id,

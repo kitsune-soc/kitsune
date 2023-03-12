@@ -9,7 +9,8 @@ use kitsune::{
     resolve::PostResolver,
     service::{
         account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
-        post::PostService, search::GrpcSearchService, timeline::TimelineService, user::UserService,
+        post::PostService, search::GrpcSearchService, timeline::TimelineService, url::UrlService,
+        user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
@@ -88,6 +89,12 @@ async fn initialise_state(
     let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
     let webfinger = Webfinger::with_defaults(redis_conn.clone());
 
+    let url_service = UrlService::builder()
+        .schema("https")
+        .domain(config.domain.as_str())
+        .build()
+        .unwrap();
+
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
         .build()
@@ -105,10 +112,10 @@ async fn initialise_state(
                 .unwrap()
                 .build(),
         )
-        .domain(config.domain.clone())
         .db_conn(conn.clone())
         .media_proxy_enabled(config.media_proxy_enabled)
         .storage_backend(Arc::new(FsStorage::new(config.upload_dir.clone())))
+        .url_service(url_service.clone())
         .build()
         .unwrap();
 
@@ -120,10 +127,10 @@ async fn initialise_state(
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .db_conn(conn.clone())
-        .domain(config.domain.clone())
         .post_resolver(post_resolver)
         .search_service(Arc::new(search_service.clone()))
         .status_event_emitter(status_event_emitter.clone())
+        .url_service(url_service.clone())
         .build()
         .unwrap();
 
@@ -133,8 +140,8 @@ async fn initialise_state(
         .unwrap();
 
     let user_service = UserService::builder()
-        .domain(config.domain.clone())
         .db_conn(conn.clone())
+        .url_service(url_service.clone())
         .build()
         .unwrap();
 
@@ -142,12 +149,12 @@ async fn initialise_state(
     let mastodon_mapper = kitsune::mapping::MastodonMapper::with_defaults(
         attachment_service.clone(),
         conn.clone(),
-        config.default_avatar_url(),
-        redis_conn,
         status_event_emitter
             .consumer()
             .await
             .expect("Failed to register status event consumer"),
+        redis_conn,
+        url_service.clone(),
     );
 
     Zustand {
@@ -166,6 +173,7 @@ async fn initialise_state(
             post: post_service,
             timeline: timeline_service,
             attachment: attachment_service,
+            url: url_service,
             user: user_service,
         },
         webfinger,

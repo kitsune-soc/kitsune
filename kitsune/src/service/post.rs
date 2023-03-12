@@ -1,4 +1,4 @@
-use super::search::ArcSearchService;
+use super::{search::ArcSearchService, url::UrlService};
 use crate::{
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
@@ -116,10 +116,10 @@ impl DeletePost {
 #[builder(pattern = "owned")]
 pub struct PostService {
     db_conn: DatabaseConnection,
-    domain: String,
     post_resolver: PostResolver,
     search_service: ArcSearchService,
     status_event_emitter: PostEventEmitter,
+    url_service: UrlService,
 }
 
 impl PostService {
@@ -206,7 +206,7 @@ impl PostService {
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
 
         let id = Uuid::now_v7();
-        let url = format!("https://{}/posts/{id}", self.domain);
+        let url = self.url_service.post_url(id);
 
         let post = self
             .db_conn
@@ -365,7 +365,7 @@ impl PostService {
         };
 
         let id = Uuid::now_v7();
-        let url = format!("https://{}/favourites/{id}", self.domain);
+        let url = self.url_service.favourite_url(id);
         let favourite = favourites::Model {
             id,
             account_id: favouriting_account_id,

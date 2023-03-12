@@ -8,6 +8,7 @@ use crate::{
     service::{
         account::{AccountService, GetPosts},
         attachment::AttachmentService,
+        url::UrlService,
     },
     state::Zustand,
 };
@@ -36,6 +37,7 @@ async fn get_html(
     State(state): State<Zustand>,
     State(account_service): State<AccountService>,
     State(attachment_service): State<AttachmentService>,
+    State(url_service): State<UrlService>,
     Path(username): Path<String>,
     Query(query): Query<PageQuery>,
 ) -> Result<UserPage> {
@@ -75,7 +77,7 @@ async fn get_html(
         acct,
         display_name: account.display_name.unwrap_or(account.username),
         profile_picture_url: profile_picture_url
-            .unwrap_or_else(|| state.config.default_avatar_url()),
+            .unwrap_or_else(|| url_service.default_avatar_url()),
         bio: account.note.unwrap_or_default(),
         posts,
     })
@@ -85,6 +87,7 @@ async fn get(
     State(state): State<Zustand>,
     State(account_service): State<AccountService>,
     _: State<AttachmentService>, // Needed to get the same types for the conditional routing
+    _: State<UrlService>,        // Needed to get the same types for the conditional routing
     Path(username): Path<String>,
     _: Query<PageQuery>, // Needed to get the same types for the conditional routing
 ) -> Result<Response> {
