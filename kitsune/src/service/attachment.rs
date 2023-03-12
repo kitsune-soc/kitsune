@@ -1,3 +1,4 @@
+use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
 use chrono::Utc;
@@ -9,8 +10,6 @@ use kitsune_storage::{BoxError, StorageBackend};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel};
 use std::sync::Arc;
 use uuid::Uuid;
-
-use super::url::UrlService;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 

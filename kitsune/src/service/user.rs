@@ -1,3 +1,4 @@
+use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
@@ -17,8 +18,6 @@ use sea_orm::{
     TransactionTrait,
 };
 use uuid::Uuid;
-
-use super::url::UrlService;
 
 #[derive(Builder, Clone)]
 pub struct Register {
