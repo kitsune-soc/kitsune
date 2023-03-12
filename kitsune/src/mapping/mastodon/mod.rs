@@ -3,7 +3,7 @@ use crate::{
     cache::{ArcCache, RedisCache},
     error::Result,
     event::{post::EventType, PostEventConsumer},
-    service::attachment::AttachmentService,
+    service::{attachment::AttachmentService, url::UrlService},
 };
 use derive_builder::Builder;
 use futures_util::StreamExt;
@@ -89,8 +89,8 @@ pub struct MastodonMapper {
     _cache_invalidator: (),
     attachment_service: AttachmentService,
     db_conn: DatabaseConnection,
-    default_avatar_url: String,
     mastodon_cache: ArcCache<Uuid, Value>,
+    url_service: UrlService,
 }
 
 impl MastodonMapper {
@@ -108,9 +108,9 @@ impl MastodonMapper {
     pub fn with_defaults(
         attachment_service: AttachmentService,
         db_conn: DatabaseConnection,
-        default_avatar_url: String,
-        redis_conn: deadpool_redis::Pool,
         event_consumer: PostEventConsumer,
+        redis_conn: deadpool_redis::Pool,
+        url_service: UrlService,
     ) -> Self {
         let cache = Arc::new(RedisCache::new(
             redis_conn,
@@ -121,9 +121,9 @@ impl MastodonMapper {
         Self::builder()
             .attachment_service(attachment_service)
             .cache_invalidator(event_consumer)
-            .default_avatar_url(default_avatar_url)
             .db_conn(db_conn)
             .mastodon_cache(cache)
+            .url_service(url_service)
             .build()
             .unwrap()
     }
@@ -135,7 +135,7 @@ impl MastodonMapper {
         MapperState {
             attachment_service: &self.attachment_service,
             db_conn: &self.db_conn,
-            default_avatar_url: &self.default_avatar_url,
+            url_service: &self.url_service,
         }
     }
 

@@ -1,3 +1,4 @@
+use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
 use chrono::Utc;
@@ -35,9 +36,9 @@ impl<S> Upload<S> {
 pub struct AttachmentService {
     client: Client,
     db_conn: DatabaseConnection,
-    domain: String,
     media_proxy_enabled: bool,
     storage_backend: Arc<dyn StorageBackend>,
+    url_service: UrlService,
 }
 
 impl AttachmentService {
@@ -63,7 +64,7 @@ impl AttachmentService {
     pub async fn get_url(&self, id: Uuid) -> Result<String> {
         let media_attachment = self.get_by_id(id).await?;
         if self.media_proxy_enabled || media_attachment.file_path.is_some() {
-            return Ok(format!("https://{}/media/{id}", self.domain));
+            return Ok(self.url_service.media_url(id));
         }
 
         Ok(media_attachment.remote_url.unwrap())

@@ -1,3 +1,4 @@
+use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
@@ -40,7 +41,7 @@ impl Register {
 #[derive(Builder, Clone)]
 pub struct UserService {
     db_conn: DatabaseConnection,
-    domain: String,
+    url_service: UrlService,
 }
 
 impl UserService {
@@ -87,7 +88,7 @@ impl UserService {
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-        let url = format!("https://{}/users/{}", self.domain, register.username);
+        let url = self.url_service.user_url(&register.username);
         let followers_url = format!("{url}/followers");
         let inbox_url = format!("{url}/inbox");
 

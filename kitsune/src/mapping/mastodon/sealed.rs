@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    service::attachment::AttachmentService,
+    service::{attachment::AttachmentService, url::UrlService},
 };
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
@@ -22,8 +22,8 @@ use uuid::Uuid;
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {
     pub attachment_service: &'a AttachmentService,
-    pub default_avatar_url: &'a str,
     pub db_conn: &'a DatabaseConnection,
+    pub url_service: &'a UrlService,
 }
 
 #[async_trait]
@@ -62,7 +62,7 @@ impl IntoMastodon for accounts::Model {
         let avatar = if let Some(avatar_id) = self.avatar_id {
             state.attachment_service.get_url(avatar_id).await?
         } else {
-            state.default_avatar_url.into()
+            state.url_service.default_avatar_url()
         };
 
         let header = OptionFuture::from(

@@ -32,13 +32,6 @@ pub struct Configuration {
     pub upload_dir: PathBuf,
 }
 
-impl Configuration {
-    #[must_use]
-    pub fn default_avatar_url(&self) -> String {
-        format!("https://{}/public/assets/default-avatar.png", self.domain)
-    }
-}
-
 impl Default for Configuration {
     fn default() -> Self {
         Self {

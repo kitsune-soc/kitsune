@@ -4,7 +4,8 @@ use crate::{
     event::PostEventEmitter,
     service::{
         account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
-        post::PostService, search::ArcSearchService, timeline::TimelineService, user::UserService,
+        post::PostService, search::ArcSearchService, timeline::TimelineService, url::UrlService,
+        user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -33,6 +34,7 @@ impl_from_ref! {
         PostService => |input: &Zustand| input.service.post.clone(),
         ArcSearchService => |input: &Zustand| input.service.search.clone(),
         TimelineService => |input: &Zustand| input.service.timeline.clone(),
+        UrlService => |input: &Zustand| input.service.url.clone(),
         UserService => |input: &Zustand| input.service.user.clone()
     ]
 }
@@ -65,6 +67,7 @@ pub struct Service {
     pub post: PostService,
     pub search: ArcSearchService,
     pub timeline: TimelineService,
+    pub url: UrlService,
     pub user: UserService,
 }
 

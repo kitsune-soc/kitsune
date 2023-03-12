@@ -1,7 +1,7 @@
 use crate::{
     error::{ApiError, Error, Result},
     mapping::IntoActivity,
-    service::account::GetPosts,
+    service::{account::GetPosts, url::UrlService},
     state::Zustand,
 };
 use axum::{
@@ -38,6 +38,7 @@ pub struct OutboxQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
     Query(query): Query<OutboxQuery>,
@@ -50,7 +51,7 @@ pub async fn get(
         return Err(ApiError::NotFound.into());
     };
 
-    let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
+    let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
     if query.page {
         let mut get_posts = GetPosts::builder().account_id(account.id).clone();
