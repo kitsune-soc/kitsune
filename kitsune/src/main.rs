@@ -6,7 +6,7 @@ use aws_sdk_s3::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
     activitypub::Fetcher,
-    cache::{ArcCache, NoopCache},
+    cache::{ArcCache, NoopCache, RedisCache},
     config::{CacheConfiguration, Configuration, MessagingConfiguration, StorageConfiguration},
     http, job,
     resolve::PostResolver,
@@ -25,8 +25,10 @@ use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storag
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
+use once_cell::sync::OnceCell;
 use sea_orm::DatabaseConnection;
-use std::{env, future, sync::Arc};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{env, fmt::Display, future, sync::Arc};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
@@ -74,10 +76,10 @@ fn initialise_logging(config: &Configuration) {
     metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
 }
 
-async fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
+fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
 where
-    K: Send + Sync + ?Sized,
-    V: Send + Sync,
+    K: Display + Send + Sync + ?Sized + 'static,
+    V: DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     match config.cache {
         CacheConfiguration::InMemory => {
@@ -86,8 +88,22 @@ where
         }
         CacheConfiguration::None => Arc::new(NoopCache),
         CacheConfiguration::Redis(ref redis_config) => {
-            // TODO: Create new cache with redis connection pool reuse
-            todo!();
+            static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
+
+            let pool = REDIS_POOL.get_or_init(|| {
+                let config = deadpool_redis::Config::from_url(&redis_config.redis_url);
+                config
+                    .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+                    .unwrap()
+            });
+
+            Arc::new(
+                RedisCache::builder()
+                    .prefix(cache_name)
+                    .redis_conn(pool.clone())
+                    .build()
+                    .unwrap(),
+            )
         }
     }
 }
@@ -136,13 +152,21 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let messaging_hub = prepare_messaging(config).await;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
-    let search_service =
+    let search_service = Arc::new(
         GrpcSearchService::new(&config.search.index_server, &config.search.search_servers)
             .await
-            .expect("Failed to connect to the search servers");
+            .expect("Failed to connect to the search servers"),
+    );
 
-    let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), todo!());
-    let webfinger = Webfinger::with_defaults(todo!());
+    let fetcher = Fetcher::builder()
+        .db_conn(conn.clone())
+        .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
+        .search_service(search_service.clone())
+        .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
+        .build()
+        .unwrap();
+
+    let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let url_service = UrlService::builder()
         .schema(config.url.schema.as_str())
@@ -172,7 +196,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let post_service = PostService::builder()
         .db_conn(conn.clone())
         .post_resolver(post_resolver)
-        .search_service(Arc::new(search_service.clone()))
+        .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
         .build()
@@ -190,16 +214,19 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .unwrap();
 
     #[cfg(feature = "mastodon-api")]
-    let mastodon_mapper = kitsune::mapping::MastodonMapper::with_defaults(
-        attachment_service.clone(),
-        conn.clone(),
-        status_event_emitter
-            .consumer()
-            .await
-            .expect("Failed to register status event consumer"),
-        todo!(),
-        url_service.clone(),
-    );
+    let mastodon_mapper = kitsune::mapping::MastodonMapper::builder()
+        .attachment_service(attachment_service.clone())
+        .cache_invalidator(
+            status_event_emitter
+                .consumer()
+                .await
+                .expect("Failed to register status event consumer"),
+        )
+        .db_conn(conn.clone())
+        .mastodon_cache(prepare_cache(config, "MASTODON-ENTITY"))
+        .url_service(url_service.clone())
+        .build()
+        .unwrap();
 
     Zustand {
         db_conn: conn,
@@ -212,7 +239,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         service: Service {
             account: account_service,
             oauth2: oauth2_service,
-            search: Arc::new(search_service),
+            search: search_service,
             post: post_service,
             timeline: timeline_service,
             attachment: attachment_service,
