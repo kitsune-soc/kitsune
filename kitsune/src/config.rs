@@ -35,7 +35,7 @@ pub struct SearchConfiguration {
 pub struct ServerConfiguration {
     pub frontend_dir: String,
     pub job_workers: usize,
-    pub max_upload_size: u64,
+    pub max_upload_size: usize,
     pub media_proxy_enabled: bool,
     pub port: u16,
     pub prometheus_port: u16,

@@ -1,6 +1,6 @@
 use self::handler::{media, nodeinfo, oauth, posts, users, well_known};
 use crate::{config::ServerConfiguration, state::Zustand};
-use axum::{routing::get_service, Router};
+use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
 use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
     cors::CorsLayer,
@@ -41,6 +41,7 @@ pub async fn run(state: Zustand, server_config: ServerConfiguration) {
 
     let router = router
         .merge(graphql::routes(state.clone()))
+        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .fallback_service(get_service(
             ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
         ))
