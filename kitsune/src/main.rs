@@ -28,7 +28,7 @@ use metrics_util::layers::Layer as _;
 use once_cell::sync::OnceCell;
 use sea_orm::DatabaseConnection;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{env, fmt::Display, future, sync::Arc};
+use std::{env, fmt::Display, future, process, sync::Arc};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
@@ -256,15 +256,15 @@ async fn main() {
 
     let args: Vec<String> = env::args().take(2).collect();
     if args.len() == 1 {
-        println!("Usage: {} <Path to configuration file>", args[0]);
-        return;
+        eprintln!("Usage: {} <Path to configuration file>", args[0]);
+        process::exit(1);
     }
 
     let config = match Configuration::load(&args[1]) {
         Ok(config) => config,
         Err(err) => {
             eprintln!("{err}");
-            return;
+            process::exit(1);
         }
     };
     initialise_logging(&config);
