@@ -1,3 +1,5 @@
+-- Example configuration for Kitsune
+
 let types = ./kitsune/config/types.dhall
 
 let makeSearchConfig =
@@ -12,8 +14,8 @@ in    { cache =
       , server =
             { frontend_dir = "./kitsune-fe/dist"
             , job_workers = 3
-            , max_upload_size = 5 * 1024 * 1024
-            , media_proxy_enabled = False
+            , max_upload_size = 5 * 1024 * 1024 -- Maximum upload size in bytes
+            , media_proxy_enabled = False -- This will proxy all remote attachments through Kitsune, enabling caching and better privacy for the users
             , port = 5000
             , prometheus_port = 9000
             }
