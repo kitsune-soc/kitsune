@@ -1,6 +1,6 @@
 use self::handler::{media, nodeinfo, oauth, posts, users, well_known};
-use crate::state::Zustand;
-use axum::{routing::get_service, Router};
+use crate::{config::ServerConfiguration, state::Zustand};
+use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
 use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
     cors::CorsLayer,
@@ -14,12 +14,12 @@ mod graphql;
 mod handler;
 mod page;
 
-#[instrument(skip(state))]
-pub async fn run(state: Zustand, port: u16) {
-    let frontend_dir = &state.config.frontend_dir;
+#[instrument(skip_all, fields(port = %server_config.port))]
+pub async fn run(state: Zustand, server_config: ServerConfiguration) {
+    let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();
-        tmp.push("index.html");
+        tmp.push_str("index.html");
         tmp
     };
 
@@ -41,6 +41,7 @@ pub async fn run(state: Zustand, port: u16) {
 
     let router = router
         .merge(graphql::routes(state.clone()))
+        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .fallback_service(get_service(
             ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
         ))
@@ -50,7 +51,7 @@ pub async fn run(state: Zustand, port: u16) {
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    axum::Server::bind(&([0, 0, 0, 0], port).into())
+    axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())
         .await
         .unwrap();

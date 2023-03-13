@@ -1,10 +1,13 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use aws_credential_types::Credentials;
+use aws_sdk_s3::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
     activitypub::Fetcher,
-    config::Configuration,
+    cache::{ArcCache, NoopCache, RedisCache},
+    config::{CacheConfiguration, Configuration, MessagingConfiguration, StorageConfiguration},
     http, job,
     resolve::PostResolver,
     service::{
@@ -15,14 +18,17 @@ use kitsune::{
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
-use kitsune_http_client::Client;
-use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
-use kitsune_storage::fs::Storage as FsStorage;
+use kitsune_messaging::{
+    redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
+};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, StorageBackend};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
+use once_cell::sync::OnceCell;
 use sea_orm::DatabaseConnection;
-use std::{env, future, sync::Arc};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{env, fmt::Display, future, process, sync::Arc};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
@@ -52,7 +58,7 @@ fn initialise_logging(config: &Configuration) {
             SECONDS_DURATION_BUCKETS,
         )
         .unwrap()
-        .with_http_listener(([0, 0, 0, 0], config.prometheus_port))
+        .with_http_listener(([0, 0, 0, 0], config.server.prometheus_port))
         .build()
         .unwrap();
     tokio::spawn(server_future);
@@ -70,28 +76,101 @@ fn initialise_logging(config: &Configuration) {
     metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
 }
 
-async fn initialise_state(
-    config: &Configuration,
-    conn: DatabaseConnection,
-    redis_conn: deadpool_redis::Pool,
-) -> Zustand {
-    let redis_messaging_backend = RedisMessagingBackend::new(&config.redis_url)
-        .await
-        .expect("Failed to construct messaging backend");
-    let messaging_hub = MessagingHub::new(redis_messaging_backend);
+fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
+where
+    K: Display + Send + Sync + ?Sized + 'static,
+    V: DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    match config.cache {
+        CacheConfiguration::InMemory => {
+            // TODO: Implement in-memory cache
+            todo!();
+        }
+        CacheConfiguration::None => Arc::new(NoopCache),
+        CacheConfiguration::Redis(ref redis_config) => {
+            static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
+
+            let pool = REDIS_POOL.get_or_init(|| {
+                let config = deadpool_redis::Config::from_url(&redis_config.redis_url);
+                config
+                    .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+                    .unwrap()
+            });
+
+            Arc::new(
+                RedisCache::builder()
+                    .prefix(cache_name)
+                    .redis_conn(pool.clone())
+                    .build()
+                    .unwrap(),
+            )
+        }
+    }
+}
+
+fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
+    match config.storage {
+        StorageConfiguration::Fs(ref fs_config) => {
+            Arc::new(FsStorage::new(fs_config.upload_dir.as_str().into()))
+        }
+        StorageConfiguration::S3(ref s3_config) => {
+            let s3_client_config = aws_sdk_s3::Config::builder()
+                .region(Region::new(s3_config.region.clone()))
+                .endpoint_url(s3_config.endpoint_url.as_str())
+                .force_path_style(s3_config.force_path_style)
+                .credentials_provider(Credentials::from_keys(
+                    s3_config.access_key.as_str(),
+                    s3_config.secret_access_key.as_str(),
+                    None,
+                ))
+                .build();
+
+            Arc::new(S3Storage::new(
+                s3_config.bucket_name.clone(),
+                s3_client_config,
+            ))
+        }
+    }
+}
+
+async fn prepare_messaging(config: &Configuration) -> MessagingHub {
+    match config.messaging {
+        MessagingConfiguration::InProcess => {
+            MessagingHub::new(TokioBroadcastMessagingBackend::default())
+        }
+        MessagingConfiguration::Redis(ref redis_config) => {
+            let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.redis_url)
+                .await
+                .expect("Failed to construct messaging backend");
+
+            MessagingHub::new(redis_messaging_backend)
+        }
+    }
+}
+
+async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Zustand {
+    let messaging_hub = prepare_messaging(config).await;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
-    let search_service =
-        GrpcSearchService::new(&config.search_index_server, &config.search_servers)
+    let search_service = Arc::new(
+        GrpcSearchService::new(&config.search.index_server, &config.search.search_servers)
             .await
-            .expect("Failed to connect to the search servers");
+            .expect("Failed to connect to the search servers"),
+    );
 
-    let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
-    let webfinger = Webfinger::with_defaults(redis_conn.clone());
+    let fetcher = Fetcher::builder()
+        .db_conn(conn.clone())
+        .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
+        .search_service(search_service.clone())
+        .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
+        .build()
+        .unwrap();
+
+    let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let url_service = UrlService::builder()
-        .schema("https")
-        .domain(config.domain.as_str())
+        .scheme(config.url.scheme.as_str())
+        .domain(config.url.domain.as_str())
         .build()
         .unwrap();
 
@@ -101,20 +180,9 @@ async fn initialise_state(
         .unwrap();
 
     let attachment_service = AttachmentService::builder()
-        .client(
-            Client::builder()
-                .content_length_limit(None)
-                .user_agent(concat!(
-                    env!("CARGO_PKG_NAME"),
-                    "/",
-                    env!("CARGO_PKG_VERSION")
-                ))
-                .unwrap()
-                .build(),
-        )
         .db_conn(conn.clone())
-        .media_proxy_enabled(config.media_proxy_enabled)
-        .storage_backend(Arc::new(FsStorage::new(config.upload_dir.clone())))
+        .media_proxy_enabled(config.server.media_proxy_enabled)
+        .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
         .build()
         .unwrap();
@@ -128,7 +196,7 @@ async fn initialise_state(
     let post_service = PostService::builder()
         .db_conn(conn.clone())
         .post_resolver(post_resolver)
-        .search_service(Arc::new(search_service.clone()))
+        .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
         .build()
@@ -146,19 +214,21 @@ async fn initialise_state(
         .unwrap();
 
     #[cfg(feature = "mastodon-api")]
-    let mastodon_mapper = kitsune::mapping::MastodonMapper::with_defaults(
-        attachment_service.clone(),
-        conn.clone(),
-        status_event_emitter
-            .consumer()
-            .await
-            .expect("Failed to register status event consumer"),
-        redis_conn,
-        url_service.clone(),
-    );
+    let mastodon_mapper = kitsune::mapping::MastodonMapper::builder()
+        .attachment_service(attachment_service.clone())
+        .cache_invalidator(
+            status_event_emitter
+                .consumer()
+                .await
+                .expect("Failed to register status event consumer"),
+        )
+        .db_conn(conn.clone())
+        .mastodon_cache(prepare_cache(config, "MASTODON-ENTITY"))
+        .url_service(url_service.clone())
+        .build()
+        .unwrap();
 
     Zustand {
-        config: config.clone(),
         db_conn: conn,
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
@@ -169,7 +239,7 @@ async fn initialise_state(
         service: Service {
             account: account_service,
             oauth2: oauth2_service,
-            search: Arc::new(search_service),
+            search: search_service,
             post: post_service,
             timeline: timeline_service,
             attachment: attachment_service,
@@ -184,25 +254,29 @@ async fn initialise_state(
 async fn main() {
     println!("{STARTUP_FIGLET}");
 
-    dotenvy::dotenv().ok();
-    let config: Configuration = envy::from_env().expect("Failed to parse configuration");
+    let args: Vec<String> = env::args().take(2).collect();
+    if args.len() == 1 {
+        eprintln!("Usage: {} <Path to configuration file>", args[0]);
+        process::exit(1);
+    }
+
+    let config = match Configuration::load(&args[1]) {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("{err}");
+            process::exit(1);
+        }
+    };
     initialise_logging(&config);
 
     let conn = kitsune_db::connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
+    let state = initialise_state(&config, conn).await;
 
-    let redis_manager = deadpool_redis::Manager::new(config.redis_url.clone())
-        .expect("Failed to build Redis pool manager");
-    let redis_conn = deadpool_redis::Pool::builder(redis_manager)
-        .build()
-        .expect("Failed to build Redis pool");
+    tokio::spawn(self::http::run(state.clone(), config.server.clone()));
 
-    let state = initialise_state(&config, conn, redis_conn).await;
-
-    tokio::spawn(self::http::run(state.clone(), config.port));
-
-    for _ in 0..config.job_workers.get() {
+    for _ in 0..config.server.job_workers {
         tokio::spawn(self::job::run(state.clone()));
     }
 

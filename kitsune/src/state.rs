@@ -1,6 +1,5 @@
 use crate::{
     activitypub::Fetcher,
-    config::Configuration,
     event::PostEventEmitter,
     service::{
         account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
@@ -77,7 +76,6 @@ pub struct Service {
 /// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,

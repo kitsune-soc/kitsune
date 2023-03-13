@@ -1,51 +1,92 @@
 use serde::{Deserialize, Serialize};
-use std::{num::NonZeroUsize, path::PathBuf};
+use serde_dhall::StaticType;
+use std::path::Path;
 
-fn default_frontend_dir() -> PathBuf {
-    "kitsune-fe/dist".into()
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct RedisCacheConfiguration {
+    pub redis_url: String,
 }
 
-fn default_prometheus_port() -> u16 {
-    9000
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub enum CacheConfiguration {
+    Redis(RedisCacheConfiguration),
+    InMemory,
+    None,
 }
 
-fn default_upload_dir() -> PathBuf {
-    "uploads".into()
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct RedisMessagingConfiguration {
+    pub redis_url: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-pub struct Configuration {
-    pub database_url: String,
-    pub domain: String,
-    #[serde(default = "default_frontend_dir")]
-    pub frontend_dir: PathBuf,
-    pub job_workers: NonZeroUsize,
-    #[serde(default)]
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub enum MessagingConfiguration {
+    Redis(RedisMessagingConfiguration),
+    InProcess,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct SearchConfiguration {
+    pub index_server: String,
+    pub search_servers: Vec<String>,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct ServerConfiguration {
+    pub frontend_dir: String,
+    pub job_workers: usize,
+    pub max_upload_size: usize,
     pub media_proxy_enabled: bool,
     pub port: u16,
-    #[serde(default = "default_prometheus_port")]
     pub prometheus_port: u16,
-    pub redis_url: String,
-    pub search_index_server: String,
-    pub search_servers: Vec<String>,
-    #[serde(default = "default_upload_dir")]
-    pub upload_dir: PathBuf,
 }
 
-impl Default for Configuration {
-    fn default() -> Self {
-        Self {
-            database_url: String::default(),
-            domain: String::default(),
-            frontend_dir: default_frontend_dir(),
-            job_workers: NonZeroUsize::new(1).unwrap(),
-            media_proxy_enabled: bool::default(),
-            port: u16::default(),
-            prometheus_port: default_prometheus_port(),
-            redis_url: String::default(),
-            search_index_server: String::default(),
-            search_servers: Vec::default(),
-            upload_dir: default_upload_dir(),
-        }
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct FsStorageConfiguration {
+    pub upload_dir: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct S3StorageConfiguration {
+    pub bucket_name: String,
+    pub endpoint_url: String,
+    pub region: String,
+    pub force_path_style: bool,
+    pub access_key: String,
+    pub secret_access_key: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub enum StorageConfiguration {
+    Fs(FsStorageConfiguration),
+    S3(S3StorageConfiguration),
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct UrlConfiguration {
+    pub scheme: String,
+    pub domain: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct Configuration {
+    pub cache: CacheConfiguration,
+    pub database_url: String,
+    pub messaging: MessagingConfiguration,
+    pub server: ServerConfiguration,
+    pub search: SearchConfiguration,
+    pub storage: StorageConfiguration,
+    pub url: UrlConfiguration,
+}
+
+impl Configuration {
+    #[allow(clippy::result_large_err)] // This function is called once. It's fine if it's a little large.
+    pub fn load<P>(path: P) -> serde_dhall::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        serde_dhall::from_file(path)
+            .static_type_annotation()
+            .parse()
     }
 }

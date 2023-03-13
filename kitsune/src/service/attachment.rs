@@ -34,6 +34,17 @@ impl<S> Upload<S> {
 
 #[derive(Builder, Clone)]
 pub struct AttachmentService {
+    #[builder(default = "
+        Client::builder()
+            .content_length_limit(None)
+            .user_agent(concat!(
+                env!(\"CARGO_PKG_NAME\"),
+                \"/\",
+                env!(\"CARGO_PKG_VERSION\")
+            ))
+            .unwrap()
+            .build()
+    ")]
     client: Client,
     db_conn: DatabaseConnection,
     media_proxy_enabled: bool,

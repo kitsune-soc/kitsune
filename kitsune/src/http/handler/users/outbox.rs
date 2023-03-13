@@ -72,7 +72,7 @@ pub async fn get(
             .try_collect()
             .await?;
 
-        let id = format!("{}{original_uri}", state.config.domain);
+        let id = format!("{}{original_uri}", url_service.base_url());
         let prev = format!(
             "{base_url}?page=true&min_id={}",
             posts.first().map_or(Uuid::max(), |post| post.id)
