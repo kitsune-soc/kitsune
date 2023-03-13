@@ -1,1 +1,1 @@
-{ schema : Text, domain : Text }
+{ scheme : Text, domain : Text }

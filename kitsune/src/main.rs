@@ -169,7 +169,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let url_service = UrlService::builder()
-        .schema(config.url.schema.as_str())
+        .scheme(config.url.scheme.as_str())
         .domain(config.url.domain.as_str())
         .build()
         .unwrap();
@@ -254,7 +254,13 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 async fn main() {
     println!("{STARTUP_FIGLET}");
 
-    let config = match Configuration::load("config.dhall") {
+    let args: Vec<String> = env::args().take(2).collect();
+    if args.len() == 1 {
+        println!("Usage: {} <Path to configuration file>", args[0]);
+        return;
+    }
+
+    let config = match Configuration::load(&args[1]) {
         Ok(config) => config,
         Err(err) => {
             eprintln!("{err}");

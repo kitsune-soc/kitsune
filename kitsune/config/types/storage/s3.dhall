@@ -1,4 +1,5 @@
-{ endpoint_url : Text
+{ bucket_name : Text
+, endpoint_url : Text
 , region : Text
 , force_path_style : Bool
 , access_key : Text

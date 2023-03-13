@@ -9,7 +9,7 @@ use uuid::Uuid;
 #[derive(Builder, Clone)]
 pub struct UrlService {
     #[builder(setter(into))]
-    schema: Arc<str>,
+    scheme: Arc<str>,
     #[builder(setter(into))]
     domain: Arc<str>,
 }
@@ -22,7 +22,7 @@ impl UrlService {
 
     #[must_use]
     pub fn base_url(&self) -> String {
-        format!("{}://{}", self.schema, self.domain)
+        format!("{}://{}", self.scheme, self.domain)
     }
 
     #[must_use]

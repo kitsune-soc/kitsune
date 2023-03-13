@@ -64,7 +64,7 @@ pub enum StorageConfiguration {
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct UrlConfiguration {
-    pub schema: String,
+    pub scheme: String,
     pub domain: String,
 }
 
