@@ -31,6 +31,11 @@ impl UrlService {
     }
 
     #[must_use]
+    pub fn domain(&self) -> &str {
+        &self.domain
+    }
+
+    #[must_use]
     pub fn favourite_url(&self, favourite_id: Uuid) -> String {
         format!("{}/favourites/{}", self.base_url(), favourite_id)
     }

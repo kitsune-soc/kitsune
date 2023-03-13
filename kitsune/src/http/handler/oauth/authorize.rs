@@ -1,7 +1,7 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
     error::{ApiError, Error, Result},
-    state::Zustand,
+    service::url::UrlService,
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
@@ -18,7 +18,9 @@ use kitsune_db::entity::{
     prelude::{Oauth2Applications, Users},
     users,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+};
 use serde::Deserialize;
 use std::str::FromStr;
 use url::Url;
@@ -57,7 +59,8 @@ struct ShowTokenPage {
 }
 
 pub async fn get(
-    State(state): State<Zustand>,
+    State(db_conn): State<DatabaseConnection>,
+    State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
     if query.response_type != "code" {
@@ -66,31 +69,32 @@ pub async fn get(
 
     let application = Oauth2Applications::find_by_id(query.client_id)
         .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
 
     Ok(AuthorizePage {
         app_name: application.name,
-        domain: state.config.domain,
+        domain: url_service.domain().into(),
     }
     .into_response())
 }
 
 pub async fn post(
-    State(state): State<Zustand>,
+    State(db_conn): State<DatabaseConnection>,
+    State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
     let user = Users::find()
         .filter(users::Column::Username.eq(form.username))
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
         .ok_or(ApiError::NotFound)?;
 
     let application = Oauth2Applications::find_by_id(query.client_id)
         .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
 
@@ -118,13 +122,13 @@ pub async fn post(
         expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
     }
     .into_active_model()
-    .insert(&state.db_conn)
+    .insert(&db_conn)
     .await?;
 
     if application.redirect_uri == SHOW_TOKEN_URI {
         Ok(ShowTokenPage {
             app_name: application.name,
-            domain: state.config.domain,
+            domain: url_service.domain().into(),
             token: authorization_code.code,
         }
         .into_response())

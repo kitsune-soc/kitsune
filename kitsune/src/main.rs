@@ -16,7 +16,6 @@ use kitsune::{
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
-use kitsune_http_client::Client;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };

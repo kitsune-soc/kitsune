@@ -1,6 +1,5 @@
 use crate::{
     activitypub::Fetcher,
-    config::Configuration,
     event::PostEventEmitter,
     service::{
         account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,

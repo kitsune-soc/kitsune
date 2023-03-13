@@ -1,4 +1,4 @@
-use crate::{error::Result, state::Zustand};
+use crate::{error::Result, service::url::UrlService, state::Zustand};
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Response},
@@ -7,7 +7,7 @@ use axum::{
 use http::StatusCode;
 use kitsune_db::entity::{accounts, prelude::Accounts};
 use kitsune_type::webfinger::{Link, Resource};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -16,7 +16,8 @@ struct WebfingerQuery {
 }
 
 async fn get(
-    State(state): State<Zustand>,
+    State(db_conn): State<DatabaseConnection>,
+    State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
     let username_at_instance = query.resource.trim_start_matches("acct:");
@@ -24,7 +25,7 @@ async fn get(
         return Ok(StatusCode::BAD_REQUEST.into_response());
     };
 
-    if instance != state.config.domain {
+    if instance != url_service.domain() {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
@@ -33,7 +34,7 @@ async fn get(
             accounts::Column::Username.eq(username)
                 .and(accounts::Column::Local.eq(true)),
         )
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());
