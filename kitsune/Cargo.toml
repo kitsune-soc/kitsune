@@ -24,6 +24,10 @@ async-trait = "0.1.66"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
+aws-credential-types = { version = "0.54.1", features = [
+    "hardcoded-credentials",
+] }
+aws-sdk-s3 = "0.24.0"
 axum = { version = "0.6.11", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.7.1", features = ["query"] }
 axum-prometheus = "0.3.1"

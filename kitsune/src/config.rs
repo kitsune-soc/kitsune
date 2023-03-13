@@ -48,6 +48,7 @@ pub struct FsStorageConfiguration {
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct S3StorageConfiguration {
+    pub bucket_name: String,
     pub endpoint_url: String,
     pub region: String,
     pub force_path_style: bool,

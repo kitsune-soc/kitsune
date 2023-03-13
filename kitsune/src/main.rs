@@ -1,6 +1,8 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use aws_credential_types::Credentials;
+use aws_sdk_s3::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
     activitypub::Fetcher,
@@ -19,7 +21,7 @@ use kitsune::{
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_storage::{fs::Storage as FsStorage, StorageBackend};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, StorageBackend};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -90,14 +92,27 @@ where
     }
 }
 
-async fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
+fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
     match config.storage {
         StorageConfiguration::Fs(ref fs_config) => {
             Arc::new(FsStorage::new(fs_config.upload_dir.as_str().into()))
         }
         StorageConfiguration::S3(ref s3_config) => {
-            // TODO: Connect to S3
-            todo!();
+            let s3_client_config = aws_sdk_s3::Config::builder()
+                .region(Region::new(s3_config.region.clone()))
+                .endpoint_url(s3_config.endpoint_url.as_str())
+                .force_path_style(s3_config.force_path_style)
+                .credentials_provider(Credentials::from_keys(
+                    s3_config.access_key.as_str(),
+                    s3_config.secret_access_key.as_str(),
+                    None,
+                ))
+                .build();
+
+            Arc::new(S3Storage::new(
+                s3_config.bucket_name.clone(),
+                s3_client_config,
+            ))
         }
     }
 }
@@ -140,11 +155,10 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .build()
         .unwrap();
 
-    let storage_backend = prepare_storage(config).await;
     let attachment_service = AttachmentService::builder()
         .db_conn(conn.clone())
         .media_proxy_enabled(config.server.media_proxy_enabled)
-        .storage_backend(storage_backend)
+        .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
         .build()
         .unwrap();

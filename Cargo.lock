@@ -2643,6 +2643,8 @@ dependencies = [
  "async-stream",
  "async-trait",
  "autometrics",
+ "aws-credential-types",
+ "aws-sdk-s3",
  "axum",
  "axum-extra",
  "axum-prometheus",
