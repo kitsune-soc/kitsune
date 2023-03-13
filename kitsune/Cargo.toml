@@ -24,19 +24,19 @@ async-trait = "0.1.66"
 autometrics = { version = "0.2.4", default-features = false, features = [
     "metrics",
 ] }
-axum = { version = "0.6.10", features = ["headers", "macros", "multipart"] }
-axum-extra = { version = "0.7.0", features = ["query"] }
+axum = { version = "0.6.11", features = ["headers", "macros", "multipart"] }
+axum-extra = { version = "0.7.1", features = ["query"] }
 axum-prometheus = "0.3.1"
 base64 = "0.21.0"
 bytes = "1.4.0"
-chrono = "0.4.23"
+chrono = "0.4.24"
 deadpool-redis = "0.11.1"
 derive_builder = "0.12.0"
-futures-util = "0.3.26"
+futures-util = "0.3.27"
 headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.9"
-hyper = "0.14.24"
+hyper = "0.14.25"
 itertools = "0.10.5"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-http-client = { path = "../kitsune-http-client" }
@@ -61,11 +61,11 @@ rand = "0.8.5"
 rayon = "1.7.0"
 redis = "0.22.3"
 rsa = "0.8.2"
-sea-orm = { version = "0.11.0", features = [
+sea-orm = { version = "0.11.1", features = [
     "runtime-tokio-rustls",
     "sqlx-postgres",
 ] }
-serde = { version = "1.0.154", features = ["derive"] }
+serde = { version = "1.0.155", features = ["derive"] }
 serde_dhall = { version = "0.12.1", default-features = false }
 serde_json = "1.0.94"
 sha2 = "0.10.6"
@@ -83,7 +83,7 @@ zxcvbn = "2.2.1"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
-sea-orm = { version = "0.11.0", features = ["sqlx-sqlite"] }
+sea-orm = { version = "0.11.1", features = ["sqlx-sqlite"] }
 
 [features]
 default = ["mastodon-api"]

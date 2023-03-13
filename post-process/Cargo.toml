@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-futures-util = "0.3.26"
+futures-util = "0.3.27"
 pest = "2.5.6"
 pest_derive = "2.5.6"
 
