@@ -122,12 +122,12 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
     let search_service =
-        GrpcSearchService::new(&config.search.index_server, &config.search.index_server)
+        GrpcSearchService::new(&config.search.index_server, &config.search.search_servers)
             .await
             .expect("Failed to connect to the search servers");
 
-    let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), redis_conn.clone());
-    let webfinger = Webfinger::with_defaults(redis_conn.clone());
+    let fetcher = Fetcher::with_defaults(conn.clone(), search_service.clone(), todo!());
+    let webfinger = Webfinger::with_defaults(todo!());
 
     let url_service = UrlService::builder()
         .schema(config.url.schema.as_str())
@@ -183,7 +183,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
             .consumer()
             .await
             .expect("Failed to register status event consumer"),
-        redis_conn,
+        todo!(),
         url_service.clone(),
     );
 
@@ -213,7 +213,13 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 async fn main() {
     println!("{STARTUP_FIGLET}");
 
-    let config = Configuration::load("config.dhall").expect("Failed to load configuration");
+    let config = match Configuration::load("config.dhall") {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("{err}");
+            return;
+        }
+    };
     initialise_logging(&config);
 
     let conn = kitsune_db::connect(&config.database_url)
@@ -221,7 +227,7 @@ async fn main() {
         .expect("Failed to connect to database");
     let state = initialise_state(&config, conn).await;
 
-    tokio::spawn(self::http::run(state.clone(), &config.server));
+    tokio::spawn(self::http::run(state.clone(), config.server.clone()));
 
     for _ in 0..config.server.job_workers {
         tokio::spawn(self::job::run(state.clone()));

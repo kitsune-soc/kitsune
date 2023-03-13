@@ -15,7 +15,7 @@ mod handler;
 mod page;
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: &ServerConfiguration) {
+pub async fn run(state: Zustand, server_config: ServerConfiguration) {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();

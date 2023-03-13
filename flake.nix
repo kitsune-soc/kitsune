@@ -16,6 +16,7 @@
                 devShells.default = pkgs.mkShell {
                     buildInputs = with pkgs; [
                         cargo-insta
+                        dhall
                         nodejs
                         #postgresql_15
                         protobuf

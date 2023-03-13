@@ -56,7 +56,6 @@ pub struct S3StorageConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
-#[serde(untagged)]
 pub enum StorageConfiguration {
     Fs(FsStorageConfiguration),
     S3(S3StorageConfiguration),
