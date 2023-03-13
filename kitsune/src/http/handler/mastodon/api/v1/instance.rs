@@ -23,7 +23,7 @@ async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
 
     Ok(Json(Instance {
         uri: state.config.domain.clone(),
-        title: state.config.domain,
+        title: "Kitsune".into(),
         short_description: "https://www.youtube.com/watch?v=6lnnPnr_0SU".into(),
         description: String::new(),
         email: String::new(),

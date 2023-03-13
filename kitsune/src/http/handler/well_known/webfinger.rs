@@ -31,7 +31,7 @@ async fn get(
     let Some(account) = Accounts::find()
         .filter(
             accounts::Column::Username.eq(username)
-                .and(accounts::Column::Domain.is_null()),
+                .and(accounts::Column::Local.eq(true)),
         )
         .one(&state.db_conn)
         .await?

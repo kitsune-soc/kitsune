@@ -77,7 +77,6 @@ pub struct Service {
 /// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub config: Configuration,
     pub db_conn: DatabaseConnection,
     pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,
