@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-autometrics = { version = "0.2.4", default-features = false, features = ["metrics"] }
+autometrics = { version = "0.3.0", default-features = false, features = ["metrics"] }
 dotenvy = "0.15.6"
 envy = "0.4.2"
 futures-util = "0.3.27"
@@ -16,7 +16,7 @@ metrics-tracing-context = "0.13.0"
 metrics-util = "0.14.0"
 mimalloc = "0.1.34"
 prost = "0.11.8"
-serde = { version = "1.0.155", features = ["derive"] }
+serde = { version = "1.0.157", features = ["derive"] }
 tantivy = "0.19.2"
 time = "0.3.20"
 tokio = { version = "1.26.0", features = ["full"] }

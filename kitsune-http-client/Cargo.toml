@@ -10,6 +10,7 @@ futures-core = "0.3.27"
 http-body = "0.4.5"
 hyper = { version = "0.14.25", features = [
     "client",
+    "deprecated",
     "http1",
     "http2",
     "runtime",
@@ -17,7 +18,7 @@ hyper = { version = "0.14.25", features = [
 hyper-rustls = { version = "0.23.2", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 pin-project-lite = "0.2.9"
-serde = "1.0.155"
+serde = "1.0.157"
 serde_json = "1.0.94"
 tower = "0.4.13"
 tower-http = { version = "0.4.0", features = [
