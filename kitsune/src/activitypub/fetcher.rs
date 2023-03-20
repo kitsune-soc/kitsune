@@ -19,7 +19,7 @@ use kitsune_db::{
     },
 };
 use kitsune_http_client::Client;
-use kitsune_type::ap::object::{Actor, Note};
+use kitsune_type::ap::{object::Actor, Object};
 use sea_orm::{
     sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
@@ -238,7 +238,7 @@ impl Fetcher {
                     .update(tx)
                     .await?;
 
-                    Ok(account)
+                    Ok::<_, Error>(account)
                 }
                 .boxed()
             })
@@ -251,7 +251,7 @@ impl Fetcher {
     }
 
     #[async_recursion]
-    async fn fetch_note_inner(&self, url: &str, call_depth: u32) -> Result<Option<posts::Model>> {
+    async fn fetch_object_inner(&self, url: &str, call_depth: u32) -> Result<Option<posts::Model>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);
         }
@@ -270,28 +270,29 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let mut note: Note = self.client.get(url.as_str()).await?.json().await?;
-        note.clean_html();
+        let mut object: Object = self.client.get(url.as_str()).await?.json().await?;
+        object.clean_html();
 
         let user = self
             .fetch_actor(
-                note.rest
+                object
+                    .rest
                     .attributed_to()
                     .map(FetchOptions::from)
                     .ok_or(Error::MalformedApObject)?,
             )
             .await?;
-        let visibility = Visibility::from_activitypub(&user, &note);
+        let visibility = Visibility::from_activitypub(&user, &object);
 
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
             uuid::NoContext,
-            note.rest.published.timestamp() as u64,
-            note.rest.published.timestamp_subsec_nanos(),
+            object.rest.published.timestamp() as u64,
+            object.rest.published.timestamp_subsec_nanos(),
         );
 
-        let in_reply_to_id = if let Some(in_reply_to) = note.rest.in_reply_to {
-            self.fetch_note_inner(&in_reply_to, call_depth + 1)
+        let in_reply_to_id = if let Some(in_reply_to) = object.rest.in_reply_to {
+            self.fetch_object_inner(&in_reply_to, call_depth + 1)
                 .await?
                 .map(|post| post.id)
         } else {
@@ -304,13 +305,13 @@ impl Fetcher {
                 account_id: user.id,
                 in_reply_to_id,
                 reposted_post_id: None,
-                subject: note.summary,
-                content: note.content,
-                is_sensitive: note.rest.sensitive,
+                subject: object.summary,
+                content: object.content,
+                is_sensitive: object.rest.sensitive,
                 visibility,
                 is_local: false,
-                url: note.rest.id.clone(),
-                created_at: note.rest.published.into(),
+                url: object.rest.id.clone(),
+                created_at: object.rest.published.into(),
                 updated_at: Utc::now().into(),
             }
             .into_active_model(),
@@ -329,15 +330,15 @@ impl Fetcher {
                 .await?;
         }
 
-        self.post_cache.set(&note.rest.id, &post).await?;
+        self.post_cache.set(&object.rest.id, &post).await?;
 
         Ok(Some(post))
     }
 
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_note(&self, url: &str) -> Result<posts::Model> {
-        self.fetch_note_inner(url, 0)
+    pub async fn fetch_object(&self, url: &str) -> Result<posts::Model> {
+        self.fetch_object_inner(url, 0)
             .await
             .transpose()
             .expect("[Bug] Highest level fetch returned a `None`")
@@ -386,7 +387,7 @@ mod test {
             .unwrap();
 
         let note = fetcher
-            .fetch_note("https://corteximplant.com/@0x0/109501674056556919")
+            .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
             .await
             .expect("Fetch note");
         assert_eq!(

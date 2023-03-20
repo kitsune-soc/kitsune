@@ -165,7 +165,7 @@ impl PostService {
     async fn process_mentions<C>(
         conn: &C,
         post_id: Uuid,
-        mentioned_account_ids: &[Uuid],
+        mentioned_account_ids: Vec<(Uuid, String)>,
     ) -> Result<()>
     where
         C: ConnectionTrait,
@@ -174,13 +174,16 @@ impl PostService {
             return Ok(());
         }
 
-        PostsMentions::insert_many(mentioned_account_ids.iter().map(|account_id| {
-            posts_mentions::Model {
-                account_id: *account_id,
-                post_id,
-            }
-            .into_active_model()
-        }))
+        PostsMentions::insert_many(mentioned_account_ids.into_iter().map(
+            |(account_id, mention_text)| {
+                posts_mentions::Model {
+                    post_id,
+                    account_id,
+                    mention_text,
+                }
+                .into_active_model()
+            },
+        ))
         .exec_without_returning(conn)
         .await?;
 
@@ -237,7 +240,7 @@ impl PostService {
                     .insert(tx)
                     .await?;
 
-                    Self::process_mentions(tx, post.id, &mentioned_account_ids).await?;
+                    Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
                     let job_context =
@@ -258,7 +261,7 @@ impl PostService {
                     .exec_without_returning(tx)
                     .await?;
 
-                    Ok(post)
+                    Ok::<_, Error>(post)
                 }
                 .boxed()
             })

@@ -152,13 +152,13 @@ impl IntoActivity for posts::Model {
                 r#type: ActivityType::Create,
                 rest: BaseObject {
                     context: ap_context(),
-                    id: format!("{}/activity", object.id()),
+                    id: format!("{}/activity", object.rest.id),
                     attributed_to: Some(StringOrObject::String(account.url)),
                     in_reply_to: None,
                     sensitive: false,
                     published: created_at.into(),
-                    to: object.to().to_vec(),
-                    cc: object.cc().to_vec(),
+                    to: object.rest.to.clone(),
+                    cc: object.rest.cc.clone(),
                 },
                 object: StringOrObject::Object(object),
             })
@@ -173,15 +173,15 @@ impl IntoActivity for posts::Model {
             r#type: ActivityType::Delete,
             rest: BaseObject {
                 context: ap_context(),
-                id: format!("{}#delete", object.id()),
+                id: format!("{}#delete", object.rest.id),
                 sensitive: false,
                 attributed_to: None,
                 in_reply_to: None,
                 published: Utc::now(),
-                to: object.to().to_vec(),
-                cc: object.cc().to_vec(),
+                to: object.rest.to,
+                cc: object.rest.cc,
             },
-            object: StringOrObject::String(object.id().to_string()),
+            object: StringOrObject::String(object.rest.id),
         })
     }
 }

@@ -1,4 +1,4 @@
-use super::{object::Note, Activity, BaseObject, Object, PUBLIC_IDENTIFIER};
+use super::{Activity, BaseObject, Object, PUBLIC_IDENTIFIER};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -55,29 +55,13 @@ impl CcTo for BaseObject {
     }
 }
 
-impl CcTo for Note {
-    fn cc(&self) -> &[String] {
-        self.rest.cc()
-    }
-
-    fn to(&self) -> &[String] {
-        self.rest.to()
-    }
-}
-
 impl CcTo for Object {
     fn cc(&self) -> &[String] {
-        match self {
-            Self::Note(note) => note.cc(),
-            Self::Person(..) => unimplemented!("Called CC/TO helper on person"),
-        }
+        &self.rest.cc
     }
 
     fn to(&self) -> &[String] {
-        match self {
-            Self::Note(note) => note.to(),
-            Self::Person(..) => unimplemented!("Called CC/TO helper on person"),
-        }
+        &self.rest.to
     }
 }
 
@@ -110,28 +94,12 @@ impl Privacy for BaseObject {
     }
 }
 
-impl Privacy for Note {
+impl Privacy for Object {
     fn is_public(&self) -> bool {
         self.rest.is_public()
     }
 
     fn is_unlisted(&self) -> bool {
         self.rest.is_unlisted()
-    }
-}
-
-impl Privacy for Object {
-    fn is_public(&self) -> bool {
-        match self {
-            Self::Note(ref note) => note.is_public(),
-            Self::Person(..) => unimplemented!("Called privacy helper on person"),
-        }
-    }
-
-    fn is_unlisted(&self) -> bool {
-        match self {
-            Self::Note(ref note) => note.is_unlisted(),
-            Self::Person(..) => unimplemented!("Called privacy helper on person"),
-        }
     }
 }

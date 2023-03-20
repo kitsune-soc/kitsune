@@ -6,6 +6,7 @@ pub enum PostsMentions {
     Table,
     PostId,
     AccountId,
+    MentionText,
 }
 
 #[derive(DeriveMigrationName)]
@@ -21,6 +22,7 @@ impl MigrationTrait for Migration {
                     .table(PostsMentions::Table)
                     .col(ColumnDef::new(PostsMentions::PostId).uuid().not_null())
                     .col(ColumnDef::new(PostsMentions::AccountId).uuid().not_null())
+                    .col(ColumnDef::new(PostsMentions::MentionText).text().not_null())
                     .primary_key(
                         Index::create()
                             .col(PostsMentions::PostId)

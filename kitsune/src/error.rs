@@ -12,6 +12,7 @@ use rsa::{
     pkcs8::{self, der, spki},
 };
 use sea_orm::TransactionError;
+use std::error::Error as StdError;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
@@ -150,11 +151,14 @@ impl From<Error> for Response {
     }
 }
 
-impl From<TransactionError<Error>> for Error {
-    fn from(err: TransactionError<Error>) -> Self {
+impl<E> From<TransactionError<E>> for Error
+where
+    E: StdError + Into<Error>,
+{
+    fn from(err: TransactionError<E>) -> Self {
         match err {
             TransactionError::Connection(db) => Self::Database(db),
-            TransactionError::Transaction(err) => err,
+            TransactionError::Transaction(err) => err.into(),
         }
     }
 }

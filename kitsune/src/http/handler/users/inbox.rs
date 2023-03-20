@@ -6,19 +6,23 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
-use futures_util::future::OptionFuture;
+use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, favourites, posts,
-        prelude::{AccountsFollowers, Favourites, Posts},
+        accounts, accounts_followers, favourites, media_attachments, posts,
+        posts_media_attachments, posts_mentions,
+        prelude::{
+            AccountsFollowers, Favourites, MediaAttachments, Posts, PostsMediaAttachments,
+            PostsMentions,
+        },
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
-use kitsune_type::ap::{Activity, ActivityType, Object};
+use kitsune_type::ap::{object::MediaAttachment, Activity, ActivityType, Tag, TagType};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
-    QuerySelect,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
+    QueryFilter, QuerySelect, TransactionTrait,
 };
 use uuid::Uuid;
 
@@ -38,59 +42,149 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     Ok(())
 }
 
+async fn handle_attachments<C>(
+    db_conn: &C,
+    author: &accounts::Model,
+    post_id: Uuid,
+    attachments: Vec<MediaAttachment>,
+) -> Result<()>
+where
+    C: ConnectionTrait,
+{
+    if attachments.is_empty() {
+        return Ok(());
+    }
+    let attachment_ids: Vec<Uuid> = (0..attachments.len()).map(|_| Uuid::now_v7()).collect();
+
+    MediaAttachments::insert_many(
+        attachments
+            .into_iter()
+            .zip(attachment_ids.iter().copied())
+            .map(|(attachment, attachment_id)| {
+                media_attachments::Model {
+                    id: attachment_id,
+                    account_id: author.id,
+                    content_type: attachment.media_type,
+                    description: attachment.name,
+                    blurhash: attachment.blurhash,
+                    file_path: None,
+                    remote_url: Some(attachment.url),
+                    created_at: Utc::now().into(),
+                    updated_at: Utc::now().into(),
+                }
+                .into_active_model()
+            }),
+    )
+    .exec_with_returning(db_conn)
+    .await?;
+
+    PostsMediaAttachments::insert_many(attachment_ids.into_iter().map(|attachment_id| {
+        posts_media_attachments::Model {
+            post_id,
+            media_attachment_id: attachment_id,
+        }
+        .into_active_model()
+    }))
+    .exec(db_conn)
+    .await?;
+
+    Ok(())
+}
+
+async fn handle_mentions<'a, C, M>(
+    db_conn: &C,
+    author: &accounts::Model,
+    post_id: Uuid,
+    mention_iter: M,
+) -> Result<()>
+where
+    C: ConnectionTrait,
+    M: Iterator<Item = &'a Tag> + Clone,
+{
+    if mention_iter.clone().count() == 0 {
+        return Ok(());
+    }
+
+    PostsMentions::insert_many(mention_iter.map(|mention| {
+        posts_mentions::Model {
+            post_id,
+            account_id: author.id,
+            mention_text: mention.name.clone(),
+        }
+        .into_active_model()
+    }))
+    .exec(db_conn)
+    .await?;
+
+    Ok(())
+}
+
 async fn create_activity(
     state: &Zustand,
     author: accounts::Model,
     activity: Activity,
 ) -> Result<()> {
     let visibility = Visibility::from_activitypub(&author, &activity);
+    if let Some(object) = activity.object.into_object() {
+        let in_reply_to_id = OptionFuture::from(
+            object
+                .rest
+                .in_reply_to
+                .as_ref()
+                .map(|post_url| state.fetcher.fetch_object(post_url)),
+        )
+        .await
+        .transpose()?
+        .map(|in_reply_to| in_reply_to.id);
 
-    match activity.object.into_object() {
-        Some(Object::Note(note)) => {
-            let in_reply_to_id = OptionFuture::from(
-                note.rest
-                    .in_reply_to
-                    .as_ref()
-                    .map(|post_url| state.fetcher.fetch_note(post_url)),
-            )
-            .await
-            .transpose()?
-            .map(|in_reply_to| in_reply_to.id);
+        let new_post = state
+            .db_conn
+            .transaction(|tx| {
+                async move {
+                    let new_post = Posts::insert(
+                        posts::Model {
+                            id: Uuid::now_v7(),
+                            account_id: author.id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: object.summary,
+                            content: object.content,
+                            is_sensitive: object.rest.sensitive,
+                            visibility,
+                            is_local: false,
+                            url: object.rest.id,
+                            created_at: object.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .exec(tx)
+                    .await?;
 
-            let new_post = Posts::insert(
-                posts::Model {
-                    id: Uuid::now_v7(),
-                    account_id: author.id,
-                    in_reply_to_id,
-                    reposted_post_id: None,
-                    subject: note.summary,
-                    content: note.content,
-                    is_sensitive: note.rest.sensitive,
-                    visibility,
-                    is_local: false,
-                    url: note.rest.id,
-                    created_at: note.rest.published.into(),
-                    updated_at: Utc::now().into(),
+                    handle_attachments(tx, &author, new_post.last_insert_id, object.attachment)
+                        .await?;
+
+                    let mention_iter = object
+                        .tag
+                        .iter()
+                        .filter(|tag| tag.r#type == TagType::Mention);
+                    handle_mentions(tx, &author, new_post.last_insert_id, mention_iter).await?;
+
+                    Ok::<_, Error>(new_post)
                 }
-                .into_active_model(),
-            )
-            .exec(&state.db_conn)
+                .boxed()
+            })
             .await?;
 
-            state
-                .event_emitter
-                .post
-                .emit(PostEvent {
-                    r#type: EventType::Create,
-                    post_id: new_post.last_insert_id,
-                })
-                .await
-                .map_err(Error::Event)?;
-        }
-        None | Some(Object::Person(..)) => {
-            // Right now, we refuse to save anything but a note
-            // If we receive a user or just a URL to a resource, we don't care
-        }
+        state
+            .event_emitter
+            .post
+            .emit(PostEvent {
+                r#type: EventType::Create,
+                post_id: new_post.last_insert_id,
+            })
+            .await
+            .map_err(Error::Event)?;
     }
 
     Ok(())
