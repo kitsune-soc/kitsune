@@ -28,7 +28,7 @@ use metrics_util::layers::Layer as _;
 use once_cell::sync::OnceCell;
 use sea_orm::DatabaseConnection;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{env, fmt::Display, future, process, sync::Arc};
+use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
@@ -101,6 +101,7 @@ where
                 RedisCache::builder()
                     .prefix(cache_name)
                     .redis_conn(pool.clone())
+                    .ttl(Duration::from_secs(60)) // TODO: Parameterise this
                     .build()
                     .unwrap(),
             )
@@ -275,10 +276,10 @@ async fn main() {
     let state = initialise_state(&config, conn).await;
 
     tokio::spawn(self::http::run(state.clone(), config.server.clone()));
-
-    for _ in 0..config.server.job_workers {
-        tokio::spawn(self::job::run(state.clone()));
-    }
+    tokio::spawn(self::job::run_dispatcher(
+        state.clone(),
+        config.server.job_workers,
+    ));
 
     future::pending::<()>().await;
 }
