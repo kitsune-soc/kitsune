@@ -11,7 +11,6 @@ use crate::{
     state::Zustand,
 };
 use chrono::Utc;
-use futures_util::{stream::FuturesUnordered, StreamExt};
 use kitsune_db::entity::jobs;
 use kitsune_db::{custom::JobState, entity::prelude::Jobs};
 use once_cell::sync::Lazy;
@@ -21,6 +20,7 @@ use sea_orm::{
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tokio::task::JoinSet;
 
 mod catch_panic;
 
@@ -127,7 +127,7 @@ async fn get_jobs(db_conn: &DatabaseConnection, num_jobs: usize) -> Result<Vec<j
 #[instrument(skip(state))]
 pub async fn run_dispatcher(state: Zustand, num_job_workers: usize) {
     let deliverer = Deliverer::default();
-    let mut executor = FuturesUnordered::new();
+    let mut executor = JoinSet::new();
     let mut execution_timeout = tokio::time::interval(EXECUTION_TIMEOUT_DURATION);
 
     let mut pause_between_queries = tokio::time::interval(PAUSE_BETWEEN_QUERIES);
@@ -154,16 +154,12 @@ pub async fn run_dispatcher(state: Zustand, num_job_workers: usize) {
         }
 
         for job in jobs {
-            executor.push(tokio::spawn(execute_one(
-                job,
-                state.clone(),
-                deliverer.clone(),
-            )));
+            executor.spawn(execute_one(job, state.clone(), deliverer.clone()));
         }
 
         loop {
             tokio::select! {
-                None = executor.next() => break,
+                None = executor.join_next() => break,
                 _ = execution_timeout.tick() => break,
             }
         }
