@@ -10,7 +10,7 @@ derive_builder = "0.12.0"
 http = "0.2.9"
 rayon = "1.7.0"
 ring = { version = "0.16.20", features = ["std"] }
-thiserror = "1.0.39"
+thiserror = "1.0.40"
 tokio = { version = "1.26.0", features = ["sync"] }
 
 [dev-dependencies]
