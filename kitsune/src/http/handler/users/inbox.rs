@@ -1,4 +1,5 @@
 use crate::{
+    activitypub::{handle_attachments, handle_mentions},
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
@@ -10,19 +11,15 @@ use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, favourites, media_attachments, posts,
-        posts_media_attachments, posts_mentions,
-        prelude::{
-            AccountsFollowers, Favourites, MediaAttachments, Posts, PostsMediaAttachments,
-            PostsMentions,
-        },
+        accounts, accounts_followers, favourites, posts,
+        prelude::{AccountsFollowers, Favourites, Posts},
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
-use kitsune_type::ap::{object::MediaAttachment, Activity, ActivityType, Tag, TagType};
+use kitsune_type::ap::{Activity, ActivityType};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
-    QueryFilter, QuerySelect, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
+    QuerySelect, TransactionTrait,
 };
 use uuid::Uuid;
 
@@ -38,83 +35,6 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let mut follow_activity: accounts_followers::ActiveModel = follow_activity.into();
     follow_activity.approved_at = ActiveValue::Set(Some(Utc::now().into()));
     follow_activity.update(&state.db_conn).await?;
-
-    Ok(())
-}
-
-async fn handle_attachments<C>(
-    db_conn: &C,
-    author: &accounts::Model,
-    post_id: Uuid,
-    attachments: Vec<MediaAttachment>,
-) -> Result<()>
-where
-    C: ConnectionTrait,
-{
-    if attachments.is_empty() {
-        return Ok(());
-    }
-    let attachment_ids: Vec<Uuid> = (0..attachments.len()).map(|_| Uuid::now_v7()).collect();
-
-    MediaAttachments::insert_many(
-        attachments
-            .into_iter()
-            .zip(attachment_ids.iter().copied())
-            .map(|(attachment, attachment_id)| {
-                media_attachments::Model {
-                    id: attachment_id,
-                    account_id: author.id,
-                    content_type: attachment.media_type,
-                    description: attachment.name,
-                    blurhash: attachment.blurhash,
-                    file_path: None,
-                    remote_url: Some(attachment.url),
-                    created_at: Utc::now().into(),
-                    updated_at: Utc::now().into(),
-                }
-                .into_active_model()
-            }),
-    )
-    .exec_with_returning(db_conn)
-    .await?;
-
-    PostsMediaAttachments::insert_many(attachment_ids.into_iter().map(|attachment_id| {
-        posts_media_attachments::Model {
-            post_id,
-            media_attachment_id: attachment_id,
-        }
-        .into_active_model()
-    }))
-    .exec(db_conn)
-    .await?;
-
-    Ok(())
-}
-
-async fn handle_mentions<'a, C, M>(
-    db_conn: &C,
-    author: &accounts::Model,
-    post_id: Uuid,
-    mention_iter: M,
-) -> Result<()>
-where
-    C: ConnectionTrait,
-    M: Iterator<Item = &'a Tag> + Clone,
-{
-    if mention_iter.clone().count() == 0 {
-        return Ok(());
-    }
-
-    PostsMentions::insert_many(mention_iter.map(|mention| {
-        posts_mentions::Model {
-            post_id,
-            account_id: author.id,
-            mention_text: mention.name.clone(),
-        }
-        .into_active_model()
-    }))
-    .exec(db_conn)
-    .await?;
 
     Ok(())
 }
@@ -163,12 +83,7 @@ async fn create_activity(
 
                     handle_attachments(tx, &author, new_post.last_insert_id, object.attachment)
                         .await?;
-
-                    let mention_iter = object
-                        .tag
-                        .iter()
-                        .filter(|tag| tag.r#type == TagType::Mention);
-                    handle_mentions(tx, &author, new_post.last_insert_id, mention_iter).await?;
+                    handle_mentions(tx, &author, new_post.last_insert_id, &object.tag).await?;
 
                     Ok::<_, Error>(new_post)
                 }

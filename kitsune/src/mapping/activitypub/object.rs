@@ -114,7 +114,8 @@ impl IntoObject for posts::Model {
             tag.push(Tag {
                 r#type: TagType::Mention,
                 name: mention.mention_text,
-                href: mentioned_url,
+                href: Some(mentioned_url),
+                icon: None,
             });
         }
 

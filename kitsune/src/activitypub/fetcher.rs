@@ -28,6 +28,8 @@ use std::{sync::Arc, time::Duration};
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
+use super::{handle_attachments, handle_mentions};
+
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
@@ -299,30 +301,43 @@ impl Fetcher {
             None
         };
 
-        let post = Posts::insert(
-            posts::Model {
-                id: Uuid::new_v7(uuid_timestamp),
-                account_id: user.id,
-                in_reply_to_id,
-                reposted_post_id: None,
-                subject: object.summary,
-                content: object.content,
-                is_sensitive: object.rest.sensitive,
-                visibility,
-                is_local: false,
-                url: object.rest.id.clone(),
-                created_at: object.rest.published.into(),
-                updated_at: Utc::now().into(),
-            }
-            .into_active_model(),
-        )
-        .on_conflict(
-            OnConflict::column(posts::Column::Url)
-                .update_columns([posts::Column::Content, posts::Column::Subject])
-                .clone(),
-        )
-        .exec_with_returning(&self.db_conn)
-        .await?;
+        let post = self
+            .db_conn
+            .transaction(|tx| {
+                async move {
+                    let new_post = Posts::insert(
+                        posts::Model {
+                            id: Uuid::new_v7(uuid_timestamp),
+                            account_id: user.id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: object.summary,
+                            content: object.content,
+                            is_sensitive: object.rest.sensitive,
+                            visibility,
+                            is_local: false,
+                            url: object.rest.id,
+                            created_at: object.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .on_conflict(
+                        OnConflict::column(posts::Column::Url)
+                            .update_columns([posts::Column::Content, posts::Column::Subject])
+                            .clone(),
+                    )
+                    .exec_with_returning(tx)
+                    .await?;
+
+                    handle_attachments(tx, &user, new_post.id, object.attachment).await?;
+                    handle_mentions(tx, &user, new_post.id, &object.tag).await?;
+
+                    Ok::<_, Error>(new_post)
+                }
+                .boxed()
+            })
+            .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
             self.search_service
@@ -330,7 +345,7 @@ impl Fetcher {
                 .await?;
         }
 
-        self.post_cache.set(&object.rest.id, &post).await?;
+        self.post_cache.set(&post.url, &post).await?;
 
         Ok(Some(post))
     }

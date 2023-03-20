@@ -73,6 +73,7 @@ pub struct Object {
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum TagType {
+    Emoji,
     Hashtag,
     Mention,
 }
@@ -81,7 +82,8 @@ pub enum TagType {
 pub struct Tag {
     pub r#type: TagType,
     pub name: String,
-    pub href: String,
+    pub href: Option<String>,
+    pub icon: Option<MediaAttachment>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
