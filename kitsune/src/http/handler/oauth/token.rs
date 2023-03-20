@@ -146,7 +146,7 @@ async fn authorization_code(
 
                 authorization_code.delete(tx).await?;
 
-                Ok((access_token, refresh_token))
+                Ok::<_, Error>((access_token, refresh_token))
             }
             .boxed()
         })
@@ -192,7 +192,7 @@ async fn client_credentials(
                 .insert(tx)
                 .await?;
 
-                Ok((access_token, refresh_token))
+                Ok::<_, Error>((access_token, refresh_token))
             }
             .boxed()
         })
@@ -291,7 +291,7 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
                     .exec(tx)
                     .await?;
 
-                Ok((new_access_token, refresh_token))
+                Ok::<_, Error>((new_access_token, refresh_token))
             }
             .boxed()
         })

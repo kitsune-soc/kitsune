@@ -1,22 +1,23 @@
 use crate::{
-    error::{ApiError, Result},
+    error::{ApiError, Error, Result},
     state::Zustand,
     util::BaseToCc,
 };
 use async_trait::async_trait;
+use futures_util::TryStreamExt;
 use kitsune_db::{
     column::UrlQuery,
     entity::{
-        accounts, media_attachments, posts,
-        prelude::{Accounts, MediaAttachments},
+        accounts, media_attachments, posts, posts_mentions,
+        prelude::{Accounts, MediaAttachments, PostsMentions},
     },
-    link::{InReplyTo, MentionedAccounts},
+    link::InReplyTo,
 };
 use kitsune_type::ap::{
     ap_context,
     helper::StringOrObject,
-    object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
-    BaseObject, Object,
+    object::{Actor, ActorType, MediaAttachment, MediaAttachmentType, PublicKey},
+    BaseObject, Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
 use sea_orm::{prelude::*, QuerySelect};
@@ -79,20 +80,52 @@ impl IntoObject for posts::Model {
             .one(&state.db_conn)
             .await?;
 
-        let mut mentioned: Vec<String> = self
-            .find_linked(MentionedAccounts)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<_, UrlQuery>()
+        let attachment = self
+            .find_related(MediaAttachments)
+            .stream(&state.db_conn)
+            .await?
+            .map_err(Error::from)
+            .and_then(|attachment| async move {
+                let url = state.service.attachment.get_url(attachment.id).await?;
+
+                Ok(MediaAttachment {
+                    r#type: MediaAttachmentType::Document,
+                    name: attachment.description,
+                    blurhash: attachment.blurhash,
+                    media_type: attachment.content_type,
+                    url,
+                })
+            })
+            .try_collect()
+            .await?;
+
+        let mentions = PostsMentions::find()
+            .filter(posts_mentions::Column::PostId.eq(self.id))
+            .find_also_related(Accounts)
             .all(&state.db_conn)
             .await?;
 
+        let mut tag = Vec::new();
         let (mut to, cc) = self.visibility.base_to_cc(&account);
-        to.append(&mut mentioned);
+        for (mention, mentioned) in mentions {
+            let mentioned_url = mentioned.unwrap().url;
 
-        Ok(Object::Note(Note {
+            to.push(mentioned_url.clone());
+            tag.push(Tag {
+                r#type: TagType::Mention,
+                name: mention.mention_text,
+                href: Some(mentioned_url),
+                icon: None,
+            });
+        }
+
+        Ok(Object {
+            r#type: ObjectType::Note,
             summary: self.subject,
             content: self.content,
+            attachment,
+            tag,
+            url: None,
             rest: BaseObject {
                 context: ap_context(),
                 id: self.url,
@@ -103,13 +136,13 @@ impl IntoObject for posts::Model {
                 to,
                 cc,
             },
-        }))
+        })
     }
 }
 
 #[async_trait]
 impl IntoObject for accounts::Model {
-    type Output = Object;
+    type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let public_key_id = format!("{}#main-key", self.url);
@@ -136,7 +169,8 @@ impl IntoObject for accounts::Model {
         let outbox_url = format!("{}/outbox", self.url);
         let following_url = format!("{}/following", self.url);
 
-        Ok(Object::Person(Actor {
+        Ok(Actor {
+            r#type: ActorType::Person,
             name: self.display_name,
             subject: self.note,
             icon,
@@ -157,6 +191,6 @@ impl IntoObject for accounts::Model {
                 owner: self.url,
                 public_key_pem: self.public_key,
             },
-        }))
+        })
     }
 }

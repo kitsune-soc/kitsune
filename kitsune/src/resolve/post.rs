@@ -5,9 +5,9 @@ use crate::{
 };
 use kitsune_db::entity::{accounts, prelude::Accounts};
 use parking_lot::Mutex;
-use post_process::{BoxError, Element, Html, Transformer};
+use post_process::{BoxError, Element, Html, Render, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
-use std::{borrow::Cow, collections::HashSet, mem};
+use std::{borrow::Cow, collections::HashMap, mem};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -58,7 +58,7 @@ impl PostResolver {
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
-        mentioned_accounts: &Mutex<HashSet<Uuid>>,
+        mentioned_accounts: &Mutex<HashMap<Uuid, String>>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -66,7 +66,9 @@ impl PostResolver {
                     .fetch_account(&mention.username, mention.domain.as_deref())
                     .await?
                 {
-                    mentioned_accounts.lock().insert(account.id);
+                    let mut mention_text = String::new();
+                    Element::Mention(mention.clone()).render(&mut mention_text);
+                    mentioned_accounts.lock().insert(account.id, mention_text);
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
@@ -92,15 +94,15 @@ impl PostResolver {
     ///
     /// # Returns
     ///
-    /// - List of mentioned accounts
+    /// - List of mentioned accounts, represented as `(Account ID, Mention text)`
     /// - Content with the mentions replaced by links
     ///
     /// # Panics
     ///
     /// This should never panic
     #[instrument(skip_all)]
-    pub async fn resolve(&self, content: &str) -> Result<(Vec<Uuid>, String)> {
-        let mentioned_account_ids = Mutex::new(HashSet::new());
+    pub async fn resolve(&self, content: &str) -> Result<(Vec<(Uuid, String)>, String)> {
+        let mentioned_account_ids = Mutex::new(HashMap::new());
         let transformer = Transformer::new(|elem| self.transform(elem, &mentioned_account_ids));
 
         let content = transformer
@@ -151,7 +153,8 @@ mod test {
         assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
-        let mentioned_account = Accounts::find_by_id(mentioned_account_ids[0])
+        let (account_id, _mention_text) = &mentioned_account_ids[0];
+        let mentioned_account = Accounts::find_by_id(*account_id)
             .one(&db_conn)
             .await
             .ok()

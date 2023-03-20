@@ -1,4 +1,5 @@
 use crate::{
+    activitypub::{handle_attachments, handle_mentions},
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
@@ -6,7 +7,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use chrono::Utc;
-use futures_util::future::OptionFuture;
+use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
     custom::Visibility,
     entity::{
@@ -15,10 +16,10 @@ use kitsune_db::{
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
-use kitsune_type::ap::{Activity, ActivityType, Object};
+use kitsune_type::ap::{Activity, ActivityType};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
-    QuerySelect,
+    QuerySelect, TransactionTrait,
 };
 use uuid::Uuid;
 
@@ -44,53 +45,61 @@ async fn create_activity(
     activity: Activity,
 ) -> Result<()> {
     let visibility = Visibility::from_activitypub(&author, &activity);
+    if let Some(object) = activity.object.into_object() {
+        let in_reply_to_id = OptionFuture::from(
+            object
+                .rest
+                .in_reply_to
+                .as_ref()
+                .map(|post_url| state.fetcher.fetch_object(post_url)),
+        )
+        .await
+        .transpose()?
+        .map(|in_reply_to| in_reply_to.id);
 
-    match activity.object.into_object() {
-        Some(Object::Note(note)) => {
-            let in_reply_to_id = OptionFuture::from(
-                note.rest
-                    .in_reply_to
-                    .as_ref()
-                    .map(|post_url| state.fetcher.fetch_note(post_url)),
-            )
-            .await
-            .transpose()?
-            .map(|in_reply_to| in_reply_to.id);
+        let new_post = state
+            .db_conn
+            .transaction(|tx| {
+                async move {
+                    let new_post = Posts::insert(
+                        posts::Model {
+                            id: Uuid::now_v7(),
+                            account_id: author.id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: object.summary,
+                            content: object.content,
+                            is_sensitive: object.rest.sensitive,
+                            visibility,
+                            is_local: false,
+                            url: object.rest.id,
+                            created_at: object.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .exec(tx)
+                    .await?;
 
-            let new_post = Posts::insert(
-                posts::Model {
-                    id: Uuid::now_v7(),
-                    account_id: author.id,
-                    in_reply_to_id,
-                    reposted_post_id: None,
-                    subject: note.summary,
-                    content: note.content,
-                    is_sensitive: note.rest.sensitive,
-                    visibility,
-                    is_local: false,
-                    url: note.rest.id,
-                    created_at: note.rest.published.into(),
-                    updated_at: Utc::now().into(),
+                    handle_attachments(tx, &author, new_post.last_insert_id, object.attachment)
+                        .await?;
+                    handle_mentions(tx, &author, new_post.last_insert_id, &object.tag).await?;
+
+                    Ok::<_, Error>(new_post)
                 }
-                .into_active_model(),
-            )
-            .exec(&state.db_conn)
+                .boxed()
+            })
             .await?;
 
-            state
-                .event_emitter
-                .post
-                .emit(PostEvent {
-                    r#type: EventType::Create,
-                    post_id: new_post.last_insert_id,
-                })
-                .await
-                .map_err(Error::Event)?;
-        }
-        None | Some(Object::Person(..)) => {
-            // Right now, we refuse to save anything but a note
-            // If we receive a user or just a URL to a resource, we don't care
-        }
+        state
+            .event_emitter
+            .post
+            .emit(PostEvent {
+                r#type: EventType::Create,
+                post_id: new_post.last_insert_id,
+            })
+            .await
+            .map_err(Error::Event)?;
     }
 
     Ok(())

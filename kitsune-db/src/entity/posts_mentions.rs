@@ -10,6 +10,8 @@ pub struct Model {
     pub post_id: Uuid,
     #[sea_orm(primary_key, auto_increment = false)]
     pub account_id: Uuid,
+    #[sea_orm(column_type = "Text")]
+    pub mention_text: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

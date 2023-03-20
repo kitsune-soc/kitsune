@@ -111,7 +111,7 @@ async fn get(
                 .insert(0, state.mastodon_mapper.map(account).await?);
         }
 
-        if let Ok(post) = state.fetcher.fetch_note(query.query.as_str()).await {
+        if let Ok(post) = state.fetcher.fetch_object(query.query.as_str()).await {
             search_result
                 .statuses
                 .insert(0, state.mastodon_mapper.map(post).await?);
