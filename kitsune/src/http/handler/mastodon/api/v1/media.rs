@@ -1,16 +1,18 @@
 use crate::{
     error::{ApiError, Result},
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     mapping::MastodonMapper,
-    service::attachment::{AttachmentService, Upload},
+    service::attachment::{AttachmentService, Update, Upload},
     state::Zustand,
 };
 use axum::{
+    debug_handler,
     extract::{Multipart, Path, State},
     routing, Json, Router,
 };
-use futures_util::TryStreamExt;
+use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_type::mastodon::MediaAttachment;
+use serde::Deserialize;
 use std::io::SeekFrom;
 use tempfile::tempfile;
 use tokio::{
@@ -20,7 +22,12 @@ use tokio::{
 use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 
-async fn get(
+#[derive(Deserialize)]
+pub struct UpdateAttachment {
+    description: String,
+}
+
+pub async fn get(
     State(attachment_service): State<AttachmentService>,
     State(mapper): State<MastodonMapper>,
     Path(id): Path<Uuid>,
@@ -74,8 +81,30 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
 
+#[debug_handler(state = Zustand)]
+pub async fn put(
+    State(attachment_service): State<AttachmentService>,
+    State(mastodon_mapper): State<MastodonMapper>,
+    AuthExtractor(user_data): MastodonAuthExtractor,
+    Path(attachment_id): Path<Uuid>,
+    FormOrJson(form): FormOrJson<UpdateAttachment>,
+) -> Result<Json<MediaAttachment>> {
+    let update = Update::builder()
+        .account_id(user_data.account.id)
+        .attachment_id(attachment_id)
+        .description(form.description)
+        .build()
+        .unwrap();
+
+    attachment_service
+        .update(update)
+        .and_then(|model| mastodon_mapper.map(model))
+        .map_ok(Json)
+        .await
+}
+
 pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
-        .route("/:id", routing::get(get))
+        .route("/:id", routing::get(get).put(put))
 }

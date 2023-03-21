@@ -7,11 +7,29 @@ use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
 use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, StorageBackend};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter,
+};
 use std::sync::Arc;
 use uuid::Uuid;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
+
+#[derive(Builder)]
+pub struct Update {
+    account_id: Uuid,
+    attachment_id: Uuid,
+    #[builder(setter(strip_option))]
+    description: Option<String>,
+}
+
+impl Update {
+    #[must_use]
+    pub fn builder() -> UpdateBuilder {
+        UpdateBuilder::default()
+    }
+}
 
 #[derive(Builder)]
 #[builder(pattern = "owned")]
@@ -109,6 +127,22 @@ impl AttachmentService {
         } else {
             Err(ApiError::NotFound.into())
         }
+    }
+
+    pub async fn update(&self, update: Update) -> Result<media_attachments::Model> {
+        let active_model = media_attachments::ActiveModel {
+            id: ActiveValue::Set(update.attachment_id),
+            description: update
+                .description
+                .map_or(ActiveValue::NotSet, |desc| ActiveValue::Set(Some(desc))),
+            ..Default::default()
+        };
+
+        MediaAttachments::update(active_model)
+            .filter(media_attachments::Column::AccountId.eq(update.account_id))
+            .exec(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<media_attachments::Model>
