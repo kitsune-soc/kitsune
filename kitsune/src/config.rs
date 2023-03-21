@@ -15,6 +15,13 @@ pub enum CacheConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct InstanceConfiguration {
+    pub name: String,
+    pub description: String,
+    pub character_limit: usize,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct RedisMessagingConfiguration {
     pub redis_url: String,
 }
@@ -72,6 +79,7 @@ pub struct UrlConfiguration {
 pub struct Configuration {
     pub cache: CacheConfiguration,
     pub database_url: String,
+    pub instance: InstanceConfiguration,
     pub messaging: MessagingConfiguration,
     pub server: ServerConfiguration,
     pub search: SearchConfiguration,

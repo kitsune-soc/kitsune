@@ -1,35 +1,25 @@
-use crate::{error::Result, service::url::UrlService, state::Zustand};
-use axum::{extract::State, routing, Json, Router};
-use kitsune_db::entity::{
-    accounts,
-    prelude::{Accounts, Users},
+use crate::{
+    error::Result,
+    service::{instance::InstanceService, url::UrlService},
+    state::Zustand,
 };
+use axum::{extract::State, routing, Json, Router};
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
 };
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect,
-};
 
 async fn get(
-    State(db_conn): State<DatabaseConnection>,
+    State(instance_service): State<InstanceService>,
     State(url_service): State<UrlService>,
 ) -> Result<Json<Instance>> {
-    let user_count = Users::find().count(&db_conn).await?;
-
-    let domain_count = Accounts::find()
-        .filter(accounts::Column::Domain.is_not_null())
-        .select_only()
-        .column(accounts::Column::Domain)
-        .group_by(accounts::Column::Domain)
-        .count(&db_conn)
-        .await?;
+    let user_count = instance_service.user_count().await?;
+    let domain_count = instance_service.known_instances().await?;
 
     Ok(Json(Instance {
         uri: url_service.domain().into(),
-        title: "Kitsune".into(),
-        short_description: "https://www.youtube.com/watch?v=6lnnPnr_0SU".into(),
+        title: instance_service.name().into(),
+        short_description: instance_service.description().into(),
         description: String::new(),
         email: String::new(),
         version: env!("CARGO_PKG_VERSION").into(),

@@ -2,6 +2,8 @@ let Cache = ./types/cache.dhall
 
 let FsStorage = ./types/storage/fs.dhall
 
+let Instance = ./types/instance.dhall
+
 let Messaging = ./types/messaging.dhall
 
 let RedisCache = ./types/cache/redis.dhall
@@ -21,6 +23,7 @@ let Url = ./types/url.dhall
 let Config =
       { cache : Cache
       , database_url : Text
+      , instance : Instance
       , messaging : Messaging
       , server : Server
       , search : Search
@@ -31,6 +34,7 @@ let Config =
 in  { Cache
     , Config
     , FsStorage
+    , Instance
     , Messaging
     , RedisCache
     , RedisMessaging

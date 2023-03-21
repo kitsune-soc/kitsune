@@ -11,9 +11,9 @@ use kitsune::{
     http, job,
     resolve::PostResolver,
     service::{
-        account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
-        post::PostService, search::GrpcSearchService, timeline::TimelineService, url::UrlService,
-        user::UserService,
+        account::AccountService, attachment::AttachmentService, instance::InstanceService,
+        oauth2::Oauth2Service, post::PostService, search::GrpcSearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
@@ -188,6 +188,14 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .build()
         .unwrap();
 
+    let instance_service = InstanceService::builder()
+        .db_conn(conn.clone())
+        .name(config.instance.name.as_str())
+        .description(config.instance.description.as_str())
+        .character_limit(config.instance.character_limit)
+        .build()
+        .unwrap();
+
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
         .build()
@@ -196,6 +204,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .db_conn(conn.clone())
+        .instance_service(instance_service.clone())
         .post_resolver(post_resolver)
         .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
@@ -239,6 +248,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         mastodon_mapper,
         service: Service {
             account: account_service,
+            instance: instance_service,
             oauth2: oauth2_service,
             search: search_service,
             post: post_service,
