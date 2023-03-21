@@ -1,4 +1,4 @@
-use super::{search::ArcSearchService, url::UrlService};
+use super::{instance::InstanceService, search::ArcSearchService, url::UrlService};
 use crate::{
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
@@ -116,6 +116,7 @@ impl DeletePost {
 #[builder(pattern = "owned")]
 pub struct PostService {
     db_conn: DatabaseConnection,
+    instance_service: InstanceService,
     post_resolver: PostResolver,
     search_service: ArcSearchService,
     status_event_emitter: PostEventEmitter,
@@ -196,6 +197,10 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn create(&self, create_post: CreatePost) -> Result<posts::Model> {
+        if create_post.content.chars().count() > self.instance_service.character_limit() {
+            return Err(ApiError::BadRequest.into());
+        }
+
         let mut content = if create_post.process_markdown {
             let parser = Parser::new_ext(&create_post.content, Options::all());
             let mut buf = String::new();

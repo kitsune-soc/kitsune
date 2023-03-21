@@ -18,7 +18,7 @@ pub enum CacheConfiguration {
 pub struct InstanceConfiguration {
     pub name: String,
     pub description: String,
-    pub character_limit: u64,
+    pub character_limit: usize,
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]

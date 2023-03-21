@@ -2,9 +2,9 @@ use crate::{
     activitypub::Fetcher,
     event::PostEventEmitter,
     service::{
-        account::AccountService, attachment::AttachmentService, oauth2::Oauth2Service,
-        post::PostService, search::ArcSearchService, timeline::TimelineService, url::UrlService,
-        user::UserService,
+        account::AccountService, attachment::AttachmentService, instance::InstanceService,
+        oauth2::Oauth2Service, post::PostService, search::ArcSearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -32,6 +32,7 @@ impl_from_ref! {
         Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         ArcSearchService => |input: &Zustand| input.service.search.clone(),
+        InstanceService => |input: &Zustand| input.service.instance.clone(),
         TimelineService => |input: &Zustand| input.service.timeline.clone(),
         UrlService => |input: &Zustand| input.service.url.clone(),
         UserService => |input: &Zustand| input.service.user.clone()
@@ -64,6 +65,7 @@ pub struct Service {
     pub attachment: AttachmentService,
     pub oauth2: Oauth2Service,
     pub post: PostService,
+    pub instance: InstanceService,
     pub search: ArcSearchService,
     pub timeline: TimelineService,
     pub url: UrlService,

@@ -10,7 +10,7 @@ in    { cache =
           : types.Cache
       , database_url = "postgres://localhost/kitsune"
       , instance =
-            { name = "Kitsune"
+            { name = "Kitsune ActivityPub server lmao"
             , description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
             , character_limit = 5000
             }
