@@ -9,6 +9,7 @@ use kitsune_db::entity::prelude::Accounts;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
+mod relationships;
 mod statuses;
 mod verify_credentials;
 
@@ -28,5 +29,6 @@ pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:id", routing::get(get))
         .route("/:id/statuses", routing::get(statuses::get))
+        .route("/relationships", routing::get(relationships::get))
         .route("/verify_credentials", routing::get(verify_credentials::get))
 }

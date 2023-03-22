@@ -76,7 +76,7 @@ pub async fn post(
         }
     }
 
-    let upload = upload.build().map_err(|_| ApiError::Unauthorised)?;
+    let upload = upload.build().map_err(|_| ApiError::BadRequest)?;
     let media_attachment = attachment_service.upload(upload).await?;
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }

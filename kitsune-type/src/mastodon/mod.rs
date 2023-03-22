@@ -4,6 +4,7 @@ use uuid::Uuid;
 pub mod account;
 pub mod instance;
 pub mod media_attachment;
+pub mod relationship;
 pub mod search;
 pub mod status;
 

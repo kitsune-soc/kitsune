@@ -18,6 +18,7 @@ pub struct Instance {
     pub title: String,
     pub short_description: String,
     pub description: String,
+    pub max_toot_chars: usize,
     pub email: String,
     pub version: String,
     pub urls: Urls,
