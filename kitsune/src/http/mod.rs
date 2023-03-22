@@ -14,8 +14,7 @@ mod graphql;
 mod handler;
 mod page;
 
-#[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: ServerConfiguration) {
+pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();
@@ -39,7 +38,7 @@ pub async fn run(state: Zustand, server_config: ServerConfiguration) {
         router = router.merge(handler::mastodon::routes());
     }
 
-    let router = router
+    router
         .merge(graphql::routes(state.clone()))
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .fallback_service(get_service(
@@ -49,8 +48,12 @@ pub async fn run(state: Zustand, server_config: ServerConfiguration) {
         .layer(PrometheusMetricLayer::new())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
+        .with_state(state)
+}
 
+#[instrument(skip_all, fields(port = %server_config.port))]
+pub async fn run(state: Zustand, server_config: ServerConfiguration) {
+    let router = create_router(state, &server_config);
     axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())
         .await
