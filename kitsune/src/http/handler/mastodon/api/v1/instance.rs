@@ -13,6 +13,7 @@ async fn get(
     State(instance_service): State<InstanceService>,
     State(url_service): State<UrlService>,
 ) -> Result<Json<Instance>> {
+    let status_count = instance_service.local_post_count().await?;
     let user_count = instance_service.user_count().await?;
     let domain_count = instance_service.known_instances().await?;
 
@@ -21,6 +22,7 @@ async fn get(
         title: instance_service.name().into(),
         short_description: instance_service.description().into(),
         description: String::new(),
+        max_toot_chars: instance_service.character_limit(),
         email: String::new(),
         version: env!("CARGO_PKG_VERSION").into(),
         urls: Urls {
@@ -28,8 +30,8 @@ async fn get(
         },
         stats: Stats {
             user_count,
+            status_count,
             domain_count,
-            status_count: 0,
         },
     }))
 }
