@@ -50,7 +50,7 @@ impl InstanceService {
             .map_err(Error::from)
     }
 
-    pub async fn post_count(&self) -> Result<u64> {
+    pub async fn local_post_count(&self) -> Result<u64> {
         Posts::find()
             .filter(posts::Column::IsLocal.eq(true))
             .count(&self.db_conn)

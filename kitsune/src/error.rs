@@ -172,7 +172,7 @@ impl IntoResponse for Error {
             err @ Self::Api(ApiError::NotFound) => {
                 (StatusCode::NOT_FOUND, err.to_string()).into_response()
             }
-            err @ Self::OAuthApplicationNotFound => {
+            err @ (Self::Api(ApiError::BadRequest) | Self::OAuthApplicationNotFound) => {
                 (StatusCode::BAD_REQUEST, err.to_string()).into_response()
             }
             err @ (Self::Api(ApiError::Unauthorised) | Self::PasswordMismatch) => {

@@ -5,11 +5,12 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    accounts, media_attachments, posts, posts_mentions,
-    prelude::{Accounts, Favourites, MediaAttachments, Posts, PostsMentions},
+    accounts, accounts_followers, media_attachments, posts, posts_mentions,
+    prelude::{Accounts, AccountsFollowers, Favourites, MediaAttachments, Posts, PostsMentions},
 };
 use kitsune_type::mastodon::{
-    account::Source, media_attachment::MediaType, status::Mention, Account, MediaAttachment, Status,
+    account::Source, media_attachment::MediaType, relationship::Relationship, status::Mention,
+    Account, MediaAttachment, Status,
 };
 use mime::Mime;
 use sea_orm::{
@@ -95,6 +96,62 @@ impl IntoMastodon for accounts::Model {
                 note: String::new(),
                 fields: Vec::new(),
             },
+        })
+    }
+}
+
+/// Maps to the relationship between the two accounts
+///
+/// - Left: Requestor of the relationship
+/// - Right: Target of the relationship
+#[async_trait]
+impl IntoMastodon for (&accounts::Model, &accounts::Model) {
+    type Output = Relationship;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let (requestor, target) = self;
+        let (following, requested) = if let Some(follow) = AccountsFollowers::find()
+            .filter(
+                accounts_followers::Column::AccountId
+                    .eq(requestor.id)
+                    .and(accounts_followers::Column::FollowerId.eq(target.id)),
+            )
+            .one(state.db_conn)
+            .await?
+        {
+            (follow.approved_at.is_some(), follow.approved_at.is_none())
+        } else {
+            (false, false)
+        };
+
+        let followed_by = AccountsFollowers::find()
+            .filter(
+                accounts_followers::Column::AccountId
+                    .eq(target.id)
+                    .and(accounts_followers::Column::FollowerId.eq(requestor.id)),
+            )
+            .count(state.db_conn)
+            .await?
+            != 0;
+
+        Ok(Relationship {
+            id: target.id,
+            following,
+            showing_reblogs: true,
+            notifying: false,
+            followed_by,
+            blocking: false,
+            blocked_by: false,
+            muting: false,
+            muting_notifications: false,
+            requested,
+            domain_blocking: false,
+            endorsed: false,
+            note: String::default(),
         })
     }
 }
