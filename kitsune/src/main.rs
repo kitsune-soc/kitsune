@@ -6,7 +6,7 @@ use aws_sdk_s3::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{
     activitypub::Fetcher,
-    cache::{ArcCache, NoopCache, RedisCache},
+    cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
     config::{CacheConfiguration, Configuration, MessagingConfiguration, StorageConfiguration},
     http, job,
     resolve::PostResolver,
@@ -79,13 +79,10 @@ fn initialise_logging(config: &Configuration) {
 fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
 where
     K: Display + Send + Sync + ?Sized + 'static,
-    V: DeserializeOwned + Serialize + Send + Sync + 'static,
+    V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     match config.cache {
-        CacheConfiguration::InMemory => {
-            // TODO: Implement in-memory cache
-            todo!();
-        }
+        CacheConfiguration::InMemory => Arc::new(InMemoryCache::new(100, Duration::from_secs(60))), // TODO: Parameterise this
         CacheConfiguration::None => Arc::new(NoopCache),
         CacheConfiguration::Redis(ref redis_config) => {
             static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
