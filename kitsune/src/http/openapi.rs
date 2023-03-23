@@ -79,36 +79,35 @@ struct CommonApiDocs;
 
 #[cfg(feature = "mastodon-api")]
 #[derive(OpenApi)]
-#[
-    openapi(
-        components(schemas(
-            mastodon::api::v1::apps::AppForm,
-            mastodon::api::v1::media::CreateAttachment,
-            mastodon::api::v1::media::UpdateAttachment,
-            mastodon::api::v1::statuses::CreateForm,
-            mastodon::api::v2::search::SearchType,
-        )),
-        modifiers(&SecurityAddon),
-        paths(
-            mastodon::api::v1::accounts::get,
-            mastodon::api::v1::accounts::relationships::get,
-            mastodon::api::v1::accounts::statuses::get,
-            mastodon::api::v1::accounts::verify_credentials::get,
-            mastodon::api::v1::apps::post,
-            mastodon::api::v1::instance::get,
-            mastodon::api::v1::media::post,
-            mastodon::api::v1::media::put,
-            mastodon::api::v1::statuses::delete,
-            mastodon::api::v1::statuses::get,
-            mastodon::api::v1::statuses::post,
-            mastodon::api::v1::statuses::context::get,
-            mastodon::api::v1::statuses::favourite::post,
-            mastodon::api::v1::statuses::unfavourite::post,
-            mastodon::api::v1::timelines::home::get,
-            mastodon::api::v1::timelines::public::get,
-            mastodon::api::v2::search::get,
-        )
-    )]
+#[openapi(
+    components(schemas(
+        mastodon::api::v1::apps::AppForm,
+        mastodon::api::v1::media::CreateAttachment,
+        mastodon::api::v1::media::UpdateAttachment,
+        mastodon::api::v1::statuses::CreateForm,
+        mastodon::api::v2::search::SearchType,
+    )),
+    modifiers(&SecurityAddon),
+    paths(
+        mastodon::api::v1::accounts::get,
+        mastodon::api::v1::accounts::relationships::get,
+        mastodon::api::v1::accounts::statuses::get,
+        mastodon::api::v1::accounts::verify_credentials::get,
+        mastodon::api::v1::apps::post,
+        mastodon::api::v1::instance::get,
+        mastodon::api::v1::media::post,
+        mastodon::api::v1::media::put,
+        mastodon::api::v1::statuses::delete,
+        mastodon::api::v1::statuses::get,
+        mastodon::api::v1::statuses::post,
+        mastodon::api::v1::statuses::context::get,
+        mastodon::api::v1::statuses::favourite::post,
+        mastodon::api::v1::statuses::unfavourite::post,
+        mastodon::api::v1::timelines::home::get,
+        mastodon::api::v1::timelines::public::get,
+        mastodon::api::v2::search::get,
+    )
+)]
 struct MastodonApiDocs;
 
 pub fn api_docs() -> OpenApiStruct {
