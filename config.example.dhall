@@ -8,7 +8,9 @@ let makeSearchConfig =
 in    { cache =
             types.Cache.Redis { redis_url = "redis://localhost:6379" }
           : types.Cache
-      , database_url = "postgres://localhost/kitsune"
+      , database =
+            { url = "postgres://localhost/kitsune", max_connections = 20 }
+          : types.Database
       , instance =
             { name = "Kitsune"
             , description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
