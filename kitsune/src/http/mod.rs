@@ -1,6 +1,6 @@
 use self::{
     handler::{media, nodeinfo, oauth, posts, users, well_known},
-    openapi::ApiDocs,
+    openapi::api_docs,
 };
 use crate::{config::ServerConfiguration, state::Zustand};
 use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
@@ -10,7 +10,6 @@ use tower_http::{
     services::{ServeDir, ServeFile},
     trace::TraceLayer,
 };
-use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 mod cond;
@@ -46,7 +45,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
 
     router
         .merge(graphql::routes(state.clone()))
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDocs::openapi()))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .fallback_service(get_service(
             ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),

@@ -23,6 +23,13 @@ use tokio_util::io::ReaderStream;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
+#[derive(ToSchema)]
+pub struct CreateAttachment {
+    pub description: Option<String>,
+    #[schema(value_type = String, format = Binary)]
+    pub file: (),
+}
+
 #[derive(Deserialize, ToSchema)]
 pub struct UpdateAttachment {
     description: String,
