@@ -17,13 +17,14 @@ use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
 use serde::Deserialize;
 use url::Url;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 fn default_page_limit() -> u64 {
     40
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum SearchType {
     Accounts,
@@ -31,7 +32,7 @@ pub enum SearchType {
     Statuses,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 struct SearchQuery {
     #[serde(rename = "q")]
     query: String,
@@ -47,6 +48,17 @@ struct SearchQuery {
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    get,
+    path = "/api/v2/search",
+    security(
+        ("authorization" = [])
+    ),
+    params(SearchQuery),
+    responses(
+        (status = 200, description = "Search results", body = SearchResult),
+    ),
+)]
 async fn get(
     State(state): State<Zustand>,
     State(search): State<ArcSearchService>,

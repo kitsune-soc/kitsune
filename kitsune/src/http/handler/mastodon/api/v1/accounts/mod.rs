@@ -9,10 +9,18 @@ use kitsune_db::entity::prelude::Accounts;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
-mod relationships;
-mod statuses;
-mod verify_credentials;
+pub mod relationships;
+pub mod statuses;
+pub mod verify_credentials;
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/accounts/{id}",
+    responses(
+        (status = 200, description = "Account information", body = Account),
+        (status = StatusCode::NOT_FOUND, description = "No account with that ID exists"),
+    )
+)]
 async fn get(
     State(db_conn): State<DatabaseConnection>,
     State(mastodon_mapper): State<MastodonMapper>,

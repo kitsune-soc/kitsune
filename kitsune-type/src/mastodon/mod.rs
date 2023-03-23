@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 pub mod account;
@@ -14,7 +15,7 @@ pub use self::media_attachment::MediaAttachment;
 pub use self::search::SearchResult;
 pub use self::status::Status;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct App {
     pub id: Uuid,
     pub name: String,

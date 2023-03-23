@@ -9,12 +9,22 @@ use kitsune_db::entity::{accounts, prelude::Accounts};
 use kitsune_type::webfinger::{Link, Resource};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
+use utoipa::IntoParams;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 struct WebfingerQuery {
     resource: String,
 }
 
+#[utoipa::path(
+    get,
+    path = "/.well-known/webfinger",
+    params(WebfingerQuery),
+    responses(
+        (status = 200, description = "Response with the location of the user's profile", body = Resource),
+        (status = StatusCode::NOT_FOUND, description = "The service doesn't know this user"),
+    )
+)]
 async fn get(
     State(db_conn): State<DatabaseConnection>,
     State(url_service): State<UrlService>,

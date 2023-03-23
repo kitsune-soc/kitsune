@@ -11,6 +11,13 @@ use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde_json::Value;
 
 #[debug_handler]
+#[utoipa::path(
+    get,
+    path = "/nodeinfo/2.1",
+    responses(
+        (status = 200, description = "Get response following the Nodeinfo 2.1 schema", body = TwoOne)
+    ),
+)]
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
     let total = Users::find().count(&state.db_conn).await?;
     let local_posts = Posts::find()

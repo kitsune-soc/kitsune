@@ -10,14 +10,24 @@ use kitsune_db::entity::prelude::Accounts;
 use kitsune_type::mastodon::relationship::Relationship;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use serde::Deserialize;
+use utoipa::IntoParams;
 use uuid::Uuid;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 pub struct RelationshipQuery {
     id: Vec<Uuid>,
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    get,
+    path = "/api/v1/accounts/relationships",
+    params(RelationshipQuery),
+    responses(
+        (status = 200, description = "Relationship between you and the other accounts", body = Vec<Relationship>),
+        (status = 400, description = "One of the account IDs you input isn't known"),
+    ),
+)]
 pub async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
     State(db_conn): State<DatabaseConnection>,

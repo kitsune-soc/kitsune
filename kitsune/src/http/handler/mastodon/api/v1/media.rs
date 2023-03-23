@@ -20,13 +20,22 @@ use tokio::{
     io::{AsyncSeekExt, AsyncWriteExt},
 };
 use tokio_util::io::ReaderStream;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct UpdateAttachment {
     description: String,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/media/{id}",
+    responses(
+        (status = 200, description = "Media attachment", body = MediaAttachment),
+        (status = 404, description = "Media attachment doesn't exist"),
+    ),
+)]
 pub async fn get(
     State(attachment_service): State<AttachmentService>,
     State(mapper): State<MastodonMapper>,
@@ -37,6 +46,14 @@ pub async fn get(
     ))
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/media",
+    request_body(content = MediaAttachmentBody, content_type = "multipart/form-data"),
+    responses(
+        (status = 200, description = "New media attachment", body = MediaAttachment),
+    ),
+)]
 pub async fn post(
     State(attachment_service): State<AttachmentService>,
     State(mastodon_mapper): State<MastodonMapper>,
@@ -82,6 +99,14 @@ pub async fn post(
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    put,
+    path = "/api/v1/media/{id}",
+    request_body = UpdateAttachment,
+    responses(
+        (status = 200, description = "Updated media attachment", body = MediaAttachment),
+    ),
+)]
 pub async fn put(
     State(attachment_service): State<AttachmentService>,
     State(mastodon_mapper): State<MastodonMapper>,

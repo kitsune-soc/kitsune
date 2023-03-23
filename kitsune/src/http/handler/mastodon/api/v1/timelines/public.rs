@@ -11,6 +11,7 @@ use futures_util::{StreamExt, TryStreamExt};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use std::cmp::min;
+use utoipa::IntoParams;
 use uuid::Uuid;
 
 const MAX_LIMIT: usize = 40;
@@ -19,7 +20,7 @@ fn default_limit() -> usize {
     20
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 pub struct GetQuery {
     #[serde(default)]
     local: bool,
@@ -31,6 +32,14 @@ pub struct GetQuery {
     limit: usize,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/timelines/public",
+    params(GetQuery),
+    responses(
+        (status = 200, description = "Current public timeline", body = Vec<Status>),
+    ),
+)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
