@@ -9,7 +9,7 @@ use utoipa::{
 
 #[derive(ToSchema)]
 pub struct MediaAttachmentBody {
-    pub description: String,
+    pub description: Option<String>,
     #[schema(value_type = String, format = Binary)]
     pub file: (),
 }
