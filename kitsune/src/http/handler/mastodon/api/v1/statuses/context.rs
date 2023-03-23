@@ -17,6 +17,10 @@ use uuid::Uuid;
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/context",
+    security(
+        (),
+        ("oauth_token" = [])
+    ),
     responses(
         (status = 200, description = "Ancestor and descendant statuses in the thread", body = Context),
         (status = 404, description = "Status doesn't exist"),

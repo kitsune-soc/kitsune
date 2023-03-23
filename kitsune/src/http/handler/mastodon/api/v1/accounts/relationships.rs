@@ -22,6 +22,9 @@ pub struct RelationshipQuery {
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/relationships",
+    security(
+        ("oauth_token" = [])
+    ),
     params(RelationshipQuery),
     responses(
         (status = 200, description = "Relationship between you and the other accounts", body = Vec<Relationship>),

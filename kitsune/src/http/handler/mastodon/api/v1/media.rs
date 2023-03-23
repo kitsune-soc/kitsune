@@ -49,6 +49,9 @@ pub async fn get(
 #[utoipa::path(
     post,
     path = "/api/v1/media",
+    security(
+        ("oauth_token" = [])
+    ),
     request_body(content = MediaAttachmentBody, content_type = "multipart/form-data"),
     responses(
         (status = 200, description = "New media attachment", body = MediaAttachment),
@@ -102,6 +105,9 @@ pub async fn post(
 #[utoipa::path(
     put,
     path = "/api/v1/media/{id}",
+    security(
+        ("oauth_token" = [])
+    ),
     request_body = UpdateAttachment,
     responses(
         (status = 200, description = "Updated media attachment", body = MediaAttachment),

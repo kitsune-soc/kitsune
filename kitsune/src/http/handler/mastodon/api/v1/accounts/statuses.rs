@@ -32,6 +32,10 @@ pub struct GetQuery {
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/{id}/statuses",
+    security(
+        (),
+        ("oauth_token" = [])
+    ),
     params(GetQuery),
     responses(
         (status = 200, description = "Statuses by the user", body = Vec<Status>),

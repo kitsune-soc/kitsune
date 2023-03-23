@@ -32,6 +32,9 @@ pub struct GetQuery {
 #[utoipa::path(
     get,
     path = "/api/v1/timelines/home",
+    security(
+        ("oauth_token" = [])
+    ),
     params(GetQuery),
     responses(
         (status = 200, description = "Current home timeline", body = Vec<Status>),

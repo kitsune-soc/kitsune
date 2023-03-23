@@ -17,6 +17,9 @@ use uuid::Uuid;
 #[utoipa::path(
     post,
     path = "/api/v1/statuses/{id}/unfavourite",
+    security(
+        ("oauth_token" = [])
+    ),
     responses(
         (status = 200, description = "The status with updated information regarding like status"),
     )

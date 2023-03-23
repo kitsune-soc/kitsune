@@ -38,6 +38,9 @@ pub struct CreateForm {
 #[utoipa::path(
     delete,
     path = "/api/v1/statuses/{id}",
+    security(
+        ("oauth_token" = [])
+    ),
     responses(
         (status = StatusCode::OK, description = "Status was deleted"),
     )
@@ -63,6 +66,10 @@ async fn delete(
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}",
+    security(
+        (),
+        ("oauth_token" = [])
+    ),
     responses(
         (status = 200, description = "The requested status", body = Status),
         (status = 404, description = "Requested status doesn't exist"),
@@ -86,6 +93,9 @@ async fn get(
 #[utoipa::path(
     post,
     path = "/api/v1/statuses",
+    security(
+        ("oauth_token" = [])
+    ),
     request_body = CreateForm,
     responses(
         (status = 200, description = "Newly created post", body = Status),

@@ -52,7 +52,7 @@ struct SearchQuery {
     get,
     path = "/api/v2/search",
     security(
-        ("authorization" = [])
+        ("oauth_token" = [])
     ),
     params(SearchQuery),
     responses(
