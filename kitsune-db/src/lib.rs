@@ -15,7 +15,7 @@
 #![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
 
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection, DbErr};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
 use tracing_log::LogTracer;
 
 pub mod column;
@@ -31,10 +31,14 @@ pub mod r#trait;
 ///
 /// - Connection could not be established
 /// - Running the migration failed
-pub async fn connect(db_url: &str) -> Result<DatabaseConnection, DbErr> {
+pub async fn connect<C>(conn_opts: C) -> Result<DatabaseConnection, DbErr>
+where
+    C: Into<ConnectOptions>,
+{
     LogTracer::init().ok();
 
-    let conn = Database::connect(db_url).await?;
+    let conn = Database::connect(conn_opts).await?;
     Migrator::up(&conn, None).await?;
+
     Ok(conn)
 }

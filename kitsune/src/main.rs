@@ -26,7 +26,7 @@ use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
 use once_cell::sync::OnceCell;
-use sea_orm::DatabaseConnection;
+use sea_orm::{ConnectOptions, DatabaseConnection};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
 use tracing::level_filters::LevelFilter;
@@ -277,7 +277,10 @@ async fn main() {
     };
     initialise_logging(&config);
 
-    let conn = kitsune_db::connect(&config.database_url)
+    let conn_opts = ConnectOptions::new(config.database.url.clone())
+        .max_connections(config.database.max_connections)
+        .clone();
+    let conn = kitsune_db::connect(conn_opts)
         .await
         .expect("Failed to connect to database");
     let state = initialise_state(&config, conn).await;

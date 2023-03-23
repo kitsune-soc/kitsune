@@ -1,5 +1,7 @@
 let Cache = ./types/cache.dhall
 
+let Database = ./types/database.dhall
+
 let FsStorage = ./types/storage/fs.dhall
 
 let Instance = ./types/instance.dhall
@@ -22,7 +24,7 @@ let Url = ./types/url.dhall
 
 let Config =
       { cache : Cache
-      , database_url : Text
+      , database : Database
       , instance : Instance
       , messaging : Messaging
       , server : Server
@@ -33,6 +35,7 @@ let Config =
 
 in  { Cache
     , Config
+    , Database
     , FsStorage
     , Instance
     , Messaging

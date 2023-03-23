@@ -15,6 +15,12 @@ pub enum CacheConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct DatabaseConfiguration {
+    pub url: String,
+    pub max_connections: u32,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct InstanceConfiguration {
     pub name: String,
     pub description: String,
@@ -78,7 +84,7 @@ pub struct UrlConfiguration {
 #[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct Configuration {
     pub cache: CacheConfiguration,
-    pub database_url: String,
+    pub database: DatabaseConfiguration,
     pub instance: InstanceConfiguration,
     pub messaging: MessagingConfiguration,
     pub server: ServerConfiguration,
