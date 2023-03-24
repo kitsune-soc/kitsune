@@ -54,6 +54,7 @@ impl SearchService for SqlSearchService {
                     .filter(
                         accounts::Column::DisplayName
                             .like(&query)
+                            .or(accounts::Column::Username.like(&query))
                             .or(accounts::Column::Note.like(&query)),
                     )
                     .limit(max_results)
