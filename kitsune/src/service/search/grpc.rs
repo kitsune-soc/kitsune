@@ -1,7 +1,7 @@
+use super::{SearchIndex, SearchItem, SearchResult, SearchService};
 use crate::error::Result;
 use async_trait::async_trait;
 use futures_util::stream;
-use kitsune_db::entity::{accounts, posts};
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
     index::{
@@ -10,115 +10,9 @@ use kitsune_search_proto::{
     },
     search::{search_client::SearchClient, SearchRequest, SearchResult as GrpcSearchResult},
 };
-use std::{future, ops::Deref, sync::Arc};
+use std::future;
 use tonic::transport::{Channel, Endpoint};
 use uuid::Uuid;
-
-pub type ArcSearchService = Arc<dyn SearchService>;
-
-pub enum SearchItem {
-    Account(accounts::Model),
-    Post(posts::Model),
-}
-
-impl From<accounts::Model> for SearchItem {
-    fn from(account: accounts::Model) -> Self {
-        Self::Account(account)
-    }
-}
-
-impl From<posts::Model> for SearchItem {
-    fn from(post: posts::Model) -> Self {
-        Self::Post(post)
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum SearchIndex {
-    Account,
-    Post,
-}
-
-impl From<SearchIndex> for GrpcSearchIndex {
-    fn from(value: SearchIndex) -> Self {
-        match value {
-            SearchIndex::Account => GrpcSearchIndex::Account,
-            SearchIndex::Post => GrpcSearchIndex::Post,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct SearchResult {
-    pub id: Uuid,
-}
-
-impl From<GrpcSearchResult> for SearchResult {
-    fn from(value: GrpcSearchResult) -> Self {
-        let id = Uuid::from_bytes(
-            value
-                .id
-                .try_into()
-                .expect("Received non-UUID from search service"),
-        );
-
-        Self { id }
-    }
-}
-
-#[async_trait]
-pub trait SearchService: Send + Sync {
-    /// Add an item to the index
-    async fn add_to_index(&self, item: SearchItem) -> Result<()>;
-
-    /// Remove an item from the index
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()>;
-
-    /// Reset a search index
-    ///
-    /// **WARNING**: This is a major destructive operation
-    async fn reset_index(&self, index: SearchIndex) -> Result<()>;
-
-    /// Search through a search index
-    async fn search(
-        &self,
-        index: SearchIndex,
-        query: String,
-        max_results: u64,
-        offset: u64,
-        min_id: Option<Uuid>,
-        max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>>;
-}
-
-#[async_trait]
-impl SearchService for Arc<dyn SearchService + Send + Sync> {
-    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().add_to_index(item).await
-    }
-
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().remove_from_index(item).await
-    }
-
-    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
-        self.deref().reset_index(index).await
-    }
-
-    async fn search(
-        &self,
-        index: SearchIndex,
-        query: String,
-        max_results: u64,
-        offset: u64,
-        min_id: Option<Uuid>,
-        max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
-        self.deref()
-            .search(index, query, max_results, offset, min_id, max_id)
-            .await
-    }
-}
 
 /// Search service
 ///
@@ -244,35 +138,24 @@ impl SearchService for GrpcSearchService {
     }
 }
 
-/// Dummy search service
-///
-/// Always returns `Ok(())`/an empty list
-#[derive(Clone)]
-pub struct NoopSearchService;
-
-#[async_trait]
-impl SearchService for NoopSearchService {
-    async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
-        Ok(())
+impl From<SearchIndex> for GrpcSearchIndex {
+    fn from(value: SearchIndex) -> Self {
+        match value {
+            SearchIndex::Account => GrpcSearchIndex::Account,
+            SearchIndex::Post => GrpcSearchIndex::Post,
+        }
     }
+}
 
-    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
-        Ok(())
-    }
+impl From<GrpcSearchResult> for SearchResult {
+    fn from(value: GrpcSearchResult) -> Self {
+        let id = Uuid::from_bytes(
+            value
+                .id
+                .try_into()
+                .expect("Received non-UUID from search service"),
+        );
 
-    async fn reset_index(&self, _index: SearchIndex) -> Result<()> {
-        Ok(())
-    }
-
-    async fn search(
-        &self,
-        _index: SearchIndex,
-        _query: String,
-        _max_results: u64,
-        _offset: u64,
-        _min_id: Option<Uuid>,
-        _max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
-        Ok(Vec::new())
+        Self { id }
     }
 }

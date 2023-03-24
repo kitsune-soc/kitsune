@@ -6,6 +6,8 @@ let FsStorage = ./types/storage/fs.dhall
 
 let Instance = ./types/instance.dhall
 
+let Kitsune = ./types/search/kitsune.dhall
+
 let Messaging = ./types/messaging.dhall
 
 let Oidc = ./types/oidc.dhall
@@ -40,6 +42,7 @@ in  { Cache
     , Database
     , FsStorage
     , Instance
+    , Kitsune
     , Messaging
     , Oidc
     , RedisCache

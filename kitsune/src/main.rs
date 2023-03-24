@@ -10,7 +10,7 @@ use kitsune::{
     cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
     config::{
         CacheConfiguration, Configuration, MessagingConfiguration, OidcConfiguration,
-        StorageConfiguration,
+        SearchConfiguration, StorageConfiguration,
     },
     http, job,
     resolve::PostResolver,
@@ -21,7 +21,7 @@ use kitsune::{
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::GrpcSearchService,
+        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -177,16 +177,27 @@ async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
     .set_redirect_uri(RedirectUrl::new(oidc_config.redirect_uri.clone()).unwrap())
 }
 
+async fn prepare_search(
+    search_config: &SearchConfiguration,
+    db_conn: &DatabaseConnection,
+) -> ArcSearchService {
+    match search_config {
+        SearchConfiguration::Kitsune(config) => Arc::new(
+            GrpcSearchService::new(&config.index_server, &config.search_servers)
+                .await
+                .expect("Failed to connect to the search servers"),
+        ),
+        SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
+        SearchConfiguration::None => Arc::new(NoopSearchService),
+    }
+}
+
 #[allow(clippy::too_many_lines)] // TODO: Refactor this method to get under the 100 lines
 async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Zustand {
     let messaging_hub = prepare_messaging(config).await;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
-    let search_service = Arc::new(
-        GrpcSearchService::new(&config.search.index_server, &config.search.search_servers)
-            .await
-            .expect("Failed to connect to the search servers"),
-    );
+    let search_service = prepare_search(&config.search, &conn).await;
 
     let fetcher = Fetcher::builder()
         .db_conn(conn.clone())

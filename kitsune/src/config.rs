@@ -47,9 +47,16 @@ pub enum MessagingConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
-pub struct SearchConfiguration {
+pub struct KitsuneSearchConfiguration {
     pub index_server: String,
     pub search_servers: Vec<String>,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
+pub enum SearchConfiguration {
+    Kitsune(KitsuneSearchConfiguration),
+    Sql,
+    None,
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]

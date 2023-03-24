@@ -3,7 +3,8 @@ let types = ./kitsune/config/types.dhall
 
 let makeSearchConfig =
       λ(url : Text) →
-        { index_server = url, search_servers = [ url ] } : types.Search
+          types.Search.Kitsune { index_server = url, search_servers = [ url ] }
+        : types.Search
 
 in    { cache =
             types.Cache.Redis { redis_url = "redis://localhost:6379" }
