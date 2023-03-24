@@ -230,8 +230,8 @@ impl Client {
             HeaderValue::from_str(Utc::now().to_rfc2822().as_str()).unwrap(),
         );
 
-        if let Some(host) = req.uri().host() {
-            let value = HeaderValue::from_str(host).unwrap();
+        if let Some(authority) = req.uri().authority() {
+            let value = HeaderValue::from_str(authority.as_str()).unwrap();
             req.headers_mut().insert(HOST, value);
         }
 
@@ -313,6 +313,12 @@ impl Client {
             .map_err(BoxError::from)?;
 
         self.execute(req).await
+    }
+}
+
+impl Default for Client {
+    fn default() -> Self {
+        ClientBuilder::default().build()
     }
 }
 

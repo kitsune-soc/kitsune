@@ -1,7 +1,7 @@
-use super::TOKEN_VALID_DURATION;
 use crate::{
     error::{ApiError, Error, Result},
     http::extractor::FormOrJson,
+    service::oauth2::TOKEN_VALID_DURATION,
     util::{generate_secret, AccessTokenTtl},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
@@ -217,7 +217,7 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
         .ok_or(ApiError::NotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password_hash = PasswordHash::new(&user.password)?;
+        let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(

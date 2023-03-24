@@ -14,8 +14,8 @@ pub struct Model {
     pub username: String,
     #[sea_orm(column_type = "Text", unique)]
     pub email: String,
-    #[sea_orm(column_type = "Text", unique)]
-    pub password: String,
+    #[sea_orm(column_type = "Text", nullable, unique)]
+    pub password: Option<String>,
     #[sea_orm(column_type = "Text")]
     pub private_key: String,
     pub created_at: DateTimeWithTimeZone,
