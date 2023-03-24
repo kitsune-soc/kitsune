@@ -2,15 +2,16 @@ use super::{Account, MediaAttachment};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct Context {
     pub ancestors: VecDeque<Status>,
     pub descendants: Vec<Status>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Mention {
     pub id: Uuid,
     pub username: String,
@@ -18,7 +19,7 @@ pub struct Mention {
     pub acct: String,
 }
 
-#[derive(Clone, Copy, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum Visibility {
     #[default]
@@ -28,7 +29,7 @@ pub enum Visibility {
     Direct,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Status {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,

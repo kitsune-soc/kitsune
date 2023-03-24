@@ -1,15 +1,16 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Field {
     pub name: String,
     pub value: String,
     pub verified_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Source {
     pub privacy: String,
     pub sensitive: bool,
@@ -18,7 +19,7 @@ pub struct Source {
     pub fields: Vec<Field>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Account {
     pub id: Uuid,
     pub acct: String,

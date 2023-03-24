@@ -83,6 +83,8 @@ tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 url = "2.3.1"
+utoipa = { version = "3.1.2", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "3.1.1", features = ["axum"] }
 uuid = { version = "1.3.0", features = ["v7"] }
 zxcvbn = "2.2.2"
 

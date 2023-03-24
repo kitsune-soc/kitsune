@@ -14,6 +14,18 @@ use std::collections::VecDeque;
 use uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    get,
+    path = "/api/v1/statuses/{id}/context",
+    security(
+        (),
+        ("oauth_token" = [])
+    ),
+    responses(
+        (status = 200, description = "Ancestor and descendant statuses in the thread", body = Context),
+        (status = 404, description = "Status doesn't exist"),
+    )
+)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

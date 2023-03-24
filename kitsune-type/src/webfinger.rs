@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct Link {
     pub rel: String,
     pub r#type: Option<String>,
     pub href: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct Resource {
     pub subject: String,
     pub aliases: Vec<String>,

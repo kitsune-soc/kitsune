@@ -1,8 +1,8 @@
 use crate::state::Zustand;
 use axum::Router;
 
-mod nodeinfo;
-mod webfinger;
+pub mod nodeinfo;
+pub mod webfinger;
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
