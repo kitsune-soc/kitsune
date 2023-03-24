@@ -8,6 +8,8 @@ let Instance = ./types/instance.dhall
 
 let Messaging = ./types/messaging.dhall
 
+let Oidc = ./types/oidc.dhall
+
 let RedisCache = ./types/cache/redis.dhall
 
 let RedisMessaging = ./types/messaging/redis.dhall
@@ -39,6 +41,7 @@ in  { Cache
     , FsStorage
     , Instance
     , Messaging
+    , Oidc
     , RedisCache
     , RedisMessaging
     , S3Storage

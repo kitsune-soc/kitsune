@@ -1,7 +1,7 @@
 use super::TOKEN_VALID_DURATION;
 use crate::{
     error::{ApiError, Error, Result},
-    service::url::UrlService,
+    service::{oidc::OidcService, url::UrlService},
     util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
@@ -60,9 +60,15 @@ struct ShowTokenPage {
 
 pub async fn get(
     State(db_conn): State<DatabaseConnection>,
+    State(oidc_service): State<Option<OidcService>>,
     State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
+    if let Some(oidc_service) = oidc_service {
+        let auth_url = oidc_service.authorisation_url().await?;
+        return Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response());
+    }
+
     if query.response_type != "code" {
         return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
     }
@@ -99,7 +105,7 @@ pub async fn post(
         .ok_or(Error::OAuthApplicationNotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password_hash = PasswordHash::new(&user.password)?;
+        let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(

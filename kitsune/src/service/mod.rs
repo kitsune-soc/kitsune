@@ -2,6 +2,7 @@ pub mod account;
 pub mod attachment;
 pub mod instance;
 pub mod oauth2;
+pub mod oidc;
 pub mod post;
 pub mod search;
 pub mod timeline;

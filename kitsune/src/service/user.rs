@@ -3,7 +3,7 @@ use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
 use derive_builder::Builder;
-use futures_util::FutureExt;
+use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::entity::{
     accounts,
     prelude::{Accounts, Users},
@@ -28,7 +28,8 @@ pub struct Register {
     email: String,
 
     /// Password of the new user
-    password: String,
+    #[builder(setter(strip_option))]
+    password: Option<String>,
 }
 
 impl Register {
@@ -71,20 +72,23 @@ impl UserService {
             return Err(ApiError::EmailTaken.into());
         }
 
-        let hashed_password_fut = crate::blocking::cpu(move || {
-            let salt = SaltString::generate(rand::thread_rng());
-            let argon2 = Argon2::default();
+        let hashed_password_fut = OptionFuture::from(register.password.map(|password| {
+            crate::blocking::cpu(move || {
+                let salt = SaltString::generate(rand::thread_rng());
+                let argon2 = Argon2::default();
 
-            argon2
-                .hash_password(register.password.as_bytes(), &salt)
-                .map(|hash| hash.to_string())
-        });
+                argon2
+                    .hash_password(password.as_bytes(), &salt)
+                    .map(|hash| hash.to_string())
+            })
+        }));
         let private_key_fut =
             crate::blocking::cpu(|| RsaPrivateKey::new(&mut rand::thread_rng(), 4096));
 
-        let (hashed_password, private_key) =
-            tokio::try_join!(hashed_password_fut, private_key_fut)?;
-        let private_key = private_key?;
+        let (hashed_password, private_key) = tokio::join!(hashed_password_fut, private_key_fut);
+        let hashed_password = hashed_password.transpose()?.transpose()?;
+
+        let private_key = private_key??;
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
@@ -124,7 +128,7 @@ impl UserService {
                         account_id: insert_result.last_insert_id,
                         username: register.username,
                         email: register.email,
-                        password: hashed_password?,
+                        password: hashed_password,
                         private_key: private_key_str.to_string(),
                         created_at: Utc::now().into(),
                         updated_at: Utc::now().into(),

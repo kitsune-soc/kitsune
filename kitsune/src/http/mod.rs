@@ -1,4 +1,4 @@
-use self::handler::{media, nodeinfo, oauth, posts, users, well_known};
+use self::handler::{media, nodeinfo, oauth, oidc, posts, users, well_known};
 use crate::{config::ServerConfiguration, state::Zustand};
 use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
 use axum_prometheus::PrometheusMetricLayer;
@@ -28,6 +28,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
         .nest("/oauth", oauth::routes())
+        .nest("/oidc", oidc::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())

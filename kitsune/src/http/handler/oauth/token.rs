@@ -215,7 +215,7 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
         .ok_or(ApiError::NotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password_hash = PasswordHash::new(&user.password)?;
+        let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(

@@ -21,13 +21,14 @@ in    { cache =
       , server =
             { frontend_dir = "./kitsune-fe/dist"
             , job_workers = 20
-            , max_upload_size = 5 * 1024 * 1024 {- Maximum upload size in bytes -}
-            , media_proxy_enabled = False {- This will proxy all remote attachments through Kitsune, enabling caching and better privacy for the users -}
+            , max_upload_size = 5 * 1024 * 1024
+            , media_proxy_enabled = False
+            , oidc = None
             , port = 5000
             , prometheus_port = 9000
             }
           : types.Server
-      , search = makeSearchConfig "https://localhost:8080"
+      , search = makeSearchConfig "https://localhost:8081"
       , storage = types.Storage.Fs { upload_dir = "./uploads" } : types.Storage
       , url = { scheme = "http", domain = "localhost:5000" } : types.Url
       }

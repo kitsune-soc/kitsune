@@ -28,6 +28,14 @@ pub struct InstanceConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct OidcConfiguration {
+    pub redirect_uri: String,
+    pub server_url: String,
+    pub client_id: String,
+    pub client_secret: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct RedisMessagingConfiguration {
     pub redis_url: String,
 }
@@ -50,6 +58,7 @@ pub struct ServerConfiguration {
     pub job_workers: usize,
     pub max_upload_size: usize,
     pub media_proxy_enabled: bool,
+    pub oidc: Option<OidcConfiguration>,
     pub port: u16,
     pub prometheus_port: u16,
 }

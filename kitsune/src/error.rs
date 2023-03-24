@@ -6,6 +6,10 @@ use axum::{
 use deadpool_redis::PoolError;
 use http::StatusCode;
 use kitsune_messaging::BoxError;
+use openidconnect::{
+    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
+    StandardErrorResponse,
+};
 use redis::RedisError;
 use rsa::{
     pkcs1,
@@ -52,6 +56,42 @@ pub enum CacheError {
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum OidcError {
+    #[error(transparent)]
+    ClaimsVerification(#[from] ClaimsVerificationError),
+
+    #[error(transparent)]
+    LoginState(#[from] CacheError),
+
+    #[error("Missing Email address")]
+    MissingEmail,
+
+    #[error("Mismatching hash")]
+    MismatchingHash,
+
+    #[error("Missing ID token")]
+    MissingIdToken,
+
+    #[error("Missing username")]
+    MissingUsername,
+
+    #[error(transparent)]
+    RequestToken(
+        #[from]
+        RequestTokenError<
+            kitsune_http_client::Error,
+            StandardErrorResponse<CoreErrorResponseType>,
+        >,
+    ),
+
+    #[error(transparent)]
+    Signing(#[from] SigningError),
+
+    #[error("Unknown CSRF token")]
+    UnknownCsrfToken,
 }
 
 #[derive(Debug, Error)]
@@ -107,6 +147,9 @@ pub enum Error {
 
     #[error(transparent)]
     TokioJoin(#[from] tokio::task::JoinError),
+
+    #[error(transparent)]
+    Oidc(#[from] OidcError),
 
     #[error(transparent)]
     PasswordHash(#[from] password_hash::Error),
@@ -182,7 +225,7 @@ impl IntoResponse for Error {
                 (StatusCode::UNSUPPORTED_MEDIA_TYPE, err.to_string()).into_response()
             }
             err => {
-                error!(error = %err, "Error occurred in handler");
+                error!(error = ?err, "Error occurred in handler");
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
         }

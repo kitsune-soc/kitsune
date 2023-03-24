@@ -4,16 +4,27 @@
 use aws_credential_types::Credentials;
 use aws_sdk_s3::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
+use futures_util::future::OptionFuture;
 use kitsune::{
     activitypub::Fetcher,
     cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
-    config::{CacheConfiguration, Configuration, MessagingConfiguration, StorageConfiguration},
+    config::{
+        CacheConfiguration, Configuration, MessagingConfiguration, OidcConfiguration,
+        StorageConfiguration,
+    },
     http, job,
     resolve::PostResolver,
     service::{
-        account::AccountService, attachment::AttachmentService, instance::InstanceService,
-        oauth2::Oauth2Service, post::PostService, search::GrpcSearchService,
-        timeline::TimelineService, url::UrlService, user::UserService,
+        account::AccountService,
+        attachment::AttachmentService,
+        instance::InstanceService,
+        oauth2::Oauth2Service,
+        oidc::{async_client, OidcService},
+        post::PostService,
+        search::GrpcSearchService,
+        timeline::TimelineService,
+        url::UrlService,
+        user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
@@ -26,6 +37,10 @@ use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
 use once_cell::sync::OnceCell;
+use openidconnect::{
+    core::{CoreClient, CoreProviderMetadata},
+    ClientId, ClientSecret, IssuerUrl, RedirectUrl,
+};
 use sea_orm::{ConnectOptions, DatabaseConnection};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
@@ -146,6 +161,23 @@ async fn prepare_messaging(config: &Configuration) -> MessagingHub {
     }
 }
 
+async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
+    let provider_metadata = CoreProviderMetadata::discover_async(
+        IssuerUrl::new(oidc_config.server_url.clone()).unwrap(),
+        async_client,
+    )
+    .await
+    .unwrap();
+
+    CoreClient::from_provider_metadata(
+        provider_metadata,
+        ClientId::new(oidc_config.client_id.clone()),
+        Some(ClientSecret::new(oidc_config.client_secret.clone())),
+    )
+    .set_redirect_uri(RedirectUrl::new(oidc_config.redirect_uri.clone()).unwrap())
+}
+
+#[allow(clippy::too_many_lines)] // TODO: Refactor this method to get under the 100 lines
 async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Zustand {
     let messaging_hub = prepare_messaging(config).await;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
@@ -192,6 +224,16 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .character_limit(config.instance.character_limit)
         .build()
         .unwrap();
+
+    let oidc_service =
+        OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async move {
+            OidcService::builder()
+                .client(prepare_oidc_client(oidc_config).await)
+                .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
+                .build()
+                .unwrap()
+        }))
+        .await;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
@@ -247,6 +289,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
             account: account_service,
             instance: instance_service,
             oauth2: oauth2_service,
+            oidc: oidc_service,
             search: search_service,
             post: post_service,
             timeline: timeline_service,
