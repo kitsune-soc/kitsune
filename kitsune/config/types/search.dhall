@@ -1,1 +1,1 @@
-{ index_server : Text, search_servers : List Text }
+let Kitsune = ./search/kitsune.dhall in < Kitsune : Kitsune | Sql | None >
