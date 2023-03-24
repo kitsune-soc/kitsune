@@ -237,6 +237,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
+        .url_service(url_service.clone())
         .build()
         .unwrap();
 

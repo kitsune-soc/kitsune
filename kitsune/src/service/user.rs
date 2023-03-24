@@ -28,7 +28,7 @@ pub struct Register {
     email: String,
 
     /// Password of the new user
-    #[builder(setter(strip_option))]
+    #[builder(default, setter(strip_option))]
     password: Option<String>,
 }
 

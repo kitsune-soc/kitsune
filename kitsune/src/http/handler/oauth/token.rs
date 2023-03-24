@@ -1,7 +1,7 @@
-use super::TOKEN_VALID_DURATION;
 use crate::{
     error::{ApiError, Error, Result},
     http::extractor::FormOrJson,
+    service::oauth2::TOKEN_VALID_DURATION,
     util::{generate_secret, AccessTokenTtl},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};

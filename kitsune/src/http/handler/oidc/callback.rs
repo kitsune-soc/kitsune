@@ -1,12 +1,19 @@
 use crate::{
     error::{ApiError, Result},
     service::{
+        oauth2::{AuthorisationCode, Oauth2Service},
         oidc::OidcService,
         user::{Register, UserService},
     },
 };
-use axum::extract::{Query, State};
-use kitsune_db::entity::{prelude::Users, users};
+use axum::{
+    extract::{Query, State},
+    response::Response,
+};
+use kitsune_db::entity::{
+    prelude::{Oauth2Applications, Users},
+    users,
+};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
@@ -19,9 +26,10 @@ pub struct CallbackQuery {
 pub async fn get(
     State(db_conn): State<DatabaseConnection>,
     State(user_service): State<UserService>,
+    State(oauth_service): State<Oauth2Service>,
     State(oidc_service): State<Option<OidcService>>,
     Query(query): Query<CallbackQuery>,
-) -> Result<()> {
+) -> Result<Response> {
     let Some(oidc_service) = oidc_service else {
         return Err(ApiError::BadRequest.into());
     };
@@ -43,7 +51,21 @@ pub async fn get(
         user_service.register(register).await?
     };
 
-    // TODO: Create internal authorisation code and redirect back to the user
+    let application = Oauth2Applications::find_by_id(user_info.oauth2.application_id)
+        .one(&db_conn)
+        .await?
+        .ok_or_else(|| {
+            error!("OAuth2 application stored inside the login state not available anymore");
+            ApiError::InternalServerError
+        })?;
 
-    Ok(())
+    let authorisation_code = AuthorisationCode::builder()
+        .application(application)
+        .state(user_info.oauth2.state)
+        .user_id(user.id)
+        .build()
+        .unwrap();
+    oauth_service
+        .create_authorisation_code_response(authorisation_code)
+        .await
 }

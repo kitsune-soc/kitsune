@@ -13,6 +13,7 @@ use openidconnect::{
 };
 use serde::{Deserialize, Serialize};
 use url::Url;
+use uuid::Uuid;
 
 #[allow(clippy::missing_panics_doc)]
 pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, Error> {
@@ -29,22 +30,37 @@ pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, Error> {
 }
 
 #[derive(Debug)]
+pub struct Oauth2Info {
+    pub application_id: Uuid,
+    pub state: Option<String>,
+}
+
+#[derive(Debug)]
 pub struct UserInfo {
     pub username: String,
     pub email: String,
+    pub oauth2: Oauth2Info,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct Oauth2LoginState {
+    application_id: Uuid,
+    state: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct VerificationData {
+pub struct LoginState {
     nonce: Nonce,
     pkce_verifier: PkceCodeVerifier,
+    oauth2: Oauth2LoginState,
 }
 
-impl Clone for VerificationData {
+impl Clone for LoginState {
     fn clone(&self) -> Self {
         Self {
             nonce: self.nonce.clone(),
             pkce_verifier: PkceCodeVerifier::new(self.pkce_verifier.secret().clone()),
+            oauth2: self.oauth2.clone(),
         }
     }
 }
@@ -52,7 +68,7 @@ impl Clone for VerificationData {
 #[derive(Builder, Clone)]
 pub struct OidcService {
     client: CoreClient,
-    login_state: ArcCache<String, VerificationData>,
+    login_state: ArcCache<String, LoginState>,
 }
 
 impl OidcService {
@@ -61,7 +77,11 @@ impl OidcService {
         OidcServiceBuilder::default()
     }
 
-    pub async fn authorisation_url(&self) -> Result<Url> {
+    pub async fn authorisation_url(
+        &self,
+        oauth2_application_id: Uuid,
+        oauth2_state: Option<String>,
+    ) -> Result<Url> {
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
         let (auth_url, csrf_token, nonce) = self
             .client
@@ -75,9 +95,13 @@ impl OidcService {
             .set_pkce_challenge(pkce_challenge)
             .url();
 
-        let verification_data = VerificationData {
+        let verification_data = LoginState {
             nonce,
             pkce_verifier,
+            oauth2: Oauth2LoginState {
+                application_id: oauth2_application_id,
+                state: oauth2_state,
+            },
         };
         self.login_state
             .set(csrf_token.secret(), &verification_data)
@@ -91,8 +115,9 @@ impl OidcService {
         state: String,
         authorization_code: String,
     ) -> Result<UserInfo, OidcError> {
-        let VerificationData {
+        let LoginState {
             nonce,
+            oauth2,
             pkce_verifier,
         } = self
             .login_state
@@ -128,6 +153,10 @@ impl OidcService {
                 .ok_or(OidcError::MissingUsername)?
                 .to_string(),
             email: claims.email().ok_or(OidcError::MissingEmail)?.to_string(),
+            oauth2: Oauth2Info {
+                application_id: oauth2.application_id,
+                state: oauth2.state,
+            },
         })
     }
 }
