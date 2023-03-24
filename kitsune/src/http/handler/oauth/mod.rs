@@ -12,8 +12,8 @@ use axum::{
 use chrono::Duration;
 use once_cell::sync::Lazy;
 
-mod authorize;
-mod token;
+pub mod authorize;
+pub mod token;
 
 static TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 

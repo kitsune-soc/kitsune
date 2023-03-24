@@ -9,6 +9,13 @@ use kitsune_type::mastodon::{
     Instance,
 };
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/instance",
+    responses(
+        (status = 200, description = "Instance metadata", body = Instance),
+    ),
+)]
 async fn get(
     State(instance_service): State<InstanceService>,
     State(url_service): State<UrlService>,

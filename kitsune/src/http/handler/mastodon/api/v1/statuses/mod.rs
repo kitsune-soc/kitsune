@@ -14,14 +14,15 @@ use axum::{
 use http::StatusCode;
 use kitsune_type::mastodon::status::Visibility;
 use serde::Deserialize;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-mod context;
-mod favourite;
-mod unfavourite;
+pub mod context;
+pub mod favourite;
+pub mod unfavourite;
 
-#[derive(Deserialize)]
-struct CreateForm {
+#[derive(Deserialize, ToSchema)]
+pub struct CreateForm {
     #[serde(default)]
     media_ids: Vec<Uuid>,
     status: String,
@@ -34,6 +35,16 @@ struct CreateForm {
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    delete,
+    path = "/api/v1/statuses/{id}",
+    security(
+        ("oauth_token" = [])
+    ),
+    responses(
+        (status = StatusCode::OK, description = "Status was deleted"),
+    )
+)]
 async fn delete(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -52,6 +63,18 @@ async fn delete(
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    get,
+    path = "/api/v1/statuses/{id}",
+    security(
+        (),
+        ("oauth_token" = [])
+    ),
+    responses(
+        (status = 200, description = "The requested status", body = Status),
+        (status = 404, description = "Requested status doesn't exist"),
+    )
+)]
 async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
@@ -67,6 +90,17 @@ async fn get(
 }
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    post,
+    path = "/api/v1/statuses",
+    security(
+        ("oauth_token" = [])
+    ),
+    request_body = CreateForm,
+    responses(
+        (status = 200, description = "Newly created post", body = Status),
+    )
+)]
 async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

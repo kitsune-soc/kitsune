@@ -14,6 +14,16 @@ use axum::{
 use uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    post,
+    path = "/api/v1/statuses/{id}/unfavourite",
+    security(
+        ("oauth_token" = [])
+    ),
+    responses(
+        (status = 200, description = "The status with updated information regarding like status"),
+    )
+)]
 pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

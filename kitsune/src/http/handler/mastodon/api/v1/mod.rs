@@ -1,13 +1,12 @@
 use crate::state::Zustand;
 use axum::Router;
 
-mod accounts;
-mod apps;
-mod instance;
-mod statuses;
-mod timelines;
-
+pub mod accounts;
+pub mod apps;
+pub mod instance;
 pub mod media;
+pub mod statuses;
+pub mod timelines;
 
 pub fn routes() -> Router<Zustand> {
     Router::new()

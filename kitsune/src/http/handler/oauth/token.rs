@@ -26,10 +26,11 @@ use sea_orm::{
     IntoActiveModel, ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Serialize)]
-struct AccessTokenResponse {
+#[derive(Serialize, ToSchema)]
+pub struct AccessTokenResponse {
     access_token: String,
     token_type: String,
     expires_in: i64,
@@ -37,7 +38,7 @@ struct AccessTokenResponse {
     refresh_token: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct AuthorizationCodeData {
     client_id: Uuid,
     client_secret: String,
@@ -45,26 +46,27 @@ pub struct AuthorizationCodeData {
     redirect_uri: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct ClientCredentialsData {
     client_id: Uuid,
     client_secret: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct PasswordData {
     username: String,
+    #[schema(format = Password)]
     password: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct RefreshTokenData {
     client_id: Uuid,
     client_secret: String,
     refresh_token: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case", tag = "grant_type")]
 pub enum TokenForm {
     AuthorizationCode(AuthorizationCodeData),
@@ -306,6 +308,14 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
     .into_response())
 }
 
+#[utoipa::path(
+    post,
+    path = "/oauth/token",
+    request_body = TokenForm,
+    responses(
+        (status = 200, description = "Newly created token", body = AccessTokenResponse)
+    )
+)]
 pub async fn post(
     State(db_conn): State<DatabaseConnection>,
     FormOrJson(form): FormOrJson<TokenForm>,

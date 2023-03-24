@@ -1,8 +1,8 @@
 use crate::state::Zustand;
 use axum::Router;
 
-mod media;
-mod search;
+pub mod media;
+pub mod search;
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
