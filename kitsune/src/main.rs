@@ -217,6 +217,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
+        .url_service(url_service.clone())
         .build()
         .unwrap();
 

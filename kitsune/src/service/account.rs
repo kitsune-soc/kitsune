@@ -1,15 +1,32 @@
-use crate::error::{Error, Result};
+use super::url::UrlService;
+use crate::error::{ApiError, Error, Result};
+use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     entity::{
-        accounts, posts,
-        prelude::{Accounts, Posts},
+        accounts, accounts_followers, posts,
+        prelude::{Accounts, AccountsFollowers, Posts},
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder,
+};
 use uuid::Uuid;
+
+#[derive(Builder, Clone)]
+pub struct Follow {
+    account_id: Uuid,
+    follower_id: Uuid,
+}
+
+impl Follow {
+    #[must_use]
+    pub fn builder() -> FollowBuilder {
+        FollowBuilder::default()
+    }
+}
 
 #[derive(Builder, Clone)]
 pub struct GetPosts {
@@ -41,14 +58,71 @@ impl GetPosts {
 }
 
 #[derive(Builder, Clone)]
+pub struct Unfollow {
+    /// Account that is being followed
+    account_id: Uuid,
+
+    /// Account that is following
+    follower_id: Uuid,
+}
+
+impl Unfollow {
+    #[must_use]
+    pub fn builder() -> UnfollowBuilder {
+        UnfollowBuilder::default()
+    }
+}
+
+#[derive(Builder, Clone)]
 pub struct AccountService {
     db_conn: DatabaseConnection,
+    url_service: UrlService,
 }
 
 impl AccountService {
     #[must_use]
     pub fn builder() -> AccountServiceBuilder {
         AccountServiceBuilder::default()
+    }
+
+    /// Follow an account
+    ///
+    /// # Returns
+    ///
+    /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
+    pub async fn follow(&self, follow: Follow) -> Result<(accounts::Model, accounts::Model)> {
+        let account = Accounts::find_by_id(follow.account_id)
+            .one(&self.db_conn)
+            .await?
+            .ok_or(ApiError::BadRequest)?;
+        let follower = Accounts::find_by_id(follow.follower_id)
+            .one(&self.db_conn)
+            .await?
+            .ok_or(ApiError::BadRequest)?;
+
+        let id = Uuid::now_v7();
+        let url = self.url_service.follow_url(id);
+        let mut follow_model = accounts_followers::Model {
+            id,
+            account_id: account.id,
+            follower_id: follower.id,
+            approved_at: None,
+            url,
+            created_at: Utc::now().into(),
+            updated_at: Utc::now().into(),
+        };
+
+        if account.local && !account.locked {
+            follow_model.approved_at = Some(Utc::now().into());
+        }
+
+        AccountsFollowers::insert(follow_model.into_active_model())
+            .exec_without_returning(&self.db_conn)
+            .await?;
+
+        // TODO: Federate this follow
+
+        Ok((account, follower))
     }
 
     /// Get a local account by its username
@@ -92,5 +166,33 @@ impl AccountService {
             .stream(&self.db_conn)
             .await?
             .map_err(Error::from))
+    }
+
+    /// Undo the follow of an account
+    ///
+    /// # Returns
+    ///
+    /// Tuple of two account models. First account is the account that was being followed, second account is the account that was following
+    pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(accounts::Model, accounts::Model)> {
+        let account = Accounts::find_by_id(unfollow.account_id)
+            .one(&self.db_conn)
+            .await?
+            .ok_or(ApiError::BadRequest)?;
+        let follower = Accounts::find_by_id(unfollow.follower_id)
+            .one(&self.db_conn)
+            .await?
+            .ok_or(ApiError::BadRequest)?;
+
+        let exec_result = AccountsFollowers::delete_many()
+            .filter(accounts_followers::Column::AccountId.eq(account.id))
+            .filter(accounts_followers::Column::FollowerId.eq(follower.id))
+            .exec(&self.db_conn)
+            .await?;
+
+        if exec_result.rows_affected != 0 {
+            // TODO: Federate this unfollow
+        }
+
+        Ok((account, follower))
     }
 }
