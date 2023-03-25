@@ -36,6 +36,9 @@ pub enum ApiError {
     #[error("Not found")]
     NotFound,
 
+    #[error("Registrations closed")]
+    RegistrationsClosed,
+
     #[error("Unauthorised")]
     Unauthorised,
 

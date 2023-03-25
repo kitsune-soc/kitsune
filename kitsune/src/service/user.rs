@@ -42,6 +42,7 @@ impl Register {
 #[derive(Builder, Clone)]
 pub struct UserService {
     db_conn: DatabaseConnection,
+    registrations_open: bool,
     url_service: UrlService,
 }
 
@@ -52,6 +53,10 @@ impl UserService {
     }
 
     pub async fn register(&self, register: Register) -> Result<users::Model> {
+        if !self.registrations_open {
+            return Err(ApiError::RegistrationsClosed.into());
+        }
+
         // These queries provide a better user experience than just a random 500 error
         // They are also fine from a performance standpoint since both, the username and the email field, are indexed
         let is_username_taken = Users::find()

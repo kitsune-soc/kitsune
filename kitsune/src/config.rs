@@ -25,6 +25,7 @@ pub struct InstanceConfiguration {
     pub name: String,
     pub description: String,
     pub character_limit: usize,
+    pub registrations_open: bool,
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]

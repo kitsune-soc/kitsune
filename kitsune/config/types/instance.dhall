@@ -1,1 +1,5 @@
-{ name : Text, description : Text, character_limit : Natural }
+{ name : Text
+, description : Text
+, character_limit : Natural
+, registrations_open : Bool
+}
