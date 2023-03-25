@@ -271,6 +271,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let user_service = UserService::builder()
         .db_conn(conn.clone())
+        .registrations_open(config.instance.registrations_open)
         .url_service(url_service.clone())
         .build()
         .unwrap();
