@@ -12,23 +12,9 @@ env:
   RUSTFLAGS: "-C debuginfo=0 --cfg uuid_unstable"
 
 jobs:
-  check:
-    name: Check
-    needs: fmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: mtoohey31/cache-flake-attrs@v2
-        with:
-          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
-      - uses: taiki-e/install-action@cargo-hack
-      - uses: Swatinem/rust-cache@v2
-      - uses: rui314/setup-mold@v1
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack check --feature-powerset --all
-
   clippy:
     name: Clippy
-    needs: [fmt, check]
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
