@@ -22,13 +22,7 @@ jobs:
         with:
           key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - uses: taiki-e/install-action@cargo-hack
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack check --feature-powerset --all
 
@@ -42,13 +36,7 @@ jobs:
         with:
           key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
       - uses: taiki-e/install-action@cargo-hack
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack --feature-powerset --all clippy -- -D warnings
 
@@ -71,12 +59,6 @@ jobs:
       - uses: mtoohey31/cache-flake-attrs@v2
         with:
           key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output
