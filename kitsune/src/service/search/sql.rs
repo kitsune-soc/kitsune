@@ -1,5 +1,4 @@
-use super::{SearchIndex, SearchItem, SearchResult, SearchService};
-use crate::error::Result;
+use super::{Result, SearchIndex, SearchItem, SearchResult, SearchService};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{

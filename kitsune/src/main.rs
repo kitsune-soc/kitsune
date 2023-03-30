@@ -21,7 +21,10 @@ use kitsune::{
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
+        search::{
+            ArcSearchService, GrpcSearchService, MeiliSearchService, NoopSearchService,
+            SqlSearchService,
+        },
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -183,10 +186,14 @@ async fn prepare_search(
 ) -> ArcSearchService {
     match search_config {
         SearchConfiguration::Kitsune(config) => Arc::new(
-            GrpcSearchService::new(&config.index_server, &config.search_servers)
+            GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
                 .expect("Failed to connect to the search servers"),
         ),
+        SearchConfiguration::Meilisearch(config) => Arc::new(MeiliSearchService::new(
+            &config.instance_url,
+            &config.api_key,
+        )),
         SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
         SearchConfiguration::None => Arc::new(NoopSearchService),
     }

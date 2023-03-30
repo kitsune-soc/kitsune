@@ -1,31 +1,82 @@
-use crate::error::Result;
+use crate::error::SearchError;
 use async_trait::async_trait;
 use kitsune_db::entity::{accounts, posts};
+use serde::{Deserialize, Serialize};
 use std::{ops::Deref, sync::Arc};
 use uuid::Uuid;
 
 mod grpc;
+mod meilisearch;
 mod sql;
 
-pub use self::grpc::GrpcSearchService;
-pub use self::sql::SqlSearchService;
+pub use self::{grpc::GrpcSearchService, meilisearch::MeiliSearchService, sql::SqlSearchService};
 
 pub type ArcSearchService = Arc<dyn SearchService>;
 
+type Result<T, E = SearchError> = std::result::Result<T, E>;
+
+#[derive(Deserialize, Serialize)]
+pub struct Account {
+    pub id: Uuid,
+    pub display_name: Option<String>,
+    pub username: String,
+    pub note: Option<String>,
+}
+
+impl From<accounts::Model> for Account {
+    fn from(value: accounts::Model) -> Self {
+        Self {
+            id: value.id,
+            display_name: value.display_name,
+            username: value.username,
+            note: value.note,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Post {
+    pub id: Uuid,
+    pub subject: Option<String>,
+    pub content: String,
+}
+
+impl From<posts::Model> for Post {
+    fn from(value: posts::Model) -> Self {
+        Self {
+            id: value.id,
+            subject: value.subject,
+            content: value.content,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum SearchItem {
-    Account(accounts::Model),
-    Post(posts::Model),
+    Account(Account),
+    Post(Post),
+}
+
+impl SearchItem {
+    #[must_use]
+    pub fn index(&self) -> SearchIndex {
+        match self {
+            Self::Account(..) => SearchIndex::Account,
+            Self::Post(..) => SearchIndex::Post,
+        }
+    }
 }
 
 impl From<accounts::Model> for SearchItem {
     fn from(account: accounts::Model) -> Self {
-        Self::Account(account)
+        Self::Account(account.into())
     }
 }
 
 impl From<posts::Model> for SearchItem {
     fn from(post: posts::Model) -> Self {
-        Self::Post(post)
+        Self::Post(post.into())
     }
 }
 
@@ -35,7 +86,7 @@ pub enum SearchIndex {
     Post,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct SearchResult {
     pub id: Uuid,
 }
