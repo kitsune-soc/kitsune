@@ -18,7 +18,7 @@
                         cargo-insta
                         dhall
                         nodejs
-                        openssl_1_1
+                        openssl
                         #postgresql_15
                         protobuf
                         redis
