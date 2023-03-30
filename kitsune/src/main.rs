@@ -193,7 +193,7 @@ async fn prepare_search(
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(feature = "meilisearch")]
             // To avoid an "unused variable" warning in case the feature is deactivated
-            #[allow(clippy::used-underscore-binding)]
+            #[allow(clippy::used_underscore_binding)]
             return Arc::new(
                 MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                     .await
