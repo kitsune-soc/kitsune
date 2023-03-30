@@ -21,10 +21,7 @@ use kitsune::{
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::{
-            ArcSearchService, GrpcSearchService, MeiliSearchService, NoopSearchService,
-            SqlSearchService,
-        },
+        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -49,6 +46,9 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
+
+#[cfg(feature = "meilisearch")]
+use kitsune::service::search::MeiliSearchService;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -190,11 +190,17 @@ async fn prepare_search(
                 .await
                 .expect("Failed to connect to the search servers"),
         ),
-        SearchConfiguration::Meilisearch(config) => Arc::new(
-            MeiliSearchService::new(&config.instance_url, &config.api_key)
-                .await
-                .expect("Failed to connect to Meilisearch"),
-        ),
+        SearchConfiguration::Meilisearch(_config) => {
+            #[cfg(feature = "meilisearch")]
+            return Arc::new(
+                MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                    .await
+                    .expect("Failed to connect to Meilisearch"),
+            );
+
+            #[cfg(not(feature = "meilisearch"))]
+            panic!("Server compiled without Meilisearch compatibility");
+        }
         SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
         SearchConfiguration::None => Arc::new(NoopSearchService),
     }

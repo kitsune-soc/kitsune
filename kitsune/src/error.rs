@@ -102,6 +102,7 @@ pub enum SearchError {
     #[error(transparent)]
     Database(#[from] sea_orm::DbErr),
 
+    #[cfg(feature = "meilisearch")]
     #[error(transparent)]
     Meilisearch(#[from] meilisearch_sdk::errors::Error),
 

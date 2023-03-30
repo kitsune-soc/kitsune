@@ -7,10 +7,13 @@ use strum::EnumIter;
 use uuid::Uuid;
 
 mod grpc;
+#[cfg(feature = "meilisearch")]
 mod meilisearch;
 mod sql;
 
-pub use self::{grpc::GrpcSearchService, meilisearch::MeiliSearchService, sql::SqlSearchService};
+#[cfg(feature = "meilisearch")]
+pub use self::meilisearch::MeiliSearchService;
+pub use self::{grpc::GrpcSearchService, sql::SqlSearchService};
 
 pub type ArcSearchService = Arc<dyn SearchService>;
 
