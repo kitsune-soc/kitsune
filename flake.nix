@@ -25,6 +25,7 @@
                         rust-bin.stable.latest.default
                         sqlite
                         yarn
+                        zlib
                     ];
                 };
             }
