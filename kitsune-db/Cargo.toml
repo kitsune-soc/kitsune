@@ -9,6 +9,7 @@ kitsune-type = { path = "../kitsune-type" }
 migration = { path = "migration" }
 sea-orm = { version = "0.11.2", default-features = false, features = [
     "with-chrono",
+    "with-json",
     "with-uuid",
 ] }
 serde = { version = "1.0.159", features = ["derive"] }
