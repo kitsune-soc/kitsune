@@ -1,6 +1,7 @@
 use super::{Result, SearchIndex, SearchItem, SearchResult, SearchService};
 use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
+use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 pub struct MeiliSearchService {
@@ -8,40 +9,32 @@ pub struct MeiliSearchService {
 }
 
 impl MeiliSearchService {
+    #[allow(clippy::missing_panics_doc)]
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
-        let client = Client::new(host, api_key);
-
-        client
-            .create_index("accounts", Some("id"))
-            .await?
-            .wait_for_completion(&client, None, None)
-            .await?;
-
-        client
-            .create_index("posts", Some("id"))
-            .await?
-            .wait_for_completion(&client, None, None)
-            .await?;
-
-        Ok(Self { client })
-    }
-
-    async fn get_index(&self, index: SearchIndex) -> Result<Index> {
+        let service = Self {
+            client: Client::new(host, api_key),
+        };
         let settings = Settings::new()
             .with_filterable_attributes(["created_at"])
             .with_sortable_attributes(["id"]);
 
-        let index = match index {
+        for index in SearchIndex::iter() {
+            service
+                .get_index(index)
+                .set_settings(&settings)
+                .await?
+                .wait_for_completion(&service.client, None, None)
+                .await?;
+        }
+
+        Ok(service)
+    }
+
+    fn get_index(&self, index: SearchIndex) -> Index {
+        match index {
             SearchIndex::Account => self.client.index("accounts"),
             SearchIndex::Post => self.client.index("posts"),
-        };
-        index
-            .set_settings(&settings)
-            .await?
-            .wait_for_completion(&self.client, None, None)
-            .await?;
-
-        Ok(index)
+        }
     }
 }
 
@@ -49,7 +42,6 @@ impl MeiliSearchService {
 impl SearchService for MeiliSearchService {
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         self.get_index(item.index())
-            .await?
             .add_documents(&[item], Some("id"))
             .await?
             .wait_for_completion(&self.client, None, None)
@@ -62,13 +54,11 @@ impl SearchService for MeiliSearchService {
         match item {
             SearchItem::Account(account) => {
                 self.get_index(SearchIndex::Account)
-                    .await?
                     .delete_document(account.id)
                     .await?
             }
             SearchItem::Post(post) => {
                 self.get_index(SearchIndex::Post)
-                    .await?
                     .delete_document(post.id)
                     .await?
             }
@@ -81,7 +71,6 @@ impl SearchService for MeiliSearchService {
 
     async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         self.get_index(index)
-            .await?
             .delete_all_documents()
             .await?
             .wait_for_completion(&self.client, None, None)
@@ -112,7 +101,6 @@ impl SearchService for MeiliSearchService {
         #[allow(clippy::cast_possible_truncation)]
         let results = self
             .get_index(index)
-            .await?
             .search()
             .with_query(&query)
             .with_filter(&filter)

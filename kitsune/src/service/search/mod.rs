@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use kitsune_db::entity::{accounts, posts};
 use serde::{Deserialize, Serialize};
 use std::{ops::Deref, sync::Arc};
+use strum::EnumIter;
 use uuid::Uuid;
 
 mod grpc;
@@ -88,7 +89,7 @@ impl From<posts::Model> for SearchItem {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, EnumIter)]
 pub enum SearchIndex {
     Account,
     Post,
