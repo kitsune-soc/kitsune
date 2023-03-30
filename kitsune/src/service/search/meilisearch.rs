@@ -99,23 +99,16 @@ impl SearchService for MeiliSearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
-        let mut filter = String::new();
-        if let Some(min_id) = min_id {
-            let (created_at_secs, _) = min_id.get_timestamp().unwrap().to_unix();
-            filter.push_str("created_at > ");
-            filter.push_str(&created_at_secs.to_string());
-        }
+        let min_timestamp = min_id.map_or(u64::MIN, |id| {
+            let (created_at_secs, _) = id.get_timestamp().unwrap().to_unix();
+            created_at_secs
+        });
+        let max_timestamp = max_id.map_or(u64::MAX, |id| {
+            let (created_at_secs, _) = id.get_timestamp().unwrap().to_unix();
+            created_at_secs
+        });
 
-        if let Some(max_id) = max_id {
-            let (created_at_secs, _) = max_id.get_timestamp().unwrap().to_unix();
-            if !filter.is_empty() {
-                filter.push_str(" AND");
-            }
-
-            filter.push_str("created_at < ");
-            filter.push_str(&created_at_secs.to_string());
-        }
-
+        let filter = format!("created_at > {min_timestamp} AND created_at < {max_timestamp}");
         #[allow(clippy::cast_possible_truncation)]
         let results = self
             .get_index(index)
