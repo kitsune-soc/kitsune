@@ -30,7 +30,7 @@ in    { cache =
             , prometheus_port = 9000
             }
           : types.Server
-      , search = makeSearchConfig "https://localhost:8081"
+      , search = types.Search.Meilisearch { instance_url = "http://localhost:7700", api_key = "xTJC-083-CMzIA0ga6gEXTpJKKafPe55JuxpMYzBkjc" }
       , storage = types.Storage.Fs { upload_dir = "./uploads" } : types.Storage
       , url = { scheme = "http", domain = "localhost:5000" } : types.Url
       }

@@ -21,15 +21,19 @@ pub struct Account {
     pub display_name: Option<String>,
     pub username: String,
     pub note: Option<String>,
+    /// Timestamp of the creation expressed in seconds since the Unix epoch
+    pub created_at: u64,
 }
 
 impl From<accounts::Model> for Account {
     fn from(value: accounts::Model) -> Self {
+        let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
         Self {
             id: value.id,
             display_name: value.display_name,
             username: value.username,
             note: value.note,
+            created_at: created_at_secs,
         }
     }
 }
@@ -39,14 +43,18 @@ pub struct Post {
     pub id: Uuid,
     pub subject: Option<String>,
     pub content: String,
+    /// Timestamp of the creation expressed in seconds since the Unix epoch
+    pub created_at: u64,
 }
 
 impl From<posts::Model> for Post {
     fn from(value: posts::Model) -> Self {
+        let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
         Self {
             id: value.id,
             subject: value.subject,
             content: value.content,
+            created_at: created_at_secs,
         }
     }
 }

@@ -190,10 +190,11 @@ async fn prepare_search(
                 .await
                 .expect("Failed to connect to the search servers"),
         ),
-        SearchConfiguration::Meilisearch(config) => Arc::new(MeiliSearchService::new(
-            &config.instance_url,
-            &config.api_key,
-        )),
+        SearchConfiguration::Meilisearch(config) => Arc::new(
+            MeiliSearchService::new(&config.instance_url, &config.api_key)
+                .await
+                .expect("Failed to connect to Meilisearch"),
+        ),
         SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
         SearchConfiguration::None => Arc::new(NoopSearchService),
     }
