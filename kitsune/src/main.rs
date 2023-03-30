@@ -47,6 +47,9 @@ use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
+#[cfg(feature = "meilisearch")]
+use kitsune::service::search::MeiliSearchService;
+
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -183,10 +186,23 @@ async fn prepare_search(
 ) -> ArcSearchService {
     match search_config {
         SearchConfiguration::Kitsune(config) => Arc::new(
-            GrpcSearchService::new(&config.index_server, &config.search_servers)
+            GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
                 .expect("Failed to connect to the search servers"),
         ),
+        SearchConfiguration::Meilisearch(_config) => {
+            #[cfg(feature = "meilisearch")]
+            // To avoid an "unused variable" warning in case the feature is deactivated
+            #[allow(clippy::used_underscore_binding)]
+            return Arc::new(
+                MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                    .await
+                    .expect("Failed to connect to Meilisearch"),
+            );
+
+            #[cfg(not(feature = "meilisearch"))]
+            panic!("Server compiled without Meilisearch compatibility");
+        }
         SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
         SearchConfiguration::None => Arc::new(NoopSearchService),
     }

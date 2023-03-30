@@ -54,8 +54,15 @@ pub struct KitsuneSearchConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct MeiliSearchConfiguration {
+    pub instance_url: String,
+    pub api_key: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub enum SearchConfiguration {
     Kitsune(KitsuneSearchConfiguration),
+    Meilisearch(MeiliSearchConfiguration),
     Sql,
     None,
 }
