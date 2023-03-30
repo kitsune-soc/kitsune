@@ -25,7 +25,7 @@ in    { cache =
             , job_workers = 20
             , max_upload_size = 5 * 1024 * 1024
             , media_proxy_enabled = False
-            , oidc = None
+            , oidc = None types.Oidc
             , port = 5000
             , prometheus_port = 9000
             }
