@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.67"
+async-trait = "0.1.68"
 aws-sdk-s3 = "0.24.0"
 aws-smithy-http = "0.54.4"
 bytes = "1.4.0"
@@ -13,7 +13,7 @@ http = "0.2.9"
 http-body = "0.4.5"
 pin-project-lite = "0.2.9"
 sync_wrapper = "0.1.2"
-tokio = { version = "1.26.0", features = ["fs", "io-util"] }
+tokio = { version = "1.27.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.7", features = ["io"] }
 
 [dev-dependencies]
@@ -21,4 +21,4 @@ aws-credential-types = { version = "0.54.1", features = [
     "hardcoded-credentials",
 ] }
 tempdir = "0.3.7"
-tokio = { version = "1.26.0", features = ["macros", "rt"] }
+tokio = { version = "1.27.0", features = ["macros", "rt"] }
