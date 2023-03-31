@@ -42,8 +42,8 @@ pub enum Users {
     Table,
     Id,
     AccountId,
-    Username,
     OidcId,
+    Username,
     Email,
     Password,
     PrivateKey,
@@ -105,13 +105,13 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .unique_key(),
                     )
+                    .col(ColumnDef::new(Users::OidcId).text().unique_key())
                     .col(
                         ColumnDef::new(Users::Username)
                             .text()
                             .not_null()
                             .unique_key(),
                     )
-                    .col(ColumnDef::new(Users::OidcId).text().unique_key())
                     .col(ColumnDef::new(Users::Email).text().not_null().unique_key())
                     .col(ColumnDef::new(Users::Password).text().unique_key())
                     .col(ColumnDef::new(Users::PrivateKey).text().not_null())

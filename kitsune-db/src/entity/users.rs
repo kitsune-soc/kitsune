@@ -10,10 +10,10 @@ pub struct Model {
     pub id: Uuid,
     #[sea_orm(unique)]
     pub account_id: Uuid,
-    #[sea_orm(column_type = "Text", unique)]
-    pub username: String,
     #[sea_orm(column_type = "Text", nullable, unique)]
     pub oidc_id: Option<String>,
+    #[sea_orm(column_type = "Text", unique)]
+    pub username: String,
     #[sea_orm(column_type = "Text", unique)]
     pub email: String,
     #[sea_orm(column_type = "Text", nullable, unique)]
