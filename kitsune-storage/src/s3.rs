@@ -4,8 +4,11 @@
 
 use crate::{BoxError, Result, StorageBackend};
 use async_trait::async_trait;
-use aws_sdk_s3::{types::ByteStream, Client, Config};
-use aws_smithy_http::body::{BoxBody, SdkBody};
+use aws_sdk_s3::{Client, Config};
+use aws_smithy_http::{
+    body::{BoxBody, SdkBody},
+    byte_stream::ByteStream,
+};
 use bytes::Bytes;
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use http::HeaderMap;

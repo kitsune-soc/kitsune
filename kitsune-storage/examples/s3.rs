@@ -1,5 +1,5 @@
 use aws_credential_types::Credentials;
-use aws_sdk_s3::{Config, Region};
+use aws_sdk_s3::{config::Region, Config};
 use bytes::{BufMut, BytesMut};
 use futures_util::{future, stream, StreamExt, TryStreamExt};
 use kitsune_storage::{s3::Storage, StorageBackend};
