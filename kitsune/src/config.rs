@@ -30,7 +30,6 @@ pub struct InstanceConfiguration {
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct OidcConfiguration {
-    pub redirect_uri: String,
     pub server_url: String,
     pub client_id: String,
     pub client_secret: String,

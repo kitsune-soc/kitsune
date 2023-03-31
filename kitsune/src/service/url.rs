@@ -46,6 +46,11 @@ impl UrlService {
     }
 
     #[must_use]
+    pub fn oidc_redirect_uri(&self) -> String {
+        format!("{}/oidc/callback", self.base_url())
+    }
+
+    #[must_use]
     pub fn post_url(&self, post_id: Uuid) -> String {
         format!("{}/posts/{}", self.base_url(), post_id)
     }

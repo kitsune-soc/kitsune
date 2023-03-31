@@ -164,7 +164,10 @@ async fn prepare_messaging(config: &Configuration) -> MessagingHub {
     }
 }
 
-async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
+async fn prepare_oidc_client(
+    oidc_config: &OidcConfiguration,
+    url_service: &UrlService,
+) -> CoreClient {
     let provider_metadata = CoreProviderMetadata::discover_async(
         IssuerUrl::new(oidc_config.server_url.clone()).unwrap(),
         async_client,
@@ -177,7 +180,7 @@ async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
         ClientId::new(oidc_config.client_id.clone()),
         Some(ClientSecret::new(oidc_config.client_secret.clone())),
     )
-    .set_redirect_uri(RedirectUrl::new(oidc_config.redirect_uri.clone()).unwrap())
+    .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
 }
 
 async fn prepare_search(
@@ -252,15 +255,14 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .build()
         .unwrap();
 
-    let oidc_service =
-        OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async move {
-            OidcService::builder()
-                .client(prepare_oidc_client(oidc_config).await)
-                .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
-                .build()
-                .unwrap()
-        }))
-        .await;
+    let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
+        OidcService::builder()
+            .client(prepare_oidc_client(oidc_config, &url_service).await)
+            .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
+            .build()
+            .unwrap()
+    }))
+    .await;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
