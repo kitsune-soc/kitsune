@@ -29,7 +29,7 @@ where
     #[must_use]
     pub fn new(size: usize, ttl: Duration) -> Self {
         Self {
-            inner: DashMap::with_capacity(size),
+            inner: DashMap::new(),
             size,
             ttl,
             _key_ty: PhantomData,

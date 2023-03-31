@@ -2,7 +2,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use aws_credential_types::Credentials;
-use aws_sdk_s3::Region;
+use aws_sdk_s3::config::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use futures_util::future::OptionFuture;
 use kitsune::{
