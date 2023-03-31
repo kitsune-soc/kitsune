@@ -27,6 +27,10 @@ pub struct Register {
     /// Email address of the new user
     email: String,
 
+    /// OIDC ID of the new user
+    #[builder(default, setter(strip_option))]
+    oidc_id: Option<String>,
+
     /// Password of the new user
     #[builder(default, setter(strip_option))]
     password: Option<String>,
@@ -132,6 +136,7 @@ impl UserService {
                         id: Uuid::now_v7(),
                         account_id: insert_result.last_insert_id,
                         username: register.username,
+                        oidc_id: register.oidc_id,
                         email: register.email,
                         password: hashed_password,
                         private_key: private_key_str.to_string(),
