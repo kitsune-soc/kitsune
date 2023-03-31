@@ -37,6 +37,7 @@ pub struct Oauth2Info {
 
 #[derive(Debug)]
 pub struct UserInfo {
+    pub subject: String,
     pub username: String,
     pub email: String,
     pub oauth2: Oauth2Info,
@@ -148,6 +149,7 @@ impl OidcService {
         }
 
         Ok(UserInfo {
+            subject: claims.subject().to_string(),
             username: claims
                 .preferred_username()
                 .ok_or(OidcError::MissingUsername)?

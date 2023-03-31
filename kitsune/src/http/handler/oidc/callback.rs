@@ -36,7 +36,7 @@ pub async fn get(
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
     let user = if let Some(user) = Users::find()
-        .filter(users::Column::Username.eq(user_info.username.as_str()))
+        .filter(users::Column::OidcId.eq(&user_info.subject))
         .one(&db_conn)
         .await?
     {
@@ -45,6 +45,7 @@ pub async fn get(
         let register = Register::builder()
             .email(user_info.email)
             .username(user_info.username)
+            .oidc_id(user_info.subject)
             .build()
             .unwrap();
 
