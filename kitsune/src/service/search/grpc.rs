@@ -1,5 +1,4 @@
-use super::{SearchIndex, SearchItem, SearchResult, SearchService};
-use crate::error::Result;
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::stream;
 use kitsune_search_proto::{
@@ -24,7 +23,7 @@ pub struct GrpcSearchService {
 }
 
 impl GrpcSearchService {
-    pub async fn new(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
+    pub async fn connect(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
         let index_channel = Endpoint::from_shared(index_endpoint.to_string())?
             .connect()
             .await?;
@@ -44,7 +43,7 @@ impl GrpcSearchService {
 }
 
 #[async_trait]
-impl SearchService for GrpcSearchService {
+impl SearchBackend for GrpcSearchService {
     #[instrument(skip_all)]
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         let request = match item {

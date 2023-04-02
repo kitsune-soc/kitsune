@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::MastodonAuthExtractor,
-    service::search::{ArcSearchService, SearchIndex},
+    service::search::{SearchBackend, SearchIndex, SearchService},
     state::Zustand,
 };
 use axum::{
@@ -61,7 +61,7 @@ struct SearchQuery {
 )]
 async fn get(
     State(state): State<Zustand>,
-    State(search): State<ArcSearchService>,
+    State(search): State<SearchService>,
     _: MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Response> {

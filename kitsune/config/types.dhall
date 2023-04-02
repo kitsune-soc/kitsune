@@ -8,6 +8,8 @@ let Instance = ./types/instance.dhall
 
 let Kitsune = ./types/search/kitsune.dhall
 
+let Meilisearch = ./types/search/meilisearch.dhall
+
 let Messaging = ./types/messaging.dhall
 
 let Oidc = ./types/oidc.dhall
@@ -43,6 +45,7 @@ in  { Cache
     , FsStorage
     , Instance
     , Kitsune
+    , Meilisearch
     , Messaging
     , Oidc
     , RedisCache

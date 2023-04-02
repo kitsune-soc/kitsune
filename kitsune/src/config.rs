@@ -30,7 +30,6 @@ pub struct InstanceConfiguration {
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct OidcConfiguration {
-    pub redirect_uri: String,
     pub server_url: String,
     pub client_id: String,
     pub client_secret: String,
@@ -54,8 +53,15 @@ pub struct KitsuneSearchConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct MeiliSearchConfiguration {
+    pub instance_url: String,
+    pub api_key: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub enum SearchConfiguration {
     Kitsune(KitsuneSearchConfiguration),
+    Meilisearch(MeiliSearchConfiguration),
     Sql,
     None,
 }

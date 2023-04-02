@@ -27,8 +27,7 @@ pub async fn post(
     let follow = Follow::builder()
         .account_id(id)
         .follower_id(user_data.account.id)
-        .build()
-        .unwrap();
+        .build();
     let follow_accounts = account_service.follow(follow).await?;
 
     Ok(Json(

@@ -1,1 +1,5 @@
-let Kitsune = ./search/kitsune.dhall in < Kitsune : Kitsune | Sql | None >
+let Kitsune = ./search/kitsune.dhall
+
+let Meilisearch = ./search/meilisearch.dhall
+
+in  < Kitsune : Kitsune | Meilisearch : Meilisearch | Sql | None >

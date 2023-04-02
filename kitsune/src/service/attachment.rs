@@ -6,29 +6,22 @@ use derive_builder::Builder;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
 use kitsune_http_client::Client;
-use kitsune_storage::{BoxError, StorageBackend};
+use kitsune_storage::{BoxError, Storage, StorageBackend};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     QueryFilter,
 };
-use std::sync::Arc;
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 
-#[derive(Builder)]
+#[derive(TypedBuilder)]
 pub struct Update {
     account_id: Uuid,
     attachment_id: Uuid,
     #[builder(setter(strip_option))]
     description: Option<String>,
-}
-
-impl Update {
-    #[must_use]
-    pub fn builder() -> UpdateBuilder {
-        UpdateBuilder::default()
-    }
 }
 
 #[derive(Builder)]
@@ -50,32 +43,28 @@ impl<S> Upload<S> {
     }
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct AttachmentService {
-    #[builder(default = "
+    #[builder(default =
         Client::builder()
             .content_length_limit(None)
             .user_agent(concat!(
-                env!(\"CARGO_PKG_NAME\"),
-                \"/\",
-                env!(\"CARGO_PKG_VERSION\")
+                env!("CARGO_PKG_NAME"),
+                "/",
+                env!("CARGO_PKG_VERSION")
             ))
             .unwrap()
             .build()
-    ")]
+    )]
     client: Client,
     db_conn: DatabaseConnection,
     media_proxy_enabled: bool,
-    storage_backend: Arc<dyn StorageBackend>,
+    #[builder(setter(into))]
+    storage_backend: Storage,
     url_service: UrlService,
 }
 
 impl AttachmentService {
-    #[must_use]
-    pub fn builder() -> AttachmentServiceBuilder {
-        AttachmentServiceBuilder::default()
-    }
-
     pub async fn get_by_id(&self, id: Uuid) -> Result<media_attachments::Model> {
         MediaAttachments::find_by_id(id)
             .one(&self.db_conn)
@@ -155,7 +144,7 @@ impl AttachmentService {
         }
 
         self.storage_backend
-            .put(&upload.path, upload.stream.boxed())
+            .put(&upload.path, upload.stream)
             .await
             .map_err(Error::Storage)?;
 

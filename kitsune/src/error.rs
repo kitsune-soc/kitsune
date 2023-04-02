@@ -98,6 +98,22 @@ pub enum OidcError {
 }
 
 #[derive(Debug, Error)]
+pub enum SearchError {
+    #[error(transparent)]
+    Database(#[from] sea_orm::DbErr),
+
+    #[cfg(feature = "meilisearch")]
+    #[error(transparent)]
+    Meilisearch(#[from] meilisearch_sdk::errors::Error),
+
+    #[error(transparent)]
+    TonicStatus(#[from] tonic::Status),
+
+    #[error(transparent)]
+    TonicTransport(#[from] tonic::transport::Error),
+}
+
+#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
     #[error(transparent)]
@@ -170,6 +186,9 @@ pub enum Error {
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
+    Search(#[from] SearchError),
+
+    #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
 
     #[error(transparent)]
@@ -177,12 +196,6 @@ pub enum Error {
 
     #[error(transparent)]
     Storage(kitsune_storage::BoxError),
-
-    #[error(transparent)]
-    TonicStatus(#[from] tonic::Status),
-
-    #[error(transparent)]
-    TonicTransport(#[from] tonic::transport::Error),
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),

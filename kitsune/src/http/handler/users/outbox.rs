@@ -54,14 +54,11 @@ pub async fn get(
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
     if query.page {
-        let mut get_posts = GetPosts::builder().account_id(account.id).clone();
-        if let Some(max_id) = query.max_id {
-            get_posts.max_id(max_id);
-        }
-        if let Some(min_id) = query.min_id {
-            get_posts.min_id(min_id);
-        }
-        let get_posts = get_posts.build().unwrap();
+        let get_posts = GetPosts::builder()
+            .account_id(account.id)
+            .max_id(query.max_id)
+            .min_id(query.min_id)
+            .build();
 
         let posts: Vec<posts::Model> = state
             .service

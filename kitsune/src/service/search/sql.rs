@@ -1,5 +1,4 @@
-use super::{SearchIndex, SearchItem, SearchResult, SearchService};
-use crate::error::Result;
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{
@@ -12,6 +11,7 @@ use kitsune_db::{
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use uuid::Uuid;
 
+#[derive(Clone)]
 // TODO: Make case insensitive
 pub struct SqlSearchService {
     db_conn: DatabaseConnection,
@@ -25,7 +25,7 @@ impl SqlSearchService {
 }
 
 #[async_trait]
-impl SearchService for SqlSearchService {
+impl SearchBackend for SqlSearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }

@@ -27,8 +27,7 @@ pub async fn post(
     let unfollow = Unfollow::builder()
         .account_id(id)
         .follower_id(user_data.account.id)
-        .build()
-        .unwrap();
+        .build();
     let unfollow_accounts = account_service.unfollow(unfollow).await?;
 
     Ok(Json(

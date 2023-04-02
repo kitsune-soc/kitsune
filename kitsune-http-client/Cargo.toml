@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.24"
 derive_builder = "0.12.0"
-futures-core = "0.3.27"
+futures-core = "0.3.28"
 http-body = "0.4.5"
 hyper = { version = "0.14.25", features = [
     "client",
@@ -15,11 +15,11 @@ hyper = { version = "0.14.25", features = [
     "http2",
     "runtime",
 ] }
-hyper-rustls = { version = "0.23.2", features = ["http2"] }
+hyper-rustls = { version = "0.24.0", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 pin-project-lite = "0.2.9"
-serde = "1.0.157"
-serde_json = "1.0.94"
+serde = "1.0.159"
+serde_json = "1.0.95"
 tower = "0.4.13"
 tower-http = { version = "0.4.0", features = [
     "decompression-full",
@@ -29,4 +29,4 @@ tower-http = { version = "0.4.0", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.26.0", features = ["macros", "rt"] }
+tokio = { version = "1.27.0", features = ["macros", "rt"] }

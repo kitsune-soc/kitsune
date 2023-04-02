@@ -18,12 +18,14 @@
                         cargo-insta
                         dhall
                         nodejs
+                        openssl
                         #postgresql_15
                         protobuf
                         redis
                         rust-bin.stable.latest.default
                         sqlite
                         yarn
+                        zlib
                     ];
                 };
             }

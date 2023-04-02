@@ -1,14 +1,13 @@
 use crate::{
-    cache::{ArcCache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    service::search::{ArcSearchService, GrpcSearchService},
+    service::search::{GrpcSearchService, SearchBackend, SearchService},
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use chrono::Utc;
-use derive_builder::Builder;
 use futures_util::FutureExt;
 use http::HeaderValue;
 use kitsune_db::{
@@ -25,6 +24,7 @@ use sea_orm::{
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
 };
 use std::{sync::Arc, time::Duration};
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
@@ -33,7 +33,7 @@ use super::{handle_attachments, handle_mentions};
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
-#[derive(Builder, Clone, Debug)]
+#[derive(Clone, Debug, TypedBuilder)]
 /// Options passed to the fetcher
 pub struct FetchOptions<'a> {
     /// Refetch the ActivityPub entity
@@ -41,42 +41,36 @@ pub struct FetchOptions<'a> {
     /// This is mainly used to refresh possibly stale actors
     ///
     /// Default: false
-    #[builder(default = "false")]
+    #[builder(default = false)]
     refetch: bool,
 
     /// URL of the ActivityPub entity
     url: &'a str,
 }
 
-impl<'a> FetchOptions<'a> {
-    #[must_use]
-    pub fn builder() -> FetchOptionsBuilder<'a> {
-        FetchOptionsBuilder::default()
-    }
-}
-
 impl<'a> From<&'a str> for FetchOptions<'a> {
     fn from(value: &'a str) -> Self {
-        Self::builder().url(value).build().unwrap()
+        Self::builder().url(value).build()
     }
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Fetcher {
-    #[builder(default = "
+    #[builder(default =
         Client::builder()
             .default_header(
-                \"Accept\",
-                HeaderValue::from_static(\"application/activity+json\"),
+                "Accept",
+                HeaderValue::from_static("application/activity+json"),
             )
             .unwrap()
             .user_agent(USER_AGENT)
             .unwrap()
             .build()
-    ")]
+    )]
     client: Client,
     db_conn: DatabaseConnection,
-    search_service: ArcSearchService,
+    #[builder(setter(into))]
+    search_service: SearchService,
 
     // Caches
     post_cache: ArcCache<str, posts::Model>,
@@ -84,11 +78,6 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    #[must_use]
-    pub fn builder() -> FetcherBuilder {
-        FetcherBuilder::default()
-    }
-
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
     pub fn with_defaults(
@@ -98,19 +87,14 @@ impl Fetcher {
     ) -> Self {
         Self::builder()
             .db_conn(db_conn)
-            .search_service(Arc::new(search_service))
-            .post_cache(Arc::new(RedisCache::new(
-                redis_conn.clone(),
-                "fetcher-post",
-                CACHE_DURATION,
-            )))
-            .user_cache(Arc::new(RedisCache::new(
-                redis_conn,
-                "fetcher-user",
-                CACHE_DURATION,
-            )))
+            .search_service(search_service)
+            .post_cache(Arc::new(
+                RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION).into(),
+            ))
+            .user_cache(Arc::new(
+                RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION).into(),
+            ))
             .build()
-            .unwrap()
     }
 
     /// Fetch an ActivityPub actor
@@ -373,11 +357,10 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
-            .search_service(Arc::new(NoopSearchService))
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
-            .build()
-            .unwrap();
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
 
         let user = fetcher
             .fetch_actor("https://corteximplant.com/users/0x0".into())
@@ -395,11 +378,10 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
-            .search_service(Arc::new(NoopSearchService))
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
-            .build()
-            .unwrap();
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
 
         let note = fetcher
             .fetch_object("https://corteximplant.com/@0x0/109501674056556919")

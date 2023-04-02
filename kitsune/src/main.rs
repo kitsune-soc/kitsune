@@ -2,7 +2,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use aws_credential_types::Credentials;
-use aws_sdk_s3::Region;
+use aws_sdk_s3::config::Region;
 use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use futures_util::future::OptionFuture;
 use kitsune::{
@@ -18,10 +18,11 @@ use kitsune::{
         account::AccountService,
         attachment::AttachmentService,
         instance::InstanceService,
+        job::JobService,
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
+        search::{GrpcSearchService, NoopSearchService, SearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -32,7 +33,7 @@ use kitsune::{
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, StorageBackend};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -46,6 +47,9 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{env, fmt::Display, future, process, sync::Arc, time::Duration};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
+
+#[cfg(feature = "meilisearch")]
+use kitsune::service::search::MeiliSearchService;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -96,9 +100,9 @@ where
     K: Display + Send + Sync + ?Sized + 'static,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
-    match config.cache {
-        CacheConfiguration::InMemory => Arc::new(InMemoryCache::new(100, Duration::from_secs(60))), // TODO: Parameterise this
-        CacheConfiguration::None => Arc::new(NoopCache),
+    let cache = match config.cache {
+        CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
+        CacheConfiguration::None => NoopCache.into(),
         CacheConfiguration::Redis(ref redis_config) => {
             static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
 
@@ -109,22 +113,23 @@ where
                     .unwrap()
             });
 
-            Arc::new(
-                RedisCache::builder()
-                    .prefix(cache_name)
-                    .redis_conn(pool.clone())
-                    .ttl(Duration::from_secs(60)) // TODO: Parameterise this
-                    .build()
-                    .unwrap(),
-            )
+            RedisCache::builder()
+                .prefix(cache_name)
+                .redis_conn(pool.clone())
+                .ttl(Duration::from_secs(60)) // TODO: Parameterise this
+                .build()
+                .unwrap()
+                .into()
         }
-    }
+    };
+
+    Arc::new(cache)
 }
 
-fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
+fn prepare_storage(config: &Configuration) -> Storage {
     match config.storage {
         StorageConfiguration::Fs(ref fs_config) => {
-            Arc::new(FsStorage::new(fs_config.upload_dir.as_str().into()))
+            FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
         StorageConfiguration::S3(ref s3_config) => {
             let s3_client_config = aws_sdk_s3::Config::builder()
@@ -138,10 +143,7 @@ fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
                 ))
                 .build();
 
-            Arc::new(S3Storage::new(
-                s3_config.bucket_name.clone(),
-                s3_client_config,
-            ))
+            S3Storage::new(s3_config.bucket_name.clone(), s3_client_config).into()
         }
     }
 }
@@ -161,7 +163,10 @@ async fn prepare_messaging(config: &Configuration) -> MessagingHub {
     }
 }
 
-async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
+async fn prepare_oidc_client(
+    oidc_config: &OidcConfiguration,
+    url_service: &UrlService,
+) -> CoreClient {
     let provider_metadata = CoreProviderMetadata::discover_async(
         IssuerUrl::new(oidc_config.server_url.clone()).unwrap(),
         async_client,
@@ -174,21 +179,34 @@ async fn prepare_oidc_client(oidc_config: &OidcConfiguration) -> CoreClient {
         ClientId::new(oidc_config.client_id.clone()),
         Some(ClientSecret::new(oidc_config.client_secret.clone())),
     )
-    .set_redirect_uri(RedirectUrl::new(oidc_config.redirect_uri.clone()).unwrap())
+    .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
 }
 
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_conn: &DatabaseConnection,
-) -> ArcSearchService {
+) -> SearchService {
     match search_config {
-        SearchConfiguration::Kitsune(config) => Arc::new(
-            GrpcSearchService::new(&config.index_server, &config.search_servers)
+        SearchConfiguration::Kitsune(config) => {
+            GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
-                .expect("Failed to connect to the search servers"),
-        ),
-        SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
-        SearchConfiguration::None => Arc::new(NoopSearchService),
+                .expect("Failed to connect to the search servers")
+                .into()
+        }
+        SearchConfiguration::Meilisearch(_config) => {
+            #[cfg(feature = "meilisearch")]
+            // To avoid an "unused variable" warning in case the feature is deactivated
+            #[allow(clippy::used_underscore_binding)]
+            return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                .await
+                .expect("Failed to connect to Meilisearch")
+                .into();
+
+            #[cfg(not(feature = "meilisearch"))]
+            panic!("Server compiled without Meilisearch compatibility");
+        }
+        SearchConfiguration::Sql => SqlSearchService::new(db_conn.clone()).into(),
+        SearchConfiguration::None => NoopSearchService.into(),
     }
 }
 
@@ -204,77 +222,67 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
         .search_service(search_service.clone())
         .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
-        .build()
-        .unwrap();
+        .build();
 
     let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let url_service = UrlService::builder()
         .scheme(config.url.scheme.as_str())
         .domain(config.url.domain.as_str())
-        .build()
-        .unwrap();
+        .build();
 
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let attachment_service = AttachmentService::builder()
         .db_conn(conn.clone())
         .media_proxy_enabled(config.server.media_proxy_enabled)
         .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let instance_service = InstanceService::builder()
         .db_conn(conn.clone())
         .name(config.instance.name.as_str())
         .description(config.instance.description.as_str())
         .character_limit(config.instance.character_limit)
-        .build()
-        .unwrap();
+        .build();
 
-    let oidc_service =
-        OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async move {
-            OidcService::builder()
-                .client(prepare_oidc_client(oidc_config).await)
-                .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
-                .build()
-                .unwrap()
-        }))
-        .await;
+    let job_service = JobService::builder().db_conn(conn.clone()).build();
+
+    let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
+        OidcService::builder()
+            .client(prepare_oidc_client(oidc_config, &url_service).await)
+            .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
+            .build()
+    }))
+    .await;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
         .db_conn(conn.clone())
         .instance_service(instance_service.clone())
+        .job_service(job_service.clone())
         .post_resolver(post_resolver)
         .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
-    let timeline_service = TimelineService::builder()
-        .db_conn(conn.clone())
-        .build()
-        .unwrap();
+    let timeline_service = TimelineService::builder().db_conn(conn.clone()).build();
 
     let user_service = UserService::builder()
         .db_conn(conn.clone())
         .registrations_open(config.instance.registrations_open)
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     #[cfg(feature = "mastodon-api")]
     let mastodon_mapper = kitsune::mapping::MastodonMapper::builder()
@@ -302,6 +310,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         service: Service {
             account: account_service,
             instance: instance_service,
+            job: job_service,
             oauth2: oauth2_service,
             oidc: oidc_service,
             search: search_service,

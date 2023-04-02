@@ -51,11 +51,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             // Refetch the user and try again
             // Maybe they rekeyed
 
-            let opts = FetchOptions::builder()
-                .refetch(true)
-                .url(ap_id)
-                .build()
-                .unwrap();
+            let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
             let remote_user = state.fetcher.fetch_actor(opts).await?;
 
             if !verify_signature(&parts, &remote_user).await? {

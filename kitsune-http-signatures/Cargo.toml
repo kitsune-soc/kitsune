@@ -11,9 +11,9 @@ http = "0.2.9"
 rayon = "1.7.0"
 ring = { version = "0.16.20", features = ["std"] }
 thiserror = "1.0.40"
-tokio = { version = "1.26.0", features = ["sync"] }
+tokio = { version = "1.27.0", features = ["sync"] }
 
 [dev-dependencies]
-pem = "1.1.1"
+pem = "2.0.0"
 pkcs8 = { version = "0.10.1", features = ["alloc"] }
-tokio = { version = "1.26.0", features = ["macros", "rt"] }
+tokio = { version = "1.27.0", features = ["macros", "rt"] }

@@ -4,8 +4,11 @@
 
 use crate::{BoxError, Result, StorageBackend};
 use async_trait::async_trait;
-use aws_sdk_s3::{types::ByteStream, Client, Config};
-use aws_smithy_http::body::{BoxBody, SdkBody};
+use aws_sdk_s3::{Client, Config};
+use aws_smithy_http::{
+    body::{BoxBody, SdkBody},
+    byte_stream::ByteStream,
+};
 use bytes::Bytes;
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use http::HeaderMap;
@@ -47,6 +50,7 @@ where
     }
 }
 
+#[derive(Clone)]
 /// S3-backed storage
 pub struct Storage {
     bucket_name: String,
@@ -89,7 +93,10 @@ impl StorageBackend for Storage {
         Ok(response.body.map_err(Into::into).boxed())
     }
 
-    async fn put(&self, path: &str, input_stream: BoxStream<'static, Result<Bytes>>) -> Result<()> {
+    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    where
+        T: Stream<Item = Result<Bytes>> + Send + 'static,
+    {
         let body = BoxBody::new(StreamBody {
             inner: SyncWrapper::new(input_stream),
         });

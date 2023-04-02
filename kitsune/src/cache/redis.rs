@@ -1,4 +1,4 @@
-use super::{Cache, CacheResult};
+use super::{CacheBackend, CacheResult};
 use async_trait::async_trait;
 use derive_builder::Builder;
 use redis::AsyncCommands;
@@ -53,7 +53,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> Cache<K, V> for RedisCache<K, V>
+impl<K, V> CacheBackend<K, V> for RedisCache<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Serialize + DeserializeOwned + Send + Sync,

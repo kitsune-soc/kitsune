@@ -1,6 +1,7 @@
 pub mod account;
 pub mod attachment;
 pub mod instance;
+pub mod job;
 pub mod oauth2;
 pub mod oidc;
 pub mod post;

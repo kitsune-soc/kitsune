@@ -1,47 +1,119 @@
-use crate::error::Result;
+use crate::error::SearchError;
 use async_trait::async_trait;
+use enum_dispatch::enum_dispatch;
 use kitsune_db::entity::{accounts, posts};
-use std::{ops::Deref, sync::Arc};
+use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 use uuid::Uuid;
 
 mod grpc;
+#[cfg(feature = "meilisearch")]
+mod meilisearch;
 mod sql;
 
-pub use self::grpc::GrpcSearchService;
-pub use self::sql::SqlSearchService;
+#[cfg(feature = "meilisearch")]
+pub use self::meilisearch::MeiliSearchService;
+pub use self::{grpc::GrpcSearchService, sql::SqlSearchService};
 
-pub type ArcSearchService = Arc<dyn SearchService>;
+type Result<T, E = SearchError> = std::result::Result<T, E>;
 
+#[derive(Clone)]
+#[enum_dispatch(SearchBackend)]
+pub enum SearchService {
+    Grpc(GrpcSearchService),
+    #[cfg(feature = "meilisearch")]
+    Meilisearch(MeiliSearchService),
+    Noop(NoopSearchService),
+    Sql(SqlSearchService),
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Account {
+    pub id: Uuid,
+    pub display_name: Option<String>,
+    pub username: String,
+    pub note: Option<String>,
+    /// Timestamp of the creation expressed in seconds since the Unix epoch
+    pub created_at: u64,
+}
+
+impl From<accounts::Model> for Account {
+    fn from(value: accounts::Model) -> Self {
+        let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
+        Self {
+            id: value.id,
+            display_name: value.display_name,
+            username: value.username,
+            note: value.note,
+            created_at: created_at_secs,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Post {
+    pub id: Uuid,
+    pub subject: Option<String>,
+    pub content: String,
+    /// Timestamp of the creation expressed in seconds since the Unix epoch
+    pub created_at: u64,
+}
+
+impl From<posts::Model> for Post {
+    fn from(value: posts::Model) -> Self {
+        let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
+        Self {
+            id: value.id,
+            subject: value.subject,
+            content: value.content,
+            created_at: created_at_secs,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum SearchItem {
-    Account(accounts::Model),
-    Post(posts::Model),
+    Account(Account),
+    Post(Post),
+}
+
+impl SearchItem {
+    #[must_use]
+    pub fn index(&self) -> SearchIndex {
+        match self {
+            Self::Account(..) => SearchIndex::Account,
+            Self::Post(..) => SearchIndex::Post,
+        }
+    }
 }
 
 impl From<accounts::Model> for SearchItem {
     fn from(account: accounts::Model) -> Self {
-        Self::Account(account)
+        Self::Account(account.into())
     }
 }
 
 impl From<posts::Model> for SearchItem {
     fn from(post: posts::Model) -> Self {
-        Self::Post(post)
+        Self::Post(post.into())
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, EnumIter)]
 pub enum SearchIndex {
     Account,
     Post,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct SearchResult {
     pub id: Uuid,
 }
 
 #[async_trait]
-pub trait SearchService: Send + Sync {
+#[enum_dispatch]
+pub trait SearchBackend: Send + Sync {
     /// Add an item to the index
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
@@ -65,35 +137,6 @@ pub trait SearchService: Send + Sync {
     ) -> Result<Vec<SearchResult>>;
 }
 
-#[async_trait]
-impl SearchService for Arc<dyn SearchService + Send + Sync> {
-    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().add_to_index(item).await
-    }
-
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().remove_from_index(item).await
-    }
-
-    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
-        self.deref().reset_index(index).await
-    }
-
-    async fn search(
-        &self,
-        index: SearchIndex,
-        query: String,
-        max_results: u64,
-        offset: u64,
-        min_id: Option<Uuid>,
-        max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
-        self.deref()
-            .search(index, query, max_results, offset, min_id, max_id)
-            .await
-    }
-}
-
 /// Dummy search service
 ///
 /// Always returns `Ok(())`/an empty list
@@ -101,7 +144,7 @@ impl SearchService for Arc<dyn SearchService + Send + Sync> {
 pub struct NoopSearchService;
 
 #[async_trait]
-impl SearchService for NoopSearchService {
+impl SearchBackend for NoopSearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }

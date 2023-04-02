@@ -46,19 +46,12 @@ pub async fn get(
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
 ) -> Result<Json<Vec<Status>>> {
-    let mut get_home = GetHome::builder()
+    let get_home = GetHome::builder()
         .fetching_account_id(user_data.account.id)
-        .clone();
-
-    if let Some(max_id) = query.max_id {
-        get_home.max_id(max_id);
-    }
-    if let Some(min_id) = query.min_id {
-        get_home.min_id(min_id);
-    }
-
+        .max_id(query.max_id)
+        .min_id(query.min_id)
+        .build();
     let limit = min(query.limit, MAX_LIMIT);
-    let get_home = get_home.build().unwrap();
 
     let statuses: Vec<Status> = timeline
         .get_home(get_home)

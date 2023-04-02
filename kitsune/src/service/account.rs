@@ -1,7 +1,6 @@
 use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use chrono::Utc;
-use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     entity::{
@@ -13,51 +12,38 @@ use kitsune_db::{
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder,
 };
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Follow {
     account_id: Uuid,
     follower_id: Uuid,
 }
 
-impl Follow {
-    #[must_use]
-    pub fn builder() -> FollowBuilder {
-        FollowBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct GetPosts {
     /// ID of the account whose posts are getting fetched
     account_id: Uuid,
 
     /// ID of the account that is requesting the posts
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     fetching_account_id: Option<Uuid>,
 
     /// Smallest ID
     ///
     /// Used for pagination
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     min_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     max_id: Option<Uuid>,
 }
 
-impl GetPosts {
-    #[must_use]
-    pub fn builder() -> GetPostsBuilder {
-        GetPostsBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Unfollow {
     /// Account that is being followed
     account_id: Uuid,
@@ -66,25 +52,13 @@ pub struct Unfollow {
     follower_id: Uuid,
 }
 
-impl Unfollow {
-    #[must_use]
-    pub fn builder() -> UnfollowBuilder {
-        UnfollowBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     db_conn: DatabaseConnection,
     url_service: UrlService,
 }
 
 impl AccountService {
-    #[must_use]
-    pub fn builder() -> AccountServiceBuilder {
-        AccountServiceBuilder::default()
-    }
-
     /// Follow an account
     ///
     /// # Returns

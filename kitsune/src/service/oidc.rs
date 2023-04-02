@@ -1,8 +1,7 @@
 use crate::{
-    cache::ArcCache,
+    cache::{ArcCache, CacheBackend},
     error::{OidcError, Result},
 };
-use derive_builder::Builder;
 use http::Request;
 use hyper::Body;
 use kitsune_http_client::{Client, Error};
@@ -12,6 +11,7 @@ use openidconnect::{
     OAuth2TokenResponse, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse,
 };
 use serde::{Deserialize, Serialize};
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
 
@@ -37,6 +37,7 @@ pub struct Oauth2Info {
 
 #[derive(Debug)]
 pub struct UserInfo {
+    pub subject: String,
     pub username: String,
     pub email: String,
     pub oauth2: Oauth2Info,
@@ -65,18 +66,13 @@ impl Clone for LoginState {
     }
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct OidcService {
     client: CoreClient,
     login_state: ArcCache<String, LoginState>,
 }
 
 impl OidcService {
-    #[must_use]
-    pub fn builder() -> OidcServiceBuilder {
-        OidcServiceBuilder::default()
-    }
-
     pub async fn authorisation_url(
         &self,
         oauth2_application_id: Uuid,
@@ -148,6 +144,7 @@ impl OidcService {
         }
 
         Ok(UserInfo {
+            subject: claims.subject().to_string(),
             username: claims
                 .preferred_username()
                 .ok_or(OidcError::MissingUsername)?
