@@ -6,12 +6,11 @@ use derive_builder::Builder;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
 use kitsune_http_client::Client;
-use kitsune_storage::{BoxError, StorageBackend};
+use kitsune_storage::{BoxError, Storage, StorageBackend};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     QueryFilter,
 };
-use std::sync::Arc;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -60,7 +59,8 @@ pub struct AttachmentService {
     client: Client,
     db_conn: DatabaseConnection,
     media_proxy_enabled: bool,
-    storage_backend: Arc<dyn StorageBackend>,
+    #[builder(setter(into))]
+    storage_backend: Storage,
     url_service: UrlService,
 }
 
@@ -144,7 +144,7 @@ impl AttachmentService {
         }
 
         self.storage_backend
-            .put(&upload.path, upload.stream.boxed())
+            .put(&upload.path, upload.stream)
             .await
             .map_err(Error::Storage)?;
 

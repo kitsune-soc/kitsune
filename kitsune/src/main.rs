@@ -32,7 +32,7 @@ use kitsune::{
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, StorageBackend};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -124,10 +124,10 @@ where
     }
 }
 
-fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
+fn prepare_storage(config: &Configuration) -> Storage {
     match config.storage {
         StorageConfiguration::Fs(ref fs_config) => {
-            Arc::new(FsStorage::new(fs_config.upload_dir.as_str().into()))
+            FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
         StorageConfiguration::S3(ref s3_config) => {
             let s3_client_config = aws_sdk_s3::Config::builder()
@@ -141,10 +141,7 @@ fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
                 ))
                 .build();
 
-            Arc::new(S3Storage::new(
-                s3_config.bucket_name.clone(),
-                s3_client_config,
-            ))
+            S3Storage::new(s3_config.bucket_name.clone(), s3_client_config).into()
         }
     }
 }
