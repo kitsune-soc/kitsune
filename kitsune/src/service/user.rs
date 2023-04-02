@@ -2,7 +2,6 @@ use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use chrono::Utc;
-use derive_builder::Builder;
 use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::entity::{
     accounts,
@@ -17,9 +16,10 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     TransactionTrait,
 };
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Register {
     /// Username of the new user
     username: String,
@@ -36,14 +36,7 @@ pub struct Register {
     password: Option<String>,
 }
 
-impl Register {
-    #[must_use]
-    pub fn builder() -> RegisterBuilder {
-        RegisterBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct UserService {
     db_conn: DatabaseConnection,
     registrations_open: bool,
@@ -51,11 +44,6 @@ pub struct UserService {
 }
 
 impl UserService {
-    #[must_use]
-    pub fn builder() -> UserServiceBuilder {
-        UserServiceBuilder::default()
-    }
-
     pub async fn register(&self, register: Register) -> Result<users::Model> {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());

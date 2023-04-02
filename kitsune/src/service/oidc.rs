@@ -2,7 +2,6 @@ use crate::{
     cache::ArcCache,
     error::{OidcError, Result},
 };
-use derive_builder::Builder;
 use http::Request;
 use hyper::Body;
 use kitsune_http_client::{Client, Error};
@@ -12,6 +11,7 @@ use openidconnect::{
     OAuth2TokenResponse, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse,
 };
 use serde::{Deserialize, Serialize};
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
 
@@ -66,18 +66,13 @@ impl Clone for LoginState {
     }
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct OidcService {
     client: CoreClient,
     login_state: ArcCache<String, LoginState>,
 }
 
 impl OidcService {
-    #[must_use]
-    pub fn builder() -> OidcServiceBuilder {
-        OidcServiceBuilder::default()
-    }
-
     pub async fn authorisation_url(
         &self,
         oauth2_application_id: Uuid,

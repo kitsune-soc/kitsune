@@ -1,12 +1,12 @@
-use derive_builder::Builder;
 use std::sync::Arc;
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 /// Small "service" to centralise the creation of URLs
 ///
 /// For some light deduplication purposes and to centralise the whole formatting story.
 /// Allows for easier adjustments of URLs.
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct UrlService {
     #[builder(setter(into))]
     scheme: Arc<str>,
@@ -15,11 +15,6 @@ pub struct UrlService {
 }
 
 impl UrlService {
-    #[must_use]
-    pub fn builder() -> UrlServiceBuilder {
-        UrlServiceBuilder::default()
-    }
-
     #[must_use]
     pub fn base_url(&self) -> String {
         format!("{}://{}", self.scheme, self.domain)

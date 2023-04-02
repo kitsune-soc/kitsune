@@ -34,6 +34,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
     IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
 };
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 #[derive(Clone, Builder)]
@@ -112,8 +113,7 @@ impl DeletePost {
     }
 }
 
-#[derive(Builder, Clone)]
-#[builder(pattern = "owned")]
+#[derive(Clone, TypedBuilder)]
 pub struct PostService {
     db_conn: DatabaseConnection,
     instance_service: InstanceService,
@@ -124,11 +124,6 @@ pub struct PostService {
 }
 
 impl PostService {
-    #[must_use]
-    pub fn builder() -> PostServiceBuilder {
-        PostServiceBuilder::default()
-    }
-
     async fn process_media_attachments<C>(
         conn: &C,
         post_id: Uuid,

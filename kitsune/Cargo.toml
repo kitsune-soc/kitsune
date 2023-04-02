@@ -95,6 +95,7 @@ tonic = "0.9.0"
 tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
+typed-builder = "0.14.0"
 url = "2.3.1"
 utoipa = { version = "3.2.1", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "3.1.2", features = ["axum"] }

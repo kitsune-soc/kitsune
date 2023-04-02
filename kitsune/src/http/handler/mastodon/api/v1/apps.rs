@@ -30,8 +30,7 @@ async fn post(
     let create_app = CreateApp::builder()
         .name(form.client_name)
         .redirect_uris(form.redirect_uris)
-        .build()
-        .unwrap();
+        .build();
     let application = oauth2.create_app(create_app).await?;
 
     Ok(Json(App {
