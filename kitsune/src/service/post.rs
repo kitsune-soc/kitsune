@@ -1,17 +1,15 @@
 use super::{
     instance::InstanceService,
+    job::{Enqueue, JobService},
     search::{SearchBackend, SearchService},
     url::UrlService,
 };
 use crate::{
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
-    job::{
-        deliver::{
-            create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
-            unfavourite::DeliverUnfavourite,
-        },
-        Job,
+    job::deliver::{
+        create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
+        unfavourite::DeliverUnfavourite,
     },
     resolve::PostResolver,
     sanitize::CleanHtmlExt,
@@ -21,12 +19,11 @@ use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
-    custom::{JobState, Role, Visibility},
+    custom::{Role, Visibility},
     entity::{
-        favourites, jobs, media_attachments, posts, posts_media_attachments, posts_mentions,
+        favourites, media_attachments, posts, posts_media_attachments, posts_mentions,
         prelude::{
-            Favourites, Jobs, MediaAttachments, Posts, PostsMediaAttachments, PostsMentions,
-            UsersRoles,
+            Favourites, MediaAttachments, Posts, PostsMediaAttachments, PostsMentions, UsersRoles,
         },
         users_roles,
     },
@@ -121,6 +118,7 @@ impl DeletePost {
 pub struct PostService {
     db_conn: DatabaseConnection,
     instance_service: InstanceService,
+    job_service: JobService,
     post_resolver: PostResolver,
     search_service: SearchService,
     status_event_emitter: PostEventEmitter,
@@ -218,6 +216,8 @@ impl PostService {
         let post = self
             .db_conn
             .transaction(move |tx| {
+                let job_service = self.job_service.clone();
+
                 async move {
                     let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
                         (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
@@ -247,22 +247,13 @@ impl PostService {
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
-                    let job_context = Job::DeliverCreate(DeliverCreate { post_id: post.id });
-
-                    Jobs::insert(
-                        jobs::Model {
-                            id: Uuid::now_v7(),
-                            state: JobState::Queued,
-                            run_at: Utc::now().into(),
-                            context: serde_json::to_value(job_context).unwrap(),
-                            fail_count: 0,
-                            created_at: Utc::now().into(),
-                            updated_at: Utc::now().into(),
-                        }
-                        .into_active_model(),
-                    )
-                    .exec_without_returning(tx)
-                    .await?;
+                    job_service
+                        .enqueue(
+                            Enqueue::builder()
+                                .job(DeliverCreate { post_id: post.id })
+                                .build(),
+                        )
+                        .await?;
 
                     Ok::<_, Error>(post)
                 }
@@ -318,21 +309,13 @@ impl PostService {
             }
         }
 
-        let job_context = Job::DeliverDelete(DeliverDelete { post_id: post.id });
-        Jobs::insert(
-            jobs::Model {
-                id: Uuid::now_v7(),
-                state: JobState::Queued,
-                run_at: Utc::now().into(),
-                context: serde_json::to_value(job_context).unwrap(),
-                fail_count: 0,
-                created_at: Utc::now().into(),
-                updated_at: Utc::now().into(),
-            }
-            .into_active_model(),
-        )
-        .exec_without_returning(&self.db_conn)
-        .await?;
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(DeliverDelete { post_id: post.id })
+                    .build(),
+            )
+            .await?;
 
         self.status_event_emitter
             .emit(PostEvent {
@@ -383,24 +366,15 @@ impl PostService {
         .insert(&self.db_conn)
         .await?;
 
-        let context = Job::DeliverFavourite(DeliverFavourite {
-            favourite_id: favourite.id,
-        });
-
-        Jobs::insert(
-            jobs::Model {
-                id: Uuid::now_v7(),
-                state: JobState::Queued,
-                run_at: Utc::now().into(),
-                context: serde_json::to_value(context).unwrap(),
-                fail_count: 0,
-                created_at: Utc::now().into(),
-                updated_at: Utc::now().into(),
-            }
-            .into_active_model(),
-        )
-        .exec_without_returning(&self.db_conn)
-        .await?;
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(DeliverFavourite {
+                        favourite_id: favourite.id,
+                    })
+                    .build(),
+            )
+            .await?;
 
         Ok(post)
     }
@@ -428,24 +402,15 @@ impl PostService {
             .one(&self.db_conn)
             .await?
         {
-            let context = Job::DeliverUnfavourite(DeliverUnfavourite {
-                favourite_id: favourite.id,
-            });
-
-            Jobs::insert(
-                jobs::Model {
-                    id: Uuid::now_v7(),
-                    state: JobState::Queued,
-                    run_at: Utc::now().into(),
-                    context: serde_json::to_value(context).unwrap(),
-                    fail_count: 0,
-                    created_at: Utc::now().into(),
-                    updated_at: Utc::now().into(),
-                }
-                .into_active_model(),
-            )
-            .exec_without_returning(&self.db_conn)
-            .await?;
+            self.job_service
+                .enqueue(
+                    Enqueue::builder()
+                        .job(DeliverUnfavourite {
+                            favourite_id: favourite.id,
+                        })
+                        .build(),
+                )
+                .await?;
         }
 
         Ok(post)
