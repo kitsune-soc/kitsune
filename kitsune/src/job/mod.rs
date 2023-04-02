@@ -47,7 +47,7 @@ pub struct JobContext<'a> {
 
 #[async_trait]
 #[enum_dispatch]
-pub trait Runnable: DeserializeOwned {
+pub trait Runnable: DeserializeOwned + Serialize {
     async fn run(&self, ctx: JobContext<'_>) -> Result<()>;
 
     /// Defaults to exponential backoff
