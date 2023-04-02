@@ -1,5 +1,5 @@
 use crate::{
-    cache::{ArcCache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
@@ -88,16 +88,12 @@ impl Fetcher {
         Self::builder()
             .db_conn(db_conn)
             .search_service(search_service)
-            .post_cache(Arc::new(RedisCache::new(
-                redis_conn.clone(),
-                "fetcher-post",
-                CACHE_DURATION,
-            )))
-            .user_cache(Arc::new(RedisCache::new(
-                redis_conn,
-                "fetcher-user",
-                CACHE_DURATION,
-            )))
+            .post_cache(Arc::new(
+                RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION).into(),
+            ))
+            .user_cache(Arc::new(
+                RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION).into(),
+            ))
             .build()
     }
 
@@ -362,8 +358,8 @@ mod test {
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
             .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let user = fetcher
@@ -383,8 +379,8 @@ mod test {
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
             .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let note = fetcher

@@ -99,9 +99,9 @@ where
     K: Display + Send + Sync + ?Sized + 'static,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
-    match config.cache {
-        CacheConfiguration::InMemory => Arc::new(InMemoryCache::new(100, Duration::from_secs(60))), // TODO: Parameterise this
-        CacheConfiguration::None => Arc::new(NoopCache),
+    let cache = match config.cache {
+        CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
+        CacheConfiguration::None => NoopCache.into(),
         CacheConfiguration::Redis(ref redis_config) => {
             static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
 
@@ -112,16 +112,17 @@ where
                     .unwrap()
             });
 
-            Arc::new(
-                RedisCache::builder()
-                    .prefix(cache_name)
-                    .redis_conn(pool.clone())
-                    .ttl(Duration::from_secs(60)) // TODO: Parameterise this
-                    .build()
-                    .unwrap(),
-            )
+            RedisCache::builder()
+                .prefix(cache_name)
+                .redis_conn(pool.clone())
+                .ttl(Duration::from_secs(60)) // TODO: Parameterise this
+                .build()
+                .unwrap()
+                .into()
         }
-    }
+    };
+
+    Arc::new(cache)
 }
 
 fn prepare_storage(config: &Configuration) -> Storage {

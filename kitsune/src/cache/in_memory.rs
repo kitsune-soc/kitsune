@@ -1,4 +1,4 @@
-use super::{Cache, CacheResult};
+use super::{CacheBackend, CacheResult};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use std::{
@@ -38,7 +38,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> Cache<K, V> for InMemoryCache<K, V>
+impl<K, V> CacheBackend<K, V> for InMemoryCache<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Clone + Send + Sync,
@@ -87,7 +87,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::cache::{Cache, InMemoryCache};
+    use crate::cache::{CacheBackend, InMemoryCache};
     use std::time::Duration;
 
     #[tokio::test]

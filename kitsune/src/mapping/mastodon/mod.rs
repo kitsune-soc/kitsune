@@ -1,6 +1,6 @@
 use self::sealed::{IntoMastodon, MapperState};
 use crate::{
-    cache::{ArcCache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     error::Result,
     event::{post::EventType, PostEventConsumer},
     service::{attachment::AttachmentService, url::UrlService},
@@ -106,11 +106,8 @@ impl MastodonMapper {
         redis_conn: deadpool_redis::Pool,
         url_service: UrlService,
     ) -> Self {
-        let cache = Arc::new(RedisCache::new(
-            redis_conn,
-            "MASTODON-ENTITY-CACHE",
-            CACHE_TTL,
-        ));
+        let cache =
+            Arc::new(RedisCache::new(redis_conn, "MASTODON-ENTITY-CACHE", CACHE_TTL).into());
 
         Self::builder()
             .attachment_service(attachment_service)
