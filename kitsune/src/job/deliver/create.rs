@@ -1,4 +1,4 @@
-use crate::job::{JobContext, JobRunner, MAX_CONCURRENT_REQUESTS};
+use crate::job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS};
 use crate::{error::Result, mapping::IntoActivity, resolve::InboxResolver};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
@@ -13,9 +13,9 @@ pub struct DeliverCreate {
 }
 
 #[async_trait]
-impl JobRunner for DeliverCreate {
+impl Runnable for DeliverCreate {
     #[instrument(skip_all, fields(post_id = %self.post_id))]
-    async fn run(self, ctx: JobContext<'_>) -> Result<()> {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some((post, Some(account))) = Posts::find_by_id(self.post_id)
             .find_also_related(Accounts)
             .one(&ctx.state.db_conn)

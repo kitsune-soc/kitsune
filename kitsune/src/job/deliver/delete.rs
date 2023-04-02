@@ -1,4 +1,4 @@
-use crate::job::{JobContext, JobRunner, MAX_CONCURRENT_REQUESTS};
+use crate::job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS};
 use crate::{error::Result, mapping::IntoActivity, resolve::InboxResolver};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
@@ -13,8 +13,8 @@ pub struct DeliverDelete {
 }
 
 #[async_trait]
-impl JobRunner for DeliverDelete {
-    async fn run(self, ctx: JobContext<'_>) -> Result<()> {
+impl Runnable for DeliverDelete {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some(post) = Posts::find_by_id(self.post_id)
             .one(&ctx.state.db_conn)
             .await?

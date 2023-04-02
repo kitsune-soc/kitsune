@@ -15,7 +15,6 @@ use chrono::Utc;
 use enum_dispatch::enum_dispatch;
 use kitsune_db::entity::jobs;
 use kitsune_db::{custom::JobState, entity::prelude::Jobs};
-use once_cell::sync::Lazy;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
@@ -31,9 +30,8 @@ pub mod deliver;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
-static LINEAR_BACKOFF_DURATION: Lazy<chrono::Duration> = Lazy::new(|| chrono::Duration::minutes(1)); // One minute
 
-#[enum_dispatch(JobRunner)]
+#[enum_dispatch(Runnable)]
 #[derive(Deserialize, Serialize)]
 pub enum Job {
     DeliverCreate,
@@ -49,8 +47,13 @@ pub struct JobContext<'a> {
 
 #[async_trait]
 #[enum_dispatch]
-pub trait JobRunner: DeserializeOwned {
-    async fn run(self, ctx: JobContext<'_>) -> Result<()>;
+pub trait Runnable: DeserializeOwned {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<()>;
+
+    /// Defaults to exponential backoff
+    fn backoff(&self, previous_tries: u32) -> u64 {
+        u64::pow(2, previous_tries)
+    }
 }
 
 // Takes owned values to make the lifetime of the returned future static
@@ -75,10 +78,16 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
             increment_counter!("failed_jobs");
 
             update_model.state = ActiveValue::Set(JobState::Failed);
-            update_model.fail_count = ActiveValue::Set(db_job.fail_count + 1);
-            update_model.run_at = ActiveValue::Set(
-                (Utc::now() + (*LINEAR_BACKOFF_DURATION * db_job.fail_count)).into(),
-            );
+
+            let fail_count = db_job.fail_count + 1;
+            update_model.fail_count = ActiveValue::Set(fail_count);
+
+            #[allow(clippy::cast_sign_loss)]
+            let backoff_duration =
+                chrono::Duration::from_std(Duration::from_secs(job.backoff(fail_count as u32)))
+                    .unwrap();
+            update_model.run_at = ActiveValue::Set((Utc::now() + backoff_duration).into());
+
             update_model.updated_at = ActiveValue::Set(Utc::now().into());
         }
         _ => {

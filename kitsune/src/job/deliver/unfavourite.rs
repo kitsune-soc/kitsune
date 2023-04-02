@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    job::{JobContext, JobRunner},
+    job::{JobContext, Runnable},
     mapping::IntoActivity,
 };
 use async_trait::async_trait;
@@ -22,8 +22,8 @@ pub struct DeliverUnfavourite {
 }
 
 #[async_trait]
-impl JobRunner for DeliverUnfavourite {
-    async fn run(self, ctx: JobContext<'_>) -> Result<()> {
+impl Runnable for DeliverUnfavourite {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some(favourite) = Favourites::find_by_id(self.favourite_id)
             .one(&ctx.state.db_conn)
             .await?
