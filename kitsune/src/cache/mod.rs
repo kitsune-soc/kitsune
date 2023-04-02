@@ -1,10 +1,8 @@
 use crate::error::CacheError;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt::Display;
-use std::{ops::Deref, sync::Arc};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{fmt::Display, sync::Arc};
 
 mod in_memory;
 mod redis;
@@ -36,25 +34,6 @@ where
     async fn delete(&self, key: &K) -> CacheResult<()>;
     async fn get(&self, key: &K) -> CacheResult<Option<V>>;
     async fn set(&self, key: &K, value: &V) -> CacheResult<()>;
-}
-
-#[async_trait]
-impl<K, V> CacheBackend<K, V> for Arc<dyn CacheBackend<K, V> + Send + Sync>
-where
-    K: Send + Sync + ?Sized,
-    V: Send + Sync,
-{
-    async fn delete(&self, key: &K) -> CacheResult<()> {
-        self.deref().delete(key).await
-    }
-
-    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
-        self.deref().get(key).await
-    }
-
-    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
-        self.deref().set(key, value).await
-    }
 }
 
 #[derive(Clone)]
