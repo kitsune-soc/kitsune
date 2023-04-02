@@ -3,8 +3,8 @@ use crate::{
     event::PostEventEmitter,
     service::{
         account::AccountService, attachment::AttachmentService, instance::InstanceService,
-        oauth2::Oauth2Service, oidc::OidcService, post::PostService, search::SearchService,
-        timeline::TimelineService, url::UrlService, user::UserService,
+        job::JobService, oauth2::Oauth2Service, oidc::OidcService, post::PostService,
+        search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -29,6 +29,7 @@ impl_from_ref! {
     [
         AccountService => |input: &Zustand| input.service.account.clone(),
         AttachmentService => |input: &Zustand| input.service.attachment.clone(),
+        JobService => |input: &Zustand| input.service.job.clone(),
         Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
         Option<OidcService> => |input: &Zustand| input.service.oidc.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
@@ -64,6 +65,7 @@ pub struct EventEmitter {
 pub struct Service {
     pub account: AccountService,
     pub attachment: AttachmentService,
+    pub job: JobService,
     pub oauth2: Oauth2Service,
     pub oidc: Option<OidcService>,
     pub post: PostService,

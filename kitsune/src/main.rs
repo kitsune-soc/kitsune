@@ -18,6 +18,7 @@ use kitsune::{
         account::AccountService,
         attachment::AttachmentService,
         instance::InstanceService,
+        job::JobService,
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
@@ -246,6 +247,8 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .character_limit(config.instance.character_limit)
         .build();
 
+    let job_service = JobService::builder().db_conn(conn.clone()).build();
+
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         OidcService::builder()
             .client(prepare_oidc_client(oidc_config, &url_service).await)
@@ -263,6 +266,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let post_service = PostService::builder()
         .db_conn(conn.clone())
         .instance_service(instance_service.clone())
+        .job_service(job_service.clone())
         .post_resolver(post_resolver)
         .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
@@ -303,6 +307,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         service: Service {
             account: account_service,
             instance: instance_service,
+            job: job_service,
             oauth2: oauth2_service,
             oidc: oidc_service,
             search: search_service,
