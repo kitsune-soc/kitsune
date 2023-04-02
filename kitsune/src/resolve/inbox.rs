@@ -36,7 +36,7 @@ impl InboxResolver {
             .stream(&self.db_conn)
             .await?;
 
-        Ok(if post.visibility == Visibility::MentionOnly {
+        let stream = if post.visibility == Visibility::MentionOnly {
             Either::Left(mentioned_inbox_stream)
         } else {
             let follower_inbox_stream = account
@@ -48,6 +48,8 @@ impl InboxResolver {
                 .await?;
 
             Either::Right(mentioned_inbox_stream.chain(follower_inbox_stream))
-        })
+        };
+
+        Ok(stream)
     }
 }
