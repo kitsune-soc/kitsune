@@ -23,7 +23,7 @@ non_component_chars = {
 }
 
 component_prefix = { 
-    NEWLINE | SOI | WHITE_SPACE
+    SYMBOL | NEWLINE | SOI | WHITE_SPACE | PUNCTUATION
 }
 
 component_postfix = _{ 
