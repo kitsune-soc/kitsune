@@ -1,9 +1,9 @@
 use crate::{
-    cache::{ArcCache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     consts::USER_AGENT,
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    service::search::{ArcSearchService, GrpcSearchService},
+    service::search::{GrpcSearchService, SearchBackend, SearchService},
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -69,7 +69,8 @@ pub struct Fetcher {
     )]
     client: Client,
     db_conn: DatabaseConnection,
-    search_service: ArcSearchService,
+    #[builder(setter(into))]
+    search_service: SearchService,
 
     // Caches
     post_cache: ArcCache<str, posts::Model>,
@@ -86,17 +87,13 @@ impl Fetcher {
     ) -> Self {
         Self::builder()
             .db_conn(db_conn)
-            .search_service(Arc::new(search_service))
-            .post_cache(Arc::new(RedisCache::new(
-                redis_conn.clone(),
-                "fetcher-post",
-                CACHE_DURATION,
-            )))
-            .user_cache(Arc::new(RedisCache::new(
-                redis_conn,
-                "fetcher-user",
-                CACHE_DURATION,
-            )))
+            .search_service(search_service)
+            .post_cache(Arc::new(
+                RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION).into(),
+            ))
+            .user_cache(Arc::new(
+                RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION).into(),
+            ))
             .build()
     }
 
@@ -360,9 +357,9 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
-            .search_service(Arc::new(NoopSearchService))
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let user = fetcher
@@ -381,9 +378,9 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
-            .search_service(Arc::new(NoopSearchService))
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let note = fetcher

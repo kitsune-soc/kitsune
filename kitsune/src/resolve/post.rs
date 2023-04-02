@@ -134,15 +134,15 @@ mod test {
 
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
-            .search_service(Arc::new(NoopSearchService))
-            .post_cache(Arc::new(NoopCache))
-            .user_cache(Arc::new(NoopCache))
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let mention_resolver = PostResolver::new(
             db_conn.clone(),
             fetcher,
-            Webfinger::new(Arc::new(NoopCache)),
+            Webfinger::new(Arc::new(NoopCache.into())),
         );
 
         let (mentioned_account_ids, content) = mention_resolver

@@ -1,5 +1,5 @@
 use crate::{
-    cache::ArcCache,
+    cache::{ArcCache, CacheBackend},
     error::{OidcError, Result},
 };
 use http::Request;

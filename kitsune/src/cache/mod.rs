@@ -1,6 +1,8 @@
 use crate::error::CacheError;
 use async_trait::async_trait;
-use std::{ops::Deref, sync::Arc};
+use enum_dispatch::enum_dispatch;
+use serde::{de::DeserializeOwned, Serialize};
+use std::{fmt::Display, sync::Arc};
 
 mod in_memory;
 mod redis;
@@ -10,10 +12,22 @@ pub use self::redis::RedisCache;
 
 type CacheResult<T, E = CacheError> = Result<T, E>;
 
-pub type ArcCache<K, V> = Arc<dyn Cache<K, V>>;
+pub type ArcCache<K, V> = Arc<Cache<K, V>>;
+
+#[enum_dispatch(CacheBackend<K, V>)]
+pub enum Cache<K, V>
+where
+    K: Display + Send + Sync + ?Sized,
+    V: Clone + DeserializeOwned + Serialize + Send + Sync,
+{
+    InMemory(InMemoryCache<K, V>),
+    Noop(NoopCache),
+    Redis(RedisCache<K, V>),
+}
 
 #[async_trait]
-pub trait Cache<K, V>: Send + Sync
+#[enum_dispatch]
+pub trait CacheBackend<K, V>: Send + Sync
 where
     K: ?Sized,
 {
@@ -22,30 +36,11 @@ where
     async fn set(&self, key: &K, value: &V) -> CacheResult<()>;
 }
 
-#[async_trait]
-impl<K, V> Cache<K, V> for Arc<dyn Cache<K, V> + Send + Sync>
-where
-    K: Send + Sync + ?Sized,
-    V: Send + Sync,
-{
-    async fn delete(&self, key: &K) -> CacheResult<()> {
-        self.deref().delete(key).await
-    }
-
-    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
-        self.deref().get(key).await
-    }
-
-    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
-        self.deref().set(key, value).await
-    }
-}
-
 #[derive(Clone)]
 pub struct NoopCache;
 
 #[async_trait]
-impl<K, V> Cache<K, V> for NoopCache
+impl<K, V> CacheBackend<K, V> for NoopCache
 where
     K: Send + Sync + ?Sized,
     V: Send + Sync,

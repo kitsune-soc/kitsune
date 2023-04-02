@@ -1,4 +1,8 @@
-use super::{instance::InstanceService, search::ArcSearchService, url::UrlService};
+use super::{
+    instance::InstanceService,
+    search::{SearchBackend, SearchService},
+    url::UrlService,
+};
 use crate::{
     error::{ApiError, Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
@@ -118,7 +122,7 @@ pub struct PostService {
     db_conn: DatabaseConnection,
     instance_service: InstanceService,
     post_resolver: PostResolver,
-    search_service: ArcSearchService,
+    search_service: SearchService,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }

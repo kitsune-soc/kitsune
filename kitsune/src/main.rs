@@ -21,7 +21,7 @@ use kitsune::{
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
+        search::{GrpcSearchService, NoopSearchService, SearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -32,7 +32,7 @@ use kitsune::{
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, StorageBackend};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -99,9 +99,9 @@ where
     K: Display + Send + Sync + ?Sized + 'static,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
-    match config.cache {
-        CacheConfiguration::InMemory => Arc::new(InMemoryCache::new(100, Duration::from_secs(60))), // TODO: Parameterise this
-        CacheConfiguration::None => Arc::new(NoopCache),
+    let cache = match config.cache {
+        CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
+        CacheConfiguration::None => NoopCache.into(),
         CacheConfiguration::Redis(ref redis_config) => {
             static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
 
@@ -112,22 +112,23 @@ where
                     .unwrap()
             });
 
-            Arc::new(
-                RedisCache::builder()
-                    .prefix(cache_name)
-                    .redis_conn(pool.clone())
-                    .ttl(Duration::from_secs(60)) // TODO: Parameterise this
-                    .build()
-                    .unwrap(),
-            )
+            RedisCache::builder()
+                .prefix(cache_name)
+                .redis_conn(pool.clone())
+                .ttl(Duration::from_secs(60)) // TODO: Parameterise this
+                .build()
+                .unwrap()
+                .into()
         }
-    }
+    };
+
+    Arc::new(cache)
 }
 
-fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
+fn prepare_storage(config: &Configuration) -> Storage {
     match config.storage {
         StorageConfiguration::Fs(ref fs_config) => {
-            Arc::new(FsStorage::new(fs_config.upload_dir.as_str().into()))
+            FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
         StorageConfiguration::S3(ref s3_config) => {
             let s3_client_config = aws_sdk_s3::Config::builder()
@@ -141,10 +142,7 @@ fn prepare_storage(config: &Configuration) -> Arc<dyn StorageBackend> {
                 ))
                 .build();
 
-            Arc::new(S3Storage::new(
-                s3_config.bucket_name.clone(),
-                s3_client_config,
-            ))
+            S3Storage::new(s3_config.bucket_name.clone(), s3_client_config).into()
         }
     }
 }
@@ -186,28 +184,28 @@ async fn prepare_oidc_client(
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_conn: &DatabaseConnection,
-) -> ArcSearchService {
+) -> SearchService {
     match search_config {
-        SearchConfiguration::Kitsune(config) => Arc::new(
+        SearchConfiguration::Kitsune(config) => {
             GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
-                .expect("Failed to connect to the search servers"),
-        ),
+                .expect("Failed to connect to the search servers")
+                .into()
+        }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(feature = "meilisearch")]
             // To avoid an "unused variable" warning in case the feature is deactivated
             #[allow(clippy::used_underscore_binding)]
-            return Arc::new(
-                MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                    .await
-                    .expect("Failed to connect to Meilisearch"),
-            );
+            return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                .await
+                .expect("Failed to connect to Meilisearch")
+                .into();
 
             #[cfg(not(feature = "meilisearch"))]
             panic!("Server compiled without Meilisearch compatibility");
         }
-        SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
-        SearchConfiguration::None => Arc::new(NoopSearchService),
+        SearchConfiguration::Sql => SqlSearchService::new(db_conn.clone()).into(),
+        SearchConfiguration::None => NoopSearchService.into(),
     }
 }
 

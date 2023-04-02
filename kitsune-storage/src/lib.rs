@@ -5,7 +5,8 @@
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures_util::stream::BoxStream;
+use enum_dispatch::enum_dispatch;
+use futures_util::{stream::BoxStream, Stream};
 use std::error::Error;
 
 pub mod fs;
@@ -19,7 +20,8 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
 #[async_trait]
-pub trait StorageBackend: Send + Sync {
+#[enum_dispatch]
+pub trait StorageBackend: Clone + Send + Sync {
     /// Delete something from the object storage
     async fn delete(&self, path: &str) -> Result<()>;
 
@@ -27,15 +29,18 @@ pub trait StorageBackend: Send + Sync {
     async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>>;
 
     /// Stream something onto the object storage
-    async fn put(&self, path: &str, input_stream: BoxStream<'static, Result<Bytes>>) -> Result<()>;
+    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    where
+        T: Stream<Item = Result<Bytes>> + Send + 'static;
 }
 
-#[cfg(test)]
-mod test {
-    use crate::StorageBackend;
+#[derive(Clone)]
+#[enum_dispatch(StorageBackend)]
+/// Combined storage enum for enum dispatch
+pub enum Storage {
+    /// File system-backed storage
+    Fs(fs::Storage),
 
-    #[test]
-    fn assert_object_safety() {
-        let _: Box<dyn StorageBackend>;
-    }
+    /// S3-backed storage
+    S3(s3::Storage),
 }

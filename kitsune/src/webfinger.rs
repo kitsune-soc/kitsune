@@ -1,5 +1,5 @@
 use crate::{
-    cache::{ArcCache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     consts::USER_AGENT,
     error::Result,
 };
@@ -20,11 +20,9 @@ pub struct Webfinger {
 impl Webfinger {
     #[must_use]
     pub fn with_defaults(redis_conn: deadpool_redis::Pool) -> Self {
-        Self::new(Arc::new(RedisCache::new(
-            redis_conn,
-            "webfinger",
-            CACHE_DURATION,
-        )))
+        Self::new(Arc::new(
+            RedisCache::new(redis_conn, "webfinger", CACHE_DURATION).into(),
+        ))
     }
 }
 
@@ -75,7 +73,7 @@ mod test {
 
     #[tokio::test]
     async fn fetch_qarnax_ap_id() {
-        let webfinger = Webfinger::new(Arc::new(NoopCache));
+        let webfinger = Webfinger::new(Arc::new(NoopCache.into()));
         let ap_id = webfinger
             .fetch_actor_url("qarnax", "corteximplant.com")
             .await

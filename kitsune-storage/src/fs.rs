@@ -5,7 +5,7 @@
 use crate::{Result, StorageBackend};
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
+use futures_util::{pin_mut, stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use tokio::{
     fs::{self, File},
@@ -13,6 +13,7 @@ use tokio::{
 };
 use tokio_util::io::ReaderStream;
 
+#[derive(Clone)]
 /// File system storage
 pub struct Storage {
     storage_dir: PathBuf,
@@ -40,12 +41,12 @@ impl StorageBackend for Storage {
         Ok(ReaderStream::new(file).map_err(Into::into).boxed())
     }
 
-    async fn put(
-        &self,
-        path: &str,
-        mut input_stream: BoxStream<'static, Result<Bytes>>,
-    ) -> Result<()> {
+    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    where
+        T: Stream<Item = Result<Bytes>> + Send + 'static,
+    {
         let mut file = File::create(self.storage_dir.join(path)).await?;
+        pin_mut!(input_stream);
         while let Some(chunk) = input_stream.next().await.transpose()? {
             file.write_all(&chunk).await?;
         }

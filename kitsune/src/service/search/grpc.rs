@@ -1,4 +1,4 @@
-use super::{Result, SearchIndex, SearchItem, SearchResult, SearchService};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::stream;
 use kitsune_search_proto::{
@@ -43,7 +43,7 @@ impl GrpcSearchService {
 }
 
 #[async_trait]
-impl SearchService for GrpcSearchService {
+impl SearchBackend for GrpcSearchService {
     #[instrument(skip_all)]
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         let request = match item {

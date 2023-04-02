@@ -50,6 +50,7 @@ where
     }
 }
 
+#[derive(Clone)]
 /// S3-backed storage
 pub struct Storage {
     bucket_name: String,
@@ -92,7 +93,10 @@ impl StorageBackend for Storage {
         Ok(response.body.map_err(Into::into).boxed())
     }
 
-    async fn put(&self, path: &str, input_stream: BoxStream<'static, Result<Bytes>>) -> Result<()> {
+    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    where
+        T: Stream<Item = Result<Bytes>> + Send + 'static,
+    {
         let body = BoxBody::new(StreamBody {
             inner: SyncWrapper::new(input_stream),
         });

@@ -1,9 +1,10 @@
-use super::{Result, SearchIndex, SearchItem, SearchResult, SearchService};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct MeiliSearchService {
     client: Client,
 }
@@ -39,7 +40,7 @@ impl MeiliSearchService {
 }
 
 #[async_trait]
-impl SearchService for MeiliSearchService {
+impl SearchBackend for MeiliSearchService {
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         self.get_index(item.index())
             .add_documents(&[item], Some("id"))
