@@ -1,0 +1,90 @@
+---
+source: post-process/tests/mention.rs
+expression: "PostParser::parse(Rule::post, &post).unwrap()"
+input_file: post-process/tests/input/mention/full_post_2
+---
+[
+    Pair {
+        rule: mention,
+        span: Span {
+            str: ">@kiryu",
+            start: 0,
+            end: 7,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: ">",
+                    start: 0,
+                    end: 1,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "kiryu",
+                    start: 2,
+                    end: 7,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: " ",
+            start: 7,
+            end: 8,
+        },
+        inner: [],
+    },
+    Pair {
+        rule: mention,
+        span: Span {
+            str: "<@akiyama@shun.me",
+            start: 8,
+            end: 25,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: "<",
+                    start: 8,
+                    end: 9,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_username,
+                span: Span {
+                    str: "akiyama",
+                    start: 10,
+                    end: 17,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: mention_domain,
+                span: Span {
+                    str: "shun.me",
+                    start: 18,
+                    end: 25,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: " allo",
+            start: 25,
+            end: 30,
+        },
+        inner: [],
+    },
+]
