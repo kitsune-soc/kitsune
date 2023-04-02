@@ -40,8 +40,7 @@ impl AuthMutation {
         let create_app = CreateApp::builder()
             .name(name)
             .redirect_uris(redirect_uri)
-            .build()
-            .unwrap();
+            .build();
         let application = ctx.state().service.oauth2.create_app(create_app).await?;
 
         Ok(application.into())
@@ -60,8 +59,7 @@ impl AuthMutation {
             .username(username)
             .email(email)
             .password(password)
-            .build()
-            .unwrap();
+            .build();
         let new_user = state.service.user.register(register).await?;
 
         Ok(new_user.into())

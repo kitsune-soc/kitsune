@@ -223,52 +223,43 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
         .search_service(search_service.clone())
         .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
-        .build()
-        .unwrap();
+        .build();
 
     let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let url_service = UrlService::builder()
         .scheme(config.url.scheme.as_str())
         .domain(config.url.domain.as_str())
-        .build()
-        .unwrap();
+        .build();
 
-    let account_service = AccountService::builder()
-        .db_conn(conn.clone())
-        .build()
-        .unwrap();
+    let account_service = AccountService::builder().db_conn(conn.clone()).build();
 
     let attachment_service = AttachmentService::builder()
         .db_conn(conn.clone())
         .media_proxy_enabled(config.server.media_proxy_enabled)
         .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let instance_service = InstanceService::builder()
         .db_conn(conn.clone())
         .name(config.instance.name.as_str())
         .description(config.instance.description.as_str())
         .character_limit(config.instance.character_limit)
-        .build()
-        .unwrap();
+        .build();
 
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         OidcService::builder()
             .client(prepare_oidc_client(oidc_config, &url_service).await)
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
             .build()
-            .unwrap()
     }))
     .await;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
     let post_service = PostService::builder()
@@ -278,20 +269,15 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .search_service(search_service.clone())
         .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
-    let timeline_service = TimelineService::builder()
-        .db_conn(conn.clone())
-        .build()
-        .unwrap();
+    let timeline_service = TimelineService::builder().db_conn(conn.clone()).build();
 
     let user_service = UserService::builder()
         .db_conn(conn.clone())
         .registrations_open(config.instance.registrations_open)
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     #[cfg(feature = "mastodon-api")]
     let mastodon_mapper = kitsune::mapping::MastodonMapper::builder()

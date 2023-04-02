@@ -7,12 +7,12 @@ use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::Response;
 use chrono::{Duration, Utc};
-use derive_builder::Builder;
 use http::StatusCode;
 use kitsune_db::entity::{oauth2_applications, oauth2_authorization_codes};
 use once_cell::sync::Lazy;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use std::str::FromStr;
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
 
@@ -21,31 +21,17 @@ pub static TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct AuthorisationCode {
     application: oauth2_applications::Model,
     state: Option<String>,
     user_id: Uuid,
 }
 
-impl AuthorisationCode {
-    #[must_use]
-    pub fn builder() -> AuthorisationCodeBuilder {
-        AuthorisationCodeBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct CreateApp {
     name: String,
     redirect_uris: String,
-}
-
-impl CreateApp {
-    #[must_use]
-    pub fn builder() -> CreateAppBuilder {
-        CreateAppBuilder::default()
-    }
 }
 
 #[derive(Template)]
@@ -56,18 +42,13 @@ struct ShowTokenPage {
     token: String,
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Oauth2Service {
     db_conn: DatabaseConnection,
     url_service: UrlService,
 }
 
 impl Oauth2Service {
-    #[must_use]
-    pub fn builder() -> Oauth2ServiceBuilder {
-        Oauth2ServiceBuilder::default()
-    }
-
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2_applications::Model> {
         oauth2_applications::Model {
             id: Uuid::now_v7(),

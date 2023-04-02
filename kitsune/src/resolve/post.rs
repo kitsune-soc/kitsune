@@ -137,8 +137,8 @@ mod test {
             .search_service(Arc::new(NoopSearchService))
             .post_cache(Arc::new(NoopCache))
             .user_cache(Arc::new(NoopCache))
-            .build()
-            .unwrap();
+            .build();
+
         let mention_resolver = PostResolver::new(
             db_conn.clone(),
             fetcher,

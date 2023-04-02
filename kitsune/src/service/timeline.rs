@@ -1,5 +1,4 @@
 use crate::error::{Error, Result};
-use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     custom::Visibility,
@@ -14,32 +13,26 @@ use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
     QueryTrait, RelationTrait,
 };
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct GetHome {
     fetching_account_id: Uuid,
 
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     max_id: Option<Uuid>,
 
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     min_id: Option<Uuid>,
 }
 
-impl GetHome {
-    #[must_use]
-    pub fn builder() -> GetHomeBuilder {
-        GetHomeBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct GetPublic {
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     max_id: Option<Uuid>,
 
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     min_id: Option<Uuid>,
 
     #[builder(default)]
@@ -49,24 +42,12 @@ pub struct GetPublic {
     only_remote: bool,
 }
 
-impl GetPublic {
-    #[must_use]
-    pub fn builder() -> GetPublicBuilder {
-        GetPublicBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct TimelineService {
     db_conn: DatabaseConnection,
 }
 
 impl TimelineService {
-    #[must_use]
-    pub fn builder() -> TimelineServiceBuilder {
-        TimelineServiceBuilder::default()
-    }
-
     /// Get a stream of posts that resemble the users home timeline
     pub async fn get_home(
         &self,

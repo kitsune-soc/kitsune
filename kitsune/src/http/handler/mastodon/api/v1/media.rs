@@ -131,8 +131,7 @@ pub async fn put(
         .account_id(user_data.account.id)
         .attachment_id(attachment_id)
         .description(form.description)
-        .build()
-        .unwrap();
+        .build();
 
     attachment_service
         .update(update)

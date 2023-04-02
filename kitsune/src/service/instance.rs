@@ -1,5 +1,4 @@
 use crate::error::{Error, Result};
-use derive_builder::Builder;
 use kitsune_db::entity::{
     accounts, posts,
     prelude::{Accounts, Posts, Users},
@@ -8,8 +7,9 @@ use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect,
 };
 use std::sync::Arc;
+use typed_builder::TypedBuilder;
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct InstanceService {
     db_conn: DatabaseConnection,
     #[builder(setter(into))]
@@ -20,11 +20,6 @@ pub struct InstanceService {
 }
 
 impl InstanceService {
-    #[must_use]
-    pub fn builder() -> InstanceServiceBuilder {
-        InstanceServiceBuilder::default()
-    }
-
     #[must_use]
     pub fn character_limit(&self) -> usize {
         self.character_limit

@@ -8,7 +8,6 @@ use crate::{
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use chrono::Utc;
-use derive_builder::Builder;
 use futures_util::FutureExt;
 use http::HeaderValue;
 use kitsune_db::{
@@ -25,6 +24,7 @@ use sea_orm::{
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
 };
 use std::{sync::Arc, time::Duration};
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
@@ -33,7 +33,7 @@ use super::{handle_attachments, handle_mentions};
 const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
-#[derive(Builder, Clone, Debug)]
+#[derive(Clone, Debug, TypedBuilder)]
 /// Options passed to the fetcher
 pub struct FetchOptions<'a> {
     /// Refetch the ActivityPub entity
@@ -41,39 +41,32 @@ pub struct FetchOptions<'a> {
     /// This is mainly used to refresh possibly stale actors
     ///
     /// Default: false
-    #[builder(default = "false")]
+    #[builder(default = false)]
     refetch: bool,
 
     /// URL of the ActivityPub entity
     url: &'a str,
 }
 
-impl<'a> FetchOptions<'a> {
-    #[must_use]
-    pub fn builder() -> FetchOptionsBuilder<'a> {
-        FetchOptionsBuilder::default()
-    }
-}
-
 impl<'a> From<&'a str> for FetchOptions<'a> {
     fn from(value: &'a str) -> Self {
-        Self::builder().url(value).build().unwrap()
+        Self::builder().url(value).build()
     }
 }
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Fetcher {
-    #[builder(default = "
+    #[builder(default =
         Client::builder()
             .default_header(
-                \"Accept\",
-                HeaderValue::from_static(\"application/activity+json\"),
+                "Accept",
+                HeaderValue::from_static("application/activity+json"),
             )
             .unwrap()
             .user_agent(USER_AGENT)
             .unwrap()
             .build()
-    ")]
+    )]
     client: Client,
     db_conn: DatabaseConnection,
     search_service: ArcSearchService,
@@ -84,11 +77,6 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    #[must_use]
-    pub fn builder() -> FetcherBuilder {
-        FetcherBuilder::default()
-    }
-
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
     pub fn with_defaults(
@@ -110,7 +98,6 @@ impl Fetcher {
                 CACHE_DURATION,
             )))
             .build()
-            .unwrap()
     }
 
     /// Fetch an ActivityPub actor
@@ -376,8 +363,7 @@ mod test {
             .search_service(Arc::new(NoopSearchService))
             .post_cache(Arc::new(NoopCache))
             .user_cache(Arc::new(NoopCache))
-            .build()
-            .unwrap();
+            .build();
 
         let user = fetcher
             .fetch_actor("https://corteximplant.com/users/0x0".into())
@@ -398,8 +384,7 @@ mod test {
             .search_service(Arc::new(NoopSearchService))
             .post_cache(Arc::new(NoopCache))
             .user_cache(Arc::new(NoopCache))
-            .build()
-            .unwrap();
+            .build();
 
         let note = fetcher
             .fetch_object("https://corteximplant.com/@0x0/109501674056556919")

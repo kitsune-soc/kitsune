@@ -45,20 +45,13 @@ pub async fn get(
     State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
 ) -> Result<Json<Vec<Status>>> {
-    let mut get_public = GetPublic::builder()
+    let get_public = GetPublic::builder()
         .only_local(query.local)
         .only_remote(query.remote)
-        .clone();
-
-    if let Some(max_id) = query.max_id {
-        get_public.max_id(max_id);
-    }
-    if let Some(min_id) = query.min_id {
-        get_public.min_id(min_id);
-    }
-
+        .max_id(query.max_id)
+        .min_id(query.min_id)
+        .build();
     let limit = min(query.limit, MAX_LIMIT);
-    let get_public = get_public.build().unwrap();
 
     let statuses: Vec<Status> = timeline
         .get_public(get_public)

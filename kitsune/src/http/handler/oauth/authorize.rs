@@ -113,8 +113,7 @@ pub async fn post(
         .application(application)
         .state(query.state)
         .user_id(user.id)
-        .build()
-        .unwrap();
+        .build();
 
     oauth2_service
         .create_authorisation_code_response(authorisation_code)

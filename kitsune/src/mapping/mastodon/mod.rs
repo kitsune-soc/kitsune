@@ -10,6 +10,7 @@ use futures_util::StreamExt;
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
 use std::{sync::Arc, time::Duration};
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 mod sealed;
@@ -21,19 +22,13 @@ pub trait MapperMarker: IntoMastodon {}
 
 impl<T> MapperMarker for T where T: IntoMastodon {}
 
-#[derive(Builder)]
-#[builder(pattern = "owned")]
+#[derive(TypedBuilder)]
 struct CacheInvalidationActor {
     cache: ArcCache<Uuid, Value>,
     event_consumer: PostEventConsumer,
 }
 
 impl CacheInvalidationActor {
-    #[must_use]
-    pub fn builder() -> CacheInvalidationActorBuilder {
-        CacheInvalidationActorBuilder::default()
-    }
-
     async fn run(mut self) {
         loop {
             while let Some(event) = self.event_consumer.next().await {
@@ -81,7 +76,6 @@ pub struct MastodonMapper {
                                 .ok_or(MastodonMapperBuilderError::UninitializedField(\"cache_invalidator\"))?
                         )
                         .build()
-                        .unwrap()
                         .spawn();",
         ),
         setter(name = "cache_invalidator", strip_option)

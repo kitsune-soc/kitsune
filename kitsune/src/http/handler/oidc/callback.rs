@@ -46,8 +46,7 @@ pub async fn get(
             .email(user_info.email)
             .username(user_info.username)
             .oidc_id(user_info.subject)
-            .build()
-            .unwrap();
+            .build();
 
         user_service.register(register).await?
     };
@@ -64,8 +63,8 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
-        .build()
-        .unwrap();
+        .build();
+
     oauth_service
         .create_authorisation_code_response(authorisation_code)
         .await

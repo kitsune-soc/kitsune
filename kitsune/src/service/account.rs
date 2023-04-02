@@ -1,5 +1,4 @@
 use crate::error::{Error, Result};
-use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     entity::{
@@ -9,48 +8,37 @@ use kitsune_db::{
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct GetPosts {
     /// ID of the account whose posts are getting fetched
     account_id: Uuid,
 
     /// ID of the account that is requesting the posts
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     fetching_account_id: Option<Uuid>,
 
     /// Smallest ID
     ///
     /// Used for pagination
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     min_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     max_id: Option<Uuid>,
 }
 
-impl GetPosts {
-    #[must_use]
-    pub fn builder() -> GetPostsBuilder {
-        GetPostsBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     db_conn: DatabaseConnection,
 }
 
 impl AccountService {
-    #[must_use]
-    pub fn builder() -> AccountServiceBuilder {
-        AccountServiceBuilder::default()
-    }
-
     /// Get a local account by its username
     pub async fn get_local_by_username(&self, username: &str) -> Result<Option<accounts::Model>> {
         Accounts::find()

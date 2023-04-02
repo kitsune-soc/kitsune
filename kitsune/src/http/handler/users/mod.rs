@@ -46,14 +46,11 @@ async fn get_html(
         .await?
         .ok_or(ApiError::NotFound)?;
 
-    let mut get_posts = GetPosts::builder().account_id(account.id).clone();
-    if let Some(max_id) = query.max_id {
-        get_posts.max_id(max_id);
-    }
-    if let Some(min_id) = query.min_id {
-        get_posts.min_id(min_id);
-    }
-    let get_posts = get_posts.build().unwrap();
+    let get_posts = GetPosts::builder()
+        .account_id(account.id)
+        .max_id(query.max_id)
+        .min_id(query.min_id)
+        .build();
 
     let posts = account_service
         .get_posts(get_posts)

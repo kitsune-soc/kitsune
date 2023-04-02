@@ -50,18 +50,12 @@ pub async fn get(
 ) -> Result<Json<Vec<Status>>> {
     let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
 
-    let mut get_posts = GetPosts::builder().account_id(account_id).clone();
-    if let Some(fetching_account_id) = fetching_account_id {
-        get_posts.fetching_account_id(fetching_account_id);
-    }
-    if let Some(max_id) = query.max_id {
-        get_posts.max_id(max_id);
-    }
-    if let Some(min_id) = query.min_id {
-        get_posts.min_id(min_id);
-    }
-
-    let get_posts = get_posts.build().unwrap();
+    let get_posts = GetPosts::builder()
+        .account_id(account_id)
+        .fetching_account_id(fetching_account_id)
+        .max_id(query.max_id)
+        .min_id(query.min_id)
+        .build();
     let limit = min(query.limit, MAX_LIMIT);
 
     let statuses: Vec<Status> = account
