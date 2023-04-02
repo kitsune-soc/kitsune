@@ -8,8 +8,8 @@ use crate::{
     event::{post::EventType, PostEvent, PostEventEmitter},
     job::{
         deliver::{
-            create::CreateDeliveryContext, delete::DeleteDeliveryContext,
-            favourite::FavouriteDeliveryContext, unfavourite::UnfavouriteDeliveryContext,
+            create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
+            unfavourite::DeliverUnfavourite,
         },
         Job,
     },
@@ -247,8 +247,7 @@ impl PostService {
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
-                    let job_context =
-                        Job::DeliverCreate(CreateDeliveryContext { post_id: post.id });
+                    let job_context = Job::DeliverCreate(DeliverCreate { post_id: post.id });
 
                     Jobs::insert(
                         jobs::Model {
@@ -319,7 +318,7 @@ impl PostService {
             }
         }
 
-        let job_context = Job::DeliverDelete(DeleteDeliveryContext { post_id: post.id });
+        let job_context = Job::DeliverDelete(DeliverDelete { post_id: post.id });
         Jobs::insert(
             jobs::Model {
                 id: Uuid::now_v7(),
@@ -384,7 +383,7 @@ impl PostService {
         .insert(&self.db_conn)
         .await?;
 
-        let context = Job::DeliverFavourite(FavouriteDeliveryContext {
+        let context = Job::DeliverFavourite(DeliverFavourite {
             favourite_id: favourite.id,
         });
 
@@ -429,7 +428,7 @@ impl PostService {
             .one(&self.db_conn)
             .await?
         {
-            let context = Job::DeliverUnfavourite(UnfavouriteDeliveryContext {
+            let context = Job::DeliverUnfavourite(DeliverUnfavourite {
                 favourite_id: favourite.id,
             });
 
