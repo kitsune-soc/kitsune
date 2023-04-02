@@ -4,6 +4,7 @@ use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct MeiliSearchService {
     client: Client,
 }

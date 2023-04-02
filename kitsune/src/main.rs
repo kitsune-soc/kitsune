@@ -21,7 +21,7 @@ use kitsune::{
         oauth2::Oauth2Service,
         oidc::{async_client, OidcService},
         post::PostService,
-        search::{ArcSearchService, GrpcSearchService, NoopSearchService, SqlSearchService},
+        search::{GrpcSearchService, NoopSearchService, SearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -183,28 +183,28 @@ async fn prepare_oidc_client(
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_conn: &DatabaseConnection,
-) -> ArcSearchService {
+) -> SearchService {
     match search_config {
-        SearchConfiguration::Kitsune(config) => Arc::new(
+        SearchConfiguration::Kitsune(config) => {
             GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
-                .expect("Failed to connect to the search servers"),
-        ),
+                .expect("Failed to connect to the search servers")
+                .into()
+        }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(feature = "meilisearch")]
             // To avoid an "unused variable" warning in case the feature is deactivated
             #[allow(clippy::used_underscore_binding)]
-            return Arc::new(
-                MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                    .await
-                    .expect("Failed to connect to Meilisearch"),
-            );
+            return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                .await
+                .expect("Failed to connect to Meilisearch")
+                .into();
 
             #[cfg(not(feature = "meilisearch"))]
             panic!("Server compiled without Meilisearch compatibility");
         }
-        SearchConfiguration::Sql => Arc::new(SqlSearchService::new(db_conn.clone())),
-        SearchConfiguration::None => Arc::new(NoopSearchService),
+        SearchConfiguration::Sql => SqlSearchService::new(db_conn.clone()).into(),
+        SearchConfiguration::None => NoopSearchService.into(),
     }
 }
 

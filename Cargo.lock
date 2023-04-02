@@ -2571,6 +2571,7 @@ dependencies = [
  "dashmap",
  "deadpool-redis",
  "derive_builder",
+ "enum_dispatch",
  "futures-util",
  "headers",
  "hex",

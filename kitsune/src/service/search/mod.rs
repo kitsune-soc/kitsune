@@ -1,8 +1,8 @@
 use crate::error::SearchError;
 use async_trait::async_trait;
+use enum_dispatch::enum_dispatch;
 use kitsune_db::entity::{accounts, posts};
 use serde::{Deserialize, Serialize};
-use std::{ops::Deref, sync::Arc};
 use strum::EnumIter;
 use uuid::Uuid;
 
@@ -15,9 +15,17 @@ mod sql;
 pub use self::meilisearch::MeiliSearchService;
 pub use self::{grpc::GrpcSearchService, sql::SqlSearchService};
 
-pub type ArcSearchService = Arc<dyn SearchService>;
-
 type Result<T, E = SearchError> = std::result::Result<T, E>;
+
+#[derive(Clone)]
+#[enum_dispatch(SearchBackend)]
+pub enum SearchService {
+    Grpc(GrpcSearchService),
+    #[cfg(feature = "meilisearch")]
+    Meilisearch(MeiliSearchService),
+    Noop(NoopSearchService),
+    Sql(SqlSearchService),
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct Account {
@@ -104,7 +112,8 @@ pub struct SearchResult {
 }
 
 #[async_trait]
-pub trait SearchService: Send + Sync {
+#[enum_dispatch]
+pub trait SearchBackend: Send + Sync {
     /// Add an item to the index
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
@@ -128,35 +137,6 @@ pub trait SearchService: Send + Sync {
     ) -> Result<Vec<SearchResult>>;
 }
 
-#[async_trait]
-impl SearchService for Arc<dyn SearchService + Send + Sync> {
-    async fn add_to_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().add_to_index(item).await
-    }
-
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
-        self.deref().remove_from_index(item).await
-    }
-
-    async fn reset_index(&self, index: SearchIndex) -> Result<()> {
-        self.deref().reset_index(index).await
-    }
-
-    async fn search(
-        &self,
-        index: SearchIndex,
-        query: String,
-        max_results: u64,
-        offset: u64,
-        min_id: Option<Uuid>,
-        max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
-        self.deref()
-            .search(index, query, max_results, offset, min_id, max_id)
-            .await
-    }
-}
-
 /// Dummy search service
 ///
 /// Always returns `Ok(())`/an empty list
@@ -164,7 +144,7 @@ impl SearchService for Arc<dyn SearchService + Send + Sync> {
 pub struct NoopSearchService;
 
 #[async_trait]
-impl SearchService for NoopSearchService {
+impl SearchBackend for NoopSearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }

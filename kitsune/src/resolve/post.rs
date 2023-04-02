@@ -134,7 +134,7 @@ mod test {
 
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
-            .search_service(Arc::new(NoopSearchService))
+            .search_service(NoopSearchService)
             .post_cache(Arc::new(NoopCache))
             .user_cache(Arc::new(NoopCache))
             .build();
