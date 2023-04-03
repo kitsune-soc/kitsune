@@ -23,6 +23,7 @@ pub struct DeliverUnfavourite {
 
 #[async_trait]
 impl Runnable for DeliverUnfavourite {
+    #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some(favourite) = Favourites::find_by_id(self.favourite_id)
             .one(&ctx.state.db_conn)

@@ -13,8 +13,10 @@ use crate::{
 use async_trait::async_trait;
 use chrono::Utc;
 use enum_dispatch::enum_dispatch;
-use kitsune_db::entity::jobs;
-use kitsune_db::{custom::JobState, entity::prelude::Jobs};
+use kitsune_db::{
+    custom::JobState,
+    entity::{jobs, prelude::Jobs},
+};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     QueryFilter, QueryOrder, QuerySelect, TransactionTrait,

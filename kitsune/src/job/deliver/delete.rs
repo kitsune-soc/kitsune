@@ -18,6 +18,7 @@ pub struct DeliverDelete {
 
 #[async_trait]
 impl Runnable for DeliverDelete {
+    #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some(post) = Posts::find_by_id(self.post_id)
             .one(&ctx.state.db_conn)
