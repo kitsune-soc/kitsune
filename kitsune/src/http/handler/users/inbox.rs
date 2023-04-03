@@ -193,8 +193,13 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
     Ok(())
 }
 
-async fn reject_activity(state: &Zustand, activity: Activity) -> Result<()> {
+async fn reject_activity(
+    state: &Zustand,
+    author: accounts::Model,
+    activity: Activity,
+) -> Result<()> {
     AccountsFollowers::delete(accounts_followers::ActiveModel {
+        account_id: ActiveValue::Set(author.id),
         url: ActiveValue::Set(activity.object().into()),
         ..Default::default()
     })
@@ -240,7 +245,7 @@ pub async fn post(
         ActivityType::Delete => delete_activity(&state, author, activity).await,
         ActivityType::Follow => follow_activity(&state, author, activity).await,
         ActivityType::Like => like_activity(&state, author, activity).await,
-        ActivityType::Reject => reject_activity(&state, activity).await,
+        ActivityType::Reject => reject_activity(&state, author, activity).await,
         ActivityType::Undo => undo_activity(&state, author, activity).await,
         ActivityType::Update => todo!(),
     }
