@@ -1,12 +1,5 @@
-use async_graphql::{Context, Object, Result, SimpleObject};
-
-use crate::http::graphql::ContextExt;
-
-#[derive(SimpleObject)]
-pub struct Instance {
-    domain: String,
-    version: &'static str,
-}
+use crate::http::graphql::{types::Instance, ContextExt};
+use async_graphql::{Context, Object, Result};
 
 #[derive(Default)]
 pub struct InstanceQuery;
@@ -16,10 +9,19 @@ impl InstanceQuery {
     #[allow(clippy::unused_async)]
     pub async fn instance(&self, ctx: &Context<'_>) -> Result<Instance> {
         let state = ctx.state();
-        let domain = state.service.url.domain().into();
+        let instance_service = &state.service.instance;
+        let url_service = &state.service.url;
+
+        let description = instance_service.description().into();
+        let domain = url_service.domain().into();
+        let local_post_count = instance_service.local_post_count().await?;
+        let user_count = instance_service.user_count().await?;
 
         Ok(Instance {
+            description,
             domain,
+            local_post_count,
+            user_count,
             version: env!("CARGO_PKG_VERSION"),
         })
     }
