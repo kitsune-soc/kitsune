@@ -2,7 +2,9 @@
   <footer>
     <div v-if="result" class="footer">
       <span>Kitsune v{{ result.instance.version }}</span>
-      <a href="/">Source code</a>
+      <a target="_blank" href="https://github.com/kitsune-soc/kitsune"
+        >Source code</a
+      >
     </div>
   </footer>
 </template>

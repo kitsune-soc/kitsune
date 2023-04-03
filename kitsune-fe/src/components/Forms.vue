@@ -26,8 +26,7 @@
           type="password"
           name="password"
         />
-        <label class="label" for="confirm-password">Confirm Password</label
-        >
+        <label class="label" for="confirm-password">Confirm Password</label>
         <input
           v-model="registerData.passwordConfirm"
           class="field"
@@ -41,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-  import { useMutation } from '@vue/apollo-composable';
+  import { useMutation, useQuery } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
 
@@ -57,6 +56,14 @@
     ) {
       registerUser(username: $username, email: $email, password: $password) {
         id
+      }
+    }
+  `);
+
+  const { result } = useQuery(gql`
+    query getInstanceInfo {
+      instance {
+        domain
       }
     }
   `);
@@ -81,7 +88,8 @@
   const login = (event: Event) => {
     event.preventDefault();
 
-    // TODO: Start login process
+    // TODO: Actually log in and not redirect to Elk
+    window.location.href = `https://elk.zone/${result.value.domain}/public/local`;
   };
 
   const register = (event: Event) => {
@@ -109,6 +117,7 @@
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
+
   .forms {
     &-forms {
       display: flex;
@@ -139,11 +148,11 @@
       margin: 0 auto;
       padding: 3vh;
       border-radius: 5px;
-      border: .2px solid $shade1dark;
+      border: 0.2px solid $shade1dark;
     }
 
     &-login {
-        align-items: center;
+      align-items: center;
     }
   }
 

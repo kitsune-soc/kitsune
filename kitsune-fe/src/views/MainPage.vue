@@ -4,8 +4,9 @@
     <div class="main-container">
       <div class="main-intro">
         <h2 class="main-intro-header">
-          <img style="height: 80px;" src="/header.svg" />
-          <!-- {{ result.instance.domain }} -->
+          <svg class="main-intro-header-logo">
+            <use xlink:href="/header.svg#logo" />
+          </svg>
         </h2>
         <p class="main-intro-description">
           Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -42,7 +43,6 @@
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
-  @use '../styles/fonts' as *;
 
   .main {
     &-container {
@@ -81,9 +81,14 @@
 
       &-header {
         font-size: 42px;
-        font-family: BlockZone;
         font-weight: bold;
         color: $shade2light;
+
+        &-logo {
+          color: $shade2light;
+          width: 500px;
+          max-width: 100%;
+        }
       }
 
       &-description,
