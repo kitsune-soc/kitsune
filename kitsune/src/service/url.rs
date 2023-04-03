@@ -36,6 +36,11 @@ impl UrlService {
     }
 
     #[must_use]
+    pub fn follow_url(&self, follow_id: Uuid) -> String {
+        format!("{}/follows/{}", self.base_url(), follow_id)
+    }
+
+    #[must_use]
     pub fn media_url(&self, attachment_id: Uuid) -> String {
         format!("{}/media/{}", self.base_url(), attachment_id)
     }

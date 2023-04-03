@@ -5,7 +5,7 @@ use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
     entity::{
-        accounts, favourites, posts,
+        accounts, accounts_followers, favourites, posts,
         prelude::{Accounts, Posts},
     },
     link::FavouritedPostAuthor,
@@ -102,6 +102,78 @@ impl IntoActivity for favourites::Model {
                 sensitive: false,
                 published: Utc::now(),
                 to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
+                cc: vec![],
+            },
+            object: StringOrObject::String(self.url),
+        })
+    }
+}
+
+#[async_trait]
+impl IntoActivity for accounts_followers::Model {
+    type Output = Activity;
+    type NegateOutput = Activity;
+
+    async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
+        let attributed_to = Accounts::find_by_id(self.follower_id)
+            .select_only()
+            .column(accounts::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Follow without follower");
+
+        let object = Accounts::find_by_id(self.account_id)
+            .select_only()
+            .column(accounts::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Follow without followed");
+
+        Ok(Activity {
+            r#type: ActivityType::Follow,
+            object: StringOrObject::String(object.clone()),
+            rest: BaseObject {
+                context: ap_context(),
+                id: self.url,
+                attributed_to: Some(StringOrObject::String(attributed_to)),
+                in_reply_to: None,
+                sensitive: false,
+                published: self.created_at.into(),
+                to: vec![object],
+                cc: vec![],
+            },
+        })
+    }
+
+    async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
+        let attributed_to = Accounts::find_by_id(self.follower_id)
+            .select_only()
+            .column(accounts::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Follow without follower");
+
+        let followed = Accounts::find_by_id(self.account_id)
+            .select_only()
+            .column(accounts::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Follow without followed");
+
+        Ok(Activity {
+            r#type: ActivityType::Undo,
+            rest: BaseObject {
+                context: ap_context(),
+                id: format!("{}#undo", self.url),
+                attributed_to: Some(StringOrObject::String(attributed_to)),
+                in_reply_to: None,
+                sensitive: false,
+                published: self.created_at.into(),
+                to: vec![followed],
                 cc: vec![],
             },
             object: StringOrObject::String(self.url),

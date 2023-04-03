@@ -9,8 +9,10 @@ use kitsune_db::entity::prelude::Accounts;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
+pub mod follow;
 pub mod relationships;
 pub mod statuses;
+pub mod unfollow;
 pub mod verify_credentials;
 
 #[utoipa::path(
@@ -36,7 +38,9 @@ async fn get(
 pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:id", routing::get(get))
+        .route("/:id/follow", routing::post(follow::post))
         .route("/:id/statuses", routing::get(statuses::get))
+        .route("/:id/unfollow", routing::post(unfollow::post))
         .route("/relationships", routing::get(relationships::get))
         .route("/verify_credentials", routing::get(verify_credentials::get))
 }

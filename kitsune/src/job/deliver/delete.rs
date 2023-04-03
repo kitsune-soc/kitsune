@@ -1,5 +1,9 @@
-use crate::job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS};
-use crate::{error::Result, mapping::IntoActivity, resolve::InboxResolver};
+use crate::{
+    error::Result,
+    job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS},
+    mapping::IntoActivity,
+    resolve::InboxResolver,
+};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::entity::prelude::{Accounts, Posts, Users};
@@ -14,6 +18,7 @@ pub struct DeliverDelete {
 
 #[async_trait]
 impl Runnable for DeliverDelete {
+    #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let Some(post) = Posts::find_by_id(self.post_id)
             .one(&ctx.state.db_conn)
