@@ -3,19 +3,31 @@
 //!
 
 use crate::{MessagingBackend, Result};
+use ahash::AHashMap;
 use async_trait::async_trait;
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
 use redis::{
     aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
 };
-use std::{collections::HashMap, time::Duration};
+use std::time::Duration;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
 
 const BROADCAST_CAPACITY: usize = 10;
 const CONNECTION_RETRY_DELAY: Duration = Duration::from_secs(5);
 const REGISTRATION_QUEUE_SIZE: usize = 50;
+
+macro_rules! handle_err {
+    ($result:expr, $msg:literal $(,)?) => {{
+        if let Err(error) = { $result } {
+            error!(?error, $msg);
+        }
+    }};
+    ($result:expr $(,)?) => {
+        handle_err!($result, "");
+    };
+}
 
 #[derive(Debug)]
 struct RegistrationMessage {
@@ -24,9 +36,9 @@ struct RegistrationMessage {
 }
 
 struct MultiplexActor {
-    mapping: HashMap<String, broadcast::Sender<Vec<u8>>>,
-    pubsub_conn: PubSub,
-    redis_client: redis::Client,
+    client: redis::Client,
+    conn: PubSub,
+    mapping: AHashMap<String, broadcast::Sender<Vec<u8>>>,
     registration_queue: mpsc::Receiver<RegistrationMessage>,
 }
 
@@ -35,49 +47,40 @@ impl MultiplexActor {
         loop {
             tokio::select! {
                 Some(msg) = self.registration_queue.recv() => {
-                    if let Some(sender) = self.mapping.get(&msg.channel_pattern) {
-                        msg.responder.send(sender.subscribe()).ok();
+                    let receiver = if let Some(sender) = self.mapping.get(&msg.channel_pattern) {
+                        sender.subscribe()
                     } else {
                         let (sender, receiver) = broadcast::channel(BROADCAST_CAPACITY);
-                        self.mapping.insert(msg.channel_pattern.clone(), sender);
-                        msg.responder.send(receiver).ok();
 
-                        if let Err(err) = self.pubsub_conn.psubscribe(msg.channel_pattern.as_str()).await {
-                            error!(
-                                channel_pattern = %msg.channel_pattern,
-                                error = %err,
-                                "Failed to subscribe to channel pattern"
-                            );
-                        }
-                    }
+                        handle_err!(self.conn.psubscribe(
+                            msg.channel_pattern.as_str()).await,
+                            "Failed to subscribe to pattern",
+                        );
+
+                        self.mapping.insert(msg.channel_pattern, sender);
+                        receiver
+                    };
+                    let _ = msg.responder.send(receiver);
                 }
-                // Ugly but otherwise the compiler will complain about needing let bindings
-                // Ughh.. Rust, please..
-                msg = future::poll_fn(|ctx| self.pubsub_conn.on_message().poll_next_unpin(ctx)) => {
+                msg = future::poll_fn(|ctx| self.conn.on_message().poll_next_unpin(ctx)) => {
                     if let Some(msg) = msg {
                         let pattern: String = msg.get_pattern().unwrap();
 
                         if let Some(sender) = self.mapping.get(&pattern) {
                             if sender.send(msg.get_payload_bytes().to_vec()).is_err() {
                                 // According to the tokio docs, this case only occurs when all receivers have been dropped
-                                // So we can safely delete all the hashmap entry, to keep it as small as possible
+                                handle_err!(
+                                    self.conn.punsubscribe(pattern.as_str()).await,
+                                    "Failed to unsubscribe from pattern",
+                                );
                                 self.mapping.remove(&pattern);
-
-                                if let Err(err) = self.pubsub_conn.punsubscribe(pattern.as_str()).await {
-                                    error!(
-                                        channel_pattern = %pattern,
-                                        error = %err,
-                                        "Failed to unsubscribe from channel pattern"
-                                    );
-                                }
                             }
                         } else {
                             debug!(%pattern, "Failed to find correct receiver");
                         }
                     } else {
-                        // Reconnect, because an ending stream isn't good..
-                        self.pubsub_conn = loop {
-                            match self.redis_client.get_async_connection().await {
+                        self.conn = loop {
+                            match self.client.get_async_connection().await {
                                 Ok(conn) => break conn.into_pubsub(),
                                 Err(err) => {
                                     error!(error = %err, "Failed to connect to Redis instance");
@@ -87,13 +90,10 @@ impl MultiplexActor {
                         };
 
                         for key in self.mapping.keys() {
-                            if let Err(err) = self.pubsub_conn.psubscribe(key).await {
-                                error!(
-                                    error = %err,
-                                    channel_name = %key,
-                                    "Failed to subscribe to channel pattern"
-                                );
-                            }
+                            handle_err!(
+                                self.conn.psubscribe(key).await,
+                                "Failed to subscribe to pattern",
+                            );
                         }
                     }
                 }
@@ -101,21 +101,20 @@ impl MultiplexActor {
         }
     }
 
-    pub fn spawn(
-        redis_client: redis::Client,
-        pubsub_conn: PubSub,
-    ) -> mpsc::Sender<RegistrationMessage> {
+    pub async fn spawn(
+        client: redis::Client,
+    ) -> Result<mpsc::Sender<RegistrationMessage>, RedisError> {
         let (sender, receiver) = mpsc::channel(REGISTRATION_QUEUE_SIZE);
 
         let actor = Self {
-            mapping: HashMap::new(),
-            pubsub_conn,
-            redis_client,
+            mapping: AHashMap::new(),
+            conn: client.get_async_connection().await?.into_pubsub(),
+            client,
             registration_queue: receiver,
         };
         tokio::spawn(actor.run());
 
-        sender
+        Ok(sender)
     }
 }
 
@@ -135,8 +134,7 @@ impl RedisMessagingBackend {
     /// - Failed to connect to the Redis instance
     pub async fn new(conn_string: &str) -> Result<Self, RedisError> {
         let client = redis::Client::open(conn_string)?;
-        let sub_connection = client.get_async_connection().await?.into_pubsub();
-        let sub_actor = MultiplexActor::spawn(client.clone(), sub_connection);
+        let sub_actor = MultiplexActor::spawn(client.clone()).await?;
         let pub_connection = ConnectionManager::new(client).await?;
 
         Ok(Self {

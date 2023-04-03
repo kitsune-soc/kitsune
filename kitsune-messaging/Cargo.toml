@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ahash = "0.8.3"
 async-trait = "0.1.68"
 futures-util = "0.3.28"
 pin-project-lite = "0.2.9"
