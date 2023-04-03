@@ -89,7 +89,7 @@
     event.preventDefault();
 
     // TODO: Actually log in and not redirect to Elk
-    window.location.href = `https://elk.zone/${result.value.domain}/public/local`;
+    window.location.href = `https://elk.zone/${result.value.instance.domain}/public/local`;
   };
 
   const register = (event: Event) => {
