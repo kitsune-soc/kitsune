@@ -2,7 +2,7 @@ use self::{
     catch_panic::CatchPanic,
     deliver::{
         create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
-        unfavourite::DeliverUnfavourite,
+        follow::DeliverFollow, unfavourite::DeliverUnfavourite, unfollow::DeliverUnfollow,
     },
 };
 use crate::{
@@ -37,9 +37,12 @@ pub enum Job {
     DeliverCreate,
     DeliverDelete,
     DeliverFavourite,
+    DeliverFollow,
     DeliverUnfavourite,
+    DeliverUnfollow,
 }
 
+#[derive(Clone, Copy)]
 pub struct JobContext<'a> {
     deliverer: &'a Deliverer,
     state: &'a Zustand,
@@ -57,6 +60,7 @@ pub trait Runnable: DeserializeOwned + Serialize {
 }
 
 // Takes owned values to make the lifetime of the returned future static
+#[instrument(skip_all, fields(job_id = %db_job.id))]
 async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) {
     let job: Job = serde_json::from_value(db_job.context.clone())
         .expect("[Bug] Failed to deserialise job context");
@@ -69,6 +73,8 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
 
     if let Ok(Err(ref err)) = execution_result {
         error!(error = %err, "Job execution failed");
+    } else if execution_result.is_err() {
+        error!("Job execution panicked");
     }
 
     let mut update_model = db_job.clone().into_active_model();

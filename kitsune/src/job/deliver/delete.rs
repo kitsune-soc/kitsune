@@ -1,5 +1,9 @@
-use crate::job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS};
-use crate::{error::Result, mapping::IntoActivity, resolve::InboxResolver};
+use crate::{
+    error::Result,
+    job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS},
+    mapping::IntoActivity,
+    resolve::InboxResolver,
+};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::entity::prelude::{Accounts, Posts, Users};

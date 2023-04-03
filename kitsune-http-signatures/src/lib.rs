@@ -276,7 +276,7 @@ pub struct HttpVerifier {
     /// Check whether the signature is expired
     ///
     /// This just does a basic check if the `(expires)` header exists.
-    /// If you want a more aggressive check, use [`enforce_expiration`]
+    /// If you want a more aggressive check, use `enforce_expiration`
     #[builder(default = "true")]
     check_expiration: bool,
 
