@@ -1,30 +1,27 @@
-use super::TOKEN_VALID_DURATION;
 use crate::{
-    db::model::{
-        oauth::{application, authorization_code},
-        user,
+    error::{ApiError, Error, Result},
+    service::{
+        oauth2::{AuthorisationCode, Oauth2Service},
+        oidc::OidcService,
+        url::UrlService,
     },
-    error::{Error, Result},
-    state::Zustand,
-    util::generate_secret,
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
     extract::{Query, State},
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
     Form,
 };
-use chrono::Utc;
 use http::StatusCode;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use kitsune_db::entity::{
+    oauth2_applications,
+    prelude::{Oauth2Applications, Users},
+    users,
+};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
-use std::str::FromStr;
-use url::Url;
 use uuid::Uuid;
-
-/// If the Redirect URI is equal to this string, show the token instead of redirecting the user
-const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 #[derive(Deserialize)]
 pub struct AuthorizeQuery {
@@ -41,63 +38,63 @@ pub struct AuthorizeForm {
 }
 
 #[derive(Template)]
-#[template(path = "authorize.html")]
+#[template(path = "oauth/authorize.html")]
 struct AuthorizePage {
     app_name: String,
     domain: String,
 }
 
-#[derive(Template)]
-#[template(path = "token.html")]
-struct ShowTokenPage {
-    app_name: String,
-    domain: String,
-    token: String,
-}
-
 pub async fn get(
-    State(state): State<Zustand>,
+    State(db_conn): State<DatabaseConnection>,
+    State(oidc_service): State<Option<OidcService>>,
+    State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
     if query.response_type != "code" {
         return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
     }
 
-    let application = application::Entity::find_by_id(query.client_id)
-        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&state.db_conn)
+    let application = Oauth2Applications::find_by_id(query.client_id)
+        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
+        .one(&db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
 
-    let page = AuthorizePage {
-        app_name: application.name,
-        domain: state.config.domain,
-    }
-    .render()
-    .unwrap();
+    if let Some(oidc_service) = oidc_service {
+        let auth_url = oidc_service
+            .authorisation_url(application.id, query.state)
+            .await?;
 
-    Ok(Html(page).into_response())
+        Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response())
+    } else {
+        Ok(AuthorizePage {
+            app_name: application.name,
+            domain: url_service.domain().into(),
+        }
+        .into_response())
+    }
 }
 
 pub async fn post(
-    State(state): State<Zustand>,
+    State(db_conn): State<DatabaseConnection>,
+    State(oauth2_service): State<Oauth2Service>,
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
-    let user = user::Entity::find()
-        .filter(user::Column::Username.eq(form.username))
-        .one(&state.db_conn)
+    let user = Users::find()
+        .filter(users::Column::Username.eq(form.username))
+        .one(&db_conn)
         .await?
-        .ok_or(Error::UserNotFound)?;
+        .ok_or(ApiError::NotFound)?;
 
-    let application = application::Entity::find_by_id(query.client_id)
-        .filter(application::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&state.db_conn)
+    let application = Oauth2Applications::find_by_id(query.client_id)
+        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
+        .one(&db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)?;
 
     let is_valid = crate::blocking::cpu(move || {
-        let password_hash = PasswordHash::new(&user.password)?;
+        let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 
         Ok::<_, Error>(
@@ -112,36 +109,13 @@ pub async fn post(
         return Err(Error::PasswordMismatch);
     }
 
-    let authorization_code = authorization_code::Model {
-        code: generate_secret(),
-        application_id: application.id,
-        user_id: user.id,
-        created_at: Utc::now(),
-        expired_at: Utc::now() + *TOKEN_VALID_DURATION,
-    }
-    .into_active_model()
-    .insert(&state.db_conn)
-    .await?;
+    let authorisation_code = AuthorisationCode::builder()
+        .application(application)
+        .state(query.state)
+        .user_id(user.id)
+        .build();
 
-    if application.redirect_uri == SHOW_TOKEN_URI {
-        let page = ShowTokenPage {
-            app_name: application.name,
-            domain: state.config.domain,
-            token: authorization_code.code,
-        }
-        .render()
-        .unwrap();
-
-        Ok(Html(page).into_response())
-    } else {
-        let mut url = Url::from_str(&application.redirect_uri)?;
-        url.query_pairs_mut()
-            .append_pair("code", &authorization_code.code);
-
-        if let Some(state) = query.state {
-            url.query_pairs_mut().append_pair("state", &state);
-        }
-
-        Ok((StatusCode::FOUND, [("Location", url.as_str())]).into_response())
-    }
+    oauth2_service
+        .create_authorisation_code_response(authorisation_code)
+        .await
 }

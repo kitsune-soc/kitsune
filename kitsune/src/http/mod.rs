@@ -1,65 +1,67 @@
-use self::handler::{oauth, posts, users, well_known};
-use crate::state::Zustand;
-use axum::{http::StatusCode, routing::get_service, Router};
-use std::io;
+use self::{
+    handler::{media, nodeinfo, oauth, oidc, posts, users, well_known},
+    openapi::api_docs,
+};
+use crate::{config::ServerConfiguration, state::Zustand};
+use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
+use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
     trace::TraceLayer,
 };
+use utoipa_swagger_ui::SwaggerUi;
 
-pub mod graphql;
-
+mod cond;
 mod extractor;
+mod graphql;
 mod handler;
+mod openapi;
+mod page;
 
-#[allow(clippy::unused_async)]
-async fn handle_error(err: io::Error) -> StatusCode {
-    error!(error = %err, "Static file handler failed");
-    StatusCode::INTERNAL_SERVER_ERROR
-}
-
-#[instrument(skip(state))]
-pub async fn run(state: Zustand, port: u16) {
-    let frontend_dir = &state.config.frontend_dir;
+pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
+    let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.clone();
-        tmp.push("index.html");
+        tmp.push_str("index.html");
         tmp
     };
 
     // This warning will come up if the server is compiled without the Mastodon API compatibility
     #[allow(unused_mut)]
     let mut router = Router::new()
+        .nest("/media", media::routes())
+        .nest("/nodeinfo", nodeinfo::routes())
         .nest("/oauth", oauth::routes())
+        .nest("/oidc", oidc::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest_service(
-            "/public",
-            get_service(ServeDir::new("public")).handle_error(handle_error),
-        )
-        .nest_service(
-            "/media",
-            get_service(ServeDir::new(&state.config.upload_dir)).handle_error(handle_error),
-        );
+        .nest_service("/public", get_service(ServeDir::new("public")));
 
     #[cfg(feature = "mastodon-api")]
     {
         router = router.merge(handler::mastodon::routes());
     }
 
-    let router = router
+    router
         .merge(graphql::routes(state.clone()))
-        .fallback_service(
-            get_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
-                .handle_error(handle_error),
-        )
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
+        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
+        .fallback_service(get_service(
+            ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
+        ))
+        // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
+        .layer(PrometheusMetricLayer::new())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
+        .with_state(state)
+}
 
-    axum::Server::bind(&([0, 0, 0, 0], port).into())
+#[instrument(skip_all, fields(port = %server_config.port))]
+pub async fn run(state: Zustand, server_config: ServerConfiguration) {
+    let router = create_router(state, &server_config);
+    axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())
         .await
         .unwrap();

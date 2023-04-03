@@ -1,35 +1,25 @@
 use crate::{
     activitypub::Fetcher,
-    cache::Cache,
-    db::model::{account, post},
     error::{Error, Result},
-    search::SearchService,
     webfinger::Webfinger,
 };
+use kitsune_db::entity::{accounts, prelude::Accounts};
 use parking_lot::Mutex;
-use post_process::{BoxError, Element, Html, Transformer};
+use post_process::{BoxError, Element, Html, Render, Transformer};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
-use std::{borrow::Cow, collections::HashSet, mem};
+use std::{borrow::Cow, collections::HashMap, mem};
 use uuid::Uuid;
 
-pub struct PostResolver<FS, FPC, FUC, WC> {
+#[derive(Clone)]
+pub struct PostResolver {
     db_conn: DatabaseConnection,
-    fetcher: Fetcher<FS, FPC, FUC>,
-    webfinger: Webfinger<WC>,
+    fetcher: Fetcher,
+    webfinger: Webfinger,
 }
 
-impl<FS, FPC, FUC, WC> PostResolver<FS, FPC, FUC, WC>
-where
-    FS: SearchService,
-    FPC: Cache<str, post::Model>,
-    FUC: Cache<str, account::Model>,
-    WC: Cache<str, String>,
-{
-    pub fn new(
-        db_conn: DatabaseConnection,
-        fetcher: Fetcher<FS, FPC, FUC>,
-        webfinger: Webfinger<WC>,
-    ) -> Self {
+impl PostResolver {
+    #[must_use]
+    pub fn new(db_conn: DatabaseConnection, fetcher: Fetcher, webfinger: Webfinger) -> Self {
         Self {
             db_conn,
             fetcher,
@@ -41,23 +31,23 @@ where
         &self,
         username: &str,
         domain: Option<&str>,
-    ) -> Result<Option<account::Model>> {
+    ) -> Result<Option<accounts::Model>> {
         if let Some(domain) = domain {
             let Some(actor_url) = self.webfinger.fetch_actor_url(username, domain).await? else {
                 return Ok(None)
             };
 
             self.fetcher
-                .fetch_actor(&actor_url)
+                .fetch_actor(actor_url.as_str().into())
                 .await
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            account::Entity::find()
+            Accounts::find()
                 .filter(
-                    account::Column::Username
+                    accounts::Column::Username
                         .eq(username)
-                        .and(account::Column::Domain.is_null()),
+                        .and(accounts::Column::Domain.is_null()),
                 )
                 .one(&self.db_conn)
                 .await
@@ -68,7 +58,7 @@ where
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
-        mentioned_accounts: &Mutex<HashSet<Uuid>>,
+        mentioned_accounts: &Mutex<HashMap<Uuid, String>>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -76,7 +66,9 @@ where
                     .fetch_account(&mention.username, mention.domain.as_deref())
                     .await?
                 {
-                    mentioned_accounts.lock().insert(account.id);
+                    let mut mention_text = String::new();
+                    Element::Mention(mention.clone()).render(&mut mention_text);
+                    mentioned_accounts.lock().insert(account.id, mention_text);
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
@@ -102,14 +94,15 @@ where
     ///
     /// # Returns
     ///
-    /// - List of mentioned accounts
+    /// - List of mentioned accounts, represented as `(Account ID, Mention text)`
     /// - Content with the mentions replaced by links
     ///
     /// # Panics
     ///
     /// This should never panic
-    pub async fn resolve(&self, content: &str) -> Result<(Vec<Uuid>, String)> {
-        let mentioned_account_ids = Mutex::new(HashSet::new());
+    #[instrument(skip_all)]
+    pub async fn resolve(&self, content: &str) -> Result<(Vec<(Uuid, String)>, String)> {
+        let mentioned_account_ids = Mutex::new(HashMap::new());
         let transformer = Transformer::new(|elem| self.transform(elem, &mentioned_account_ids));
 
         let content = transformer
@@ -126,34 +119,32 @@ where
 mod test {
     use super::PostResolver;
     use crate::{
-        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
+        activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService,
         webfinger::Webfinger,
     };
-    use migration::{Migrator, MigratorTrait};
+    use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
-    use sea_orm::{Database, DatabaseConnection, EntityTrait};
-
-    async fn db_conn() -> DatabaseConnection {
-        let db_conn = Database::connect("sqlite::memory:")
-            .await
-            .expect("Failed to connect to in-memory SQLite");
-        Migrator::up(&db_conn, None)
-            .await
-            .expect("Failed to migrate database");
-
-        db_conn
-    }
+    use sea_orm::EntityTrait;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn parse_mentions() {
-        let db_conn = db_conn().await;
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let post = "Hello @0x0@corteximplant.com! How are you doing?";
+
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn.clone())
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
 
         let mention_resolver = PostResolver::new(
             db_conn.clone(),
-            Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache),
-            Webfinger::new(NoopCache),
+            fetcher,
+            Webfinger::new(Arc::new(NoopCache.into())),
         );
+
         let (mentioned_account_ids, content) = mention_resolver
             .resolve(post)
             .await
@@ -162,7 +153,8 @@ mod test {
         assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
-        let mentioned_account = account::Entity::find_by_id(mentioned_account_ids[0])
+        let (account_id, _mention_text) = &mentioned_account_ids[0];
+        let mentioned_account = Accounts::find_by_id(*account_id)
             .one(&db_conn)
             .await
             .ok()

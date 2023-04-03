@@ -13,16 +13,15 @@ async fn basic_signature() {
         ),
     );
     let public_key = self::data::get_public_key();
-    let signer = HttpVerifier::builder().parts(&parts).build().unwrap();
+    let signer = HttpVerifier::builder()
+        .enforce_expiration(None)
+        .build()
+        .unwrap();
 
     signer
-        .verify(move |key_id| {
-            let key_id = key_id.to_string();
-
-            async move {
-                assert_eq!(key_id, "Test");
-                Ok(public_key)
-            }
+        .verify(&parts, move |key_id| async move {
+            assert_eq!(key_id, "Test");
+            Ok(public_key)
         })
         .await
         .unwrap();

@@ -12,6 +12,12 @@ pub enum Error {
     #[error(transparent)]
     Base64Decode(#[from] base64::DecodeError),
 
+    #[error(transparent)]
+    ChronoOutOfRange(#[from] chrono::OutOfRangeError),
+
+    #[error(transparent)]
+    ChronoParse(#[from] chrono::ParseError),
+
     #[error("Signature is expired")]
     ExpiredSignature,
 

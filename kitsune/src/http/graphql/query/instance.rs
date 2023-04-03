@@ -16,9 +16,10 @@ impl InstanceQuery {
     #[allow(clippy::unused_async)]
     pub async fn instance(&self, ctx: &Context<'_>) -> Result<Instance> {
         let state = ctx.state();
+        let domain = state.service.url.domain().into();
 
         Ok(Instance {
-            domain: state.config.domain.clone(),
+            domain,
             version: env!("CARGO_PKG_VERSION"),
         })
     }

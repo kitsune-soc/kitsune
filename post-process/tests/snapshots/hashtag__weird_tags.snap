@@ -1,0 +1,44 @@
+---
+source: post-process/tests/hashtag.rs
+expression: "PostParser::parse(Rule::post, &post).unwrap()"
+input_file: post-process/tests/input/hashtag/weird_1
+---
+[
+    Pair {
+        rule: hashtag,
+        span: Span {
+            str: "#invalid",
+            start: 0,
+            end: 8,
+        },
+        inner: [
+            Pair {
+                rule: component_prefix,
+                span: Span {
+                    str: "",
+                    start: 0,
+                    end: 0,
+                },
+                inner: [],
+            },
+            Pair {
+                rule: hashtag_content,
+                span: Span {
+                    str: "invalid",
+                    start: 1,
+                    end: 8,
+                },
+                inner: [],
+            },
+        ],
+    },
+    Pair {
+        rule: text,
+        span: Span {
+            str: "#tag",
+            start: 8,
+            end: 12,
+        },
+        inner: [],
+    },
+]

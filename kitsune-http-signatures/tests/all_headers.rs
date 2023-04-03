@@ -17,19 +17,14 @@ async fn all_headers() {
     );
     let public_key = self::data::get_public_key();
     let signer = HttpVerifier::builder()
-        .parts(&parts)
         .check_expiration(false)
         .build()
         .unwrap();
 
     signer
-        .verify(move |key_id| {
-            let key_id = key_id.to_string();
-
-            async move {
-                assert_eq!(key_id, "Test");
-                Ok(public_key)
-            }
+        .verify(&parts, move |key_id| async move {
+            assert_eq!(key_id, "Test");
+            Ok(public_key)
         })
         .await
         .unwrap();

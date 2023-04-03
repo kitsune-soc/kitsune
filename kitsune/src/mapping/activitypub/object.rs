@@ -1,20 +1,23 @@
 use crate::{
-    db::{
-        model::{
-            account, media_attachment, mention,
-            post::{self, Visibility},
-        },
-        UrlQuery,
-    },
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     state::Zustand,
+    util::BaseToCc,
 };
 use async_trait::async_trait;
+use futures_util::TryStreamExt;
+use kitsune_db::{
+    column::UrlQuery,
+    entity::{
+        accounts, media_attachments, posts, posts_mentions,
+        prelude::{Accounts, MediaAttachments, PostsMentions},
+    },
+    link::InReplyTo,
+};
 use kitsune_type::ap::{
     ap_context,
     helper::StringOrObject,
-    object::{Actor, MediaAttachment, MediaAttachmentType, Note, PublicKey},
-    BaseObject, Object, PUBLIC_IDENTIFIER,
+    object::{Actor, ActorType, MediaAttachment, MediaAttachmentType, PublicKey},
+    BaseObject, Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
 use sea_orm::{prelude::*, QuerySelect};
@@ -28,84 +31,123 @@ pub trait IntoObject {
 }
 
 #[async_trait]
-impl IntoObject for media_attachment::Model {
+impl IntoObject for media_attachments::Model {
     type Output = MediaAttachment;
 
-    async fn into_object(self, _state: &Zustand) -> Result<Self::Output> {
-        let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
+    async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+        let mime =
+            Mime::from_str(&self.content_type).map_err(|_| ApiError::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
             mime::AUDIO => MediaAttachmentType::Audio,
             mime::IMAGE => MediaAttachmentType::Image,
             mime::VIDEO => MediaAttachmentType::Video,
-            _ => return Err(Error::UnsupportedMediaType),
+            _ => return Err(ApiError::UnsupportedMediaType.into()),
         };
+        let url = state.service.attachment.get_url(self.id).await?;
 
         Ok(MediaAttachment {
             r#type,
             name: self.description,
             media_type: self.content_type,
             blurhash: self.blurhash,
-            url: self.url,
+            url,
         })
     }
 }
 
 #[async_trait]
-impl IntoObject for post::Model {
+impl IntoObject for posts::Model {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let account = account::Entity::find_by_id(self.account_id)
+        // Right now a repost can't have content
+        // Therefore it's also not an object
+        // We just return en error here
+        if self.reposted_post_id.is_some() {
+            return Err(ApiError::NotFound.into());
+        }
+
+        let account = Accounts::find_by_id(self.account_id)
             .one(&state.db_conn)
             .await?
             .expect("[Bug] No user associated with post");
 
-        let mut mentioned: Vec<String> = self
-            .find_linked(mention::MentionedAccounts)
+        let in_reply_to = self
+            .find_linked(InReplyTo)
             .select_only()
-            .column(account::Column::Url)
-            .into_values::<_, UrlQuery>()
+            .column(posts::Column::Url)
+            .into_values::<String, UrlQuery>()
+            .one(&state.db_conn)
+            .await?;
+
+        let attachment = self
+            .find_related(MediaAttachments)
+            .stream(&state.db_conn)
+            .await?
+            .map_err(Error::from)
+            .and_then(|attachment| async move {
+                let url = state.service.attachment.get_url(attachment.id).await?;
+
+                Ok(MediaAttachment {
+                    r#type: MediaAttachmentType::Document,
+                    name: attachment.description,
+                    blurhash: attachment.blurhash,
+                    media_type: attachment.content_type,
+                    url,
+                })
+            })
+            .try_collect()
+            .await?;
+
+        let mentions = PostsMentions::find()
+            .filter(posts_mentions::Column::PostId.eq(self.id))
+            .find_also_related(Accounts)
             .all(&state.db_conn)
             .await?;
 
-        let (mut to, cc) = match self.visibility {
-            Visibility::Public => (
-                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url],
-                vec![],
-            ),
-            Visibility::Unlisted => (
-                vec![account.followers_url],
-                vec![PUBLIC_IDENTIFIER.to_string()],
-            ),
-            Visibility::FollowerOnly => (vec![account.followers_url], vec![]),
-            Visibility::MentionOnly => (vec![], vec![]),
-        };
-        to.append(&mut mentioned);
+        let mut tag = Vec::new();
+        let (mut to, cc) = self.visibility.base_to_cc(&account);
+        for (mention, mentioned) in mentions {
+            let mentioned_url = mentioned.unwrap().url;
 
-        Ok(Object::Note(Note {
-            subject: self.subject,
+            to.push(mentioned_url.clone());
+            tag.push(Tag {
+                r#type: TagType::Mention,
+                name: mention.mention_text,
+                href: Some(mentioned_url),
+                icon: None,
+            });
+        }
+
+        Ok(Object {
+            r#type: ObjectType::Note,
+            summary: self.subject,
             content: self.content,
+            attachment,
+            tag,
+            url: None,
             rest: BaseObject {
                 context: ap_context(),
                 id: self.url,
                 attributed_to: Some(StringOrObject::String(account.url)),
+                in_reply_to,
                 sensitive: self.is_sensitive,
-                published: self.created_at,
+                published: self.created_at.into(),
                 to,
                 cc,
             },
-        }))
+        })
     }
 }
 
 #[async_trait]
-impl IntoObject for account::Model {
-    type Output = Object;
+impl IntoObject for accounts::Model {
+    type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = media_attachment::Entity::find_by_id(avatar_id)
+            let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");
@@ -114,7 +156,7 @@ impl IntoObject for account::Model {
             None
         };
         let image = if let Some(header_id) = self.header_id {
-            let media_attachment = media_attachment::Entity::find_by_id(header_id)
+            let media_attachment = MediaAttachments::find_by_id(header_id)
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Missing media attachment");
@@ -127,7 +169,8 @@ impl IntoObject for account::Model {
         let outbox_url = format!("{}/outbox", self.url);
         let following_url = format!("{}/following", self.url);
 
-        Ok(Object::Person(Actor {
+        Ok(Actor {
+            r#type: ActorType::Person,
             name: self.display_name,
             subject: self.note,
             icon,
@@ -140,7 +183,7 @@ impl IntoObject for account::Model {
             following: following_url,
             rest: BaseObject {
                 id: self.url.clone(),
-                published: self.created_at,
+                published: self.created_at.into(),
                 ..Default::default()
             },
             public_key: PublicKey {
@@ -148,6 +191,6 @@ impl IntoObject for account::Model {
                 owner: self.url,
                 public_key_pem: self.public_key,
             },
-        }))
+        })
     }
 }

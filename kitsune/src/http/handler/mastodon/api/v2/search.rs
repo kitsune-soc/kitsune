@@ -1,8 +1,7 @@
 use crate::{
-    db::model::{account, post},
     error::Result,
-    mapping::IntoMastodon,
-    search::SearchService,
+    http::extractor::MastodonAuthExtractor,
+    service::search::{SearchBackend, SearchIndex, SearchService},
     state::Zustand,
 };
 use axum::{
@@ -13,17 +12,19 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use http::StatusCode;
-use kitsune_search_proto::common::SearchIndex;
+use kitsune_db::entity::prelude::{Accounts, Posts};
 use kitsune_type::mastodon::SearchResult;
 use sea_orm::EntityTrait;
 use serde::Deserialize;
+use url::Url;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 fn default_page_limit() -> u64 {
     40
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum SearchType {
     Accounts,
@@ -31,7 +32,7 @@ pub enum SearchType {
     Statuses,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 struct SearchQuery {
     #[serde(rename = "q")]
     query: String,
@@ -46,9 +47,22 @@ struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler]
+#[debug_handler(state = Zustand)]
+#[utoipa::path(
+    get,
+    path = "/api/v2/search",
+    security(
+        ("oauth_token" = [])
+    ),
+    params(SearchQuery),
+    responses(
+        (status = 200, description = "Search results", body = SearchResult),
+    ),
+)]
 async fn get(
-    State(mut state): State<Zustand>,
+    State(state): State<Zustand>,
+    State(search): State<SearchService>,
+    _: MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Response> {
     let indices = if let Some(r#type) = query.r#type {
@@ -65,8 +79,7 @@ async fn get(
 
     let mut search_result = SearchResult::default();
     for index in indices {
-        let results = state
-            .search_service
+        let results = search
             .search(
                 index,
                 query.query.clone(),
@@ -78,35 +91,42 @@ async fn get(
             .await?;
 
         for result in results {
-            let id = Uuid::from_bytes(
-                result
-                    .id
-                    .try_into()
-                    .expect("[Bug] Non-UUID indexed in search index"),
-            );
-
             match index {
                 SearchIndex::Account => {
-                    let account = account::Entity::find_by_id(id)
+                    let account = Accounts::find_by_id(result.id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Account indexed in search not in database");
 
                     search_result
                         .accounts
-                        .push(account.into_mastodon(&state).await?);
+                        .push(state.mastodon_mapper.map(account).await?);
                 }
                 SearchIndex::Post => {
-                    let post = post::Entity::find_by_id(id)
+                    let post = Posts::find_by_id(result.id)
                         .one(&state.db_conn)
                         .await?
                         .expect("[Bug] Post indexed in search not in database");
 
                     search_result
                         .statuses
-                        .push(post.into_mastodon(&state).await?);
+                        .push(state.mastodon_mapper.map(post).await?);
                 }
             }
+        }
+    }
+
+    if Url::parse(&query.query).is_ok() {
+        if let Ok(account) = state.fetcher.fetch_actor(query.query.as_str().into()).await {
+            search_result
+                .accounts
+                .insert(0, state.mastodon_mapper.map(account).await?);
+        }
+
+        if let Ok(post) = state.fetcher.fetch_object(query.query.as_str()).await {
+            search_result
+                .statuses
+                .insert(0, state.mastodon_mapper.map(post).await?);
         }
     }
 

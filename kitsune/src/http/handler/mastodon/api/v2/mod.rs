@@ -1,8 +1,11 @@
 use crate::state::Zustand;
 use axum::Router;
 
-mod search;
+pub mod media;
+pub mod search;
 
 pub fn routes() -> Router<Zustand> {
-    Router::new().nest("/search", search::routes())
+    Router::new()
+        .nest("/media", media::routes())
+        .nest("/search", search::routes())
 }

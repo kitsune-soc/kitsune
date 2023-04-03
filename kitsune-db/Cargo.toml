@@ -1,0 +1,17 @@
+[package]
+name = "kitsune-db"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+derive_builder = "0.12.0"
+kitsune-type = { path = "../kitsune-type" }
+migration = { path = "migration" }
+sea-orm = { version = "0.11.2", default-features = false, features = [
+    "with-chrono",
+    "with-json",
+    "with-uuid",
+] }
+serde = { version = "1.0.159", features = ["derive"] }
+tracing-log = "0.1.3"
+uuid = "1.3.0"

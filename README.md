@@ -6,27 +6,12 @@ Due to its decentralised nature, you can self-host Kitsune on your own hardware 
 
 Kitsune itself is pretty lightweight and should run even on a Raspberry Pi (even though we haven't tested that yet).
 
+**[Documentation](https://docs.joinkitsune.org)**
+
 ## ⚠ Disclaimer
 
 This software is far from production-ready. Breaking changes (even to, for example, existing database migrations (yes, we know it's bad)) might happen. 
 So, as long as this disclaimer is here, make sure to double check all the changes before you update your installation.
-
-## Installation
-
-Besides the binaries, you need the following things to run Kitsune:
-
-- Redis (for caching)
-- (optional) a database server (either PostgreSQL or MySQL/MariaDB; you can use SQLite instead)
-- NGINX (as a reverse-proxy)
-- TLS certificate (we recommend a free one from "Let's Encrypt")
-
-There are no good installation docs at the moment, but the installation itself is pretty straightforward. 
-
-1. Rename `.env.example` to `.env`, change the values to fit your needs. 
-2. The reverse proxy config is pretty vanilla, just forward the traffic. 
-3. The Redis installation is expected to be in a single-node configuration.
-
-We're sure you can figure it out.
 
 ## Contributing
 

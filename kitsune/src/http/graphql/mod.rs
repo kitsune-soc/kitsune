@@ -1,5 +1,5 @@
 use self::{mutation::RootMutation, query::RootQuery};
-use super::extractor::{AuthExtactor, UserData};
+use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
@@ -16,13 +16,14 @@ type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 
 mod mutation;
 mod query;
+mod types;
 
 pub trait ContextExt {
     fn state(&self) -> &Zustand;
     fn user_data(&self) -> Result<&UserData>;
 }
 
-impl ContextExt for &'_ Context<'_> {
+impl ContextExt for &Context<'_> {
     fn state(&self) -> &Zustand {
         self.data().expect("[Bug] State missing in GraphQL context")
     }
@@ -36,7 +37,7 @@ impl ContextExt for &'_ Context<'_> {
 #[debug_handler(state = Zustand)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
-    user_data: Option<AuthExtactor>,
+    user_data: Option<AuthExtractor<true>>,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
     let mut req = req.into_inner();
@@ -57,7 +58,6 @@ async fn graphiql_route() -> Html<String> {
     Html(page_src)
 }
 
-#[must_use]
 pub fn routes(state: Zustand) -> Router<Zustand> {
     let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),

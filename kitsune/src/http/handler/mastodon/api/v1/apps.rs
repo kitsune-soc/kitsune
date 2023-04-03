@@ -1,35 +1,37 @@
 use crate::{
-    db::model::oauth::application, error::Result, http::extractor::FormOrJson, state::Zustand,
-    util::generate_secret,
+    error::Result,
+    http::extractor::FormOrJson,
+    service::oauth2::{CreateApp, Oauth2Service},
+    state::Zustand,
 };
 use axum::{extract::State, routing, Json, Router};
-use chrono::Utc;
 use kitsune_type::mastodon::App;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use serde::Deserialize;
-use uuid::Uuid;
+use utoipa::ToSchema;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct AppForm {
     client_name: String,
     redirect_uris: String,
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/apps",
+    request_body = AppForm,
+    responses(
+        (status = 200, description = "Newly created application", body = App),
+    ),
+)]
 async fn post(
-    State(db_conn): State<DatabaseConnection>,
+    State(oauth2): State<Oauth2Service>,
     FormOrJson(form): FormOrJson<AppForm>,
 ) -> Result<Json<App>> {
-    let application = application::Model {
-        id: Uuid::now_v7(),
-        name: form.client_name,
-        secret: generate_secret(),
-        redirect_uri: form.redirect_uris,
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
-    }
-    .into_active_model()
-    .insert(&db_conn)
-    .await?;
+    let create_app = CreateApp::builder()
+        .name(form.client_name)
+        .redirect_uris(form.redirect_uris)
+        .build();
+    let application = oauth2.create_app(create_app).await?;
 
     Ok(Json(App {
         id: application.id,

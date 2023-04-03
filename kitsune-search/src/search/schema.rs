@@ -56,6 +56,9 @@ pub struct AccountSchema {
     /// Description (or bio, etc.) field (might be empty)
     pub description: Field,
 
+    /// Unix timestamp of when the account was indexed
+    pub indexed_at: Field,
+
     /// The underlying tantivy schema with the above defined fields
     pub tantivy_schema: Schema,
 }
@@ -67,6 +70,7 @@ impl Default for AccountSchema {
         let display_name = builder.add_text_field("display_name", FAST | TEXT);
         let username = builder.add_text_field("username", FAST | STRING);
         let description = builder.add_text_field("description", FAST | TEXT);
+        let indexed_at = builder.add_date_field("indexed_at", FAST);
         let tantivy_schema = builder.build();
 
         Self {
@@ -74,6 +78,7 @@ impl Default for AccountSchema {
             display_name,
             username,
             description,
+            indexed_at,
             tantivy_schema,
         }
     }
@@ -125,6 +130,9 @@ pub struct PostSchema {
     /// Content field
     pub content: Field,
 
+    /// Unix timestamp of when the post was indexed
+    pub indexed_at: Field,
+
     /// The underlying tantivy schema with the above defined fields
     pub tantivy_schema: Schema,
 }
@@ -135,12 +143,14 @@ impl Default for PostSchema {
         let id = builder.add_bytes_field("id", FAST | INDEXED | STORED);
         let subject = builder.add_text_field("subject", FAST | TEXT);
         let content = builder.add_text_field("content", FAST | TEXT);
+        let indexed_at = builder.add_date_field("indexed_at", FAST);
         let tantivy_schema = builder.build();
 
         Self {
             id,
             subject,
             content,
+            indexed_at,
             tantivy_schema,
         }
     }

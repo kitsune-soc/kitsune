@@ -1,6 +1,6 @@
 use crate::{
-    db::model::{account, user},
     error::Result,
+    service::{instance::InstanceService, url::UrlService},
     state::Zustand,
 };
 use axum::{extract::State, routing, Json, Router};
@@ -8,24 +8,28 @@ use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect};
 
-async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
-    let user_count = user::Entity::find().count(&state.db_conn).await?;
-
-    let domain_count = account::Entity::find()
-        .filter(account::Column::Domain.is_not_null())
-        .select_only()
-        .column(account::Column::Domain)
-        .group_by(account::Column::Domain)
-        .count(&state.db_conn)
-        .await?;
+#[utoipa::path(
+    get,
+    path = "/api/v1/instance",
+    responses(
+        (status = 200, description = "Instance metadata", body = Instance),
+    ),
+)]
+async fn get(
+    State(instance_service): State<InstanceService>,
+    State(url_service): State<UrlService>,
+) -> Result<Json<Instance>> {
+    let status_count = instance_service.local_post_count().await?;
+    let user_count = instance_service.user_count().await?;
+    let domain_count = instance_service.known_instances().await?;
 
     Ok(Json(Instance {
-        uri: state.config.domain.clone(),
-        title: state.config.domain,
-        short_description: "https://www.youtube.com/watch?v=6lnnPnr_0SU".into(),
+        uri: url_service.domain().into(),
+        title: instance_service.name().into(),
+        short_description: instance_service.description().into(),
         description: String::new(),
+        max_toot_chars: instance_service.character_limit(),
         email: String::new(),
         version: env!("CARGO_PKG_VERSION").into(),
         urls: Urls {
@@ -33,8 +37,8 @@ async fn get(State(state): State<Zustand>) -> Result<Json<Instance>> {
         },
         stats: Stats {
             user_count,
+            status_count,
             domain_count,
-            status_count: 0,
         },
     }))
 }

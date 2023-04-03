@@ -1,11 +1,7 @@
 use crate::{
-    db::model::{
-        account,
-        post::{self, Visibility},
-        user,
-    },
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     mapping::IntoActivity,
+    service::{account::GetPosts, url::UrlService},
     state::Zustand,
 };
 use axum::{
@@ -14,17 +10,23 @@ use axum::{
     Json,
 };
 use futures_util::{stream, StreamExt, TryStreamExt};
+use kitsune_db::{
+    entity::{
+        posts,
+        prelude::{Accounts, Posts, Users},
+        users,
+    },
+    r#trait::{PermissionCheck, PostPermissionCheckExt},
+};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
-use sea_orm::{
-    ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related,
-};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, Related};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-const ACTIVITIES_PER_PAGE: u64 = 10;
+const ACTIVITIES_PER_PAGE: usize = 10;
 
 #[derive(Deserialize, Serialize)]
 pub struct OutboxQuery {
@@ -36,39 +38,38 @@ pub struct OutboxQuery {
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = <user::Entity as Related<account::Entity>>::find_related()
-        .filter(user::Column::Username.eq(username.as_str()))
+    let Some(account) = <Users as Related<Accounts>>::find_related()
+        .filter(users::Column::Username.eq(username.as_str()))
         .one(&state.db_conn)
         .await?
     else {
-        return Err(Error::UserNotFound);
+        return Err(ApiError::NotFound.into());
     };
 
-    let base_url = format!("https://{}{}", state.config.domain, original_uri.path());
-    let base_query = account
-        .find_related(post::Entity)
-        .filter(post::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]));
+    let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
     if query.page {
-        let mut page_query = base_query;
-        if let Some(max_id) = query.max_id {
-            page_query = page_query.filter(post::Column::Id.lt(max_id));
-        }
-        if let Some(min_id) = query.min_id {
-            page_query = page_query.filter(post::Column::Id.gt(min_id));
-        }
+        let get_posts = GetPosts::builder()
+            .account_id(account.id)
+            .max_id(query.max_id)
+            .min_id(query.min_id)
+            .build();
 
-        let posts = page_query
-            .limit(ACTIVITIES_PER_PAGE)
-            .order_by_desc(post::Column::Id)
-            .all(&state.db_conn)
+        let posts: Vec<posts::Model> = state
+            .service
+            .account
+            .get_posts(get_posts)
+            .await?
+            .take(ACTIVITIES_PER_PAGE)
+            .try_collect()
             .await?;
 
-        let id = format!("{}{original_uri}", state.config.domain);
+        let id = format!("{}{original_uri}", url_service.base_url());
         let prev = format!(
             "{base_url}?page=true&min_id={}",
             posts.first().map_or(Uuid::max(), |post| post.id)
@@ -96,7 +97,12 @@ pub async fn get(
         })
         .into_response())
     } else {
-        let public_post_count = base_query.count(&state.db_conn).await?;
+        let public_post_count = Posts::find()
+            .filter(posts::Column::AccountId.eq(account.id))
+            .add_permission_checks(PermissionCheck::default())
+            .count(&state.db_conn)
+            .await?;
+
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
 

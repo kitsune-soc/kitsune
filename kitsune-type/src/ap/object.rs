@@ -20,9 +20,17 @@ pub struct MediaAttachment {
     pub url: String,
 }
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+pub enum ActorType {
+    Group,
+    #[default]
+    Person,
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
+    pub r#type: ActorType,
     pub name: Option<String>,
     pub preferred_username: String,
     pub subject: Option<String>,
@@ -45,13 +53,4 @@ pub struct PublicKey {
     pub id: String,
     pub owner: String,
     pub public_key_pem: String,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Note {
-    pub subject: Option<String>,
-    pub content: String,
-    #[serde(flatten)]
-    pub rest: BaseObject,
 }

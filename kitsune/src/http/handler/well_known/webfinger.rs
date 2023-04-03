@@ -1,25 +1,33 @@
-use crate::{
-    db::model::account,
-    error::Result,
-    state::Zustand,
-    webfinger::{Link, Resource},
-};
+use crate::{error::Result, service::url::UrlService, state::Zustand};
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Response},
-    Json,
+    routing, Json, Router,
 };
 use http::StatusCode;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use kitsune_db::entity::{accounts, prelude::Accounts};
+use kitsune_type::webfinger::{Link, Resource};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
+use utoipa::IntoParams;
 
-#[derive(Deserialize)]
-pub struct WebfingerQuery {
+#[derive(Deserialize, IntoParams)]
+struct WebfingerQuery {
     resource: String,
 }
 
-pub async fn get(
-    State(state): State<Zustand>,
+#[utoipa::path(
+    get,
+    path = "/.well-known/webfinger",
+    params(WebfingerQuery),
+    responses(
+        (status = 200, description = "Response with the location of the user's profile", body = Resource),
+        (status = StatusCode::NOT_FOUND, description = "The service doesn't know this user"),
+    )
+)]
+async fn get(
+    State(db_conn): State<DatabaseConnection>,
+    State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
     let username_at_instance = query.resource.trim_start_matches("acct:");
@@ -27,16 +35,16 @@ pub async fn get(
         return Ok(StatusCode::BAD_REQUEST.into_response());
     };
 
-    if instance != state.config.domain {
+    if instance != url_service.domain() {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let Some(account) = account::Entity::find()
+    let Some(account) = Accounts::find()
         .filter(
-            account::Column::Username.eq(username)
-                .and(account::Column::Domain.is_null()),
+            accounts::Column::Username.eq(username)
+                .and(accounts::Column::Local.eq(true)),
         )
-        .one(&state.db_conn)
+        .one(&db_conn)
         .await?
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());
@@ -47,8 +55,13 @@ pub async fn get(
         aliases: vec![account.url.clone()],
         links: vec![Link {
             rel: "self".into(),
+            r#type: Some("application/activity+json".into()),
             href: Some(account.url),
         }],
     })
     .into_response())
+}
+
+pub fn routes() -> Router<Zustand> {
+    Router::new().route("/", routing::get(get))
 }

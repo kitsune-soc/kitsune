@@ -1,4 +1,5 @@
 use crate::search::SearchIndex;
+use autometrics::autometrics;
 use futures_util::TryStreamExt;
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
@@ -7,7 +8,8 @@ use kitsune_search_proto::{
         RemoveIndexRequest, RemoveIndexResponse, ResetRequest, ResetResponse,
     },
 };
-use tantivy::{Document, IndexWriter, Term};
+use tantivy::{DateTime, Document, IndexWriter, Term};
+use time::OffsetDateTime;
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status, Streaming};
 
@@ -39,6 +41,13 @@ impl IndexService {
                     document.add_text(account_schema.description, description);
                 }
 
+                document.add_date(
+                    account_schema.indexed_at,
+                    DateTime::from_utc(OffsetDateTime::now_utc()),
+                );
+
+                increment_counter!("added_documents", "index" => GrpcSearchIndex::Account.as_str_name());
+
                 (self.account.read().await, document)
             }
             Some(IndexEntity::Post(data)) => {
@@ -50,6 +59,13 @@ impl IndexService {
                 if let Some(subject) = data.subject {
                     document.add_text(post_schema.subject, subject);
                 }
+
+                document.add_date(
+                    post_schema.indexed_at,
+                    DateTime::from_utc(OffsetDateTime::now_utc()),
+                );
+
+                increment_counter!("added_documents", "index" => GrpcSearchIndex::Post.as_str_name());
 
                 (self.post.read().await, document)
             }
@@ -91,8 +107,16 @@ impl IndexService {
         index: &SearchIndex,
     ) -> tonic::Result<()> {
         let (writer, id_field) = match req.index() {
-            GrpcSearchIndex::Account => (self.account.read().await, index.schemas.account.id),
-            GrpcSearchIndex::Post => (self.post.read().await, index.schemas.post.id),
+            GrpcSearchIndex::Account => {
+                increment_counter!("removed_documents", "index" => GrpcSearchIndex::Account.as_str_name());
+
+                (self.account.read().await, index.schemas.account.id)
+            }
+            GrpcSearchIndex::Post => {
+                increment_counter!("removed_documents", "index" => GrpcSearchIndex::Post.as_str_name());
+
+                (self.post.read().await, index.schemas.post.id)
+            }
         };
 
         let term = Term::from_field_bytes(id_field, &req.id);
@@ -103,6 +127,7 @@ impl IndexService {
 }
 
 #[async_trait]
+#[autometrics(track_concurrency)]
 impl Index for IndexService {
     async fn add(
         &self,

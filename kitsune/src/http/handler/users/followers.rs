@@ -1,11 +1,18 @@
 use crate::{
-    db::model::{account, follow, user},
-    error::{Error, Result},
+    error::{ApiError, Result},
+    service::url::UrlService,
     state::Zustand,
 };
 use axum::{
     extract::{OriginalUri, Path, State},
     Json,
+};
+use kitsune_db::{
+    entity::{
+        prelude::{Accounts, Users},
+        users,
+    },
+    link::Followers,
 };
 use kitsune_type::ap::{
     ap_context,
@@ -15,23 +22,23 @@ use sea_orm::{ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, Related};
 
 pub async fn get(
     State(state): State<Zustand>,
+    State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
 ) -> Result<Json<Collection>> {
-    let Some(account) = <user::Entity as Related<account::Entity>>::find_related()
-        .filter(user::Column::Username.eq(username))
+    let Some(account) = <Users as Related<Accounts>>::find_related()
+        .filter(users::Column::Username.eq(username))
         .one(&state.db_conn)
         .await?
     else {
-        return Err(Error::UserNotFound);
+        return Err(ApiError::NotFound.into());
     };
 
-    let follower_count = account
-        .find_linked(follow::Followers)
-        .count(&state.db_conn)
-        .await?;
+    let follower_count = account.find_linked(Followers).count(&state.db_conn).await?;
 
-    let id = format!("https://{}{}", state.config.domain, original_uri.path());
+    let mut id = url_service.base_url();
+    id.push_str(original_uri.path());
+
     Ok(Json(Collection {
         context: ap_context(),
         id,

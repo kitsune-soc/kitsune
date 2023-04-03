@@ -1,91 +1,100 @@
 use crate::{
-    cache::{Cache, RedisCache},
+    cache::{ArcCache, CacheBackend, RedisCache},
     consts::USER_AGENT,
-    db::model::{
-        account, media_attachment,
-        post::{self, Visibility},
-    },
     error::{Error, Result},
     sanitize::CleanHtmlExt,
-    search::{GrpcSearchService, SearchService},
+    service::search::{GrpcSearchService, SearchBackend, SearchService},
 };
+use async_recursion::async_recursion;
+use autometrics::autometrics;
 use chrono::Utc;
 use futures_util::FutureExt;
-use http::{HeaderMap, HeaderValue};
-use kitsune_type::ap::object::{Actor, Note};
-use reqwest::Client;
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    IntoActiveValue, QueryFilter, TransactionTrait,
+use http::HeaderValue;
+use kitsune_db::{
+    custom::Visibility,
+    entity::{
+        accounts, media_attachments, posts,
+        prelude::{Accounts, MediaAttachments, Posts},
+    },
 };
-use std::time::Duration;
+use kitsune_http_client::Client;
+use kitsune_type::ap::{object::Actor, Object};
+use sea_orm::{
+    sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
+    EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
+};
+use std::{sync::Arc, time::Duration};
+use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
-const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
+use super::{handle_attachments, handle_mentions};
 
-#[derive(Clone)]
-pub struct Fetcher<
-    S = GrpcSearchService,
-    PC = RedisCache<str, post::Model>,
-    UC = RedisCache<str, account::Model>,
-> {
+const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
+const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
+
+#[derive(Clone, Debug, TypedBuilder)]
+/// Options passed to the fetcher
+pub struct FetchOptions<'a> {
+    /// Refetch the ActivityPub entity
+    ///
+    /// This is mainly used to refresh possibly stale actors
+    ///
+    /// Default: false
+    #[builder(default = false)]
+    refetch: bool,
+
+    /// URL of the ActivityPub entity
+    url: &'a str,
+}
+
+impl<'a> From<&'a str> for FetchOptions<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::builder().url(value).build()
+    }
+}
+
+#[derive(Clone, TypedBuilder)]
+pub struct Fetcher {
+    #[builder(default =
+        Client::builder()
+            .default_header(
+                "Accept",
+                HeaderValue::from_static("application/activity+json"),
+            )
+            .unwrap()
+            .user_agent(USER_AGENT)
+            .unwrap()
+            .build()
+    )]
     client: Client,
     db_conn: DatabaseConnection,
-    search_service: S,
+    #[builder(setter(into))]
+    search_service: SearchService,
 
     // Caches
-    post_cache: PC,
-    user_cache: UC,
+    post_cache: ArcCache<str, posts::Model>,
+    user_cache: ArcCache<str, accounts::Model>,
 }
 
 impl Fetcher {
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn with_defaults(
         db_conn: DatabaseConnection,
         search_service: GrpcSearchService,
         redis_conn: deadpool_redis::Pool,
     ) -> Self {
-        Self::new(
-            db_conn,
-            search_service,
-            RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION),
-            RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION),
-        )
-    }
-}
-
-impl<S, PC, UC> Fetcher<S, PC, UC>
-where
-    S: SearchService,
-    PC: Cache<str, post::Model>,
-    UC: Cache<str, account::Model>,
-{
-    #[allow(clippy::missing_panics_doc)] // Invariants are covered. Won't panic.
-    #[must_use]
-    pub fn new(
-        db_conn: DatabaseConnection,
-        search_service: S,
-        post_cache: PC,
-        user_cache: UC,
-    ) -> Self {
-        let mut default_headers = HeaderMap::new();
-        default_headers.insert(
-            "Accept",
-            HeaderValue::from_static("application/activity+json"),
-        );
-
-        Self {
-            client: Client::builder()
-                .default_headers(default_headers)
-                .user_agent(USER_AGENT)
-                .build()
-                .unwrap(),
-            db_conn,
-            search_service,
-            post_cache,
-            user_cache,
-        }
+        Self::builder()
+            .db_conn(db_conn)
+            .search_service(search_service)
+            .post_cache(Arc::new(
+                RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION).into(),
+            ))
+            .user_cache(Arc::new(
+                RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION).into(),
+            ))
+            .build()
     }
 
     /// Fetch an ActivityPub actor
@@ -93,25 +102,30 @@ where
     /// # Panics
     ///
     /// - Panics if the URL doesn't contain a host section
-    pub async fn fetch_actor(&self, url: &str) -> Result<account::Model> {
-        if let Some(user) = self.user_cache.get(url).await? {
-            return Ok(user);
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
+    pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<accounts::Model> {
+        // Obviously we can't hit the cache nor the database if we wanna refetch the actor
+        if !opts.refetch {
+            if let Some(user) = self.user_cache.get(opts.url).await? {
+                return Ok(user);
+            }
+
+            if let Some(user) = Accounts::find()
+                .filter(accounts::Column::Url.eq(opts.url))
+                .one(&self.db_conn)
+                .await?
+            {
+                return Ok(user);
+            }
         }
 
-        if let Some(user) = account::Entity::find()
-            .filter(account::Column::Url.eq(url))
-            .one(&self.db_conn)
-            .await?
-        {
-            return Ok(user);
-        }
-
-        let mut search_service = self.search_service.clone();
-        let url = Url::parse(url)?;
-        let mut actor: Actor = self.client.get(url.clone()).send().await?.json().await?;
+        let url = Url::parse(opts.url)?;
+        let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        self.db_conn
+        let account = self
+            .db_conn
             .transaction(|tx| {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
@@ -121,65 +135,87 @@ where
                 );
 
                 async move {
-                    let account = account::Model {
-                        id: Uuid::new_v7(uuid_timestamp),
-                        avatar_id: None,
-                        header_id: None,
-                        display_name: actor.name,
-                        note: actor.subject,
-                        username: actor.preferred_username,
-                        locked: actor.manually_approves_followers,
-                        domain: Some(url.host_str().unwrap().into()),
-                        url: actor.rest.id,
-                        followers_url: actor.followers,
-                        inbox_url: actor.inbox,
-                        public_key: actor.public_key.public_key_pem,
-                        created_at: actor.rest.published,
-                        updated_at: Utc::now(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
+                    let account = Accounts::insert(
+                        accounts::Model {
+                            id: Uuid::new_v7(uuid_timestamp),
+                            avatar_id: None,
+                            header_id: None,
+                            display_name: actor.name,
+                            note: actor.subject,
+                            username: actor.preferred_username,
+                            locked: actor.manually_approves_followers,
+                            local: false,
+                            domain: Some(url.host_str().unwrap().into()),
+                            url: actor.rest.id,
+                            followers_url: actor.followers,
+                            inbox_url: actor.inbox,
+                            public_key: actor.public_key.public_key_pem,
+                            created_at: actor.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .on_conflict(
+                        OnConflict::column(accounts::Column::Url)
+                            .update_columns([
+                                accounts::Column::DisplayName,
+                                accounts::Column::Note,
+                                accounts::Column::Locked,
+                                accounts::Column::PublicKey,
+                                accounts::Column::UpdatedAt,
+                            ])
+                            .clone(),
+                    )
+                    .exec_with_returning(tx)
                     .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
-                        let media_attachment = media_attachment::Model {
-                            id: Uuid::now_v7(),
-                            account_id: account.id,
-                            description: icon.name,
-                            content_type: icon.media_type,
-                            blurhash: icon.blurhash,
-                            url: icon.url,
-                            created_at: Utc::now(),
-                        }
-                        .into_active_model()
-                        .insert(tx)
+                        let insert_result = MediaAttachments::insert(
+                            media_attachments::Model {
+                                id: Uuid::now_v7(),
+                                account_id: account.id,
+                                description: icon.name,
+                                content_type: icon.media_type,
+                                blurhash: icon.blurhash,
+                                file_path: None,
+                                remote_url: Some(icon.url),
+                                created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
+                            }
+                            .into_active_model(),
+                        )
+                        .exec(tx)
                         .await?;
 
-                        Some(media_attachment.id)
+                        Some(insert_result.last_insert_id)
                     } else {
                         None
                     };
 
                     let header_id = if let Some(image) = actor.image {
-                        let media_attachment = media_attachment::Model {
-                            id: Uuid::now_v7(),
-                            account_id: account.id,
-                            description: image.name,
-                            content_type: image.media_type,
-                            blurhash: image.blurhash,
-                            url: image.url,
-                            created_at: Utc::now(),
-                        }
-                        .into_active_model()
-                        .insert(tx)
+                        let insert_result = MediaAttachments::insert(
+                            media_attachments::Model {
+                                id: Uuid::now_v7(),
+                                account_id: account.id,
+                                description: image.name,
+                                content_type: image.media_type,
+                                blurhash: image.blurhash,
+                                file_path: None,
+                                remote_url: Some(image.url),
+                                created_at: Utc::now().into(),
+                                updated_at: Utc::now().into(),
+                            }
+                            .into_active_model(),
+                        )
+                        .exec(tx)
                         .await?;
 
-                        Some(media_attachment.id)
+                        Some(insert_result.last_insert_id)
                     } else {
                         None
                     };
 
-                    let account = account::ActiveModel {
+                    let account = accounts::ActiveModel {
                         id: ActiveValue::Set(account.id),
                         avatar_id: avatar_id.into_active_value(),
                         header_id: header_id.into_active_value(),
@@ -187,97 +223,147 @@ where
                     }
                     .update(tx)
                     .await?;
-                    search_service.add_to_index(account.clone()).await?;
 
-                    Ok(account)
+                    Ok::<_, Error>(account)
                 }
                 .boxed()
             })
-            .await
-            .map_err(Error::from)
+            .await?;
+        self.search_service
+            .add_to_index(account.clone().into())
+            .await?;
+
+        Ok(account)
     }
 
-    pub async fn fetch_note(&self, url: &str) -> Result<post::Model> {
-        if let Some(post) = self.post_cache.get(url).await? {
-            return Ok(post);
+    #[async_recursion]
+    async fn fetch_object_inner(&self, url: &str, call_depth: u32) -> Result<Option<posts::Model>> {
+        if call_depth > MAX_FETCH_DEPTH {
+            return Ok(None);
         }
 
-        if let Some(post) = post::Entity::find()
-            .filter(post::Column::Url.eq(url))
+        if let Some(post) = self.post_cache.get(url).await? {
+            return Ok(Some(post));
+        }
+
+        if let Some(post) = Posts::find()
+            .filter(posts::Column::Url.eq(url))
             .one(&self.db_conn)
             .await?
         {
-            return Ok(post);
+            self.post_cache.set(url, &post).await?;
+            return Ok(Some(post));
         }
 
-        let mut note: Note = self.client.get(url).send().await?.json().await?;
-        note.clean_html();
+        let url = Url::parse(url)?;
+        let mut object: Object = self.client.get(url.as_str()).await?.json().await?;
+        object.clean_html();
 
         let user = self
-            .fetch_actor(note.rest.attributed_to().ok_or(Error::MalformedApObject)?)
+            .fetch_actor(
+                object
+                    .rest
+                    .attributed_to()
+                    .map(FetchOptions::from)
+                    .ok_or(Error::MalformedApObject)?,
+            )
             .await?;
-        let visibility = Visibility::from_activitypub(&user, &note);
+        let visibility = Visibility::from_activitypub(&user, &object);
 
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
             uuid::NoContext,
-            note.rest.published.timestamp() as u64,
-            note.rest.published.timestamp_subsec_nanos(),
+            object.rest.published.timestamp() as u64,
+            object.rest.published.timestamp_subsec_nanos(),
         );
 
-        let post = post::Model {
-            id: Uuid::new_v7(uuid_timestamp),
-            account_id: user.id,
-            subject: note.subject,
-            content: note.content,
-            is_sensitive: note.rest.sensitive,
-            visibility,
-            url: note.rest.id,
-            created_at: note.rest.published,
-            updated_at: Utc::now(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await?;
+        let in_reply_to_id = if let Some(in_reply_to) = object.rest.in_reply_to {
+            self.fetch_object_inner(&in_reply_to, call_depth + 1)
+                .await?
+                .map(|post| post.id)
+        } else {
+            None
+        };
+
+        let post = self
+            .db_conn
+            .transaction(|tx| {
+                async move {
+                    let new_post = Posts::insert(
+                        posts::Model {
+                            id: Uuid::new_v7(uuid_timestamp),
+                            account_id: user.id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: object.summary,
+                            content: object.content,
+                            is_sensitive: object.rest.sensitive,
+                            visibility,
+                            is_local: false,
+                            url: object.rest.id,
+                            created_at: object.rest.published.into(),
+                            updated_at: Utc::now().into(),
+                        }
+                        .into_active_model(),
+                    )
+                    .on_conflict(
+                        OnConflict::column(posts::Column::Url)
+                            .update_columns([posts::Column::Content, posts::Column::Subject])
+                            .clone(),
+                    )
+                    .exec_with_returning(tx)
+                    .await?;
+
+                    handle_attachments(tx, &user, new_post.id, object.attachment).await?;
+                    handle_mentions(tx, &user, new_post.id, &object.tag).await?;
+
+                    Ok::<_, Error>(new_post)
+                }
+                .boxed()
+            })
+            .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
             self.search_service
-                .clone()
-                .add_to_index(post.clone())
+                .add_to_index(post.clone().into())
                 .await?;
         }
 
-        Ok(post)
+        self.post_cache.set(&post.url, &post).await?;
+
+        Ok(Some(post))
+    }
+
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
+    pub async fn fetch_object(&self, url: &str) -> Result<posts::Model> {
+        self.fetch_object_inner(url, 0)
+            .await
+            .transpose()
+            .expect("[Bug] Highest level fetch returned a `None`")
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        activitypub::Fetcher, cache::NoopCache, db::model::account, search::NoopSearchService,
-    };
-    use migration::{Migrator, MigratorTrait};
+    use crate::{activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService};
+    use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
-    use sea_orm::{Database, DatabaseConnection, ModelTrait};
-
-    async fn prepare_db() -> DatabaseConnection {
-        let db_conn = Database::connect("sqlite::memory:")
-            .await
-            .expect("Database connection");
-        Migrator::up(&db_conn, None)
-            .await
-            .expect("Database migration");
-
-        db_conn
-    }
+    use sea_orm::EntityTrait;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn fetch_actor() {
-        let db_conn = prepare_db().await;
-        let fetcher = Fetcher::new(db_conn, NoopSearchService, NoopCache, NoopCache);
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
 
         let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0")
+            .fetch_actor("https://corteximplant.com/users/0x0".into())
             .await
             .expect("Fetch actor");
 
@@ -289,11 +375,16 @@ mod test {
 
     #[tokio::test]
     async fn fetch_note() {
-        let db_conn = prepare_db().await;
-        let fetcher = Fetcher::new(db_conn.clone(), NoopSearchService, NoopCache, NoopCache);
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn.clone())
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
 
         let note = fetcher
-            .fetch_note("https://corteximplant.com/@0x0/109501674056556919")
+            .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
             .await
             .expect("Fetch note");
         assert_eq!(
@@ -301,8 +392,7 @@ mod test {
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"
         );
 
-        let author = note
-            .find_related(account::Entity)
+        let author = Accounts::find_by_id(note.account_id)
             .one(&db_conn)
             .await
             .ok()

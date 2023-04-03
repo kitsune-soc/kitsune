@@ -1,6 +1,6 @@
 use self::{
     helper::StringOrObject,
-    object::{Actor, Note},
+    object::{Actor, MediaAttachment},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -45,46 +45,45 @@ pub struct Activity {
 impl Activity {
     pub fn object(&self) -> &str {
         match self.object {
-            StringOrObject::Object(ref obj) => obj.id(),
+            StringOrObject::Object(ref obj) => &obj.rest.id,
             StringOrObject::String(ref obj) => obj,
         }
     }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum ObjectType {
+    Article,
+    Image,
+    Note,
+    Video,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(tag = "type")]
-pub enum Object {
-    Note(Note),
-    Person(Actor),
+pub struct Object {
+    pub r#type: ObjectType,
+    pub summary: Option<String>,
+    pub content: String,
+    pub attachment: Vec<MediaAttachment>,
+    pub tag: Vec<Tag>,
+    pub url: Option<String>,
+    #[serde(flatten)]
+    pub rest: BaseObject,
 }
 
-impl Object {
-    pub fn id(&self) -> &str {
-        match self {
-            Self::Note(note) => &note.rest.id,
-            Self::Person(person) => &person.rest.id,
-        }
-    }
-
-    pub fn cc(&self) -> &[String] {
-        match self {
-            Self::Note(ref note) => note.rest.cc.as_slice(),
-            Self::Person(ref person) => person.rest.cc.as_slice(),
-        }
-    }
-
-    pub fn to(&self) -> &[String] {
-        match self {
-            Self::Note(ref note) => note.rest.to.as_slice(),
-            Self::Person(ref person) => person.rest.to.as_slice(),
-        }
-    }
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
+pub enum TagType {
+    Emoji,
+    Hashtag,
+    Mention,
 }
 
-impl Default for Object {
-    fn default() -> Self {
-        Self::Note(Note::default())
-    }
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Tag {
+    pub r#type: TagType,
+    pub name: String,
+    pub href: Option<String>,
+    pub icon: Option<MediaAttachment>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -95,6 +94,8 @@ pub struct BaseObject {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributed_to: Option<StringOrObject<Box<Actor>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub in_reply_to: Option<String>,
     #[serde(default)]
     pub sensitive: bool,
     pub published: DateTime<Utc>,
@@ -120,12 +121,13 @@ impl Default for BaseObject {
     fn default() -> Self {
         Self {
             context: ap_context(),
-            id: String::new(),
-            attributed_to: None,
-            sensitive: false,
+            id: String::default(),
+            attributed_to: Option::default(),
+            in_reply_to: Option::default(),
+            sensitive: bool::default(),
             published: Utc::now(),
-            to: Vec::new(),
-            cc: Vec::new(),
+            to: Vec::default(),
+            cc: Vec::default(),
         }
     }
 }

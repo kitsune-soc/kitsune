@@ -61,7 +61,7 @@ where
     pub async fn transform(&self, text: &'a str) -> Result<String> {
         let transformed = {
             let pairs = PostParser::parse(Rule::post, text).unwrap();
-            let elements: Vec<_> = Element::from_pairs(pairs).collect();
+            let elements: Vec<Element<'a>> = Element::from_pairs(pairs).collect();
             stream::iter(elements).then(&self.transformation)
         };
 

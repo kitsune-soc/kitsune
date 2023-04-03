@@ -15,13 +15,17 @@
             {
                 devShells.default = pkgs.mkShell {
                     buildInputs = with pkgs; [
+                        cargo-insta
+                        dhall
                         nodejs
-                        postgresql_15
+                        openssl
+                        #postgresql_15
                         protobuf
                         redis
                         rust-bin.stable.latest.default
                         sqlite
                         yarn
+                        zlib
                     ];
                 };
             }

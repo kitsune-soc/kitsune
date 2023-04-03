@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use http::{request::Parts, Method, Request, Uri};
-use pkcs8::{der::Decode, Document, SubjectPublicKeyInfo};
+use pkcs8::{der::Decode, Document, SubjectPublicKeyInfoRef};
 use ring::signature::{
     RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY,
 };
@@ -65,15 +65,15 @@ pub fn get_parts() -> Parts {
 
 /// This private key isn't related to the public key you can get from `get_public_key`
 pub fn get_private_key() -> RsaKeyPair {
-    let der = pem::parse(SOME_PRIVATE_KEY).unwrap().contents;
-    RsaKeyPair::from_der(&der).unwrap()
+    let der = pem::parse(SOME_PRIVATE_KEY).unwrap();
+    RsaKeyPair::from_der(der.contents()).unwrap()
 }
 
 pub fn get_public_key() -> UnparsedPublicKey<Vec<u8>> {
     let pem = pem::parse(PUBLIC_KEY).unwrap();
-    let pub_key = Document::from_der(&pem.contents).unwrap();
-    let pub_key: SubjectPublicKeyInfo<'_> = pub_key.decode_msg().unwrap();
-    let pub_key = pub_key.subject_public_key.to_vec();
+    let pub_key = Document::from_der(pem.contents()).unwrap();
+    let pub_key: SubjectPublicKeyInfoRef<'_> = pub_key.decode_msg().unwrap();
+    let pub_key = pub_key.subject_public_key.raw_bytes().to_vec();
 
     UnparsedPublicKey::new(&RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY, pub_key)
 }
