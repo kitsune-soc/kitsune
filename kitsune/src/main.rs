@@ -226,6 +226,8 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
+    let job_service = JobService::builder().db_conn(conn.clone()).build();
+
     let url_service = UrlService::builder()
         .scheme(config.url.scheme.as_str())
         .domain(config.url.domain.as_str())
@@ -233,6 +235,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
+        .job_service(job_service.clone())
         .url_service(url_service.clone())
         .build();
 
@@ -249,8 +252,6 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .description(config.instance.description.as_str())
         .character_limit(config.instance.character_limit)
         .build();
-
-    let job_service = JobService::builder().db_conn(conn.clone()).build();
 
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         OidcService::builder()

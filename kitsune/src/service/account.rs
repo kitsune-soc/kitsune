@@ -1,5 +1,11 @@
-use super::url::UrlService;
-use crate::error::{ApiError, Error, Result};
+use super::{
+    job::{Enqueue, JobService},
+    url::UrlService,
+};
+use crate::{
+    error::{ApiError, Error, Result},
+    job::deliver::{follow::DeliverFollow, unfollow::DeliverUnfollow},
+};
 use chrono::Utc;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
@@ -55,6 +61,7 @@ pub struct Unfollow {
 #[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     db_conn: DatabaseConnection,
+    job_service: JobService,
     url_service: UrlService,
 }
 
@@ -90,11 +97,21 @@ impl AccountService {
             follow_model.approved_at = Some(Utc::now().into());
         }
 
-        AccountsFollowers::insert(follow_model.into_active_model())
-            .exec_without_returning(&self.db_conn)
+        let follow_id = AccountsFollowers::insert(follow_model.into_active_model())
+            .exec(&self.db_conn)
             .await?;
 
-        // TODO: Federate this follow
+        if !account.local {
+            self.job_service
+                .enqueue(
+                    Enqueue::builder()
+                        .job(DeliverFollow {
+                            follow_id: follow_id.last_insert_id,
+                        })
+                        .build(),
+                )
+                .await?;
+        }
 
         Ok((account, follower))
     }
@@ -157,14 +174,24 @@ impl AccountService {
             .await?
             .ok_or(ApiError::BadRequest)?;
 
-        let exec_result = AccountsFollowers::delete_many()
+        let follow = AccountsFollowers::find()
             .filter(accounts_followers::Column::AccountId.eq(account.id))
             .filter(accounts_followers::Column::FollowerId.eq(follower.id))
-            .exec(&self.db_conn)
+            .one(&self.db_conn)
             .await?;
 
-        if exec_result.rows_affected != 0 {
-            // TODO: Federate this unfollow
+        if let Some(follow) = follow {
+            if !account.local {
+                self.job_service
+                    .enqueue(
+                        Enqueue::builder()
+                            .job(DeliverUnfollow {
+                                follow_id: follow.id,
+                            })
+                            .build(),
+                    )
+                    .await?;
+            }
         }
 
         Ok((account, follower))

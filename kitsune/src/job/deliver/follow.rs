@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 #[derive(Deserialize, Serialize)]
 pub struct DeliverFollow {
-    follow_id: Uuid,
+    pub follow_id: Uuid,
 }
 
 #[async_trait]
