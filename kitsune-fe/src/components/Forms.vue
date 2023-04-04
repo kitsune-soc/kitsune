@@ -64,13 +64,13 @@
   const instanceData = useInstanceInfo();
 
   onDone(() => {
-    // TODO: Show to user
-    console.log('Registered successfully');
+    // TODO: Use actual modal
+    alert('Registered successfully');
   });
 
   onError((err) => {
-    // TODO: Show to user
-    console.log(`Registration failed: ${err}`);
+    // TODO: Use actual modal
+    alert(`Registration failed: ${err}`);
   });
 
   const registerData = reactive({
