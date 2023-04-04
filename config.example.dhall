@@ -16,6 +16,9 @@ in    { cache =
             { name = "Kitsune"
             , description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
             , character_limit = 5000
+            , federation_filter =
+                  types.FederationFilter.Deny { domains = [] : List Text }
+                : types.FederationFilter
             , registrations_open = True
             }
           : types.Instance

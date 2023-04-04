@@ -162,6 +162,9 @@ pub enum Error {
     Oneshot(#[from] oneshot::error::RecvError),
 
     #[error(transparent)]
+    Regex(#[from] regex::Error),
+
+    #[error(transparent)]
     Rsa(#[from] rsa::errors::Error),
 
     #[error(transparent)]

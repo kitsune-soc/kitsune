@@ -21,10 +21,17 @@ pub struct DatabaseConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub enum FederationFilterConfiguration {
+    Allow { domains: Vec<String> },
+    Deny { domains: Vec<String> },
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub struct InstanceConfiguration {
     pub name: String,
     pub description: String,
     pub character_limit: usize,
+    pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
 }
 
