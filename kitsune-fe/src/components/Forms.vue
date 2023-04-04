@@ -40,9 +40,10 @@
 </template>
 
 <script setup lang="ts">
-  import { useMutation, useQuery } from '@vue/apollo-composable';
+  import { useMutation } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
+  import { useInstanceInfo } from '../graphql/instance-info';
 
   const {
     mutate: registerUser,
@@ -60,13 +61,7 @@
     }
   `);
 
-  const { result } = useQuery(gql`
-    query getInstanceInfo {
-      instance {
-        domain
-      }
-    }
-  `);
+  const instanceData = useInstanceInfo();
 
   onDone(() => {
     // TODO: Show to user
@@ -89,7 +84,7 @@
     event.preventDefault();
 
     // TODO: Actually log in and not redirect to Elk
-    window.location.href = `https://elk.zone/${result.value.instance.domain}/public/local`;
+    window.location.href = `https://elk.zone/${instanceData.value?.instance.domain}/public/local`;
   };
 
   const register = (event: Event) => {

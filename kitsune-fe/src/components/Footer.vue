@@ -1,7 +1,7 @@
 <template>
   <footer>
-    <div v-if="result" class="footer">
-      <span>Kitsune v{{ result.instance.version }}</span>
+    <div v-if="instanceData" class="footer">
+      <span>Kitsune v{{ instanceData.instance.version }}</span>
       <a target="_blank" href="https://github.com/kitsune-soc/kitsune"
         >Source code</a
       >
@@ -10,16 +10,8 @@
 </template>
 
 <script setup lang="ts">
-  import { useQuery } from '@vue/apollo-composable';
-  import gql from 'graphql-tag';
-
-  const { result } = useQuery(gql`
-    query getInstanceInfo {
-      instance {
-        version
-      }
-    }
-  `);
+  import { useInstanceInfo } from '../graphql/instance-info';
+  const instanceData = useInstanceInfo();
 </script>
 
 <style scoped lang="scss">

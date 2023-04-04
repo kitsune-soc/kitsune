@@ -15,12 +15,14 @@ impl InstanceQuery {
         let description = instance_service.description().into();
         let domain = url_service.domain().into();
         let local_post_count = instance_service.local_post_count().await?;
+        let name = instance_service.name().into();
         let user_count = instance_service.user_count().await?;
 
         Ok(Instance {
             description,
             domain,
             local_post_count,
+            name,
             user_count,
             version: env!("CARGO_PKG_VERSION"),
         })
