@@ -119,7 +119,10 @@ impl PostResolver {
 mod test {
     use super::PostResolver;
     use crate::{
-        activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService,
+        activitypub::Fetcher,
+        cache::NoopCache,
+        config::FederationFilterConfiguration,
+        service::{federation_filter::FederationFilterService, search::NoopSearchService},
         webfinger::Webfinger,
     };
     use kitsune_db::entity::prelude::Accounts;
@@ -134,6 +137,12 @@ mod test {
 
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    domains: Vec::new(),
+                })
+                .unwrap(),
+            )
             .search_service(NoopSearchService)
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))

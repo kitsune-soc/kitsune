@@ -3,6 +3,7 @@ use crate::{
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
+    service::federation_filter::FederationFilterService,
     state::Zustand,
 };
 use axum::{debug_handler, extract::State};
@@ -230,12 +231,17 @@ async fn undo_activity(state: &Zustand, author: accounts::Model, activity: Activ
     Ok(())
 }
 
-#[debug_handler]
+#[debug_handler(state = Zustand)]
 pub async fn post(
     State(state): State<Zustand>,
+    State(federation_filter): State<FederationFilterService>,
     SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {
     increment_counter!("received_activities");
+
+    if !federation_filter.is_entity_allowed(&activity)? {
+        return Ok(());
+    }
 
     match activity.r#type {
         ActivityType::Accept => accept_activity(&state, activity).await,

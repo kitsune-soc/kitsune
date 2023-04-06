@@ -1,6 +1,7 @@
 use crate::{
     consts::USER_AGENT,
     error::{Error, Result},
+    service::federation_filter::FederationFilterService,
 };
 use autometrics::autometrics;
 use base64::{engine::general_purpose, Engine};
@@ -11,13 +12,17 @@ use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
 use sha2::{Digest, Sha256};
+use typed_builder::TypedBuilder;
+use url::Url;
 
 /// Delivers ActivityPub activities
 ///
 /// Does not need to be Arc wrapped for cheap cloning. It's inherently cheap to clone.
-#[derive(Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct Deliverer {
+    #[builder(default = Client::builder().user_agent(USER_AGENT).unwrap().build())]
     client: Client,
+    federation_filter: FederationFilterService,
 }
 
 impl Deliverer {
@@ -35,6 +40,13 @@ impl Deliverer {
         user: &users::Model,
         activity: &Activity,
     ) -> Result<()> {
+        if !self
+            .federation_filter
+            .is_url_allowed(&Url::parse(inbox_url)?)?
+        {
+            return Ok(());
+        }
+
         let body = serde_json::to_string(&activity)?;
         let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
@@ -91,13 +103,5 @@ impl Deliverer {
         }
 
         Ok(())
-    }
-}
-
-impl Default for Deliverer {
-    fn default() -> Self {
-        Self {
-            client: Client::builder().user_agent(USER_AGENT).unwrap().build(),
-        }
     }
 }

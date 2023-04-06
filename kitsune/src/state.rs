@@ -2,9 +2,10 @@ use crate::{
     activitypub::Fetcher,
     event::PostEventEmitter,
     service::{
-        account::AccountService, attachment::AttachmentService, instance::InstanceService,
-        job::JobService, oauth2::Oauth2Service, oidc::OidcService, post::PostService,
-        search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
+        account::AccountService, attachment::AttachmentService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        oauth2::Oauth2Service, oidc::OidcService, post::PostService, search::SearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -29,6 +30,7 @@ impl_from_ref! {
     [
         AccountService => |input: &Zustand| input.service.account.clone(),
         AttachmentService => |input: &Zustand| input.service.attachment.clone(),
+        FederationFilterService => |input: &Zustand| input.service.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
         Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
         Option<OidcService> => |input: &Zustand| input.service.oidc.clone(),
@@ -65,6 +67,7 @@ pub struct EventEmitter {
 pub struct Service {
     pub account: AccountService,
     pub attachment: AttachmentService,
+    pub federation_filter: FederationFilterService,
     pub job: JobService,
     pub oauth2: Oauth2Service,
     pub oidc: Option<OidcService>,
