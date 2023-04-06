@@ -14,6 +14,6 @@ thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["sync"] }
 
 [dev-dependencies]
-pem = "2.0.0"
-pkcs8 = { version = "0.10.1", features = ["alloc"] }
+pem = "2.0.1"
+pkcs8 = { version = "0.10.2", features = ["alloc"] }
 tokio = { version = "1.27.0", features = ["macros", "rt"] }
