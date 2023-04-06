@@ -340,6 +340,7 @@ mod test {
         activitypub::Fetcher,
         cache::NoopCache,
         config::FederationFilterConfiguration,
+        error::{ApiError, Error},
         service::{federation_filter::FederationFilterService, search::NoopSearchService},
     };
     use kitsune_db::entity::prelude::Accounts;
@@ -407,5 +408,67 @@ mod test {
             .expect("Get author");
         assert_eq!(author.username, "0x0");
         assert_eq!(author.url, "https://corteximplant.com/users/0x0");
+    }
+
+    #[tokio::test]
+    async fn federation_allow() {
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Allow {
+                    domains: vec!["corteximplant.com".into()],
+                })
+                .unwrap(),
+            )
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
+
+        assert!(matches!(
+            fetcher.fetch_object("https://example.com/fakeobject").await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://other.badstuff.com/otherfake")
+                .await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+                .await,
+            Ok(..)
+        ));
+    }
+
+    #[tokio::test]
+    async fn federation_deny() {
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    domains: vec!["example.com".into(), "*.badstuff.com".into()],
+                })
+                .unwrap(),
+            )
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
+
+        assert!(matches!(
+            fetcher.fetch_object("https://example.com/fakeobject").await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://other.badstuff.com/otherfake")
+                .await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
     }
 }
