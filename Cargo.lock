@@ -4219,9 +4219,12 @@ dependencies = [
  "itoa",
  "percent-encoding",
  "pin-project-lite",
+ "rustls 0.21.0",
+ "rustls-native-certs",
  "ryu",
  "sha1_smol",
  "tokio",
+ "tokio-rustls 0.24.0",
  "tokio-util",
  "url",
 ]
