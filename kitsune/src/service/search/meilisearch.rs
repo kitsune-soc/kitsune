@@ -13,7 +13,7 @@ impl MeiliSearchService {
     #[allow(clippy::missing_panics_doc)]
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
         let service = Self {
-            client: Client::new(host, api_key),
+            client: Client::new(host, Some(api_key)),
         };
         let settings = Settings::new()
             .with_filterable_attributes(["created_at"])

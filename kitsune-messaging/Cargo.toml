@@ -8,7 +8,7 @@ ahash = "0.8.3"
 async-trait = "0.1.68"
 futures-util = "0.3.28"
 pin-project-lite = "0.2.9"
-redis = { version = "0.22.3", features = [
+redis = { version = "0.23.0", features = [
     "aio",
     "connection-manager",
     "tokio-comp",

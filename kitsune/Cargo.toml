@@ -23,7 +23,7 @@ async-graphql = { version = "5.0.7", default-features = false, features = [
 ] }
 async-graphql-axum = "5.0.7"
 async-recursion = "1.0.4"
-async-stream = "0.3.4"
+async-stream = "0.3.5"
 async-trait = "0.1.68"
 autometrics = { version = "0.3.2", default-features = false, features = [
     "metrics",
@@ -31,7 +31,7 @@ autometrics = { version = "0.3.2", default-features = false, features = [
 aws-credential-types = { version = "0.55.0", features = [
     "hardcoded-credentials",
 ] }
-aws-sdk-s3 = "0.25.0"
+aws-sdk-s3 = "0.25.1"
 axum = { version = "0.6.12", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.7.2", features = ["query"] }
 axum-prometheus = "0.3.2"
@@ -39,7 +39,8 @@ base64 = "0.21.0"
 bytes = "1.4.0"
 chrono = "0.4.24"
 dashmap = "5.4.0"
-deadpool-redis = "0.11.1"
+# Replace this with a crates.io release as soon as Redis v0.23 support has been merged
+deadpool-redis = { git = "https://github.com/aumetra/deadpool", rev = "2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6" }
 derive_builder = "0.12.0"
 enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
@@ -55,12 +56,12 @@ kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search-proto = { path = "../kitsune-search/proto" }
 kitsune-storage = { path = "../kitsune-storage" }
 kitsune-type = { path = "../kitsune-type" }
-meilisearch-sdk = { version = "0.22.1", optional = true }
+meilisearch-sdk = { version = "0.23.0", optional = true }
 metrics = "0.20.1"
 metrics-exporter-prometheus = "0.11.0"
 metrics-tracing-context = "0.13.0"
 metrics-util = "0.14.0"
-mimalloc = "0.1.35"
+mimalloc = "0.1.36"
 mime = "0.3.17"
 mime_guess = "2.0.4"
 once_cell = "1.17.1"
@@ -73,7 +74,7 @@ pulldown-cmark = { version = "0.9.2", default-features = false, features = [
 ] }
 rand = "0.8.5"
 rayon = "1.7.0"
-redis = "0.22.3"
+redis = "0.23.0"
 rsa = "0.8.2"
 sea-orm = { version = "0.11.2", default-features = false, features = [
     "runtime-tokio-rustls",
@@ -92,14 +93,14 @@ tempfile = "3.5.0"
 thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["full"] }
 tokio-util = { version = "0.7.7", features = ["compat"] }
-tonic = "0.9.0"
+tonic = "0.9.1"
 tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 typed-builder = "0.14.0"
 url = "2.3.1"
 utoipa = { version = "3.2.1", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "3.1.2", features = ["axum"] }
+utoipa-swagger-ui = { version = "3.1.3", features = ["axum"] }
 uuid = { version = "1.3.0", features = ["v7"] }
 zxcvbn = { version = "2.2.2", default-features = false }
 
