@@ -99,9 +99,7 @@ pub struct BaseObject {
     #[serde(default)]
     pub sensitive: bool,
     pub published: DateTime<Utc>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cc: Vec<String>,
 }
 
