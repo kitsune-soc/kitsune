@@ -150,10 +150,11 @@ async fn get_jobs(db_conn: &DatabaseConnection, num_jobs: usize) -> Result<Vec<j
 
 #[instrument(skip(state))]
 pub async fn run_dispatcher(state: Zustand, num_job_workers: usize) {
-    let deliverer = Deliverer::default();
-    let mut executor = JoinSet::new();
-    let mut execution_timeout = tokio::time::interval(EXECUTION_TIMEOUT_DURATION);
+    let deliverer = Deliverer::builder()
+        .federation_filter(state.service.federation_filter.clone())
+        .build();
 
+    let mut executor = JoinSet::new();
     let mut pause_between_queries = tokio::time::interval(PAUSE_BETWEEN_QUERIES);
     let mut do_pause = false;
 
@@ -181,11 +182,11 @@ pub async fn run_dispatcher(state: Zustand, num_job_workers: usize) {
             executor.spawn(execute_one(job, state.clone(), deliverer.clone()));
         }
 
-        loop {
-            tokio::select! {
-                None = executor.join_next() => break,
-                _ = execution_timeout.tick() => break,
-            }
+        if tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, executor.join_next())
+            .await
+            .is_err()
+        {
+            debug!("Reached timeout. Waiting for job");
         }
     }
 }

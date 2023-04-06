@@ -2,6 +2,8 @@ let Cache = ./types/cache.dhall
 
 let Database = ./types/database.dhall
 
+let FederationFilter = ./types/federation_filter.dhall
+
 let FsStorage = ./types/storage/fs.dhall
 
 let Instance = ./types/instance.dhall
@@ -42,6 +44,7 @@ let Config =
 in  { Cache
     , Config
     , Database
+    , FederationFilter
     , FsStorage
     , Instance
     , Kitsune

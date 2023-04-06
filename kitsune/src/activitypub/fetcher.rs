@@ -1,9 +1,13 @@
+use super::{handle_attachments, handle_mentions};
 use crate::{
-    cache::{ArcCache, CacheBackend, RedisCache},
+    cache::{ArcCache, CacheBackend},
     consts::USER_AGENT,
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
-    service::search::{GrpcSearchService, SearchBackend, SearchService},
+    service::{
+        federation_filter::FederationFilterService,
+        search::{SearchBackend, SearchService},
+    },
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -23,14 +27,10 @@ use sea_orm::{
     sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
 };
-use std::{sync::Arc, time::Duration};
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
 
-use super::{handle_attachments, handle_mentions};
-
-const CACHE_DURATION: Duration = Duration::from_secs(60); // 1 minute
 const MAX_FETCH_DEPTH: u32 = 100; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
 #[derive(Clone, Debug, TypedBuilder)]
@@ -69,6 +69,7 @@ pub struct Fetcher {
     )]
     client: Client,
     db_conn: DatabaseConnection,
+    federation_filter: FederationFilterService,
     #[builder(setter(into))]
     search_service: SearchService,
 
@@ -78,25 +79,6 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    #[must_use]
-    #[allow(clippy::missing_panics_doc)]
-    pub fn with_defaults(
-        db_conn: DatabaseConnection,
-        search_service: GrpcSearchService,
-        redis_conn: deadpool_redis::Pool,
-    ) -> Self {
-        Self::builder()
-            .db_conn(db_conn)
-            .search_service(search_service)
-            .post_cache(Arc::new(
-                RedisCache::new(redis_conn.clone(), "fetcher-post", CACHE_DURATION).into(),
-            ))
-            .user_cache(Arc::new(
-                RedisCache::new(redis_conn, "fetcher-user", CACHE_DURATION).into(),
-            ))
-            .build()
-    }
-
     /// Fetch an ActivityPub actor
     ///
     /// # Panics
@@ -121,6 +103,10 @@ impl Fetcher {
         }
 
         let url = Url::parse(opts.url)?;
+        if !self.federation_filter.is_url_allowed(&url)? {
+            return Err(ApiError::Unauthorised.into());
+        }
+
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
@@ -242,6 +228,10 @@ impl Fetcher {
             return Ok(None);
         }
 
+        if !self.federation_filter.is_url_allowed(&Url::parse(url)?)? {
+            return Err(ApiError::Unauthorised.into());
+        }
+
         if let Some(post) = self.post_cache.get(url).await? {
             return Ok(Some(post));
         }
@@ -346,7 +336,13 @@ impl Fetcher {
 
 #[cfg(test)]
 mod test {
-    use crate::{activitypub::Fetcher, cache::NoopCache, service::search::NoopSearchService};
+    use crate::{
+        activitypub::Fetcher,
+        cache::NoopCache,
+        config::FederationFilterConfiguration,
+        error::{ApiError, Error},
+        service::{federation_filter::FederationFilterService, search::NoopSearchService},
+    };
     use kitsune_db::entity::prelude::Accounts;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;
@@ -357,6 +353,12 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    domains: Vec::new(),
+                })
+                .unwrap(),
+            )
             .search_service(NoopSearchService)
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
@@ -378,6 +380,12 @@ mod test {
         let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    domains: Vec::new(),
+                })
+                .unwrap(),
+            )
             .search_service(NoopSearchService)
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
@@ -400,5 +408,67 @@ mod test {
             .expect("Get author");
         assert_eq!(author.username, "0x0");
         assert_eq!(author.url, "https://corteximplant.com/users/0x0");
+    }
+
+    #[tokio::test]
+    async fn federation_allow() {
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Allow {
+                    domains: vec!["corteximplant.com".into()],
+                })
+                .unwrap(),
+            )
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
+
+        assert!(matches!(
+            fetcher.fetch_object("https://example.com/fakeobject").await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://other.badstuff.com/otherfake")
+                .await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+                .await,
+            Ok(..)
+        ));
+    }
+
+    #[tokio::test]
+    async fn federation_deny() {
+        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let fetcher = Fetcher::builder()
+            .db_conn(db_conn)
+            .federation_filter(
+                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    domains: vec!["example.com".into(), "*.badstuff.com".into()],
+                })
+                .unwrap(),
+            )
+            .search_service(NoopSearchService)
+            .post_cache(Arc::new(NoopCache.into()))
+            .user_cache(Arc::new(NoopCache.into()))
+            .build();
+
+        assert!(matches!(
+            fetcher.fetch_object("https://example.com/fakeobject").await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
+        assert!(matches!(
+            fetcher
+                .fetch_object("https://other.badstuff.com/otherfake")
+                .await,
+            Err(Error::Api(ApiError::Unauthorised))
+        ));
     }
 }

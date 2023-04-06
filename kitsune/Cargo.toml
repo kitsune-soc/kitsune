@@ -44,6 +44,7 @@ deadpool-redis = { git = "https://github.com/aumetra/deadpool", rev = "2349b0f8e
 derive_builder = "0.12.0"
 enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
+globset = { version = "0.4.10", features = ["simd-accel"] }
 headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.9"

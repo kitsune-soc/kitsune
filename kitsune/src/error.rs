@@ -62,6 +62,18 @@ pub enum CacheError {
 }
 
 #[derive(Debug, Error)]
+pub enum FederationFilterError {
+    #[error(transparent)]
+    Glob(#[from] globset::Error),
+
+    #[error("Host missing from URL")]
+    HostMissing,
+
+    #[error(transparent)]
+    UrlParse(#[from] url::ParseError),
+}
+
+#[derive(Debug, Error)]
 pub enum OidcError {
     #[error(transparent)]
     ClaimsVerification(#[from] ClaimsVerificationError),
@@ -133,6 +145,9 @@ pub enum Error {
 
     #[error(transparent)]
     Event(BoxError),
+
+    #[error(transparent)]
+    FederationFilter(#[from] FederationFilterError),
 
     #[error(transparent)]
     Http(#[from] http::Error),

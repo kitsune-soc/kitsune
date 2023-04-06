@@ -17,6 +17,7 @@ use kitsune::{
     service::{
         account::AccountService,
         attachment::AttachmentService,
+        federation_filter::FederationFilterService,
         instance::InstanceService,
         job::JobService,
         oauth2::Oauth2Service,
@@ -216,9 +217,12 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
     let search_service = prepare_search(&config.search, &conn).await;
+    let federation_filter_service =
+        FederationFilterService::new(&config.instance.federation_filter).unwrap();
 
     let fetcher = Fetcher::builder()
         .db_conn(conn.clone())
+        .federation_filter(federation_filter_service.clone())
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
         .search_service(search_service.clone())
         .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
@@ -310,6 +314,7 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         mastodon_mapper,
         service: Service {
             account: account_service,
+            federation_filter: federation_filter_service,
             instance: instance_service,
             job: job_service,
             oauth2: oauth2_service,
