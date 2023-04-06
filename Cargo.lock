@@ -1522,8 +1522,7 @@ dependencies = [
 [[package]]
 name = "deadpool"
 version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "421fe0f90f2ab22016f32a9881be5134fdd71c65298917084b0c7477cbc3856e"
+source = "git+https://github.com/aumetra/deadpool?rev=2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6#2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6"
 dependencies = [
  "async-trait",
  "deadpool-runtime",
@@ -1535,18 +1534,16 @@ dependencies = [
 [[package]]
 name = "deadpool-redis"
 version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b8bde44cbfdf17ae5baa45c9f43073b320f1a19955389315629304a23909ad2"
+source = "git+https://github.com/aumetra/deadpool?rev=2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6#2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6"
 dependencies = [
  "deadpool",
- "redis 0.22.3",
+ "redis",
 ]
 
 [[package]]
 name = "deadpool-runtime"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaa37046cc0f6c3cc6090fbdbf73ef0b8ef4cfcc37f6befc0020f63e8cf121e1"
+source = "git+https://github.com/aumetra/deadpool?rev=2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6#2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6"
 dependencies = [
  "tokio",
 ]
@@ -2629,7 +2626,7 @@ dependencies = [
  "pulldown-cmark",
  "rand 0.8.5",
  "rayon",
- "redis 0.23.0",
+ "redis",
  "rsa",
  "sea-orm",
  "serde",
@@ -2725,7 +2722,7 @@ dependencies = [
  "async-trait",
  "futures-util",
  "pin-project-lite",
- "redis 0.23.0",
+ "redis",
  "serde",
  "serde_json",
  "tokio",
@@ -4204,25 +4201,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "678054eb77286b51581ba43620cc911abf02758c91f93f479767aed0f90458b2"
 dependencies = [
  "rand_core 0.3.1",
-]
-
-[[package]]
-name = "redis"
-version = "0.22.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa8455fa3621f6b41c514946de66ea0531f57ca017b2e6c7cc368035ea5b46df"
-dependencies = [
- "async-trait",
- "bytes",
- "combine",
- "futures-util",
- "itoa",
- "percent-encoding",
- "pin-project-lite",
- "ryu",
- "tokio",
- "tokio-util",
- "url",
 ]
 
 [[package]]
