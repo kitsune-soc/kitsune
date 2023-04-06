@@ -15,7 +15,7 @@ pub mod object;
 pub use self::helper::Privacy;
 
 pub fn ap_context() -> Value {
-    json!("https://www.w3.org/ns/activitystreams")
+    json!(["https://www.w3.org/ns/activitystreams"])
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
