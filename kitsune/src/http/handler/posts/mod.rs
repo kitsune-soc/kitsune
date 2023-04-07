@@ -3,12 +3,13 @@ use crate::{
     http::{
         cond,
         page::{PostComponent, PostPage},
+        responder::ActivityPubJson,
     },
     mapping::IntoObject,
     service::post::PostService,
     state::Zustand,
 };
-use axum::{debug_handler, extract::Path, extract::State, routing, Json, Router};
+use axum::{debug_handler, extract::Path, extract::State, routing, Router};
 use futures_util::TryStreamExt;
 use kitsune_type::ap::Object;
 use std::collections::VecDeque;
@@ -58,10 +59,10 @@ async fn get(
     State(state): State<Zustand>,
     State(post): State<PostService>,
     Path(id): Path<Uuid>,
-) -> Result<Json<Object>> {
+) -> Result<ActivityPubJson<Object>> {
     let post = post.get_by_id(id, None).await?.ok_or(ApiError::NotFound)?;
 
-    Ok(Json(post.into_object(&state).await?))
+    Ok(ActivityPubJson(post.into_object(&state).await?))
 }
 
 pub fn routes() -> Router<Zustand> {

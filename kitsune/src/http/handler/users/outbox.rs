@@ -1,5 +1,6 @@
 use crate::{
     error::{ApiError, Error, Result},
+    http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
     state::Zustand,
@@ -7,7 +8,6 @@ use crate::{
 use axum::{
     extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
-    Json,
 };
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
@@ -86,7 +86,7 @@ pub async fn get(
             .try_collect()
             .await?;
 
-        Ok(Json(CollectionPage {
+        Ok(ActivityPubJson(CollectionPage {
             context: ap_context(),
             r#type: PageType::OrderedCollectionPage,
             id,
@@ -106,7 +106,7 @@ pub async fn get(
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
 
-        Ok(Json(Collection {
+        Ok(ActivityPubJson(Collection {
             context: ap_context(),
             id: base_url,
             r#type: CollectionType::OrderedCollection,
