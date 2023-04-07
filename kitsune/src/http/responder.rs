@@ -12,7 +12,10 @@ where
 {
     fn into_response(self) -> Response {
         (
-            [("Content-Type", "application/activity+json")],
+            [(
+                "Content-Type",
+                "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
+            )],
             Json(self.0),
         )
             .into_response()
