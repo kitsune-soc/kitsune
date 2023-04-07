@@ -15,7 +15,21 @@ pub mod object;
 pub use self::helper::Privacy;
 
 pub fn ap_context() -> Value {
-    json!(["https://www.w3.org/ns/activitystreams"])
+    json!([
+        "https://www.w3.org/ns/activitystreams",
+        "https://w3id.org/security/v1",
+        {
+            "Hashtag": "as:Hashtag",
+            "sensitive": "as:sensitive",
+            "schema": "http://schema.org/",
+            "toot": "http://joinmastodon.org/ns#",
+            "Emoji": "toot:Emoji",
+            "PropertyValue": "schema:PropertyValue",
+            "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+            "value": "schema:value",
+            "quoteUrl": "as:quoteUrl",
+        },
+    ])
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
