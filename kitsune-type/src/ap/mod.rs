@@ -51,6 +51,7 @@ pub enum ActivityType {
 #[serde(rename_all = "camelCase")]
 pub struct Activity {
     pub r#type: ActivityType,
+    pub actor: String,
     pub object: StringOrObject<Object>,
     #[serde(flatten)]
     pub rest: BaseObject,
