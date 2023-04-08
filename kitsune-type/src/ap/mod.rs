@@ -113,6 +113,7 @@ pub struct BaseObject {
     pub in_reply_to: Option<String>,
     #[serde(default)]
     pub sensitive: bool,
+    #[serde(default)]
     pub published: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,

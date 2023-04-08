@@ -1,7 +1,10 @@
 use axum::handler::Handler;
 use futures_util::{future::Either, FutureExt};
 use http::{header::ACCEPT, Request};
-use mime::TEXT_HTML;
+use mime::APPLICATION_JSON;
+
+const APPLICATION_ACTIVITY_JSON: &str = "application/activity+json";
+const APPLICATION_LD_JSON: &str = "application/ld+json";
 
 /// Conditional wrapper around two handlers
 ///
@@ -51,10 +54,14 @@ pub fn html<B, L, R>(
             .and_then(|header| {
                 header
                     .to_str()
-                    .map(|value| value.contains(TEXT_HTML.as_ref()))
+                    .map(|value| {
+                        !(value.contains(APPLICATION_JSON.as_ref())
+                            || value.contains(APPLICATION_ACTIVITY_JSON)
+                            || value.contains(APPLICATION_LD_JSON))
+                    })
                     .ok()
             })
-            .unwrap_or(false)
+            .unwrap_or(true)
     };
 
     ConditionalWrapper::new(cond, left, right)
