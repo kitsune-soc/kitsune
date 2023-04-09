@@ -29,7 +29,7 @@ pub enum ActorType {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
-    #[serde(rename = "@context")]
+    #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
     pub r#type: ActorType,

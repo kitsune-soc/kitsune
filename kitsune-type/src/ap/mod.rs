@@ -93,7 +93,7 @@ impl ObjectField {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Activity {
-    #[serde(rename = "@context")]
+    #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
     pub r#type: ActivityType,

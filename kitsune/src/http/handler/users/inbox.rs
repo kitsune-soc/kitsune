@@ -198,34 +198,28 @@ async fn reject_activity(
     author: accounts::Model,
     activity: Activity,
 ) -> Result<()> {
-    AccountsFollowers::delete(accounts_followers::ActiveModel {
-        account_id: ActiveValue::Set(author.id),
-        url: ActiveValue::Set(activity.object().into()),
-        ..Default::default()
-    })
-    .exec(&state.db_conn)
-    .await?;
+    AccountsFollowers::delete_many()
+        .filter(accounts_followers::Column::AccountId.eq(author.id))
+        .filter(accounts_followers::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
 
     Ok(())
 }
 
 async fn undo_activity(state: &Zustand, author: accounts::Model, activity: Activity) -> Result<()> {
     // An undo activity can apply for likes and follows
-    Favourites::delete(favourites::ActiveModel {
-        account_id: ActiveValue::Set(author.id),
-        url: ActiveValue::Set(activity.object().into()),
-        ..Default::default()
-    })
-    .exec(&state.db_conn)
-    .await?;
+    Favourites::delete_many()
+        .filter(favourites::Column::AccountId.eq(author.id))
+        .filter(favourites::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
 
-    AccountsFollowers::delete(accounts_followers::ActiveModel {
-        account_id: ActiveValue::Set(author.id),
-        url: ActiveValue::Set(activity.object().into()),
-        ..Default::default()
-    })
-    .exec(&state.db_conn)
-    .await?;
+    AccountsFollowers::delete_many()
+        .filter(accounts_followers::Column::FollowerId.eq(author.id))
+        .filter(accounts_followers::Column::Url.eq(activity.object()))
+        .exec(&state.db_conn)
+        .await?;
 
     Ok(())
 }
