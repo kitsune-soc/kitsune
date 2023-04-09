@@ -72,7 +72,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
 
 #[cfg(feature = "meilisearch")]
-use kitsune::service::search::MeiliSearchService;
+use self::service::search::MeiliSearchService;
 
 fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
 where
