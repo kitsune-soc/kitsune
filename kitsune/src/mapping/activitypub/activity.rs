@@ -27,7 +27,7 @@ pub trait IntoActivity {
 #[async_trait]
 impl IntoActivity for favourites::Model {
     type Output = Activity;
-    type NegateOutput = Activity;
+    type NegateOutput = Activity<Activity>;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let account_url = self
@@ -106,7 +106,7 @@ impl IntoActivity for favourites::Model {
                 to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
                 cc: vec![],
             },
-            object: StringOrObject::String(self.url),
+            object: StringOrObject::Object(self.into_activity(state).await?),
         })
     }
 }
@@ -114,7 +114,7 @@ impl IntoActivity for favourites::Model {
 #[async_trait]
 impl IntoActivity for accounts_followers::Model {
     type Output = Activity;
-    type NegateOutput = Activity;
+    type NegateOutput = Activity<Activity>;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let attributed_to = Accounts::find_by_id(self.follower_id)
@@ -180,7 +180,7 @@ impl IntoActivity for accounts_followers::Model {
                 to: vec![followed],
                 cc: vec![],
             },
-            object: StringOrObject::String(self.url),
+            object: StringOrObject::Object(self.into_activity(state).await?),
         })
     }
 }
@@ -262,10 +262,10 @@ impl IntoActivity for posts::Model {
                 attributed_to: None,
                 in_reply_to: None,
                 published: Utc::now(),
-                to: object.rest.to,
-                cc: object.rest.cc,
+                to: object.rest.to.clone(),
+                cc: object.rest.cc.clone(),
             },
-            object: StringOrObject::String(object.rest.id),
+            object: StringOrObject::Object(object),
         })
     }
 }

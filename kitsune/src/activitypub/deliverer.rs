@@ -12,6 +12,7 @@ use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::SecretDocument;
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -34,13 +35,16 @@ impl Deliverer {
     /// - Panics in case the inbox URL isn't actually a valid URL
     #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.rest.id))]
     #[autometrics(track_concurrency)]
-    pub async fn deliver(
+    pub async fn deliver<T>(
         &self,
         inbox_url: &str,
         account: &accounts::Model,
         user: &users::Model,
-        activity: &Activity,
-    ) -> Result<()> {
+        activity: &Activity<T>,
+    ) -> Result<()>
+    where
+        T: Serialize,
+    {
         if !self
             .federation_filter
             .is_url_allowed(&Url::parse(inbox_url)?)?
@@ -67,6 +71,7 @@ impl Deliverer {
             .unwrap();
 
         let response = self.client.execute_signed(request, private_key).await?;
+        debug!(status_code = %response.status(), "successfully executed http request");
         if !response.status().is_success() {
             let status_code = response.status();
             let body = response.text().await?;

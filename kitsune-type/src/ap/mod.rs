@@ -49,10 +49,10 @@ pub enum ActivityType {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Activity {
+pub struct Activity<T = Object> {
     pub r#type: ActivityType,
     pub actor: String,
-    pub object: StringOrObject<Object>,
+    pub object: StringOrObject<T>,
     #[serde(flatten)]
     pub rest: BaseObject,
 }
