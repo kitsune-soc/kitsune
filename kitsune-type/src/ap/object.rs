@@ -1,16 +1,16 @@
-use super::BaseObject;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
     Audio,
-    #[default]
     Document,
     Image,
     Video,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaAttachment {
     pub r#type: MediaAttachmentType,
@@ -20,24 +20,24 @@ pub struct MediaAttachment {
     pub url: String,
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ActorType {
     Group,
-    #[default]
     Person,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
+    #[serde(rename = "@context")]
+    pub context: Value,
+    pub id: String,
     pub r#type: ActorType,
     pub name: Option<String>,
     pub preferred_username: String,
     pub subject: Option<String>,
     pub icon: Option<MediaAttachment>,
     pub image: Option<MediaAttachment>,
-    #[serde(flatten)]
-    pub rest: BaseObject,
     #[serde(default)]
     pub manually_approves_followers: bool,
     pub public_key: PublicKey,
@@ -45,9 +45,10 @@ pub struct Actor {
     pub outbox: String,
     pub followers: String,
     pub following: String,
+    pub published: DateTime<Utc>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKey {
     pub id: String,

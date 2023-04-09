@@ -41,11 +41,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
             }
         };
-        let ap_id = activity
-            .rest
-            .attributed_to()
-            .ok_or_else(|| StatusCode::BAD_REQUEST.into_response())?;
 
+        let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
         if !verify_signature(&parts, &remote_user).await? {
             // Refetch the user and try again

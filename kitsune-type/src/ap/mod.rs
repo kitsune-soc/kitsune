@@ -32,11 +32,10 @@ pub fn ap_context() -> Value {
     ])
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum ActivityType {
     Accept,
     Announce,
-    #[default]
     Create,
     Block,
     Delete,
@@ -47,21 +46,80 @@ pub enum ActivityType {
     Update,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum ObjectField {
+    Activity(Box<Activity>),
+    Actor(Actor),
+    Object(Object),
+    Url(String),
+}
+
+impl ObjectField {
+    pub fn id(&self) -> &str {
+        match self {
+            Self::Activity(ref activity) => &activity.id,
+            Self::Actor(ref actor) => &actor.id,
+            Self::Object(ref object) => &object.id,
+            Self::Url(ref url) => url,
+        }
+    }
+
+    pub fn into_activity(self) -> Option<Box<Activity>> {
+        if let Self::Activity(activity) = self {
+            Some(activity)
+        } else {
+            None
+        }
+    }
+
+    pub fn into_actor(self) -> Option<Actor> {
+        if let Self::Actor(actor) = self {
+            Some(actor)
+        } else {
+            None
+        }
+    }
+
+    pub fn into_object(self) -> Option<Object> {
+        if let Self::Object(object) = self {
+            Some(object)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Activity<T = Object> {
+pub struct Activity {
+    #[serde(rename = "@context")]
+    pub context: Value,
+    pub id: String,
     pub r#type: ActivityType,
-    pub actor: String,
-    pub object: StringOrObject<T>,
-    #[serde(flatten)]
-    pub rest: BaseObject,
+    pub actor: StringOrObject<Actor>,
+    pub object: ObjectField,
+    #[serde(default)]
+    pub published: DateTime<Utc>,
+    #[serde(default)]
+    pub to: Vec<String>,
+    #[serde(default)]
+    pub cc: Vec<String>,
 }
 
 impl Activity {
+    pub fn actor(&self) -> &str {
+        match self.actor {
+            StringOrObject::Object(ref obj) => &obj.id,
+            StringOrObject::String(ref url) => url,
+        }
+    }
+
     pub fn object(&self) -> &str {
         match self.object {
-            StringOrObject::Object(ref obj) => &obj.rest.id,
-            StringOrObject::String(ref obj) => obj,
+            ObjectField::Activity(ref activity) => activity.id.as_str(),
+            ObjectField::Actor(ref actor) => actor.id.as_str(),
+            ObjectField::Object(ref object) => object.id.as_str(),
+            ObjectField::Url(ref url) => url,
         }
     }
 }
@@ -76,14 +134,32 @@ pub enum ObjectType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Object {
+    #[serde(rename = "@context")]
+    pub context: Value,
+    pub id: String,
     pub r#type: ObjectType,
+    pub attributed_to: StringOrObject<Actor>,
+    pub in_reply_to: Option<String>,
     pub summary: Option<String>,
     pub content: String,
     pub attachment: Vec<MediaAttachment>,
     pub tag: Vec<Tag>,
-    pub url: Option<String>,
-    #[serde(flatten)]
-    pub rest: BaseObject,
+    #[serde(default)]
+    pub sensitive: bool,
+    pub published: DateTime<Utc>,
+    #[serde(default)]
+    pub to: Vec<String>,
+    #[serde(default)]
+    pub cc: Vec<String>,
+}
+
+impl Object {
+    pub fn attributed_to(&self) -> &str {
+        match self.attributed_to {
+            StringOrObject::Object(ref actor) => &actor.id,
+            StringOrObject::String(ref id) => id,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -99,51 +175,4 @@ pub struct Tag {
     pub name: String,
     pub href: Option<String>,
     pub icon: Option<MediaAttachment>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BaseObject {
-    #[serde(rename = "@context")]
-    pub context: Value,
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub attributed_to: Option<StringOrObject<Box<Actor>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub in_reply_to: Option<String>,
-    #[serde(default)]
-    pub sensitive: bool,
-    #[serde(default)]
-    pub published: DateTime<Utc>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub to: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub cc: Vec<String>,
-}
-
-impl BaseObject {
-    pub fn attributed_to(&self) -> Option<&str> {
-        self.attributed_to.as_ref().map(|prop| {
-            match prop {
-                StringOrObject::Object(actor) => &actor.rest.id,
-                StringOrObject::String(id) => id,
-            }
-            .as_str()
-        })
-    }
-}
-
-impl Default for BaseObject {
-    fn default() -> Self {
-        Self {
-            context: ap_context(),
-            id: String::default(),
-            attributed_to: Option::default(),
-            in_reply_to: Option::default(),
-            sensitive: bool::default(),
-            published: Utc::now(),
-            to: Vec::default(),
-            cc: Vec::default(),
-        }
-    }
 }

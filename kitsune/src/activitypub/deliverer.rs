@@ -12,7 +12,6 @@ use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::SecretDocument;
-use serde::Serialize;
 use sha2::{Digest, Sha256};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -33,18 +32,15 @@ impl Deliverer {
     /// # Panics
     ///
     /// - Panics in case the inbox URL isn't actually a valid URL
-    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.rest.id))]
+    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
     #[autometrics(track_concurrency)]
-    pub async fn deliver<T>(
+    pub async fn deliver(
         &self,
         inbox_url: &str,
         account: &accounts::Model,
         user: &users::Model,
-        activity: &Activity<T>,
-    ) -> Result<()>
-    where
-        T: Serialize,
-    {
+        activity: &Activity,
+    ) -> Result<()> {
         if !self
             .federation_filter
             .is_url_allowed(&Url::parse(inbox_url)?)?

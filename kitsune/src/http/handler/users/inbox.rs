@@ -49,7 +49,6 @@ async fn create_activity(
     if let Some(object) = activity.object.into_object() {
         let in_reply_to_id = OptionFuture::from(
             object
-                .rest
                 .in_reply_to
                 .as_ref()
                 .map(|post_url| state.fetcher.fetch_object(post_url)),
@@ -70,11 +69,11 @@ async fn create_activity(
                             reposted_post_id: None,
                             subject: object.summary,
                             content: object.content,
-                            is_sensitive: object.rest.sensitive,
+                            is_sensitive: object.sensitive,
                             visibility,
                             is_local: false,
-                            url: object.rest.id,
-                            created_at: object.rest.published.into(),
+                            url: object.id,
+                            created_at: object.published.into(),
                             updated_at: Utc::now().into(),
                         }
                         .into_active_model(),
@@ -151,8 +150,8 @@ async fn follow_activity(
             account_id: followed_user.id,
             follower_id: author.id,
             approved_at: None,
-            url: activity.rest.id,
-            created_at: activity.rest.published.into(),
+            url: activity.id,
+            created_at: activity.published.into(),
             updated_at: Utc::now().into(),
         }
         .into_active_model(),
@@ -183,7 +182,7 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
             id: Uuid::now_v7(),
             account_id: author.id,
             post_id: post.id,
-            url: activity.rest.id,
+            url: activity.id,
             created_at: Utc::now().into(),
         }
         .into_active_model(),

@@ -17,7 +17,7 @@ use kitsune_type::ap::{
     ap_context,
     helper::StringOrObject,
     object::{Actor, ActorType, MediaAttachment, MediaAttachmentType, PublicKey},
-    BaseObject, Object, ObjectType, Tag, TagType,
+    Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
 use sea_orm::{prelude::*, QuerySelect};
@@ -120,22 +120,19 @@ impl IntoObject for posts::Model {
         }
 
         Ok(Object {
+            context: ap_context(),
+            id: self.url,
             r#type: ObjectType::Note,
+            attributed_to: StringOrObject::String(account.url),
+            in_reply_to,
+            sensitive: self.is_sensitive,
             summary: self.subject,
             content: self.content,
             attachment,
             tag,
-            url: Some(self.url.clone()),
-            rest: BaseObject {
-                context: ap_context(),
-                id: self.url,
-                attributed_to: Some(StringOrObject::String(account.url)),
-                in_reply_to,
-                sensitive: self.is_sensitive,
-                published: self.created_at.into(),
-                to,
-                cc,
-            },
+            published: self.created_at.into(),
+            to,
+            cc,
         })
     }
 }
@@ -170,6 +167,8 @@ impl IntoObject for accounts::Model {
         let following_url = format!("{}/following", self.url);
 
         Ok(Actor {
+            context: ap_context(),
+            id: self.url.clone(),
             r#type: ActorType::Person,
             name: self.display_name,
             subject: self.note,
@@ -181,16 +180,12 @@ impl IntoObject for accounts::Model {
             outbox: outbox_url,
             followers: self.followers_url,
             following: following_url,
-            rest: BaseObject {
-                id: self.url.clone(),
-                published: self.created_at.into(),
-                ..Default::default()
-            },
             public_key: PublicKey {
                 id: public_key_id,
                 owner: self.url,
                 public_key_pem: self.public_key,
             },
+            published: self.created_at.into(),
         })
     }
 }
