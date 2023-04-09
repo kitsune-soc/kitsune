@@ -90,6 +90,7 @@ struct CommonApiDocs;
     modifiers(&SecurityAddon),
     paths(
         mastodon::api::v1::accounts::get,
+        mastodon::api::v1::accounts::lookup::get,
         mastodon::api::v1::accounts::relationships::get,
         mastodon::api::v1::accounts::statuses::get,
         mastodon::api::v1::accounts::verify_credentials::get,

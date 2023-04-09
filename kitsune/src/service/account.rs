@@ -3,8 +3,10 @@ use super::{
     url::UrlService,
 };
 use crate::{
+    activitypub::Fetcher,
     error::{ApiError, Error, Result},
     job::deliver::{follow::DeliverFollow, unfollow::DeliverUnfollow},
+    webfinger::Webfinger,
 };
 use chrono::Utc;
 use futures_util::{Stream, TryStreamExt};
@@ -25,6 +27,21 @@ use uuid::Uuid;
 pub struct Follow {
     account_id: Uuid,
     follower_id: Uuid,
+}
+
+#[derive(Clone, TypedBuilder)]
+pub struct GetUser<'a> {
+    username: &'a str,
+    #[builder(default)]
+    domain: Option<&'a str>,
+    #[builder(default = true)]
+    use_webfinger: bool,
+}
+
+impl<'a> From<&'a str> for GetUser<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::builder().username(value).build()
+    }
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -61,8 +78,10 @@ pub struct Unfollow {
 #[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     db_conn: DatabaseConnection,
+    fetcher: Fetcher,
     job_service: JobService,
     url_service: UrlService,
+    webfinger: Webfinger,
 }
 
 impl AccountService {
@@ -116,14 +135,40 @@ impl AccountService {
         Ok((account, follower))
     }
 
-    /// Get a local account by its username
-    pub async fn get_local_by_username(&self, username: &str) -> Result<Option<accounts::Model>> {
-        Accounts::find()
-            .filter(accounts::Column::Username.eq(username))
-            .filter(accounts::Column::Local.eq(true))
-            .one(&self.db_conn)
-            .await
-            .map_err(Error::from)
+    /// Get an account by its username and domain
+    pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<accounts::Model>> {
+        if let Some(domain) = get_user.domain {
+            if let Some(account) = Accounts::find()
+                .filter(accounts::Column::Username.eq(get_user.username))
+                .filter(accounts::Column::Domain.eq(domain))
+                .one(&self.db_conn)
+                .await?
+            {
+                return Ok(Some(account));
+            } else if !get_user.use_webfinger {
+                return Ok(None);
+            }
+
+            let Some(actor_url) = self.webfinger.fetch_actor_url(get_user.username, domain).await? else {
+                return Ok(None)
+            };
+
+            self.fetcher
+                .fetch_actor(actor_url.as_str().into())
+                .await
+                .map(Some)
+                .map_err(Error::from)
+        } else {
+            Accounts::find()
+                .filter(
+                    accounts::Column::Username
+                        .eq(get_user.username)
+                        .and(accounts::Column::Local.eq(true)),
+                )
+                .one(&self.db_conn)
+                .await
+                .map_err(Error::from)
+        }
     }
 
     /// Get a stream of posts owned by the user
