@@ -132,7 +132,7 @@ pub enum ObjectType {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Object {
-    #[serde(rename = "@context")]
+    #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
     pub r#type: ObjectType,
