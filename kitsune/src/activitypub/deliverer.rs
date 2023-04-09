@@ -56,7 +56,7 @@ impl Deliverer {
             .method(Method::POST)
             .uri(inbox_url)
             .header("Digest", &digest_header)
-            .body(body.clone().into())?;
+            .body(body.into())?;
 
         let key_id = format!("{}#main-key", account.url);
         let (_tag, pkcs8_document) = SecretDocument::from_pem(&user.private_key)?;

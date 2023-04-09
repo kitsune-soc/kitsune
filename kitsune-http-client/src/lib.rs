@@ -5,13 +5,13 @@
 #![allow(forbidden_lint_groups)]
 
 use self::util::BoxCloneService;
-use chrono::Utc;
 use futures_core::Stream;
+use headers::{Date, HeaderMapExt};
 use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, DATE, HOST, USER_AGENT},
+    header::{HeaderName, HOST, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -25,7 +25,7 @@ use std::{
     fmt,
     pin::Pin,
     task::{self, Poll},
-    time::Duration,
+    time::{Duration, SystemTime},
 };
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
@@ -226,14 +226,11 @@ impl Client {
         req.headers_mut()
             .extend(self.default_headers.clone().into_iter());
 
-        let http_date_time = Utc::now().to_rfc2822().replace("+0000", "GMT");
-        req.headers_mut().insert(
-            DATE,
-            HeaderValue::from_str(http_date_time.as_str()).unwrap(),
-        );
+        req.headers_mut()
+            .typed_insert(Date::from(SystemTime::now()));
 
-        if let Some(authority) = req.uri().authority() {
-            let value = HeaderValue::from_str(authority.as_str()).unwrap();
+        if let Some(host) = req.uri().host() {
+            let value = HeaderValue::from_str(host).unwrap();
             req.headers_mut().insert(HOST, value);
         }
 
@@ -276,6 +273,7 @@ impl Client {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
         let (name, value) = HttpSigner::builder()
+            .include_creation_timestamp(true)
             .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds
             .build()
             .unwrap()
