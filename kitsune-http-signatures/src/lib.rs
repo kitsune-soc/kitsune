@@ -172,11 +172,16 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 
                         format!("(expires): {timestamp}")
                     }
-                    SignatureComponent::RequestTarget => format!(
-                        "(request-target): {} {}",
-                        value.parts.method.as_str().to_lowercase(),
-                        value.parts.uri
-                    ),
+                    SignatureComponent::RequestTarget => {
+                        let uri = &value.parts.uri;
+                        format!(
+                            "(request-target): {} {}",
+                            value.parts.method.as_str().to_lowercase(),
+                            uri.path_and_query()
+                                .map(|path| path.as_str())
+                                .unwrap_or_else(|| uri.path())
+                        )
+                    }
                     SignatureComponent::Header(header_name) => {
                         let header_value = value
                             .parts

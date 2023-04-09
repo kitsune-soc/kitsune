@@ -55,7 +55,7 @@ impl Deliverer {
         let request = Request::builder()
             .method(Method::POST)
             .uri(inbox_url)
-            .header("Digest", &digest_header)
+            .header("Digest", digest_header)
             .body(body.into())?;
 
         let key_id = format!("{}#main-key", account.url);
