@@ -53,6 +53,10 @@ pub enum ObjectField {
     Actor(Actor),
     Object(Object),
     Url(String),
+    // We really just need the ID from a tombstone object.
+    // These are used by, for example, Mastodon in the object field of `Delete` activities.
+    // So we just hack this in as the last possible case.
+    Tombstone { id: String },
 }
 
 impl ObjectField {
@@ -62,6 +66,7 @@ impl ObjectField {
             Self::Actor(ref actor) => &actor.id,
             Self::Object(ref object) => &object.id,
             Self::Url(ref url) => url,
+            Self::Tombstone { ref id } => id,
         }
     }
 
@@ -117,6 +122,7 @@ impl Activity {
             ObjectField::Actor(ref actor) => actor.id.as_str(),
             ObjectField::Object(ref object) => object.id.as_str(),
             ObjectField::Url(ref url) => url,
+            ObjectField::Tombstone { ref id } => id,
         }
     }
 }
