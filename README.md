@@ -13,6 +13,24 @@ Kitsune itself is pretty lightweight and should run even on a Raspberry Pi (even
 This software is far from production-ready. Breaking changes (even to, for example, existing database migrations (yes, we know it's bad)) might happen. 
 So, as long as this disclaimer is here, make sure to double check all the changes before you update your installation.
 
+## State of federation
+
+We successfully federated with Mastodon on the following functionality:
+
+- Webfinger
+- Actors
+- Posts
+    - Create
+    - Delete
+    - Replies
+    - Content Warnings
+    - Media attachments
+- Likes
+    - Added
+    - Removed
+
+(last updated: 09.04.2023)
+
 ## Contributing
 
 Contributions are very welcome. However, if you intend to change anything more than updating a dependency or fixing a small bug, please open an issue first. 
