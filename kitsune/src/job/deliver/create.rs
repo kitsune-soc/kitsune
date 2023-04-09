@@ -7,7 +7,7 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::entity::prelude::{Accounts, Posts, Users};
-use sea_orm::{EntityTrait, ModelTrait};
+use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,19 +20,20 @@ pub struct DeliverCreate {
 impl Runnable for DeliverCreate {
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some((post, Some(account))) = Posts::find_by_id(self.post_id)
-            .find_also_related(Accounts)
+        let Some(post) = Posts::find_by_id(self.post_id)
             .one(&ctx.state.db_conn)
             .await?
         else {
             return Ok(());
         };
 
-        let user = account
-            .find_related(Users)
+        let (account, user) = Accounts::find_by_id(post.account_id)
+            .find_also_related(Users)
             .one(&ctx.state.db_conn)
             .await?
-            .expect("[Bug] Trying to deliver activity for account with no associated user");
+            .expect("[Bug] Post without associated author account");
+        let user =
+            user.expect("[Bug] Trying to deliver activity for account without associated user");
 
         let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
         let inbox_stream = inbox_resolver
