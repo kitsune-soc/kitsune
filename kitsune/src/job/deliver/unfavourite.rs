@@ -8,7 +8,7 @@ use kitsune_db::{
     column::InboxUrlQuery,
     entity::{
         accounts,
-        prelude::{Accounts, Favourites, Users},
+        prelude::{Accounts, PostsFavourites, Users},
     },
     link::FavouritedPostAuthor,
 };
@@ -25,7 +25,7 @@ pub struct DeliverUnfavourite {
 impl Runnable for DeliverUnfavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some(favourite) = Favourites::find_by_id(self.favourite_id)
+        let Some(favourite) = PostsFavourites::find_by_id(self.favourite_id)
             .one(&ctx.state.db_conn)
             .await?
         else {
@@ -58,7 +58,7 @@ impl Runnable for DeliverUnfavourite {
             .deliver(&inbox_url, &account, &user, &activity)
             .await?;
 
-        Favourites::delete_by_id(favourite_id)
+        PostsFavourites::delete_by_id(favourite_id)
             .exec(&ctx.state.db_conn)
             .await?;
 

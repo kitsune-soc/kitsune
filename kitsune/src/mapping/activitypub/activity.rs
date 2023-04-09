@@ -5,7 +5,7 @@ use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
     entity::{
-        accounts, accounts_followers, favourites, posts,
+        accounts, accounts_followers, posts, posts_favourites,
         prelude::{Accounts, Posts},
     },
 };
@@ -22,7 +22,7 @@ pub trait IntoActivity {
 }
 
 #[async_trait]
-impl IntoActivity for favourites::Model {
+impl IntoActivity for posts_favourites::Model {
     type Output = Activity;
     type NegateOutput = Activity;
 

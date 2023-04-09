@@ -10,7 +10,7 @@ Kitsune itself is pretty lightweight and should run even on a Raspberry Pi (even
 
 ## ⚠ Disclaimer
 
-This software is far from production-ready. Breaking changes (even to, for example, existing database migrations (yes, we know it's bad)) might happen. 
+This software is far from production-ready. Breaking changes might happen. 
 So, as long as this disclaimer is here, make sure to double check all the changes before you update your installation.
 
 ## State of federation

@@ -21,9 +21,10 @@ use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     custom::{Role, Visibility},
     entity::{
-        favourites, media_attachments, posts, posts_media_attachments, posts_mentions,
+        media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
         prelude::{
-            Favourites, MediaAttachments, Posts, PostsMediaAttachments, PostsMentions, UsersRoles,
+            MediaAttachments, Posts, PostsFavourites, PostsMediaAttachments, PostsMentions,
+            UsersRoles,
         },
         users_roles,
     },
@@ -355,7 +356,7 @@ impl PostService {
 
         let id = Uuid::now_v7();
         let url = self.url_service.favourite_url(id);
-        let favourite = favourites::Model {
+        let favourite = posts_favourites::Model {
             id,
             account_id: favouriting_account_id,
             post_id: post.id,
@@ -397,8 +398,8 @@ impl PostService {
         };
 
         if let Some(favourite) = post
-            .find_related(Favourites)
-            .filter(favourites::Column::AccountId.eq(favouriting_account_id))
+            .find_related(PostsFavourites)
+            .filter(posts_favourites::Column::AccountId.eq(favouriting_account_id))
             .one(&self.db_conn)
             .await?
         {

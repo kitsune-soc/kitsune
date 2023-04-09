@@ -34,8 +34,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::favourites::Entity")]
-    Favourites,
     #[sea_orm(
         belongs_to = "super::media_attachments::Entity",
         from = "Column::AvatarId",
@@ -54,13 +52,15 @@ pub enum Relation {
     MediaAttachments1,
     #[sea_orm(has_many = "super::posts::Entity")]
     Posts,
+    #[sea_orm(has_many = "super::posts_favourites::Entity")]
+    PostsFavourites,
     #[sea_orm(has_one = "super::users::Entity")]
     Users,
 }
 
-impl Related<super::favourites::Entity> for Entity {
+impl Related<super::posts_favourites::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Favourites.def()
+        Relation::PostsFavourites.def()
     }
 }
 

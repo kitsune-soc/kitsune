@@ -2,7 +2,7 @@ use crate::m20220101_000001_create_table::{Accounts, Posts};
 use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
-pub enum Favourites {
+pub enum PostsFavourites {
     Table,
     Id,
     AccountId,
@@ -21,37 +21,37 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .if_not_exists()
-                    .table(Favourites::Table)
-                    .col(ColumnDef::new(Favourites::Id).uuid().primary_key())
-                    .col(ColumnDef::new(Favourites::AccountId).uuid().not_null())
-                    .col(ColumnDef::new(Favourites::PostId).uuid().not_null())
+                    .table(PostsFavourites::Table)
+                    .col(ColumnDef::new(PostsFavourites::Id).uuid().primary_key())
+                    .col(ColumnDef::new(PostsFavourites::AccountId).uuid().not_null())
+                    .col(ColumnDef::new(PostsFavourites::PostId).uuid().not_null())
                     .col(
-                        ColumnDef::new(Favourites::Url)
+                        ColumnDef::new(PostsFavourites::Url)
                             .text()
                             .not_null()
                             .unique_key(),
                     )
                     .col(
-                        ColumnDef::new(Favourites::CreatedAt)
+                        ColumnDef::new(PostsFavourites::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .index(
                         Index::create()
-                            .col(Favourites::AccountId)
-                            .col(Favourites::PostId)
+                            .col(PostsFavourites::AccountId)
+                            .col(PostsFavourites::PostId)
                             .unique(),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(Favourites::AccountId)
+                            .from_col(PostsFavourites::AccountId)
                             .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from_col(Favourites::PostId)
+                            .from_col(PostsFavourites::PostId)
                             .to(Posts::Table, Posts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
@@ -63,7 +63,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Favourites::Table).to_owned())
+            .drop_table(Table::drop().table(PostsFavourites::Table).to_owned())
             .await
     }
 }

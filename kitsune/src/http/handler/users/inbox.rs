@@ -12,8 +12,8 @@ use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, favourites, posts,
-        prelude::{AccountsFollowers, Favourites, Posts},
+        accounts, accounts_followers, posts, posts_favourites,
+        prelude::{AccountsFollowers, Posts, PostsFavourites},
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
@@ -177,8 +177,8 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
         return Ok(());
     };
 
-    Favourites::insert(
-        favourites::Model {
+    PostsFavourites::insert(
+        posts_favourites::Model {
             id: Uuid::now_v7(),
             account_id: author.id,
             post_id: post.id,
@@ -209,9 +209,9 @@ async fn reject_activity(
 
 async fn undo_activity(state: &Zustand, author: accounts::Model, activity: Activity) -> Result<()> {
     // An undo activity can apply for likes and follows
-    Favourites::delete_many()
-        .filter(favourites::Column::AccountId.eq(author.id))
-        .filter(favourites::Column::Url.eq(activity.object()))
+    PostsFavourites::delete_many()
+        .filter(posts_favourites::Column::AccountId.eq(author.id))
+        .filter(posts_favourites::Column::Url.eq(activity.object()))
         .exec(&state.db_conn)
         .await?;
 
