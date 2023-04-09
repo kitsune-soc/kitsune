@@ -1,4 +1,4 @@
-use super::{Activity, Object, PUBLIC_IDENTIFIER};
+use super::{Object, PUBLIC_IDENTIFIER};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -35,16 +35,6 @@ pub trait CcTo {
     fn to(&self) -> &[String];
 }
 
-impl CcTo for Activity {
-    fn cc(&self) -> &[String] {
-        &self.cc
-    }
-
-    fn to(&self) -> &[String] {
-        &self.to
-    }
-}
-
 impl CcTo for Object {
     fn cc(&self) -> &[String] {
         &self.cc
@@ -61,16 +51,6 @@ pub trait Privacy {
 
     fn is_private(&self) -> bool {
         !self.is_public() && !self.is_unlisted()
-    }
-}
-
-impl Privacy for Activity {
-    fn is_public(&self) -> bool {
-        self.to.iter().any(|url| url == PUBLIC_IDENTIFIER)
-    }
-
-    fn is_unlisted(&self) -> bool {
-        !self.is_public() && self.cc.iter().any(|url| url == PUBLIC_IDENTIFIER)
     }
 }
 

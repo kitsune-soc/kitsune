@@ -47,6 +47,7 @@ pub enum ActivityType {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum ObjectField {
     Activity(Box<Activity>),
     Actor(Actor),
@@ -100,10 +101,6 @@ pub struct Activity {
     pub object: ObjectField,
     #[serde(default)]
     pub published: DateTime<Utc>,
-    #[serde(default)]
-    pub to: Vec<String>,
-    #[serde(default)]
-    pub cc: Vec<String>,
 }
 
 impl Activity {
@@ -133,6 +130,7 @@ pub enum ObjectType {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Object {
     #[serde(rename = "@context")]
     pub context: Value,

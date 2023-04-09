@@ -1,5 +1,5 @@
 use super::IntoObject;
-use crate::{error::Result, state::Zustand, util::BaseToCc};
+use crate::{error::Result, state::Zustand};
 use async_trait::async_trait;
 use chrono::Utc;
 use kitsune_db::{
@@ -8,11 +8,8 @@ use kitsune_db::{
         accounts, accounts_followers, favourites, posts,
         prelude::{Accounts, Posts},
     },
-    link::FavouritedPostAuthor,
 };
-use kitsune_type::ap::{
-    ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField, PUBLIC_IDENTIFIER,
-};
+use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use sea_orm::{EntityTrait, ModelTrait, QuerySelect};
 
 #[async_trait]
@@ -39,15 +36,6 @@ impl IntoActivity for favourites::Model {
             .await?
             .expect("[Bug] Favourite without associated account");
 
-        let author_account_url = self
-            .find_linked(FavouritedPostAuthor)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without related account");
-
         let post_url = self
             .find_related(Posts)
             .select_only()
@@ -64,8 +52,6 @@ impl IntoActivity for favourites::Model {
             actor: StringOrObject::String(account_url.clone()),
             object: ObjectField::Url(post_url),
             published: self.created_at.into(),
-            to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
-            cc: vec![],
         })
     }
 
@@ -79,15 +65,6 @@ impl IntoActivity for favourites::Model {
             .await?
             .expect("[Bug] Favourite without associated account");
 
-        let author_account_url = self
-            .find_linked(FavouritedPostAuthor)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without related account");
-
         Ok(Activity {
             context: ap_context(),
             id: format!("{}#undo", self.url),
@@ -95,8 +72,6 @@ impl IntoActivity for favourites::Model {
             actor: StringOrObject::String(account_url.clone()),
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
             published: Utc::now(),
-            to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
-            cc: vec![],
         })
     }
 }
@@ -128,10 +103,8 @@ impl IntoActivity for accounts_followers::Model {
             id: self.url,
             actor: StringOrObject::String(attributed_to.clone()),
             r#type: ActivityType::Follow,
-            object: ObjectField::Url(object.clone()),
+            object: ObjectField::Url(object),
             published: self.created_at.into(),
-            to: vec![object],
-            cc: vec![],
         })
     }
 
@@ -144,14 +117,6 @@ impl IntoActivity for accounts_followers::Model {
             .await?
             .expect("[Bug] Follow without follower");
 
-        let followed = Accounts::find_by_id(self.account_id)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Follow without followed");
-
         Ok(Activity {
             context: ap_context(),
             id: format!("{}#undo", self.url),
@@ -159,8 +124,6 @@ impl IntoActivity for accounts_followers::Model {
             actor: StringOrObject::String(attributed_to),
             published: self.created_at.into(),
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
-            to: vec![followed],
-            cc: vec![],
         })
     }
 }
@@ -184,7 +147,6 @@ impl IntoActivity for posts::Model {
                 .one(&state.db_conn)
                 .await?
                 .expect("[Bug] Repost without associated post");
-            let (to, cc) = self.visibility.base_to_cc(&account);
 
             Ok(Activity {
                 context: ap_context(),
@@ -193,8 +155,6 @@ impl IntoActivity for posts::Model {
                 actor: StringOrObject::String(account.url.clone()),
                 object: ObjectField::Url(reposted_post_url),
                 published: self.created_at.into(),
-                to,
-                cc,
             })
         } else {
             let created_at = self.created_at;
@@ -206,8 +166,6 @@ impl IntoActivity for posts::Model {
                 r#type: ActivityType::Create,
                 actor: StringOrObject::String(account.url.clone()),
                 published: created_at.into(),
-                to: object.to.clone(),
-                cc: object.cc.clone(),
                 object: ObjectField::Object(object),
             })
         }
@@ -228,8 +186,6 @@ impl IntoActivity for posts::Model {
             r#type: ActivityType::Delete,
             actor: StringOrObject::String(account.url.clone()),
             published: Utc::now(),
-            to: object.to.clone(),
-            cc: object.cc.clone(),
             object: ObjectField::Object(object),
         })
     }

@@ -45,7 +45,6 @@ async fn create_activity(
     author: accounts::Model,
     activity: Activity,
 ) -> Result<()> {
-    let visibility = Visibility::from_activitypub(&author, &activity);
     if let Some(object) = activity.object.into_object() {
         let in_reply_to_id = OptionFuture::from(
             object
@@ -61,6 +60,7 @@ async fn create_activity(
             .db_conn
             .transaction(|tx| {
                 async move {
+                    let visibility = Visibility::from_activitypub(&author, &object);
                     let new_post = Posts::insert(
                         posts::Model {
                             id: Uuid::now_v7(),
