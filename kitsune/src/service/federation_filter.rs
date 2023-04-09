@@ -10,19 +10,19 @@ pub trait Entity {
 
 impl Entity for Activity {
     fn id(&self) -> &str {
-        &self.rest.id
+        &self.id
     }
 }
 
 impl Entity for Actor {
     fn id(&self) -> &str {
-        &self.rest.id
+        &self.id
     }
 }
 
 impl Entity for Object {
     fn id(&self) -> &str {
-        &self.rest.id
+        &self.id
     }
 }
 

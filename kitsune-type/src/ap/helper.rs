@@ -1,4 +1,4 @@
-use super::{Activity, BaseObject, Object, PUBLIC_IDENTIFIER};
+use super::{Object, PUBLIC_IDENTIFIER};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -35,33 +35,13 @@ pub trait CcTo {
     fn to(&self) -> &[String];
 }
 
-impl CcTo for Activity {
-    fn cc(&self) -> &[String] {
-        self.rest.cc()
-    }
-
-    fn to(&self) -> &[String] {
-        self.rest.to()
-    }
-}
-
-impl CcTo for BaseObject {
-    fn cc(&self) -> &[String] {
-        self.cc.as_slice()
-    }
-
-    fn to(&self) -> &[String] {
-        self.to.as_slice()
-    }
-}
-
 impl CcTo for Object {
     fn cc(&self) -> &[String] {
-        &self.rest.cc
+        &self.cc
     }
 
     fn to(&self) -> &[String] {
-        &self.rest.to
+        &self.to
     }
 }
 
@@ -74,32 +54,12 @@ pub trait Privacy {
     }
 }
 
-impl Privacy for Activity {
-    fn is_public(&self) -> bool {
-        self.rest.is_public()
-    }
-
-    fn is_unlisted(&self) -> bool {
-        self.rest.is_unlisted()
-    }
-}
-
-impl Privacy for BaseObject {
+impl Privacy for Object {
     fn is_public(&self) -> bool {
         self.to.iter().any(|url| url == PUBLIC_IDENTIFIER)
     }
 
     fn is_unlisted(&self) -> bool {
         !self.is_public() && self.cc.iter().any(|url| url == PUBLIC_IDENTIFIER)
-    }
-}
-
-impl Privacy for Object {
-    fn is_public(&self) -> bool {
-        self.rest.is_public()
-    }
-
-    fn is_unlisted(&self) -> bool {
-        self.rest.is_unlisted()
     }
 }

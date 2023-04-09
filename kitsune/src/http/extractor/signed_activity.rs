@@ -6,7 +6,7 @@ use crate::{
 use async_trait::async_trait;
 use axum::{
     body::Body,
-    extract::FromRequest,
+    extract::{FromRequest, OriginalUri},
     response::{IntoResponse, Response},
     RequestExt,
 };
@@ -26,13 +26,21 @@ impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
     async fn from_request(
-        req: http::Request<Body>,
+        mut req: http::Request<Body>,
         state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
-        let (parts, body) = req
+        // Axum will cut out the "/users" part of the router (due to the nesting)
+        // That's why we get the original URI here (which includes the full path)
+        let OriginalUri(original_uri) = req
+            .extract_parts()
+            .await
+            .map_err(IntoResponse::into_response)?;
+
+        let (mut parts, body) = req
             .with_limited_body()
             .expect("[Bug] Payload size of inbox not limited")
             .into_parts();
+        parts.uri = original_uri;
 
         let activity: Activity = match hyper::body::to_bytes(body).await {
             Ok(bytes) => serde_json::from_slice(&bytes).map_err(Error::from)?,
@@ -41,11 +49,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
             }
         };
-        let ap_id = activity
-            .rest
-            .attributed_to()
-            .ok_or_else(|| StatusCode::BAD_REQUEST.into_response())?;
 
+        let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
         if !verify_signature(&parts, &remote_user).await? {
             // Refetch the user and try again

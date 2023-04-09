@@ -116,8 +116,8 @@ impl Fetcher {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
                     uuid::NoContext,
-                    actor.rest.published.timestamp() as u64,
-                    actor.rest.published.timestamp_subsec_nanos(),
+                    actor.published.timestamp() as u64,
+                    actor.published.timestamp_subsec_nanos(),
                 );
 
                 async move {
@@ -132,11 +132,11 @@ impl Fetcher {
                             locked: actor.manually_approves_followers,
                             local: false,
                             domain: Some(url.host_str().unwrap().into()),
-                            url: actor.rest.id,
+                            url: actor.id,
                             followers_url: actor.followers,
                             inbox_url: actor.inbox,
                             public_key: actor.public_key.public_key_pem,
-                            created_at: actor.rest.published.into(),
+                            created_at: actor.published.into(),
                             updated_at: Utc::now().into(),
                         }
                         .into_active_model(),
@@ -249,25 +249,17 @@ impl Fetcher {
         let mut object: Object = self.client.get(url.as_str()).await?.json().await?;
         object.clean_html();
 
-        let user = self
-            .fetch_actor(
-                object
-                    .rest
-                    .attributed_to()
-                    .map(FetchOptions::from)
-                    .ok_or(Error::MalformedApObject)?,
-            )
-            .await?;
+        let user = self.fetch_actor(object.attributed_to().into()).await?;
         let visibility = Visibility::from_activitypub(&user, &object);
 
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
             uuid::NoContext,
-            object.rest.published.timestamp() as u64,
-            object.rest.published.timestamp_subsec_nanos(),
+            object.published.timestamp() as u64,
+            object.published.timestamp_subsec_nanos(),
         );
 
-        let in_reply_to_id = if let Some(in_reply_to) = object.rest.in_reply_to {
+        let in_reply_to_id = if let Some(in_reply_to) = object.in_reply_to {
             self.fetch_object_inner(&in_reply_to, call_depth + 1)
                 .await?
                 .map(|post| post.id)
@@ -287,11 +279,11 @@ impl Fetcher {
                             reposted_post_id: None,
                             subject: object.summary,
                             content: object.content,
-                            is_sensitive: object.rest.sensitive,
+                            is_sensitive: object.sensitive,
                             visibility,
                             is_local: false,
-                            url: object.rest.id,
-                            created_at: object.rest.published.into(),
+                            url: object.id,
+                            created_at: object.published.into(),
                             updated_at: Utc::now().into(),
                         }
                         .into_active_model(),
