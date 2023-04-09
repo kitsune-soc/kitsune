@@ -32,5 +32,5 @@ pub async fn post(
 ) -> Result<Response> {
     let post = post.unfavourite(id, user_data.account.id).await?;
 
-    Ok(Json(mastodon_mapper.map(post).await?).into_response())
+    Ok(Json(mastodon_mapper.map((&user_data.account, post)).await?).into_response())
 }

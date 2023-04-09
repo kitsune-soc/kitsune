@@ -5,7 +5,7 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    accounts, accounts_followers, media_attachments, posts, posts_mentions,
+    accounts, accounts_followers, favourites, media_attachments, posts, posts_mentions,
     prelude::{Accounts, AccountsFollowers, Favourites, MediaAttachments, Posts, PostsMentions},
 };
 use kitsune_type::mastodon::{
@@ -217,6 +217,39 @@ impl IntoMastodon for media_attachments::Model {
 }
 
 #[async_trait]
+impl IntoMastodon for (&accounts::Model, posts::Model) {
+    type Output = Status;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let (account, post) = self;
+
+        let favourited = Favourites::find()
+            .filter(favourites::Column::AccountId.eq(account.id))
+            .filter(favourites::Column::PostId.eq(post.id))
+            .count(state.db_conn)
+            .await?
+            != 0;
+
+        let reblogged = Posts::find()
+            .filter(posts::Column::AccountId.eq(account.id))
+            .filter(posts::Column::RepostedPostId.eq(post.id))
+            .count(state.db_conn)
+            .await?
+            != 0;
+
+        let mut status = post.into_mastodon(state).await?;
+        status.favourited = favourited;
+        status.reblogged = reblogged;
+
+        Ok(status)
+    }
+}
+
+#[async_trait]
 impl IntoMastodon for posts::Model {
     type Output = Status;
 
@@ -289,6 +322,8 @@ impl IntoMastodon for posts::Model {
             media_attachments,
             mentions,
             reblog,
+            favourited: false,
+            reblogged: false,
         })
     }
 }

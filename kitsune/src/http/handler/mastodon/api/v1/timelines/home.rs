@@ -57,7 +57,7 @@ pub async fn get(
         .get_home(get_home)
         .await?
         .take(limit)
-        .and_then(|post| mastodon_mapper.map(post))
+        .and_then(|post| mastodon_mapper.map((&user_data.account, post)))
         .try_collect()
         .await?;
 

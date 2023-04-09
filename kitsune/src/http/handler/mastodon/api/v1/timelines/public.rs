@@ -1,5 +1,6 @@
 use crate::{
     error::Result,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
     service::timeline::{GetPublic, TimelineService},
 };
@@ -7,7 +8,7 @@ use axum::{
     extract::{Query, State},
     Json,
 };
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::{FutureExt, StreamExt, TryStreamExt};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use std::cmp::min;
@@ -44,6 +45,7 @@ pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
     Query(query): Query<GetQuery>,
+    user_data: Option<MastodonAuthExtractor>,
 ) -> Result<Json<Vec<Status>>> {
     let get_public = GetPublic::builder()
         .only_local(query.local)
@@ -57,7 +59,15 @@ pub async fn get(
         .get_public(get_public)
         .await?
         .take(limit)
-        .and_then(|post| mastodon_mapper.map(post))
+        .and_then(|post| {
+            if let Some(AuthExtractor(ref user_data)) = user_data {
+                mastodon_mapper
+                    .map((&user_data.account, post))
+                    .left_future()
+            } else {
+                mastodon_mapper.map(post).right_future()
+            }
+        })
         .try_collect()
         .await?;
 
