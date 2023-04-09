@@ -14,6 +14,16 @@ use kitsune_type::mastodon::relationship::Relationship;
 use uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
+#[utoipa::path(
+    post,
+    path = "/api/v1/accounts/{id}/follow",
+    security(
+        ("oauth_token" = [])
+    ),
+    responses(
+        (status = 200, description = "Followed user successfully", body = Relationship)
+    ),
+)]
 pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

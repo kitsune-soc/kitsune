@@ -43,7 +43,7 @@ async fn get_html(
     Query(query): Query<PageQuery>,
 ) -> Result<UserPage> {
     let account = account_service
-        .get_local_by_username(&username)
+        .get(username.as_str().into())
         .await?
         .ok_or(ApiError::NotFound)?;
 
@@ -90,7 +90,7 @@ async fn get(
     _: Query<PageQuery>, // Needed to get the same types for the conditional routing
 ) -> Result<Response> {
     let account = account_service
-        .get_local_by_username(&username)
+        .get(username.as_str().into())
         .await?
         .ok_or(ApiError::NotFound)?;
 

@@ -10,6 +10,7 @@ use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
 pub mod follow;
+pub mod lookup;
 pub mod relationships;
 pub mod statuses;
 pub mod unfollow;
@@ -41,6 +42,7 @@ pub fn routes() -> Router<Zustand> {
         .route("/:id/follow", routing::post(follow::post))
         .route("/:id/statuses", routing::get(statuses::get))
         .route("/:id/unfollow", routing::post(unfollow::post))
+        .route("/lookup", routing::get(lookup::get))
         .route("/relationships", routing::get(relationships::get))
         .route("/verify_credentials", routing::get(verify_credentials::get))
 }

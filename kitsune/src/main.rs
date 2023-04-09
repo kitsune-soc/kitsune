@@ -239,8 +239,10 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
 
     let account_service = AccountService::builder()
         .db_conn(conn.clone())
+        .fetcher(fetcher.clone())
         .job_service(job_service.clone())
         .url_service(url_service.clone())
+        .webfinger(webfinger.clone())
         .build();
 
     let attachment_service = AttachmentService::builder()
@@ -270,7 +272,10 @@ async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Z
         .url_service(url_service.clone())
         .build();
 
-    let post_resolver = PostResolver::new(conn.clone(), fetcher.clone(), webfinger.clone());
+    let post_resolver = PostResolver::builder()
+        .account(account_service.clone())
+        .build();
+
     let post_service = PostService::builder()
         .db_conn(conn.clone())
         .instance_service(instance_service.clone())

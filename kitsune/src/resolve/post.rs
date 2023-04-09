@@ -1,60 +1,19 @@
 use crate::{
-    activitypub::Fetcher,
     error::{Error, Result},
-    webfinger::Webfinger,
+    service::account::{AccountService, GetUser},
 };
-use kitsune_db::entity::{accounts, prelude::Accounts};
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::{borrow::Cow, collections::HashMap, mem};
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct PostResolver {
-    db_conn: DatabaseConnection,
-    fetcher: Fetcher,
-    webfinger: Webfinger,
+    account: AccountService,
 }
 
 impl PostResolver {
-    #[must_use]
-    pub fn new(db_conn: DatabaseConnection, fetcher: Fetcher, webfinger: Webfinger) -> Self {
-        Self {
-            db_conn,
-            fetcher,
-            webfinger,
-        }
-    }
-
-    async fn fetch_account(
-        &self,
-        username: &str,
-        domain: Option<&str>,
-    ) -> Result<Option<accounts::Model>> {
-        if let Some(domain) = domain {
-            let Some(actor_url) = self.webfinger.fetch_actor_url(username, domain).await? else {
-                return Ok(None)
-            };
-
-            self.fetcher
-                .fetch_actor(actor_url.as_str().into())
-                .await
-                .map(Some)
-                .map_err(Error::from)
-        } else {
-            Accounts::find()
-                .filter(
-                    accounts::Column::Username
-                        .eq(username)
-                        .and(accounts::Column::Domain.is_null()),
-                )
-                .one(&self.db_conn)
-                .await
-                .map_err(Error::from)
-        }
-    }
-
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
@@ -62,10 +21,12 @@ impl PostResolver {
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
-                if let Some(account) = self
-                    .fetch_account(&mention.username, mention.domain.as_deref())
-                    .await?
-                {
+                let get_user = GetUser::builder()
+                    .username(&mention.username)
+                    .domain(mention.domain.as_deref())
+                    .build();
+
+                if let Some(account) = self.account.get(get_user).await? {
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
                     mentioned_accounts.lock().insert(account.id, mention_text);
@@ -122,7 +83,10 @@ mod test {
         activitypub::Fetcher,
         cache::NoopCache,
         config::FederationFilterConfiguration,
-        service::{federation_filter::FederationFilterService, search::NoopSearchService},
+        service::{
+            account::AccountService, federation_filter::FederationFilterService, job::JobService,
+            search::NoopSearchService, url::UrlService,
+        },
         webfinger::Webfinger,
     };
     use kitsune_db::entity::prelude::Accounts;
@@ -148,11 +112,19 @@ mod test {
             .user_cache(Arc::new(NoopCache.into()))
             .build();
 
-        let mention_resolver = PostResolver::new(
-            db_conn.clone(),
-            fetcher,
-            Webfinger::new(Arc::new(NoopCache.into())),
-        );
+        let job_service = JobService::builder().db_conn(db_conn.clone()).build();
+        let url_service = UrlService::builder()
+            .domain("example.com")
+            .scheme("http")
+            .build();
+        let account_service = AccountService::builder()
+            .db_conn(db_conn.clone())
+            .fetcher(fetcher)
+            .job_service(job_service)
+            .url_service(url_service)
+            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+            .build();
+        let mention_resolver = PostResolver::builder().account(account_service).build();
 
         let (mentioned_account_ids, content) = mention_resolver
             .resolve(post)
