@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    http::extractor::MastodonAuthExtractor,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
     service::search::{SearchBackend, SearchIndex, SearchService},
     state::Zustand,
 };
@@ -62,7 +62,7 @@ struct SearchQuery {
 async fn get(
     State(state): State<Zustand>,
     State(search): State<SearchService>,
-    _: MastodonAuthExtractor,
+    AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Response> {
     let indices = if let Some(r#type) = query.r#type {
@@ -124,9 +124,13 @@ async fn get(
         }
 
         if let Ok(post) = state.fetcher.fetch_object(query.query.as_str()).await {
-            search_result
-                .statuses
-                .insert(0, state.mastodon_mapper.map(post).await?);
+            search_result.statuses.insert(
+                0,
+                state
+                    .mastodon_mapper
+                    .map((&user_data.account, post))
+                    .await?,
+            );
         }
     }
 
