@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    http::extractor::MastodonAuthExtractor,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
     service::account::{AccountService, GetPosts},
 };
@@ -8,7 +8,7 @@ use axum::{
     extract::{Path, Query, State},
     Json,
 };
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::{FutureExt, StreamExt, TryStreamExt};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use std::cmp::min;
@@ -47,6 +47,7 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     auth_data: Option<MastodonAuthExtractor>,
     Query(query): Query<GetQuery>,
+    user_data: Option<MastodonAuthExtractor>,
 ) -> Result<Json<Vec<Status>>> {
     let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
 
@@ -62,7 +63,15 @@ pub async fn get(
         .get_posts(get_posts)
         .await?
         .take(limit)
-        .and_then(|post| mastodon_mapper.map(post))
+        .and_then(|post| {
+            if let Some(AuthExtractor(ref user_data)) = user_data {
+                mastodon_mapper
+                    .map((&user_data.account, post))
+                    .left_future()
+            } else {
+                mastodon_mapper.map(post).right_future()
+            }
+        })
         .try_collect()
         .await?;
 
