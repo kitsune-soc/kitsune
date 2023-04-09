@@ -1,6 +1,6 @@
 use self::sealed::{IntoMastodon, MapperState};
 use crate::{
-    cache::{ArcCache, CacheBackend, RedisCache},
+    cache::{ArcCache, CacheBackend},
     error::Result,
     event::{post::EventType, PostEventConsumer},
     service::{attachment::AttachmentService, url::UrlService},
@@ -9,14 +9,10 @@ use derive_builder::Builder;
 use futures_util::StreamExt;
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
-use std::{sync::Arc, time::Duration};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 mod sealed;
-
-/// Cache Mastodon entities for 60 seconds
-const CACHE_TTL: Duration = Duration::from_secs(60);
 
 pub trait MapperMarker: IntoMastodon {}
 
@@ -91,32 +87,6 @@ impl MastodonMapper {
     #[must_use]
     pub fn builder() -> MastodonMapperBuilder {
         MastodonMapperBuilder::default()
-    }
-
-    /// Create a mapper with some defaults
-    ///
-    /// # Panics
-    ///
-    /// This should never panic.
-    #[must_use]
-    pub fn with_defaults(
-        attachment_service: AttachmentService,
-        db_conn: DatabaseConnection,
-        event_consumer: PostEventConsumer,
-        redis_conn: deadpool_redis::Pool,
-        url_service: UrlService,
-    ) -> Self {
-        let cache =
-            Arc::new(RedisCache::new(redis_conn, "MASTODON-ENTITY-CACHE", CACHE_TTL).into());
-
-        Self::builder()
-            .attachment_service(attachment_service)
-            .cache_invalidator(event_consumer)
-            .db_conn(db_conn)
-            .mastodon_cache(cache)
-            .url_service(url_service)
-            .build()
-            .unwrap()
     }
 
     /// Return a reference to a mapper state

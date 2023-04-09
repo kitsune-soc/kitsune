@@ -48,4 +48,6 @@ pub struct Status {
     pub media_attachments: Vec<MediaAttachment>,
     pub mentions: Vec<Mention>,
     pub reblog: Option<Box<Status>>,
+    pub favourited: bool,
+    pub reblogged: bool,
 }
