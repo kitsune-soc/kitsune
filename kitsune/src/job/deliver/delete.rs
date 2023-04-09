@@ -42,15 +42,16 @@ impl Runnable for DeliverDelete {
             .try_chunks(MAX_CONCURRENT_REQUESTS)
             .map_err(|err| err.1);
 
-        Posts::delete_by_id(post.id)
-            .exec(&ctx.state.db_conn)
-            .await?;
-
+        let post_id = post.id;
         let delete_activity = post.into_negate_activity(ctx.state).await?;
 
         // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
         ctx.deliverer
             .deliver_many(&account, &user, &delete_activity, inbox_stream)
+            .await?;
+
+        Posts::delete_by_id(post_id)
+            .exec(&ctx.state.db_conn)
             .await?;
 
         Ok(())

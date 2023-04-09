@@ -11,6 +11,8 @@ use kitsune_db::entity::{accounts, users};
 use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
+use rsa::pkcs8::SecretDocument;
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -33,13 +35,16 @@ impl Deliverer {
     /// - Panics in case the inbox URL isn't actually a valid URL
     #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.rest.id))]
     #[autometrics(track_concurrency)]
-    pub async fn deliver(
+    pub async fn deliver<T>(
         &self,
         inbox_url: &str,
         account: &accounts::Model,
         user: &users::Model,
-        activity: &Activity,
-    ) -> Result<()> {
+        activity: &Activity<T>,
+    ) -> Result<()>
+    where
+        T: Serialize,
+    {
         if !self
             .federation_filter
             .is_url_allowed(&Url::parse(inbox_url)?)?
@@ -54,23 +59,23 @@ impl Deliverer {
         let request = Request::builder()
             .method(Method::POST)
             .uri(inbox_url)
-            .header("Digest", &digest_header)
-            .body(body.clone().into())?;
+            .header("Digest", digest_header)
+            .body(body.into())?;
 
         let key_id = format!("{}#main-key", account.url);
+        let (_tag, pkcs8_document) = SecretDocument::from_pem(&user.private_key)?;
         let private_key = PrivateKey::builder()
             .key_id(&key_id)
-            .key(RsaKeyPair::from_pkcs8(user.private_key.as_bytes())?)
+            .key(RsaKeyPair::from_pkcs8(pkcs8_document.as_bytes())?)
             .build()
             .unwrap();
 
         let response = self.client.execute_signed(request, private_key).await?;
+        debug!(status_code = %response.status(), "successfully executed http request");
         if !response.status().is_success() {
-            error!(
-                status_code = %response.status(),
-                %inbox_url,
-                "failed to deliver activity",
-            );
+            let status_code = response.status();
+            let body = response.text().await?;
+            error!(%status_code, %body, %inbox_url, "failed to deliver activity");
         }
 
         Ok(())

@@ -27,7 +27,7 @@ pub trait IntoActivity {
 #[async_trait]
 impl IntoActivity for favourites::Model {
     type Output = Activity;
-    type NegateOutput = Activity;
+    type NegateOutput = Activity<Activity>;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let account_url = self
@@ -58,6 +58,7 @@ impl IntoActivity for favourites::Model {
             .expect("[Bug] Favourite without associated post");
 
         Ok(Activity {
+            actor: account_url.clone(),
             r#type: ActivityType::Like,
             object: StringOrObject::String(post_url),
             rest: BaseObject {
@@ -93,6 +94,7 @@ impl IntoActivity for favourites::Model {
             .expect("[Bug] Post without related account");
 
         Ok(Activity {
+            actor: account_url.clone(),
             r#type: ActivityType::Undo,
             rest: BaseObject {
                 context: ap_context(),
@@ -104,7 +106,7 @@ impl IntoActivity for favourites::Model {
                 to: vec![author_account_url, PUBLIC_IDENTIFIER.to_string()],
                 cc: vec![],
             },
-            object: StringOrObject::String(self.url),
+            object: StringOrObject::Object(self.into_activity(state).await?),
         })
     }
 }
@@ -112,7 +114,7 @@ impl IntoActivity for favourites::Model {
 #[async_trait]
 impl IntoActivity for accounts_followers::Model {
     type Output = Activity;
-    type NegateOutput = Activity;
+    type NegateOutput = Activity<Activity>;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let attributed_to = Accounts::find_by_id(self.follower_id)
@@ -132,6 +134,7 @@ impl IntoActivity for accounts_followers::Model {
             .expect("[Bug] Follow without followed");
 
         Ok(Activity {
+            actor: attributed_to.clone(),
             r#type: ActivityType::Follow,
             object: StringOrObject::String(object.clone()),
             rest: BaseObject {
@@ -165,6 +168,7 @@ impl IntoActivity for accounts_followers::Model {
             .expect("[Bug] Follow without followed");
 
         Ok(Activity {
+            actor: attributed_to.clone(),
             r#type: ActivityType::Undo,
             rest: BaseObject {
                 context: ap_context(),
@@ -176,7 +180,7 @@ impl IntoActivity for accounts_followers::Model {
                 to: vec![followed],
                 cc: vec![],
             },
-            object: StringOrObject::String(self.url),
+            object: StringOrObject::Object(self.into_activity(state).await?),
         })
     }
 }
@@ -203,6 +207,7 @@ impl IntoActivity for posts::Model {
             let (to, cc) = self.visibility.base_to_cc(&account);
 
             Ok(Activity {
+                actor: account.url.clone(),
                 r#type: ActivityType::Announce,
                 object: StringOrObject::String(reposted_post_url),
                 rest: BaseObject {
@@ -221,6 +226,7 @@ impl IntoActivity for posts::Model {
             let object = self.into_object(state).await?;
 
             Ok(Activity {
+                actor: account.url.clone(),
                 r#type: ActivityType::Create,
                 rest: BaseObject {
                     context: ap_context(),
@@ -238,10 +244,16 @@ impl IntoActivity for posts::Model {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
+        let account = Accounts::find_by_id(self.account_id)
+            .one(&state.db_conn)
+            .await?
+            .expect("[Bug] Post without author");
+
         // TODO: Decide type by `reposted_post_id` field
         let object = self.into_object(state).await?;
 
         Ok(Activity {
+            actor: account.url.clone(),
             r#type: ActivityType::Delete,
             rest: BaseObject {
                 context: ap_context(),
@@ -250,10 +262,10 @@ impl IntoActivity for posts::Model {
                 attributed_to: None,
                 in_reply_to: None,
                 published: Utc::now(),
-                to: object.rest.to,
-                cc: object.rest.cc,
+                to: object.rest.to.clone(),
+                cc: object.rest.cc.clone(),
             },
-            object: StringOrObject::String(object.rest.id),
+            object: StringOrObject::Object(object),
         })
     }
 }

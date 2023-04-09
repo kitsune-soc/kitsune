@@ -1,9 +1,10 @@
-use crate::{error::Result, mapping::IntoActivity, state::Zustand};
+use crate::{
+    error::Result, http::responder::ActivityPubJson, mapping::IntoActivity, state::Zustand,
+};
 use axum::{
     debug_handler,
     extract::{Path, State},
     response::{IntoResponse, Response},
-    Json,
 };
 use http::StatusCode;
 use uuid::Uuid;
@@ -19,5 +20,5 @@ pub async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<R
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
-    Ok(Json(post.into_activity(&state).await?).into_response())
+    Ok(ActivityPubJson(post.into_activity(&state).await?).into_response())
 }

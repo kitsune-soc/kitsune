@@ -74,7 +74,7 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
     .await;
 
     if let Ok(Err(ref err)) = execution_result {
-        error!(error = %err, "Job execution failed");
+        error!(error = ?err, "Job execution failed");
     } else if execution_result.is_err() {
         error!("Job execution panicked");
     }
@@ -107,7 +107,7 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
     }
 
     if let Err(err) = update_model.update(&state.db_conn).await {
-        error!(error = %err, "Failed to update job information");
+        error!(error = ?err, "Failed to update job information");
     }
 }
 

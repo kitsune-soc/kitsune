@@ -41,10 +41,6 @@ impl Runnable for DeliverUnfavourite {
             return Ok(());
         };
 
-        Favourites::delete_by_id(favourite.id)
-            .exec(&ctx.state.db_conn)
-            .await?;
-
         let inbox_url = favourite
             .find_linked(FavouritedPostAuthor)
             .select_only()
@@ -53,11 +49,17 @@ impl Runnable for DeliverUnfavourite {
             .one(&ctx.state.db_conn)
             .await?
             .expect("[Bug] Post without associated account");
+
+        let favourite_id = favourite.id;
         let activity = favourite.into_negate_activity(ctx.state).await?;
 
         // TODO: Maybe deliver to followers as well?
         ctx.deliverer
             .deliver(&inbox_url, &account, &user, &activity)
+            .await?;
+
+        Favourites::delete_by_id(favourite_id)
+            .exec(&ctx.state.db_conn)
             .await?;
 
         Ok(())

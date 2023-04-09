@@ -125,7 +125,7 @@ impl IntoObject for posts::Model {
             content: self.content,
             attachment,
             tag,
-            url: None,
+            url: Some(self.url.clone()),
             rest: BaseObject {
                 context: ap_context(),
                 id: self.url,

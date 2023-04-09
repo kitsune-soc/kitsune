@@ -2684,9 +2684,9 @@ dependencies = [
 name = "kitsune-http-client"
 version = "0.1.0"
 dependencies = [
- "chrono",
  "derive_builder",
  "futures-core",
+ "headers",
  "http-body",
  "hyper",
  "hyper-rustls 0.24.0",

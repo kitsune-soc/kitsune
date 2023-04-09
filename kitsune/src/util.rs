@@ -29,12 +29,12 @@ impl BaseToCc for Visibility {
     fn base_to_cc(&self, account: &accounts::Model) -> (Vec<String>, Vec<String>) {
         match self {
             Visibility::Public => (
-                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url.clone()],
-                vec![],
+                vec![PUBLIC_IDENTIFIER.to_string()],
+                vec![account.followers_url.clone()],
             ),
             Visibility::Unlisted => (
-                vec![account.followers_url.clone()],
-                vec![PUBLIC_IDENTIFIER.to_string()],
+                vec![],
+                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url.clone()],
             ),
             Visibility::FollowerOnly => (vec![account.followers_url.clone()], vec![]),
             Visibility::MentionOnly => (vec![], vec![]),

@@ -5,13 +5,13 @@
 #![allow(forbidden_lint_groups)]
 
 use self::util::BoxCloneService;
-use chrono::Utc;
 use futures_core::Stream;
+use headers::{Date, HeaderMapExt};
 use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, DATE, HOST, USER_AGENT},
+    header::{HeaderName, HOST, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -25,7 +25,7 @@ use std::{
     fmt,
     pin::Pin,
     task::{self, Poll},
-    time::Duration,
+    time::{Duration, SystemTime},
 };
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
@@ -225,13 +225,12 @@ impl Client {
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
         req.headers_mut()
             .extend(self.default_headers.clone().into_iter());
-        req.headers_mut().insert(
-            DATE,
-            HeaderValue::from_str(Utc::now().to_rfc2822().as_str()).unwrap(),
-        );
 
-        if let Some(authority) = req.uri().authority() {
-            let value = HeaderValue::from_str(authority.as_str()).unwrap();
+        req.headers_mut()
+            .typed_insert(Date::from(SystemTime::now()));
+
+        if let Some(host) = req.uri().host() {
+            let value = HeaderValue::from_str(host).unwrap();
             req.headers_mut().insert(HOST, value);
         }
 
@@ -274,15 +273,14 @@ impl Client {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
         let (name, value) = HttpSigner::builder()
-            .expires_in(Duration::from_secs(5 * 60)) // Make the signature expire in 5 minutes
+            .include_creation_timestamp(true)
+            .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds
             .build()
             .unwrap()
             .sign(
                 &parts,
                 vec![
                     SignatureComponent::RequestTarget,
-                    SignatureComponent::Created,
-                    SignatureComponent::Expires,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
                     SignatureComponent::Header("Host"),
@@ -341,6 +339,17 @@ impl Response {
     #[must_use]
     pub fn headers(&self) -> &HeaderMap {
         self.inner.headers()
+    }
+
+    /// Read the body and attempt to interpret it as a UTF-8 encoded string
+    ///
+    /// # Errors
+    ///
+    /// - Reading the body from the remote failed
+    /// - The body isn't a UTF-8 encoded string
+    pub async fn text(self) -> Result<String> {
+        let body = self.bytes().await?;
+        Ok(String::from_utf8(body.to_vec()).map_err(BoxError::from)?)
     }
 
     /// Read the body and deserialise it as JSON into a `serde` enabled structure

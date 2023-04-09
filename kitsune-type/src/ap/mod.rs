@@ -15,7 +15,21 @@ pub mod object;
 pub use self::helper::Privacy;
 
 pub fn ap_context() -> Value {
-    json!("https://www.w3.org/ns/activitystreams")
+    json!([
+        "https://www.w3.org/ns/activitystreams",
+        "https://w3id.org/security/v1",
+        {
+            "Hashtag": "as:Hashtag",
+            "sensitive": "as:sensitive",
+            "schema": "http://schema.org/",
+            "toot": "http://joinmastodon.org/ns#",
+            "Emoji": "toot:Emoji",
+            "PropertyValue": "schema:PropertyValue",
+            "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+            "value": "schema:value",
+            "quoteUrl": "as:quoteUrl",
+        },
+    ])
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -35,9 +49,10 @@ pub enum ActivityType {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Activity {
+pub struct Activity<T = Object> {
     pub r#type: ActivityType,
-    pub object: StringOrObject<Object>,
+    pub actor: String,
+    pub object: StringOrObject<T>,
     #[serde(flatten)]
     pub rest: BaseObject,
 }
@@ -98,6 +113,7 @@ pub struct BaseObject {
     pub in_reply_to: Option<String>,
     #[serde(default)]
     pub sensitive: bool,
+    #[serde(default)]
     pub published: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub to: Vec<String>,

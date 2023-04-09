@@ -1,12 +1,10 @@
 use crate::{
     error::{ApiError, Result},
+    http::responder::ActivityPubJson,
     service::url::UrlService,
     state::Zustand,
 };
-use axum::{
-    extract::{OriginalUri, Path, State},
-    Json,
-};
+use axum::extract::{OriginalUri, Path, State};
 use kitsune_db::{
     entity::{
         prelude::{Accounts, Users},
@@ -25,7 +23,7 @@ pub async fn get(
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(username): Path<String>,
-) -> Result<Json<Collection>> {
+) -> Result<ActivityPubJson<Collection>> {
     let Some(account) = <Users as Related<Accounts>>::find_related()
         .filter(users::Column::Username.eq(username))
         .one(&state.db_conn)
@@ -39,7 +37,7 @@ pub async fn get(
     let mut id = url_service.base_url();
     id.push_str(original_uri.path());
 
-    Ok(Json(Collection {
+    Ok(ActivityPubJson(Collection {
         context: ap_context(),
         id,
         r#type: CollectionType::OrderedCollection,

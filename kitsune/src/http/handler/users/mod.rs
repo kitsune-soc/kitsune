@@ -3,6 +3,7 @@ use crate::{
     http::{
         cond,
         page::{PostComponent, UserPage},
+        responder::ActivityPubJson,
     },
     mapping::IntoObject,
     service::{
@@ -16,7 +17,7 @@ use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Response},
     routing::{self, post},
-    Json, Router,
+    Router,
 };
 use futures_util::{future::OptionFuture, TryStreamExt};
 use serde::Deserialize;
@@ -93,7 +94,7 @@ async fn get(
         .await?
         .ok_or(ApiError::NotFound)?;
 
-    Ok(Json(account.into_object(&state).await?).into_response())
+    Ok(ActivityPubJson(account.into_object(&state).await?).into_response())
 }
 
 pub fn routes() -> Router<Zustand> {
