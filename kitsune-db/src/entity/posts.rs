@@ -35,8 +35,6 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Accounts,
-    #[sea_orm(has_many = "super::favourites::Entity")]
-    Favourites,
     #[sea_orm(
         belongs_to = "Entity",
         from = "Column::InReplyToId",
@@ -53,11 +51,13 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     SelfRef1,
+    #[sea_orm(has_many = "super::posts_favourites::Entity")]
+    PostsFavourites,
 }
 
-impl Related<super::favourites::Entity> for Entity {
+impl Related<super::posts_favourites::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Favourites.def()
+        Relation::PostsFavourites.def()
     }
 }
 

@@ -5,8 +5,10 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    accounts, accounts_followers, favourites, media_attachments, posts, posts_mentions,
-    prelude::{Accounts, AccountsFollowers, Favourites, MediaAttachments, Posts, PostsMentions},
+    accounts, accounts_followers, media_attachments, posts, posts_favourites, posts_mentions,
+    prelude::{
+        Accounts, AccountsFollowers, MediaAttachments, Posts, PostsFavourites, PostsMentions,
+    },
 };
 use kitsune_type::mastodon::{
     account::Source, media_attachment::MediaType, relationship::Relationship, status::Mention,
@@ -227,9 +229,9 @@ impl IntoMastodon for (&accounts::Model, posts::Model) {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let (account, post) = self;
 
-        let favourited = Favourites::find()
-            .filter(favourites::Column::AccountId.eq(account.id))
-            .filter(favourites::Column::PostId.eq(post.id))
+        let favourited = PostsFavourites::find()
+            .filter(posts_favourites::Column::AccountId.eq(account.id))
+            .filter(posts_favourites::Column::PostId.eq(post.id))
             .count(state.db_conn)
             .await?
             != 0;
@@ -270,7 +272,10 @@ impl IntoMastodon for posts::Model {
             .count(state.db_conn)
             .await?;
 
-        let favourites_count = self.find_related(Favourites).count(state.db_conn).await?;
+        let favourites_count = self
+            .find_related(PostsFavourites)
+            .count(state.db_conn)
+            .await?;
 
         let media_attachments = self
             .find_related(MediaAttachments)

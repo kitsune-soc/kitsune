@@ -4,7 +4,6 @@ pub mod prelude;
 
 pub mod accounts;
 pub mod accounts_followers;
-pub mod favourites;
 pub mod jobs;
 pub mod media_attachments;
 pub mod oauth2_access_tokens;
@@ -12,6 +11,7 @@ pub mod oauth2_applications;
 pub mod oauth2_authorization_codes;
 pub mod oauth2_refresh_tokens;
 pub mod posts;
+pub mod posts_favourites;
 pub mod posts_media_attachments;
 pub mod posts_mentions;
 pub mod users;
