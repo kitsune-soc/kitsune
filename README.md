@@ -21,13 +21,23 @@ We successfully federated with Mastodon on the following functionality:
 - Actors
 - Posts
     - Create
+        - Incoming and outgoing
     - Delete
+        - Incoming and outgoing
     - Replies
+        - Incoming and outgoing
     - Content Warnings
+        - Outgoing
     - Media attachments
+        - Outgoing
 - Likes
     - Added
     - Removed
+- Follows
+    - Added
+        - Incoming
+    - Removed
+        - Incoming
 
 (last updated: 09.04.2023)
 
