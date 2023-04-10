@@ -1,6 +1,6 @@
 [package]
 name = "kitsune"
-version = "0.1.0-UTA"
+version = "0.0.1-pre.0"
 edition = "2021"
 repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://kitsune-soc.github.io"

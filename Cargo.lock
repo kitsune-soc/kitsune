@@ -2572,7 +2572,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune"
-version = "0.1.0-UTA"
+version = "0.0.1-pre.0"
 dependencies = [
  "ammonia",
  "argon2",
