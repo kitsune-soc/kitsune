@@ -14,6 +14,7 @@ pub mod lookup;
 pub mod relationships;
 pub mod statuses;
 pub mod unfollow;
+pub mod update_credentials;
 pub mod verify_credentials;
 
 #[utoipa::path(
@@ -44,5 +45,9 @@ pub fn routes() -> Router<Zustand> {
         .route("/:id/unfollow", routing::post(unfollow::post))
         .route("/lookup", routing::get(lookup::get))
         .route("/relationships", routing::get(relationships::get))
+        .route(
+            "/update_credentials",
+            routing::patch(update_credentials::patch),
+        )
         .route("/verify_credentials", routing::get(verify_credentials::get))
 }

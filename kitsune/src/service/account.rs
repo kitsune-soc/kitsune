@@ -9,6 +9,7 @@ use crate::{
     webfinger::Webfinger,
 };
 use chrono::Utc;
+use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     entity::{
@@ -18,7 +19,8 @@ use kitsune_db::{
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder,
+    ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    QueryOrder,
 };
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -73,6 +75,29 @@ pub struct Unfollow {
 
     /// Account that is following
     follower_id: Uuid,
+}
+
+#[derive(Builder)]
+#[builder(pattern = "owned")]
+pub struct Update {
+    account_id: Uuid,
+    #[builder(default, setter(strip_option))]
+    display_name: Option<String>,
+    #[builder(default, setter(strip_option))]
+    note: Option<String>,
+    #[builder(default, setter(strip_option))]
+    avatar_id: Option<Uuid>,
+    #[builder(default, setter(strip_option))]
+    header_id: Option<Uuid>,
+    #[builder(default, setter(strip_option))]
+    locked: Option<bool>,
+}
+
+impl Update {
+    #[must_use]
+    pub fn builder() -> UpdateBuilder {
+        UpdateBuilder::default()
+    }
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -240,5 +265,33 @@ impl AccountService {
         }
 
         Ok((account, follower))
+    }
+
+    pub async fn update(&self, update: Update) -> Result<accounts::Model> {
+        let mut active_model = accounts::ActiveModel {
+            id: ActiveValue::Set(update.account_id),
+            ..Default::default()
+        };
+
+        if let Some(display_name) = update.display_name {
+            active_model.display_name = ActiveValue::Set(Some(display_name));
+        }
+        if let Some(note) = update.note {
+            active_model.note = ActiveValue::Set(Some(note));
+        }
+        if let Some(avatar_id) = update.avatar_id {
+            active_model.avatar_id = ActiveValue::Set(Some(avatar_id));
+        }
+        if let Some(header_id) = update.header_id {
+            active_model.header_id = ActiveValue::Set(Some(header_id));
+        }
+        if let Some(locked) = update.locked {
+            active_model.locked = ActiveValue::Set(locked);
+        }
+
+        Accounts::update(active_model)
+            .exec(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 }
