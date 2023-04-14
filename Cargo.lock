@@ -1233,6 +1233,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "520fbf3c07483f94e3e3ca9d0cfd913d7718ef2483d2cfd91c0d9e91474ab913"
 
 [[package]]
+name = "const-oid"
+version = "0.10.0-pre"
+source = "git+https://github.com/RustCrypto/formats.git?rev=25910fe837092418458017353a9acab6081dc198#25910fe837092418458017353a9acab6081dc198"
+
+[[package]]
 name = "convert_case"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1556,7 +1561,7 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1a467a65c5e759bce6e65eaf91cc29f466cdc57cb65777bd646872a8a1fd4de"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "pem-rfc7468",
  "zeroize",
 ]
@@ -1567,7 +1572,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82b10af9f9f9f2134a42d3f8aa74658660f2e0234b0eb81bd171df8aa32779ed"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "zeroize",
 ]
 
@@ -1651,7 +1656,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8168378f4e5023e7218c89c891c0fd8ecdb5e5e4f18cb78f38cf245dd021e76f"
 dependencies = [
  "block-buffer",
- "const-oid",
+ "const-oid 0.9.2",
  "crypto-common",
  "subtle",
 ]
@@ -2594,6 +2599,7 @@ dependencies = [
  "base64 0.21.0",
  "bytes",
  "chrono",
+ "const-oid 0.10.0-pre",
  "dashmap",
  "deadpool-redis",
  "derive_builder",

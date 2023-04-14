@@ -38,6 +38,9 @@ axum-prometheus = "0.3.2"
 base64 = "0.21.0"
 bytes = "1.4.0"
 chrono = "0.4.24"
+const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe837092418458017353a9acab6081dc198", features = [
+    "db",
+] }
 dashmap = "5.4.0"
 # Replace this with a crates.io release as soon as Redis v0.23 support has been merged
 deadpool-redis = { git = "https://github.com/aumetra/deadpool", rev = "2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6" }
