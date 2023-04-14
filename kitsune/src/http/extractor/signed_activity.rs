@@ -10,10 +10,12 @@ use axum::{
     response::{IntoResponse, Response},
     RequestExt,
 };
+use const_oid::db::rfc8410::ID_ED_25519;
+use futures_util::future;
 use http::{request::Parts, StatusCode};
 use kitsune_db::entity::accounts;
 use kitsune_http_signatures::{
-    ring::signature::{UnparsedPublicKey, RSA_PKCS1_2048_8192_SHA256},
+    ring::signature::{UnparsedPublicKey, ED25519, RSA_PKCS1_2048_8192_SHA256},
     HttpVerifier,
 };
 use kitsune_type::ap::Activity;
@@ -71,16 +73,19 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 async fn verify_signature(parts: &Parts, remote_user: &accounts::Model) -> Result<bool> {
     let (_tag, public_key) = Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
     let public_key: SubjectPublicKeyInfo<'_> = public_key.decode_msg().map_err(Error::from)?;
-    let public_key = UnparsedPublicKey::new(
-        &RSA_PKCS1_2048_8192_SHA256,
-        public_key.subject_public_key.to_vec(),
-    );
+
+    // TODO: Replace this with an actual comparison as soon as the new const_oid version is out
+    let public_key = if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
+        UnparsedPublicKey::new(&ED25519, public_key.subject_public_key.to_vec())
+    } else {
+        UnparsedPublicKey::new(
+            &RSA_PKCS1_2048_8192_SHA256,
+            public_key.subject_public_key.to_vec(),
+        )
+    };
 
     let is_valid = HttpVerifier::default()
-        .verify(parts, |_key_id| async move {
-            // TODO: Select from the database by key ID
-            Ok(public_key)
-        })
+        .verify(parts, |_key_id| future::ok(public_key))
         .await
         .is_ok();
 
