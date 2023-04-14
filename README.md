@@ -1,4 +1,12 @@
+<div align="center">
+
 # kitsune
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kitsune-soc/kitsune/rust.yml?style=for-the-badge)
+[![dependency status](https://deps.rs/repo/github/kitsune-soc/kitsune/status.svg?style=for-the-badge)](https://deps.rs/repo/github/kitsune-soc/kitsune)
+![Matrix](https://img.shields.io/matrix/kitsune-space:matrix.org?label=Matrix%20chat&style=for-the-badge)
+
+</div>
 
 Kitsune is an open-souce social media server utilising the ActivityPub protocol. 
 Utilising the capabilities of ActivityPub, you can interact with people on Mastodon, Misskey, Akkoma, etc. 
