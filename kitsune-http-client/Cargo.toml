@@ -8,7 +8,7 @@ derive_builder = "0.12.0"
 futures-core = "0.3.28"
 headers = "0.3.8"
 http-body = "0.4.5"
-hyper = { version = "0.14.25", features = [
+hyper = { version = "0.14.26", features = [
     "client",
     "deprecated",
     "http1",
@@ -18,8 +18,8 @@ hyper = { version = "0.14.25", features = [
 hyper-rustls = { version = "0.24.0", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 pin-project-lite = "0.2.9"
-serde = "1.0.159"
-serde_json = "1.0.95"
+serde = "1.0.160"
+serde_json = "1.0.96"
 tower = "0.4.13"
 tower-http = { version = "0.4.0", features = [
     "decompression-full",

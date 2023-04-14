@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.68"
-aws-sdk-s3 = "0.25.1"
-aws-smithy-http = "0.55.0"
+aws-sdk-s3 = "0.26.0"
+aws-smithy-http = "0.55.1"
 bytes = "1.4.0"
 enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
@@ -18,7 +18,7 @@ tokio = { version = "1.27.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.7", features = ["io"] }
 
 [dev-dependencies]
-aws-credential-types = { version = "0.55.0", features = [
+aws-credential-types = { version = "0.55.1", features = [
     "hardcoded-credentials",
 ] }
 tempdir = "0.3.7"
