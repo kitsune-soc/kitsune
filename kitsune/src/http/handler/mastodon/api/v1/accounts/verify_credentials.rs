@@ -14,6 +14,7 @@ use kitsune_type::mastodon::Account;
     ),
     responses(
         (status = 200, description = "Account of the logged in user", body = Account),
+        (status = StatusCode::BAD_REQUEST, description = "The request was invalid"),
     )
 )]
 pub async fn get(

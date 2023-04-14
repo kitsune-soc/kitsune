@@ -25,7 +25,7 @@ async-graphql-axum = "5.0.7"
 async-recursion = "1.0.4"
 async-stream = "0.3.5"
 async-trait = "0.1.68"
-autometrics = { version = "0.3.2", default-features = false, features = [
+autometrics = { version = "0.3.3", default-features = false, features = [
     "metrics",
 ] }
 aws-credential-types = { version = "0.55.1", features = [
