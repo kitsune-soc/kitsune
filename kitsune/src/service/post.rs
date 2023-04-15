@@ -217,8 +217,6 @@ impl PostService {
         let post = self
             .db_conn
             .transaction(move |tx| {
-                let job_service = self.job_service.clone();
-
                 async move {
                     let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
                         (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
@@ -248,23 +246,21 @@ impl PostService {
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
-                    job_service
-                        .enqueue(
-                            Enqueue::builder()
-                                .job(DeliverCreate { post_id: post.id })
-                                .build(),
-                        )
-                        .await?;
-
                     Ok::<_, Error>(post)
                 }
                 .boxed()
             })
             .await?;
 
-        if create_post.visibility == Visibility::Public
-            || create_post.visibility == Visibility::Unlisted
-        {
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(DeliverCreate { post_id: post.id })
+                    .build(),
+            )
+            .await?;
+
+        if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
             self.search_service
                 .add_to_index(post.clone().into())
                 .await?;
