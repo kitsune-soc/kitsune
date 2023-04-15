@@ -33,7 +33,10 @@ impl PostResolver {
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
-                        attributes: vec![(Cow::Borrowed("href"), Cow::Owned(account.url))],
+                        attributes: vec![
+                            (Cow::Borrowed("class"), Cow::Borrowed("mention")),
+                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
+                        ],
                         content: Box::new(Element::Mention(mention)),
                     })
                 } else {
@@ -140,7 +143,7 @@ mod test {
             .await
             .expect("Failed to resolve mentions");
 
-        assert_eq!(content, "Hello <a href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
+        assert_eq!(content, "Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
         assert_eq!(mentioned_account_ids.len(), 1);
 
         let (account_id, _mention_text) = &mentioned_account_ids[0];
