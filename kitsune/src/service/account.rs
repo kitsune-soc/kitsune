@@ -6,7 +6,11 @@ use super::{
 use crate::{
     activitypub::Fetcher,
     error::{ApiError, Error, Result},
-    job::deliver::{follow::DeliverFollow, unfollow::DeliverUnfollow},
+    job::deliver::{
+        follow::DeliverFollow,
+        unfollow::DeliverUnfollow,
+        update::{DeliverUpdate, UpdateEntity},
+    },
     webfinger::Webfinger,
 };
 use bytes::Bytes;
@@ -298,9 +302,19 @@ impl AccountService {
             active_model.locked = ActiveValue::Set(locked);
         }
 
-        Accounts::update(active_model)
-            .exec(&self.db_conn)
-            .await
-            .map_err(Error::from)
+        let updated_account = Accounts::update(active_model).exec(&self.db_conn).await?;
+
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(DeliverUpdate {
+                        entity: UpdateEntity::Account,
+                        id: updated_account.id,
+                    })
+                    .build(),
+            )
+            .await?;
+
+        Ok(updated_account)
     }
 }
