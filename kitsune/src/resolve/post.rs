@@ -4,7 +4,7 @@ use crate::{
 };
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
-use std::{borrow::Cow, collections::HashMap, mem};
+use std::{borrow::Cow, collections::HashMap};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -74,8 +74,10 @@ impl PostResolver {
             .await
             .map_err(Error::PostProcessing)?;
 
-        let mentioned_account_ids = mem::take(&mut *mentioned_account_ids.lock());
-        Ok((mentioned_account_ids.into_iter().collect(), content))
+        Ok((
+            mentioned_account_ids.into_inner().into_iter().collect(),
+            content,
+        ))
     }
 }
 
