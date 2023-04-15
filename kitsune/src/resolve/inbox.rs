@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use futures_util::{future::Either, Stream, StreamExt};
 use kitsune_db::{
     column::InboxUrlQuery,
@@ -16,6 +16,21 @@ impl InboxResolver {
     #[must_use]
     pub fn new(db_conn: DatabaseConnection) -> Self {
         Self { db_conn }
+    }
+
+    #[instrument(skip_all, fields(account_id = %account.id))]
+    pub async fn resolve_followers(
+        &self,
+        account: &accounts::Model,
+    ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
+        account
+            .find_linked(Followers)
+            .select_only()
+            .column(accounts::Column::InboxUrl)
+            .into_values::<_, InboxUrlQuery>()
+            .stream(&self.db_conn)
+            .await
+            .map_err(Error::from)
     }
 
     #[instrument(skip_all, fields(post_id = %post.id))]
@@ -39,15 +54,7 @@ impl InboxResolver {
         let stream = if post.visibility == Visibility::MentionOnly {
             Either::Left(mentioned_inbox_stream)
         } else {
-            let follower_inbox_stream = account
-                .find_linked(Followers)
-                .select_only()
-                .column(accounts::Column::InboxUrl)
-                .into_values::<_, InboxUrlQuery>()
-                .stream(&self.db_conn)
-                .await?;
-
-            Either::Right(mentioned_inbox_stream.chain(follower_inbox_stream))
+            Either::Right(mentioned_inbox_stream.chain(self.resolve_followers(&account).await?))
         };
 
         Ok(stream)
