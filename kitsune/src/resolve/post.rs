@@ -33,7 +33,10 @@ impl PostResolver {
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
-                        attributes: vec![(Cow::Borrowed("href"), Cow::Owned(account.url))],
+                        attributes: vec![
+                            (Cow::Borrowed("class"), Cow::Borrowed("mention")),
+                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
+                        ],
                         content: Box::new(Element::Mention(mention)),
                     })
                 } else {
