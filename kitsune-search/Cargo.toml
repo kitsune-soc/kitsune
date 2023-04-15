@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-autometrics = { version = "0.3.2", default-features = false, features = ["metrics"] }
+autometrics = { version = "0.3.3", default-features = false, features = ["metrics"] }
 dotenvy = "0.15.7"
 envy = "0.4.2"
 futures-util = "0.3.28"

@@ -476,9 +476,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "autometrics"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "623fba480dd91a3cf98c6f72e33650655a6b48b9dfdc8b4dcdc261cf485535b6"
+checksum = "52c47a2283b04388a392a7bff8a0f68db615d967e4d177068f573773fcefa91b"
 dependencies = [
  "autometrics-macros",
  "metrics",
@@ -486,9 +486,9 @@ dependencies = [
 
 [[package]]
 name = "autometrics-macros"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0bbf215c7e53bfcec4f1ac56d88b49e87f83889aa43725b21d8a86718ef3b92"
+checksum = "214b577a372c973db7ade265f56e1f84c3fdda7fe4f813466f81fce8c2755e6f"
 dependencies = [
  "percent-encoding",
  "proc-macro2",

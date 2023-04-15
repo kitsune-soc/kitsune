@@ -3,6 +3,7 @@ use self::{
     deliver::{
         create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
         follow::DeliverFollow, unfavourite::DeliverUnfavourite, unfollow::DeliverUnfollow,
+        update::DeliverUpdate,
     },
 };
 use crate::{
@@ -29,9 +30,9 @@ mod catch_panic;
 
 pub mod deliver;
 
-const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
-const MAX_CONCURRENT_REQUESTS: usize = 10;
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
+const MAX_CONCURRENT_REQUESTS: usize = 10;
+const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 
 #[enum_dispatch(Runnable)]
 #[derive(Deserialize, Serialize)]
@@ -42,6 +43,7 @@ pub enum Job {
     DeliverFollow,
     DeliverUnfavourite,
     DeliverUnfollow,
+    DeliverUpdate,
 }
 
 #[derive(Clone, Copy)]
@@ -80,13 +82,13 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
     }
 
     let mut update_model = db_job.clone().into_active_model();
+    update_model.updated_at = ActiveValue::Set(Utc::now().into());
     #[allow(clippy::cast_possible_truncation)]
     match execution_result {
         Ok(Err(..)) | Err(..) => {
             increment_counter!("failed_jobs");
 
             update_model.state = ActiveValue::Set(JobState::Failed);
-
             let fail_count = db_job.fail_count + 1;
             update_model.fail_count = ActiveValue::Set(fail_count);
 
@@ -95,14 +97,11 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
                 chrono::Duration::from_std(Duration::from_secs(job.backoff(fail_count as u32)))
                     .unwrap();
             update_model.run_at = ActiveValue::Set((Utc::now() + backoff_duration).into());
-
-            update_model.updated_at = ActiveValue::Set(Utc::now().into());
         }
         _ => {
             increment_counter!("succeeded_jobs");
 
             update_model.state = ActiveValue::Set(JobState::Succeeded);
-            update_model.updated_at = ActiveValue::Set(Utc::now().into());
         }
     }
 

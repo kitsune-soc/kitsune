@@ -93,6 +93,7 @@ struct CommonApiDocs;
         mastodon::api::v1::accounts::lookup::get,
         mastodon::api::v1::accounts::relationships::get,
         mastodon::api::v1::accounts::statuses::get,
+        mastodon::api::v1::accounts::update_credentials::patch,
         mastodon::api::v1::accounts::verify_credentials::get,
         mastodon::api::v1::apps::post,
         mastodon::api::v1::instance::get,

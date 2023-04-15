@@ -215,19 +215,20 @@ pub async fn initialise_state(config: &Configuration, conn: DatabaseConnection) 
         .domain(config.url.domain.as_str())
         .build();
 
-    let account_service = AccountService::builder()
-        .db_conn(conn.clone())
-        .fetcher(fetcher.clone())
-        .job_service(job_service.clone())
-        .url_service(url_service.clone())
-        .webfinger(webfinger.clone())
-        .build();
-
     let attachment_service = AttachmentService::builder()
         .db_conn(conn.clone())
         .media_proxy_enabled(config.server.media_proxy_enabled)
         .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
+        .build();
+
+    let account_service = AccountService::builder()
+        .attachment_service(attachment_service.clone())
+        .db_conn(conn.clone())
+        .fetcher(fetcher.clone())
+        .job_service(job_service.clone())
+        .url_service(url_service.clone())
+        .webfinger(webfinger.clone())
         .build();
 
     let instance_service = InstanceService::builder()

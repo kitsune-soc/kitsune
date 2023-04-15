@@ -16,7 +16,7 @@ use rsa::{
     pkcs8::{self, der, spki},
 };
 use sea_orm::TransactionError;
-use std::error::Error as StdError;
+use std::{error::Error as StdError, str::ParseBoolError};
 use thiserror::Error;
 use tokio::sync::oneshot;
 
@@ -172,6 +172,9 @@ pub enum Error {
 
     #[error("OAuth application not found")]
     OAuthApplicationNotFound,
+
+    #[error(transparent)]
+    ParseBool(#[from] ParseBoolError),
 
     #[error(transparent)]
     Oneshot(#[from] oneshot::error::RecvError),

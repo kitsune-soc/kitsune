@@ -1,6 +1,9 @@
 use crate::{
     error::{ApiError, Result},
-    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+    http::{
+        extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+        util::buffer_multipart_to_tempfile,
+    },
     mapping::MastodonMapper,
     service::attachment::{AttachmentService, Update, Upload},
     state::Zustand,
@@ -10,16 +13,9 @@ use axum::{
     extract::{Multipart, Path, State},
     routing, Json, Router,
 };
-use futures_util::{TryFutureExt, TryStreamExt};
+use futures_util::TryFutureExt;
 use kitsune_type::mastodon::MediaAttachment;
 use serde::Deserialize;
-use std::io::SeekFrom;
-use tempfile::tempfile;
-use tokio::{
-    fs::File,
-    io::{AsyncSeekExt, AsyncWriteExt},
-};
-use tokio_util::io::ReaderStream;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -81,22 +77,9 @@ pub async fn post(
                     let Some(content_type) = field.content_type().map(ToString::to_string) else {
                         continue;
                     };
+                    let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
-                    let tempfile = tempfile().unwrap();
-                    let mut tempfile = File::from_std(tempfile);
-
-                    while let Some(chunk) = field.chunk().await? {
-                        if let Err(err) = tempfile.write_all(&chunk).await {
-                            error!(error = ?err, "Failed to write chunk to tempfile");
-                            return Err(ApiError::InternalServerError.into());
-                        }
-                    }
-
-                    tempfile.seek(SeekFrom::Start(0)).await.unwrap();
-
-                    upload = upload
-                        .content_type(content_type)
-                        .stream(ReaderStream::new(tempfile).map_err(Into::into));
+                    upload = upload.content_type(content_type).stream(stream);
                 }
                 _ => continue,
             }

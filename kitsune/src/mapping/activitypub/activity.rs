@@ -22,6 +22,27 @@ pub trait IntoActivity {
 }
 
 #[async_trait]
+impl IntoActivity for accounts::Model {
+    type Output = Activity;
+    type NegateOutput = Activity;
+
+    async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
+        Ok(Activity {
+            context: ap_context(),
+            id: format!("{}#update", self.url),
+            r#type: ActivityType::Update,
+            actor: StringOrObject::String(self.url.clone()),
+            object: ObjectField::Actor(self.into_object(state).await?),
+            published: Utc::now(),
+        })
+    }
+
+    async fn into_negate_activity(self, _state: &Zustand) -> Result<Self::NegateOutput> {
+        todo!();
+    }
+}
+
+#[async_trait]
 impl IntoActivity for posts_favourites::Model {
     type Output = Activity;
     type NegateOutput = Activity;
@@ -177,16 +198,28 @@ impl IntoActivity for posts::Model {
             .await?
             .expect("[Bug] Post without author");
 
-        // TODO: Decide type by `reposted_post_id` field
-        let object = self.into_object(state).await?;
+        let activity = if self.reposted_post_id.is_some() {
+            Activity {
+                context: ap_context(),
+                id: format!("{}#undo", self.url),
+                r#type: ActivityType::Undo,
+                actor: StringOrObject::String(account.url),
+                object: ObjectField::Url(self.url),
+                published: Utc::now(),
+            }
+        } else {
+            let object = self.into_object(state).await?;
 
-        Ok(Activity {
-            context: ap_context(),
-            id: format!("{}#delete", object.id),
-            r#type: ActivityType::Delete,
-            actor: StringOrObject::String(account.url.clone()),
-            published: Utc::now(),
-            object: ObjectField::Object(object),
-        })
+            Activity {
+                context: ap_context(),
+                id: format!("{}#delete", object.id),
+                r#type: ActivityType::Delete,
+                actor: StringOrObject::String(account.url.clone()),
+                published: Utc::now(),
+                object: ObjectField::Object(object),
+            }
+        };
+
+        Ok(activity)
     }
 }
