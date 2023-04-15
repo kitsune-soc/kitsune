@@ -38,6 +38,11 @@ impl Runnable for DeliverAccept {
             return Ok(());
         };
 
+        // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
+        // But I'm not sure how I could encode these into the form of these two traits
+        // So we make an exception for this
+        //
+        // If someone has a better idea, please open an issue
         let accept_activity = Activity {
             context: ap_context(),
             id: format!("{}#accept", follow.url),
