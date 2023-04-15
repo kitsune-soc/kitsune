@@ -1,9 +1,12 @@
+use std::ops::Not;
+
 use crate::{
     activitypub::{handle_attachments, handle_mentions},
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
-    service::federation_filter::FederationFilterService,
+    job::deliver::accept::DeliverAccept,
+    service::{federation_filter::FederationFilterService, job::Enqueue},
     state::Zustand,
 };
 use axum::{debug_handler, extract::State};
@@ -143,21 +146,36 @@ async fn follow_activity(
     activity: Activity,
 ) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
+    let approved_at = followed_user.locked.not().then(|| Utc::now().into());
 
-    AccountsFollowers::insert(
+    let insert_result = AccountsFollowers::insert(
         accounts_followers::Model {
             id: Uuid::now_v7(),
             account_id: followed_user.id,
             follower_id: author.id,
-            approved_at: None,
+            approved_at,
             url: activity.id,
             created_at: activity.published.into(),
             updated_at: Utc::now().into(),
         }
         .into_active_model(),
     )
-    .exec_without_returning(&state.db_conn)
+    .exec(&state.db_conn)
     .await?;
+
+    if followed_user.local {
+        state
+            .service
+            .job
+            .enqueue(
+                Enqueue::builder()
+                    .job(DeliverAccept {
+                        follow_id: insert_result.last_insert_id,
+                    })
+                    .build(),
+            )
+            .await?;
+    }
 
     Ok(())
 }
