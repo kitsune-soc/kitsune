@@ -199,15 +199,26 @@ impl IntoActivity for posts::Model {
             .expect("[Bug] Post without author");
 
         // TODO: Decide type by `reposted_post_id` field
-        let object = self.into_object(state).await?;
+        if self.reposted_post_id.is_some() {
+            Ok(Activity {
+                context: ap_context(),
+                id: format!("{}#undo", self.url),
+                r#type: ActivityType::Undo,
+                actor: StringOrObject::String(account.url),
+                object: ObjectField::Url(self.url),
+                published: Utc::now(),
+            })
+        } else {
+            let object = self.into_object(state).await?;
 
-        Ok(Activity {
-            context: ap_context(),
-            id: format!("{}#delete", object.id),
-            r#type: ActivityType::Delete,
-            actor: StringOrObject::String(account.url.clone()),
-            published: Utc::now(),
-            object: ObjectField::Object(object),
-        })
+            Ok(Activity {
+                context: ap_context(),
+                id: format!("{}#delete", object.id),
+                r#type: ActivityType::Delete,
+                actor: StringOrObject::String(account.url.clone()),
+                published: Utc::now(),
+                object: ObjectField::Object(object),
+            })
+        }
     }
 }
