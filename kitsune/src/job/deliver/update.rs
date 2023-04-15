@@ -37,7 +37,6 @@ impl Runnable for DeliverUpdate {
                 else {
                     return Ok(());
                 };
-
                 let inbox_stream = inbox_resolver.resolve_followers(&account).await?;
 
                 (
