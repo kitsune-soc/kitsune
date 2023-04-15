@@ -20,8 +20,8 @@ pub enum UpdateEntity {
 
 #[derive(Deserialize, Serialize)]
 pub struct DeliverUpdate {
-    entity: UpdateEntity,
-    id: Uuid,
+    pub entity: UpdateEntity,
+    pub id: Uuid,
 }
 
 #[async_trait]
