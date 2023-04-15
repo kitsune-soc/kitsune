@@ -1,8 +1,14 @@
 use crate::{
     error::{ApiError, Result},
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::{
+        extractor::{AuthExtractor, MastodonAuthExtractor},
+        util::buffer_multipart_to_tempfile,
+    },
     mapping::MastodonMapper,
-    service::account::{AccountService, Update},
+    service::{
+        account::{AccountService, Update},
+        attachment::Upload,
+    },
 };
 use axum::{
     extract::{Multipart, State},
@@ -28,7 +34,7 @@ pub async fn patch(
 ) -> Result<Json<Account>> {
     let mut update = Update::builder().account_id(user_data.account.id);
 
-    while let Some(field) = multipart.next_field().await? {
+    while let Some(mut field) = multipart.next_field().await? {
         let Some(field_name) = field.name() else {
             continue;
         };
@@ -36,8 +42,36 @@ pub async fn patch(
         update = match field_name {
             "display_name" => update.display_name(field.text().await?),
             "note" => update.note(field.text().await?),
-            "avatar" => todo!(),
-            "header" => todo!(),
+            "avatar" => {
+                let Some(content_type) = field.content_type().map(ToString::to_string) else {
+                    return Err(ApiError::BadRequest.into());
+                };
+                let stream = buffer_multipart_to_tempfile(&mut field).await?;
+
+                let upload = Upload::builder()
+                    .account_id(user_data.account.id)
+                    .content_type(content_type)
+                    .stream(stream)
+                    .build()
+                    .map_err(|_| ApiError::BadRequest)?;
+
+                update.avatar(upload)
+            }
+            "header" => {
+                let Some(content_type) = field.content_type().map(ToString::to_string) else {
+                    return Err(ApiError::BadRequest.into());
+                };
+                let stream = buffer_multipart_to_tempfile(&mut field).await?;
+
+                let upload = Upload::builder()
+                    .account_id(user_data.account.id)
+                    .content_type(content_type)
+                    .stream(stream)
+                    .build()
+                    .map_err(|_| ApiError::BadRequest)?;
+
+                update.header(upload)
+            }
             "locked" => update.locked(field.text().await?.parse()?),
             _ => continue,
         };

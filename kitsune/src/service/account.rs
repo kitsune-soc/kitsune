@@ -1,4 +1,5 @@
 use super::{
+    attachment::{AttachmentService, Upload},
     job::{Enqueue, JobService},
     url::UrlService,
 };
@@ -8,6 +9,7 @@ use crate::{
     job::deliver::{follow::DeliverFollow, unfollow::DeliverUnfollow},
     webfinger::Webfinger,
 };
+use bytes::Bytes;
 use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
@@ -79,29 +81,30 @@ pub struct Unfollow {
 
 #[derive(Builder)]
 #[builder(pattern = "owned")]
-pub struct Update {
+pub struct Update<A, H> {
     account_id: Uuid,
     #[builder(default, setter(strip_option))]
     display_name: Option<String>,
     #[builder(default, setter(strip_option))]
     note: Option<String>,
     #[builder(default, setter(strip_option))]
-    avatar_id: Option<Uuid>,
+    avatar: Option<Upload<A>>,
     #[builder(default, setter(strip_option))]
-    header_id: Option<Uuid>,
+    header: Option<Upload<H>>,
     #[builder(default, setter(strip_option))]
     locked: Option<bool>,
 }
 
-impl Update {
+impl<A, H> Update<A, H> {
     #[must_use]
-    pub fn builder() -> UpdateBuilder {
+    pub fn builder() -> UpdateBuilder<A, H> {
         UpdateBuilder::default()
     }
 }
 
 #[derive(Clone, TypedBuilder)]
 pub struct AccountService {
+    attachment_service: AttachmentService,
     db_conn: DatabaseConnection,
     fetcher: Fetcher,
     job_service: JobService,
@@ -267,7 +270,11 @@ impl AccountService {
         Ok((account, follower))
     }
 
-    pub async fn update(&self, update: Update) -> Result<accounts::Model> {
+    pub async fn update<A, H>(&self, update: Update<A, H>) -> Result<accounts::Model>
+    where
+        A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
+        H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
+    {
         let mut active_model = accounts::ActiveModel {
             id: ActiveValue::Set(update.account_id),
             ..Default::default()
@@ -279,11 +286,13 @@ impl AccountService {
         if let Some(note) = update.note {
             active_model.note = ActiveValue::Set(Some(note));
         }
-        if let Some(avatar_id) = update.avatar_id {
-            active_model.avatar_id = ActiveValue::Set(Some(avatar_id));
+        if let Some(avatar) = update.avatar {
+            let media_attachment = self.attachment_service.upload(avatar).await?;
+            active_model.avatar_id = ActiveValue::Set(Some(media_attachment.id));
         }
-        if let Some(header_id) = update.header_id {
-            active_model.header_id = ActiveValue::Set(Some(header_id));
+        if let Some(header) = update.header {
+            let media_attachment = self.attachment_service.upload(header).await?;
+            active_model.header_id = ActiveValue::Set(Some(media_attachment.id));
         }
         if let Some(locked) = update.locked {
             active_model.locked = ActiveValue::Set(locked);

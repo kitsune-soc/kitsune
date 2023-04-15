@@ -19,6 +19,7 @@ mod handler;
 mod openapi;
 mod page;
 mod responder;
+mod util;
 
 pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
     let frontend_dir = &server_config.frontend_dir;

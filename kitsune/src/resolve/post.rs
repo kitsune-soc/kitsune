@@ -84,12 +84,14 @@ mod test {
         cache::NoopCache,
         config::FederationFilterConfiguration,
         service::{
-            account::AccountService, federation_filter::FederationFilterService, job::JobService,
-            search::NoopSearchService, url::UrlService,
+            account::AccountService, attachment::AttachmentService,
+            federation_filter::FederationFilterService, job::JobService, search::NoopSearchService,
+            url::UrlService,
         },
         webfinger::Webfinger,
     };
     use kitsune_db::entity::prelude::Accounts;
+    use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
     use sea_orm::EntityTrait;
     use std::sync::Arc;
@@ -117,7 +119,14 @@ mod test {
             .domain("example.com")
             .scheme("http")
             .build();
+        let attachment_service = AttachmentService::builder()
+            .db_conn(db_conn.clone())
+            .media_proxy_enabled(false)
+            .storage_backend(FsStorage::new("uploads".into()))
+            .url_service(url_service.clone())
+            .build();
         let account_service = AccountService::builder()
+            .attachment_service(attachment_service)
             .db_conn(db_conn.clone())
             .fetcher(fetcher)
             .job_service(job_service)
