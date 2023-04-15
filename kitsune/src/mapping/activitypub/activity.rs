@@ -22,6 +22,27 @@ pub trait IntoActivity {
 }
 
 #[async_trait]
+impl IntoActivity for accounts::Model {
+    type Output = Activity;
+    type NegateOutput = Activity;
+
+    async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
+        Ok(Activity {
+            context: ap_context(),
+            id: format!("{}#update", self.url),
+            r#type: ActivityType::Update,
+            actor: StringOrObject::String(self.url.clone()),
+            object: ObjectField::Actor(self.into_object(state).await?),
+            published: Utc::now(),
+        })
+    }
+
+    async fn into_negate_activity(self, _state: &Zustand) -> Result<Self::NegateOutput> {
+        todo!();
+    }
+}
+
+#[async_trait]
 impl IntoActivity for posts_favourites::Model {
     type Output = Activity;
     type NegateOutput = Activity;
