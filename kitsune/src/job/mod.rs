@@ -1,9 +1,9 @@
 use self::{
     catch_panic::CatchPanic,
     deliver::{
-        create::DeliverCreate, delete::DeliverDelete, favourite::DeliverFavourite,
-        follow::DeliverFollow, unfavourite::DeliverUnfavourite, unfollow::DeliverUnfollow,
-        update::DeliverUpdate,
+        accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
+        favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
+        unfollow::DeliverUnfollow, update::DeliverUpdate,
     },
 };
 use crate::{
@@ -37,6 +37,7 @@ const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 #[enum_dispatch(Runnable)]
 #[derive(Deserialize, Serialize)]
 pub enum Job {
+    DeliverAccept,
     DeliverCreate,
     DeliverDelete,
     DeliverFavourite,
