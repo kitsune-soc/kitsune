@@ -62,7 +62,7 @@ mod test {
     use bytes::{BufMut, BytesMut};
     use futures_util::{future, stream, StreamExt, TryStreamExt};
     use std::str;
-    use tempdir::TempDir;
+    use tempfile::TempDir;
 
     const TEST_TEXT: &str = r#"
     新時代はこの未来だ
@@ -103,7 +103,7 @@ mod test {
 
     #[tokio::test]
     async fn basic() {
-        let temp_dir = TempDir::new("test-").unwrap();
+        let temp_dir = TempDir::new().unwrap();
         let storage = Storage::new(temp_dir.path().to_owned());
 
         storage

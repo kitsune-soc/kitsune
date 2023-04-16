@@ -21,5 +21,5 @@ tokio-util = { version = "0.7.7", features = ["io"] }
 aws-credential-types = { version = "0.55.1", features = [
     "hardcoded-credentials",
 ] }
-tempdir = "0.3.7"
+tempfile = "3.5.0"
 tokio = { version = "1.27.0", features = ["macros", "rt"] }
