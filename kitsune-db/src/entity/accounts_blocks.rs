@@ -10,7 +10,7 @@ pub struct Model {
     pub id: Uuid,
     pub account_id: Uuid,
     pub blocked_account_id: Uuid,
-    pub created_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
