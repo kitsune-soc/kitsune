@@ -130,7 +130,7 @@ impl IntoObject for posts::Model {
             content: self.content,
             attachment,
             tag,
-            published: self.created_at.into(),
+            published: self.created_at,
             to,
             cc,
         })
@@ -185,7 +185,7 @@ impl IntoObject for accounts::Model {
                 owner: self.url,
                 public_key_pem: self.public_key,
             },
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 }

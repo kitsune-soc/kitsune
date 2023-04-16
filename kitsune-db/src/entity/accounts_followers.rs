@@ -10,11 +10,11 @@ pub struct Model {
     pub id: Uuid,
     pub account_id: Uuid,
     pub follower_id: Uuid,
-    pub approved_at: Option<DateTimeWithTimeZone>,
+    pub approved_at: Option<TimeDateTimeWithTimeZone>,
     #[sea_orm(column_type = "Text", unique)]
     pub url: String,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

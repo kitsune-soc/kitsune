@@ -1,12 +1,12 @@
 use crate::{util::UnixTimestampExt, Error, Result, SignatureComponent};
 use base64::{engine::general_purpose, Engine};
-use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use http::{header::DATE, request::Parts};
 use std::{
     cmp::min,
     time::{Duration, SystemTime, SystemTimeError},
 };
+use time::{format_description::well_known::Rfc2822, OffsetDateTime};
 
 #[derive(Builder)]
 pub struct SignatureHeader<'a> {
@@ -95,22 +95,21 @@ impl<'a> SignatureHeader<'a> {
                 .get(DATE)
                 .ok_or(Error::InvalidSignatureHeader)?;
 
-            DateTime::parse_from_rfc2822(date_header.to_str()?)?.with_timezone(&Utc)
+            OffsetDateTime::parse(date_header.to_str()?, &Rfc2822)?
         } else {
             return Err(Error::InvalidSignatureHeader);
         };
 
         // Determine when the signature is considered expired
-        let expires_at: DateTime<Utc> = {
-            let enforced_expires_at =
-                signed_created + chrono::Duration::from_std(enforced_duration)?;
+        let expires_at: OffsetDateTime = {
+            let enforced_expires_at = signed_created + time::Duration::try_from(enforced_duration)?;
 
             self.expires.map_or(enforced_expires_at, |expires| {
                 min(expires.into(), enforced_expires_at)
             })
         };
 
-        Ok(Utc::now() >= expires_at)
+        Ok(OffsetDateTime::now_utc() >= expires_at)
     }
 }
 

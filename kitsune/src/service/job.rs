@@ -1,10 +1,10 @@
 use crate::{error::Result, job::Job};
-use chrono::{DateTime, Utc};
 use kitsune_db::{
     custom::JobState,
     entity::{jobs, prelude::Jobs},
 };
 use sea_orm::{DatabaseConnection, EntityTrait, IntoActiveModel};
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -12,7 +12,7 @@ use uuid::Uuid;
 pub struct Enqueue<T> {
     job: T,
     #[builder(default, setter(strip_option))]
-    run_at: Option<DateTime<Utc>>,
+    run_at: Option<OffsetDateTime>,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -26,16 +26,15 @@ impl JobService {
         T: Into<Job>,
     {
         let context = serde_json::to_value(enqueue.job.into())?;
-        let run_at = enqueue.run_at.unwrap_or(Utc::now()).into();
 
         let job = jobs::Model {
             id: Uuid::now_v7(),
             state: JobState::Queued,
             context,
-            run_at,
+            run_at: enqueue.run_at.unwrap_or_else(OffsetDateTime::now_utc),
             fail_count: 0,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: OffsetDateTime::now_utc(),
         };
 
         Jobs::insert(job.into_active_model())

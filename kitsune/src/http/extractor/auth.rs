@@ -5,7 +5,6 @@ use axum::{
     response::{IntoResponse, Response},
     RequestPartsExt, TypedHeader,
 };
-use chrono::Utc;
 use headers::{authorization::Bearer, Authorization};
 use http::{request::Parts, StatusCode};
 use kitsune_db::entity::{
@@ -14,6 +13,7 @@ use kitsune_db::entity::{
     users,
 };
 use sea_orm::{ColumnTrait, QueryFilter, Related};
+use time::OffsetDateTime;
 
 /// Mastodon-specific auth extractor alias
 ///
@@ -54,8 +54,8 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
             .filter(oauth2_access_tokens::Column::Token.eq(bearer_token.token()));
 
         if ENFORCE_EXPIRATION {
-            user_account_query =
-                user_account_query.filter(oauth2_access_tokens::Column::ExpiredAt.gt(Utc::now()));
+            user_account_query = user_account_query
+                .filter(oauth2_access_tokens::Column::ExpiredAt.gt(OffsetDateTime::now_utc()));
         }
 
         let Some((user, Some(account))) = user_account_query

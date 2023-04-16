@@ -80,7 +80,7 @@ impl IntoMastodon for accounts::Model {
             acct,
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
-            created_at: self.created_at.into(),
+            created_at: self.created_at,
             locked: self.locked,
             note: self.note.unwrap_or_default(),
             url: self.url,
@@ -311,7 +311,7 @@ impl IntoMastodon for posts::Model {
 
         Ok(Status {
             id: self.id,
-            created_at: self.created_at.into(),
+            created_at: self.created_at,
             in_reply_to_account_id: None,
             in_reply_to_id: self.in_reply_to_id,
             sensitive: self.is_sensitive,

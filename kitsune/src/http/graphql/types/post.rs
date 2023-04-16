@@ -1,9 +1,9 @@
 use super::Visibility;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use chrono::{DateTime, Utc};
 use kitsune_db::entity::{posts, prelude::Accounts};
 use sea_orm::EntityTrait;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
@@ -18,8 +18,8 @@ pub struct Post {
     pub content: String,
     pub visibility: Visibility,
     pub url: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+    pub updated_at: OffsetDateTime,
 }
 
 #[ComplexObject]
@@ -44,8 +44,8 @@ impl From<posts::Model> for Post {
             content: value.content,
             visibility: value.visibility.into(),
             url: value.url,
-            created_at: value.created_at.into(),
-            updated_at: value.updated_at.into(),
+            created_at: value.created_at,
+            updated_at: value.updated_at,
         }
     }
 }

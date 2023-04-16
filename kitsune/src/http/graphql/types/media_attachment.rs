@@ -1,9 +1,9 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use chrono::{DateTime, Utc};
 use kitsune_db::entity::{media_attachments, prelude::Accounts};
 use sea_orm::EntityTrait;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, SimpleObject)]
@@ -15,7 +15,7 @@ pub struct MediaAttachment {
     pub content_type: String,
     pub description: Option<String>,
     pub blurhash: Option<String>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
 }
 
 #[ComplexObject]
@@ -46,7 +46,7 @@ impl From<media_attachments::Model> for MediaAttachment {
             content_type: value.content_type,
             description: value.description,
             blurhash: value.blurhash,
-            created_at: value.created_at.into(),
+            created_at: value.created_at,
         }
     }
 }

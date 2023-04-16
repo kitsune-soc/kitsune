@@ -8,7 +8,6 @@ use crate::{
     state::Zustand,
 };
 use axum::{debug_handler, extract::State};
-use chrono::Utc;
 use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
     custom::Visibility,
@@ -24,6 +23,7 @@ use sea_orm::{
     QuerySelect, TransactionTrait,
 };
 use std::ops::Not;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
@@ -36,7 +36,7 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     };
 
     let mut follow_activity: accounts_followers::ActiveModel = follow_activity.into();
-    follow_activity.approved_at = ActiveValue::Set(Some(Utc::now().into()));
+    follow_activity.approved_at = ActiveValue::Set(Some(OffsetDateTime::now_utc()));
     follow_activity.update(&state.db_conn).await?;
 
     Ok(())
@@ -75,8 +75,8 @@ async fn create_activity(
                             visibility,
                             is_local: false,
                             url: object.id,
-                            created_at: object.published.into(),
-                            updated_at: Utc::now().into(),
+                            created_at: object.published,
+                            updated_at: OffsetDateTime::now_utc(),
                         }
                         .into_active_model(),
                     )
@@ -145,7 +145,7 @@ async fn follow_activity(
     activity: Activity,
 ) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
-    let approved_at = followed_user.locked.not().then(|| Utc::now().into());
+    let approved_at = followed_user.locked.not().then(OffsetDateTime::now_utc);
 
     let insert_result = AccountsFollowers::insert(
         accounts_followers::Model {
@@ -154,8 +154,8 @@ async fn follow_activity(
             follower_id: author.id,
             approved_at,
             url: activity.id,
-            created_at: activity.published.into(),
-            updated_at: Utc::now().into(),
+            created_at: activity.published,
+            updated_at: OffsetDateTime::now_utc(),
         }
         .into_active_model(),
     )
@@ -200,7 +200,7 @@ async fn like_activity(state: &Zustand, author: accounts::Model, activity: Activ
             account_id: author.id,
             post_id: post.id,
             url: activity.id,
-            created_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
         }
         .into_active_model(),
     )

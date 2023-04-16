@@ -11,7 +11,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text", unique)]
     pub access_token: String,
     pub application_id: Uuid,
-    pub created_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
