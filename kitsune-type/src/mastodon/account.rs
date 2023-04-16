@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub struct Field {
     pub name: String,
     pub value: String,
-    pub verified_at: Option<DateTime<Utc>>,
+    pub verified_at: Option<OffsetDateTime>,
 }
 
 #[derive(Clone, Deserialize, Serialize, ToSchema)]
@@ -25,7 +25,8 @@ pub struct Account {
     pub acct: String,
     pub username: String,
     pub display_name: String,
-    pub created_at: DateTime<Utc>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub created_at: OffsetDateTime,
     pub locked: bool,
     pub note: String,
     pub url: String,

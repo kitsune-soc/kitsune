@@ -14,7 +14,6 @@ use crate::{
     webfinger::Webfinger,
 };
 use bytes::Bytes;
-use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
@@ -28,6 +27,7 @@ use sea_orm::{
     ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     QueryOrder,
 };
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -140,12 +140,12 @@ impl AccountService {
             follower_id: follower.id,
             approved_at: None,
             url,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: OffsetDateTime::now_utc(),
         };
 
         if account.local && !account.locked {
-            follow_model.approved_at = Some(Utc::now().into());
+            follow_model.approved_at = Some(OffsetDateTime::now_utc());
         }
 
         let follow_id = AccountsFollowers::insert(follow_model.into_active_model())

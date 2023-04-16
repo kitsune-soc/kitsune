@@ -1,7 +1,7 @@
 use super::{Account, MediaAttachment};
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use time::OffsetDateTime;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -32,7 +32,8 @@ pub enum Visibility {
 #[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Status {
     pub id: Uuid,
-    pub created_at: DateTime<Utc>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub created_at: OffsetDateTime,
     pub in_reply_to_id: Option<Uuid>,
     pub in_reply_to_account_id: Option<Uuid>,
     pub sensitive: bool,

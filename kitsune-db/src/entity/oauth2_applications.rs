@@ -14,8 +14,8 @@ pub struct Model {
     pub secret: String,
     #[sea_orm(column_type = "Text")]
     pub redirect_uri: String,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

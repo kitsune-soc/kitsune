@@ -12,7 +12,6 @@ use crate::{
     state::Zustand,
 };
 use async_trait::async_trait;
-use chrono::Utc;
 use enum_dispatch::enum_dispatch;
 use kitsune_db::{
     custom::JobState,
@@ -24,6 +23,7 @@ use sea_orm::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::Duration;
+use time::OffsetDateTime;
 use tokio::task::JoinSet;
 
 mod catch_panic;
@@ -83,7 +83,7 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
     }
 
     let mut update_model = db_job.clone().into_active_model();
-    update_model.updated_at = ActiveValue::Set(Utc::now().into());
+    update_model.updated_at = ActiveValue::Set(OffsetDateTime::now_utc());
     #[allow(clippy::cast_possible_truncation)]
     match execution_result {
         Ok(Err(..)) | Err(..) => {
@@ -93,11 +93,9 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
             let fail_count = db_job.fail_count + 1;
             update_model.fail_count = ActiveValue::Set(fail_count);
 
-            #[allow(clippy::cast_sign_loss)]
-            let backoff_duration =
-                chrono::Duration::from_std(Duration::from_secs(job.backoff(fail_count as u32)))
-                    .unwrap();
-            update_model.run_at = ActiveValue::Set((Utc::now() + backoff_duration).into());
+            #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
+            let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
+            update_model.run_at = ActiveValue::Set(OffsetDateTime::now_utc() + backoff_duration);
         }
         _ => {
             increment_counter!("succeeded_jobs");
@@ -119,11 +117,12 @@ async fn get_jobs(db_conn: &DatabaseConnection, num_jobs: usize) -> Result<Vec<j
             jobs::Column::State
                 .eq(JobState::Queued)
                 .or(jobs::Column::State.eq(JobState::Failed))
-                .and(jobs::Column::RunAt.lte(Utc::now()))
+                .and(jobs::Column::RunAt.lte(OffsetDateTime::now_utc()))
                 // Re-execute job if it has been running for longer than an hour (probably the worker crashed or something)
-                .or(jobs::Column::State
-                    .eq(JobState::Running)
-                    .and(jobs::Column::UpdatedAt.lt(Utc::now() - chrono::Duration::hours(1)))),
+                .or(jobs::Column::State.eq(JobState::Running).and(
+                    jobs::Column::UpdatedAt
+                        .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
+                )),
         )
         .limit(num_jobs as u64)
         .order_by_asc(jobs::Column::CreatedAt)
@@ -135,7 +134,7 @@ async fn get_jobs(db_conn: &DatabaseConnection, num_jobs: usize) -> Result<Vec<j
     let update_jobs = jobs.iter().map(|job| {
         let mut update_job = job.clone().into_active_model();
         update_job.state = ActiveValue::Set(JobState::Running);
-        update_job.updated_at = ActiveValue::Set(Utc::now().into());
+        update_job.updated_at = ActiveValue::Set(OffsetDateTime::now_utc());
         update_job
     });
 

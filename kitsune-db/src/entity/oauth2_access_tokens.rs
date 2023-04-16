@@ -10,8 +10,8 @@ pub struct Model {
     pub token: String,
     pub user_id: Option<Uuid>,
     pub application_id: Option<Uuid>,
-    pub created_at: DateTimeWithTimeZone,
-    pub expired_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub expired_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

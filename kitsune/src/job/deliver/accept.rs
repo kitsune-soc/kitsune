@@ -3,11 +3,11 @@ use crate::{
     job::{JobContext, Runnable},
 };
 use async_trait::async_trait;
-use chrono::Utc;
 use kitsune_db::entity::prelude::{Accounts, AccountsFollowers, Users};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Deserialize, Serialize)]
@@ -49,7 +49,7 @@ impl Runnable for DeliverAccept {
             r#type: ActivityType::Accept,
             actor: StringOrObject::String(followed_account.url.clone()),
             object: ObjectField::Url(follow.url),
-            published: Utc::now(),
+            published: OffsetDateTime::now_utc(),
         };
 
         ctx.deliverer

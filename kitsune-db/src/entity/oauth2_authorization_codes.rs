@@ -10,8 +10,8 @@ pub struct Model {
     pub code: String,
     pub application_id: Uuid,
     pub user_id: Uuid,
-    pub created_at: DateTimeWithTimeZone,
-    pub expired_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub expired_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

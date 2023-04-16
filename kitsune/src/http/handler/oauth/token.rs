@@ -10,7 +10,6 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use chrono::Utc;
 use futures_util::FutureExt;
 use http::StatusCode;
 use kitsune_db::entity::{
@@ -26,6 +25,7 @@ use sea_orm::{
     IntoActiveModel, ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -102,7 +102,7 @@ async fn authorization_code(
 ) -> Result<Response> {
     let Some((authorization_code, Some(user))) =
         Oauth2AuthorizationCodes::find_by_id(data.code)
-            .filter(oauth2_authorization_codes::Column::ExpiredAt.gt(Utc::now()))
+            .filter(oauth2_authorization_codes::Column::ExpiredAt.gt(OffsetDateTime::now_utc()))
             .find_also_related(Users)
             .one(&db_conn)
             .await?
@@ -129,8 +129,8 @@ async fn authorization_code(
                     token: generate_secret(),
                     user_id: Some(user.id),
                     application_id: Some(authorization_code.application_id),
-                    created_at: Utc::now().into(),
-                    expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
+                    created_at: OffsetDateTime::now_utc(),
+                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                 }
                 .into_active_model()
                 .insert(tx)
@@ -140,7 +140,7 @@ async fn authorization_code(
                     token: generate_secret(),
                     access_token: access_token.token.clone(),
                     application_id: application.id,
-                    created_at: Utc::now().into(),
+                    created_at: OffsetDateTime::now_utc(),
                 }
                 .into_active_model()
                 .insert(tx)
@@ -155,7 +155,7 @@ async fn authorization_code(
         .await?;
 
     Ok(Json(AccessTokenResponse {
-        expires_in: access_token.ttl().num_seconds(),
+        expires_in: access_token.ttl().whole_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
         refresh_token: Some(refresh_token.token),
@@ -177,8 +177,8 @@ async fn client_credentials(
                     token: generate_secret(),
                     user_id: None,
                     application_id: Some(application.id),
-                    created_at: Utc::now().into(),
-                    expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
+                    created_at: OffsetDateTime::now_utc(),
+                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                 }
                 .into_active_model()
                 .insert(tx)
@@ -188,7 +188,7 @@ async fn client_credentials(
                     token: generate_secret(),
                     access_token: access_token.token.clone(),
                     application_id: application.id,
-                    created_at: Utc::now().into(),
+                    created_at: OffsetDateTime::now_utc(),
                 }
                 .into_active_model()
                 .insert(tx)
@@ -201,7 +201,7 @@ async fn client_credentials(
         .await?;
 
     Ok(Json(AccessTokenResponse {
-        expires_in: access_token.ttl().num_seconds(),
+        expires_in: access_token.ttl().whole_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
         refresh_token: Some(refresh_token.token),
@@ -236,15 +236,15 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
         token: generate_secret(),
         user_id: Some(user.id),
         application_id: None,
-        created_at: Utc::now().into(),
-        expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
+        created_at: OffsetDateTime::now_utc(),
+        expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
     }
     .into_active_model()
     .insert(&db_conn)
     .await?;
 
     Ok(Json(AccessTokenResponse {
-        expires_in: access_token.ttl().num_seconds(),
+        expires_in: access_token.ttl().whole_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
         refresh_token: None,
@@ -273,8 +273,8 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
             async move {
                 let new_access_token = oauth2_access_tokens::Model {
                     token: generate_secret(),
-                    created_at: Utc::now().into(),
-                    expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
+                    created_at: OffsetDateTime::now_utc(),
+                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                     ..access_token
                 }
                 .into_active_model()
@@ -300,7 +300,7 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
         .await?;
 
     Ok(Json(AccessTokenResponse {
-        expires_in: access_token.ttl().num_seconds(),
+        expires_in: access_token.ttl().whole_seconds(),
         access_token: access_token.token,
         token_type: "Bearer".into(),
         refresh_token: Some(refresh_token.token),

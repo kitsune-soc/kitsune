@@ -12,10 +12,10 @@ pub struct Model {
     pub state: JobState,
     #[sea_orm(column_type = "JsonBinary")]
     pub context: Json,
-    pub run_at: DateTimeWithTimeZone,
+    pub run_at: TimeDateTimeWithTimeZone,
     pub fail_count: i32,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

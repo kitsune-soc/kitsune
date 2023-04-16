@@ -11,7 +11,6 @@ use crate::{
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
-use chrono::Utc;
 use futures_util::FutureExt;
 use http::HeaderValue;
 use kitsune_db::{
@@ -27,6 +26,7 @@ use sea_orm::{
     sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
 };
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
@@ -116,8 +116,8 @@ impl Fetcher {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
                     uuid::NoContext,
-                    actor.published.timestamp() as u64,
-                    actor.published.timestamp_subsec_nanos(),
+                    actor.published.unix_timestamp() as u64,
+                    actor.published.nanosecond(),
                 );
 
                 async move {
@@ -136,8 +136,8 @@ impl Fetcher {
                             followers_url: actor.followers,
                             inbox_url: actor.inbox,
                             public_key: actor.public_key.public_key_pem,
-                            created_at: actor.published.into(),
-                            updated_at: Utc::now().into(),
+                            created_at: actor.published,
+                            updated_at: OffsetDateTime::now_utc(),
                         }
                         .into_active_model(),
                     )
@@ -165,8 +165,8 @@ impl Fetcher {
                                 blurhash: icon.blurhash,
                                 file_path: None,
                                 remote_url: Some(icon.url),
-                                created_at: Utc::now().into(),
-                                updated_at: Utc::now().into(),
+                                created_at: OffsetDateTime::now_utc(),
+                                updated_at: OffsetDateTime::now_utc(),
                             }
                             .into_active_model(),
                         )
@@ -188,8 +188,8 @@ impl Fetcher {
                                 blurhash: image.blurhash,
                                 file_path: None,
                                 remote_url: Some(image.url),
-                                created_at: Utc::now().into(),
-                                updated_at: Utc::now().into(),
+                                created_at: OffsetDateTime::now_utc(),
+                                updated_at: OffsetDateTime::now_utc(),
                             }
                             .into_active_model(),
                         )
@@ -256,8 +256,8 @@ impl Fetcher {
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
             uuid::NoContext,
-            object.published.timestamp() as u64,
-            object.published.timestamp_subsec_nanos(),
+            object.published.unix_timestamp() as u64,
+            object.published.nanosecond(),
         );
 
         let in_reply_to_id = if let Some(in_reply_to) = object.in_reply_to {
@@ -284,8 +284,8 @@ impl Fetcher {
                             visibility,
                             is_local: false,
                             url: object.id,
-                            created_at: object.published.into(),
-                            updated_at: Utc::now().into(),
+                            created_at: object.published,
+                            updated_at: OffsetDateTime::now_utc(),
                         }
                         .into_active_model(),
                     )

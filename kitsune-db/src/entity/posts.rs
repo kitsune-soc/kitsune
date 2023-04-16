@@ -21,8 +21,8 @@ pub struct Model {
     pub is_local: bool,
     #[sea_orm(column_type = "Text", unique)]
     pub url: String,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

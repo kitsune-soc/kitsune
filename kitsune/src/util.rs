@@ -1,9 +1,9 @@
-use chrono::{DateTime, FixedOffset, Utc};
 use kitsune_db::{
     custom::Visibility,
     entity::{accounts, oauth2_access_tokens},
 };
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
+use time::OffsetDateTime;
 
 #[must_use]
 pub fn generate_secret() -> String {
@@ -12,12 +12,12 @@ pub fn generate_secret() -> String {
 }
 
 pub trait AccessTokenTtl {
-    fn ttl(&self) -> chrono::Duration;
+    fn ttl(&self) -> time::Duration;
 }
 
 impl AccessTokenTtl for oauth2_access_tokens::Model {
-    fn ttl(&self) -> chrono::Duration {
-        self.expired_at - DateTime::<FixedOffset>::from(Utc::now())
+    fn ttl(&self) -> time::Duration {
+        self.expired_at - OffsetDateTime::now_utc()
     }
 }
 
