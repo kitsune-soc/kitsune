@@ -189,7 +189,7 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("idx-posts-account-id")
+                    .name("idx-posts-account_id")
                     .table(Posts::Table)
                     .col(Posts::AccountId)
                     .to_owned(),
@@ -201,7 +201,7 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("idx-posts-account-id")
+                    .name("idx-posts-account_id")
                     .table(Posts::Table)
                     .to_owned(),
             )

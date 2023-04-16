@@ -39,7 +39,7 @@ impl InstanceService {
         Accounts::find()
             .filter(accounts::Column::Local.eq(false))
             .select_only()
-            .column(accounts::Column::Id)
+            .column(accounts::Column::Domain)
             .group_by(accounts::Column::Domain)
             .count(&self.db_conn)
             .await
