@@ -215,6 +215,7 @@ impl Fetcher {
                 .boxed()
             })
             .await?;
+
         self.search_service
             .add_to_index(account.clone().into())
             .await?;

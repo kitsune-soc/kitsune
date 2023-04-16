@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use crate::{
     activitypub::{handle_attachments, handle_mentions},
     error::{Error, Result},
@@ -25,6 +23,7 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
     QuerySelect, TransactionTrait,
 };
+use std::ops::Not;
 use uuid::Uuid;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
