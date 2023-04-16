@@ -3,6 +3,7 @@
 pub mod prelude;
 
 pub mod accounts;
+pub mod accounts_blocks;
 pub mod accounts_followers;
 pub mod jobs;
 pub mod media_attachments;

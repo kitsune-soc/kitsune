@@ -8,6 +8,7 @@ mod m20221127_211534_create_follow_table;
 mod m20221213_214258_create_mention_table;
 mod m20221213_215428_create_favourites_table;
 mod m20221220_215922_create_roles_table;
+mod m20230416_173244_create_blocks_table;
 
 pub struct Migrator;
 
@@ -23,6 +24,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20221213_214258_create_mention_table::Migration),
             Box::new(m20221213_215428_create_favourites_table::Migration),
             Box::new(m20221220_215922_create_roles_table::Migration),
+            Box::new(m20230416_173244_create_blocks_table::Migration),
         ]
     }
 }
