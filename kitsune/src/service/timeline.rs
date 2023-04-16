@@ -3,15 +3,13 @@ use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, posts, posts_mentions,
-        prelude::{AccountsFollowers, Posts},
+        accounts_followers, posts, posts_mentions,
+        prelude::{AccountsFollowers, Posts, PostsMentions},
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{
-    sea_query::{Expr, IntoCondition},
-    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
-    QueryTrait, RelationTrait,
+    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, QueryTrait,
 };
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -54,48 +52,40 @@ impl TimelineService {
         get_home: GetHome,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
         let mut query = Posts::find()
-            // Post is owned by the user
-            .filter(posts::Column::AccountId.eq(get_home.fetching_account_id))
-            // User is following the author and the post is not a direct message
-            .join(
-                JoinType::LeftJoin,
-                posts::Relation::Accounts
-                    .def()
-                    .on_condition(move |posts_left, accounts_right| {
-                        Expr::col((posts_left, posts::Column::Visibility))
-                            .is_in([
-                                Visibility::Public,
-                                Visibility::Unlisted,
-                                Visibility::FollowerOnly,
-                            ])
-                            .and(
-                                Expr::col((accounts_right, accounts::Column::Id)).in_subquery(
-                                    AccountsFollowers::find()
-                                        .filter(
-                                            accounts_followers::Column::FollowerId
-                                                .eq(get_home.fetching_account_id),
-                                        )
-                                        .filter(
-                                            accounts_followers::Column::ApprovedAt.is_not_null(),
-                                        )
-                                        .select_only()
-                                        .column(accounts_followers::Column::AccountId)
-                                        .into_query(),
-                                ),
+            .filter(
+                // Post is owned by the user
+                posts::Column::AccountId
+                    .eq(get_home.fetching_account_id)
+                    // User is following the author and the post is not a direct message
+                    .or(posts::Column::Visibility
+                        .is_in([
+                            Visibility::Public,
+                            Visibility::Unlisted,
+                            Visibility::FollowerOnly,
+                        ])
+                        .and(
+                            posts::Column::AccountId.in_subquery(
+                                AccountsFollowers::find()
+                                    .filter(
+                                        accounts_followers::Column::FollowerId
+                                            .eq(get_home.fetching_account_id),
+                                    )
+                                    .filter(accounts_followers::Column::ApprovedAt.is_not_null())
+                                    .select_only()
+                                    .column(accounts_followers::Column::AccountId)
+                                    .into_query(),
+                            ),
+                        ))
+                    // User is mentioned in the post
+                    .or(posts::Column::Id.in_subquery(
+                        PostsMentions::find()
+                            .filter(
+                                posts_mentions::Column::AccountId.eq(get_home.fetching_account_id),
                             )
-                            .into_condition()
-                    }),
-            )
-            // User is mentioned in the post
-            .join(
-                JoinType::LeftJoin,
-                posts_mentions::Relation::Posts.def().rev().on_condition(
-                    move |_posts_left, mentions_right| {
-                        Expr::col((mentions_right, posts_mentions::Column::AccountId))
-                            .eq(get_home.fetching_account_id)
-                            .into_condition()
-                    },
-                ),
+                            .select_only()
+                            .column(posts_mentions::Column::PostId)
+                            .into_query(),
+                    )),
             )
             .order_by_desc(posts::Column::CreatedAt);
 
