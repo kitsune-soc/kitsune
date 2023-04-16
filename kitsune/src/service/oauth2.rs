@@ -6,17 +6,16 @@ use crate::{
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::Response;
-use chrono::{Duration, Utc};
 use http::StatusCode;
 use kitsune_db::entity::{oauth2_applications, oauth2_authorization_codes};
-use once_cell::sync::Lazy;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use std::str::FromStr;
+use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
 
-pub static TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
+pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
@@ -55,8 +54,8 @@ impl Oauth2Service {
             secret: generate_secret(),
             name: create_app.name,
             redirect_uri: create_app.redirect_uris,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: OffsetDateTime::now_utc(),
         }
         .into_active_model()
         .insert(&self.db_conn)
@@ -76,8 +75,8 @@ impl Oauth2Service {
             code: generate_secret(),
             application_id: application.id,
             user_id,
-            created_at: Utc::now().into(),
-            expired_at: (Utc::now() + *TOKEN_VALID_DURATION).into(),
+            created_at: OffsetDateTime::now_utc(),
+            expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
         }
         .into_active_model()
         .insert(&self.db_conn)

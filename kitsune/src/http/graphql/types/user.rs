@@ -1,12 +1,12 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
-use chrono::{DateTime, Utc};
 use kitsune_db::entity::{
     prelude::{Accounts, Users},
     users,
 };
 use sea_orm::{EntityTrait, ModelTrait};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
@@ -17,8 +17,8 @@ pub struct User {
     pub account_id: Uuid,
     pub username: String,
     pub email: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+    pub updated_at: OffsetDateTime,
 }
 
 #[ComplexObject]
@@ -44,8 +44,8 @@ impl From<users::Model> for User {
             account_id: value.account_id,
             username: value.username,
             email: value.email,
-            created_at: value.created_at.into(),
-            updated_at: value.updated_at.into(),
+            created_at: value.created_at,
+            updated_at: value.updated_at,
         }
     }
 }

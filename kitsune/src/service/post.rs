@@ -15,7 +15,6 @@ use crate::{
     sanitize::CleanHtmlExt,
 };
 use async_stream::try_stream;
-use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
@@ -36,6 +35,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
     IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
 };
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -236,8 +236,8 @@ impl PostService {
                         visibility: create_post.visibility,
                         is_local: true,
                         url,
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
+                        created_at: OffsetDateTime::now_utc(),
+                        updated_at: OffsetDateTime::now_utc(),
                     }
                     .into_active_model()
                     .insert(tx)
@@ -357,7 +357,7 @@ impl PostService {
             account_id: favouriting_account_id,
             post_id: post.id,
             url,
-            created_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
         }
         .into_active_model()
         .insert(&self.db_conn)

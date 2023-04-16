@@ -26,8 +26,8 @@ pub struct Model {
     pub inbox_url: String,
     #[sea_orm(column_type = "Text")]
     pub public_key: String,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
 }

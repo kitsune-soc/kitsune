@@ -1,11 +1,11 @@
 use crate::error::Result;
-use chrono::Utc;
 use kitsune_db::entity::{
     accounts, media_attachments, posts_media_attachments, posts_mentions,
     prelude::{MediaAttachments, PostsMediaAttachments, PostsMentions},
 };
 use kitsune_type::ap::{object::MediaAttachment, Tag, TagType};
 use sea_orm::{ConnectionTrait, EntityTrait, IntoActiveModel};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 pub mod deliverer;
@@ -40,8 +40,8 @@ where
                     blurhash: attachment.blurhash,
                     file_path: None,
                     remote_url: Some(attachment.url),
-                    created_at: Utc::now().into(),
-                    updated_at: Utc::now().into(),
+                    created_at: OffsetDateTime::now_utc(),
+                    updated_at: OffsetDateTime::now_utc(),
                 }
                 .into_active_model()
             }),

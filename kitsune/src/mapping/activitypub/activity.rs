@@ -1,7 +1,6 @@
 use super::IntoObject;
 use crate::{error::Result, state::Zustand};
 use async_trait::async_trait;
-use chrono::Utc;
 use kitsune_db::{
     column::UrlQuery,
     entity::{
@@ -11,6 +10,7 @@ use kitsune_db::{
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use sea_orm::{EntityTrait, ModelTrait, QuerySelect};
+use time::OffsetDateTime;
 
 #[async_trait]
 pub trait IntoActivity {
@@ -33,7 +33,7 @@ impl IntoActivity for accounts::Model {
             r#type: ActivityType::Update,
             actor: StringOrObject::String(self.url.clone()),
             object: ObjectField::Actor(self.into_object(state).await?),
-            published: Utc::now(),
+            published: OffsetDateTime::now_utc(),
         })
     }
 
@@ -72,7 +72,7 @@ impl IntoActivity for posts_favourites::Model {
             r#type: ActivityType::Like,
             actor: StringOrObject::String(account_url.clone()),
             object: ObjectField::Url(post_url),
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 
@@ -92,7 +92,7 @@ impl IntoActivity for posts_favourites::Model {
             r#type: ActivityType::Undo,
             actor: StringOrObject::String(account_url.clone()),
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
-            published: Utc::now(),
+            published: OffsetDateTime::now_utc(),
         })
     }
 }
@@ -125,7 +125,7 @@ impl IntoActivity for accounts_followers::Model {
             actor: StringOrObject::String(attributed_to.clone()),
             r#type: ActivityType::Follow,
             object: ObjectField::Url(object),
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 
@@ -143,7 +143,7 @@ impl IntoActivity for accounts_followers::Model {
             id: format!("{}#undo", self.url),
             r#type: ActivityType::Undo,
             actor: StringOrObject::String(attributed_to),
-            published: self.created_at.into(),
+            published: self.created_at,
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
         })
     }
@@ -175,7 +175,7 @@ impl IntoActivity for posts::Model {
                 r#type: ActivityType::Announce,
                 actor: StringOrObject::String(account.url.clone()),
                 object: ObjectField::Url(reposted_post_url),
-                published: self.created_at.into(),
+                published: self.created_at,
             })
         } else {
             let created_at = self.created_at;
@@ -186,7 +186,7 @@ impl IntoActivity for posts::Model {
                 id: format!("{}/activity", object.id),
                 r#type: ActivityType::Create,
                 actor: StringOrObject::String(account.url.clone()),
-                published: created_at.into(),
+                published: created_at,
                 object: ObjectField::Object(object),
             })
         }
@@ -205,7 +205,7 @@ impl IntoActivity for posts::Model {
                 r#type: ActivityType::Undo,
                 actor: StringOrObject::String(account.url),
                 object: ObjectField::Url(self.url),
-                published: Utc::now(),
+                published: OffsetDateTime::now_utc(),
             }
         } else {
             let object = self.into_object(state).await?;
@@ -215,7 +215,7 @@ impl IntoActivity for posts::Model {
                 id: format!("{}#delete", object.id),
                 r#type: ActivityType::Delete,
                 actor: StringOrObject::String(account.url.clone()),
-                published: Utc::now(),
+                published: OffsetDateTime::now_utc(),
                 object: ObjectField::Object(object),
             }
         };

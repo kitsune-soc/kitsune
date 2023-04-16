@@ -1,6 +1,6 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use time::OffsetDateTime;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
@@ -45,7 +45,8 @@ pub struct Actor {
     pub outbox: String,
     pub followers: String,
     pub following: String,
-    pub published: DateTime<Utc>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub published: OffsetDateTime,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

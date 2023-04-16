@@ -1,7 +1,6 @@
 use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
-use chrono::Utc;
 use derive_builder::Builder;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
@@ -11,6 +10,7 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
     QueryFilter,
 };
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -156,8 +156,8 @@ impl AttachmentService {
             blurhash: None,
             file_path: Some(upload.path),
             remote_url: None,
-            created_at: Utc::now().into(),
-            updated_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: OffsetDateTime::now_utc(),
         }
         .into_active_model()
         .insert(&self.db_conn)

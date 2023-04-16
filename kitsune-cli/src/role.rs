@@ -1,5 +1,4 @@
 use crate::Result;
-use chrono::Utc;
 use clap::{Args, Subcommand, ValueEnum};
 use kitsune_db::{
     custom::Role as DbRole,
@@ -11,6 +10,7 @@ use kitsune_db::{
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
 };
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Subcommand)]
@@ -68,7 +68,7 @@ async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Re
             id: Uuid::now_v7(),
             user_id: user.id,
             role: role.into(),
-            created_at: Utc::now().into(),
+            created_at: OffsetDateTime::now_utc(),
         }
         .into_active_model(),
     )

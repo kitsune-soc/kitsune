@@ -2,9 +2,9 @@ use self::{
     helper::StringOrObject,
     object::{Actor, MediaAttachment},
 };
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use time::OffsetDateTime;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
@@ -104,8 +104,8 @@ pub struct Activity {
     pub r#type: ActivityType,
     pub actor: StringOrObject<Actor>,
     pub object: ObjectField,
-    #[serde(default)]
-    pub published: DateTime<Utc>,
+    #[serde(default = "OffsetDateTime::now_utc", with = "time::serde::rfc3339")]
+    pub published: OffsetDateTime,
 }
 
 impl Activity {
@@ -150,7 +150,8 @@ pub struct Object {
     pub tag: Vec<Tag>,
     #[serde(default)]
     pub sensitive: bool,
-    pub published: DateTime<Utc>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub published: OffsetDateTime,
     #[serde(default)]
     pub to: Vec<String>,
     #[serde(default)]

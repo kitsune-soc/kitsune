@@ -1,7 +1,6 @@
 use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use chrono::Utc;
 use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::entity::{
     accounts,
@@ -16,6 +15,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     TransactionTrait,
 };
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -112,8 +112,8 @@ impl UserService {
                             followers_url,
                             inbox_url,
                             public_key: public_key_str,
-                            created_at: Utc::now().into(),
-                            updated_at: Utc::now().into(),
+                            created_at: OffsetDateTime::now_utc(),
+                            updated_at: OffsetDateTime::now_utc(),
                         }
                         .into_active_model(),
                     )
@@ -128,8 +128,8 @@ impl UserService {
                         email: register.email,
                         password: hashed_password,
                         private_key: private_key_str.to_string(),
-                        created_at: Utc::now().into(),
-                        updated_at: Utc::now().into(),
+                        created_at: OffsetDateTime::now_utc(),
+                        updated_at: OffsetDateTime::now_utc(),
                     }
                     .into_active_model()
                     .insert(tx)
