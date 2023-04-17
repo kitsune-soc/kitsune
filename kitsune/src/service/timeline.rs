@@ -28,6 +28,9 @@ pub struct GetHome {
 #[derive(Clone, TypedBuilder)]
 pub struct GetPublic {
     #[builder(default)]
+    fetching_account_id: Option<Uuid>,
+
+    #[builder(default)]
     max_id: Option<Uuid>,
 
     #[builder(default)]
@@ -52,6 +55,7 @@ impl TimelineService {
         get_home: GetHome,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
         let mut query = Posts::find()
+            .add_block_checks(get_home.fetching_account_id)
             .filter(
                 // Post is owned by the user
                 posts::Column::AccountId
@@ -110,6 +114,7 @@ impl TimelineService {
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
         let permission_check = PermissionCheck::builder()
+            .fetching_account_id(get_public.fetching_account_id)
             .include_unlisted(false)
             .build()
             .unwrap();
@@ -118,6 +123,9 @@ impl TimelineService {
             .add_permission_checks(permission_check)
             .order_by_desc(posts::Column::CreatedAt);
 
+        if let Some(fetching_account_id) = get_public.fetching_account_id {
+            query = query.add_block_checks(fetching_account_id);
+        }
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::Column::Id.lt(max_id));
         }

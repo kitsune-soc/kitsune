@@ -1,8 +1,8 @@
 use crate::{
     custom::Visibility,
     entity::{
-        accounts, accounts_followers, posts, posts_mentions,
-        prelude::{AccountsFollowers, Posts},
+        accounts, accounts_blocks, accounts_followers, posts, posts_mentions,
+        prelude::{AccountsBlocks, AccountsFollowers, Posts},
     },
 };
 use derive_builder::Builder;
@@ -42,12 +42,28 @@ impl Default for PermissionCheck {
 
 /// Extension trait for adding permission checks to queries regaring posts
 pub trait PostPermissionCheckExt {
+    /// Add block checks to the query
+    #[must_use]
+    fn add_block_checks(self, fetching_account_id: Uuid) -> Self;
+
     /// Add permission checks to the query
     #[must_use]
     fn add_permission_checks(self, permission_check: PermissionCheck) -> Self;
 }
 
 impl PostPermissionCheckExt for Select<Posts> {
+    fn add_block_checks(self, fetching_account_id: Uuid) -> Self {
+        self.filter(
+            posts::Column::AccountId.not_in_subquery(
+                AccountsBlocks::find()
+                    .filter(accounts_blocks::Column::AccountId.eq(fetching_account_id))
+                    .select_only()
+                    .column(accounts_blocks::Column::BlockedAccountId)
+                    .into_query(),
+            ),
+        )
+    }
+
     fn add_permission_checks(mut self, permission_check: PermissionCheck) -> Self {
         let mut post_filter = posts::Column::Visibility.eq(Visibility::Public);
 
