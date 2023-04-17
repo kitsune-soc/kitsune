@@ -81,7 +81,7 @@ async fn get(
     user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let account_id = user_data.as_ref().map(|user_data| user_data.0.account.id);
+    let account_id = user_data.as_ref().map(|user_data| user_data.account.id);
     let Some(post) = post.get_by_id(id, account_id).await? else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };

@@ -47,7 +47,9 @@ pub async fn get(
     Query(query): Query<GetQuery>,
     user_data: Option<MastodonAuthExtractor>,
 ) -> Result<Json<Vec<Status>>> {
+    let fetching_account_id = user_data.as_ref().map(|user_data| user_data.account.id);
     let get_public = GetPublic::builder()
+        .fetching_account_id(fetching_account_id)
         .only_local(query.local)
         .only_remote(query.remote)
         .max_id(query.max_id)

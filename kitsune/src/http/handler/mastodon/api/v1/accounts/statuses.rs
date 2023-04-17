@@ -49,7 +49,7 @@ pub async fn get(
     Query(query): Query<GetQuery>,
     user_data: Option<MastodonAuthExtractor>,
 ) -> Result<Json<Vec<Status>>> {
-    let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
+    let fetching_account_id = auth_data.map(|user_data| user_data.account.id);
 
     let get_posts = GetPosts::builder()
         .account_id(account_id)
@@ -57,8 +57,8 @@ pub async fn get(
         .max_id(query.max_id)
         .min_id(query.min_id)
         .build();
-    let limit = min(query.limit, MAX_LIMIT);
 
+    let limit = min(query.limit, MAX_LIMIT);
     let statuses: Vec<Status> = account
         .get_posts(get_posts)
         .await?

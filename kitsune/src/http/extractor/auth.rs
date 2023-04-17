@@ -13,6 +13,7 @@ use kitsune_db::entity::{
     users,
 };
 use sea_orm::{ColumnTrait, QueryFilter, Related};
+use std::ops::{Deref, DerefMut};
 use time::OffsetDateTime;
 
 /// Mastodon-specific auth extractor alias
@@ -33,6 +34,20 @@ pub struct UserData {
 /// The const generics parameter `ENFORCE_EXPIRATION` lets you toggle whether the extractor should ignore the expiration date.
 /// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
 pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
+
+impl<const ENFORCE_EXPIRATION: bool> Deref for AuthExtractor<ENFORCE_EXPIRATION> {
+    type Target = UserData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<const ENFORCE_EXPIRATION: bool> DerefMut for AuthExtractor<ENFORCE_EXPIRATION> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 #[async_trait]
 impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
