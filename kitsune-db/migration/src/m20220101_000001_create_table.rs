@@ -12,10 +12,20 @@ pub enum Accounts {
     Locked,
     Local,
     Domain,
+
+    // ActivityPub data
+    ActorType,
     Url,
     FollowersUrl,
+    FollowingUrl,
     InboxUrl,
+    OutboxUrl,
+    SharedInboxUrl,
+
+    // HTTP signature data
+    PublicKeyId,
     PublicKey,
+
     CreatedAt,
     UpdatedAt,
 }
@@ -69,9 +79,19 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Accounts::Locked).boolean().not_null())
                     .col(ColumnDef::new(Accounts::Local).boolean().not_null())
                     .col(ColumnDef::new(Accounts::Domain).text())
+                    .col(ColumnDef::new(Accounts::ActorType).integer().not_null())
                     .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
                     .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::FollowingUrl).text().not_null())
                     .col(ColumnDef::new(Accounts::InboxUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::OutboxUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::SharedInboxUrl).text())
+                    .col(
+                        ColumnDef::new(Accounts::PublicKeyId)
+                            .text()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(ColumnDef::new(Accounts::PublicKey).text().not_null())
                     .col(
                         ColumnDef::new(Accounts::CreatedAt)

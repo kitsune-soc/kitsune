@@ -4,10 +4,12 @@
 //! Something like the enum for the job states
 //!
 
+mod actor_type;
 mod job_state;
 mod role;
 mod visibility;
 
+pub use self::actor_type::ActorType;
 pub use self::job_state::JobState;
 pub use self::role::Role;
 pub use self::visibility::Visibility;

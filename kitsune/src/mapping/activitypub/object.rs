@@ -14,9 +14,10 @@ use kitsune_db::{
     link::InReplyTo,
 };
 use kitsune_type::ap::{
+    actor::{Actor, ActorType, PublicKey},
     ap_context,
     helper::StringOrObject,
-    object::{Actor, ActorType, MediaAttachment, MediaAttachmentType, PublicKey},
+    object::{MediaAttachment, MediaAttachmentType},
     Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
@@ -142,7 +143,6 @@ impl IntoObject for accounts::Model {
     type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
             let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
@@ -162,10 +162,6 @@ impl IntoObject for accounts::Model {
             None
         };
 
-        // TODO: Save these into the database
-        let outbox_url = format!("{}/outbox", self.url);
-        let following_url = format!("{}/following", self.url);
-
         Ok(Actor {
             context: ap_context(),
             id: self.url.clone(),
@@ -176,12 +172,14 @@ impl IntoObject for accounts::Model {
             image,
             preferred_username: self.username,
             manually_approves_followers: self.locked,
+            // TODO: Add shared inbox
+            endpoints: None,
             inbox: self.inbox_url,
-            outbox: outbox_url,
+            outbox: self.outbox_url,
             followers: self.followers_url,
-            following: following_url,
+            following: self.following_url,
             public_key: PublicKey {
-                id: public_key_id,
+                id: self.public_key_id,
                 owner: self.url,
                 public_key_pem: self.public_key,
             },

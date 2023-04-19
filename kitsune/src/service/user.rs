@@ -2,10 +2,13 @@ use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use futures_util::{future::OptionFuture, FutureExt};
-use kitsune_db::entity::{
-    accounts,
-    prelude::{Accounts, Users},
-    users,
+use kitsune_db::{
+    custom::ActorType,
+    entity::{
+        accounts,
+        prelude::{Accounts, Users},
+        users,
+    },
 };
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
@@ -91,7 +94,10 @@ impl UserService {
 
         let url = self.url_service.user_url(&register.username);
         let followers_url = format!("{url}/followers");
+        let following_url = format!("{url}/following");
         let inbox_url = format!("{url}/inbox");
+        let outbox_url = format!("{url}/outbox");
+        let public_key_id = format!("{url}#main-key");
 
         let new_user = self
             .db_conn
@@ -108,9 +114,14 @@ impl UserService {
                             note: None,
                             local: true,
                             domain: None,
+                            actor_type: ActorType::Person,
                             url,
                             followers_url,
+                            following_url,
                             inbox_url,
+                            outbox_url,
+                            shared_inbox_url: None,
+                            public_key_id,
                             public_key: public_key_str,
                             created_at: OffsetDateTime::now_utc(),
                             updated_at: OffsetDateTime::now_utc(),

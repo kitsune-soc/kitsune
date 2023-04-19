@@ -21,7 +21,7 @@ use kitsune_db::{
     },
 };
 use kitsune_http_client::Client;
-use kitsune_type::ap::{object::Actor, Object};
+use kitsune_type::ap::{actor::Actor, Object};
 use sea_orm::{
     sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
@@ -132,9 +132,16 @@ impl Fetcher {
                             locked: actor.manually_approves_followers,
                             local: false,
                             domain: Some(url.host_str().unwrap().into()),
+                            actor_type: actor.r#type.into(),
                             url: actor.id,
                             followers_url: actor.followers,
+                            following_url: actor.following,
                             inbox_url: actor.inbox,
+                            outbox_url: actor.outbox,
+                            shared_inbox_url: actor
+                                .endpoints
+                                .and_then(|endpoints| endpoints.shared_inbox),
+                            public_key_id: actor.public_key.id,
                             public_key: actor.public_key.public_key_pem,
                             created_at: actor.published,
                             updated_at: OffsetDateTime::now_utc(),
@@ -147,6 +154,7 @@ impl Fetcher {
                                 accounts::Column::DisplayName,
                                 accounts::Column::Note,
                                 accounts::Column::Locked,
+                                accounts::Column::PublicKeyId,
                                 accounts::Column::PublicKey,
                                 accounts::Column::UpdatedAt,
                             ])
