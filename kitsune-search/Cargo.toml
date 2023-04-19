@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-autometrics = { version = "0.3.3", default-features = false, features = [
+autometrics = { git = "https://github.com/autometrics-dev/autometrics-rs.git", rev = "49cce6b481e2d6ff2d1d49eedef8c9bc60e13319", default-features = false, features = [
     "metrics",
 ] }
 dotenvy = "0.15.7"
