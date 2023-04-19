@@ -34,6 +34,12 @@ impl ActorType {
     pub fn is_bot(&self) -> bool {
         ApActorType::from(*self).is_bot()
     }
+
+    /// Return whether this actor type represents a group
+    #[must_use]
+    pub fn is_group(&self) -> bool {
+        ApActorType::from(*self).is_group()
+    }
 }
 
 impl From<ApActorType> for ActorType {

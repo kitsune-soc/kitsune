@@ -14,6 +14,10 @@ impl ActorType {
     pub fn is_bot(&self) -> bool {
         matches!(self, Self::Service)
     }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

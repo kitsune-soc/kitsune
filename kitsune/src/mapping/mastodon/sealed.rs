@@ -79,6 +79,7 @@ impl IntoMastodon for accounts::Model {
             id: self.id,
             acct,
             bot: self.actor_type.is_bot(),
+            group: self.actor_type.is_group(),
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
