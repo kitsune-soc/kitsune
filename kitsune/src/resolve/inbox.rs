@@ -6,7 +6,10 @@ use kitsune_db::{
     entity::{accounts, posts, prelude::Accounts},
     link::{Followers, MentionedAccounts},
 };
-use sea_orm::{DatabaseConnection, DbErr, EntityTrait, ModelTrait, QuerySelect};
+use sea_orm::{
+    sea_query::{Expr, Func, SimpleExpr},
+    DatabaseConnection, DbErr, EntityTrait, ModelTrait, QuerySelect,
+};
 
 pub struct InboxResolver {
     db_conn: DatabaseConnection,
@@ -26,7 +29,14 @@ impl InboxResolver {
         account
             .find_linked(Followers)
             .select_only()
-            .column(accounts::Column::InboxUrl)
+            .distinct()
+            .column_as(
+                SimpleExpr::from(Func::coalesce([
+                    Expr::col(accounts::Column::SharedInboxUrl).into(),
+                    Expr::col(accounts::Column::InboxUrl).into(),
+                ])),
+                accounts::Column::InboxUrl,
+            )
             .into_values::<_, InboxUrlQuery>()
             .stream(&self.db_conn)
             .await
@@ -46,7 +56,14 @@ impl InboxResolver {
         let mentioned_inbox_stream = post
             .find_linked(MentionedAccounts)
             .select_only()
-            .column(accounts::Column::InboxUrl)
+            .distinct()
+            .column_as(
+                SimpleExpr::from(Func::coalesce([
+                    Expr::col(accounts::Column::SharedInboxUrl).into(),
+                    Expr::col(accounts::Column::InboxUrl).into(),
+                ])),
+                accounts::Column::InboxUrl,
+            )
             .into_values::<String, InboxUrlQuery>()
             .stream(&self.db_conn)
             .await?;
