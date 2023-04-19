@@ -66,9 +66,9 @@ impl IntoMastodon for accounts::Model {
             .await?;
 
         let mut acct = self.username.clone();
-        if let Some(domain) = self.domain {
+        if !self.local {
             acct.push('@');
-            acct.push_str(&domain);
+            acct.push_str(&self.domain);
         }
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
@@ -184,9 +184,9 @@ impl IntoMastodon for posts_mentions::Model {
             .expect("[Bug] Mention without associated account");
 
         let mut acct = account.username.clone();
-        if let Some(ref domain) = account.domain {
+        if !account.local {
             acct.push('@');
-            acct.push_str(domain);
+            acct.push_str(&account.domain);
         }
 
         Ok(Mention {

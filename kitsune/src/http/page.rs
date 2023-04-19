@@ -60,9 +60,9 @@ impl PostComponent {
         .transpose()?;
 
         let mut acct = format!("@{}", author.username);
-        if let Some(domain) = author.domain {
+        if !author.local {
             acct.push('@');
-            acct.push_str(&domain);
+            acct.push_str(&author.domain);
         }
 
         Ok(Self {

@@ -131,7 +131,7 @@ impl Fetcher {
                             username: actor.preferred_username,
                             locked: actor.manually_approves_followers,
                             local: false,
-                            domain: Some(url.host_str().unwrap().into()),
+                            domain: url.host_str().unwrap().into(),
                             actor_type: actor.r#type.into(),
                             url: actor.id,
                             followers_url: actor.followers,
@@ -371,7 +371,7 @@ mod test {
             .expect("Fetch actor");
 
         assert_eq!(user.username, "0x0");
-        assert_eq!(user.domain, Some("corteximplant.com".into()));
+        assert_eq!(user.domain, "corteximplant.com");
         assert_eq!(user.url, "https://corteximplant.com/users/0x0");
         assert_eq!(user.inbox_url, "https://corteximplant.com/users/0x0/inbox");
     }

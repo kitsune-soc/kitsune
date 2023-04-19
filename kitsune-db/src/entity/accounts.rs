@@ -17,8 +17,8 @@ pub struct Model {
     pub username: String,
     pub locked: bool,
     pub local: bool,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub domain: Option<String>,
+    #[sea_orm(column_type = "Text")]
+    pub domain: String,
     pub actor_type: ActorType,
     #[sea_orm(column_type = "Text", unique)]
     pub url: String,

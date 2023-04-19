@@ -92,6 +92,7 @@ impl UserService {
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
+        let domain = self.url_service.domain().to_string();
         let url = self.url_service.user_url(&register.username);
         let followers_url = format!("{url}/followers");
         let following_url = format!("{url}/following");
@@ -113,7 +114,7 @@ impl UserService {
                             locked: false,
                             note: None,
                             local: true,
-                            domain: None,
+                            domain,
                             actor_type: ActorType::Person,
                             url,
                             followers_url,

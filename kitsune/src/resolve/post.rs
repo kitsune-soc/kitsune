@@ -157,7 +157,7 @@ mod test {
             .expect("Failed to fetch account");
 
         assert_eq!(mentioned_account.username, "0x0");
-        assert_eq!(mentioned_account.domain, Some("corteximplant.com".into()));
+        assert_eq!(mentioned_account.domain, "corteximplant.com");
         assert_eq!(mentioned_account.url, "https://corteximplant.com/users/0x0");
     }
 }

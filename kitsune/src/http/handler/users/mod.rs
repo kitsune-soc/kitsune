@@ -61,9 +61,9 @@ async fn get_html(
         .await?;
 
     let mut acct = format!("@{}", account.username);
-    if let Some(domain) = account.domain {
+    if !account.local {
         acct.push('@');
-        acct.push_str(&domain);
+        acct.push_str(&account.domain);
     }
 
     let profile_picture_url =
