@@ -56,6 +56,15 @@ impl IntoMastodon for accounts::Model {
             .filter(posts::Column::AccountId.eq(self.id))
             .count(state.db_conn)
             .await?;
+        let followers_count = AccountsFollowers::find()
+            .filter(accounts_followers::Column::AccountId.eq(self.id))
+            .count(state.db_conn)
+            .await?;
+        let following_count = AccountsFollowers::find()
+            .filter(accounts_followers::Column::FollowerId.eq(self.id))
+            .count(state.db_conn)
+            .await?;
+
         let mut acct = self.username.clone();
         if let Some(domain) = self.domain {
             acct.push('@');
@@ -90,8 +99,8 @@ impl IntoMastodon for accounts::Model {
             avatar,
             header_static: header.clone(),
             header,
-            followers_count: 0,
-            following_count: 0,
+            followers_count,
+            following_count,
             statuses_count,
             source: Source {
                 privacy: "public".into(),
