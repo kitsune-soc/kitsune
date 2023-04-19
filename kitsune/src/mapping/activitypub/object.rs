@@ -14,7 +14,7 @@ use kitsune_db::{
     link::InReplyTo,
 };
 use kitsune_type::ap::{
-    actor::{Actor, ActorType, PublicKey},
+    actor::{Actor, Endpoints, PublicKey},
     ap_context,
     helper::StringOrObject,
     object::{MediaAttachment, MediaAttachmentType},
@@ -165,15 +165,16 @@ impl IntoObject for accounts::Model {
         Ok(Actor {
             context: ap_context(),
             id: self.url.clone(),
-            r#type: ActorType::Person,
+            r#type: self.actor_type.into(),
             name: self.display_name,
             subject: self.note,
             icon,
             image,
             preferred_username: self.username,
             manually_approves_followers: self.locked,
-            // TODO: Add shared inbox
-            endpoints: None,
+            endpoints: Some(Endpoints {
+                shared_inbox: self.shared_inbox_url,
+            }),
             inbox: self.inbox_url,
             outbox: self.outbox_url,
             followers: self.followers_url,

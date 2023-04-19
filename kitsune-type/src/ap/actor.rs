@@ -7,6 +7,13 @@ use time::OffsetDateTime;
 pub enum ActorType {
     Group,
     Person,
+    Service,
+}
+
+impl ActorType {
+    pub fn is_bot(&self) -> bool {
+        matches!(self, Self::Service)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

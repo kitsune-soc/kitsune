@@ -78,6 +78,7 @@ impl IntoMastodon for accounts::Model {
         Ok(Account {
             id: self.id,
             acct,
+            bot: self.actor_type.is_bot(),
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
