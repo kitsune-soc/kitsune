@@ -36,6 +36,7 @@ pub struct Actor {
     pub manually_approves_followers: bool,
     pub public_key: PublicKey,
     pub endpoints: Option<Endpoints>,
+    pub featured: Option<String>,
     pub inbox: String,
     pub outbox: String,
     pub followers: String,

@@ -16,6 +16,7 @@ pub enum Accounts {
     // ActivityPub data
     ActorType,
     Url,
+    FeaturedCollectionUrl,
     FollowersUrl,
     FollowingUrl,
     InboxUrl,
@@ -56,6 +57,7 @@ pub enum Users {
     Username,
     Email,
     Password,
+    Domain,
     PrivateKey,
     CreatedAt,
     UpdatedAt,
@@ -81,6 +83,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Accounts::Domain).text().not_null())
                     .col(ColumnDef::new(Accounts::ActorType).integer().not_null())
                     .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
+                    .col(ColumnDef::new(Accounts::FeaturedCollectionUrl).text())
                     .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
                     .col(ColumnDef::new(Accounts::FollowingUrl).text().not_null())
                     .col(ColumnDef::new(Accounts::InboxUrl).text().not_null())
@@ -134,6 +137,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Users::Email).text().not_null().unique_key())
                     .col(ColumnDef::new(Users::Password).text().unique_key())
+                    .col(ColumnDef::new(Users::Domain).text().not_null())
                     .col(ColumnDef::new(Users::PrivateKey).text().not_null())
                     .col(
                         ColumnDef::new(Users::CreatedAt)
@@ -151,6 +155,12 @@ impl MigrationTrait for Migration {
                             .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .index(
+                        Index::create()
+                            .col(Users::Username)
+                            .col(Users::Domain)
+                            .unique(),
                     )
                     .to_owned(),
             )

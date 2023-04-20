@@ -22,6 +22,8 @@ pub struct Model {
     pub actor_type: ActorType,
     #[sea_orm(column_type = "Text", unique)]
     pub url: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub featured_collection_url: Option<String>,
     #[sea_orm(column_type = "Text")]
     pub followers_url: String,
     #[sea_orm(column_type = "Text")]

@@ -134,6 +134,7 @@ impl Fetcher {
                             domain: url.host_str().unwrap().into(),
                             actor_type: actor.r#type.into(),
                             url: actor.id,
+                            featured_collection_url: actor.featured,
                             followers_url: actor.followers,
                             following_url: actor.following,
                             inbox_url: actor.inbox,
