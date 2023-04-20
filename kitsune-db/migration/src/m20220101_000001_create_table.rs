@@ -82,12 +82,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Accounts::Local).boolean().not_null())
                     .col(ColumnDef::new(Accounts::Domain).text().not_null())
                     .col(ColumnDef::new(Accounts::ActorType).integer().not_null())
-                    .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
+                    .col(ColumnDef::new(Accounts::Url).text().unique_key())
                     .col(ColumnDef::new(Accounts::FeaturedCollectionUrl).text())
-                    .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
-                    .col(ColumnDef::new(Accounts::FollowingUrl).text().not_null())
-                    .col(ColumnDef::new(Accounts::InboxUrl).text().not_null())
-                    .col(ColumnDef::new(Accounts::OutboxUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::FollowersUrl).text())
+                    .col(ColumnDef::new(Accounts::FollowingUrl).text())
+                    .col(ColumnDef::new(Accounts::InboxUrl).text())
+                    .col(ColumnDef::new(Accounts::OutboxUrl).text())
                     .col(ColumnDef::new(Accounts::SharedInboxUrl).text())
                     .col(
                         ColumnDef::new(Accounts::PublicKeyId)
@@ -224,10 +224,24 @@ impl MigrationTrait for Migration {
                     .col(Posts::AccountId)
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx-posts-reposted_post_id")
+                    .table(Posts::Table)
+                    .col(Posts::RepostedPostId)
+                    .to_owned(),
+            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_index(Index::drop().name("idx-posts-reposted_post_id").to_owned())
+            .await?;
+
         manager
             .drop_index(
                 Index::drop()

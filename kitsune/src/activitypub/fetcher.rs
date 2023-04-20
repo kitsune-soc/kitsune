@@ -133,12 +133,12 @@ impl Fetcher {
                             local: false,
                             domain: url.host_str().unwrap().into(),
                             actor_type: actor.r#type.into(),
-                            url: actor.id,
+                            url: Some(actor.id),
                             featured_collection_url: actor.featured,
-                            followers_url: actor.followers,
-                            following_url: actor.following,
-                            inbox_url: actor.inbox,
-                            outbox_url: actor.outbox,
+                            followers_url: Some(actor.followers),
+                            following_url: Some(actor.following),
+                            inbox_url: Some(actor.inbox),
+                            outbox_url: Some(actor.outbox),
                             shared_inbox_url: actor
                                 .endpoints
                                 .and_then(|endpoints| endpoints.shared_inbox),
@@ -260,7 +260,7 @@ impl Fetcher {
         object.clean_html();
 
         let user = self.fetch_actor(object.attributed_to().into()).await?;
-        let visibility = Visibility::from_activitypub(&user, &object);
+        let visibility = Visibility::from_activitypub(&user, &object).unwrap();
 
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
@@ -373,8 +373,11 @@ mod test {
 
         assert_eq!(user.username, "0x0");
         assert_eq!(user.domain, "corteximplant.com");
-        assert_eq!(user.url, "https://corteximplant.com/users/0x0");
-        assert_eq!(user.inbox_url, "https://corteximplant.com/users/0x0/inbox");
+        assert_eq!(user.url, Some("https://corteximplant.com/users/0x0".into()));
+        assert_eq!(
+            user.inbox_url,
+            Some("https://corteximplant.com/users/0x0/inbox".into())
+        );
     }
 
     #[tokio::test]
@@ -409,7 +412,10 @@ mod test {
             .flatten()
             .expect("Get author");
         assert_eq!(author.username, "0x0");
-        assert_eq!(author.url, "https://corteximplant.com/users/0x0");
+        assert_eq!(
+            author.url,
+            Some("https://corteximplant.com/users/0x0".into())
+        );
     }
 
     #[tokio::test]

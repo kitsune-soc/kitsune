@@ -84,6 +84,10 @@ impl IntoMastodon for accounts::Model {
         .await
         .transpose()?;
 
+        let url = self
+            .url
+            .unwrap_or_else(|| state.url_service.user_url(&self.username));
+
         Ok(Account {
             id: self.id,
             acct,
@@ -94,7 +98,7 @@ impl IntoMastodon for accounts::Model {
             created_at: self.created_at,
             locked: self.locked,
             note: self.note.unwrap_or_default(),
-            url: self.url,
+            url,
             avatar_static: avatar.clone(),
             avatar,
             header_static: header.clone(),
@@ -189,11 +193,15 @@ impl IntoMastodon for posts_mentions::Model {
             acct.push_str(&account.domain);
         }
 
+        let url = account
+            .url
+            .unwrap_or_else(|| state.url_service.user_url(&account.username));
+
         Ok(Mention {
             id: account.id,
             acct,
             username: account.username,
-            url: account.url,
+            url,
         })
     }
 }

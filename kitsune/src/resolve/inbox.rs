@@ -8,7 +8,7 @@ use kitsune_db::{
 };
 use sea_orm::{
     sea_query::{Expr, Func, SimpleExpr},
-    DatabaseConnection, DbErr, EntityTrait, ModelTrait, QuerySelect,
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
 };
 
 pub struct InboxResolver {
@@ -28,6 +28,11 @@ impl InboxResolver {
     ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
         account
             .find_linked(Followers)
+            .filter(
+                accounts::Column::SharedInboxUrl
+                    .is_not_null()
+                    .or(accounts::Column::InboxUrl.is_not_null()),
+            )
             .select_only()
             .distinct()
             .column_as(
@@ -55,6 +60,11 @@ impl InboxResolver {
 
         let mentioned_inbox_stream = post
             .find_linked(MentionedAccounts)
+            .filter(
+                accounts::Column::SharedInboxUrl
+                    .is_not_null()
+                    .or(accounts::Column::InboxUrl.is_not_null()),
+            )
             .select_only()
             .distinct()
             .column_as(

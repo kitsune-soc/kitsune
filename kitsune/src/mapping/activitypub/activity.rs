@@ -27,11 +27,13 @@ impl IntoActivity for accounts::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
+        let account_url = state.service.url.user_url(&self.username);
+
         Ok(Activity {
             context: ap_context(),
-            id: format!("{}#update", self.url),
+            id: format!("{account_url}#update"),
             r#type: ActivityType::Update,
-            actor: StringOrObject::String(self.url.clone()),
+            actor: StringOrObject::String(account_url),
             object: ObjectField::Actor(self.into_object(state).await?),
             published: OffsetDateTime::now_utc(),
         })
@@ -159,6 +161,7 @@ impl IntoActivity for posts::Model {
             .one(&state.db_conn)
             .await?
             .expect("[Bug] Post without author");
+        let account_url = state.service.url.user_url(&account.username);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
             let reposted_post_url = Posts::find_by_id(reposted_post_id)
@@ -173,7 +176,7 @@ impl IntoActivity for posts::Model {
                 context: ap_context(),
                 id: format!("{}/activity", self.url),
                 r#type: ActivityType::Announce,
-                actor: StringOrObject::String(account.url.clone()),
+                actor: StringOrObject::String(account_url),
                 object: ObjectField::Url(reposted_post_url),
                 published: self.created_at,
             })
@@ -185,7 +188,7 @@ impl IntoActivity for posts::Model {
                 context: ap_context(),
                 id: format!("{}/activity", object.id),
                 r#type: ActivityType::Create,
-                actor: StringOrObject::String(account.url.clone()),
+                actor: StringOrObject::String(account_url),
                 published: created_at,
                 object: ObjectField::Object(object),
             })
@@ -197,13 +200,14 @@ impl IntoActivity for posts::Model {
             .one(&state.db_conn)
             .await?
             .expect("[Bug] Post without author");
+        let account_url = state.service.url.user_url(&account.username);
 
         let activity = if self.reposted_post_id.is_some() {
             Activity {
                 context: ap_context(),
                 id: format!("{}#undo", self.url),
                 r#type: ActivityType::Undo,
-                actor: StringOrObject::String(account.url),
+                actor: StringOrObject::String(account_url),
                 object: ObjectField::Url(self.url),
                 published: OffsetDateTime::now_utc(),
             }
@@ -214,7 +218,7 @@ impl IntoActivity for posts::Model {
                 context: ap_context(),
                 id: format!("{}#delete", object.id),
                 r#type: ActivityType::Delete,
-                actor: StringOrObject::String(account.url.clone()),
+                actor: StringOrObject::String(account_url),
                 published: OffsetDateTime::now_utc(),
                 object: ObjectField::Object(object),
             }

@@ -20,18 +20,18 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub domain: String,
     pub actor_type: ActorType,
-    #[sea_orm(column_type = "Text", unique)]
-    pub url: String,
+    #[sea_orm(column_type = "Text", nullable, unique)]
+    pub url: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub featured_collection_url: Option<String>,
-    #[sea_orm(column_type = "Text")]
-    pub followers_url: String,
-    #[sea_orm(column_type = "Text")]
-    pub following_url: String,
-    #[sea_orm(column_type = "Text")]
-    pub inbox_url: String,
-    #[sea_orm(column_type = "Text")]
-    pub outbox_url: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub followers_url: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub following_url: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub inbox_url: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub outbox_url: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub shared_inbox_url: Option<String>,
     #[sea_orm(column_type = "Text", unique)]

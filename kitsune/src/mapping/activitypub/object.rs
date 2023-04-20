@@ -14,7 +14,7 @@ use kitsune_db::{
     link::InReplyTo,
 };
 use kitsune_type::ap::{
-    actor::{Actor, Endpoints, PublicKey},
+    actor::{Actor, PublicKey},
     ap_context,
     helper::StringOrObject,
     object::{MediaAttachment, MediaAttachmentType},
@@ -107,9 +107,12 @@ impl IntoObject for posts::Model {
             .await?;
 
         let mut tag = Vec::new();
-        let (mut to, cc) = self.visibility.base_to_cc(&account);
+        let (mut to, cc) = self.visibility.base_to_cc(state, &account);
         for (mention, mentioned) in mentions {
-            let mentioned_url = mentioned.unwrap().url;
+            let mentioned = mentioned.unwrap();
+            let mentioned_url = mentioned
+                .url
+                .unwrap_or_else(|| state.service.url.user_url(&mentioned.username));
 
             to.push(mentioned_url.clone());
             tag.push(Tag {
@@ -119,12 +122,13 @@ impl IntoObject for posts::Model {
                 icon: None,
             });
         }
+        let account_url = state.service.url.user_url(&account.username);
 
         Ok(Object {
             context: ap_context(),
             id: self.url,
             r#type: ObjectType::Note,
-            attributed_to: StringOrObject::String(account.url),
+            attributed_to: StringOrObject::String(account_url),
             in_reply_to,
             sensitive: self.is_sensitive,
             summary: self.subject,
@@ -162,9 +166,15 @@ impl IntoObject for accounts::Model {
             None
         };
 
+        let user_url = state.service.url.user_url(&self.username);
+        let inbox = state.service.url.inbox_url(&self.username);
+        let outbox = state.service.url.outbox_url(&self.username);
+        let followers = state.service.url.followers_url(&self.username);
+        let following = state.service.url.following_url(&self.username);
+
         Ok(Actor {
             context: ap_context(),
-            id: self.url.clone(),
+            id: user_url.clone(),
             r#type: self.actor_type.into(),
             name: self.display_name,
             subject: self.note,
@@ -172,17 +182,15 @@ impl IntoObject for accounts::Model {
             image,
             preferred_username: self.username,
             manually_approves_followers: self.locked,
-            endpoints: Some(Endpoints {
-                shared_inbox: self.shared_inbox_url,
-            }),
-            inbox: self.inbox_url,
-            outbox: self.outbox_url,
-            featured: self.featured_collection_url,
-            followers: self.followers_url,
-            following: self.following_url,
+            endpoints: None,
+            inbox,
+            outbox,
+            featured: None,
+            followers,
+            following,
             public_key: PublicKey {
                 id: self.public_key_id,
-                owner: self.url,
+                owner: user_url,
                 public_key_pem: self.public_key,
             },
             published: self.created_at,

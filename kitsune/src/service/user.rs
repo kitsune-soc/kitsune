@@ -94,10 +94,6 @@ impl UserService {
 
         let domain = self.url_service.domain().to_string();
         let url = self.url_service.user_url(&register.username);
-        let followers_url = format!("{url}/followers");
-        let following_url = format!("{url}/following");
-        let inbox_url = format!("{url}/inbox");
-        let outbox_url = format!("{url}/outbox");
         let public_key_id = format!("{url}#main-key");
 
         let new_user = self
@@ -116,13 +112,12 @@ impl UserService {
                             local: true,
                             domain: domain.clone(),
                             actor_type: ActorType::Person,
-                            url,
-                            // TODO: Add collection URL
+                            url: None,
                             featured_collection_url: None,
-                            followers_url,
-                            following_url,
-                            inbox_url,
-                            outbox_url,
+                            followers_url: None,
+                            following_url: None,
+                            inbox_url: None,
+                            outbox_url: None,
                             shared_inbox_url: None,
                             public_key_id,
                             public_key: public_key_str,
