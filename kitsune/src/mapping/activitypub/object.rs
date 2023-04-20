@@ -177,6 +177,7 @@ impl IntoObject for accounts::Model {
             }),
             inbox: self.inbox_url,
             outbox: self.outbox_url,
+            featured: self.featured_collection_url,
             followers: self.followers_url,
             following: self.following_url,
             public_key: PublicKey {
