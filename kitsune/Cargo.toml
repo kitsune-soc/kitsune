@@ -34,7 +34,7 @@ aws-credential-types = { version = "0.55.1", features = [
 aws-sdk-s3 = "0.26.0"
 axum = { version = "0.6.16", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.7.4", features = ["query"] }
-axum-prometheus = "0.3.2"
+axum-prometheus = { git = "https://github.com/Ptrskay3/axum-prometheus.git", rev = "b62b65dd3a0c932233bcc6aa755d0f37c2a645da" }
 base64 = "0.21.0"
 bytes = "1.4.0"
 const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe837092418458017353a9acab6081dc198", features = [
