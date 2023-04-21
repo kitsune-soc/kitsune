@@ -47,7 +47,7 @@ impl Runnable for DeliverUnfollow {
 
         ctx.deliverer
             .deliver(
-                &followed_account.inbox_url,
+                followed_account.inbox_url.as_deref().unwrap(),
                 &follower,
                 &follower_user,
                 &follow_activity,

@@ -1,6 +1,6 @@
 use crate::{
     activitypub::fetcher::FetchOptions,
-    error::{Error, Result},
+    error::{ApiError, Error, Result},
     state::Zustand,
 };
 use async_trait::async_trait;
@@ -11,15 +11,15 @@ use axum::{
     RequestExt,
 };
 use const_oid::db::rfc8410::ID_ED_25519;
-use futures_util::future;
 use http::{request::Parts, StatusCode};
-use kitsune_db::entity::accounts;
+use kitsune_db::entity::{accounts, prelude::Accounts};
 use kitsune_http_signatures::{
     ring::signature::{UnparsedPublicKey, ED25519, RSA_PKCS1_2048_8192_SHA256},
     HttpVerifier,
 };
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
 pub struct SignedActivity(pub accounts::Model, pub Activity);
 
@@ -54,14 +54,12 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
-        if !verify_signature(&parts, &remote_user).await? {
-            // Refetch the user and try again
-            // Maybe they rekeyed
-
+        if !verify_signature(&parts, &state.db_conn).await? {
+            // Refetch the user and try again. Maybe they rekeyed
             let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
-            let remote_user = state.fetcher.fetch_actor(opts).await?;
+            state.fetcher.fetch_actor(opts).await?;
 
-            if !verify_signature(&parts, &remote_user).await? {
+            if !verify_signature(&parts, &state.db_conn).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }
@@ -70,22 +68,32 @@ impl FromRequest<Zustand, Body> for SignedActivity {
     }
 }
 
-async fn verify_signature(parts: &Parts, remote_user: &accounts::Model) -> Result<bool> {
-    let (_tag, public_key) = Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
-    let public_key: SubjectPublicKeyInfo<'_> = public_key.decode_msg().map_err(Error::from)?;
-
-    // TODO: Replace this with an actual comparison as soon as the new const_oid version is out
-    let public_key = if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
-        UnparsedPublicKey::new(&ED25519, public_key.subject_public_key.to_vec())
-    } else {
-        UnparsedPublicKey::new(
-            &RSA_PKCS1_2048_8192_SHA256,
-            public_key.subject_public_key.to_vec(),
-        )
-    };
-
+async fn verify_signature(parts: &Parts, db_conn: &DatabaseConnection) -> Result<bool> {
     let is_valid = HttpVerifier::default()
-        .verify(parts, |_key_id| future::ok(public_key))
+        .verify(parts, |key_id| async move {
+            let remote_user = Accounts::find()
+                .filter(accounts::Column::PublicKeyId.eq(key_id))
+                .one(db_conn)
+                .await?
+                .ok_or(ApiError::NotFound)?;
+
+            let (_tag, public_key) =
+                Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
+            let public_key: SubjectPublicKeyInfo<'_> =
+                public_key.decode_msg().map_err(Error::from)?;
+
+            // TODO: Replace this with an actual comparison as soon as the new const_oid version is out
+            let public_key = if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
+                UnparsedPublicKey::new(&ED25519, public_key.subject_public_key.to_vec())
+            } else {
+                UnparsedPublicKey::new(
+                    &RSA_PKCS1_2048_8192_SHA256,
+                    public_key.subject_public_key.to_vec(),
+                )
+            };
+
+            Ok(public_key)
+        })
         .await
         .is_ok();
 

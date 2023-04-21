@@ -21,7 +21,7 @@ use kitsune_db::{
     },
 };
 use kitsune_http_client::Client;
-use kitsune_type::ap::{object::Actor, Object};
+use kitsune_type::ap::{actor::Actor, Object};
 use sea_orm::{
     sea_query::OnConflict, ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection,
     EntityTrait, IntoActiveModel, IntoActiveValue, QueryFilter, TransactionTrait,
@@ -131,10 +131,18 @@ impl Fetcher {
                             username: actor.preferred_username,
                             locked: actor.manually_approves_followers,
                             local: false,
-                            domain: Some(url.host_str().unwrap().into()),
-                            url: actor.id,
-                            followers_url: actor.followers,
-                            inbox_url: actor.inbox,
+                            domain: url.host_str().unwrap().into(),
+                            actor_type: actor.r#type.into(),
+                            url: Some(actor.id),
+                            featured_collection_url: actor.featured,
+                            followers_url: Some(actor.followers),
+                            following_url: Some(actor.following),
+                            inbox_url: Some(actor.inbox),
+                            outbox_url: Some(actor.outbox),
+                            shared_inbox_url: actor
+                                .endpoints
+                                .and_then(|endpoints| endpoints.shared_inbox),
+                            public_key_id: actor.public_key.id,
                             public_key: actor.public_key.public_key_pem,
                             created_at: actor.published,
                             updated_at: OffsetDateTime::now_utc(),
@@ -147,6 +155,7 @@ impl Fetcher {
                                 accounts::Column::DisplayName,
                                 accounts::Column::Note,
                                 accounts::Column::Locked,
+                                accounts::Column::PublicKeyId,
                                 accounts::Column::PublicKey,
                                 accounts::Column::UpdatedAt,
                             ])
@@ -251,7 +260,7 @@ impl Fetcher {
         object.clean_html();
 
         let user = self.fetch_actor(object.attributed_to().into()).await?;
-        let visibility = Visibility::from_activitypub(&user, &object);
+        let visibility = Visibility::from_activitypub(&user, &object).unwrap();
 
         #[allow(clippy::cast_sign_loss)]
         let uuid_timestamp = Timestamp::from_unix(
@@ -363,9 +372,12 @@ mod test {
             .expect("Fetch actor");
 
         assert_eq!(user.username, "0x0");
-        assert_eq!(user.domain, Some("corteximplant.com".into()));
-        assert_eq!(user.url, "https://corteximplant.com/users/0x0");
-        assert_eq!(user.inbox_url, "https://corteximplant.com/users/0x0/inbox");
+        assert_eq!(user.domain, "corteximplant.com");
+        assert_eq!(user.url, Some("https://corteximplant.com/users/0x0".into()));
+        assert_eq!(
+            user.inbox_url,
+            Some("https://corteximplant.com/users/0x0/inbox".into())
+        );
     }
 
     #[tokio::test]
@@ -400,7 +412,10 @@ mod test {
             .flatten()
             .expect("Get author");
         assert_eq!(author.username, "0x0");
-        assert_eq!(author.url, "https://corteximplant.com/users/0x0");
+        assert_eq!(
+            author.url,
+            Some("https://corteximplant.com/users/0x0".into())
+        );
     }
 
     #[tokio::test]

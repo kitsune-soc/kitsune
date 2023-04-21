@@ -56,10 +56,19 @@ impl IntoMastodon for accounts::Model {
             .filter(posts::Column::AccountId.eq(self.id))
             .count(state.db_conn)
             .await?;
+        let followers_count = AccountsFollowers::find()
+            .filter(accounts_followers::Column::AccountId.eq(self.id))
+            .count(state.db_conn)
+            .await?;
+        let following_count = AccountsFollowers::find()
+            .filter(accounts_followers::Column::FollowerId.eq(self.id))
+            .count(state.db_conn)
+            .await?;
+
         let mut acct = self.username.clone();
-        if let Some(domain) = self.domain {
+        if !self.local {
             acct.push('@');
-            acct.push_str(&domain);
+            acct.push_str(&self.domain);
         }
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
@@ -75,21 +84,27 @@ impl IntoMastodon for accounts::Model {
         .await
         .transpose()?;
 
+        let url = self
+            .url
+            .unwrap_or_else(|| state.url_service.user_url(&self.username));
+
         Ok(Account {
             id: self.id,
             acct,
+            bot: self.actor_type.is_bot(),
+            group: self.actor_type.is_group(),
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
             locked: self.locked,
             note: self.note.unwrap_or_default(),
-            url: self.url,
+            url,
             avatar_static: avatar.clone(),
             avatar,
             header_static: header.clone(),
             header,
-            followers_count: 0,
-            following_count: 0,
+            followers_count,
+            following_count,
             statuses_count,
             source: Source {
                 privacy: "public".into(),
@@ -173,16 +188,20 @@ impl IntoMastodon for posts_mentions::Model {
             .expect("[Bug] Mention without associated account");
 
         let mut acct = account.username.clone();
-        if let Some(ref domain) = account.domain {
+        if !account.local {
             acct.push('@');
-            acct.push_str(domain);
+            acct.push_str(&account.domain);
         }
+
+        let url = account
+            .url
+            .unwrap_or_else(|| state.url_service.user_url(&account.username));
 
         Ok(Mention {
             id: account.id,
             acct,
             username: account.username,
-            url: account.url,
+            url,
         })
     }
 }

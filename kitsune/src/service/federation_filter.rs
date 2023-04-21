@@ -1,6 +1,6 @@
 use crate::{config::FederationFilterConfiguration, error::FederationFilterError};
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use kitsune_type::ap::{object::Actor, Activity, Object};
+use kitsune_type::ap::{actor::Actor, Activity, Object};
 use std::sync::Arc;
 use url::Url;
 

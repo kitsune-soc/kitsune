@@ -43,7 +43,7 @@ impl Runnable for DeliverFollow {
 
         ctx.deliverer
             .deliver(
-                &followed.inbox_url,
+                followed.inbox_url.as_deref().unwrap(),
                 &follower,
                 &follower_user,
                 &follow_activity,

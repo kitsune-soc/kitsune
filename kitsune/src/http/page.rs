@@ -60,9 +60,9 @@ impl PostComponent {
         .transpose()?;
 
         let mut acct = format!("@{}", author.username);
-        if let Some(domain) = author.domain {
+        if !author.local {
             acct.push('@');
-            acct.push_str(&domain);
+            acct.push_str(&author.domain);
         }
 
         Ok(Self {
@@ -71,7 +71,9 @@ impl PostComponent {
                 .display_name
                 .unwrap_or_else(|| author.username.clone()),
             acct,
-            profile_url: author.url,
+            profile_url: author
+                .url
+                .unwrap_or_else(|| state.service.url.user_url(&author.username)),
             profile_picture_url: profile_picture_url
                 .unwrap_or_else(|| state.service.url.default_avatar_url()),
             content: post.content,

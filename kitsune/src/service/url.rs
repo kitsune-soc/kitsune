@@ -41,6 +41,26 @@ impl UrlService {
     }
 
     #[must_use]
+    pub fn followers_url(&self, username: &str) -> String {
+        format!("{}/followers", self.user_url(username))
+    }
+
+    #[must_use]
+    pub fn following_url(&self, username: &str) -> String {
+        format!("{}/following", self.user_url(username))
+    }
+
+    #[must_use]
+    pub fn inbox_url(&self, username: &str) -> String {
+        format!("{}/inbox", self.user_url(username))
+    }
+
+    #[must_use]
+    pub fn outbox_url(&self, username: &str) -> String {
+        format!("{}/outbox", self.user_url(username))
+    }
+
+    #[must_use]
     pub fn media_url(&self, attachment_id: Uuid) -> String {
         format!("{}/media/{}", self.base_url(), attachment_id)
     }
@@ -53,6 +73,11 @@ impl UrlService {
     #[must_use]
     pub fn post_url(&self, post_id: Uuid) -> String {
         format!("{}/posts/{}", self.base_url(), post_id)
+    }
+
+    #[must_use]
+    pub fn public_key_id(&self, username: &str) -> String {
+        format!("{}#main-key", self.user_url(username))
     }
 
     #[must_use]

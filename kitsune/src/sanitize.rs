@@ -1,4 +1,4 @@
-use kitsune_type::ap::{object::Actor, Object};
+use kitsune_type::ap::{actor::Actor, Object};
 
 pub trait CleanHtmlExt {
     fn clean_html(&mut self);
