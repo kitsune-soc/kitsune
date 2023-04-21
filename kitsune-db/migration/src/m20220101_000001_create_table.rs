@@ -129,12 +129,7 @@ impl MigrationTrait for Migration {
                             .unique_key(),
                     )
                     .col(ColumnDef::new(Users::OidcId).text().unique_key())
-                    .col(
-                        ColumnDef::new(Users::Username)
-                            .text()
-                            .not_null()
-                            .unique_key(),
-                    )
+                    .col(ColumnDef::new(Users::Username).text().not_null())
                     .col(ColumnDef::new(Users::Email).text().not_null().unique_key())
                     .col(ColumnDef::new(Users::Password).text().unique_key())
                     .col(ColumnDef::new(Users::Domain).text().not_null())
