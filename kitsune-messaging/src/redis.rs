@@ -60,7 +60,7 @@ impl MultiplexActor {
                         self.mapping.insert(msg.channel_pattern, sender);
                         receiver
                     };
-                    let _ = msg.responder.send(receiver);
+                    drop(msg.responder.send(receiver));
                 }
                 msg = future::poll_fn(|ctx| self.conn.on_message().poll_next_unpin(ctx)) => {
                     if let Some(msg) = msg {
