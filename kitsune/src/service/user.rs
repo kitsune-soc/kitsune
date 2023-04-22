@@ -2,10 +2,13 @@ use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use futures_util::{future::OptionFuture, FutureExt};
-use kitsune_db::entity::{
-    accounts,
-    prelude::{Accounts, Users},
-    users,
+use kitsune_db::{
+    custom::ActorType,
+    entity::{
+        accounts,
+        prelude::{Accounts, Users},
+        users,
+    },
 };
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
@@ -89,9 +92,9 @@ impl UserService {
         let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
+        let domain = self.url_service.domain().to_string();
         let url = self.url_service.user_url(&register.username);
-        let followers_url = format!("{url}/followers");
-        let inbox_url = format!("{url}/inbox");
+        let public_key_id = format!("{url}#main-key");
 
         let new_user = self
             .db_conn
@@ -107,10 +110,16 @@ impl UserService {
                             locked: false,
                             note: None,
                             local: true,
-                            domain: None,
-                            url,
-                            followers_url,
-                            inbox_url,
+                            domain: domain.clone(),
+                            actor_type: ActorType::Person,
+                            url: None,
+                            featured_collection_url: None,
+                            followers_url: None,
+                            following_url: None,
+                            inbox_url: None,
+                            outbox_url: None,
+                            shared_inbox_url: None,
+                            public_key_id,
                             public_key: public_key_str,
                             created_at: OffsetDateTime::now_utc(),
                             updated_at: OffsetDateTime::now_utc(),
@@ -127,6 +136,7 @@ impl UserService {
                         oidc_id: register.oidc_id,
                         email: register.email,
                         password: hashed_password,
+                        domain,
                         private_key: private_key_str.to_string(),
                         created_at: OffsetDateTime::now_utc(),
                         updated_at: OffsetDateTime::now_utc(),

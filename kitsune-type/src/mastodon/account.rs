@@ -23,6 +23,8 @@ pub struct Source {
 pub struct Account {
     pub id: Uuid,
     pub acct: String,
+    pub bot: bool,
+    pub group: bool,
     pub username: String,
     pub display_name: String,
     #[serde(with = "time::serde::rfc3339")]

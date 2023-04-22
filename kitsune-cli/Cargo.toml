@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.2.2", features = ["derive"] }
+clap = { version = "4.2.4", features = ["derive"] }
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { version = "0.1.0", path = "../kitsune-db" }

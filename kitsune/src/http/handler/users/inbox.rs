@@ -62,7 +62,7 @@ async fn create_activity(
             .db_conn
             .transaction(|tx| {
                 async move {
-                    let visibility = Visibility::from_activitypub(&author, &object);
+                    let visibility = Visibility::from_activitypub(&author, &object).unwrap();
                     let new_post = Posts::insert(
                         posts::Model {
                             id: Uuid::now_v7(),

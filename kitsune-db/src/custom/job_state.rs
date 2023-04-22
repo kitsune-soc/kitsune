@@ -2,7 +2,17 @@ use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Clone, Debug, DeriveActiveEnum, Deserialize, EnumIter, Eq, Ord, PartialEq, PartialOrd, Serialize,
+    Clone,
+    Copy,
+    Debug,
+    DeriveActiveEnum,
+    Deserialize,
+    EnumIter,
+    Eq,
+    Ord,
+    PartialEq,
+    PartialOrd,
+    Serialize,
 )]
 #[sea_orm(rs_type = "i32", db_type = "Integer")]
 /// State a job can be in

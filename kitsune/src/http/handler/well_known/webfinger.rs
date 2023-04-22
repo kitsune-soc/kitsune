@@ -49,14 +49,15 @@ async fn get(
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
+    let account_url = url_service.user_url(&account.username);
 
     Ok(Json(Resource {
         subject: query.resource,
-        aliases: vec![account.url.clone()],
+        aliases: vec![account_url.clone()],
         links: vec![Link {
             rel: "self".into(),
             r#type: Some("application/activity+json".into()),
-            href: Some(account.url),
+            href: Some(account_url),
         }],
     })
     .into_response())

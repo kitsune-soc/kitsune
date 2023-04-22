@@ -12,10 +12,21 @@ pub enum Accounts {
     Locked,
     Local,
     Domain,
+
+    // ActivityPub data
+    ActorType,
     Url,
+    FeaturedCollectionUrl,
     FollowersUrl,
+    FollowingUrl,
     InboxUrl,
+    OutboxUrl,
+    SharedInboxUrl,
+
+    // HTTP signature data
+    PublicKeyId,
     PublicKey,
+
     CreatedAt,
     UpdatedAt,
 }
@@ -46,6 +57,7 @@ pub enum Users {
     Username,
     Email,
     Password,
+    Domain,
     PrivateKey,
     CreatedAt,
     UpdatedAt,
@@ -68,10 +80,21 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Accounts::Username).text().not_null())
                     .col(ColumnDef::new(Accounts::Locked).boolean().not_null())
                     .col(ColumnDef::new(Accounts::Local).boolean().not_null())
-                    .col(ColumnDef::new(Accounts::Domain).text())
-                    .col(ColumnDef::new(Accounts::Url).text().not_null().unique_key())
-                    .col(ColumnDef::new(Accounts::FollowersUrl).text().not_null())
-                    .col(ColumnDef::new(Accounts::InboxUrl).text().not_null())
+                    .col(ColumnDef::new(Accounts::Domain).text().not_null())
+                    .col(ColumnDef::new(Accounts::ActorType).integer().not_null())
+                    .col(ColumnDef::new(Accounts::Url).text().unique_key())
+                    .col(ColumnDef::new(Accounts::FeaturedCollectionUrl).text())
+                    .col(ColumnDef::new(Accounts::FollowersUrl).text())
+                    .col(ColumnDef::new(Accounts::FollowingUrl).text())
+                    .col(ColumnDef::new(Accounts::InboxUrl).text())
+                    .col(ColumnDef::new(Accounts::OutboxUrl).text())
+                    .col(ColumnDef::new(Accounts::SharedInboxUrl).text())
+                    .col(
+                        ColumnDef::new(Accounts::PublicKeyId)
+                            .text()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(ColumnDef::new(Accounts::PublicKey).text().not_null())
                     .col(
                         ColumnDef::new(Accounts::CreatedAt)
@@ -106,14 +129,10 @@ impl MigrationTrait for Migration {
                             .unique_key(),
                     )
                     .col(ColumnDef::new(Users::OidcId).text().unique_key())
-                    .col(
-                        ColumnDef::new(Users::Username)
-                            .text()
-                            .not_null()
-                            .unique_key(),
-                    )
+                    .col(ColumnDef::new(Users::Username).text().not_null())
                     .col(ColumnDef::new(Users::Email).text().not_null().unique_key())
                     .col(ColumnDef::new(Users::Password).text().unique_key())
+                    .col(ColumnDef::new(Users::Domain).text().not_null())
                     .col(ColumnDef::new(Users::PrivateKey).text().not_null())
                     .col(
                         ColumnDef::new(Users::CreatedAt)
@@ -131,6 +150,12 @@ impl MigrationTrait for Migration {
                             .to(Accounts::Table, Accounts::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .index(
+                        Index::create()
+                            .col(Users::Username)
+                            .col(Users::Domain)
+                            .unique(),
                     )
                     .to_owned(),
             )
@@ -194,10 +219,24 @@ impl MigrationTrait for Migration {
                     .col(Posts::AccountId)
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx-posts-reposted_post_id")
+                    .table(Posts::Table)
+                    .col(Posts::RepostedPostId)
+                    .to_owned(),
+            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_index(Index::drop().name("idx-posts-reposted_post_id").to_owned())
+            .await?;
+
         manager
             .drop_index(
                 Index::drop()

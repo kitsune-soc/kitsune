@@ -2,8 +2,8 @@ use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Copy,
     Clone,
+    Copy,
     Debug,
     DeriveActiveEnum,
     Deserialize,

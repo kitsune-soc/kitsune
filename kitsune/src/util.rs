@@ -1,3 +1,4 @@
+use crate::state::Zustand;
 use kitsune_db::{
     custom::Visibility,
     entity::{accounts, oauth2_access_tokens},
@@ -22,21 +23,17 @@ impl AccessTokenTtl for oauth2_access_tokens::Model {
 }
 
 pub trait BaseToCc {
-    fn base_to_cc(&self, account: &accounts::Model) -> (Vec<String>, Vec<String>);
+    fn base_to_cc(&self, state: &Zustand, account: &accounts::Model) -> (Vec<String>, Vec<String>);
 }
 
 impl BaseToCc for Visibility {
-    fn base_to_cc(&self, account: &accounts::Model) -> (Vec<String>, Vec<String>) {
+    fn base_to_cc(&self, state: &Zustand, account: &accounts::Model) -> (Vec<String>, Vec<String>) {
+        let followers_url = state.service.url.followers_url(&account.username);
+
         match self {
-            Visibility::Public => (
-                vec![PUBLIC_IDENTIFIER.to_string()],
-                vec![account.followers_url.clone()],
-            ),
-            Visibility::Unlisted => (
-                vec![],
-                vec![PUBLIC_IDENTIFIER.to_string(), account.followers_url.clone()],
-            ),
-            Visibility::FollowerOnly => (vec![account.followers_url.clone()], vec![]),
+            Visibility::Public => (vec![PUBLIC_IDENTIFIER.to_string()], vec![followers_url]),
+            Visibility::Unlisted => (vec![], vec![PUBLIC_IDENTIFIER.to_string(), followers_url]),
+            Visibility::FollowerOnly => (vec![followers_url], vec![]),
             Visibility::MentionOnly => (vec![], vec![]),
         }
     }

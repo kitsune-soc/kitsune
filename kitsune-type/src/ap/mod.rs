@@ -1,13 +1,11 @@
-use self::{
-    helper::StringOrObject,
-    object::{Actor, MediaAttachment},
-};
+use self::{actor::Actor, helper::StringOrObject, object::MediaAttachment};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use time::OffsetDateTime;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
+pub mod actor;
 pub mod collection;
 pub mod helper;
 pub mod object;

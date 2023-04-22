@@ -37,6 +37,7 @@ impl Runnable for DeliverAccept {
             error!("missing followed user");
             return Ok(());
         };
+        let followed_account_url = ctx.state.service.url.user_url(&followed_account.username);
 
         // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
         // But I'm not sure how I could encode these into the form of these two traits
@@ -47,14 +48,14 @@ impl Runnable for DeliverAccept {
             context: ap_context(),
             id: format!("{}#accept", follow.url),
             r#type: ActivityType::Accept,
-            actor: StringOrObject::String(followed_account.url.clone()),
+            actor: StringOrObject::String(followed_account_url),
             object: ObjectField::Url(follow.url),
             published: OffsetDateTime::now_utc(),
         };
 
         ctx.deliverer
             .deliver(
-                &follower.inbox_url,
+                follower.inbox_url.as_deref().unwrap(),
                 &followed_account,
                 &followed_user,
                 &accept_activity,

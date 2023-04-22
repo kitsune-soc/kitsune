@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 prost = "0.11.9"
 serde = { version = "1.0.160", features = ["derive"] }
-tonic = { version = "0.9.1", default-features = false, features = [
+tonic = { version = "0.9.2", default-features = false, features = [
     "codegen",
     "transport",
     "prost",
@@ -14,7 +14,7 @@ tonic = { version = "0.9.1", default-features = false, features = [
 
 [build-dependencies]
 protoc-bin-vendored = { version = "3.0.0", optional = true }
-tonic-build = "0.9.1"
+tonic-build = "0.9.2"
 
 [features]
 default = []

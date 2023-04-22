@@ -58,10 +58,9 @@ impl Deliverer {
             .header("Digest", digest_header)
             .body(body.into())?;
 
-        let key_id = format!("{}#main-key", account.url);
         let (_tag, pkcs8_document) = SecretDocument::from_pem(&user.private_key)?;
         let private_key = PrivateKey::builder()
-            .key_id(&key_id)
+            .key_id(&account.public_key_id)
             .key(RsaKeyPair::from_pkcs8(pkcs8_document.as_bytes())?)
             .build()
             .unwrap();

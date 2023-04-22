@@ -39,19 +39,30 @@ pub enum Visibility {
 
 impl Visibility {
     /// Determine the visibility for some ActivityPub object
-    pub fn from_activitypub<O>(owner: &accounts::Model, obj: &O) -> Self
+    ///
+    /// Returns none in case the account is local
+    pub fn from_activitypub<O>(owner: &accounts::Model, obj: &O) -> Option<Self>
     where
         O: CcTo + Privacy,
     {
-        if obj.is_public() {
+        if owner.local {
+            return None;
+        }
+
+        let visibility = if obj.is_public() {
             Self::Public
         } else if obj.is_unlisted() {
             Self::Unlisted
-        } else if obj.to().contains(&owner.followers_url) {
+        } else if obj
+            .to()
+            .iter()
+            .any(|item| owner.followers_url.as_ref() == Some(item))
+        {
             Self::FollowerOnly
         } else {
             Self::MentionOnly
-        }
+        };
+        Some(visibility)
     }
 }
 

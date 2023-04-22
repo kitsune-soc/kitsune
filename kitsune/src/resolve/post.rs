@@ -1,6 +1,9 @@
 use crate::{
     error::{Error, Result},
-    service::account::{AccountService, GetUser},
+    service::{
+        account::{AccountService, GetUser},
+        url::UrlService,
+    },
 };
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
@@ -11,6 +14,7 @@ use uuid::Uuid;
 #[derive(Clone, TypedBuilder)]
 pub struct PostResolver {
     account: AccountService,
+    url: UrlService,
 }
 
 impl PostResolver {
@@ -27,6 +31,9 @@ impl PostResolver {
                     .build();
 
                 if let Some(account) = self.account.get(get_user).await? {
+                    let account_url = account
+                        .url
+                        .unwrap_or_else(|| self.url.user_url(&account.username));
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
                     mentioned_accounts.lock().insert(account.id, mention_text);
@@ -35,7 +42,7 @@ impl PostResolver {
                         tag: Cow::Borrowed("a"),
                         attributes: vec![
                             (Cow::Borrowed("class"), Cow::Borrowed("mention")),
-                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
+                            (Cow::Borrowed("href"), Cow::Owned(account_url)),
                         ],
                         content: Box::new(Element::Mention(mention)),
                     })
@@ -135,10 +142,13 @@ mod test {
             .db_conn(db_conn.clone())
             .fetcher(fetcher)
             .job_service(job_service)
-            .url_service(url_service)
+            .url_service(url_service.clone())
             .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
             .build();
-        let mention_resolver = PostResolver::builder().account(account_service).build();
+        let mention_resolver = PostResolver::builder()
+            .account(account_service)
+            .url(url_service)
+            .build();
 
         let (mentioned_account_ids, content) = mention_resolver
             .resolve(post)
@@ -157,7 +167,10 @@ mod test {
             .expect("Failed to fetch account");
 
         assert_eq!(mentioned_account.username, "0x0");
-        assert_eq!(mentioned_account.domain, Some("corteximplant.com".into()));
-        assert_eq!(mentioned_account.url, "https://corteximplant.com/users/0x0");
+        assert_eq!(mentioned_account.domain, "corteximplant.com");
+        assert_eq!(
+            mentioned_account.url,
+            Some("https://corteximplant.com/users/0x0".into())
+        );
     }
 }

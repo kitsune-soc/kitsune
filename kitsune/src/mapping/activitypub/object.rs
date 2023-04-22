@@ -14,9 +14,10 @@ use kitsune_db::{
     link::InReplyTo,
 };
 use kitsune_type::ap::{
+    actor::{Actor, PublicKey},
     ap_context,
     helper::StringOrObject,
-    object::{Actor, ActorType, MediaAttachment, MediaAttachmentType, PublicKey},
+    object::{MediaAttachment, MediaAttachmentType},
     Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
@@ -106,9 +107,12 @@ impl IntoObject for posts::Model {
             .await?;
 
         let mut tag = Vec::new();
-        let (mut to, cc) = self.visibility.base_to_cc(&account);
+        let (mut to, cc) = self.visibility.base_to_cc(state, &account);
         for (mention, mentioned) in mentions {
-            let mentioned_url = mentioned.unwrap().url;
+            let mentioned = mentioned.unwrap();
+            let mentioned_url = mentioned
+                .url
+                .unwrap_or_else(|| state.service.url.user_url(&mentioned.username));
 
             to.push(mentioned_url.clone());
             tag.push(Tag {
@@ -118,12 +122,13 @@ impl IntoObject for posts::Model {
                 icon: None,
             });
         }
+        let account_url = state.service.url.user_url(&account.username);
 
         Ok(Object {
             context: ap_context(),
             id: self.url,
             r#type: ObjectType::Note,
-            attributed_to: StringOrObject::String(account.url),
+            attributed_to: StringOrObject::String(account_url),
             in_reply_to,
             sensitive: self.is_sensitive,
             summary: self.subject,
@@ -142,7 +147,6 @@ impl IntoObject for accounts::Model {
     type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let public_key_id = format!("{}#main-key", self.url);
         let icon = if let Some(avatar_id) = self.avatar_id {
             let media_attachment = MediaAttachments::find_by_id(avatar_id)
                 .one(&state.db_conn)
@@ -162,27 +166,31 @@ impl IntoObject for accounts::Model {
             None
         };
 
-        // TODO: Save these into the database
-        let outbox_url = format!("{}/outbox", self.url);
-        let following_url = format!("{}/following", self.url);
+        let user_url = state.service.url.user_url(&self.username);
+        let inbox = state.service.url.inbox_url(&self.username);
+        let outbox = state.service.url.outbox_url(&self.username);
+        let followers = state.service.url.followers_url(&self.username);
+        let following = state.service.url.following_url(&self.username);
 
         Ok(Actor {
             context: ap_context(),
-            id: self.url.clone(),
-            r#type: ActorType::Person,
+            id: user_url.clone(),
+            r#type: self.actor_type.into(),
             name: self.display_name,
             subject: self.note,
             icon,
             image,
             preferred_username: self.username,
             manually_approves_followers: self.locked,
-            inbox: self.inbox_url,
-            outbox: outbox_url,
-            followers: self.followers_url,
-            following: following_url,
+            endpoints: None,
+            inbox,
+            outbox,
+            featured: None,
+            followers,
+            following,
             public_key: PublicKey {
-                id: public_key_id,
-                owner: self.url,
+                id: self.public_key_id,
+                owner: user_url,
                 public_key_pem: self.public_key,
             },
             published: self.created_at,
