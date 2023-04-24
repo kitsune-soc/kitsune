@@ -41,8 +41,7 @@ const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe8
     "db",
 ] }
 dashmap = "5.4.0"
-# Replace this with a crates.io release as soon as Redis v0.23 support has been merged
-deadpool-redis = { git = "https://github.com/aumetra/deadpool", rev = "2349b0f8e68ea86dbe1a06e32dbea0ea6740b0e6" }
+deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
@@ -100,7 +99,7 @@ tokio-util = { version = "0.7.7", features = ["compat"] }
 tonic = "0.9.2"
 tower-http = { version = "0.4.0", features = ["cors", "fs", "trace"] }
 tracing = "0.1.37"
-tracing-subscriber = "0.3.16"
+tracing-subscriber = "0.3.17"
 typed-builder = "0.14.0"
 url = "2.3.1"
 utoipa = { version = "3.3.0", features = ["axum_extras", "time", "uuid"] }
