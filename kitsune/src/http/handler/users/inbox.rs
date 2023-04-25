@@ -241,6 +241,12 @@ async fn undo_activity(state: &Zustand, author: accounts::Model, activity: Activ
     Ok(())
 }
 
+/// It's fine that the extractor doesn't check for "activity author == object author" since the logic
+/// of this inbox implementation attributes the contents of the object to the activity author
+///
+/// Since the extractor validates "request signer == activity author", it is safe to assume that the object author is the activity author.
+/// There aren't really any scenarios where this could be used for any nefarious purposes since a user would have *much* bigger problems than
+/// getting someone elses post attributed to them.
 #[debug_handler(state = Zustand)]
 pub async fn post(
     State(state): State<Zustand>,
