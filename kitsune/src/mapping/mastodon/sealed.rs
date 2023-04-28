@@ -86,7 +86,7 @@ impl IntoMastodon for accounts::Model {
 
         let url = self
             .url
-            .unwrap_or_else(|| state.url_service.user_url(&self.username));
+            .unwrap_or_else(|| state.url_service.user_url(self.id));
 
         Ok(Account {
             id: self.id,
@@ -195,7 +195,7 @@ impl IntoMastodon for posts_mentions::Model {
 
         let url = account
             .url
-            .unwrap_or_else(|| state.url_service.user_url(&account.username));
+            .unwrap_or_else(|| state.url_service.user_url(account.id));
 
         Ok(Mention {
             id: account.id,

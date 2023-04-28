@@ -28,7 +28,7 @@ pub trait BaseToCc {
 
 impl BaseToCc for Visibility {
     fn base_to_cc(&self, state: &Zustand, account: &accounts::Model) -> (Vec<String>, Vec<String>) {
-        let followers_url = state.service.url.followers_url(&account.username);
+        let followers_url = state.service.url.followers_url(account.id);
 
         match self {
             Visibility::Public => (vec![PUBLIC_IDENTIFIER.to_string()], vec![followers_url]),
