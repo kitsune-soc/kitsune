@@ -12,9 +12,8 @@ use axum::{
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
     entity::{
-        posts,
-        prelude::{Accounts, Posts, Users},
-        users,
+        accounts, posts,
+        prelude::{Accounts, Posts},
     },
     r#trait::{PermissionCheck, PostPermissionCheckExt},
 };
@@ -22,7 +21,7 @@ use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, Related};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -40,11 +39,11 @@ pub async fn get(
     State(state): State<Zustand>,
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
-    Path(username): Path<String>,
+    Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = <Users as Related<Accounts>>::find_related()
-        .filter(users::Column::Username.eq(username.as_str()))
+    let Some(account) = Accounts::find_by_id(account_id)
+        .filter(accounts::Column::Local.eq(true))
         .one(&state.db_conn)
         .await?
     else {

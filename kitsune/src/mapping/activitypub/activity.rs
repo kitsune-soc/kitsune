@@ -27,7 +27,7 @@ impl IntoActivity for accounts::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let account_url = state.service.url.user_url(&self.username);
+        let account_url = state.service.url.user_url(self.id);
 
         Ok(Activity {
             context: ap_context(),
@@ -157,11 +157,7 @@ impl IntoActivity for posts::Model {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let account = Accounts::find_by_id(self.account_id)
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without author");
-        let account_url = state.service.url.user_url(&account.username);
+        let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
             let reposted_post_url = Posts::find_by_id(reposted_post_id)
@@ -196,11 +192,7 @@ impl IntoActivity for posts::Model {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let account = Accounts::find_by_id(self.account_id)
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without author");
-        let account_url = state.service.url.user_url(&account.username);
+        let account_url = state.service.url.user_url(self.account_id);
 
         let activity = if self.reposted_post_id.is_some() {
             Activity {

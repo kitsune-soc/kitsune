@@ -31,9 +31,7 @@ impl PostResolver {
                     .build();
 
                 if let Some(account) = self.account.get(get_user).await? {
-                    let account_url = account
-                        .url
-                        .unwrap_or_else(|| self.url.user_url(&account.username));
+                    let account_url = account.url.unwrap_or_else(|| self.url.user_url(account.id));
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
                     mentioned_accounts.lock().insert(account.id, mention_text);

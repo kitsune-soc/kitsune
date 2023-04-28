@@ -6,26 +6,24 @@ use crate::{
 };
 use axum::extract::{OriginalUri, Path, State};
 use kitsune_db::{
-    entity::{
-        prelude::{Accounts, Users},
-        users,
-    },
+    entity::{accounts, prelude::Accounts},
     link::Following,
 };
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},
 };
-use sea_orm::{ColumnTrait, ModelTrait, PaginatorTrait, QueryFilter, Related};
+use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter};
+use uuid::Uuid;
 
 pub async fn get(
     State(state): State<Zustand>,
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
-    Path(username): Path<String>,
+    Path(account_id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Collection>> {
-    let Some(account) = <Users as Related<Accounts>>::find_related()
-        .filter(users::Column::Username.eq(username))
+    let Some(account) = Accounts::find_by_id(account_id)
+        .filter(accounts::Column::Local.eq(true))
         .one(&state.db_conn)
         .await?
     else {

@@ -73,7 +73,7 @@ impl PostComponent {
             acct,
             profile_url: author
                 .url
-                .unwrap_or_else(|| state.service.url.user_url(&author.username)),
+                .unwrap_or_else(|| state.service.url.user_url(author.id)),
             profile_picture_url: profile_picture_url
                 .unwrap_or_else(|| state.service.url.default_avatar_url()),
             content: post.content,
