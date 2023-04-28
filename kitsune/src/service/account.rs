@@ -203,6 +203,14 @@ impl AccountService {
         }
     }
 
+    /// Get an account by its ID
+    pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<accounts::Model>> {
+        Accounts::find_by_id(account_id)
+            .one(&self.db_conn)
+            .await
+            .map_err(Error::from)
+    }
+
     /// Get a stream of posts owned by the user
     ///
     /// # Panics

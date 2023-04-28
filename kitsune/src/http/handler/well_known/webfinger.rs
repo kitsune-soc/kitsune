@@ -49,7 +49,7 @@ async fn get(
     else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };
-    let account_url = url_service.user_url(&account.username);
+    let account_url = url_service.user_url(account.id);
 
     Ok(Json(Resource {
         subject: query.resource,

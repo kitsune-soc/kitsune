@@ -112,7 +112,7 @@ impl IntoObject for posts::Model {
             let mentioned = mentioned.unwrap();
             let mentioned_url = mentioned
                 .url
-                .unwrap_or_else(|| state.service.url.user_url(&mentioned.username));
+                .unwrap_or_else(|| state.service.url.user_url(account.id));
 
             to.push(mentioned_url.clone());
             tag.push(Tag {
@@ -122,7 +122,7 @@ impl IntoObject for posts::Model {
                 icon: None,
             });
         }
-        let account_url = state.service.url.user_url(&account.username);
+        let account_url = state.service.url.user_url(account.id);
 
         Ok(Object {
             context: ap_context(),
@@ -166,11 +166,11 @@ impl IntoObject for accounts::Model {
             None
         };
 
-        let user_url = state.service.url.user_url(&self.username);
-        let inbox = state.service.url.inbox_url(&self.username);
-        let outbox = state.service.url.outbox_url(&self.username);
-        let followers = state.service.url.followers_url(&self.username);
-        let following = state.service.url.following_url(&self.username);
+        let user_url = state.service.url.user_url(self.id);
+        let inbox = state.service.url.inbox_url(self.id);
+        let outbox = state.service.url.outbox_url(self.id);
+        let followers = state.service.url.followers_url(self.id);
+        let following = state.service.url.following_url(self.id);
 
         Ok(Actor {
             context: ap_context(),

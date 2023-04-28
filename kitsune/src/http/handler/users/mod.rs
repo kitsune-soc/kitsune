@@ -39,11 +39,11 @@ async fn get_html(
     State(account_service): State<AccountService>,
     State(attachment_service): State<AttachmentService>,
     State(url_service): State<UrlService>,
-    Path(username): Path<String>,
+    Path(account_id): Path<Uuid>,
     Query(query): Query<PageQuery>,
 ) -> Result<UserPage> {
     let account = account_service
-        .get(username.as_str().into())
+        .get_by_id(account_id)
         .await?
         .ok_or(ApiError::NotFound)?;
 
@@ -86,11 +86,11 @@ async fn get(
     State(account_service): State<AccountService>,
     _: State<AttachmentService>, // Needed to get the same types for the conditional routing
     _: State<UrlService>,        // Needed to get the same types for the conditional routing
-    Path(username): Path<String>,
+    Path(account_id): Path<Uuid>,
     _: Query<PageQuery>, // Needed to get the same types for the conditional routing
 ) -> Result<Response> {
     let account = account_service
-        .get(username.as_str().into())
+        .get_by_id(account_id)
         .await?
         .ok_or(ApiError::NotFound)?;
 
@@ -99,9 +99,9 @@ async fn get(
 
 pub fn routes() -> Router<Zustand> {
     Router::new()
-        .route("/:username", routing::get(cond::html(get_html, get)))
-        .route("/:username/followers", routing::get(followers::get))
-        .route("/:username/following", routing::get(following::get))
-        .route("/:username/inbox", post(inbox::post))
-        .route("/:username/outbox", routing::get(outbox::get))
+        .route("/:user_id", routing::get(cond::html(get_html, get)))
+        .route("/:user_id/followers", routing::get(followers::get))
+        .route("/:user_id/following", routing::get(following::get))
+        .route("/:user_id/inbox", post(inbox::post))
+        .route("/:user_id/outbox", routing::get(outbox::get))
 }
