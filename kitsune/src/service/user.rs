@@ -89,7 +89,7 @@ impl UserService {
         let hashed_password = hashed_password.transpose()?.transpose()?;
 
         let private_key = private_key??;
-        let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
+        let public_key_str = private_key.as_ref().to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
         let user_id = Uuid::now_v7();
