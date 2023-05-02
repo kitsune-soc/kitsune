@@ -31,19 +31,21 @@
         };
       in
       {
-        packages.cli = rustPlatform.buildRustPackage (basePackage // {
-          pname = "kitsune-cli";
-          cargoBuildFlags = "-p kitsune-cli";
-        });
-        packages.main = rustPlatform.buildRustPackage (basePackage // {
-          pname = "kitsune";
-          buildFeatures = [ "meilisearch" ];
-          cargoBuildFlags = "-p kitsune";
-        });
-        packages.search = rustPlatform.buildRustPackage (basePackage // {
-          pname = "kitsune-search";
-          cargoBuildFlags = "-p kitsune-search";
-        });
+        packages = {
+          cli = rustPlatform.buildRustPackage (basePackage // {
+            pname = "kitsune-cli";
+            cargoBuildFlags = "-p kitsune-cli";
+          });
+          main = rustPlatform.buildRustPackage (basePackage // {
+            pname = "kitsune";
+            buildFeatures = [ "meilisearch" ];
+            cargoBuildFlags = "-p kitsune";
+          });
+          search = rustPlatform.buildRustPackage (basePackage // {
+            pname = "kitsune-search";
+            cargoBuildFlags = "-p kitsune-search";
+          });
+        };
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             cargo-insta

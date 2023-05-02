@@ -3,7 +3,7 @@ use self::{
     openapi::api_docs,
 };
 use crate::{config::ServerConfiguration, state::Zustand};
-use axum::{extract::DefaultBodyLimit, routing::get_service, Router};
+use axum::{extract::DefaultBodyLimit, Router};
 use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
     cors::CorsLayer,
@@ -39,7 +39,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest_service("/public", get_service(ServeDir::new("public")));
+        .nest_service("/public", ServeDir::new("public"));
 
     #[cfg(feature = "mastodon-api")]
     {
@@ -50,9 +50,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .merge(graphql::routes(state.clone()))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
-        .fallback_service(get_service(
-            ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
-        ))
+        .fallback_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
         // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
         .layer(PrometheusMetricLayer::new())
         .layer(CorsLayer::permissive())
