@@ -14,11 +14,13 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use http::{request::Parts, StatusCode};
 use kitsune_db::entity::{accounts, prelude::Accounts};
 use kitsune_http_signatures::{
-    ring::signature::{UnparsedPublicKey, ED25519, RSA_PKCS1_2048_8192_SHA256},
+    ring::signature::{
+        UnparsedPublicKey, VerificationAlgorithm, ED25519, RSA_PKCS1_2048_8192_SHA256,
+    },
     HttpVerifier,
 };
 use kitsune_type::ap::Activity;
-use rsa::pkcs8::{Document, SubjectPublicKeyInfo};
+use rsa::pkcs8::{Document, SubjectPublicKeyInfoRef};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature
@@ -97,20 +99,19 @@ async fn verify_signature(
 
             let (_tag, public_key) =
                 Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
-            let public_key: SubjectPublicKeyInfo<'_> =
+            let public_key: SubjectPublicKeyInfoRef<'_> =
                 public_key.decode_msg().map_err(Error::from)?;
+            let public_key_bytes = public_key.subject_public_key.raw_bytes().to_vec();
 
             // TODO: Replace this with an actual comparison as soon as the new const_oid version is out
-            let public_key = if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
-                UnparsedPublicKey::new(&ED25519, public_key.subject_public_key.to_vec())
-            } else {
-                UnparsedPublicKey::new(
-                    &RSA_PKCS1_2048_8192_SHA256,
-                    public_key.subject_public_key.to_vec(),
-                )
-            };
+            let algorithm: &'static dyn VerificationAlgorithm =
+                if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
+                    &ED25519
+                } else {
+                    &RSA_PKCS1_2048_8192_SHA256
+                };
 
-            Ok(public_key)
+            Ok(UnparsedPublicKey::new(algorithm, public_key_bytes))
         })
         .await
         .is_ok();
