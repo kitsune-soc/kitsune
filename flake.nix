@@ -54,17 +54,24 @@
             cargoBuildFlags = "-p kitsune-search";
           });
         };
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            cargo-insta
-            dhall
-            nodejs
-            redis
-            rust-bin.stable.latest.default
-            yarn
-          ]
-          ++
-          baseDependencies;
+        devShells = {
+          default = backend;
+          backend = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              cargo-insta
+              dhall
+              redis
+              rust-bin.stable.latest.default
+            ]
+            ++
+            baseDependencies;
+          };
+          frontend = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              nodejs
+              yarn
+            ];
+          };
         };
       }
     );
