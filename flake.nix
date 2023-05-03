@@ -15,6 +15,12 @@
           cargo = pkgs.rust-bin.stable.latest.default;
           rustc = pkgs.rust-bin.stable.latest.default;
         };
+        baseDependencies = with pkgs; [
+          openssl
+          protobuf
+          sqlite
+          zlib
+        ];
         basePackage = {
           version = "0.0.1-pre.0";
           meta = {
@@ -27,11 +33,13 @@
             allowBuiltinFetchGit = true;
           };
 
-          src = ./.;
+          src = pkgs.lib.cleanSource ./.;
+          buildInputs = baseDependencies;
         };
       in
       {
-        packages = {
+        packages = rec {
+          default = main;
           cli = rustPlatform.buildRustPackage (basePackage // {
             pname = "kitsune-cli";
             cargoBuildFlags = "-p kitsune-cli";
@@ -51,14 +59,12 @@
             cargo-insta
             dhall
             nodejs
-            openssl
-            protobuf
             redis
             rust-bin.stable.latest.default
-            sqlite
             yarn
-            zlib
-          ];
+          ]
+          ++
+          baseDependencies;
         };
       }
     );
