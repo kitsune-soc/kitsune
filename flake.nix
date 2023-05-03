@@ -12,17 +12,21 @@
           inherit overlays system;
         };
         rustPlatform = pkgs.makeRustPlatform {
-          cargo = pkgs.rust-bin.stable.latest.default;
-          rustc = pkgs.rust-bin.stable.latest.default;
+          cargo = pkgs.rust-bin.stable.latest.minimal;
+          rustc = pkgs.rust-bin.stable.latest.minimal;
         };
         baseDependencies = with pkgs; [
           openssl
+          pkg-config
           protobuf
           sqlite
           zlib
         ];
+        cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml);
+        cargoToml = builtins.fromTOML (builtins.readFile ./kitsune/Cargo.toml);
         basePackage = {
-          version = "0.0.1-pre.0";
+          inherit (cargoToml.package) version;
+
           meta = {
             description = "ActivityPub-federated microblogging";
             homepage = "https://joinkitsune.org";
@@ -34,7 +38,25 @@
           };
 
           src = pkgs.lib.cleanSource ./.;
-          buildInputs = baseDependencies;
+          nativeBuildInputs = baseDependencies;
+
+          PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig"; # Not sure why this is broken but it is
+          RUSTFLAGS = builtins.concatStringsSep " " cargoConfig.build.rustflags; # Oh god help.
+
+          checkFlags = [
+            # Depend on creating an HTTP client and that reads from the systems truststore
+            # Because nix is fully isolated, these types of tests fail
+            #
+            # Some (most?) of these also depend on the network? Not good??
+            "--skip=activitypub::fetcher::test::federation_allow"
+            "--skip=activitypub::fetcher::test::federation_deny"
+            "--skip=activitypub::fetcher::test::fetch_actor"
+            "--skip=activitypub::fetcher::test::fetch_note"
+            "--skip=resolve::post::test::parse_mentions"
+            "--skip=webfinger::test::fetch_qarnax_ap_id"
+            "--skip=basic_request"
+            "--skip=json_request"
+          ];
         };
       in
       {
