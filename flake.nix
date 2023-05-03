@@ -54,7 +54,7 @@
             cargoBuildFlags = "-p kitsune-search";
           });
         };
-        devShells = {
+        devShells = rec {
           default = backend;
           backend = pkgs.mkShell {
             buildInputs = with pkgs; [
