@@ -37,7 +37,7 @@ impl Runnable for DeliverAccept {
             error!("missing followed user");
             return Ok(());
         };
-        let followed_account_url = ctx.state.service.url.user_url(&followed_account.username);
+        let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
 
         // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
         // But I'm not sure how I could encode these into the form of these two traits

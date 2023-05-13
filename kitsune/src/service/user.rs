@@ -89,11 +89,12 @@ impl UserService {
         let hashed_password = hashed_password.transpose()?.transpose()?;
 
         let private_key = private_key??;
-        let public_key_str = private_key.to_public_key_pem(LineEnding::LF)?;
+        let public_key_str = private_key.as_ref().to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
+        let user_id = Uuid::now_v7();
         let domain = self.url_service.domain().to_string();
-        let url = self.url_service.user_url(&register.username);
+        let url = self.url_service.user_url(user_id);
         let public_key_id = format!("{url}#main-key");
 
         let new_user = self
@@ -102,7 +103,7 @@ impl UserService {
                 async move {
                     let insert_result = Accounts::insert(
                         accounts::Model {
-                            id: Uuid::now_v7(),
+                            id: user_id,
                             avatar_id: None,
                             header_id: None,
                             display_name: None,

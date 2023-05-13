@@ -29,4 +29,4 @@ tower-http = { version = "0.4.0", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.27.0", features = ["macros", "rt"] }
+tokio = { version = "1.28.0", features = ["macros", "rt"] }
