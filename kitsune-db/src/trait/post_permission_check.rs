@@ -46,6 +46,10 @@ pub trait PostPermissionCheckExt {
     #[must_use]
     fn add_block_checks(self, fetching_account_id: Uuid) -> Self;
 
+    /// Add checks do omit any posts by users that blocked the user fetching the posts
+    #[must_use]
+    fn add_blocked_by_checks(self, fetching_account_id: Uuid) -> Self;
+
     /// Add permission checks to the query
     #[must_use]
     fn add_permission_checks(self, permission_check: PermissionCheck) -> Self;
@@ -59,6 +63,18 @@ impl PostPermissionCheckExt for Select<Posts> {
                     .filter(accounts_blocks::Column::AccountId.eq(fetching_account_id))
                     .select_only()
                     .column(accounts_blocks::Column::BlockedAccountId)
+                    .into_query(),
+            ),
+        )
+    }
+
+    fn add_blocked_by_checks(self, fetching_account_id: Uuid) -> Self {
+        self.filter(
+            posts::Column::AccountId.not_in_subquery(
+                AccountsBlocks::find()
+                    .filter(accounts_blocks::Column::BlockedAccountId.eq(fetching_account_id))
+                    .select_only()
+                    .column(accounts_blocks::Column::AccountId)
                     .into_query(),
             ),
         )

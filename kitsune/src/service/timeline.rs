@@ -56,6 +56,7 @@ impl TimelineService {
     ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
         let mut query = Posts::find()
             .add_block_checks(get_home.fetching_account_id)
+            .add_blocked_by_checks(get_home.fetching_account_id)
             .filter(
                 // Post is owned by the user
                 posts::Column::AccountId
@@ -124,7 +125,9 @@ impl TimelineService {
             .order_by_desc(posts::Column::CreatedAt);
 
         if let Some(fetching_account_id) = get_public.fetching_account_id {
-            query = query.add_block_checks(fetching_account_id);
+            query = query
+                .add_block_checks(fetching_account_id)
+                .add_blocked_by_checks(fetching_account_id);
         }
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::Column::Id.lt(max_id));

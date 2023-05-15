@@ -343,6 +343,7 @@ impl PostService {
             .unwrap();
 
         let Some(post) = Posts::find_by_id(post_id)
+            .add_blocked_by_checks(favouriting_account_id)
             .add_permission_checks(permission_check)
             .one(&self.db_conn)
             .await?
@@ -430,11 +431,11 @@ impl PostService {
             .build()
             .unwrap();
 
-        Posts::find_by_id(id)
-            .add_permission_checks(permission_check)
-            .one(&self.db_conn)
-            .await
-            .map_err(Error::from)
+        let mut select_query = Posts::find_by_id(id).add_permission_checks(permission_check);
+        if let Some(fetching_account_id) = fetching_account_id {
+            select_query = select_query.add_blocked_by_checks(fetching_account_id);
+        }
+        select_query.one(&self.db_conn).await.map_err(Error::from)
     }
 
     /// Get the ancestors of the post
@@ -455,8 +456,12 @@ impl PostService {
                 .unwrap();
 
             while let Some(post) = last_post.take() {
-                let post = post
-                    .find_linked(InReplyTo)
+                let mut select_query = post.find_linked(InReplyTo);
+                if let Some(fetching_account_id) = fetching_account_id {
+                    select_query = select_query.add_blocked_by_checks(fetching_account_id);
+                }
+
+                let post = select_query
                     .add_permission_checks(permission_check.clone())
                     .one(&self.db_conn)
                     .await?;
@@ -487,8 +492,12 @@ impl PostService {
                 .build()
                 .unwrap();
 
-            let descendant_stream = Posts::find()
-                .filter(posts::Column::InReplyToId.eq(id))
+            let mut select_query = Posts::find().filter(posts::Column::InReplyToId.eq(id));
+            if let Some(fetching_account_id) = fetching_account_id {
+                select_query = select_query.add_blocked_by_checks(fetching_account_id);
+            }
+
+            let descendant_stream = select_query
                 .add_permission_checks(permission_check)
                 .stream(&self.db_conn)
                 .await?;

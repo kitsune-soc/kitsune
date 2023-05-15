@@ -5,9 +5,11 @@ use crate::{
 use async_trait::async_trait;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::entity::{
-    accounts, accounts_followers, media_attachments, posts, posts_favourites, posts_mentions,
+    accounts, accounts_blocks, accounts_followers, media_attachments, posts, posts_favourites,
+    posts_mentions,
     prelude::{
-        Accounts, AccountsFollowers, MediaAttachments, Posts, PostsFavourites, PostsMentions,
+        Accounts, AccountsBlocks, AccountsFollowers, MediaAttachments, Posts, PostsFavourites,
+        PostsMentions,
     },
 };
 use kitsune_type::mastodon::{
@@ -155,14 +157,34 @@ impl IntoMastodon for (&accounts::Model, &accounts::Model) {
             .await?
             != 0;
 
+        let blocking = AccountsBlocks::find()
+            .filter(
+                accounts_blocks::Column::AccountId
+                    .eq(requestor.id)
+                    .and(accounts_blocks::Column::BlockedAccountId.eq(target.id)),
+            )
+            .count(state.db_conn)
+            .await?
+            != 0;
+
+        let blocked_by = AccountsBlocks::find()
+            .filter(
+                accounts_blocks::Column::BlockedAccountId
+                    .eq(requestor.id)
+                    .and(accounts_blocks::Column::AccountId.eq(target.id)),
+            )
+            .count(state.db_conn)
+            .await?
+            != 0;
+
         Ok(Relationship {
             id: target.id,
             following,
             showing_reblogs: true,
             notifying: false,
             followed_by,
-            blocking: false,
-            blocked_by: false,
+            blocking,
+            blocked_by,
             muting: false,
             muting_notifications: false,
             requested,

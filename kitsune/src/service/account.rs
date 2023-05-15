@@ -230,6 +230,10 @@ impl AccountService {
             .add_permission_checks(permission_check)
             .order_by_desc(posts::Column::CreatedAt);
 
+        if let Some(fetching_account_id) = get_posts.fetching_account_id {
+            posts_query = posts_query.add_blocked_by_checks(fetching_account_id);
+        }
+
         if let Some(min_id) = get_posts.min_id {
             posts_query = posts_query.filter(posts::Column::Id.gt(min_id));
         }
