@@ -21,7 +21,7 @@ use kitsune_db::{
         accounts, accounts_followers, posts,
         prelude::{Accounts, AccountsFollowers, Posts},
     },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
+    r#trait::{AccountPermissionCheckExt, PermissionCheck, PostPermissionCheckExt},
 };
 use sea_orm::{
     ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
@@ -124,6 +124,7 @@ impl AccountService {
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
     pub async fn follow(&self, follow: Follow) -> Result<(accounts::Model, accounts::Model)> {
         let account = Accounts::find_by_id(follow.account_id)
+            .add_blocked_by_checks(follow.follower_id)
             .one(&self.db_conn)
             .await?
             .ok_or(ApiError::BadRequest)?;
