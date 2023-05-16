@@ -117,6 +117,11 @@ pub struct AccountService {
 }
 
 impl AccountService {
+    /// Block an account
+    pub async fn block(&self, blocked_account_id: Uuid) -> Result<()> {
+        todo!();
+    }
+
     /// Follow an account
     ///
     /// # Returns
@@ -247,6 +252,11 @@ impl AccountService {
             .stream(&self.db_conn)
             .await?
             .map_err(Error::from))
+    }
+
+    /// Unblock an account
+    pub async fn unblock(&self, unblocked_account_id: Uuid) -> Result<()> {
+        todo!();
     }
 
     /// Undo the follow of an account
