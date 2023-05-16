@@ -9,7 +9,7 @@ use kitsune_db::{
     },
 };
 use sea_orm::{
-    sea_query::{extension::postgres::PgExpr, Alias, Expr, Func},
+    sea_query::{extension::postgres::PgExpr, Alias, Expr, PgFunc},
     ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, QueryFilter,
     QuerySelect,
 };
@@ -87,10 +87,9 @@ impl SearchBackend for SqlSearchService {
                 let mut query = match self.db_conn.get_database_backend() {
                     DatabaseBackend::Postgres => Posts::find().filter(
                         Expr::col(Alias::new("content_tsvector"))
-                            .matches(Func::cust(Alias::new("websearch_to_tsquery")).arg(&query))
-                            .or(Expr::col(Alias::new("subject_tsvector")).matches(
-                                Func::cust(Alias::new("websearch_to_tsquery")).arg(&query),
-                            )),
+                            .matches(PgFunc::websearch_to_tsquery(&query, None))
+                            .or(Expr::col(Alias::new("subject_tsvector"))
+                                .matches(PgFunc::websearch_to_tsquery(&query, None))),
                     ),
                     DatabaseBackend::Sqlite => {
                         // TODO: Actually use a specialised FTS5 table
