@@ -8,7 +8,11 @@ use kitsune_db::{
         prelude::{Accounts, Posts},
     },
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    sea_query::{extension::postgres::PgExpr, Alias, Expr, Func},
+    ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, QueryFilter,
+    QuerySelect,
+};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -47,15 +51,15 @@ impl SearchBackend for SqlSearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
-        let query = format!("%{query}%");
+        let like_query = format!("%{query}%");
         match index {
             SearchIndex::Account => {
                 let mut query = Accounts::find()
                     .filter(
                         accounts::Column::DisplayName
-                            .like(&query)
-                            .or(accounts::Column::Username.like(&query))
-                            .or(accounts::Column::Note.like(&query)),
+                            .like(&like_query)
+                            .or(accounts::Column::Username.like(&like_query))
+                            .or(accounts::Column::Note.like(&like_query)),
                     )
                     .limit(max_results)
                     .offset(offset);
@@ -80,17 +84,22 @@ impl SearchBackend for SqlSearchService {
                 Ok(results)
             }
             SearchIndex::Post => {
-                let mut query = Posts::find()
-                    .filter(
-                        posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]),
+                let mut query = if self.db_conn.get_database_backend() == DatabaseBackend::Postgres
+                {
+                    Posts::find().filter(
+                        Expr::col(Alias::new("content_tsvector"))
+                            .matches(Func::cust(Alias::new("websearch_to_tsquery")).arg(&query))
+                            .or(Expr::col(Alias::new("subject_tsvector")).matches(
+                                Func::cust(Alias::new("websearch_to_tsquery")).arg(&query),
+                            )),
                     )
-                    .filter(
+                } else {
+                    Posts::find().filter(
                         posts::Column::Content
-                            .like(&query)
-                            .or(posts::Column::Subject.like(&query)),
+                            .like(&like_query)
+                            .or(posts::Column::Subject.like(&like_query)),
                     )
-                    .limit(max_results)
-                    .offset(offset);
+                };
 
                 if let Some(min_id) = min_id {
                     query = query.filter(posts::Column::Id.gt(min_id));
@@ -100,6 +109,11 @@ impl SearchBackend for SqlSearchService {
                 }
 
                 let results = query
+                    .filter(
+                        posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]),
+                    )
+                    .limit(max_results)
+                    .offset(offset)
                     .select_only()
                     .column(posts::Column::Id)
                     .into_tuple()

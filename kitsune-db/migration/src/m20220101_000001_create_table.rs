@@ -1,4 +1,4 @@
-use sea_orm_migration::prelude::*;
+use sea_orm_migration::{prelude::*, sea_orm::DatabaseBackend};
 
 #[derive(Iden)]
 pub enum Accounts {
@@ -40,7 +40,9 @@ pub enum Posts {
     RepostedPostId,
     IsSensitive,
     Subject,
+    SubjectTsvector,
     Content,
+    ContentTsvector,
     Visibility,
     IsLocal,
     Url,
@@ -229,7 +231,56 @@ impl MigrationTrait for Migration {
                     .col(Posts::RepostedPostId)
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        if manager.get_database_backend() == DatabaseBackend::Postgres {
+            // Add a generated tsvector column to the database and create a GIN index over it for fast full-text search
+            manager
+                .alter_table(
+                    Table::alter()
+                        .table(Posts::Table)
+                        .add_column(ColumnDef::new(Posts::ContentTsvector).custom(Alias::new(
+                            "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
+                        )))
+                        .to_owned(),
+                )
+                .await?;
+
+            manager
+                .create_index(
+                    Index::create()
+                        .name("idx-posts-content-ts")
+                        .table(Posts::Table)
+                        .col(Posts::ContentTsvector)
+                        .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                        .to_owned(),
+                )
+                .await?;
+
+            manager
+                .alter_table(
+                    Table::alter()
+                        .table(Posts::Table)
+                        .add_column(ColumnDef::new(Posts::SubjectTsvector).custom(Alias::new(
+                            "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
+                        )))
+                        .to_owned(),
+                )
+                .await?;
+
+            manager
+                .create_index(
+                    Index::create()
+                        .name("idx-posts-subject-ts")
+                        .table(Posts::Table)
+                        .col(Posts::SubjectTsvector)
+                        .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                        .to_owned(),
+                )
+                .await?;
+        }
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
