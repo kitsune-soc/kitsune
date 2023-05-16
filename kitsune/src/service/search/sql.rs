@@ -84,21 +84,23 @@ impl SearchBackend for SqlSearchService {
                 Ok(results)
             }
             SearchIndex::Post => {
-                let mut query = if self.db_conn.get_database_backend() == DatabaseBackend::Postgres
-                {
-                    Posts::find().filter(
+                let mut query = match self.db_conn.get_database_backend() {
+                    DatabaseBackend::Postgres => Posts::find().filter(
                         Expr::col(Alias::new("content_tsvector"))
                             .matches(Func::cust(Alias::new("websearch_to_tsquery")).arg(&query))
                             .or(Expr::col(Alias::new("subject_tsvector")).matches(
                                 Func::cust(Alias::new("websearch_to_tsquery")).arg(&query),
                             )),
-                    )
-                } else {
-                    Posts::find().filter(
-                        posts::Column::Content
-                            .like(&like_query)
-                            .or(posts::Column::Subject.like(&like_query)),
-                    )
+                    ),
+                    DatabaseBackend::Sqlite => {
+                        // TODO: Actually use a specialised FTS5 table
+                        Posts::find().filter(
+                            posts::Column::Content
+                                .like(&like_query)
+                                .or(posts::Column::Subject.like(&like_query)),
+                        )
+                    }
+                    DatabaseBackend::MySql => panic!("Unsupported database backend"),
                 };
 
                 if let Some(min_id) = min_id {
