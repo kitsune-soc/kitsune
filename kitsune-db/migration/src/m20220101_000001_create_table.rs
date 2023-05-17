@@ -299,11 +299,11 @@ impl MigrationTrait for Migration {
                         END;
 
                         CREATE TRIGGER posts_fts_ad AFTER DELETE ON posts BEGIN
-                            INSERT INTO posts_fts(fts_idx, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                            INSERT INTO posts_fts(posts_fts, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
                         END;
 
                         CREATE TRIGGER posts_fts_au AFTER UPDATE ON posts BEGIN
-                            INSERT INTO posts_fts(fts_idx, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                            INSERT INTO posts_fts(posts_fts, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
                             INSERT INTO posts_fts(id, subject, content) VALUES (new.id, new.subject, new.content);
                         END;
                     "#,
