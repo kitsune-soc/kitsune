@@ -10,11 +10,8 @@ pub enum Accounts {
     AvatarId,
     HeaderId,
     DisplayName,
-    DisplayNameTsvector,
     Note,
-    NoteTsvector,
     Username,
-    UsernameTsvector,
     Locked,
     Local,
     Domain,
@@ -33,6 +30,11 @@ pub enum Accounts {
     PublicKeyId,
     PublicKey,
 
+    // Full-text search vectors (PostgreSQL only)
+    DisplayNameTsvector,
+    NoteTsvector,
+    UsernameTsvector,
+
     CreatedAt,
     UpdatedAt,
 }
@@ -46,14 +48,16 @@ pub enum Posts {
     RepostedPostId,
     IsSensitive,
     Subject,
-    SubjectTsvector,
     Content,
-    ContentTsvector,
     Visibility,
     IsLocal,
     Url,
     CreatedAt,
     UpdatedAt,
+
+    // Full-text search vectors (PostgreSQL only)
+    SubjectTsvector,
+    ContentTsvector,
 }
 
 #[derive(Iden)]
