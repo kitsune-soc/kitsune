@@ -359,6 +359,8 @@ impl MigrationTrait for Migration {
             }
             DatabaseBackend::Sqlite => {
                 // Create a new FTS5 virtual table and some triggers to automatically maintain its dataset
+
+                // --- START POSTS ---
                 let statement = Statement::from_sql_and_values(
                     DatabaseBackend::Sqlite,
                     r#"
@@ -385,6 +387,37 @@ impl MigrationTrait for Migration {
                 );
 
                 manager.get_connection().execute(statement).await?;
+                // --- END POSTS ---
+
+                // --- START ACCOUNTS ---
+                let statement = Statement::from_sql_and_values(
+                    DatabaseBackend::Sqlite,
+                    r#"
+                        CREATE VIRTUAL TABLE accounts_fts USING fts5 (
+                            id UNINDEXED,
+                            display_name,
+                            note,
+                            username
+                        );
+
+                        CREATE TRIGGER accounts_fts_ai AFTER INSERT ON accounts BEGIN
+                            INSERT INTO accounts_fts(id, display_name, note, username) VALUES (new.id, new.display_name, new.note, new.username);
+                        END;
+
+                        CREATE TRIGGER accounts_fts_ad AFTER DELETE ON accounts BEGIN
+                            INSERT INTO accounts_fts(accounts_fts, id, display_name, note, username) VALUES ('delete', old.id, old.display_name, old.note, old.username);
+                        END;
+
+                        CREATE TRIGGER accounts_fts_au AFTER UPDATE ON accounts BEGIN
+                            INSERT INTO accounts_fts(accounts_fts, id, display_name, note, username) VALUES ('delete', old.id, old.display_name, old.note, old.username);
+                            INSERT INTO accounts_fts(id, display_name, note, username) VALUES (new.id, new.display_name, new.note, new.username);
+                        END;
+                    "#,
+                    [],
+                );
+
+                manager.get_connection().execute(statement).await?;
+                // --- END ACCOUNTS ---
             }
             DatabaseBackend::MySql => panic!("Unsupported backend"),
         }
@@ -423,16 +456,31 @@ impl MigrationTrait for Migration {
                 let statement = Statement::from_sql_and_values(
                     DatabaseBackend::Sqlite,
                     r#"
-                    DROP TRIGGER posts_fts_au;
-                    DROP TRIGGER posts_fts_ad;
-                    DROP TRIGGER posts_fts_ai;
-                "#,
+                        DROP TRIGGER posts_fts_au;
+                        DROP TRIGGER posts_fts_ad;
+                        DROP TRIGGER posts_fts_ai;
+                    "#,
                     [],
                 );
                 manager.get_connection().execute(statement).await?;
 
                 manager
                     .drop_table(Table::drop().table(Alias::new("posts_fts")).to_owned())
+                    .await?;
+
+                let statement = Statement::from_sql_and_values(
+                    DatabaseBackend::Sqlite,
+                    r#"
+                        DROP TRIGGER accounts_fts_au;
+                        DROP TRIGGER accounts_fts_ad;
+                        DROP TRIGGER accounts_fts_ai;
+                    "#,
+                    [],
+                );
+                manager.get_connection().execute(statement).await?;
+
+                manager
+                    .drop_table(Table::drop().table(Alias::new("accounts_fts")).to_owned())
                     .await?;
             }
             DatabaseBackend::MySql => panic!("Unsupported database backend"),

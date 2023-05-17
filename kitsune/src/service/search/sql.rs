@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{
     custom::Visibility,
-    custom_entity::posts_fts,
+    custom_entity::{accounts_fts, posts_fts},
     entity::{
         accounts, posts,
         prelude::{Accounts, Posts},
@@ -67,7 +67,18 @@ impl SearchBackend for SqlSearchService {
                                     .matches(PgFunc::websearch_to_tsquery(&query, None))),
                         )
                     }
-                    DatabaseBackend::Sqlite => todo!(),
+                    DatabaseBackend::Sqlite => {
+                        use sea_orm::sea_query::extension::sqlite::SqliteExpr;
+
+                        Accounts::find().join_rev(
+                            JoinType::InnerJoin,
+                            accounts_fts::Relation::Accounts.def().on_condition(
+                                move |accounts_fts, _accounts| {
+                                    Expr::col(accounts_fts).matches(&query).into_condition()
+                                },
+                            ),
+                        )
+                    }
                     DatabaseBackend::MySql => panic!("Unsupported database backend"),
                 };
 
