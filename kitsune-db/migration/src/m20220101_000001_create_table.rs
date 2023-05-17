@@ -379,11 +379,11 @@ impl MigrationTrait for Migration {
                         END;
 
                         CREATE TRIGGER posts_fts_ad AFTER DELETE ON posts BEGIN
-                            INSERT INTO posts_fts(posts_fts, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                            DELETE FROM posts_fts WHERE id = old.id;
                         END;
 
                         CREATE TRIGGER posts_fts_au AFTER UPDATE ON posts BEGIN
-                            INSERT INTO posts_fts(posts_fts, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                            DELETE FROM posts_fts WHERE id = old.id;
                             INSERT INTO posts_fts(id, subject, content) VALUES (new.id, new.subject, new.content);
                         END;
                     "#,
@@ -409,11 +409,11 @@ impl MigrationTrait for Migration {
                         END;
 
                         CREATE TRIGGER accounts_fts_ad AFTER DELETE ON accounts BEGIN
-                            INSERT INTO accounts_fts(accounts_fts, id, display_name, note, username) VALUES ('delete', old.id, old.display_name, old.note, old.username);
+                            DELETE FROM accounts_fts WHERE id = old.id;
                         END;
 
                         CREATE TRIGGER accounts_fts_au AFTER UPDATE ON accounts BEGIN
-                            INSERT INTO accounts_fts(accounts_fts, id, display_name, note, username) VALUES ('delete', old.id, old.display_name, old.note, old.username);
+                            DELETE FROM accounts_fts WHERE id = old.id;
                             INSERT INTO accounts_fts(id, display_name, note, username) VALUES (new.id, new.display_name, new.note, new.username);
                         END;
                     "#,
