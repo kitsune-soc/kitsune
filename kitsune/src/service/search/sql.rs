@@ -3,15 +3,16 @@ use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{
     custom::Visibility,
+    custom_entity::posts_fts,
     entity::{
         accounts, posts,
         prelude::{Accounts, Posts},
     },
 };
 use sea_orm::{
-    sea_query::{extension::postgres::PgExpr, Alias, Expr, PgFunc},
-    ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, QueryFilter,
-    QuerySelect,
+    sea_query::{Alias, Expr, IntoCondition, PgFunc},
+    ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, JoinType,
+    QueryFilter, QuerySelect, RelationTrait,
 };
 use uuid::Uuid;
 
@@ -85,18 +86,26 @@ impl SearchBackend for SqlSearchService {
             }
             SearchIndex::Post => {
                 let mut query = match self.db_conn.get_database_backend() {
-                    DatabaseBackend::Postgres => Posts::find().filter(
-                        Expr::col(Alias::new("content_tsvector"))
-                            .matches(PgFunc::websearch_to_tsquery(&query, None))
-                            .or(Expr::col(Alias::new("subject_tsvector"))
-                                .matches(PgFunc::websearch_to_tsquery(&query, None))),
-                    ),
-                    DatabaseBackend::Sqlite => {
-                        // TODO: Actually use a specialised FTS5 table
+                    DatabaseBackend::Postgres => {
+                        use sea_orm::sea_query::extension::postgres::PgExpr;
+
                         Posts::find().filter(
-                            posts::Column::Content
-                                .like(&like_query)
-                                .or(posts::Column::Subject.like(&like_query)),
+                            Expr::col(Alias::new("content_tsvector"))
+                                .matches(PgFunc::websearch_to_tsquery(&query, None))
+                                .or(Expr::col(Alias::new("subject_tsvector"))
+                                    .matches(PgFunc::websearch_to_tsquery(&query, None))),
+                        )
+                    }
+                    DatabaseBackend::Sqlite => {
+                        use sea_orm::sea_query::extension::sqlite::SqliteExpr;
+
+                        Posts::find().join(
+                            JoinType::InnerJoin,
+                            posts_fts::Relation::Posts.def().rev().on_condition(
+                                move |_posts, posts_fts| {
+                                    Expr::col(posts_fts).matches(&query).into_condition()
+                                },
+                            ),
                         )
                     }
                     DatabaseBackend::MySql => panic!("Unsupported database backend"),

@@ -1,4 +1,7 @@
-use sea_orm_migration::{prelude::*, sea_orm::DatabaseBackend};
+use sea_orm_migration::{
+    prelude::*,
+    sea_orm::{DatabaseBackend, Statement},
+};
 
 #[derive(Iden)]
 pub enum Accounts {
@@ -233,57 +236,106 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        if manager.get_database_backend() == DatabaseBackend::Postgres {
-            // Add a generated tsvector column to the database and create a GIN index over it for fast full-text search
-            manager
-                .alter_table(
-                    Table::alter()
-                        .table(Posts::Table)
-                        .add_column(ColumnDef::new(Posts::ContentTsvector).custom(Alias::new(
-                            "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
-                        )))
-                        .to_owned(),
-                )
-                .await?;
+        match manager.get_database_backend() {
+            DatabaseBackend::Postgres => {
+                // Add a generated tsvector column to the database and create a GIN index over it for fast full-text search
+                manager
+                    .alter_table(
+                        Table::alter()
+                            .table(Posts::Table)
+                            .add_column(ColumnDef::new(Posts::ContentTsvector).custom(Alias::new(
+                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
+                            )))
+                            .to_owned(),
+                    )
+                    .await?;
 
-            manager
-                .create_index(
-                    Index::create()
-                        .name("idx-posts-content-ts")
-                        .table(Posts::Table)
-                        .col(Posts::ContentTsvector)
-                        .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
-                        .to_owned(),
-                )
-                .await?;
+                manager
+                    .create_index(
+                        Index::create()
+                            .name("idx-posts-content-ts")
+                            .table(Posts::Table)
+                            .col(Posts::ContentTsvector)
+                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .to_owned(),
+                    )
+                    .await?;
 
-            manager
-                .alter_table(
-                    Table::alter()
-                        .table(Posts::Table)
-                        .add_column(ColumnDef::new(Posts::SubjectTsvector).custom(Alias::new(
-                            "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
-                        )))
-                        .to_owned(),
-                )
-                .await?;
+                manager
+                    .alter_table(
+                        Table::alter()
+                            .table(Posts::Table)
+                            .add_column(ColumnDef::new(Posts::SubjectTsvector).custom(Alias::new(
+                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
+                            )))
+                            .to_owned(),
+                    )
+                    .await?;
 
-            manager
-                .create_index(
-                    Index::create()
-                        .name("idx-posts-subject-ts")
-                        .table(Posts::Table)
-                        .col(Posts::SubjectTsvector)
-                        .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
-                        .to_owned(),
-                )
-                .await?;
+                manager
+                    .create_index(
+                        Index::create()
+                            .name("idx-posts-subject-ts")
+                            .table(Posts::Table)
+                            .col(Posts::SubjectTsvector)
+                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .to_owned(),
+                    )
+                    .await?;
+            }
+            DatabaseBackend::Sqlite => {
+                // Create a new FTS5 virtual table and some triggers to automatically maintain its dataset
+                let statement = Statement::from_sql_and_values(
+                    DatabaseBackend::Sqlite,
+                    r#"
+                        CREATE VIRTUAL TABLE posts_fts USING fts5 (
+                            id UNINDEXED,
+                            subject,
+                            content
+                        );
+
+                        CREATE TRIGGER posts_fts_ai AFTER INSERT ON posts BEGIN
+                            INSERT INTO posts_fts(id, subject, content) VALUES (new.id, new.subject, new.content);
+                        END;
+
+                        CREATE TRIGGER posts_fts_ad AFTER DELETE ON posts BEGIN
+                            INSERT INTO posts_fts(fts_idx, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                        END;
+
+                        CREATE TRIGGER posts_fts_au AFTER UPDATE ON posts BEGIN
+                            INSERT INTO posts_fts(fts_idx, id, subject, content) VALUES ('delete', old.id, old.subject, old.content);
+                            INSERT INTO posts_fts(id, subject, content) VALUES (new.id, new.subject, new.content);
+                        END;
+                    "#,
+                    [],
+                );
+
+                manager.get_connection().execute(statement).await?;
+            }
+            DatabaseBackend::MySql => panic!("Unsupported backend"),
         }
 
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        if manager.get_database_backend() == DatabaseBackend::Sqlite {
+            let statement = Statement::from_sql_and_values(
+                DatabaseBackend::Sqlite,
+                r#"
+                    DROP TRIGGER posts_fts_au;
+                    DROP TRIGGER posts_fts_ad;
+                    DROP TRIGGER posts_fts_ai;
+                "#,
+                [],
+            );
+            manager.get_connection().execute(statement).await?;
+
+            manager
+                .drop_table(Table::drop().table(Alias::new("posts_fts")).to_owned())
+                .await?;
+        }
+
         manager
             .drop_index(Index::drop().name("idx-posts-reposted_post_id").to_owned())
             .await?;
