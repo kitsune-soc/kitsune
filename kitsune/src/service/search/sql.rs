@@ -52,18 +52,24 @@ impl SearchBackend for SqlSearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
-        let like_query = format!("%{query}%");
         match index {
             SearchIndex::Account => {
-                let mut query = Accounts::find()
-                    .filter(
-                        accounts::Column::DisplayName
-                            .like(&like_query)
-                            .or(accounts::Column::Username.like(&like_query))
-                            .or(accounts::Column::Note.like(&like_query)),
-                    )
-                    .limit(max_results)
-                    .offset(offset);
+                let mut query = match self.db_conn.get_database_backend() {
+                    DatabaseBackend::Postgres => {
+                        use sea_orm::sea_query::extension::postgres::PgExpr;
+
+                        Accounts::find().filter(
+                            Expr::col(Alias::new("display_name_tsvector"))
+                                .matches(PgFunc::websearch_to_tsquery(&query, None))
+                                .or(Expr::col(Alias::new("note_tsvector"))
+                                    .matches(PgFunc::websearch_to_tsquery(&query, None)))
+                                .or(Expr::col(Alias::new("username_tsvector"))
+                                    .matches(PgFunc::websearch_to_tsquery(&query, None))),
+                        )
+                    }
+                    DatabaseBackend::Sqlite => todo!(),
+                    DatabaseBackend::MySql => panic!("Unsupported database backend"),
+                };
 
                 if let Some(min_id) = min_id {
                     query = query.filter(posts::Column::Id.gt(min_id));
@@ -73,6 +79,8 @@ impl SearchBackend for SqlSearchService {
                 }
 
                 let results = query
+                    .limit(max_results)
+                    .offset(offset)
                     .select_only()
                     .column(accounts::Column::Id)
                     .into_tuple()
