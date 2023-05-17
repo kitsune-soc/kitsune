@@ -99,10 +99,10 @@ impl SearchBackend for SqlSearchService {
                     DatabaseBackend::Sqlite => {
                         use sea_orm::sea_query::extension::sqlite::SqliteExpr;
 
-                        Posts::find().join(
+                        Posts::find().join_rev(
                             JoinType::InnerJoin,
-                            posts_fts::Relation::Posts.def().rev().on_condition(
-                                move |_posts, posts_fts| {
+                            posts_fts::Relation::Posts.def().on_condition(
+                                move |posts_fts, _posts| {
                                     Expr::col(posts_fts).matches(&query).into_condition()
                                 },
                             ),
