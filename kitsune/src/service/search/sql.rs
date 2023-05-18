@@ -2,7 +2,7 @@ use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{
-    custom::Visibility,
+    custom::{tsvector_column, Visibility},
     custom_entity::{accounts_fts, posts_fts},
     entity::{
         accounts, posts,
@@ -10,14 +10,13 @@ use kitsune_db::{
     },
 };
 use sea_orm::{
-    sea_query::{Alias, Expr, IntoCondition, PgFunc},
+    sea_query::{Expr, IntoCondition, PgFunc},
     ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, JoinType,
     QueryFilter, QuerySelect, RelationTrait,
 };
 use uuid::Uuid;
 
 #[derive(Clone)]
-// TODO: Make case insensitive
 pub struct SqlSearchService {
     db_conn: DatabaseConnection,
 }
@@ -59,11 +58,11 @@ impl SearchBackend for SqlSearchService {
                         use sea_orm::sea_query::extension::postgres::PgExpr;
 
                         Accounts::find().filter(
-                            Expr::col(Alias::new("display_name_tsvector"))
+                            Expr::col(tsvector_column::Accounts::DisplayName)
                                 .matches(PgFunc::websearch_to_tsquery(&query, None))
-                                .or(Expr::col(Alias::new("note_tsvector"))
+                                .or(Expr::col(tsvector_column::Accounts::Note)
                                     .matches(PgFunc::websearch_to_tsquery(&query, None)))
-                                .or(Expr::col(Alias::new("username_tsvector"))
+                                .or(Expr::col(tsvector_column::Accounts::Username)
                                     .matches(PgFunc::websearch_to_tsquery(&query, None))),
                         )
                     }
@@ -109,9 +108,9 @@ impl SearchBackend for SqlSearchService {
                         use sea_orm::sea_query::extension::postgres::PgExpr;
 
                         Posts::find().filter(
-                            Expr::col(Alias::new("content_tsvector"))
+                            Expr::col(tsvector_column::Posts::Content)
                                 .matches(PgFunc::websearch_to_tsquery(&query, None))
-                                .or(Expr::col(Alias::new("subject_tsvector"))
+                                .or(Expr::col(tsvector_column::Posts::Subject)
                                     .matches(PgFunc::websearch_to_tsquery(&query, None))),
                         )
                     }
