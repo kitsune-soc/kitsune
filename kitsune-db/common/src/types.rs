@@ -4,8 +4,15 @@
 
 use sea_orm::{sea_query, Iden};
 
+/// PostgreSQL-exclusive types
+#[derive(Clone, Copy, Iden)]
+pub enum PgTypes {
+    /// tsvector (text-search vector)
+    Tsvector,
+}
+
 /// PostgreSQL-exclusive composite-type indices
-#[derive(Iden)]
+#[derive(Clone, Copy, Iden)]
 pub enum PgCompositeIndex {
     /// GIN (Generalized Inverted Index)
     #[iden = "GIN"]

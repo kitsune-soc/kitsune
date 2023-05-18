@@ -1,5 +1,9 @@
 use crate::m20220101_000001_create_table::{Accounts, Posts};
-use kitsune_db_common::{tsvector_column, types::PgCompositeIndex};
+use kitsune_db_common::{
+    to_tsvector, tsvector_column,
+    types::{PgCompositeIndex, PgTypes},
+    StoredGeneratedColumn,
+};
 use sea_orm_migration::{
     prelude::*,
     sea_orm::{DatabaseBackend, Statement},
@@ -20,9 +24,11 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Posts::Table)
-                            .add_column(ColumnDef::new(tsvector_column::Posts::Content).custom(Alias::new(
-                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
-                            )))
+                            .add_column(ColumnDef::new(tsvector_column::Posts::Content).custom(
+                                StoredGeneratedColumn::new(PgTypes::Tsvector).generate_expr(
+                                    to_tsvector("simple", Expr::col(Posts::Content)),
+                                ),
+                            ))
                             .to_owned(),
                     )
                     .await?;
@@ -42,9 +48,11 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Posts::Table)
-                            .add_column(ColumnDef::new(tsvector_column::Posts::Subject).custom(Alias::new(
-                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
-                            )))
+                            .add_column(ColumnDef::new(tsvector_column::Posts::Subject).custom(
+                                StoredGeneratedColumn::new(PgTypes::Tsvector).generate_expr(
+                                    to_tsvector("simple", Expr::col(Posts::Subject)),
+                                ),
+                            ))
                             .to_owned(),
                     )
                     .await?;
@@ -66,9 +74,13 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(tsvector_column::Accounts::DisplayName).custom(Alias::new(
-                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', display_name)) STORED",
-                            )))
+                            .add_column(
+                                ColumnDef::new(tsvector_column::Accounts::DisplayName).custom(
+                                    StoredGeneratedColumn::new(PgTypes::Tsvector).generate_expr(
+                                        to_tsvector("simple", Expr::col(Accounts::DisplayName)),
+                                    ),
+                                ),
+                            )
                             .to_owned(),
                     )
                     .await?;
@@ -88,9 +100,11 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(tsvector_column::Accounts::Note).custom(Alias::new(
-                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', note)) STORED",
-                            )))
+                            .add_column(ColumnDef::new(tsvector_column::Accounts::Note).custom(
+                                StoredGeneratedColumn::new(PgTypes::Tsvector).generate_expr(
+                                    to_tsvector("simple", Expr::col(Accounts::Note)),
+                                ),
+                            ))
                             .to_owned(),
                     )
                     .await?;
@@ -110,9 +124,11 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(tsvector_column::Accounts::Username).custom(Alias::new(
-                                "tsvector GENERATED ALWAYS AS (to_tsvector('simple', username)) STORED",
-                            )))
+                            .add_column(ColumnDef::new(tsvector_column::Accounts::Username).custom(
+                                StoredGeneratedColumn::new(PgTypes::Tsvector).generate_expr(
+                                    to_tsvector("simple", Expr::col(Accounts::Username)),
+                                ),
+                            ))
                             .to_owned(),
                     )
                     .await?;

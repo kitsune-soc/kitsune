@@ -7,5 +7,20 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
 
+mod generated_column;
+
 pub mod tsvector_column;
 pub mod types;
+
+use sea_orm::sea_query::{Expr, FunctionCall, PgFunc, SimpleExpr};
+
+pub use crate::generated_column::StoredGeneratedColumn;
+
+/// Create a function call to the `to_tsvector` function using the `('[language]', [content])` syntax
+pub fn to_tsvector<L, V>(lang: L, val: V) -> FunctionCall
+where
+    L: Into<SimpleExpr>,
+    V: Into<SimpleExpr>,
+{
+    PgFunc::to_tsvector(Expr::asterisk(), None).args([lang.into(), val.into()])
+}
