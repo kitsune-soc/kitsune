@@ -10,6 +10,7 @@ members = [
     "kitsune",
     "kitsune-cli",
     "kitsune-db",
+    "kitsune-db/common",
     "kitsune-db/migration",
     "kitsune-http-client",
     "kitsune-http-signatures",

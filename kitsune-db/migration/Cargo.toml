@@ -9,7 +9,8 @@ name = "migration"
 path = "src/lib.rs"
 
 [dependencies]
-tokio = { version = "1.28.0", features = ["full"] }
+kitsune-db-common = { path = "../common" }
+tokio = { version = "1.28.1", features = ["full"] }
 
 [dependencies.sea-orm-migration]
 version = "0.11.3"
