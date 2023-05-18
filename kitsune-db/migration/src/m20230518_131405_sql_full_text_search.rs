@@ -1,9 +1,9 @@
+use crate::m20220101_000001_create_table::{Accounts, Posts};
+use kitsune_db_common::{tsvector_column, types::PgCompositeIndex};
 use sea_orm_migration::{
     prelude::*,
     sea_orm::{DatabaseBackend, Statement},
 };
-
-use crate::m20220101_000001_create_table::{Accounts, Posts};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Posts::Table)
-                            .add_column(ColumnDef::new(Posts::ContentTsvector).custom(Alias::new(
+                            .add_column(ColumnDef::new(tsvector_column::Posts::Content).custom(Alias::new(
                                 "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
                             )))
                             .to_owned(),
@@ -32,8 +32,8 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .name("idx-posts-content-ts")
                             .table(Posts::Table)
-                            .col(Posts::ContentTsvector)
-                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .col(tsvector_column::Posts::Content)
+                            .index_type(IndexType::Custom(PgCompositeIndex::Gin.into_iden()))
                             .to_owned(),
                     )
                     .await?;
@@ -42,7 +42,7 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Posts::Table)
-                            .add_column(ColumnDef::new(Posts::SubjectTsvector).custom(Alias::new(
+                            .add_column(ColumnDef::new(tsvector_column::Posts::Subject).custom(Alias::new(
                                 "tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED",
                             )))
                             .to_owned(),
@@ -54,8 +54,8 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .name("idx-posts-subject-ts")
                             .table(Posts::Table)
-                            .col(Posts::SubjectTsvector)
-                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .col(tsvector_column::Posts::Subject)
+                            .index_type(IndexType::Custom(PgCompositeIndex::Gin.into_iden()))
                             .to_owned(),
                     )
                     .await?;
@@ -66,7 +66,7 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(Accounts::DisplayNameTsvector).custom(Alias::new(
+                            .add_column(ColumnDef::new(tsvector_column::Accounts::DisplayName).custom(Alias::new(
                                 "tsvector GENERATED ALWAYS AS (to_tsvector('simple', display_name)) STORED",
                             )))
                             .to_owned(),
@@ -78,8 +78,8 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .name("idx-accounts-display_name-ts")
                             .table(Accounts::Table)
-                            .col(Accounts::DisplayNameTsvector)
-                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .col(tsvector_column::Accounts::DisplayName)
+                            .index_type(IndexType::Custom(PgCompositeIndex::Gin.into_iden()))
                             .to_owned(),
                     )
                     .await?;
@@ -88,7 +88,7 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(Accounts::NoteTsvector).custom(Alias::new(
+                            .add_column(ColumnDef::new(tsvector_column::Accounts::Note).custom(Alias::new(
                                 "tsvector GENERATED ALWAYS AS (to_tsvector('simple', note)) STORED",
                             )))
                             .to_owned(),
@@ -100,8 +100,8 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .name("idx-accounts-note-ts")
                             .table(Accounts::Table)
-                            .col(Accounts::NoteTsvector)
-                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .col(tsvector_column::Accounts::Note)
+                            .index_type(IndexType::Custom(PgCompositeIndex::Gin.into_iden()))
                             .to_owned(),
                     )
                     .await?;
@@ -110,7 +110,7 @@ impl MigrationTrait for Migration {
                     .alter_table(
                         Table::alter()
                             .table(Accounts::Table)
-                            .add_column(ColumnDef::new(Accounts::UsernameTsvector).custom(Alias::new(
+                            .add_column(ColumnDef::new(tsvector_column::Accounts::Username).custom(Alias::new(
                                 "tsvector GENERATED ALWAYS AS (to_tsvector('simple', username)) STORED",
                             )))
                             .to_owned(),
@@ -122,8 +122,8 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .name("idx-accounts-username-ts")
                             .table(Accounts::Table)
-                            .col(Accounts::UsernameTsvector)
-                            .index_type(IndexType::Custom(SeaRc::new(Alias::new("GIN"))))
+                            .col(tsvector_column::Accounts::Username)
+                            .index_type(IndexType::Custom(PgCompositeIndex::Gin.into_iden()))
                             .to_owned(),
                     )
                     .await?;

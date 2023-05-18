@@ -18,6 +18,8 @@ use migration::{Migrator, MigratorTrait};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
 use tracing_log::LogTracer;
 
+pub use ::kitsune_db_common as common;
+
 pub mod column;
 pub mod custom;
 #[allow(missing_docs)]

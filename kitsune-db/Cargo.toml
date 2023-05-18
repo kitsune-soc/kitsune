@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 derive_builder = "0.12.0"
+kitsune-db-common = { path = "common" }
 kitsune-type = { path = "../kitsune-type" }
 migration = { path = "migration" }
 sea-orm = { version = "0.11.3", default-features = false, features = [

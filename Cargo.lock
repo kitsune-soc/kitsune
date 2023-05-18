@@ -2772,12 +2772,20 @@ name = "kitsune-db"
 version = "0.1.0"
 dependencies = [
  "derive_builder",
+ "kitsune-db-common",
  "kitsune-type",
  "migration",
  "sea-orm",
  "serde",
  "tracing-log",
  "uuid",
+]
+
+[[package]]
+name = "kitsune-db-common"
+version = "0.1.0"
+dependencies = [
+ "sea-orm",
 ]
 
 [[package]]
@@ -3258,6 +3266,7 @@ dependencies = [
 name = "migration"
 version = "0.1.0"
 dependencies = [
+ "kitsune-db-common",
  "sea-orm-migration",
  "tokio",
 ]

@@ -27,11 +27,6 @@ pub enum Accounts {
     PublicKeyId,
     PublicKey,
 
-    // Full-text search vectors (PostgreSQL only)
-    DisplayNameTsvector,
-    NoteTsvector,
-    UsernameTsvector,
-
     CreatedAt,
     UpdatedAt,
 }
@@ -51,10 +46,6 @@ pub enum Posts {
     Url,
     CreatedAt,
     UpdatedAt,
-
-    // Full-text search vectors (PostgreSQL only)
-    SubjectTsvector,
-    ContentTsvector,
 }
 
 #[derive(Iden)]

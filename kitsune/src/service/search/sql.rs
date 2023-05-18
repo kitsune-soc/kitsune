@@ -2,7 +2,8 @@ use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use kitsune_db::{
-    custom::{tsvector_column, Visibility},
+    common::tsvector_column,
+    custom::Visibility,
     custom_entity::{accounts_fts, posts_fts},
     entity::{
         accounts, posts,
