@@ -105,7 +105,7 @@ diesel::table! {
         application_id -> Uuid,
         user_id -> Uuid,
         created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        expired_at -> Timestamptz,
     }
 }
 

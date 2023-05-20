@@ -6,7 +6,13 @@ use crate::{
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::Response;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
+use kitsune_db::{
+    model::oauth2::{self, NewApplication, NewAuthorizationCode},
+    schema::oauth2_applications,
+    PgPool,
+};
 use std::str::FromStr;
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
@@ -20,7 +26,7 @@ const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 #[derive(Clone, TypedBuilder)]
 pub struct AuthorisationCode {
-    application: oauth2_applications::Model,
+    application: oauth2::Application,
     state: Option<String>,
     user_id: Uuid,
 }
@@ -41,24 +47,26 @@ struct ShowTokenPage {
 
 #[derive(Clone, TypedBuilder)]
 pub struct Oauth2Service {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     url_service: UrlService,
 }
 
 impl Oauth2Service {
-    pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2_applications::Model> {
-        oauth2_applications::Model {
-            id: Uuid::now_v7(),
-            secret: generate_secret(),
-            name: create_app.name,
-            redirect_uri: create_app.redirect_uris,
-            created_at: OffsetDateTime::now_utc(),
-            updated_at: OffsetDateTime::now_utc(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await
-        .map_err(Error::from)
+    pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        diesel::insert_into(oauth2_applications::table)
+            .values(NewApplication {
+                id: Uuid::now_v7(),
+                secret: generate_secret().as_str(),
+                name: create_app.name.as_str(),
+                redirect_uri: create_app.redirect_uris.as_str(),
+                scopes: "",
+                website: None,
+            })
+            .execute(&mut db_conn)
+            .await
+            .map_err(Error::from)
     }
 
     pub async fn create_authorisation_code_response(
@@ -69,11 +77,10 @@ impl Oauth2Service {
             user_id,
         }: AuthorisationCode,
     ) -> Result<Response> {
-        let authorization_code = oauth2_authorization_codes::Model {
-            code: generate_secret(),
+        let authorization_code = NewAuthorizationCode {
+            code: generate_secret().as_str(),
             application_id: application.id,
             user_id,
-            created_at: OffsetDateTime::now_utc(),
             expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
         }
         .into_active_model()

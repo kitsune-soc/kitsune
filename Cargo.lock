@@ -1550,6 +1550,7 @@ dependencies = [
  "byteorder",
  "diesel_derives",
  "itoa",
+ "pq-sys",
  "serde_json",
  "time",
  "uuid",
@@ -1580,6 +1581,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "diesel_full_text_search"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2ec394eff8a81dd1bbb1fc731581d07c46c3cba1c2c51246f5dabe03760e673"
+dependencies = [
+ "diesel",
 ]
 
 [[package]]
@@ -2580,6 +2590,7 @@ dependencies = [
  "derive_builder",
  "diesel",
  "diesel-async",
+ "diesel_full_text_search",
  "enum_dispatch",
  "futures-util",
  "globset",
@@ -2659,6 +2670,7 @@ version = "0.1.0"
 dependencies = [
  "diesel",
  "diesel-async",
+ "diesel_full_text_search",
  "diesel_migrations_async",
  "kitsune-type",
  "num-derive",
@@ -3863,6 +3875,15 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
+
+[[package]]
+name = "pq-sys"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31c0052426df997c0cbd30789eb44ca097e3541717a7b8fa36b1c464ee7edebd"
+dependencies = [
+ "vcpkg",
+]
 
 [[package]]
 name = "precomputed-hash"

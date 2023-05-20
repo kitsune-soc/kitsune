@@ -1,10 +1,14 @@
 use crate::error::{Error, Result};
+use kitsune_db::{
+    schema::{accounts, posts, users},
+    PgPool,
+};
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
 pub struct InstanceService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     #[builder(setter(into))]
     name: Arc<str>,
     #[builder(setter(into))]
@@ -29,27 +33,29 @@ impl InstanceService {
     }
 
     pub async fn known_instances(&self) -> Result<u64> {
-        Accounts::find()
-            .filter(accounts::Column::Local.eq(false))
-            .select_only()
-            .column(accounts::Column::Domain)
-            .group_by(accounts::Column::Domain)
-            .count(&self.db_conn)
+        accounts::table
+            .filter(accounts::local.eq(false))
+            .select(accounts::domain)
+            .group_by(accounts::domain)
+            .count()
+            .get_result(&self.db_conn)
             .await
             .map_err(Error::from)
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
-        Posts::find()
-            .filter(posts::Column::IsLocal.eq(true))
-            .count(&self.db_conn)
+        posts::table
+            .filter(posts::is_local.eq(true))
+            .count()
+            .get_result(&self.db_conn)
             .await
             .map_err(Error::from)
     }
 
     pub async fn user_count(&self) -> Result<u64> {
-        Users::find()
-            .count(&self.db_conn)
+        users::table
+            .count()
+            .get_result(&self.db_conn)
             .await
             .map_err(Error::from)
     }

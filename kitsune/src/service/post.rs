@@ -16,15 +16,17 @@ use crate::{
 };
 use async_stream::try_stream;
 use derive_builder::Builder;
+use diesel::QueryDsl;
 use diesel_async::AsyncPgConnection;
 use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
     model::{
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
-        post::{Post, Visibility},
+        post::{NewPost, Post, Visibility},
+        user_role::Role,
     },
-    schema::{media_attachments, posts_media_attachments, posts_mentions},
+    schema::{media_attachments, posts, posts_media_attachments, posts_mentions, users_roles},
     PgPool,
 };
 use pulldown_cmark::{html, Options, Parser};
@@ -209,29 +211,33 @@ impl PostService {
             .transaction(move |tx| {
                 async move {
                     let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
-                        (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
+                        (posts::table
+                            .find(in_reply_to_id)
+                            .count()
+                            .get_result(tx)
+                            .await?
+                            != 0)
                             .then_some(in_reply_to_id)
                     } else {
                         None
                     };
 
-                    let post = posts::Model {
-                        id,
-                        account_id: create_post.author_id,
-                        in_reply_to_id,
-                        reposted_post_id: None,
-                        subject: create_post.subject,
-                        content,
-                        is_sensitive: create_post.sensitive,
-                        visibility: create_post.visibility,
-                        is_local: true,
-                        url,
-                        created_at: OffsetDateTime::now_utc(),
-                        updated_at: OffsetDateTime::now_utc(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
-                    .await?;
+                    let post = diesel::insert_into(posts::table)
+                        .values(NewPost {
+                            id,
+                            account_id: create_post.author_id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: create_post.subject,
+                            content: content.as_str(),
+                            is_sensitive: create_post.sensitive,
+                            visibility: create_post.visibility,
+                            is_local: true,
+                            url: url.as_str(),
+                            created_at: None,
+                        })
+                        .execute(tx)
+                        .await?;
 
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
@@ -273,19 +279,21 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
-        let Some(post) = Posts::find_by_id(delete_post.post_id)
-            .one(&self.db_conn)
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+        let post = posts::table
+            .find(delete_post.post_id)
+            .first(&self.db_conn)
+            .await?;
 
         if post.account_id != delete_post.account_id {
             if let Some(user_id) = delete_post.user_id {
-                let admin_role_count = UsersRoles::find()
-                    .filter(users_roles::Column::UserId.eq(user_id))
-                    .filter(users_roles::Column::Role.eq(Role::Administrator))
-                    .count(&self.db_conn)
+                let admin_role_count = users_roles::table
+                    .filter(
+                        users_roles::user_id
+                            .eq(user_id)
+                            .and(users_roles::role.eq(Role::Administrator)),
+                    )
+                    .count()
+                    .get_result(&self.db_conn)
                     .await?;
 
                 if admin_role_count == 0 {
@@ -322,11 +330,7 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, create a bug report.
-    pub async fn favourite(
-        &self,
-        post_id: Uuid,
-        favouriting_account_id: Uuid,
-    ) -> Result<posts::Model> {
+    pub async fn favourite(&self, post_id: Uuid, favouriting_account_id: Uuid) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(Some(favouriting_account_id))
             .build()

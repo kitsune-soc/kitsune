@@ -14,7 +14,7 @@ CREATE TABLE oauth2_authorization_codes (
     application_id UUID NOT NULL,
     user_id UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- Foreign key constraints
     FOREIGN KEY (application_id) REFERENCES oauth2_applications(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -45,4 +45,3 @@ CREATE TABLE oauth2_refresh_tokens (
 );
 
 SELECT diesel_manage_updated_at('oauth2_applications');
-SELECT diesel_manage_updated_at('oauth2_authorization_codes');

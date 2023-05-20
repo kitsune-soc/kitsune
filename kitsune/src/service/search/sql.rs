@@ -1,16 +1,24 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
+use kitsune_db::{
+    function::websearch_to_tsquery,
+    model::post::Visibility,
+    schema::{accounts, posts},
+    PgPool,
+};
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SqlSearchService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
 }
 
 impl SqlSearchService {
     #[must_use]
-    pub fn new(db_conn: DatabaseConnection) -> Self {
+    pub fn new(db_conn: PgPool) -> Self {
         Self { db_conn }
     }
 }
@@ -38,50 +46,30 @@ impl SearchBackend for SqlSearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
+        let mut db_conn = self.db_conn.get().await?;
+
         match index {
             SearchIndex::Account => {
-                let mut query = match self.db_conn.get_database_backend() {
-                    DatabaseBackend::Postgres => {
-                        use sea_orm::sea_query::extension::postgres::PgExpr;
-
-                        Accounts::find().filter(
-                            Expr::col(tsvector_column::Accounts::DisplayName)
-                                .matches(PgFunc::websearch_to_tsquery(&query, None))
-                                .or(Expr::col(tsvector_column::Accounts::Note)
-                                    .matches(PgFunc::websearch_to_tsquery(&query, None)))
-                                .or(Expr::col(tsvector_column::Accounts::Username)
-                                    .matches(PgFunc::websearch_to_tsquery(&query, None))),
-                        )
-                    }
-                    DatabaseBackend::Sqlite => {
-                        use sea_orm::sea_query::extension::sqlite::SqliteExpr;
-
-                        Accounts::find().join_rev(
-                            JoinType::InnerJoin,
-                            accounts_fts::Relation::Accounts.def().on_condition(
-                                move |accounts_fts, _accounts| {
-                                    Expr::col(accounts_fts).matches(&query).into_condition()
-                                },
-                            ),
-                        )
-                    }
-                    DatabaseBackend::MySql => panic!("Unsupported database backend"),
-                };
+                let mut query = accounts::table.filter(
+                    accounts::display_name_ts
+                        .matches(websearch_to_tsquery(&query))
+                        .or(accounts::note_ts
+                            .matches(websearch_to_tsquery(&query))
+                            .or(accounts::username_ts.matches(websearch_to_tsquery(&query)))),
+                );
 
                 if let Some(min_id) = min_id {
-                    query = query.filter(posts::Column::Id.gt(min_id));
+                    query = query.filter(accounts::id.gt(min_id));
                 }
                 if let Some(max_id) = max_id {
-                    query = query.filter(posts::Column::Id.lt(max_id));
+                    query = query.filter(accounts::id.lt(max_id));
                 }
 
                 let results = query
                     .limit(max_results)
                     .offset(offset)
-                    .select_only()
-                    .column(accounts::Column::Id)
-                    .into_tuple()
-                    .stream(&self.db_conn)
+                    .select(accounts::id)
+                    .load_stream(&mut db_conn)
                     .await?
                     .map_ok(|id| SearchResult { id })
                     .try_collect()
@@ -90,49 +78,25 @@ impl SearchBackend for SqlSearchService {
                 Ok(results)
             }
             SearchIndex::Post => {
-                let mut query = match self.db_conn.get_database_backend() {
-                    DatabaseBackend::Postgres => {
-                        use sea_orm::sea_query::extension::postgres::PgExpr;
-
-                        Posts::find().filter(
-                            Expr::col(tsvector_column::Posts::Content)
-                                .matches(PgFunc::websearch_to_tsquery(&query, None))
-                                .or(Expr::col(tsvector_column::Posts::Subject)
-                                    .matches(PgFunc::websearch_to_tsquery(&query, None))),
-                        )
-                    }
-                    DatabaseBackend::Sqlite => {
-                        use sea_orm::sea_query::extension::sqlite::SqliteExpr;
-
-                        Posts::find().join_rev(
-                            JoinType::InnerJoin,
-                            posts_fts::Relation::Posts.def().on_condition(
-                                move |posts_fts, _posts| {
-                                    Expr::col(posts_fts).matches(&query).into_condition()
-                                },
-                            ),
-                        )
-                    }
-                    DatabaseBackend::MySql => panic!("Unsupported database backend"),
-                };
+                let mut query = posts::table.filter(
+                    posts::content_ts
+                        .matches(websearch_to_tsquery(&query))
+                        .or(posts::subject.matches(websearch_to_tsquery(&query))),
+                );
 
                 if let Some(min_id) = min_id {
-                    query = query.filter(posts::Column::Id.gt(min_id));
+                    query = query.filter(posts::id.gt(min_id));
                 }
                 if let Some(max_id) = max_id {
-                    query = query.filter(posts::Column::Id.lt(max_id));
+                    query = query.filter(posts::id.lt(max_id));
                 }
 
                 let results = query
-                    .filter(
-                        posts::Column::Visibility.is_in([Visibility::Public, Visibility::Unlisted]),
-                    )
+                    .filter(posts::visibility.eq_any([Visibility::Public, Visibility::Unlisted]))
                     .limit(max_results)
                     .offset(offset)
-                    .select_only()
-                    .column(posts::Column::Id)
-                    .into_tuple()
-                    .stream(&self.db_conn)
+                    .select(posts::id)
+                    .load_stream(&mut db_conn)
                     .await?
                     .map_ok(|id| SearchResult { id })
                     .try_collect()

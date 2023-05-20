@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     activitypub::Fetcher,
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     job::deliver::{
         follow::DeliverFollow,
         unfollow::DeliverUnfollow,
@@ -15,7 +15,14 @@ use crate::{
 };
 use bytes::Bytes;
 use derive_builder::Builder;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
+use kitsune_db::{
+    model::{account::Account, follower::NewFollow},
+    schema::{accounts, accounts_follows},
+    PgPool,
+};
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -98,7 +105,7 @@ impl<A, H> Update<A, H> {
 #[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     attachment_service: AttachmentService,
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     fetcher: Fetcher,
     job_service: JobService,
     url_service: UrlService,
@@ -111,34 +118,37 @@ impl AccountService {
     /// # Returns
     ///
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
-    pub async fn follow(&self, follow: Follow) -> Result<(accounts::Model, accounts::Model)> {
-        let account = Accounts::find_by_id(follow.account_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
-        let follower = Accounts::find_by_id(follow.follower_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
+    pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        let (account, follower) = tokio::try_join!(
+            accounts::table
+                .find(follow.account_id)
+                .get_result(&mut db_conn),
+            accounts::table
+                .find(follow.follower_id)
+                .get_result(&mut db_conn)
+        );
 
         let id = Uuid::now_v7();
         let url = self.url_service.follow_url(id);
-        let mut follow_model = accounts_followers::Model {
+        let mut follow_model = NewFollow {
             id,
             account_id: account.id,
             follower_id: follower.id,
             approved_at: None,
-            url,
-            created_at: OffsetDateTime::now_utc(),
-            updated_at: OffsetDateTime::now_utc(),
+            url: url.as_str(),
+            created_at: None,
         };
 
         if account.local && !account.locked {
             follow_model.approved_at = Some(OffsetDateTime::now_utc());
         }
 
-        let follow_id = AccountsFollowers::insert(follow_model.into_active_model())
-            .exec(&self.db_conn)
+        let follow_id = diesel::insert_into(accounts_follows::table)
+            .values(follow_model)
+            .select(accounts_follows::id)
+            .execute(&mut db_conn)
             .await?;
 
         if !account.local {
@@ -157,11 +167,15 @@ impl AccountService {
     }
 
     /// Get an account by its username and domain
-    pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<accounts::Model>> {
+    pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<Account>> {
         if let Some(domain) = get_user.domain {
-            if let Some(account) = Accounts::find()
-                .filter(accounts::Column::Username.eq(get_user.username))
-                .filter(accounts::Column::Domain.eq(domain))
+            if let Some(account) = accounts::table
+                .filter(
+                    accounts::username
+                        .eq(get_user.username)
+                        .and(accounts::domain.eq(domain)),
+                )
+                .optional()
                 .one(&self.db_conn)
                 .await?
             {
@@ -180,22 +194,23 @@ impl AccountService {
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            Accounts::find()
+            accounts::table
                 .filter(
-                    accounts::Column::Username
+                    accounts::username
                         .eq(get_user.username)
-                        .and(accounts::Column::Local.eq(true)),
+                        .and(accounts::local.eq(true)),
                 )
-                .one(&self.db_conn)
+                .first(&self.db_cnn)
                 .await
                 .map_err(Error::from)
         }
     }
 
     /// Get an account by its ID
-    pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<accounts::Model>> {
-        Accounts::find_by_id(account_id)
-            .one(&self.db_conn)
+    pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<Account>> {
+        accounts::table
+            .find(account_id)
+            .get_result(&mut self.db_conn.get().await?)
             .await
             .map_err(Error::from)
     }
@@ -238,20 +253,26 @@ impl AccountService {
     /// # Returns
     ///
     /// Tuple of two account models. First account is the account that was being followed, second account is the account that was following
-    pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(accounts::Model, accounts::Model)> {
-        let account = Accounts::find_by_id(unfollow.account_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
-        let follower = Accounts::find_by_id(unfollow.follower_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
+    pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
+        let mut db_conn = self.db_conn.get().await?;
 
-        let follow = AccountsFollowers::find()
-            .filter(accounts_followers::Column::AccountId.eq(account.id))
-            .filter(accounts_followers::Column::FollowerId.eq(follower.id))
-            .one(&self.db_conn)
+        let (account, follower) = tokio::try_join!(
+            accounts::table
+                .find(unfollow.account_id)
+                .get_result(&mut db_conn),
+            accounts::table
+                .find(unfollow.follower_id)
+                .get_result(&mut db_conn)
+        );
+
+        let follow = accounts_follows::table
+            .filter(
+                accounts_follows::account_id
+                    .eq(account.id)
+                    .and(accounts_follows::follower_id.eq(follower.id)),
+            )
+            .optional()
+            .get_result(&self.db_conn)
             .await?;
 
         if let Some(follow) = follow {
@@ -271,35 +292,32 @@ impl AccountService {
         Ok((account, follower))
     }
 
-    pub async fn update<A, H>(&self, update: Update<A, H>) -> Result<accounts::Model>
+    pub async fn update<A, H>(&self, update: Update<A, H>) -> Result<Account>
     where
         A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
         H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
     {
-        let mut active_model = accounts::ActiveModel {
-            id: ActiveValue::Set(update.account_id),
-            ..Default::default()
-        };
+        let mut update_query = diesel::update(accounts::table.find(update.account_id));
 
         if let Some(display_name) = update.display_name {
-            active_model.display_name = ActiveValue::Set(Some(display_name));
+            update_query = update_query.set(accounts::display_name.eq(display_name));
         }
         if let Some(note) = update.note {
-            active_model.note = ActiveValue::Set(Some(note));
+            update_query = update_query.set(accounts::note.eq(note));
         }
         if let Some(avatar) = update.avatar {
             let media_attachment = self.attachment_service.upload(avatar).await?;
-            active_model.avatar_id = ActiveValue::Set(Some(media_attachment.id));
+            update_query = update_query.set(accounts::avatar_id.eq(media_attachment.id));
         }
         if let Some(header) = update.header {
             let media_attachment = self.attachment_service.upload(header).await?;
-            active_model.header_id = ActiveValue::Set(Some(media_attachment.id));
+            update_query = update_query.set(accounts::header_id.eq(media_attachment.id));
         }
         if let Some(locked) = update.locked {
-            active_model.locked = ActiveValue::Set(locked);
+            update_query = update_query.set(accounts::locked.eq(locked));
         }
 
-        let updated_account = Accounts::update(active_model).exec(&self.db_conn).await?;
+        let updated_account = update_query.execute(&mut self.db_conn.get().await?).await?;
 
         self.job_service
             .enqueue(

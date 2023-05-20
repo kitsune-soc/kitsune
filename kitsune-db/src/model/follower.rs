@@ -10,6 +10,7 @@ pub struct Follow {
     pub id: Uuid,
     pub account_id: Uuid,
     pub follower_id: Uuid,
+    pub approved_at: Option<OffsetDateTime>,
     pub url: String,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
@@ -21,6 +22,7 @@ pub struct NewFollow<'a> {
     pub id: Uuid,
     pub account_id: Uuid,
     pub follower_id: Uuid,
+    pub approved_at: Option<OffsetDateTime>,
     pub url: &'a str,
     pub created_at: Option<OffsetDateTime>,
 }

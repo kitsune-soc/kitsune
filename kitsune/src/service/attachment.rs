@@ -2,10 +2,16 @@ use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use futures_util::{Stream, StreamExt, TryStreamExt};
+use kitsune_db::{
+    model::media_attachment::{MediaAttachment, NewMediaAttachment},
+    schema::media_attachments,
+    PgPool,
+};
 use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, Storage, StorageBackend};
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -52,7 +58,7 @@ pub struct AttachmentService {
             .build()
     )]
     client: Client,
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
     storage_backend: Storage,
@@ -60,9 +66,11 @@ pub struct AttachmentService {
 }
 
 impl AttachmentService {
-    pub async fn get_by_id(&self, id: Uuid) -> Result<media_attachments::Model> {
-        MediaAttachments::find_by_id(id)
-            .one(&self.db_conn)
+    pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
+        let mut db_conn = self.db_conn.get().await?;
+        media_attachments::table
+            .find(id)
+            .get_result(&mut db_conn)
             .await?
             .ok_or_else(|| ApiError::NotFound.into())
     }
@@ -90,7 +98,7 @@ impl AttachmentService {
     /// This should never panic
     pub async fn stream_file(
         &self,
-        media_attachment: &media_attachments::Model,
+        media_attachment: &MediaAttachment,
     ) -> Result<impl Stream<Item = Result<Bytes>>> {
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self
@@ -113,23 +121,27 @@ impl AttachmentService {
         }
     }
 
-    pub async fn update(&self, update: Update) -> Result<media_attachments::Model> {
-        let active_model = media_attachments::ActiveModel {
-            id: ActiveValue::Set(update.attachment_id),
-            description: update
-                .description
-                .map_or(ActiveValue::NotSet, |desc| ActiveValue::Set(Some(desc))),
-            ..Default::default()
-        };
+    pub async fn update(&self, update: Update) -> Result<MediaAttachment> {
+        let mut update_statement = diesel::update(
+            media_attachments::table.filter(
+                media_attachments::id
+                    .eq(update.attachment_id)
+                    .and(media_attachments::account_id.eq(update.account_id)),
+            ),
+        );
 
-        MediaAttachments::update(active_model)
-            .filter(media_attachments::Column::AccountId.eq(update.account_id))
-            .exec(&self.db_conn)
+        if let Some(description) = update.description {
+            update_statement = update_statement.set(media_attachments::description.eq(description));
+        }
+
+        let mut db_conn = self.db_conn.get().await?;
+        update_statement
+            .execute(&mut db_conn)
             .await
             .map_err(Error::from)
     }
 
-    pub async fn upload<S>(&self, upload: Upload<S>) -> Result<media_attachments::Model>
+    pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
     where
         S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
     {
@@ -143,20 +155,19 @@ impl AttachmentService {
             .await
             .map_err(Error::Storage)?;
 
-        let media_attachment = media_attachments::Model {
-            id: Uuid::now_v7(),
-            account_id: upload.account_id,
-            content_type: upload.content_type,
-            description: upload.description,
-            blurhash: None,
-            file_path: Some(upload.path),
-            remote_url: None,
-            created_at: OffsetDateTime::now_utc(),
-            updated_at: OffsetDateTime::now_utc(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await?;
+        let mut db_conn = self.db_conn.get().await?;
+        let media_attachment = diesel::insert_into(media_attachments::table)
+            .values(NewMediaAttachment {
+                id: Uuid::now_v7(),
+                account_id: upload.account_id,
+                content_type: upload.content_type.as_str(),
+                description: upload.description,
+                blurhash: None,
+                file_path: Some(upload.path.as_str()),
+                remote_url: None,
+            })
+            .execute(&mut db_conn)
+            .await?;
 
         Ok(media_attachment)
     }
