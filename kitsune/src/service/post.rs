@@ -17,16 +17,22 @@ use crate::{
 use async_stream::try_stream;
 use derive_builder::Builder;
 use diesel::QueryDsl;
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
+    add_post_permission_check,
     model::{
+        favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
         post::{NewPost, Post, Visibility},
         user_role::Role,
     },
-    schema::{media_attachments, posts, posts_media_attachments, posts_mentions, users_roles},
+    post_permission_check::PermissionCheck,
+    schema::{
+        media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
+        users_roles,
+    },
     PgPool,
 };
 use pulldown_cmark::{html, Options, Parser};
@@ -279,9 +285,10 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
+        let mut db_conn = self.db_conn.get().await?;
         let post = posts::table
             .find(delete_post.post_id)
-            .first(&self.db_conn)
+            .first(&mut db_conn)
             .await?;
 
         if post.account_id != delete_post.account_id {
@@ -293,7 +300,7 @@ impl PostService {
                             .and(users_roles::role.eq(Role::Administrator)),
                     )
                     .count()
-                    .get_result(&self.db_conn)
+                    .get_result(&mut db_conn)
                     .await?;
 
                 if admin_role_count == 0 {
@@ -336,26 +343,23 @@ impl PostService {
             .build()
             .unwrap();
 
-        let Some(post) = Posts::find_by_id(post_id)
-            .add_permission_checks(permission_check)
-            .one(&self.db_conn)
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+        let mut db_conn = self.db_conn.get().await?;
+        let post = add_post_permission_check!(permission_check => posts::table.find(post_id))
+            .first(&mut db_conn)
+            .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.favourite_url(id);
-        let favourite = posts_favourites::Model {
-            id,
-            account_id: favouriting_account_id,
-            post_id: post.id,
-            url,
-            created_at: OffsetDateTime::now_utc(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await?;
+        let favourite = diesel::insert_into(posts_favourites::table)
+            .values(NewFavourite {
+                id,
+                account_id: favouriting_account_id,
+                post_id: post.id,
+                url,
+                created_at: None(OffsetDateTime::now_utc()),
+            })
+            .execute(&mut db_conn)
+            .await?;
 
         self.job_service
             .enqueue(
@@ -375,21 +379,13 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, please open a bug report.
-    pub async fn unfavourite(
-        &self,
-        post_id: Uuid,
-        favouriting_account_id: Uuid,
-    ) -> Result<posts::Model> {
-        let Some(post) = self
+    pub async fn unfavourite(&self, post_id: Uuid, favouriting_account_id: Uuid) -> Result<Post> {
+        let post = self
             .get_by_id(post_id, Some(favouriting_account_id))
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+            .await?;
 
-        if let Some(favourite) = post
-            .find_related(PostsFavourites)
-            .filter(posts_favourites::Column::AccountId.eq(favouriting_account_id))
+        if let Some(favourite) = Favourite::belongs_to(&post)
+            .filter(posts_favourites::account_id.eq(favouriting_account_id))
             .one(&self.db_conn)
             .await?
         {
@@ -414,19 +410,14 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
-    pub async fn get_by_id(
-        &self,
-        id: Uuid,
-        fetching_account_id: Option<Uuid>,
-    ) -> Result<Option<posts::Model>> {
+    pub async fn get_by_id(&self, id: Uuid, fetching_account_id: Option<Uuid>) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(fetching_account_id)
             .build()
             .unwrap();
 
-        Posts::find_by_id(id)
-            .add_permission_checks(permission_check)
-            .one(&self.db_conn)
+        add_post_permission_check!(permission_check => posts::table.find(id))
+            .get_result(&self.db_conn)
             .await
             .map_err(Error::from)
     }
@@ -440,7 +431,7 @@ impl PostService {
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
-    ) -> impl Stream<Item = Result<posts::Model>> + '_ {
+    ) -> impl Stream<Item = Result<Post>> + '_ {
         try_stream! {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
@@ -449,9 +440,10 @@ impl PostService {
                 .unwrap();
 
             while let Some(post) = last_post.take() {
-                let post = post
-                    .find_linked(InReplyTo)
-                    .add_permission_checks(permission_check.clone())
+                let post =
+                    add_post_permission_check!(
+                        permission_check => posts::table.filter(posts::in_reply_to_id.eq(post.id))
+                    )
                     .one(&self.db_conn)
                     .await?;
 
@@ -474,17 +466,18 @@ impl PostService {
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
-    ) -> BoxStream<'_, Result<posts::Model>> {
+    ) -> BoxStream<'_, Result<Post>> {
         try_stream! {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build()
                 .unwrap();
 
-            let descendant_stream = Posts::find()
-                .filter(posts::Column::InReplyToId.eq(id))
-                .add_permission_checks(permission_check)
-                .stream(&self.db_conn)
+            let descendant_stream =
+                add_post_permission_check!(
+                    permission_check => posts::table.filter(posts::in_reply_to_id.eq(id))
+                )
+                .load_stream(&self.db_conn)
                 .await?;
 
             for await descendant in descendant_stream {

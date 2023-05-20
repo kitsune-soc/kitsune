@@ -1,10 +1,14 @@
-use crate::schema::jobs;
+use crate::{error::EnumConversionError, schema::jobs};
 use diesel::{
+    backend::RawValue,
+    deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
     AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
 };
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use time::OffsetDateTime;
@@ -37,6 +41,7 @@ pub struct NewJob {
     Debug,
     Deserialize,
     Eq,
+    FromPrimitive,
     FromSqlRow,
     Ord,
     PartialEq,
@@ -64,6 +69,16 @@ pub enum JobState {
     /// The job has run to completion and not errored out. The job will not be reprocessed.
     /// This entry is kept for historic purposes and can be deleted at any point in time without impacting anything.
     Succeeded = 3,
+}
+
+impl FromSql<Integer, Pg> for JobState
+where
+    i32: FromSql<Integer, Pg>,
+{
+    fn from_sql(bytes: RawValue<'_, Pg>) -> deserialize::Result<Self> {
+        let value = i32::from_sql(bytes)?;
+        Ok(Self::from_i32(value).ok_or(EnumConversionError(value))?)
+    }
 }
 
 impl ToSql<Integer, Pg> for JobState

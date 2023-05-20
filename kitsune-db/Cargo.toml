@@ -5,6 +5,7 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
+derive_builder = "0.12.0"
 diesel = { version = "2.0.4", features = ["serde_json", "time", "uuid"] }
 diesel-async = { version = "0.2.2", features = ["deadpool", "postgres"] }
 diesel_full_text_search = "2.0.0"

@@ -1,10 +1,19 @@
 use super::account::Account;
-use crate::schema::posts;
-use diesel::{AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable};
+use crate::{error::EnumConversionError, schema::posts};
+use diesel::{
+    backend::RawValue,
+    deserialize::{self, FromSql},
+    pg::Pg,
+    serialize::{self, Output, ToSql},
+    sql_types::Integer,
+    AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
+};
 use kitsune_type::{
     ap::{helper::CcTo, Privacy},
     mastodon::status::Visibility as MastodonVisibility,
 };
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -50,6 +59,7 @@ pub struct NewPost<'a> {
     Default,
     Deserialize,
     Eq,
+    FromPrimitive,
     FromSqlRow,
     Ord,
     PartialEq,
@@ -110,5 +120,24 @@ impl From<MastodonVisibility> for Visibility {
             MastodonVisibility::Private => Self::FollowerOnly,
             MastodonVisibility::Direct => Self::MentionOnly,
         }
+    }
+}
+
+impl FromSql<Integer, Pg> for Visibility
+where
+    i32: FromSql<Integer, Pg>,
+{
+    fn from_sql(bytes: RawValue<'_, Pg>) -> deserialize::Result<Self> {
+        let value = i32::from_sql(bytes)?;
+        Ok(Self::from_i32(value).ok_or(EnumConversionError(value))?)
+    }
+}
+
+impl ToSql<Integer, Pg> for Visibility
+where
+    i32: ToSql<Integer, Pg>,
+{
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+        <i32 as ToSql<Integer, _>>::to_sql(&(*self as i32), &mut out.reborrow())
     }
 }

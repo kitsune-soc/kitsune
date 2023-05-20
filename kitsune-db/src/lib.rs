@@ -11,6 +11,7 @@ mod error;
 
 pub mod function;
 pub mod model;
+pub mod post_permission_check;
 pub mod schema;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
