@@ -4,6 +4,7 @@ use crate::{
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result, Upload};
+use kitsune_db::schema::accounts;
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -19,47 +20,44 @@ impl UserMutation {
         header: Option<Upload>,
         locked: Option<bool>,
     ) -> Result<Account> {
-        let state = ctx.state();
+        let mut db_conn = ctx.state().db_conn.get().await?;
         let user_data = ctx.user_data()?;
-        let mut active_user = accounts::ActiveModel {
-            id: ActiveValue::Set(user_data.account.id),
-            ..Default::default()
-        };
+        let mut update_query = diesel::update(&user_data.account);
 
         if let Some(mut display_name) = display_name {
-            active_user.display_name = if display_name.is_empty() {
-                ActiveValue::Set(None)
+            update_query = if display_name.is_empty() {
+                update_query.set(accounts::display_name.eq(None))
             } else {
                 display_name.clean_html();
-                ActiveValue::Set(Some(display_name))
+                update_query.set(accounts::display_name.eq(display_name))
             };
         }
 
         if let Some(mut note) = note {
-            active_user.note = if note.is_empty() {
-                ActiveValue::Set(None)
+            update_query = if note.is_empty() {
+                update_query.set(accounts::note.eq(None))
             } else {
                 note.clean_html();
-                ActiveValue::Set(Some(note))
+                update_query.set(accounts::note.eq(note))
             };
         }
 
         if let Some(avatar) = avatar {
             let media_attachment = handle_upload(ctx, avatar, None).await?;
-            active_user.avatar_id = ActiveValue::Set(Some(media_attachment.id));
+            update_query = update_query.set(accounts::avatar_id.eq(media_attachment.id));
         }
 
         if let Some(header) = header {
             let media_attachment = handle_upload(ctx, header, None).await?;
-            active_user.header_id = ActiveValue::Set(Some(media_attachment.id));
+            update_query = update_query.set(accounts::header_id.eq(media_attachment.id));
         }
 
         if let Some(locked) = locked {
-            active_user.locked = ActiveValue::Set(locked);
+            update_query = update_query.set(accounts::locked.eq(locked));
         }
 
-        active_user
-            .update(&state.db_conn)
+        update_query
+            .execute(&mut db_conn)
             .await
             .map(Into::into)
             .map_err(Error::from)

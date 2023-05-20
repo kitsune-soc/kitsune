@@ -2,6 +2,7 @@ use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
 use crate::{http::graphql::ContextExt, service::attachment};
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use futures_util::TryStreamExt;
+use kitsune_db::model::media_attachment::MediaAttachment;
 use mime::Mime;
 use std::str::FromStr;
 use tokio_util::{compat::FuturesAsyncReadCompatExt, io::ReaderStream};
@@ -15,7 +16,7 @@ async fn handle_upload(
     ctx: &Context<'_>,
     file: Upload,
     description: Option<String>,
-) -> Result<media_attachments::Model> {
+) -> Result<MediaAttachment> {
     let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;
     let content_type = value
