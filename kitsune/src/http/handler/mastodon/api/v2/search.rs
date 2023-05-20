@@ -12,9 +12,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use http::StatusCode;
-use kitsune_db::entity::prelude::{Accounts, Posts};
 use kitsune_type::mastodon::SearchResult;
-use sea_orm::EntityTrait;
 use serde::Deserialize;
 use url::Url;
 use utoipa::{IntoParams, ToSchema};

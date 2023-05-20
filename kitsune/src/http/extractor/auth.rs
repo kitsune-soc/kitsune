@@ -5,14 +5,13 @@ use axum::{
     response::{IntoResponse, Response},
     RequestPartsExt, TypedHeader,
 };
+use diesel::QueryDsl;
 use headers::{authorization::Bearer, Authorization};
-use http::{request::Parts, StatusCode};
-use kitsune_db::entity::{
-    accounts, oauth2_access_tokens,
-    prelude::{Accounts, Oauth2AccessTokens, Users},
-    users,
+use http::request::Parts;
+use kitsune_db::{
+    model::{account::Account, user::User},
+    schema::{accounts, oauth2_access_tokens, users},
 };
-use sea_orm::{ColumnTrait, QueryFilter, Related};
 use time::OffsetDateTime;
 
 /// Mastodon-specific auth extractor alias
@@ -24,8 +23,8 @@ pub type MastodonAuthExtractor = AuthExtractor<false>;
 
 #[derive(Clone)]
 pub struct UserData {
-    pub account: accounts::Model,
-    pub user: users::Model,
+    pub account: Account,
+    pub user: User,
 }
 
 /// Extract the account and user from the request
@@ -49,22 +48,21 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let mut user_account_query = <Oauth2AccessTokens as Related<Users>>::find_related()
-            .find_also_related(Accounts)
-            .filter(oauth2_access_tokens::Column::Token.eq(bearer_token.token()));
+        let mut user_account_query = oauth2_access_tokens::table
+            .inner_join(users::table)
+            .inner_join(accounts::table)
+            .filter(oauth2_access_tokens::token.eq(bearer_token.token()));
 
         if ENFORCE_EXPIRATION {
             user_account_query = user_account_query
-                .filter(oauth2_access_tokens::Column::ExpiredAt.gt(OffsetDateTime::now_utc()));
+                .filter(oauth2_access_tokens::expired_at.gt(OffsetDateTime::now_utc()));
         }
 
-        let Some((user, Some(account))) = user_account_query
-            .one(&state.db_conn)
+        let (user, account) = user_account_query
+            .select((users::all_columns, accounts::all_columns))
+            .get_result(&state.db_conn)
             .await
-            .map_err(Error::from)?
-        else {
-            return Err(StatusCode::UNAUTHORIZED.into_response());
-        };
+            .map_err(Error::from)?;
 
         Ok(Self(UserData { account, user }))
     }

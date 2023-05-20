@@ -15,12 +15,14 @@ use crate::{
 };
 use bytes::Bytes;
 use derive_builder::Builder;
-use diesel::QueryDsl;
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    model::{account::Account, follower::NewFollow},
-    schema::{accounts, accounts_follows},
+    add_post_permission_check,
+    model::{account::Account, follower::NewFollow, post::Post},
+    post_permission_check::PermissionCheck,
+    schema::{accounts, accounts_follows, posts},
     PgPool,
 };
 use time::OffsetDateTime;
@@ -223,23 +225,23 @@ impl AccountService {
     pub async fn get_posts(
         &self,
         get_posts: GetPosts,
-    ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+    ) -> Result<impl Stream<Item = Result<Post>> + '_> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
             .build()
             .unwrap();
 
-        let mut posts_query = Posts::find()
-            .filter(posts::Column::AccountId.eq(get_posts.account_id))
-            .add_permission_checks(permission_check)
-            .order_by_desc(posts::Column::CreatedAt);
+        let mut posts_query = add_post_permission_check!(
+            permission_check => posts::table.filter(posts::account_id.eq(get_posts.account_id))
+        )
+        .order(posts::created_at.desc());
 
         if let Some(min_id) = get_posts.min_id {
-            posts_query = posts_query.filter(posts::Column::Id.gt(min_id));
+            posts_query = posts_query.filter(posts::id.gt(min_id));
         }
 
         if let Some(max_id) = get_posts.max_id {
-            posts_query = posts_query.filter(posts::Column::Id.lt(max_id));
+            posts_query = posts_query.filter(posts::id.lt(max_id));
         }
 
         Ok(posts_query

@@ -6,9 +6,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::extract::Query;
-use kitsune_db::entity::prelude::Accounts;
 use kitsune_type::mastodon::relationship::Relationship;
-use sea_orm::{DatabaseConnection, EntityTrait};
 use serde::Deserialize;
 use utoipa::IntoParams;
 use uuid::Uuid;

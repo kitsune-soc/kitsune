@@ -5,15 +5,10 @@ use crate::{
     state::Zustand,
 };
 use axum::extract::{OriginalUri, Path, State};
-use kitsune_db::{
-    entity::{accounts, prelude::Accounts},
-    link::Followers,
-};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},
 };
-use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter};
 use uuid::Uuid;
 
 pub async fn get(

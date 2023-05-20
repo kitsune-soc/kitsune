@@ -5,9 +5,7 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_db::entity::{accounts, prelude::Accounts};
 use kitsune_type::webfinger::{Link, Resource};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use utoipa::IntoParams;
 

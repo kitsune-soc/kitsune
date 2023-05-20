@@ -1,7 +1,5 @@
 use crate::http::graphql::{types::Account, ContextExt};
 use async_graphql::{Context, Object, Result};
-use kitsune_db::entity::prelude::Accounts;
-use sea_orm::EntityTrait;
 use uuid::Uuid;
 
 #[derive(Default)]

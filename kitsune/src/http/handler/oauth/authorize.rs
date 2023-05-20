@@ -14,12 +14,6 @@ use axum::{
     Form,
 };
 use http::StatusCode;
-use kitsune_db::entity::{
-    oauth2_applications,
-    prelude::{Oauth2Applications, Users},
-    users,
-};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use uuid::Uuid;
 

@@ -1,11 +1,6 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
-use kitsune_db::entity::{
-    prelude::{Accounts, Users},
-    users,
-};
-use sea_orm::{EntityTrait, ModelTrait};
 use time::OffsetDateTime;
 use uuid::Uuid;
 

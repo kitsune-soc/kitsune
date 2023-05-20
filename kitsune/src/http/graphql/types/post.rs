@@ -1,8 +1,6 @@
 use super::Visibility;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use kitsune_db::entity::{posts, prelude::Accounts};
-use sea_orm::EntityTrait;
 use time::OffsetDateTime;
 use uuid::Uuid;
 

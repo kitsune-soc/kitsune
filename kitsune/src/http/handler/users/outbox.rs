@@ -10,18 +10,10 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use futures_util::{stream, StreamExt, TryStreamExt};
-use kitsune_db::{
-    entity::{
-        accounts, posts,
-        prelude::{Accounts, Posts},
-    },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
-};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

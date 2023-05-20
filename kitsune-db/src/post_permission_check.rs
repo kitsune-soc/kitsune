@@ -49,8 +49,7 @@ macro_rules! add_post_permission_check {
         if let Some(fetching_account_id) = $permission_opts.fetching_account_id {
             post_query = post_query.or_filter(
                 // The post is owned by the user
-                posts::account_id
-                    .eq(fetching_account_id)
+                (posts::account_id.eq(fetching_account_id))
                     .or(
                         // Post is follower-only, and the user is following the author
                         (posts::visibility.eq(Visibility::FollowerOnly).and(
@@ -65,14 +64,16 @@ macro_rules! add_post_permission_check {
                             ),
                         )),
                     )
-                    // Post is mention-only, and user is mentioned in the post
-                    .or(posts::visibility.eq(Visibility::MentionOnly).and(
-                        posts::id.eq_any(
-                            posts_mentions::table
-                                .filter(posts_mentions::account_id.eq(fetching_account_id))
-                                .select(posts_mentions::post_id),
-                        ),
-                    )),
+                    .or(
+                        // Post is mention-only, and user is mentioned in the post
+                        (posts::visibility.eq(Visibility::MentionOnly).and(
+                            posts::id.eq_any(
+                                posts_mentions::table
+                                    .filter(posts_mentions::account_id.eq(fetching_account_id))
+                                    .select(posts_mentions::post_id),
+                            ),
+                        )),
+                    ),
             );
         }
 

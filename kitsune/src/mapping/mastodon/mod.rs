@@ -7,7 +7,7 @@ use crate::{
 };
 use derive_builder::Builder;
 use futures_util::StreamExt;
-use sea_orm::DatabaseConnection;
+use kitsune_db::PgPool;
 use serde_json::Value;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -78,7 +78,7 @@ pub struct MastodonMapper {
     )]
     _cache_invalidator: (),
     attachment_service: AttachmentService,
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     mastodon_cache: ArcCache<Uuid, Value>,
     url_service: UrlService,
 }

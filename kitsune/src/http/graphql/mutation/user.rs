@@ -4,8 +4,6 @@ use crate::{
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result, Upload};
-use kitsune_db::entity::accounts;
-use sea_orm::{ActiveModelTrait, ActiveValue};
 
 #[derive(Default)]
 pub struct UserMutation;

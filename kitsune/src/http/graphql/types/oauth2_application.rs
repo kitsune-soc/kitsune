@@ -1,5 +1,4 @@
 use async_graphql::SimpleObject;
-use kitsune_db::entity::oauth2_applications;
 use time::OffsetDateTime;
 use uuid::Uuid;
 

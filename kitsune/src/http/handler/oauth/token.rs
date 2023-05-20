@@ -12,18 +12,6 @@ use axum::{
 };
 use futures_util::FutureExt;
 use http::StatusCode;
-use kitsune_db::entity::{
-    oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes, oauth2_refresh_tokens,
-    prelude::{
-        Oauth2AccessTokens, Oauth2Applications, Oauth2AuthorizationCodes, Oauth2RefreshTokens,
-        Users,
-    },
-    users,
-};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
-    IntoActiveModel, ModelTrait, QueryFilter, TransactionTrait,
-};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use utoipa::ToSchema;

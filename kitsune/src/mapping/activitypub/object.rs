@@ -5,14 +5,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
-use kitsune_db::{
-    column::UrlQuery,
-    entity::{
-        accounts, media_attachments, posts, posts_mentions,
-        prelude::{Accounts, MediaAttachments, PostsMentions},
-    },
-    link::InReplyTo,
-};
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
@@ -21,7 +13,6 @@ use kitsune_type::ap::{
     Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
-use sea_orm::{prelude::*, QuerySelect};
 use std::str::FromStr;
 
 #[async_trait]

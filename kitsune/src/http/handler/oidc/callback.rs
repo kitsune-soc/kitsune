@@ -10,11 +10,6 @@ use axum::{
     extract::{Query, State},
     response::Response,
 };
-use kitsune_db::entity::{
-    prelude::{Oauth2Applications, Users},
-    users,
-};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

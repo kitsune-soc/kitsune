@@ -9,19 +9,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use futures_util::{future::OptionFuture, FutureExt};
-use kitsune_db::{
-    custom::Visibility,
-    entity::{
-        accounts, accounts_followers, posts, posts_favourites,
-        prelude::{AccountsFollowers, Posts, PostsFavourites},
-    },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
-};
 use kitsune_type::ap::{Activity, ActivityType};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
-    QuerySelect, TransactionTrait,
-};
 use std::ops::Not;
 use time::OffsetDateTime;
 use uuid::Uuid;

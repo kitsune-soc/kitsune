@@ -1,13 +1,8 @@
 use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
-use kitsune_db::entity::{
-    posts,
-    prelude::{Posts, Users},
-};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde_json::Value;
 
 #[debug_handler]

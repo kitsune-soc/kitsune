@@ -2,7 +2,6 @@ use self::{auth::AuthMutation, post::PostMutation, user::UserMutation};
 use crate::{http::graphql::ContextExt, service::attachment};
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use futures_util::TryStreamExt;
-use kitsune_db::entity::media_attachments;
 use mime::Mime;
 use std::str::FromStr;
 use tokio_util::{compat::FuturesAsyncReadCompatExt, io::ReaderStream};

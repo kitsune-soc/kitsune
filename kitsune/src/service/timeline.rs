@@ -1,5 +1,13 @@
 use crate::error::{Error, Result};
+use diesel::ExpressionMethods;
 use futures_util::{Stream, TryStreamExt};
+use kitsune_db::{
+    add_post_permission_check,
+    model::post::{Post, Visibility},
+    post_permission_check::PermissionCheck,
+    schema::{accounts_follows, posts, posts_mentions},
+    PgPool,
+};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -31,7 +39,7 @@ pub struct GetPublic {
 
 #[derive(Clone, TypedBuilder)]
 pub struct TimelineService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
 }
 
 impl TimelineService {
@@ -39,53 +47,47 @@ impl TimelineService {
     pub async fn get_home(
         &self,
         get_home: GetHome,
-    ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
-        let mut query = Posts::find()
+    ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        let mut query = posts::table
             .filter(
                 // Post is owned by the user
-                posts::Column::AccountId
+                posts::account_id
                     .eq(get_home.fetching_account_id)
                     // User is following the author and the post is not a direct message
-                    .or(posts::Column::Visibility
-                        .is_in([
+                    .or(posts::visibility
+                        .eq_any([
                             Visibility::Public,
                             Visibility::Unlisted,
                             Visibility::FollowerOnly,
                         ])
                         .and(
-                            posts::Column::AccountId.in_subquery(
-                                AccountsFollowers::find()
+                            posts::account_id.eq_any(
+                                accounts_follows::table
                                     .filter(
-                                        accounts_followers::Column::FollowerId
+                                        accounts_follows::follower_id
                                             .eq(get_home.fetching_account_id),
                                     )
-                                    .filter(accounts_followers::Column::ApprovedAt.is_not_null())
-                                    .select_only()
-                                    .column(accounts_followers::Column::AccountId)
-                                    .into_query(),
+                                    .filter(accounts_follows::approved_at.is_not_null())
+                                    .select(accounts_follows::account_id),
                             ),
                         ))
                     // User is mentioned in the post
-                    .or(posts::Column::Id.in_subquery(
-                        PostsMentions::find()
-                            .filter(
-                                posts_mentions::Column::AccountId.eq(get_home.fetching_account_id),
-                            )
-                            .select_only()
-                            .column(posts_mentions::Column::PostId)
-                            .into_query(),
+                    .or(posts::id.eq_any(
+                        posts_mentions::table
+                            .filter(posts_mentions::account_id.eq(get_home.fetching_account_id))
+                            .select(posts_mentions::post_id),
                     )),
             )
-            .order_by_desc(posts::Column::CreatedAt);
+            .order(posts::created_at.desc());
 
         if let Some(max_id) = get_home.max_id {
-            query = query.filter(posts::Column::Id.lt(max_id));
+            query = query.filter(posts::id.lt(max_id));
         }
         if let Some(min_id) = get_home.min_id {
-            query = query.filter(posts::Column::Id.gt(min_id));
+            query = query.filter(posts::id.gt(min_id));
         }
 
-        Ok(query.stream(&self.db_conn).await?.map_err(Error::from))
+        Ok(query.load_stream(&self.db_conn).await?.map_err(Error::from))
     }
 
     /// Get a stream of public posts
@@ -97,27 +99,26 @@ impl TimelineService {
     pub async fn get_public(
         &self,
         get_public: GetPublic,
-    ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+    ) -> Result<impl Stream<Item = Result<Post>> + '_> {
         let permission_check = PermissionCheck::builder()
             .include_unlisted(false)
             .build()
             .unwrap();
 
-        let mut query = Posts::find()
-            .add_permission_checks(permission_check)
-            .order_by_desc(posts::Column::CreatedAt);
+        let mut query = add_post_permission_check!(permission_check => posts::table)
+            .order(posts::created_at.desc());
 
         if let Some(max_id) = get_public.max_id {
-            query = query.filter(posts::Column::Id.lt(max_id));
+            query = query.filter(posts::id.lt(max_id));
         }
         if let Some(min_id) = get_public.min_id {
-            query = query.filter(posts::Column::Id.gt(min_id));
+            query = query.filter(posts::id.gt(min_id));
         }
 
         if get_public.only_local {
-            query = query.filter(posts::Column::IsLocal.eq(true));
+            query = query.filter(posts::is_local.eq(true));
         } else if get_public.only_remote {
-            query = query.filter(posts::Column::IsLocal.eq(false));
+            query = query.filter(posts::is_local.eq(false));
         }
 
         Ok(query.stream(&self.db_conn).await?.map_err(Error::from))

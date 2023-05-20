@@ -5,8 +5,6 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_db::entity::prelude::Accounts;
-use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
 pub mod follow;

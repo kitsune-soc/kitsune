@@ -1,15 +1,7 @@
 use super::IntoObject;
 use crate::{error::Result, state::Zustand};
 use async_trait::async_trait;
-use kitsune_db::{
-    column::UrlQuery,
-    entity::{
-        accounts, accounts_followers, posts, posts_favourites,
-        prelude::{Accounts, Posts},
-    },
-};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
-use sea_orm::{EntityTrait, ModelTrait, QuerySelect};
 use time::OffsetDateTime;
 
 #[async_trait]
