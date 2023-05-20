@@ -1,6 +1,8 @@
 use super::Visibility;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
+use diesel::QueryDsl;
+use kitsune_db::{model::post::Post as DbPost, schema::accounts};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -23,16 +25,18 @@ pub struct Post {
 #[ComplexObject]
 impl Post {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<super::Account> {
-        Ok(Accounts::find_by_id(self.account_id)
-            .one(&ctx.state().db_conn)
+        let mut db_conn = ctx.state().db_conn.get().await?;
+
+        Ok(accounts::table
+            .find(self.account_id)
+            .get_result(&mut db_conn)
             .await?
-            .expect("[Bug] Post without associated user encountered")
             .into())
     }
 }
 
-impl From<posts::Model> for Post {
-    fn from(value: posts::Model) -> Self {
+impl From<DbPost> for Post {
+    fn from(value: DbPost) -> Self {
         Self {
             id: value.id,
             account_id: value.account_id,

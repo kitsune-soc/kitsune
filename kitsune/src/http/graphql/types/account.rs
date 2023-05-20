@@ -1,6 +1,9 @@
 use super::MediaAttachment;
-use crate::http::graphql::ContextExt;
-use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
+use crate::{http::graphql::ContextExt, service::account::GetPosts};
+use async_graphql::{ComplexObject, Context, Result, SimpleObject};
+use diesel::QueryDsl;
+use futures_util::TryStreamExt;
+use kitsune_db::{model::account::Account as DbAccount, schema::media_attachments};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -23,9 +26,13 @@ pub struct Account {
 #[ComplexObject]
 impl Account {
     pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
+        let mut db_conn = ctx.state().db_conn.get().await?;
+
         if let Some(avatar_id) = self.avatar_id {
-            MediaAttachments::find_by_id(avatar_id)
-                .one(&ctx.state().db_conn)
+            media_attachments::table
+                .find(avatar_id)
+                .optional()
+                .one(&mut db_conn)
                 .await
                 .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
@@ -35,9 +42,13 @@ impl Account {
     }
 
     pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
+        let mut db_conn = ctx.state().db_conn.get().await?;
+
         if let Some(header_id) = self.header_id {
-            MediaAttachments::find_by_id(header_id)
-                .one(&ctx.state().db_conn)
+            media_attachments::table
+                .find(header_id)
+                .optional()
+                .one(&mut db_conn)
                 .await
                 .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
@@ -47,23 +58,21 @@ impl Account {
     }
 
     pub async fn posts(&self, ctx: &Context<'_>) -> Result<Vec<super::Post>> {
-        let account = Accounts::find_by_id(self.id)
-            .one(&ctx.state().db_conn)
+        let account_service = &ctx.state().service.account;
+        let get_posts = GetPosts::builder().account_id(self.id).build();
+        let posts = account_service
+            .get_posts(get_posts)
             .await?
-            .ok_or_else(|| Error::new("User not present"))?;
+            .map_ok(Into::into)
+            .try_collect()
+            .await?;
 
-        Posts::find()
-            .add_permission_checks(PermissionCheck::default())
-            .filter(posts::Column::AccountId.eq(account.id))
-            .all(&ctx.state().db_conn)
-            .await
-            .map(|posts| posts.into_iter().map(Into::into).collect())
-            .map_err(Into::into)
+        Ok(posts)
     }
 }
 
-impl From<accounts::Model> for Account {
-    fn from(value: accounts::Model) -> Self {
+impl From<DbAccount> for Account {
+    fn from(value: DbAccount) -> Self {
         Self {
             id: value.id,
             avatar_id: value.avatar_id,
