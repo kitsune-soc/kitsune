@@ -82,6 +82,7 @@
             buildInputs = with pkgs; [
               cargo-insta
               dhall
+              diesel-cli
               redis
               rust-bin.stable.latest.default
             ]

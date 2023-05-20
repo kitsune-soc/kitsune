@@ -10,7 +10,7 @@ use crate::{
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
-use sea_orm::DatabaseConnection;
+use kitsune_db::PgPool;
 
 macro_rules! impl_from_ref {
     ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
@@ -85,7 +85,7 @@ pub struct Service {
 /// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub db_conn: DatabaseConnection,
+    pub db_conn: PgPool,
     pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,
     #[cfg(feature = "mastodon-api")]

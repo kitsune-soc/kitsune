@@ -1,10 +1,11 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use kitsune_db::{
-    custom::JobState,
-    entity::{jobs, prelude::Jobs},
+    model::job::JobState,
+    schema::jobs::dsl::{jobs, state},
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::error::Error;
 
 type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
@@ -33,16 +34,12 @@ struct App {
     subcommand: AppSubcommand,
 }
 
-async fn clear_completed_jobs(db_conn: DatabaseConnection) -> Result<()> {
-    let delete_result = Jobs::delete_many()
-        .filter(jobs::Column::State.eq(JobState::Succeeded))
-        .exec(&db_conn)
+async fn clear_completed_jobs(db_conn: &mut AsyncPgConnection) -> Result<()> {
+    let delete_result = diesel::delete(jobs.filter(state.eq(JobState::Succeeded)))
+        .execute(db_conn)
         .await?;
 
-    println!(
-        "Deleted {} succeeded jobs from the database",
-        delete_result.rows_affected
-    );
+    println!("Deleted {} succeeded jobs from the database", delete_result);
 
     Ok(())
 }
@@ -53,12 +50,13 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let config: Configuration = envy::from_env()?;
-    let db_conn = kitsune_db::connect(&config.database_url).await?;
+    let db_conn = kitsune_db::connect(&config.database_url, 1).await?;
+    let mut db_conn = db_conn.get().await?;
     let cmd = App::parse();
 
     match cmd.subcommand {
-        AppSubcommand::ClearSucceededJobs => clear_completed_jobs(db_conn).await?,
-        AppSubcommand::Role(cmd) => self::role::handle(cmd, db_conn).await?,
+        AppSubcommand::ClearSucceededJobs => clear_completed_jobs(&mut db_conn).await?,
+        AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
     }
 
     Ok(())

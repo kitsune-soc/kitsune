@@ -2,17 +2,20 @@
 name = "kitsune-db"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 [dependencies]
-derive_builder = "0.12.0"
-kitsune-db-common = { path = "common" }
-kitsune-type = { path = "../kitsune-type" }
-migration = { path = "migration" }
-sea-orm = { version = "0.11.3", default-features = false, features = [
-    "with-json",
-    "with-time",
-    "with-uuid",
+diesel = { version = "2.0.4", features = ["serde_json", "time", "uuid"] }
+diesel-async = { version = "0.2.2", features = ["deadpool", "postgres"] }
+diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "fdde99d8fd62559f74efdc247bf7f3ec99ec6df8", features = [
+    "postgres",
 ] }
+kitsune-type = { version = "0.1.0", path = "../kitsune-type" }
+num-derive = "0.3.3"
+num-traits = "0.2.15"
 serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+thiserror = "1.0.40"
+time = "0.3.21"
 tracing-log = "0.1.3"
 uuid = "1.3.3"
