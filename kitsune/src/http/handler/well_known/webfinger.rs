@@ -5,6 +5,7 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
+use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::webfinger::{Link, Resource};
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -24,7 +25,7 @@ struct WebfingerQuery {
     )
 )]
 async fn get(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Response> {
@@ -37,16 +38,14 @@ async fn get(
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let Some(account) = Accounts::find()
+    let account = accounts::table
         .filter(
-            accounts::Column::Username.eq(username)
-                .and(accounts::Column::Local.eq(true)),
+            accounts::username
+                .eq(username)
+                .and(accounts::local.eq(true)),
         )
-        .one(&db_conn)
-        .await?
-    else {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    };
+        .first::<Account>(&mut db_conn.get().await?)
+        .await?;
     let account_url = url_service.user_url(account.id);
 
     Ok(Json(Resource {

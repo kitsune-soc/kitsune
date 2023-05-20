@@ -2,11 +2,9 @@ use crate::error::{Error, Result};
 use crate::state::Zustand;
 use askama::Template;
 use futures_util::{future::OptionFuture, TryStreamExt};
-use kitsune_db::entity::{
-    posts,
-    prelude::{Accounts, MediaAttachments},
-};
-use sea_orm::{EntityTrait, ModelTrait};
+use kitsune_db::model::media_attachment::PostMediaAttachment;
+use kitsune_db::model::post::Post;
+use kitsune_db::schema::{accounts, media_attachments};
 use std::collections::VecDeque;
 
 pub struct MediaAttachment {
@@ -28,16 +26,20 @@ pub struct PostComponent {
 }
 
 impl PostComponent {
-    pub async fn prepare(state: &Zustand, post: posts::Model) -> Result<Self> {
-        let author = Accounts::find_by_id(post.account_id)
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Post without author");
+    pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
+        let mut db_conn = state.db_conn.get().await?;
 
-        let attachments = post
-            .find_related(MediaAttachments)
-            .stream(&state.db_conn)
-            .await?
+        let author_fut = accounts::table
+            .find(post.account_id)
+            .get_result(&mut db_conn);
+
+        let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
+            .inner_join(media_attachments::table)
+            .select(media_attachments::all_columns)
+            .load_stream(&mut db_conn);
+
+        let (author, attachments_stream) = tokio::try_join!(author_fut, attachments_stream_fut)?;
+        let attachments = attachments_stream
             .map_err(Error::from)
             .and_then(|attachment| async move {
                 let url = state.service.attachment.get_url(attachment.id).await?;

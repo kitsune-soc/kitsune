@@ -1,5 +1,6 @@
 use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
+use kitsune_db::schema::{posts, users};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
@@ -14,11 +15,15 @@ use serde_json::Value;
     ),
 )]
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
-    let total = Users::find().count(&state.db_conn).await?;
-    let local_posts = Posts::find()
-        .filter(posts::Column::IsLocal.eq(true))
-        .count(&state.db_conn)
-        .await?;
+    let mut db_conn = state.db_conn.get().await?;
+
+    let total_fut = users::table.count().get_result(&mut db_conn);
+    let local_posts_fut = posts::table
+        .filter(posts::is_local.eq(true))
+        .count()
+        .get_result(&mut db_conn);
+
+    let (total, local_posts) = tokio::try_join!(total_fut, local_posts_fut);
 
     Ok(Json(TwoOne {
         version: Version::TwoOne,

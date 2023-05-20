@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
@@ -9,7 +9,12 @@ use axum::{
     extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
 };
+use diesel::QueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
+use kitsune_db::{
+    add_post_permission_check, model::post::Post, post_permission_check::PermissionCheck,
+    schema::accounts,
+};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
@@ -34,13 +39,13 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = Accounts::find_by_id(account_id)
-        .filter(accounts::Column::Local.eq(true))
-        .one(&state.db_conn)
-        .await?
-    else {
-        return Err(ApiError::NotFound.into());
-    };
+    let mut db_conn = state.db_conn.get().await?;
+
+    let account = accounts::table
+        .find(account_id)
+        .filter(accounts::local.eq(true))
+        .one(&mut db_conn)
+        .await?;
 
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
@@ -51,7 +56,7 @@ pub async fn get(
             .min_id(query.min_id)
             .build();
 
-        let posts: Vec<posts::Model> = state
+        let posts: Vec<Post> = state
             .service
             .account
             .get_posts(get_posts)
@@ -88,11 +93,11 @@ pub async fn get(
         })
         .into_response())
     } else {
-        let public_post_count = Posts::find()
-            .filter(posts::Column::AccountId.eq(account.id))
-            .add_permission_checks(PermissionCheck::default())
-            .count(&state.db_conn)
-            .await?;
+        let public_post_count =
+            add_post_permission_check!(PermissionCheck::default() => Post::belonging_to(&account))
+                .count()
+                .get_result(&mut db_conn)
+                .await?;
 
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
