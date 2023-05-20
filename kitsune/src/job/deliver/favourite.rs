@@ -5,14 +5,9 @@ use crate::{
 };
 use async_trait::async_trait;
 use kitsune_db::{
-    column::InboxUrlQuery,
-    entity::{
-        accounts,
-        prelude::{Accounts, PostsFavourites, Users},
-    },
-    link::FavouritedPostAuthor,
+    model::favourite::Favourite,
+    schema::{accounts, posts, posts_favourites, users},
 };
-use sea_orm::{prelude::*, QuerySelect};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -25,33 +20,26 @@ pub struct DeliverFavourite {
 impl Runnable for DeliverFavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some(favourite) = PostsFavourites::find_by_id(self.favourite_id)
-            .one(&ctx.state.db_conn)
-            .await?
-        else {
-            return Ok(());
-        };
+        let favourite = posts_favourites::table
+            .find(self.favourite_id)
+            .first::<Favourite>(&ctx.state.db_conn)
+            .await?;
 
-        let Some((account, Some(user))) = favourite
-            .find_related(Accounts)
-            .find_also_related(Users)
-            .one(&ctx.state.db_conn)
-            .await?
-        else {
-            return Ok(());
-        };
+        let (account, user) = accounts::table
+            .filter(accounts::id.eq(favourite.account_id))
+            .inner_join(users::table.on(users::account_id.eq(accounts::id)))
+            .first(&ctx.state.db_conn)
+            .await?;
 
-        let inbox_url = favourite
-            .find_linked(FavouritedPostAuthor)
-            .select_only()
-            .column(accounts::Column::InboxUrl)
-            .into_values::<String, InboxUrlQuery>()
-            .one(&ctx.state.db_conn)
-            .await?
-            .expect("[Bug] Post without associated account");
+        let inbox_url = posts::table
+            .find(favourite.post_id)
+            .inner_join(accounts::table)
+            .select(accounts::inbox_url)
+            .first(&self.db_conn)
+            .await?;
+
         let activity = favourite.into_activity(ctx.state).await?;
 
-        // TODO: Maybe deliver to followers as well?
         ctx.deliverer
             .deliver(&inbox_url, &account, &user, &activity)
             .await?;

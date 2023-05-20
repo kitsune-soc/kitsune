@@ -8,6 +8,8 @@ use uuid::Uuid;
 #[derive(Clone, Deserialize, Identifiable, Serialize, Queryable)]
 pub struct Account {
     pub id: Uuid,
+    pub avatar_id: Option<Uuid>,
+    pub header_id: Option<Uuid>,
     pub display_name: Option<String>,
     pub note: Option<String>,
     pub username: String,

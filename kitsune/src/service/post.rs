@@ -16,25 +16,18 @@ use crate::{
 };
 use async_stream::try_stream;
 use derive_builder::Builder;
+use diesel_async::AsyncPgConnection;
 use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
 use kitsune_db::{
-    custom::{Role, Visibility},
-    entity::{
-        media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
-        prelude::{
-            MediaAttachments, Posts, PostsFavourites, PostsMediaAttachments, PostsMentions,
-            UsersRoles,
-        },
-        users_roles,
+    model::{
+        media_attachment::NewPostMediaAttachment,
+        mention::NewMention,
+        post::{Post, Visibility},
     },
-    link::InReplyTo,
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
+    schema::{media_attachments, posts_media_attachments, posts_mentions},
+    PgPool,
 };
 use pulldown_cmark::{html, Options, Parser};
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
-    IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
-};
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -117,7 +110,7 @@ impl DeletePost {
 
 #[derive(Clone, TypedBuilder)]
 pub struct PostService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
@@ -127,64 +120,61 @@ pub struct PostService {
 }
 
 impl PostService {
-    async fn process_media_attachments<C>(
-        conn: &C,
+    async fn process_media_attachments(
+        conn: &mut AsyncPgConnection,
         post_id: Uuid,
         media_attachment_ids: &[Uuid],
-    ) -> Result<()>
-    where
-        C: ConnectionTrait,
-    {
+    ) -> Result<()> {
         if media_attachment_ids.is_empty() {
             return Ok(());
         }
 
-        if MediaAttachments::find()
-            .filter(media_attachments::Column::Id.is_in(media_attachment_ids.iter().copied()))
-            .count(conn)
+        if media_attachments::table
+            .filter(media_attachments::id.eq_any(media_attachment_ids))
+            .count()
+            .get_result(conn)
             .await?
             != media_attachment_ids.len() as u64
         {
             return Err(ApiError::BadRequest.into());
         }
 
-        PostsMediaAttachments::insert_many(media_attachment_ids.iter().map(|media_id| {
-            posts_media_attachments::Model {
-                post_id,
-                media_attachment_id: *media_id,
-            }
-            .into_active_model()
-        }))
-        .exec_without_returning(conn)
-        .await?;
+        diesel::insert_into(posts_media_attachments::table)
+            .values(
+                media_attachment_ids
+                    .iter()
+                    .map(|media_id| NewPostMediaAttachment {
+                        post_id,
+                        media_attachment_id: *media_id,
+                    }),
+            )
+            .execute(conn)
+            .await?;
 
         Ok(())
     }
 
-    async fn process_mentions<C>(
-        conn: &C,
+    async fn process_mentions(
+        conn: &mut AsyncPgConnection,
         post_id: Uuid,
         mentioned_account_ids: Vec<(Uuid, String)>,
-    ) -> Result<()>
-    where
-        C: ConnectionTrait,
-    {
+    ) -> Result<()> {
         if mentioned_account_ids.is_empty() {
             return Ok(());
         }
 
-        PostsMentions::insert_many(mentioned_account_ids.into_iter().map(
-            |(account_id, mention_text)| {
-                posts_mentions::Model {
-                    post_id,
-                    account_id,
-                    mention_text,
-                }
-                .into_active_model()
-            },
-        ))
-        .exec_without_returning(conn)
-        .await?;
+        diesel::insert_into(posts_mentions::table)
+            .values(
+                mentioned_account_ids
+                    .iter()
+                    .map(|(account_id, mention_text)| NewMention {
+                        post_id,
+                        account_id,
+                        mention_text,
+                    }),
+            )
+            .execute(conn)
+            .await?;
 
         Ok(())
     }
@@ -194,7 +184,7 @@ impl PostService {
     /// # Panics
     ///
     /// This should never ever panic. If it does, create a bug report.
-    pub async fn create(&self, create_post: CreatePost) -> Result<posts::Model> {
+    pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
         if create_post.content.chars().count() > self.instance_service.character_limit() {
             return Err(ApiError::BadRequest.into());
         }

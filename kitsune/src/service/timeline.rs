@@ -1,16 +1,5 @@
 use crate::error::{Error, Result};
 use futures_util::{Stream, TryStreamExt};
-use kitsune_db::{
-    custom::Visibility,
-    entity::{
-        accounts_followers, posts, posts_mentions,
-        prelude::{AccountsFollowers, Posts, PostsMentions},
-    },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
-};
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, QueryTrait,
-};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 

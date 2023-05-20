@@ -1,11 +1,14 @@
 use crate::error::Result;
-use kitsune_db::entity::{
-    accounts, media_attachments, posts_media_attachments, posts_mentions,
-    prelude::{MediaAttachments, PostsMediaAttachments, PostsMentions},
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use kitsune_db::{
+    model::{
+        account::Account,
+        media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
+        mention::NewMention,
+    },
+    schema::{media_attachments, posts_media_attachments, posts_mentions},
 };
 use kitsune_type::ap::{object::MediaAttachment, Tag, TagType};
-use sea_orm::{ConnectionTrait, EntityTrait, IntoActiveModel};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 pub mod deliverer;
@@ -13,64 +16,56 @@ pub mod fetcher;
 
 pub use self::{deliverer::Deliverer, fetcher::Fetcher};
 
-pub async fn handle_attachments<C>(
-    db_conn: &C,
-    author: &accounts::Model,
+pub async fn handle_attachments(
+    db_conn: &mut AsyncPgConnection,
+    author: &Account,
     post_id: Uuid,
     attachments: Vec<MediaAttachment>,
-) -> Result<()>
-where
-    C: ConnectionTrait,
-{
+) -> Result<()> {
     if attachments.is_empty() {
         return Ok(());
     }
     let attachment_ids: Vec<Uuid> = (0..attachments.len()).map(|_| Uuid::now_v7()).collect();
 
-    MediaAttachments::insert_many(
-        attachments
-            .into_iter()
-            .zip(attachment_ids.iter().copied())
-            .map(|(attachment, attachment_id)| {
-                media_attachments::Model {
+    diesel::insert_into(media_attachments::table)
+        .values(
+            attachments
+                .into_iter()
+                .zip(attachment_ids.iter().copied())
+                .map(|(attachment, attachment_id)| NewMediaAttachment {
                     id: attachment_id,
                     account_id: author.id,
-                    content_type: attachment.media_type,
+                    content_type: attachment.media_type.as_str(),
                     description: attachment.name,
                     blurhash: attachment.blurhash,
                     file_path: None,
-                    remote_url: Some(attachment.url),
-                    created_at: OffsetDateTime::now_utc(),
-                    updated_at: OffsetDateTime::now_utc(),
-                }
-                .into_active_model()
-            }),
-    )
-    .exec_with_returning(db_conn)
-    .await?;
+                    remote_url: Some(attachment.url.as_str()),
+                }),
+        )
+        .execute(db_conn)
+        .await?;
 
-    PostsMediaAttachments::insert_many(attachment_ids.into_iter().map(|attachment_id| {
-        posts_media_attachments::Model {
-            post_id,
-            media_attachment_id: attachment_id,
-        }
-        .into_active_model()
-    }))
-    .exec(db_conn)
-    .await?;
+    diesel::insert_into(posts_media_attachments::table)
+        .values(
+            attachment_ids
+                .into_iter()
+                .map(|attachment_id| NewPostMediaAttachment {
+                    post_id,
+                    media_attachment_id: attachment_id,
+                }),
+        )
+        .execute(db_conn)
+        .await?;
 
     Ok(())
 }
 
-pub async fn handle_mentions<'a, C>(
-    db_conn: &C,
-    author: &accounts::Model,
+pub async fn handle_mentions(
+    db_conn: &mut AsyncPgConnection,
+    author: &Account,
     post_id: Uuid,
     mentions: &[Tag],
-) -> Result<()>
-where
-    C: ConnectionTrait,
-{
+) -> Result<()> {
     let mention_iter = mentions
         .iter()
         .filter(|mention| mention.r#type == TagType::Mention);
@@ -79,16 +74,14 @@ where
         return Ok(());
     }
 
-    PostsMentions::insert_many(mention_iter.map(|mention| {
-        posts_mentions::Model {
+    diesel::insert_into(posts_mentions::table)
+        .values(mention_iter.map(|mention| NewMention {
             post_id,
             account_id: author.id,
-            mention_text: mention.name.clone(),
-        }
-        .into_active_model()
-    }))
-    .exec(db_conn)
-    .await?;
+            mention_text: mention.name.as_str(),
+        }))
+        .execute(db_conn)
+        .await?;
 
     Ok(())
 }

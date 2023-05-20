@@ -9,6 +9,7 @@ pub use crate::error::{Error, Result};
 
 mod error;
 
+pub mod function;
 pub mod model;
 pub mod schema;
 

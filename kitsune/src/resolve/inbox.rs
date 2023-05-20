@@ -1,81 +1,75 @@
-use crate::error::{Error, Result};
+use crate::error::Result;
+use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods, QueryDsl};
 use futures_util::{future::Either, Stream, StreamExt};
 use kitsune_db::{
-    column::InboxUrlQuery,
-    custom::Visibility,
-    entity::{accounts, posts, prelude::Accounts},
-    link::{Followers, MentionedAccounts},
-};
-use sea_orm::{
-    sea_query::{Expr, Func, SimpleExpr},
-    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
+    function::coalesce_nullable,
+    model::{
+        account::Account,
+        mention::Mention,
+        post::{Post, Visibility},
+    },
+    PgPool,
 };
 
 pub struct InboxResolver {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
 }
 
 impl InboxResolver {
     #[must_use]
-    pub fn new(db_conn: DatabaseConnection) -> Self {
+    pub fn new(db_conn: PgPool) -> Self {
         Self { db_conn }
     }
 
     #[instrument(skip_all, fields(account_id = %account.id))]
     pub async fn resolve_followers(
         &self,
-        account: &accounts::Model,
-    ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
-        account
-            .find_linked(Followers)
-            .filter(
-                accounts::Column::SharedInboxUrl
-                    .is_not_null()
-                    .or(accounts::Column::InboxUrl.is_not_null()),
+        account: &Account,
+    ) -> Result<impl Stream<Item = Result<String>> + Send + '_> {
+        use kitsune_db::schema::{accounts, accounts_follows};
+
+        accounts_follows::table
+            .filter(accounts_follows::account_id.eq(account.id))
+            .inner_join(
+                accounts::table.on(accounts::id.eq(accounts_follows::follower_id).and(
+                    accounts::inbox_url
+                        .is_not_null()
+                        .or(accounts::shared_inbox_url.is_not_null()),
+                )),
             )
-            .select_only()
+            .select(coalesce_nullable(
+                accounts::shared_inbox_url,
+                accounts::inbox_url,
+            ))
             .distinct()
-            .column_as(
-                SimpleExpr::from(Func::coalesce([
-                    Expr::col(accounts::Column::SharedInboxUrl).into(),
-                    Expr::col(accounts::Column::InboxUrl).into(),
-                ])),
-                accounts::Column::InboxUrl,
-            )
-            .into_values::<_, InboxUrlQuery>()
-            .stream(&self.db_conn)
-            .await
-            .map_err(Error::from)
+            .load_stream(&self.db_conn)
+            .await?
     }
 
     #[instrument(skip_all, fields(post_id = %post.id))]
     pub async fn resolve(
         &self,
-        post: &posts::Model,
-    ) -> Result<impl Stream<Item = Result<String, DbErr>> + Send + '_> {
-        let account = Accounts::find_by_id(post.account_id)
-            .one(&self.db_conn)
-            .await?
-            .expect("[Bug] Post without associated account");
+        post: &Post,
+    ) -> Result<impl Stream<Item = Result<String>> + Send + '_> {
+        use kitsune_db::schema::accounts;
 
-        let mentioned_inbox_stream = post
-            .find_linked(MentionedAccounts)
+        let account = accounts::table
+            .find(post.account_id)
+            .first(&self.db_conn)
+            .await?;
+
+        let mentioned_inbox_stream = Mention::belonging_to(post)
+            .inner_join(accounts::table)
             .filter(
-                accounts::Column::SharedInboxUrl
+                accounts::shared_inbox_url
                     .is_not_null()
-                    .or(accounts::Column::InboxUrl.is_not_null()),
+                    .or(accounts::inbox_url.is_not_null()),
             )
-            .select_only()
-            .distinct()
-            .column_as(
-                SimpleExpr::from(Func::coalesce([
-                    Expr::col(accounts::Column::SharedInboxUrl).into(),
-                    Expr::col(accounts::Column::InboxUrl).into(),
-                ])),
-                accounts::Column::InboxUrl,
-            )
-            .into_values::<String, InboxUrlQuery>()
-            .stream(&self.db_conn)
+            .select(coalesce_nullable(
+                accounts::shared_inbox_url,
+                accounts::inbox_url,
+            ))
+            .load_stream(&self.db_conn)
             .await?;
 
         let stream = if post.visibility == Visibility::MentionOnly {

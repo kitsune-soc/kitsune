@@ -33,6 +33,8 @@ diesel::table! {
         display_name_ts -> Nullable<Tsvector>,
         note_ts -> Nullable<Tsvector>,
         username_ts -> Nullable<Tsvector>,
+        avatar_id -> Nullable<Uuid>,
+        header_id -> Nullable<Uuid>,
     }
 }
 
@@ -187,7 +189,6 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(media_attachments -> accounts (account_id));
 diesel::joinable!(oauth2_access_tokens -> oauth2_applications (application_id));
 diesel::joinable!(oauth2_access_tokens -> users (user_id));
 diesel::joinable!(oauth2_authorization_codes -> oauth2_applications (application_id));

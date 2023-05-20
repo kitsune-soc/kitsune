@@ -3,22 +3,17 @@ use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use futures_util::{future::OptionFuture, FutureExt};
 use kitsune_db::{
-    custom::ActorType,
-    entity::{
-        accounts,
-        prelude::{Accounts, Users},
-        users,
+    model::{
+        account::{ActorType, NewAccount},
+        user::{NewUser, User},
     },
+    schema::{accounts, users},
+    PgPool,
 };
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
 };
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
-    TransactionTrait,
-};
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -41,35 +36,15 @@ pub struct Register {
 
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     registrations_open: bool,
     url_service: UrlService,
 }
 
 impl UserService {
-    pub async fn register(&self, register: Register) -> Result<users::Model> {
+    pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());
-        }
-
-        // These queries provide a better user experience than just a random 500 error
-        // They are also fine from a performance standpoint since both, the username and the email field, are indexed
-        let is_username_taken = Users::find()
-            .filter(users::Column::Username.eq(register.username.as_str()))
-            .one(&self.db_conn)
-            .await?
-            .is_some();
-        if is_username_taken {
-            return Err(ApiError::UsernameTaken.into());
-        }
-
-        let is_email_used = Users::find()
-            .filter(users::Column::Email.eq(register.email.as_str()))
-            .one(&self.db_conn)
-            .await?
-            .is_some();
-        if is_email_used {
-            return Err(ApiError::EmailTaken.into());
         }
 
         let hashed_password_fut = OptionFuture::from(register.password.map(|password| {
@@ -101,17 +76,15 @@ impl UserService {
             .db_conn
             .transaction(|tx| {
                 async move {
-                    let insert_result = Accounts::insert(
-                        accounts::Model {
+                    let account_id = diesel::insert_into(accounts::table)
+                        .values(NewAccount {
                             id: user_id,
-                            avatar_id: None,
-                            header_id: None,
                             display_name: None,
-                            username: register.username.clone(),
+                            username: register.username.as_str(),
                             locked: false,
                             note: None,
                             local: true,
-                            domain: domain.clone(),
+                            domain: domain.as_str(),
                             actor_type: ActorType::Person,
                             url: None,
                             featured_collection_url: None,
@@ -120,33 +93,29 @@ impl UserService {
                             inbox_url: None,
                             outbox_url: None,
                             shared_inbox_url: None,
-                            public_key_id,
-                            public_key: public_key_str,
-                            created_at: OffsetDateTime::now_utc(),
-                            updated_at: OffsetDateTime::now_utc(),
-                        }
-                        .into_active_model(),
+                            public_key_id: public_key_id.as_str(),
+                            public_key: public_key_str.as_str(),
+                            created_at: None,
+                        })
+                        .select(accounts::id)
+                        .execute(tx)
+                        .await?;
+
+                    Ok::<_, Error>(
+                        diesel::insert_into(users::table)
+                            .values(NewUser {
+                                id: Uuid::now_v7(),
+                                account_id,
+                                username: register.username.as_str(),
+                                oidc_id: register.oidc_id,
+                                email: register.email.as_str(),
+                                password: hashed_password,
+                                domain: domain.as_str(),
+                                private_key: private_key_str.as_str(),
+                            })
+                            .execute(tx)
+                            .await?,
                     )
-                    .exec(tx)
-                    .await?;
-
-                    let new_user = users::Model {
-                        id: Uuid::now_v7(),
-                        account_id: insert_result.last_insert_id,
-                        username: register.username,
-                        oidc_id: register.oidc_id,
-                        email: register.email,
-                        password: hashed_password,
-                        domain,
-                        private_key: private_key_str.to_string(),
-                        created_at: OffsetDateTime::now_utc(),
-                        updated_at: OffsetDateTime::now_utc(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
-                    .await?;
-
-                    Ok::<_, Error>(new_user)
                 }
                 .boxed()
             })

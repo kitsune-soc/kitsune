@@ -3,13 +3,8 @@ use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
 use futures_util::{Stream, StreamExt, TryStreamExt};
-use kitsune_db::entity::{media_attachments, prelude::MediaAttachments};
 use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, Storage, StorageBackend};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    QueryFilter,
-};
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;

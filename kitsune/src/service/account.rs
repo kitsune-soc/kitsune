@@ -16,17 +16,6 @@ use crate::{
 use bytes::Bytes;
 use derive_builder::Builder;
 use futures_util::{Stream, TryStreamExt};
-use kitsune_db::{
-    entity::{
-        accounts, accounts_followers, posts,
-        prelude::{Accounts, AccountsFollowers, Posts},
-    },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
-};
-use sea_orm::{
-    ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
-    QueryOrder,
-};
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;

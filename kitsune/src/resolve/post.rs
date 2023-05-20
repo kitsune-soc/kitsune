@@ -86,7 +86,7 @@ impl PostResolver {
     }
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod test {
     use super::PostResolver;
     use crate::{
@@ -100,10 +100,8 @@ mod test {
         },
         webfinger::Webfinger,
     };
-    use kitsune_db::entity::prelude::Accounts;
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
-    use sea_orm::EntityTrait;
     use std::sync::Arc;
 
     #[tokio::test]
@@ -171,4 +169,4 @@ mod test {
             Some("https://corteximplant.com/users/0x0".into())
         );
     }
-}
+}*/

@@ -1,7 +1,6 @@
 use crate::error::SearchError;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use kitsune_db::entity::{accounts, posts};
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use uuid::Uuid;

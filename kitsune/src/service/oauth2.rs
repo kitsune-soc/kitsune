@@ -7,8 +7,6 @@ use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::Response;
 use http::StatusCode;
-use kitsune_db::entity::{oauth2_applications, oauth2_authorization_codes};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, IntoActiveModel};
 use std::str::FromStr;
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;

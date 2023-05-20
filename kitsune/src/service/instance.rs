@@ -1,11 +1,4 @@
 use crate::error::{Error, Result};
-use kitsune_db::entity::{
-    accounts, posts,
-    prelude::{Accounts, Posts, Users},
-};
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect,
-};
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 

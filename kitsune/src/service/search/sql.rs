@@ -1,20 +1,6 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
-use kitsune_db::{
-    common::tsvector_column,
-    custom::Visibility,
-    custom_entity::{accounts_fts, posts_fts},
-    entity::{
-        accounts, posts,
-        prelude::{Accounts, Posts},
-    },
-};
-use sea_orm::{
-    sea_query::{Expr, IntoCondition, PgFunc},
-    ColumnTrait, ConnectionTrait, DatabaseBackend, DatabaseConnection, EntityTrait, JoinType,
-    QueryFilter, QuerySelect, RelationTrait,
-};
 use uuid::Uuid;
 
 #[derive(Clone)]

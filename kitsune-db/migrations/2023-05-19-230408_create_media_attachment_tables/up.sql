@@ -23,4 +23,16 @@ CREATE TABLE posts_media_attachments (
     FOREIGN KEY (media_attachment_id) REFERENCES media_attachments(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+ALTER TABLE accounts
+    ADD avatar_id UUID,
+    ADD FOREIGN KEY (avatar_id) REFERENCES media_attachments(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+ALTER TABLE accounts
+    ADD header_id UUID,
+    ADD FOREIGN KEY (header_id) REFERENCES media_attachments(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
 SELECT diesel_manage_updated_at('media_attachments');
