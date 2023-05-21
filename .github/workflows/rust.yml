@@ -63,4 +63,4 @@ jobs:
       - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output
         env:
-          DATABASE_URL: "postgres://postgres:postgres@postgres/test_db"
+          DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
