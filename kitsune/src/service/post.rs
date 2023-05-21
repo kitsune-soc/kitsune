@@ -203,6 +203,10 @@ impl PostService {
             return Err(ApiError::BadRequest.into());
         }
 
+        let subject = create_post.subject.map(|mut subject| {
+            subject.clean_html();
+            subject
+        });
         let mut content = if create_post.process_markdown {
             let parser = Parser::new_ext(&create_post.content, Options::all());
             let mut buf = String::new();
@@ -240,7 +244,7 @@ impl PostService {
                             account_id: create_post.author_id,
                             in_reply_to_id,
                             reposted_post_id: None,
-                            subject: create_post.subject.as_deref(),
+                            subject: subject.as_deref(),
                             content: content.as_str(),
                             is_sensitive: create_post.sensitive,
                             visibility: create_post.visibility,

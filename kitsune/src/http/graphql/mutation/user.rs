@@ -1,12 +1,9 @@
 use super::handle_upload;
 use crate::{
     http::graphql::{types::Account, ContextExt},
-    sanitize::CleanHtmlExt,
+    service::account::Update,
 };
 use async_graphql::{Context, Error, Object, Result, Upload};
-use diesel::ExpressionMethods;
-use diesel_async::RunQueryDsl;
-use kitsune_db::schema::accounts;
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -22,46 +19,35 @@ impl UserMutation {
         header: Option<Upload>,
         locked: Option<bool>,
     ) -> Result<Account> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
-        let user_data = ctx.user_data()?;
-        let mut update_query = diesel::update(&user_data.account);
+        let account_service = &ctx.state().service.account;
+        let mut account_update = Update::builder();
 
-        if let Some(mut display_name) = display_name {
-            update_query = if display_name.is_empty() {
-                update_query.set(accounts::display_name.eq(None))
-            } else {
-                display_name.clean_html();
-                update_query.set(accounts::display_name.eq(display_name))
-            };
+        if let Some(display_name) = display_name {
+            account_update = account_update.display_name(display_name);
         }
 
-        if let Some(mut note) = note {
-            update_query = if note.is_empty() {
-                update_query.set(accounts::note.eq(None))
-            } else {
-                note.clean_html();
-                update_query.set(accounts::note.eq(note))
-            };
+        if let Some(note) = note {
+            account_update = account_update.note(note);
         }
 
         if let Some(avatar) = avatar {
             let media_attachment = handle_upload(ctx, avatar, None).await?;
-            update_query = update_query.set(accounts::avatar_id.eq(media_attachment.id));
+            account_update = account_update.avatar(media_attachment);
         }
 
         if let Some(header) = header {
             let media_attachment = handle_upload(ctx, header, None).await?;
-            update_query = update_query.set(accounts::header_id.eq(media_attachment.id));
+            account_update = account_update.header(media_attachment);
         }
 
         if let Some(locked) = locked {
-            update_query = update_query.set(accounts::locked.eq(locked));
+            account_update = account_update.locked(locked);
         }
 
-        update_query
-            .execute(&mut db_conn)
+        account_service
+            .update(account_update.build()?)
             .await
-            .map(Into::into)
+            .map(Account::from)
             .map_err(Error::from)
     }
 }

@@ -11,6 +11,7 @@ use crate::{
         unfollow::DeliverUnfollow,
         update::{DeliverUpdate, UpdateEntity},
     },
+    sanitize::CleanHtmlExt,
     webfinger::Webfinger,
 };
 use bytes::Bytes;
@@ -307,20 +308,22 @@ impl AccountService {
         Ok((account, follower))
     }
 
-    pub async fn update<A, H>(&self, update: Update<A, H>) -> Result<Account>
+    pub async fn update<A, H>(&self, mut update: Update<A, H>) -> Result<Account>
     where
         A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
         H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
     {
         let mut changeset = UpdateAccount::default();
 
-        if let Some(ref display_name) = update.display_name {
+        if let Some(ref mut display_name) = update.display_name {
+            display_name.clean_html();
             changeset = UpdateAccount {
                 display_name: Some(display_name),
                 ..changeset
             };
         }
-        if let Some(ref note) = update.note {
+        if let Some(ref mut note) = update.note {
+            note.clean_html();
             changeset = UpdateAccount {
                 note: Some(note),
                 ..changeset
