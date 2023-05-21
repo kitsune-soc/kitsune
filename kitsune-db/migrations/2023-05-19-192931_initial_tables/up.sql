@@ -23,8 +23,8 @@ CREATE TABLE accounts (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search columns
-    display_name_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', display_name)) STORED NOT NULL,
-    note_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', note)) STORED NOT NULL,
+    display_name_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', COALESCE(display_name, ''))) STORED NOT NULL,
+    note_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', COALESCE(note, ''))) STORED NOT NULL,
     username_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', username)) STORED NOT NULL,
 
     -- UNIQUE constraints
@@ -87,7 +87,7 @@ CREATE TABLE posts (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search columns
-    subject_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', subject)) STORED NOT NULL,
+    subject_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', COALESCE(subject, ''))) STORED NOT NULL,
     content_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED NOT NULL,
 
     -- Foreign key constraints

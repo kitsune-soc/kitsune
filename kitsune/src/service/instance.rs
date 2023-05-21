@@ -39,7 +39,7 @@ impl InstanceService {
         accounts::table
             .filter(accounts::local.eq(false))
             .select(accounts::domain)
-            .group_by(accounts::domain)
+            .distinct()
             .count()
             .get_result::<i64>(&mut db_conn)
             .await
