@@ -1,6 +1,12 @@
 use super::IntoObject;
 use crate::{error::Result, state::Zustand};
 use async_trait::async_trait;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
+    schema::{accounts, posts},
+};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use time::OffsetDateTime;
 
@@ -14,7 +20,7 @@ pub trait IntoActivity {
 }
 
 #[async_trait]
-impl IntoActivity for accounts::Model {
+impl IntoActivity for Account {
     type Output = Activity;
     type NegateOutput = Activity;
 
@@ -37,28 +43,25 @@ impl IntoActivity for accounts::Model {
 }
 
 #[async_trait]
-impl IntoActivity for posts_favourites::Model {
+impl IntoActivity for Favourite {
     type Output = Activity;
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let account_url = self
-            .find_related(Accounts)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Favourite without associated account");
+        let mut db_conn = state.db_conn.get().await?;
+        let account_url_fut = accounts::table
+            .find(self.account_id)
+            .select(accounts::url)
+            .get_result::<Option<String>>(&mut db_conn);
 
-        let post_url = self
-            .find_related(Posts)
-            .select_only()
-            .column(posts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Favourite without associated post");
+        let post_url_fut = posts::table
+            .find(self.post_id)
+            .select(posts::url)
+            .get_result(&mut db_conn);
+
+        let (account_url, post_url) = tokio::try_join!(account_url_fut, post_url_fut)?;
+        let account_url =
+            account_url.unwrap_or_else(|| state.service.url.user_url(self.account_id));
 
         Ok(Activity {
             context: ap_context(),
@@ -71,14 +74,13 @@ impl IntoActivity for posts_favourites::Model {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let account_url = self
-            .find_related(Accounts)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
+        let mut db_conn = state.db_conn.get().await?;
+        let account_url = accounts::table
+            .find(self.account_id)
+            .select(accounts::url)
+            .get_result::<Option<String>>(&mut db_conn)
             .await?
-            .expect("[Bug] Favourite without associated account");
+            .unwrap_or_else(|| state.service.url.user_url(self.account_id));
 
         Ok(Activity {
             context: ap_context(),
@@ -92,31 +94,32 @@ impl IntoActivity for posts_favourites::Model {
 }
 
 #[async_trait]
-impl IntoActivity for accounts_followers::Model {
+impl IntoActivity for Follow {
     type Output = Activity;
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let attributed_to = Accounts::find_by_id(self.follower_id)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Follow without follower");
+        let mut db_conn = state.db_conn.get().await?;
+        let attributed_to_fut = accounts::table
+            .find(self.follower_id)
+            .select(accounts::url)
+            .get_result::<Option<String>>(&mut db_conn);
 
-        let object = Accounts::find_by_id(self.account_id)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] Follow without followed");
+        let object_fut = accounts::table
+            .find(self.account_id)
+            .select(accounts::url)
+            .get_result::<Option<String>>(&mut db_conn);
+
+        let (attributed_to, object) = tokio::try_join!(attributed_to_fut, object_fut)?;
+        let (attributed_to, object) = (
+            attributed_to.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),
+            object.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),
+        );
 
         Ok(Activity {
             context: ap_context(),
             id: self.url,
-            actor: StringOrObject::String(attributed_to.clone()),
+            actor: StringOrObject::String(attributed_to),
             r#type: ActivityType::Follow,
             object: ObjectField::Url(object),
             published: self.created_at,
@@ -124,13 +127,13 @@ impl IntoActivity for accounts_followers::Model {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let attributed_to = Accounts::find_by_id(self.follower_id)
-            .select_only()
-            .column(accounts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
+        let mut db_conn = state.db_conn.get().await?;
+        let attributed_to = accounts::table
+            .find(self.follower_id)
+            .select(accounts::url)
+            .get_result::<Option<String>>(&mut db_conn)
             .await?
-            .expect("[Bug] Follow without follower");
+            .unwrap_or_else(|| state.service.url.user_url(self.follower_id));
 
         Ok(Activity {
             context: ap_context(),
@@ -144,7 +147,7 @@ impl IntoActivity for accounts_followers::Model {
 }
 
 #[async_trait]
-impl IntoActivity for posts::Model {
+impl IntoActivity for Post {
     type Output = Activity;
     type NegateOutput = Activity;
 
@@ -152,13 +155,12 @@ impl IntoActivity for posts::Model {
         let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
-            let reposted_post_url = Posts::find_by_id(reposted_post_id)
-                .select_only()
-                .column(posts::Column::Url)
-                .into_values::<String, UrlQuery>()
-                .one(&state.db_conn)
-                .await?
-                .expect("[Bug] Repost without associated post");
+            let mut db_conn = state.db_conn.get().await?;
+            let reposted_post_url = posts::table
+                .find(reposted_post_id)
+                .select(posts::url)
+                .get_result(&mut db_conn)
+                .await?;
 
             Ok(Activity {
                 context: ap_context(),

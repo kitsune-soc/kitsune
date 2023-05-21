@@ -4,7 +4,18 @@ use crate::{
     util::BaseToCc,
 };
 use async_trait::async_trait;
-use futures_util::TryStreamExt;
+use diesel::{BelongingToDsl, QueryDsl};
+use diesel_async::RunQueryDsl;
+use futures_util::{future::OptionFuture, FutureExt, TryStreamExt};
+use kitsune_db::{
+    model::{
+        account::Account,
+        media_attachment::{MediaAttachment as DbMediaAttachment, PostMediaAttachment},
+        mention::Mention,
+        post::Post,
+    },
+    schema::{accounts, media_attachments, posts, posts_mentions},
+};
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
@@ -23,7 +34,7 @@ pub trait IntoObject {
 }
 
 #[async_trait]
-impl IntoObject for media_attachments::Model {
+impl IntoObject for DbMediaAttachment {
     type Output = MediaAttachment;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
@@ -48,7 +59,7 @@ impl IntoObject for media_attachments::Model {
 }
 
 #[async_trait]
-impl IntoObject for posts::Model {
+impl IntoObject for Post {
     type Output = Object;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
@@ -59,23 +70,38 @@ impl IntoObject for posts::Model {
             return Err(ApiError::NotFound.into());
         }
 
-        let account = Accounts::find_by_id(self.account_id)
-            .one(&state.db_conn)
-            .await?
-            .expect("[Bug] No user associated with post");
+        let mut db_conn = state.db_conn.get().await?;
+        let account_fut = accounts::table
+            .find(self.account_id)
+            .select(Account::columns())
+            .get_result(&mut db_conn);
 
-        let in_reply_to = self
-            .find_linked(InReplyTo)
-            .select_only()
-            .column(posts::Column::Url)
-            .into_values::<String, UrlQuery>()
-            .one(&state.db_conn)
-            .await?;
+        let in_reply_to_fut = OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
+            posts::table
+                .find(in_reply_to_id)
+                .select(posts::url)
+                .get_result(&mut db_conn)
+        }))
+        .map(Option::transpose);
 
-        let attachment = self
-            .find_related(MediaAttachments)
-            .stream(&state.db_conn)
-            .await?
+        let mentions_fut = Mention::belonging_to(&self)
+            .inner_join(accounts::table)
+            .select((posts_mentions::all_columns, Account::columns()))
+            .load::<(Mention, Account)>(&mut db_conn);
+
+        let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
+            .inner_join(media_attachments::table)
+            .select(media_attachments::all_columns)
+            .load_stream::<DbMediaAttachment>(&mut db_conn);
+
+        let (account, in_reply_to, mentions, attachment_stream) = tokio::try_join!(
+            account_fut,
+            in_reply_to_fut,
+            mentions_fut,
+            attachment_stream_fut
+        )?;
+
+        let attachment = attachment_stream
             .map_err(Error::from)
             .and_then(|attachment| async move {
                 let url = state.service.attachment.get_url(attachment.id).await?;
@@ -91,16 +117,9 @@ impl IntoObject for posts::Model {
             .try_collect()
             .await?;
 
-        let mentions = PostsMentions::find()
-            .filter(posts_mentions::Column::PostId.eq(self.id))
-            .find_also_related(Accounts)
-            .all(&state.db_conn)
-            .await?;
-
         let mut tag = Vec::new();
         let (mut to, cc) = self.visibility.base_to_cc(state, &account);
         for (mention, mentioned) in mentions {
-            let mentioned = mentioned.unwrap();
             let mentioned_url = mentioned
                 .url
                 .unwrap_or_else(|| state.service.url.user_url(account.id));
@@ -134,24 +153,27 @@ impl IntoObject for posts::Model {
 }
 
 #[async_trait]
-impl IntoObject for accounts::Model {
+impl IntoObject for Account {
     type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+        let mut db_conn = state.db_conn.get().await?;
         let icon = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = MediaAttachments::find_by_id(avatar_id)
-                .one(&state.db_conn)
-                .await?
-                .expect("[Bug] Missing media attachment");
+            let media_attachment = media_attachments::table
+                .find(avatar_id)
+                .get_result::<DbMediaAttachment>(&mut db_conn)
+                .await?;
+
             Some(media_attachment.into_object(state).await?)
         } else {
             None
         };
         let image = if let Some(header_id) = self.header_id {
-            let media_attachment = MediaAttachments::find_by_id(header_id)
-                .one(&state.db_conn)
-                .await?
-                .expect("[Bug] Missing media attachment");
+            let media_attachment = media_attachments::table
+                .find(header_id)
+                .get_result::<DbMediaAttachment>(&mut db_conn)
+                .await?;
+
             Some(media_attachment.into_object(state).await?)
         } else {
             None
