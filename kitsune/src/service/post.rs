@@ -440,8 +440,7 @@ impl PostService {
                 .unwrap();
 
             while let Some(post) = last_post.take() {
-                let post =
-                    add_post_permission_check!(
+                let post = add_post_permission_check!(
                         permission_check => posts::table.filter(posts::in_reply_to_id.eq(post.id))
                     )
                     .one(&self.db_conn)
@@ -473,8 +472,7 @@ impl PostService {
                 .build()
                 .unwrap();
 
-            let descendant_stream =
-                add_post_permission_check!(
+            let descendant_stream = add_post_permission_check!(
                     permission_check => posts::table.filter(posts::in_reply_to_id.eq(id))
                 )
                 .load_stream(&self.db_conn)

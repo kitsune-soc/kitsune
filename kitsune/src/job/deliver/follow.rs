@@ -4,8 +4,6 @@ use crate::{
     mapping::IntoActivity,
 };
 use async_trait::async_trait;
-use kitsune_db::entity::prelude::{Accounts, AccountsFollowers, Users};
-use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

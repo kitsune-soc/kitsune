@@ -4,7 +4,9 @@ use axum::{
     response::{IntoResponse, Response},
     routing, Json, Router,
 };
-use http::StatusCode;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
+use kitsune_db::{schema::accounts, PgPool};
 use uuid::Uuid;
 
 pub mod follow;
@@ -24,13 +26,12 @@ pub mod verify_credentials;
     )
 )]
 async fn get(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(mastodon_mapper): State<MastodonMapper>,
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
-    let Some(account) = Accounts::find_by_id(id).one(&db_conn).await? else {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    };
+    let mut db_conn = db_conn.get().await?;
+    let account = accounts::table.find(id).get_result(&mut db_conn).await?;
 
     Ok(Json(mastodon_mapper.map(account).await?).into_response())
 }

@@ -1,11 +1,13 @@
 use crate::{
-    error::{ApiError, Result},
+    error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
     state::Zustand,
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::extract::Query;
+use diesel::ExpressionMethods;
+use kitsune_db::{schema::accounts, PgPool};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -31,18 +33,19 @@ pub struct RelationshipQuery {
 )]
 pub async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(mastodon_mapper): State<MastodonMapper>,
     Query(query): Query<RelationshipQuery>,
 ) -> Result<Json<Vec<Relationship>>> {
-    let mut relationships = Vec::with_capacity(query.id.len());
-    for account_id in query.id {
-        let Some(account) = Accounts::find_by_id(account_id).one(&db_conn).await? else {
-            return Err(ApiError::BadRequest.into());
-        };
+    let mut db_conn = db_conn.get().await?;
 
-        relationships.push(mastodon_mapper.map((&user_data.account, &account)).await?);
-    }
+    let relationships = accounts::table
+        .filter(accounts::id.eq_any(&query.id))
+        .load_stream(&mut db_conn)
+        .await?
+        .and_then(|account| mastodon_mapper.map((&user_data.account, &account)))
+        .try_collect()
+        .await?;
 
     Ok(Json(relationships))
 }

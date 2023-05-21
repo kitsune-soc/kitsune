@@ -3,9 +3,7 @@ use crate::{
     job::{JobContext, Runnable},
 };
 use async_trait::async_trait;
-use kitsune_db::entity::prelude::{Accounts, AccountsFollowers, Users};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
-use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;

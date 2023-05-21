@@ -12,6 +12,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use http::StatusCode;
+use kitsune_db::schema::{accounts, posts};
 use kitsune_type::mastodon::SearchResult;
 use serde::Deserialize;
 use url::Url;
@@ -63,6 +64,8 @@ async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Response> {
+    let mut db_conn = state.db_conn.get().await?;
+
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {
             SearchType::Accounts => SearchIndex::Account,
@@ -75,6 +78,7 @@ async fn get(
         vec![SearchIndex::Account, SearchIndex::Post]
     };
 
+    // TODO: Find a way to pipeline
     let mut search_result = SearchResult::default();
     for index in indices {
         let results = search
@@ -91,20 +95,20 @@ async fn get(
         for result in results {
             match index {
                 SearchIndex::Account => {
-                    let account = Accounts::find_by_id(result.id)
-                        .one(&state.db_conn)
-                        .await?
-                        .expect("[Bug] Account indexed in search not in database");
+                    let account = accounts::table
+                        .find(result.id)
+                        .get_result(&mut db_conn)
+                        .await?;
 
                     search_result
                         .accounts
                         .push(state.mastodon_mapper.map(account).await?);
                 }
                 SearchIndex::Post => {
-                    let post = Posts::find_by_id(result.id)
-                        .one(&state.db_conn)
-                        .await?
-                        .expect("[Bug] Post indexed in search not in database");
+                    let post = posts::table
+                        .find(result.id)
+                        .get_result(&mut db_conn)
+                        .await?;
 
                     search_result
                         .statuses

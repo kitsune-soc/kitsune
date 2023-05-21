@@ -6,8 +6,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
-use kitsune_db::entity::prelude::{Accounts, Posts, Users};
-use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

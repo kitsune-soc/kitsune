@@ -4,15 +4,6 @@ use crate::{
     mapping::IntoActivity,
 };
 use async_trait::async_trait;
-use kitsune_db::{
-    column::InboxUrlQuery,
-    entity::{
-        accounts,
-        prelude::{Accounts, PostsFavourites, Users},
-    },
-    link::FavouritedPostAuthor,
-};
-use sea_orm::{prelude::*, QuerySelect};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
