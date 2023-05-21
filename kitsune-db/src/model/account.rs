@@ -65,6 +65,16 @@ impl_columns! {
     )
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = accounts)]
+pub struct AccountConflictChangeset<'a> {
+    pub display_name: Option<&'a str>,
+    pub note: Option<&'a str>,
+    pub locked: bool,
+    pub public_key_id: &'a str,
+    pub public_key: &'a str,
+}
+
 #[derive(AsChangeset, Default)]
 #[diesel(table_name = accounts)]
 pub struct UpdateAccount<'a> {
@@ -73,6 +83,13 @@ pub struct UpdateAccount<'a> {
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
     pub locked: Option<bool>,
+}
+
+#[derive(AsChangeset, Default)]
+#[diesel(table_name = accounts)]
+pub struct UpdateAccountMedia {
+    pub avatar_id: Option<Uuid>,
+    pub header_id: Option<Uuid>,
 }
 
 #[derive(Clone, Insertable)]

@@ -6,7 +6,7 @@ use diesel::{
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
+    AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
 };
 use kitsune_type::{
     ap::{helper::CcTo, Privacy},
@@ -50,6 +50,13 @@ impl_columns! {
         posts::created_at,
         posts::updated_at,
     )
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = posts)]
+pub struct PostConflictChangeset<'a> {
+    pub subject: Option<&'a str>,
+    pub content: &'a str,
 }
 
 #[derive(Clone, Insertable)]

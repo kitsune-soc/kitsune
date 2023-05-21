@@ -6,8 +6,10 @@ use crate::{
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::extract::Query;
-use diesel::ExpressionMethods;
-use kitsune_db::{schema::accounts, PgPool};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use futures_util::StreamExt;
+use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -38,14 +40,16 @@ pub async fn get(
     Query(query): Query<RelationshipQuery>,
 ) -> Result<Json<Vec<Relationship>>> {
     let mut db_conn = db_conn.get().await?;
-
-    let relationships = accounts::table
+    let mut account_stream = accounts::table
         .filter(accounts::id.eq_any(&query.id))
-        .load_stream(&mut db_conn)
-        .await?
-        .and_then(|account| mastodon_mapper.map((&user_data.account, &account)))
-        .try_collect()
+        .select(Account::columns())
+        .load_stream::<Account>(&mut db_conn)
         .await?;
+
+    let mut relationships = Vec::with_capacity(query.id.len());
+    while let Some(account) = account_stream.next().await.transpose()? {
+        relationships.push(mastodon_mapper.map((&user_data.account, &account)).await?);
+    }
 
     Ok(Json(relationships))
 }

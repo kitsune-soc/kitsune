@@ -6,7 +6,7 @@ use axum::{
 };
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
-use kitsune_db::{schema::accounts, PgPool};
+use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use uuid::Uuid;
 
 pub mod follow;
@@ -31,7 +31,11 @@ async fn get(
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let mut db_conn = db_conn.get().await?;
-    let account = accounts::table.find(id).get_result(&mut db_conn).await?;
+    let account = accounts::table
+        .find(id)
+        .select(Account::columns())
+        .get_result::<Account>(&mut db_conn)
+        .await?;
 
     Ok(Json(mastodon_mapper.map(account).await?).into_response())
 }

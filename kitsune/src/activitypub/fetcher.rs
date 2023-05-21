@@ -11,14 +11,14 @@ use crate::{
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
-use diesel_async::RunQueryDsl;
-use futures_util::FutureExt;
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use http::HeaderValue;
 use kitsune_db::{
     model::{
-        account::{Account, NewAccount},
+        account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
         media_attachment::NewMediaAttachment,
-        post::{NewPost, Post, Visibility},
+        post::{NewPost, Post, PostConflictChangeset, Visibility},
     },
     PgPool,
 };
@@ -95,9 +95,10 @@ impl Fetcher {
 
             if let Some(user) = accounts::table
                 .filter(accounts::url.eq(opts.url))
-                .optional()
-                .first(&db_conn)
-                .await?
+                .select(Account::columns())
+                .first(&mut db_conn)
+                .await
+                .optional()?
             {
                 return Ok(user);
             }
@@ -111,8 +112,7 @@ impl Fetcher {
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        let account = self
-            .db_conn
+        let account: Account = db_conn
             .transaction(|tx| {
                 #[allow(clippy::cast_sign_loss)]
                 let uuid_timestamp = Timestamp::from_unix(
@@ -125,36 +125,38 @@ impl Fetcher {
                     let account = diesel::insert_into(accounts::table)
                         .values(NewAccount {
                             id: Uuid::new_v7(uuid_timestamp),
-                            display_name: actor.name,
-                            note: actor.subject,
+                            display_name: actor.name.as_deref(),
+                            note: actor.subject.as_deref(),
                             username: actor.preferred_username.as_str(),
                             locked: actor.manually_approves_followers,
                             local: false,
                             domain: url.host_str().unwrap().into(),
                             actor_type: actor.r#type.into(),
                             url: Some(actor.id.as_str()),
-                            featured_collection_url: actor.featured,
+                            featured_collection_url: actor.featured.as_deref(),
                             followers_url: Some(actor.followers.as_str()),
                             following_url: Some(actor.following.as_str()),
                             inbox_url: Some(actor.inbox.as_str()),
                             outbox_url: Some(actor.outbox.as_str()),
                             shared_inbox_url: actor
                                 .endpoints
-                                .and_then(|endpoints| endpoints.shared_inbox),
+                                .and_then(|endpoints| endpoints.shared_inbox)
+                                .as_deref(),
                             public_key_id: actor.public_key.id.as_str(),
                             public_key: actor.public_key.public_key_pem.as_str(),
                             created_at: Some(actor.published),
                         })
-                        .on_conflict((
-                            accounts::url,
-                            accounts::display_name,
-                            accounts::note,
-                            accounts::locked,
-                            accounts::public_key_id,
-                            accounts::public_key,
-                        ))
+                        .on_conflict(accounts::url)
                         .do_update()
-                        .execute(tx)
+                        .set(AccountConflictChangeset {
+                            display_name: actor.name.as_deref(),
+                            note: actor.subject.as_deref(),
+                            locked: actor.manually_approves_followers,
+                            public_key_id: actor.public_key.id.as_str(),
+                            public_key: actor.public_key.public_key_pem.as_str(),
+                        })
+                        .returning(Account::columns())
+                        .get_result::<Account>(tx)
                         .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
@@ -163,14 +165,14 @@ impl Fetcher {
                                 .values(NewMediaAttachment {
                                     id: Uuid::now_v7(),
                                     account_id: account.id,
-                                    description: icon.name,
+                                    description: icon.name.as_deref(),
                                     content_type: icon.media_type.as_str(),
-                                    blurhash: icon.blurhash,
+                                    blurhash: icon.blurhash.as_deref(),
                                     file_path: None,
                                     remote_url: Some(icon.url.as_str()),
                                 })
                                 .returning(media_attachments::id)
-                                .execute(tx)
+                                .get_result::<Uuid>(tx)
                                 .await?,
                         )
                     } else {
@@ -183,31 +185,43 @@ impl Fetcher {
                                 .values(NewMediaAttachment {
                                     id: Uuid::now_v7(),
                                     account_id: account.id,
-                                    description: image.name,
+                                    description: image.name.as_deref(),
                                     content_type: image.media_type.as_str(),
-                                    blurhash: image.blurhash,
+                                    blurhash: image.blurhash.as_deref(),
                                     file_path: None,
                                     remote_url: Some(image.url.as_str()),
                                 })
                                 .returning(media_attachments::id)
-                                .execute(tx)
+                                .get_result::<Uuid>(tx)
                                 .await?,
                         )
                     } else {
                         None
                     };
 
-                    let mut update_account = diesel::update(&account);
+                    let mut update_changeset = UpdateAccountMedia::default();
                     if let Some(avatar_id) = avatar_id {
-                        update_account = update_account.set(accounts::avatar_id.eq(avatar_id));
+                        update_changeset = UpdateAccountMedia {
+                            avatar_id: Some(avatar_id),
+                            ..update_changeset
+                        };
                     }
                     if let Some(header_id) = header_id {
-                        update_account = update_account.set(accounts::header_id.eq(header_id));
+                        update_changeset = UpdateAccountMedia {
+                            header_id: Some(header_id),
+                            ..update_changeset
+                        };
                     }
 
-                    Ok::<_, Error>(update_account.execute(tx).await?)
+                    Ok::<_, Error>(
+                        diesel::update(&account)
+                            .set(update_changeset)
+                            .returning(Account::columns())
+                            .get_result(tx)
+                            .await?,
+                    )
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 
@@ -234,11 +248,13 @@ impl Fetcher {
             return Ok(Some(post));
         }
 
+        let mut db_conn = self.db_conn.get().await?;
         if let Some(post) = posts::table
             .filter(posts::url.eq(url))
-            .optional()
-            .first(&self.db_conn)
-            .await?
+            .select(Post::columns())
+            .first(&mut db_conn)
+            .await
+            .optional()?
         {
             self.post_cache.set(url, &post).await?;
             return Ok(Some(post));
@@ -266,8 +282,7 @@ impl Fetcher {
             None
         };
 
-        let post = self
-            .db_conn
+        let post = db_conn
             .transaction(|tx| {
                 async move {
                     let new_post = diesel::insert_into(posts::table)
@@ -276,7 +291,7 @@ impl Fetcher {
                             account_id: user.id,
                             in_reply_to_id,
                             reposted_post_id: None,
-                            subject: object.summary,
+                            subject: object.summary.as_deref(),
                             content: object.content.as_str(),
                             is_sensitive: object.sensitive,
                             visibility,
@@ -284,9 +299,14 @@ impl Fetcher {
                             url: object.id.as_str(),
                             created_at: Some(object.published),
                         })
-                        .on_conflict((posts::url, posts::content, posts::subject))
+                        .on_conflict(posts::url)
                         .do_update()
-                        .execute(tx)
+                        .set(PostConflictChangeset {
+                            subject: object.summary.as_deref(),
+                            content: object.content.as_str(),
+                        })
+                        .returning(Post::columns())
+                        .get_result::<Post>(tx)
                         .await?;
 
                     handle_attachments(tx, &user, new_post.id, object.attachment).await?;
@@ -294,7 +314,7 @@ impl Fetcher {
 
                     Ok::<_, Error>(new_post)
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 

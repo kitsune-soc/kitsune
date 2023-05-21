@@ -11,8 +11,13 @@ use axum::{
     routing, Json, Router,
 };
 use axum_extra::extract::Query;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_db::schema::{accounts, posts};
+use kitsune_db::{
+    model::{account::Account, post::Post},
+    schema::{accounts, posts},
+};
 use kitsune_type::mastodon::SearchResult;
 use serde::Deserialize;
 use url::Url;
@@ -97,7 +102,8 @@ async fn get(
                 SearchIndex::Account => {
                     let account = accounts::table
                         .find(result.id)
-                        .get_result(&mut db_conn)
+                        .select(Account::columns())
+                        .get_result::<Account>(&mut db_conn)
                         .await?;
 
                     search_result
@@ -107,7 +113,8 @@ async fn get(
                 SearchIndex::Post => {
                     let post = posts::table
                         .find(result.id)
-                        .get_result(&mut db_conn)
+                        .select(Post::columns())
+                        .get_result::<Post>(&mut db_conn)
                         .await?;
 
                     search_result

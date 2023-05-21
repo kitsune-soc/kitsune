@@ -30,17 +30,18 @@ pub async fn handle_attachments(
     diesel::insert_into(media_attachments::table)
         .values(
             attachments
-                .into_iter()
+                .iter()
                 .zip(attachment_ids.iter().copied())
                 .map(|(attachment, attachment_id)| NewMediaAttachment {
                     id: attachment_id,
                     account_id: author.id,
                     content_type: attachment.media_type.as_str(),
-                    description: attachment.name,
-                    blurhash: attachment.blurhash,
+                    description: attachment.name.as_deref(),
+                    blurhash: attachment.blurhash.as_deref(),
                     file_path: None,
                     remote_url: Some(attachment.url.as_str()),
-                }),
+                })
+                .collect::<Vec<NewMediaAttachment<'_>>>(),
         )
         .execute(db_conn)
         .await?;
@@ -52,7 +53,8 @@ pub async fn handle_attachments(
                 .map(|attachment_id| NewPostMediaAttachment {
                     post_id,
                     media_attachment_id: attachment_id,
-                }),
+                })
+                .collect::<Vec<NewPostMediaAttachment>>(),
         )
         .execute(db_conn)
         .await?;
@@ -75,11 +77,15 @@ pub async fn handle_mentions(
     }
 
     diesel::insert_into(posts_mentions::table)
-        .values(mention_iter.map(|mention| NewMention {
-            post_id,
-            account_id: author.id,
-            mention_text: mention.name.as_str(),
-        }))
+        .values(
+            mention_iter
+                .map(|mention| NewMention {
+                    post_id,
+                    account_id: author.id,
+                    mention_text: mention.name.as_str(),
+                })
+                .collect::<Vec<NewMention<'_>>>(),
+        )
         .execute(db_conn)
         .await?;
 
