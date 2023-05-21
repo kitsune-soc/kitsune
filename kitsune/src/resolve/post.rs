@@ -86,7 +86,7 @@ impl PostResolver {
     }
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod test {
     use super::PostResolver;
     use crate::{
@@ -100,13 +100,17 @@ mod test {
         },
         webfinger::Webfinger,
     };
+    use diesel::{QueryDsl, SelectableHelper};
+    use diesel_async::RunQueryDsl;
+    use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
-    use std::sync::Arc;
+    use std::{env, sync::Arc};
 
     #[tokio::test]
     async fn parse_mentions() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let db_url = env::var("DATABASE_URL").unwrap();
+        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
         let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
         let fetcher = Fetcher::builder()
@@ -155,11 +159,11 @@ mod test {
         assert_eq!(mentioned_account_ids.len(), 1);
 
         let (account_id, _mention_text) = &mentioned_account_ids[0];
-        let mentioned_account = Accounts::find_by_id(*account_id)
-            .one(&db_conn)
+        let mentioned_account = accounts::table
+            .find(account_id)
+            .select(Account::as_select())
+            .get_result::<Account>(&mut db_conn.get().await.unwrap())
             .await
-            .ok()
-            .flatten()
             .expect("Failed to fetch account");
 
         assert_eq!(mentioned_account.username, "0x0");
@@ -169,4 +173,4 @@ mod test {
             Some("https://corteximplant.com/users/0x0".into())
         );
     }
-}*/
+}

@@ -339,7 +339,7 @@ impl Fetcher {
     }
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod test {
     use crate::{
         activitypub::Fetcher,
@@ -348,14 +348,16 @@ mod test {
         error::{ApiError, Error},
         service::{federation_filter::FederationFilterService, search::NoopSearchService},
     };
-    use kitsune_db::entity::prelude::Accounts;
+    use diesel::{QueryDsl, SelectableHelper};
+    use diesel_async::RunQueryDsl;
+    use kitsune_db::{model::account::Account, schema::accounts};
     use pretty_assertions::assert_eq;
-    use sea_orm::EntityTrait;
-    use std::sync::Arc;
+    use std::{env, sync::Arc};
 
     #[tokio::test]
     async fn fetch_actor() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let db_url = env::var("DATABASE_URL").unwrap();
+        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
             .federation_filter(
@@ -385,7 +387,8 @@ mod test {
 
     #[tokio::test]
     async fn fetch_note() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let db_url = env::var("DATABASE_URL").unwrap();
+        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn.clone())
             .federation_filter(
@@ -408,12 +411,13 @@ mod test {
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"
         );
 
-        let author = Accounts::find_by_id(note.account_id)
-            .one(&db_conn)
+        let author = accounts::table
+            .find(note.account_id)
+            .select(Account::as_select())
+            .get_result::<Account>(&mut db_conn.get().await.unwrap())
             .await
-            .ok()
-            .flatten()
             .expect("Get author");
+
         assert_eq!(author.username, "0x0");
         assert_eq!(
             author.url,
@@ -423,7 +427,8 @@ mod test {
 
     #[tokio::test]
     async fn federation_allow() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let db_url = env::var("DATABASE_URL").unwrap();
+        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
             .federation_filter(
@@ -457,7 +462,8 @@ mod test {
 
     #[tokio::test]
     async fn federation_deny() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
+        let db_url = env::var("DATABASE_URL").unwrap();
+        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
         let fetcher = Fetcher::builder()
             .db_conn(db_conn)
             .federation_filter(
@@ -482,4 +488,4 @@ mod test {
             Err(Error::Api(ApiError::Unauthorised))
         ));
     }
-}*/
+}
