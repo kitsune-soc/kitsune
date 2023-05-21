@@ -1,9 +1,7 @@
 // @generated automatically by Diesel CLI.
 
 pub mod sql_types {
-    #[derive(diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "tsvector", schema = "pg_catalog"))]
-    pub struct Tsvector;
+    pub use diesel_full_text_search::Tsvector;
 }
 
 diesel::table! {
@@ -30,9 +28,9 @@ diesel::table! {
         public_key -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
-        display_name_ts -> Nullable<Tsvector>,
-        note_ts -> Nullable<Tsvector>,
-        username_ts -> Nullable<Tsvector>,
+        display_name_ts -> Tsvector,
+        note_ts -> Tsvector,
+        username_ts -> Tsvector,
         avatar_id -> Nullable<Uuid>,
         header_id -> Nullable<Uuid>,
     }
@@ -135,8 +133,8 @@ diesel::table! {
         url -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
-        subject_ts -> Nullable<Tsvector>,
-        content_ts -> Nullable<Tsvector>,
+        subject_ts -> Tsvector,
+        content_ts -> Tsvector,
     }
 }
 

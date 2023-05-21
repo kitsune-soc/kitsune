@@ -140,6 +140,17 @@ impl From<MastodonVisibility> for Visibility {
     }
 }
 
+impl From<Visibility> for MastodonVisibility {
+    fn from(value: Visibility) -> Self {
+        match value {
+            Visibility::Public => Self::Public,
+            Visibility::Unlisted => Self::Unlisted,
+            Visibility::FollowerOnly => Self::Private,
+            Visibility::MentionOnly => Self::Direct,
+        }
+    }
+}
+
 impl FromSql<Integer, Pg> for Visibility
 where
     i32: FromSql<Integer, Pg>,

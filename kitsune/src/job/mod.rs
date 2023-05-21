@@ -6,13 +6,18 @@ use self::{
         unfollow::DeliverUnfollow, update::DeliverUpdate,
     },
 };
-use crate::{activitypub::Deliverer, error::Result, state::Zustand};
+use crate::{
+    activitypub::Deliverer,
+    error::{Error, Result},
+    state::Zustand,
+};
 use async_trait::async_trait;
-use diesel::QueryDsl;
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
-use futures_util::stream::FuturesUnordered;
+use futures_util::{stream::FuturesUnordered, StreamExt};
 use kitsune_db::{
-    model::job::{Job as DbJob, JobState},
+    model::job::{Job as DbJob, JobState, UpdateJob},
     schema::jobs,
     PgPool,
 };
@@ -61,7 +66,7 @@ pub trait Runnable: DeserializeOwned + Serialize {
 
 // Takes owned values to make the lifetime of the returned future static
 #[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) {
+async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Result<()> {
     let job: Job = serde_json::from_value(db_job.context.clone())
         .expect("[Bug] Failed to deserialise job context");
 
@@ -77,6 +82,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) {
         error!("Job execution panicked");
     }
 
+    let mut db_conn = state.db_conn.get().await?;
     #[allow(clippy::cast_possible_truncation)]
     match execution_result {
         Ok(Err(..)) | Err(..) => {
@@ -87,10 +93,12 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) {
             let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
 
             diesel::update(&db_job)
-                .set(jobs::fail_count.eq(fail_count))
-                .set(jobs::state.eq(JobState::Failed))
-                .set(jobs::state.run_at(OffsetDateTime::now_utc() + backoff_duration))
-                .execute(&state.db_conn)
+                .set(UpdateJob {
+                    fail_count,
+                    state: JobState::Failed,
+                    run_at: OffsetDateTime::now_utc() + backoff_duration,
+                })
+                .execute(&mut db_conn)
                 .await?;
         }
         _ => {
@@ -98,43 +106,57 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) {
 
             diesel::update(&db_job)
                 .set(jobs::state.eq(JobState::Succeeded))
-                .execute(&state.db_conn)
+                .execute(&mut db_conn)
                 .await?;
         }
     }
+
+    Ok(())
 }
 
 async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
-    let txn = db_conn.begin().await?;
+    let mut db_conn = db_conn.get().await?;
 
-    let jobs = jobs::table
-        .filter(
-            (jobs::state
-                .eq(JobState::Queued)
-                .or(jobs::state.eq(JobState::Failed))
-                .and(jobs::run_at.lte(kitsune_db::function::now())))
-            .or(jobs::state
-                .eq(JobState::Running)
-                .and(jobs::updated_at.lt(OffsetDateTime::now_utc() - time::Duration::hours(1)))),
-        )
-        .limit(num_jobs as i64)
-        .order(jobs::created_at.asc())
-        .for_update()
-        .load(&txn)
-        .await?;
+    let jobs = db_conn
+        .transaction(|tx| {
+            async move {
+                let jobs = jobs::table
+                    .filter(
+                        (jobs::state
+                            .eq(JobState::Queued)
+                            .or(jobs::state.eq(JobState::Failed))
+                            .and(jobs::run_at.le(kitsune_db::function::now())))
+                        .or(jobs::state.eq(JobState::Running).and(
+                            jobs::updated_at
+                                .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
+                        )),
+                    )
+                    .limit(num_jobs as i64)
+                    .order(jobs::created_at.asc())
+                    .for_update()
+                    .load(tx)
+                    .await?;
 
-    let update_jobs = jobs
-        .iter()
-        .map(|job| {
-            diesel::update(job)
-                .set(jobs::state.eq(JobState::Running))
-                .execute(txn)
+                // New scope to ensure `update_jobs` is getting dropped
+                // Otherwise this will prevent us from returning the `jobs` list
+                {
+                    let mut update_jobs = jobs
+                        .iter()
+                        .map(|job| {
+                            diesel::update(job)
+                                .set(jobs::state.eq(JobState::Running))
+                                .execute(tx)
+                        })
+                        .collect::<FuturesUnordered<_>>();
+
+                    while let Some(..) = update_jobs.next().await.transpose()? {}
+                }
+
+                Ok::<_, Error>(jobs)
+            }
+            .scope_boxed()
         })
-        .collect::<FuturesUnordered<_>>();
-
-    while let Some(..) = update_jobs.next().await.transpose()? {}
-
-    txn.commit().await?;
+        .await?;
 
     Ok(jobs)
 }

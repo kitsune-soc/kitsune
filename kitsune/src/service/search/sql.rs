@@ -1,10 +1,10 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
-use diesel::QueryDsl;
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use diesel_full_text_search::{websearch_to_tsquery, TsVectorExtensions};
 use futures_util::TryStreamExt;
 use kitsune_db::{
-    function::websearch_to_tsquery,
     model::post::Visibility,
     schema::{accounts, posts},
     PgPool,
@@ -50,13 +50,15 @@ impl SearchBackend for SqlSearchService {
 
         match index {
             SearchIndex::Account => {
-                let mut query = accounts::table.filter(
-                    accounts::display_name_ts
-                        .matches(websearch_to_tsquery(&query))
-                        .or(accounts::note_ts
+                let mut query = accounts::table
+                    .filter(
+                        accounts::display_name_ts
                             .matches(websearch_to_tsquery(&query))
-                            .or(accounts::username_ts.matches(websearch_to_tsquery(&query)))),
-                );
+                            .or(accounts::note_ts
+                                .matches(websearch_to_tsquery(&query))
+                                .or(accounts::username_ts.matches(websearch_to_tsquery(&query)))),
+                    )
+                    .into_boxed();
 
                 if let Some(min_id) = min_id {
                     query = query.filter(accounts::id.gt(min_id));
@@ -66,8 +68,8 @@ impl SearchBackend for SqlSearchService {
                 }
 
                 let results = query
-                    .limit(max_results)
-                    .offset(offset)
+                    .limit(max_results as i64)
+                    .offset(offset as i64)
                     .select(accounts::id)
                     .load_stream(&mut db_conn)
                     .await?
@@ -78,11 +80,13 @@ impl SearchBackend for SqlSearchService {
                 Ok(results)
             }
             SearchIndex::Post => {
-                let mut query = posts::table.filter(
-                    posts::content_ts
-                        .matches(websearch_to_tsquery(&query))
-                        .or(posts::subject.matches(websearch_to_tsquery(&query))),
-                );
+                let mut query = posts::table
+                    .filter(
+                        posts::content_ts
+                            .matches(websearch_to_tsquery(&query))
+                            .or(posts::subject_ts.matches(websearch_to_tsquery(&query))),
+                    )
+                    .into_boxed();
 
                 if let Some(min_id) = min_id {
                     query = query.filter(posts::id.gt(min_id));
@@ -93,8 +97,8 @@ impl SearchBackend for SqlSearchService {
 
                 let results = query
                     .filter(posts::visibility.eq_any([Visibility::Public, Visibility::Unlisted]))
-                    .limit(max_results)
-                    .offset(offset)
+                    .limit(max_results as i64)
+                    .offset(offset as i64)
                     .select(posts::id)
                     .load_stream(&mut db_conn)
                     .await?

@@ -1,5 +1,9 @@
-use crate::error::Result;
-use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods, QueryDsl};
+use crate::error::{Error, Result};
+use diesel::{
+    result::Error as DieselError, BelongingToDsl, BoolExpressionMethods, ExpressionMethods,
+    JoinOnDsl, QueryDsl,
+};
+use diesel_async::RunQueryDsl;
 use futures_util::{future::Either, Stream, StreamExt};
 use kitsune_db::{
     function::coalesce_nullable,
@@ -8,6 +12,7 @@ use kitsune_db::{
         mention::Mention,
         post::{Post, Visibility},
     },
+    schema::{accounts, accounts_follows},
     PgPool,
 };
 
@@ -25,8 +30,8 @@ impl InboxResolver {
     pub async fn resolve_followers(
         &self,
         account: &Account,
-    ) -> Result<impl Stream<Item = Result<String>> + Send + '_> {
-        use kitsune_db::schema::{accounts, accounts_follows};
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+        let mut db_conn = self.db_conn.get().await?;
 
         accounts_follows::table
             .filter(accounts_follows::account_id.eq(account.id))
@@ -37,28 +42,28 @@ impl InboxResolver {
                         .or(accounts::shared_inbox_url.is_not_null()),
                 )),
             )
+            .distinct()
             .select(coalesce_nullable(
                 accounts::shared_inbox_url,
                 accounts::inbox_url,
             ))
-            .distinct()
-            .load_stream(&self.db_conn)
-            .await?
+            .load_stream(&mut db_conn)
+            .await
+            .map_err(Error::from)
     }
 
-    #[instrument(skip_all, fields(post_id = %post.id))]
+    //#[instrument(skip_all, fields(post_id = %post.id))]
     pub async fn resolve(
         &self,
         post: &Post,
-    ) -> Result<impl Stream<Item = Result<String>> + Send + '_> {
-        use kitsune_db::schema::accounts;
-
-        let account = accounts::table
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+        let mut db_conn = self.db_conn.get().await?;
+        let account_fut = accounts::table
             .find(post.account_id)
-            .first(&self.db_conn)
-            .await?;
+            .select(Account::columns())
+            .first(&mut db_conn);
 
-        let mentioned_inbox_stream = Mention::belonging_to(post)
+        let mentioned_inbox_stream_fut = Mention::belonging_to(post)
             .inner_join(accounts::table)
             .filter(
                 accounts::shared_inbox_url
@@ -69,8 +74,10 @@ impl InboxResolver {
                 accounts::shared_inbox_url,
                 accounts::inbox_url,
             ))
-            .load_stream(&self.db_conn)
-            .await?;
+            .load_stream(&mut db_conn);
+
+        let (account, mentioned_inbox_stream) =
+            tokio::try_join!(account_fut, mentioned_inbox_stream_fut)?;
 
         let stream = if post.visibility == Visibility::MentionOnly {
             Either::Left(mentioned_inbox_stream)

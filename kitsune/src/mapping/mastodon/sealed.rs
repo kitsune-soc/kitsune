@@ -3,11 +3,16 @@ use crate::{
     service::{attachment::AttachmentService, url::UrlService},
 };
 use async_trait::async_trait;
-use futures_util::{future::OptionFuture, TryStreamExt};
+use diesel::{
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
+};
+use diesel_async::RunQueryDsl;
+use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_db::{
     model::{
         account::Account as DbAccount,
         favourite::Favourite as DbFavourite,
+        follower::Follow,
         media_attachment::{
             MediaAttachment as DbMediaAttachment, PostMediaAttachment as DbPostMediaAttachment,
         },
@@ -62,16 +67,16 @@ impl IntoMastodon for DbAccount {
             posts::table
                 .filter(posts::account_id.eq(self.id))
                 .count()
-                .get_result(&mut db_conn),
+                .get_result::<i64>(&mut db_conn),
             accounts_follows::table
                 .filter(accounts_follows::account_id.eq(self.id))
                 .count()
-                .get_result(&mut db_conn),
+                .get_result::<i64>(&mut db_conn),
             accounts_follows::table
                 .filter(accounts_follows::follower_id.eq(self.id))
                 .count()
-                .get_result(&mut db_conn)
-        );
+                .get_result::<i64>(&mut db_conn)
+        )?;
 
         let mut acct = self.username.clone();
         if !self.local {
@@ -111,9 +116,9 @@ impl IntoMastodon for DbAccount {
             avatar,
             header_static: header.clone(),
             header,
-            followers_count,
-            following_count,
-            statuses_count,
+            followers_count: followers_count as u64,
+            following_count: following_count as u64,
+            statuses_count: statuses_count as u64,
             source: Source {
                 privacy: "public".into(),
                 sensitive: false,
@@ -147,8 +152,8 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
                     .eq(requestor.id)
                     .and(accounts_follows::follower_id.eq(target.id)),
             )
-            .optional()
-            .get_result(&mut db_conn)
+            .get_result::<Follow>(&mut db_conn)
+            .map(OptionalExtension::optional)
             .map_ok(|optional_follow| {
                 optional_follow.map_or((false, false), |follow| {
                     (follow.approved_at.is_some(), follow.approved_at.is_none())
@@ -162,7 +167,7 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
                     .and(accounts_follows::follower_id.eq(requestor.id)),
             )
             .count()
-            .get_result(&mut db_conn)
+            .get_result::<i64>(&mut db_conn)
             .map_ok(|count| count != 0);
 
         let ((following, requested), followed_by) =
@@ -197,11 +202,11 @@ impl IntoMastodon for DbMention {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
 
-        let account = accounts::table
+        let account: DbAccount = accounts::table
             .find(self.account_id)
+            .select(DbAccount::columns())
             .get_result(&mut db_conn)
-            .await?
-            .expect("[Bug] Mention without associated account");
+            .await?;
 
         let mut acct = account.username.clone();
         if !account.local {
@@ -270,14 +275,14 @@ impl IntoMastodon for (&DbAccount, DbPost) {
             .filter(posts_favourites::account_id.eq(account.id))
             .filter(posts_favourites::post_id.eq(post.id))
             .count()
-            .get_result(&mut db_conn)
+            .get_result::<i64>(&mut db_conn)
             .map_ok(|count| count != 0);
 
         let reblogged_fut = posts::table
             .filter(posts::account_id.eq(account.id))
             .filter(posts::reposted_post_id.eq(post.id))
             .count()
-            .get_result(&mut db_conn)
+            .get_result::<i64>(&mut db_conn)
             .map_ok(|count| count != 0);
 
         let (favourited, reblogged) = tokio::try_join!(favourited_fut, reblogged_fut)?;
@@ -303,37 +308,60 @@ impl IntoMastodon for DbPost {
 
         let account_fut = accounts::table
             .find(self.account_id)
-            .get_result(&mut db_conn)
+            .select(DbAccount::columns())
+            .get_result::<DbAccount>(&mut db_conn)
+            .map_err(Error::from)
             .and_then(|db_account| db_account.into_mastodon(state));
 
         let reblog_count_fut = posts::table
             .filter(posts::reposted_post_id.eq(self.id))
             .count()
-            .get_result(&mut db_conn);
+            .get_result::<i64>(&mut db_conn)
+            .map_err(Error::from);
 
         let favourites_count_fut = DbFavourite::belonging_to(&self)
             .count()
-            .get_result(&mut db_conn);
+            .get_result::<i64>(&mut db_conn)
+            .map_err(Error::from);
 
         let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
             .inner_join(media_attachments::table)
             .select(media_attachments::all_columns)
-            .load_stream(&mut db_conn)
+            .load_stream::<DbMediaAttachment>(&mut db_conn)
             .map_err(Error::from)
             .and_then(|attachment_stream| {
                 attachment_stream
+                    .map_err(Error::from)
                     .and_then(|attachment| attachment.into_mastodon(state))
                     .try_collect()
-            })
-            .flatten();
+            });
 
-        let mentions_stream_fut = DbMention::belonging_to(&self).load_stream(&mut db_conn);
+        let mentions_stream_fut = DbMention::belonging_to(&self)
+            .load_stream::<DbMention>(&mut db_conn)
+            .map_err(Error::from);
+
+        let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = tokio::try_join!(
+            account_fut,
+            reblog_count_fut,
+            favourites_count_fut,
+            media_attachments_fut,
+            mentions_stream_fut,
+        )?;
+
+        let mentions = mentions_stream
+            .map_err(Error::from)
+            .and_then(|mention| mention.into_mastodon(state))
+            .try_collect()
+            .await?;
 
         let reblog = OptionFuture::from(
-            OptionFuture::from(
-                self.reposted_post_id
-                    .map(|id| posts::table.find(id).optional().get_result(&mut db_conn)),
-            )
+            OptionFuture::from(self.reposted_post_id.map(|id| {
+                posts::table
+                    .find(id)
+                    .select(DbPost::columns())
+                    .get_result::<DbPost>(&mut db_conn)
+                    .map(OptionalExtension::optional)
+            }))
             .await
             .transpose()?
             .flatten()
@@ -342,20 +370,6 @@ impl IntoMastodon for DbPost {
         .await
         .transpose()?
         .map(Box::new);
-
-        let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = tokio::try_join!(
-            account_fut,
-            reblog_count_fut,
-            favourites_count_fut,
-            media_attachments_fut,
-            mentions_stream_fut,
-        );
-
-        let mentions = mentions_stream
-            .map_err(Error::from)
-            .and_then(|mention| mention.into_mastodon(state))
-            .try_collect()
-            .await?;
 
         Ok(Status {
             id: self.id,
@@ -368,8 +382,8 @@ impl IntoMastodon for DbPost {
             uri: self.url.clone(),
             url: self.url,
             replies_count: 0,
-            reblog_count,
-            favourites_count,
+            favourites_count: favourites_count as u64,
+            reblog_count: reblog_count as u64,
             content: self.content,
             account,
             media_attachments,

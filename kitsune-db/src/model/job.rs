@@ -5,7 +5,7 @@ use diesel::{
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
+    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
 };
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -23,6 +23,14 @@ pub struct Job {
     pub fail_count: i32,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = jobs)]
+pub struct UpdateJob {
+    pub fail_count: i32,
+    pub state: JobState,
+    pub run_at: OffsetDateTime,
 }
 
 #[derive(Clone, Insertable)]
