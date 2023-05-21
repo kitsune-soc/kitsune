@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::extract::Query;
-use diesel::{ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::StreamExt;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
@@ -42,7 +42,7 @@ pub async fn get(
     let mut db_conn = db_conn.get().await?;
     let mut account_stream = accounts::table
         .filter(accounts::id.eq_any(&query.id))
-        .select(Account::columns())
+        .select(Account::as_select())
         .load_stream::<Account>(&mut db_conn)
         .await?;
 

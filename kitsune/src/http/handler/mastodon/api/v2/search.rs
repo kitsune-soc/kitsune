@@ -11,7 +11,7 @@ use axum::{
     routing, Json, Router,
 };
 use axum_extra::extract::Query;
-use diesel::QueryDsl;
+use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use kitsune_db::{
@@ -102,7 +102,7 @@ async fn get(
                 SearchIndex::Account => {
                     let account = accounts::table
                         .find(result.id)
-                        .select(Account::columns())
+                        .select(Account::as_select())
                         .get_result::<Account>(&mut db_conn)
                         .await?;
 
@@ -113,7 +113,7 @@ async fn get(
                 SearchIndex::Post => {
                     let post = posts::table
                         .find(result.id)
-                        .select(Post::columns())
+                        .select(Post::as_select())
                         .get_result::<Post>(&mut db_conn)
                         .await?;
 

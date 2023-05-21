@@ -4,6 +4,12 @@ use crate::{
     mapping::IntoActivity,
 };
 use async_trait::async_trait;
+use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{account::Account, favourite::Favourite, user::User},
+    schema::{accounts, posts, posts_favourites, users},
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -16,41 +22,41 @@ pub struct DeliverUnfavourite {
 impl Runnable for DeliverUnfavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some(favourite) = PostsFavourites::find_by_id(self.favourite_id)
-            .one(&ctx.state.db_conn)
-            .await?
+        let mut db_conn = ctx.state.db_conn.get().await?;
+        let Some(favourite) = posts_favourites::table
+            .find(self.favourite_id)
+            .get_result::<Favourite>(&mut db_conn)
+            .await
+            .optional()?
         else {
             return Ok(());
         };
 
-        let Some((account, Some(user))) = favourite
-            .find_related(Accounts)
-            .find_also_related(Users)
-            .one(&ctx.state.db_conn)
-            .await?
-        else {
-            return Ok(());
-        };
+        let favourite_author_data_fut = accounts::table
+            .find(favourite.account_id)
+            .inner_join(users::table)
+            .select((Account::as_select(), User::as_select()))
+            .get_result(&mut db_conn);
 
-        let inbox_url = favourite
-            .find_linked(FavouritedPostAuthor)
-            .select_only()
-            .column(accounts::Column::InboxUrl)
-            .into_values::<String, InboxUrlQuery>()
-            .one(&ctx.state.db_conn)
-            .await?
-            .expect("[Bug] Post without associated account");
+        let inbox_url_fut = posts::table
+            .find(favourite.post_id)
+            .inner_join(accounts::table)
+            .select(accounts::inbox_url)
+            .get_result::<Option<String>>(&mut db_conn);
+
+        let ((account, user), inbox_url) =
+            tokio::try_join!(favourite_author_data_fut, inbox_url_fut)?;
 
         let favourite_id = favourite.id;
-        let activity = favourite.into_negate_activity(ctx.state).await?;
+        if let Some(ref inbox_url) = inbox_url {
+            let activity = favourite.into_negate_activity(ctx.state).await?;
+            ctx.deliverer
+                .deliver(inbox_url, &account, &user, &activity)
+                .await?;
+        }
 
-        // TODO: Maybe deliver to followers as well?
-        ctx.deliverer
-            .deliver(&inbox_url, &account, &user, &activity)
-            .await?;
-
-        PostsFavourites::delete_by_id(favourite_id)
-            .exec(&ctx.state.db_conn)
+        diesel::delete(posts_favourites::table.find(favourite_id))
+            .execute(&mut db_conn)
             .await?;
 
         Ok(())

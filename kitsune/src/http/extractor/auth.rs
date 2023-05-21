@@ -5,7 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
     RequestPartsExt, TypedHeader,
 };
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
@@ -62,7 +62,7 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
         let (user, account) = user_account_query
-            .select((users::all_columns, Account::columns()))
+            .select((User::as_select(), Account::as_select()))
             .get_result(&mut db_conn)
             .await
             .map_err(Error::from)?;

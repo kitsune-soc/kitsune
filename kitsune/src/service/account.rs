@@ -15,7 +15,9 @@ use crate::{
 };
 use bytes::Bytes;
 use derive_builder::Builder;
-use diesel::{BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper,
+};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
@@ -131,11 +133,11 @@ impl AccountService {
         let (account, follower): (Account, Account) = tokio::try_join!(
             accounts::table
                 .find(follow.account_id)
-                .select(Account::columns())
+                .select(Account::as_select())
                 .get_result(&mut db_conn),
             accounts::table
                 .find(follow.follower_id)
-                .select(Account::columns())
+                .select(Account::as_select())
                 .get_result(&mut db_conn)
         )?;
 
@@ -179,7 +181,7 @@ impl AccountService {
                         .eq(get_user.username)
                         .and(accounts::domain.eq(domain)),
                 )
-                .select(Account::columns())
+                .select(Account::as_select())
                 .get_result(&mut db_conn)
                 .await
                 .optional()?
@@ -205,7 +207,7 @@ impl AccountService {
                         .eq(get_user.username)
                         .and(accounts::local.eq(true)),
                 )
-                .select(Account::columns())
+                .select(Account::as_select())
                 .first(&mut db_conn)
                 .await
                 .optional()
@@ -217,7 +219,7 @@ impl AccountService {
     pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<Account>> {
         accounts::table
             .find(account_id)
-            .select(Account::columns())
+            .select(Account::as_select())
             .get_result(&mut self.db_conn.get().await?)
             .await
             .optional()
@@ -242,7 +244,7 @@ impl AccountService {
         let mut posts_query = add_post_permission_check!(
             permission_check => posts::table.filter(posts::account_id.eq(get_posts.account_id))
         )
-        .select(Post::columns())
+        .select(Post::as_select())
         .order(posts::created_at.desc());
 
         if let Some(min_id) = get_posts.min_id {
@@ -270,11 +272,11 @@ impl AccountService {
         let (account, follower): (Account, Account) = tokio::try_join!(
             accounts::table
                 .find(unfollow.account_id)
-                .select(Account::columns())
+                .select(Account::as_select())
                 .get_result(&mut db_conn),
             accounts::table
                 .find(unfollow.follower_id)
-                .select(Account::columns())
+                .select(Account::as_select())
                 .get_result(&mut db_conn)
         )?;
 
@@ -347,7 +349,7 @@ impl AccountService {
 
         let updated_account: Account = diesel::update(accounts::table.find(update.account_id))
             .set(changeset)
-            .returning(Account::columns())
+            .returning(Account::as_returning())
             .get_result(&mut self.db_conn.get().await?)
             .await?;
 

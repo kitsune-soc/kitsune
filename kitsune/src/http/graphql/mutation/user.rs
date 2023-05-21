@@ -4,6 +4,8 @@ use crate::{
     sanitize::CleanHtmlExt,
 };
 use async_graphql::{Context, Error, Object, Result, Upload};
+use diesel::ExpressionMethods;
+use diesel_async::RunQueryDsl;
 use kitsune_db::schema::accounts;
 
 #[derive(Default)]

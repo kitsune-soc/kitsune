@@ -1,7 +1,7 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use diesel::QueryDsl;
+use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::{
@@ -31,7 +31,7 @@ impl MediaAttachment {
 
         accounts::table
             .find(self.account_id)
-            .select(DbAccount::columns())
+            .select(DbAccount::as_select())
             .get_result::<DbAccount>(&mut db_conn)
             .await
             .map(Into::into)

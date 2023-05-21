@@ -4,7 +4,7 @@ use crate::{
     util::BaseToCc,
 };
 use async_trait::async_trait;
-use diesel::{BelongingToDsl, QueryDsl};
+use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryStreamExt};
 use kitsune_db::{
@@ -86,7 +86,7 @@ impl IntoObject for Post {
 
         let mentions_fut = Mention::belonging_to(&self)
             .inner_join(accounts::table)
-            .select((posts_mentions::all_columns, Account::columns()))
+            .select((posts_mentions::all_columns, Account::as_select()))
             .load::<(Mention, Account)>(&mut db_conn);
 
         let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)

@@ -11,7 +11,7 @@ use crate::{
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
-use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use http::HeaderValue;
 use kitsune_db::{
@@ -95,7 +95,7 @@ impl Fetcher {
 
             if let Some(user) = accounts::table
                 .filter(accounts::url.eq(opts.url))
-                .select(Account::columns())
+                .select(Account::as_select())
                 .first(&mut db_conn)
                 .await
                 .optional()?
@@ -155,7 +155,7 @@ impl Fetcher {
                             public_key_id: actor.public_key.id.as_str(),
                             public_key: actor.public_key.public_key_pem.as_str(),
                         })
-                        .returning(Account::columns())
+                        .returning(Account::as_returning())
                         .get_result::<Account>(tx)
                         .await?;
 
@@ -216,7 +216,7 @@ impl Fetcher {
                     Ok::<_, Error>(
                         diesel::update(&account)
                             .set(update_changeset)
-                            .returning(Account::columns())
+                            .returning(Account::as_returning())
                             .get_result(tx)
                             .await?,
                     )
@@ -251,7 +251,7 @@ impl Fetcher {
         let mut db_conn = self.db_conn.get().await?;
         if let Some(post) = posts::table
             .filter(posts::url.eq(url))
-            .select(Post::columns())
+            .select(Post::as_select())
             .first(&mut db_conn)
             .await
             .optional()?
@@ -305,7 +305,7 @@ impl Fetcher {
                             subject: object.summary.as_deref(),
                             content: object.content.as_str(),
                         })
-                        .returning(Post::columns())
+                        .returning(Post::as_returning())
                         .get_result::<Post>(tx)
                         .await?;
 

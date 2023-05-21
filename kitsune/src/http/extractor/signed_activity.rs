@@ -11,7 +11,7 @@ use axum::{
     RequestExt,
 };
 use const_oid::db::rfc8410::ID_ED_25519;
-use diesel::{ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::{request::Parts, StatusCode};
 use kitsune_db::{model::account::Account, schema::accounts};
@@ -85,7 +85,7 @@ async fn verify_signature(
         .verify(parts, |key_id| async move {
             let remote_user: Account = accounts::table
                 .filter(accounts::public_key_id.eq(key_id))
-                .select(Account::columns())
+                .select(Account::as_select())
                 .first(db_conn)
                 .await?;
 

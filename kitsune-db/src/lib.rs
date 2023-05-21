@@ -8,7 +8,6 @@ use tracing_log::LogTracer;
 pub use crate::error::{Error, Result};
 
 mod error;
-mod macros;
 
 pub mod function;
 pub mod model;

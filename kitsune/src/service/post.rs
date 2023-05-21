@@ -18,6 +18,7 @@ use async_stream::try_stream;
 use derive_builder::Builder;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
+    SelectableHelper,
 };
 use diesel_async::{
     scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
@@ -247,7 +248,7 @@ impl PostService {
                             url: url.as_str(),
                             created_at: None,
                         })
-                        .returning(Post::columns())
+                        .returning(Post::as_returning())
                         .get_result(tx)
                         .await?;
 
@@ -294,7 +295,7 @@ impl PostService {
         let mut db_conn = self.db_conn.get().await?;
         let post: Post = posts::table
             .find(delete_post.post_id)
-            .select(Post::columns())
+            .select(Post::as_select())
             .first(&mut db_conn)
             .await?;
 
@@ -352,7 +353,7 @@ impl PostService {
 
         let mut db_conn = self.db_conn.get().await?;
         let post: Post = add_post_permission_check!(permission_check => posts::table.find(post_id))
-            .select(Post::columns())
+            .select(Post::as_select())
             .get_result(&mut db_conn)
             .await?;
 
@@ -427,7 +428,7 @@ impl PostService {
             .unwrap();
 
         add_post_permission_check!(permission_check => posts::table.find(id))
-            .select(Post::columns())
+            .select(Post::as_select())
             .get_result(&mut db_conn)
             .await
             .map_err(Error::from)
@@ -455,7 +456,7 @@ impl PostService {
                 let post = add_post_permission_check!(
                         permission_check => posts::table.filter(posts::in_reply_to_id.eq(post.id))
                     )
-                    .select(Post::columns())
+                    .select(Post::as_select())
                     .get_result::<Post>(&mut db_conn)
                     .await
                     .optional()?;
@@ -490,7 +491,7 @@ impl PostService {
             let descendant_stream = add_post_permission_check!(
                     permission_check => posts::table.filter(posts::in_reply_to_id.eq(id))
                 )
-                .select(Post::columns())
+                .select(Post::as_select())
                 .load_stream::<Post>(&mut db_conn)
                 .await?;
 

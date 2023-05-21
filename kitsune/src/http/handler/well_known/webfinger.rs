@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing, Json, Router,
 };
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
@@ -46,7 +46,7 @@ async fn get(
                 .eq(username)
                 .and(accounts::local.eq(true)),
         )
-        .select(Account::columns())
+        .select(Account::as_select())
         .first::<Account>(&mut db_conn.get().await?)
         .await?;
     let account_url = url_service.user_url(account.id);

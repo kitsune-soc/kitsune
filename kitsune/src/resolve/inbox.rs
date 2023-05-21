@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
 use diesel::{
     result::Error as DieselError, BelongingToDsl, BoolExpressionMethods, ExpressionMethods,
-    JoinOnDsl, QueryDsl,
+    JoinOnDsl, QueryDsl, SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{future::Either, Stream, StreamExt};
@@ -60,7 +60,7 @@ impl InboxResolver {
         let mut db_conn = self.db_conn.get().await?;
         let account_fut = accounts::table
             .find(post.account_id)
-            .select(Account::columns())
+            .select(Account::as_select())
             .first(&mut db_conn);
 
         let mentioned_inbox_stream_fut = Mention::belonging_to(post)

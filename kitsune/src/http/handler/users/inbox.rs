@@ -8,7 +8,7 @@ use crate::{
     state::Zustand,
 };
 use axum::{debug_handler, extract::State};
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
 use kitsune_db::{
@@ -161,7 +161,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
     let post = add_post_permission_check!(
         permission_check => posts::table.filter(posts::url.eq(activity.object()))
     )
-    .select(Post::columns())
+    .select(Post::as_select())
     .get_result::<Post>(&mut db_conn)
     .await?;
 

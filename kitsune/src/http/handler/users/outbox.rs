@@ -9,7 +9,7 @@ use axum::{
     extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
 };
-use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl};
+use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
@@ -47,7 +47,7 @@ pub async fn get(
     let account = accounts::table
         .find(account_id)
         .filter(accounts::local.eq(true))
-        .select(Account::columns())
+        .select(Account::as_select())
         .get_result::<Account>(&mut db_conn)
         .await?;
 

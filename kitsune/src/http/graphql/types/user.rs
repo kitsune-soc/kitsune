@@ -1,7 +1,7 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
-use diesel::QueryDsl;
+use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::{account::Account as DbAccount, user::User as DbUser},
@@ -30,7 +30,7 @@ impl User {
         users::table
             .find(self.id)
             .inner_join(accounts::table)
-            .select(DbAccount::columns())
+            .select(DbAccount::as_select())
             .get_result::<DbAccount>(&mut db_conn)
             .await
             .map(Into::into)

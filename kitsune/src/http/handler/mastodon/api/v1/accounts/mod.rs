@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing, Json, Router,
 };
-use diesel::QueryDsl;
+use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use uuid::Uuid;
@@ -33,7 +33,7 @@ async fn get(
     let mut db_conn = db_conn.get().await?;
     let account = accounts::table
         .find(id)
-        .select(Account::columns())
+        .select(Account::as_select())
         .get_result::<Account>(&mut db_conn)
         .await?;
 

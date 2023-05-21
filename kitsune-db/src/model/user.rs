@@ -1,9 +1,9 @@
 use crate::schema::users;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Clone, Identifiable, Queryable)]
+#[derive(Clone, Identifiable, Selectable, Queryable)]
 pub struct User {
     pub id: Uuid,
     pub account_id: Uuid,

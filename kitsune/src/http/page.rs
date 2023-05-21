@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
 use crate::state::Zustand;
 use askama::Template;
-use diesel::{BelongingToDsl, QueryDsl};
+use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_db::{
@@ -38,7 +38,7 @@ impl PostComponent {
 
         let author_fut = accounts::table
             .find(post.account_id)
-            .select(Account::columns())
+            .select(Account::as_select())
             .get_result::<Account>(&mut db_conn);
 
         let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)

@@ -10,11 +10,21 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::AsyncPgConnection;
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::{
+    scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
+};
 use futures_util::FutureExt;
 use http::StatusCode;
-use kitsune_db::{model::oauth2, schema::oauth2_applications};
+use kitsune_db::{
+    function::now,
+    model::{oauth2, user::User},
+    schema::{
+        oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
+        oauth2_refresh_tokens, users,
+    },
+    PgPool,
+};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use utoipa::ToSchema;
@@ -76,32 +86,31 @@ async fn get_application(
         .find(id)
         .filter(oauth2_applications::secret.eq(secret))
         .into_boxed();
+
     if let Some(redirect_uri) = redirect_uri {
         query = query.filter(oauth2_applications::redirect_uri.eq(redirect_uri));
     }
 
-    query
-        .get_result(db_conn)
-        .await?
-        .ok_or(Error::OAuthApplicationNotFound)
+    query.get_result(db_conn).await.map_err(Error::from)
 }
 
 async fn authorization_code(
     db_conn: &mut AsyncPgConnection,
     data: AuthorizationCodeData,
 ) -> Result<Response> {
-    let Some((authorization_code, Some(user))) =
-        Oauth2AuthorizationCodes::find_by_id(data.code)
-            .filter(oauth2_authorization_codes::Column::ExpiredAt.gt(OffsetDateTime::now_utc()))
-            .find_also_related(Users)
-            .one(&db_conn)
-            .await?
+    let Some((authorization_code, user)) = oauth2_authorization_codes::table
+        .find(data.code)
+        .filter(oauth2_authorization_codes::expired_at.gt(now()))
+        .inner_join(users::table)
+        .get_result::<(oauth2::AuthorizationCode, User)>(db_conn)
+        .await
+        .optional()?
     else {
         return Ok((StatusCode::UNAUTHORIZED, "Unknown authorization code").into_response());
     };
 
     let application = get_application(
-        &db_conn,
+        db_conn,
         data.client_id,
         data.client_secret,
         Some(data.redirect_uri),
@@ -115,32 +124,30 @@ async fn authorization_code(
     let (access_token, refresh_token) = db_conn
         .transaction(|tx| {
             async move {
-                let access_token = oauth2_access_tokens::Model {
-                    token: generate_secret(),
-                    user_id: Some(user.id),
-                    application_id: Some(authorization_code.application_id),
-                    created_at: OffsetDateTime::now_utc(),
-                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
-                }
-                .into_active_model()
-                .insert(tx)
-                .await?;
+                let access_token = diesel::insert_into(oauth2_access_tokens::table)
+                    .values(oauth2::NewAccessToken {
+                        token: generate_secret().as_str(),
+                        user_id: Some(user.id),
+                        application_id: Some(authorization_code.application_id),
+                        expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                    })
+                    .get_result::<oauth2::AccessToken>(tx)
+                    .await?;
 
-                let refresh_token = oauth2_refresh_tokens::Model {
-                    token: generate_secret(),
-                    access_token: access_token.token.clone(),
-                    application_id: application.id,
-                    created_at: OffsetDateTime::now_utc(),
-                }
-                .into_active_model()
-                .insert(tx)
-                .await?;
+                let refresh_token = diesel::insert_into(oauth2_refresh_tokens::table)
+                    .values(oauth2::NewRefreshToken {
+                        token: generate_secret().as_str(),
+                        access_token: access_token.token.as_str(),
+                        application_id: application.id,
+                    })
+                    .get_result::<oauth2::RefreshToken>(tx)
+                    .await?;
 
-                authorization_code.delete(tx).await?;
+                diesel::delete(&authorization_code).execute(tx).await?;
 
                 Ok::<_, Error>((access_token, refresh_token))
             }
-            .boxed()
+            .scope_boxed()
         })
         .await?;
 
@@ -154,7 +161,7 @@ async fn authorization_code(
 }
 
 async fn client_credentials(
-    db_conn: DatabaseConnection,
+    db_conn: &mut AsyncPgConnection,
     data: ClientCredentialsData,
 ) -> Result<Response> {
     let (access_token, refresh_token) = db_conn
@@ -163,30 +170,28 @@ async fn client_credentials(
                 let application =
                     get_application(tx, data.client_id, data.client_secret, None).await?;
 
-                let access_token = oauth2_access_tokens::Model {
-                    token: generate_secret(),
-                    user_id: None,
-                    application_id: Some(application.id),
-                    created_at: OffsetDateTime::now_utc(),
-                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
-                }
-                .into_active_model()
-                .insert(tx)
-                .await?;
+                let access_token = diesel::insert_into(oauth2_access_tokens::table)
+                    .values(oauth2::NewAccessToken {
+                        token: generate_secret().as_str(),
+                        user_id: None,
+                        application_id: Some(application.id),
+                        expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                    })
+                    .get_result::<oauth2::AccessToken>(tx)
+                    .await?;
 
-                let refresh_token = oauth2_refresh_tokens::Model {
-                    token: generate_secret(),
-                    access_token: access_token.token.clone(),
-                    application_id: application.id,
-                    created_at: OffsetDateTime::now_utc(),
-                }
-                .into_active_model()
-                .insert(tx)
-                .await?;
+                let refresh_token = diesel::insert_into(oauth2_refresh_tokens::table)
+                    .values(oauth2::NewRefreshToken {
+                        token: generate_secret().as_str(),
+                        access_token: access_token.token.as_str(),
+                        application_id: application.id,
+                    })
+                    .get_result::<oauth2::RefreshToken>(tx)
+                    .await?;
 
                 Ok::<_, Error>((access_token, refresh_token))
             }
-            .boxed()
+            .scope_boxed()
         })
         .await?;
 
@@ -199,12 +204,11 @@ async fn client_credentials(
     .into_response())
 }
 
-async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Result<Response> {
-    let user = Users::find()
-        .filter(users::Column::Username.eq(data.username))
-        .one(&db_conn)
-        .await?
-        .ok_or(ApiError::NotFound)?;
+async fn password_grant(db_conn: &mut AsyncPgConnection, data: PasswordData) -> Result<Response> {
+    let user = users::table
+        .filter(users::username.eq(data.username))
+        .first::<User>(db_conn)
+        .await?;
 
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
@@ -222,16 +226,15 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
         return Err(Error::PasswordMismatch);
     }
 
-    let access_token = oauth2_access_tokens::Model {
-        token: generate_secret(),
-        user_id: Some(user.id),
-        application_id: None,
-        created_at: OffsetDateTime::now_utc(),
-        expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
-    }
-    .into_active_model()
-    .insert(&db_conn)
-    .await?;
+    let access_token = diesel::insert_into(oauth2_access_tokens::table)
+        .values(oauth2::NewAccessToken {
+            token: generate_secret().as_str(),
+            user_id: Some(user.id),
+            application_id: None,
+            expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+        })
+        .get_result::<oauth2::AccessToken>(db_conn)
+        .await?;
 
     Ok(Json(AccessTokenResponse {
         expires_in: access_token.ttl().whole_seconds(),
@@ -242,18 +245,22 @@ async fn password_grant(db_conn: DatabaseConnection, data: PasswordData) -> Resu
     .into_response())
 }
 
-async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> Result<Response> {
-    let Some((refresh_token, Some(access_token))) =
-        Oauth2RefreshTokens::find_by_id(data.refresh_token)
-            .filter(oauth2_access_tokens::Column::ApplicationId.is_not_null())
-            .find_also_related(Oauth2AccessTokens)
-            .one(&db_conn)
-            .await?
+async fn refresh_token(
+    db_conn: &mut AsyncPgConnection,
+    data: RefreshTokenData,
+) -> Result<Response> {
+    let Some((refresh_token, access_token)) = oauth2_refresh_tokens::table
+        .find(data.refresh_token)
+        .inner_join(oauth2_access_tokens::table)
+        .filter(oauth2_access_tokens::application_id.is_not_null())
+        .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(db_conn)
+        .await
+        .optional()?
     else {
         return Ok((StatusCode::BAD_REQUEST, "Refresh token not found").into_response());
     };
 
-    let application = get_application(&db_conn, data.client_id, data.client_secret, None).await?;
+    let application = get_application(db_conn, data.client_id, data.client_secret, None).await?;
     if access_token.application_id.unwrap() != application.id {
         return Ok((StatusCode::UNAUTHORIZED, "Invalid application credentials").into_response());
     }
@@ -261,15 +268,15 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
     let (access_token, refresh_token) = db_conn
         .transaction(|tx| {
             async move {
-                let new_access_token = oauth2_access_tokens::Model {
-                    token: generate_secret(),
-                    created_at: OffsetDateTime::now_utc(),
-                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
-                    ..access_token
-                }
-                .into_active_model()
-                .insert(tx)
-                .await?;
+                let new_access_token = diesel::insert_into(oauth2_access_tokens::table)
+                    .values(oauth2::NewAccessToken {
+                        user_id: access_token.user_id,
+                        token: generate_secret().as_str(),
+                        application_id: access_token.application_id,
+                        expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                    })
+                    .get_result(tx)
+                    .await?;
 
                 let refresh_token = oauth2_refresh_tokens::ActiveModel {
                     token: ActiveValue::Set(refresh_token.token),
@@ -279,9 +286,7 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
                 .update(tx)
                 .await?;
 
-                Oauth2AccessTokens::delete_by_id(access_token.token)
-                    .exec(tx)
-                    .await?;
+                diesel::delete(&access_token).execute(tx).await?;
 
                 Ok::<_, Error>((new_access_token, refresh_token))
             }
@@ -307,13 +312,15 @@ async fn refresh_token(db_conn: DatabaseConnection, data: RefreshTokenData) -> R
     )
 )]
 pub async fn post(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     FormOrJson(form): FormOrJson<TokenForm>,
 ) -> Result<Response> {
+    let mut db_conn = db_conn.get().await?;
+
     match form {
-        TokenForm::AuthorizationCode(data) => authorization_code(db_conn, data).await,
-        TokenForm::ClientCredentials(data) => client_credentials(db_conn, data).await,
-        TokenForm::Password(data) => password_grant(db_conn, data).await,
-        TokenForm::RefreshToken(data) => refresh_token(db_conn, data).await,
+        TokenForm::AuthorizationCode(data) => authorization_code(&mut db_conn, data).await,
+        TokenForm::ClientCredentials(data) => client_credentials(&mut db_conn, data).await,
+        TokenForm::Password(data) => password_grant(&mut db_conn, data).await,
+        TokenForm::RefreshToken(data) => refresh_token(&mut db_conn, data).await,
     }
 }

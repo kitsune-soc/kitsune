@@ -1,6 +1,6 @@
 use crate::http::graphql::{types::Account, ContextExt};
 use async_graphql::{Context, Object, Result};
-use diesel::QueryDsl;
+use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::account::Account as DbAccount, schema::accounts};
 use uuid::Uuid;
@@ -15,7 +15,7 @@ impl AccountQuery {
 
         Ok(accounts::table
             .find(id)
-            .select(DbAccount::columns())
+            .select(DbAccount::as_select())
             .get_result::<DbAccount>(&mut db_conn)
             .await
             .map(Into::into)?)

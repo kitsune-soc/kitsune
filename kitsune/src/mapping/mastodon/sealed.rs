@@ -5,6 +5,7 @@ use crate::{
 use async_trait::async_trait;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
+    SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
@@ -204,7 +205,7 @@ impl IntoMastodon for DbMention {
 
         let account: DbAccount = accounts::table
             .find(self.account_id)
-            .select(DbAccount::columns())
+            .select(DbAccount::as_select())
             .get_result(&mut db_conn)
             .await?;
 
@@ -308,7 +309,7 @@ impl IntoMastodon for DbPost {
 
         let account_fut = accounts::table
             .find(self.account_id)
-            .select(DbAccount::columns())
+            .select(DbAccount::as_select())
             .get_result::<DbAccount>(&mut db_conn)
             .map_err(Error::from)
             .and_then(|db_account| db_account.into_mastodon(state));
@@ -358,7 +359,7 @@ impl IntoMastodon for DbPost {
             OptionFuture::from(self.reposted_post_id.map(|id| {
                 posts::table
                     .find(id)
-                    .select(DbPost::columns())
+                    .select(DbPost::as_select())
                     .get_result::<DbPost>(&mut db_conn)
                     .map(OptionalExtension::optional)
             }))

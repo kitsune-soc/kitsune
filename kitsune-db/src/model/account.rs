@@ -1,11 +1,11 @@
-use crate::{error::EnumConversionError, impl_columns, schema::accounts};
+use crate::{error::EnumConversionError, schema::accounts};
 use diesel::{
     backend::RawValue,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
+    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
 };
 use kitsune_type::ap::actor::ActorType as ApActorType;
 use num_derive::FromPrimitive;
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Clone, Deserialize, Identifiable, Serialize, Queryable)]
+#[derive(Clone, Deserialize, Identifiable, Serialize, Selectable, Queryable)]
 pub struct Account {
     pub id: Uuid,
     pub avatar_id: Option<Uuid>,
@@ -37,32 +37,6 @@ pub struct Account {
     pub public_key: String,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
-}
-
-impl_columns! {
-    Account => (
-        accounts::id,
-        accounts::avatar_id,
-        accounts::header_id,
-        accounts::display_name,
-        accounts::note,
-        accounts::username,
-        accounts::locked,
-        accounts::local,
-        accounts::domain,
-        accounts::actor_type,
-        accounts::url,
-        accounts::featured_collection_url,
-        accounts::followers_url,
-        accounts::following_url,
-        accounts::inbox_url,
-        accounts::outbox_url,
-        accounts::shared_inbox_url,
-        accounts::public_key_id,
-        accounts::public_key,
-        accounts::created_at,
-        accounts::updated_at,
-    )
 }
 
 #[derive(AsChangeset)]

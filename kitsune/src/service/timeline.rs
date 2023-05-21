@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
@@ -81,7 +81,7 @@ impl TimelineService {
                     )),
             )
             .order(posts::created_at.desc())
-            .select(Post::columns())
+            .select(Post::as_select())
             .into_boxed();
 
         if let Some(max_id) = get_home.max_id {
@@ -112,7 +112,7 @@ impl TimelineService {
 
         let mut query = add_post_permission_check!(permission_check => posts::table)
             .order(posts::created_at.desc())
-            .select(Post::columns());
+            .select(Post::as_select());
 
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::id.lt(max_id));

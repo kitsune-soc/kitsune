@@ -4,8 +4,10 @@ use crate::{
     mapping::IntoActivity,
 };
 use async_trait::async_trait;
+use diesel::{QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
-    model::favourite::Favourite,
+    model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
 };
 use serde::{Deserialize, Serialize};
@@ -20,29 +22,34 @@ pub struct DeliverFavourite {
 impl Runnable for DeliverFavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+        let mut db_conn = ctx.state.db_conn.get().await?;
         let favourite = posts_favourites::table
             .find(self.favourite_id)
-            .first::<Favourite>(&ctx.state.db_conn)
+            .get_result::<Favourite>(&mut db_conn)
             .await?;
 
-        let (account, user) = accounts::table
-            .filter(accounts::id.eq(favourite.account_id))
-            .inner_join(users::table.on(users::account_id.eq(accounts::id)))
-            .first(&ctx.state.db_conn)
-            .await?;
+        let favourite_author_data_fut = accounts::table
+            .find(favourite.account_id)
+            .inner_join(users::table)
+            .select((Account::as_select(), User::as_select()))
+            .get_result(&mut db_conn);
 
-        let inbox_url = posts::table
+        let inbox_url_fut = posts::table
             .find(favourite.post_id)
             .inner_join(accounts::table)
             .select(accounts::inbox_url)
-            .first(&self.db_conn)
-            .await?;
+            .get_result::<Option<String>>(&mut db_conn);
 
-        let activity = favourite.into_activity(ctx.state).await?;
+        let ((account, user), inbox_url) =
+            tokio::try_join!(favourite_author_data_fut, inbox_url_fut)?;
 
-        ctx.deliverer
-            .deliver(&inbox_url, &account, &user, &activity)
-            .await?;
+        if let Some(ref inbox_url) = inbox_url {
+            let activity = favourite.into_activity(ctx.state).await?;
+
+            ctx.deliverer
+                .deliver(inbox_url, &account, &user, &activity)
+                .await?;
+        }
 
         Ok(())
     }

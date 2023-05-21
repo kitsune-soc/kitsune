@@ -1,5 +1,5 @@
 use super::account::Account;
-use crate::{error::EnumConversionError, impl_columns, schema::posts};
+use crate::{error::EnumConversionError, schema::posts};
 use diesel::{
     backend::RawValue,
     deserialize::{self, FromSql},
@@ -7,6 +7,7 @@ use diesel::{
     serialize::{self, Output, ToSql},
     sql_types::Integer,
     AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
+    Selectable,
 };
 use kitsune_type::{
     ap::{helper::CcTo, Privacy},
@@ -18,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Serialize)]
+#[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
 #[diesel(belongs_to(Account), table_name = posts)]
 pub struct Post {
     pub id: Uuid,
@@ -33,23 +34,6 @@ pub struct Post {
     pub url: String,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
-}
-
-impl_columns! {
-    Post => (
-        posts::id,
-        posts::account_id,
-        posts::in_reply_to_id,
-        posts::reposted_post_id,
-        posts::is_sensitive,
-        posts::subject,
-        posts::content,
-        posts::visibility,
-        posts::is_local,
-        posts::url,
-        posts::created_at,
-        posts::updated_at,
-    )
 }
 
 #[derive(AsChangeset)]
