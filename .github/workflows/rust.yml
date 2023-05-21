@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: "postgres:latest-alpine"
+        image: postgres
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
