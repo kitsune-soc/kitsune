@@ -126,7 +126,6 @@ impl AttachmentService {
         if let Some(ref description) = update.description {
             changeset = UpdateMediaAttachment {
                 description: Some(description),
-                ..changeset
             };
         }
 

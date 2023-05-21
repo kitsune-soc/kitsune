@@ -84,16 +84,16 @@ pub async fn post(
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
     let mut db_conn = db_conn.get().await?;
-    let user_fut = users::table
+    let user = users::table
         .filter(users::username.eq(form.username))
-        .first::<User>(&mut db_conn);
+        .first::<User>(&mut db_conn)
+        .await?;
 
-    let application_fut = oauth2_applications::table
+    let application = oauth2_applications::table
         .find(query.client_id)
         .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-        .get_result::<oauth2::Application>(&mut db_conn);
-
-    let (user, application) = tokio::try_join!(user_fut, application_fut)?;
+        .get_result::<oauth2::Application>(&mut db_conn)
+        .await?;
 
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;

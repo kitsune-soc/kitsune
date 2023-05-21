@@ -19,13 +19,12 @@ use serde_json::Value;
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
     let mut db_conn = state.db_conn.get().await?;
 
-    let total_fut = users::table.count().get_result::<i64>(&mut db_conn);
-    let local_posts_fut = posts::table
+    let total = users::table.count().get_result::<i64>(&mut db_conn).await?;
+    let local_posts = posts::table
         .filter(posts::is_local.eq(true))
         .count()
-        .get_result::<i64>(&mut db_conn);
-
-    let (total, local_posts) = tokio::try_join!(total_fut, local_posts_fut)?;
+        .get_result::<i64>(&mut db_conn)
+        .await?;
 
     Ok(Json(TwoOne {
         version: Version::TwoOne,

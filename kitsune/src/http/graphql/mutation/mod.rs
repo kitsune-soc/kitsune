@@ -13,9 +13,9 @@ mod post;
 mod user;
 
 /// Saves the file into a user-configured subdirectory and returns a full URL to the file
-async fn handle_upload(
+fn handle_upload(
     ctx: &Context<'_>,
-    file: Upload,
+    file: &Upload,
     description: Option<String>,
 ) -> Result<attachment::Upload<impl Stream<Item = Result<Bytes, BoxError>> + Send + 'static>> {
     let user_data = ctx.user_data()?;

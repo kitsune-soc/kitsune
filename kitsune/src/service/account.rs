@@ -131,16 +131,17 @@ impl AccountService {
     pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let (account, follower): (Account, Account) = tokio::try_join!(
-            accounts::table
-                .find(follow.account_id)
-                .select(Account::as_select())
-                .get_result(&mut db_conn),
-            accounts::table
-                .find(follow.follower_id)
-                .select(Account::as_select())
-                .get_result(&mut db_conn)
-        )?;
+        let account = accounts::table
+            .find(follow.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
+
+        let follower = accounts::table
+            .find(follow.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.follow_url(id);
@@ -270,16 +271,17 @@ impl AccountService {
     pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let (account, follower): (Account, Account) = tokio::try_join!(
-            accounts::table
-                .find(unfollow.account_id)
-                .select(Account::as_select())
-                .get_result(&mut db_conn),
-            accounts::table
-                .find(unfollow.follower_id)
-                .select(Account::as_select())
-                .get_result(&mut db_conn)
-        )?;
+        let account = accounts::table
+            .find(unfollow.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
+
+        let follower = accounts::table
+            .find(unfollow.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
 
         let follow = accounts_follows::table
             .filter(

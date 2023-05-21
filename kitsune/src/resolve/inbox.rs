@@ -58,12 +58,13 @@ impl InboxResolver {
         post: &Post,
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
         let mut db_conn = self.db_conn.get().await?;
-        let account_fut = accounts::table
+        let account = accounts::table
             .find(post.account_id)
             .select(Account::as_select())
-            .first(&mut db_conn);
+            .first(&mut db_conn)
+            .await?;
 
-        let mentioned_inbox_stream_fut = Mention::belonging_to(post)
+        let mentioned_inbox_stream = Mention::belonging_to(post)
             .inner_join(accounts::table)
             .filter(
                 accounts::shared_inbox_url
@@ -74,10 +75,8 @@ impl InboxResolver {
                 accounts::shared_inbox_url,
                 accounts::inbox_url,
             ))
-            .load_stream(&mut db_conn);
-
-        let (account, mentioned_inbox_stream) =
-            tokio::try_join!(account_fut, mentioned_inbox_stream_fut)?;
+            .load_stream(&mut db_conn)
+            .await?;
 
         let stream = if post.visibility == Visibility::MentionOnly {
             Either::Left(mentioned_inbox_stream)

@@ -35,19 +35,18 @@ impl Runnable for DeliverAccept {
             return Ok(());
         };
 
-        let follower_inbox_url_fut = accounts::table
+        let follower_inbox_url = accounts::table
             .find(follow.follower_id)
             .select(accounts::inbox_url.assume_not_null())
-            .get_result::<String>(&mut db_conn);
+            .get_result::<String>(&mut db_conn)
+            .await?;
 
-        let followed_data_fut = accounts::table
+        let (followed_account, followed_user) = accounts::table
             .find(follow.account_id)
             .inner_join(users::table.on(accounts::id.eq(users::account_id)))
             .select((Account::as_select(), User::as_select()))
-            .get_result::<(Account, User)>(&mut db_conn);
-
-        let (follower_inbox_url, (followed_account, followed_user)) =
-            tokio::try_join!(follower_inbox_url_fut, followed_data_fut)?;
+            .get_result::<(Account, User)>(&mut db_conn)
+            .await?;
 
         let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
 

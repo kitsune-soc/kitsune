@@ -49,17 +49,18 @@ impl IntoActivity for Favourite {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let account_url_fut = accounts::table
+        let account_url = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn);
+            .get_result::<Option<String>>(&mut db_conn)
+            .await?;
 
-        let post_url_fut = posts::table
+        let post_url = posts::table
             .find(self.post_id)
             .select(posts::url)
-            .get_result(&mut db_conn);
+            .get_result(&mut db_conn)
+            .await?;
 
-        let (account_url, post_url) = tokio::try_join!(account_url_fut, post_url_fut)?;
         let account_url =
             account_url.unwrap_or_else(|| state.service.url.user_url(self.account_id));
 
@@ -67,7 +68,7 @@ impl IntoActivity for Favourite {
             context: ap_context(),
             id: self.url,
             r#type: ActivityType::Like,
-            actor: StringOrObject::String(account_url.clone()),
+            actor: StringOrObject::String(account_url),
             object: ObjectField::Url(post_url),
             published: self.created_at,
         })
@@ -100,17 +101,18 @@ impl IntoActivity for Follow {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let attributed_to_fut = accounts::table
+        let attributed_to = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn);
+            .get_result::<Option<String>>(&mut db_conn)
+            .await?;
 
-        let object_fut = accounts::table
+        let object = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn);
+            .get_result::<Option<String>>(&mut db_conn)
+            .await?;
 
-        let (attributed_to, object) = tokio::try_join!(attributed_to_fut, object_fut)?;
         let (attributed_to, object) = (
             attributed_to.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),
             object.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),

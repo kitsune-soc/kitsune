@@ -130,7 +130,7 @@ impl Fetcher {
                             username: actor.preferred_username.as_str(),
                             locked: actor.manually_approves_followers,
                             local: false,
-                            domain: url.host_str().unwrap().into(),
+                            domain: url.host_str().unwrap(),
                             actor_type: actor.r#type.into(),
                             url: Some(actor.id.as_str()),
                             featured_collection_url: actor.featured.as_deref(),

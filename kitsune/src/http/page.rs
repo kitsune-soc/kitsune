@@ -36,17 +36,18 @@ impl PostComponent {
     pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
         let mut db_conn = state.db_conn.get().await?;
 
-        let author_fut = accounts::table
+        let author = accounts::table
             .find(post.account_id)
             .select(Account::as_select())
-            .get_result::<Account>(&mut db_conn);
+            .get_result::<Account>(&mut db_conn)
+            .await?;
 
-        let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
+        let attachments_stream = PostMediaAttachment::belonging_to(&post)
             .inner_join(media_attachments::table)
             .select(DbMediaAttachment::as_select())
-            .load_stream::<DbMediaAttachment>(&mut db_conn);
+            .load_stream::<DbMediaAttachment>(&mut db_conn)
+            .await?;
 
-        let (author, attachments_stream) = tokio::try_join!(author_fut, attachments_stream_fut)?;
         let attachments = attachments_stream
             .map_err(Error::from)
             .and_then(|attachment| async move {

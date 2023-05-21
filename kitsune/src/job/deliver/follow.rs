@@ -32,19 +32,18 @@ impl Runnable for DeliverFollow {
             return Ok(());
         };
 
-        let follower_data_fut = accounts::table
+        let (follower, follower_user) = accounts::table
             .find(follow.follower_id)
             .inner_join(users::table)
             .select((Account::as_select(), User::as_select()))
-            .get_result::<(Account, User)>(&mut db_conn);
+            .get_result::<(Account, User)>(&mut db_conn)
+            .await?;
 
-        let followed_inbox_fut = accounts::table
+        let followed_inbox = accounts::table
             .find(follow.account_id)
             .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
-
-        let ((follower, follower_user), followed_inbox) =
-            tokio::try_join!(follower_data_fut, followed_inbox_fut)?;
+            .get_result::<Option<String>>(&mut db_conn)
+            .await?;
 
         if let Some(followed_inbox) = followed_inbox {
             let follow_activity = follow.into_activity(ctx.state).await?;

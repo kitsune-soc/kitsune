@@ -28,20 +28,19 @@ impl Runnable for DeliverFavourite {
             .get_result::<Favourite>(&mut db_conn)
             .await?;
 
-        let favourite_author_data_fut = accounts::table
+        let (account, user) = accounts::table
             .find(favourite.account_id)
             .inner_join(users::table)
             .select((Account::as_select(), User::as_select()))
-            .get_result(&mut db_conn);
+            .get_result(&mut db_conn)
+            .await?;
 
-        let inbox_url_fut = posts::table
+        let inbox_url = posts::table
             .find(favourite.post_id)
             .inner_join(accounts::table)
             .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
-
-        let ((account, user), inbox_url) =
-            tokio::try_join!(favourite_author_data_fut, inbox_url_fut)?;
+            .get_result::<Option<String>>(&mut db_conn)
+            .await?;
 
         if let Some(ref inbox_url) = inbox_url {
             let activity = favourite.into_activity(ctx.state).await?;

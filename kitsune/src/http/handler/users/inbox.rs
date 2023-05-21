@@ -197,25 +197,25 @@ async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -
 async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let mut db_conn = state.db_conn.get().await?;
     // An undo activity can apply for likes and follows
-    let delete_favourite_fut = diesel::delete(
+    diesel::delete(
         posts_favourites::table.filter(
             posts_favourites::account_id
                 .eq(author.id)
                 .and(posts_favourites::url.eq(activity.object())),
         ),
     )
-    .execute(&mut db_conn);
+    .execute(&mut db_conn)
+    .await?;
 
-    let delete_follow_fut = diesel::delete(
+    diesel::delete(
         accounts_follows::table.filter(
             accounts_follows::follower_id
                 .eq(author.id)
                 .and(accounts_follows::url.eq(activity.object())),
         ),
     )
-    .execute(&mut db_conn);
-
-    tokio::try_join!(delete_favourite_fut, delete_follow_fut)?;
+    .execute(&mut db_conn)
+    .await?;
 
     Ok(())
 }

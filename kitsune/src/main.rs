@@ -6,7 +6,6 @@ use kitsune::{config::Configuration, http, job};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
-use sea_orm::ConnectOptions;
 use std::{env, future, process};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
@@ -74,12 +73,12 @@ async fn main() {
     };
     initialise_logging(&config);
 
-    let conn_opts = ConnectOptions::new(config.database.url.clone())
-        .max_connections(config.database.max_connections)
-        .clone();
-    let conn = kitsune_db::connect(conn_opts)
-        .await
-        .expect("Failed to connect to database");
+    let conn = kitsune_db::connect(
+        &config.database.url,
+        config.database.max_connections as usize,
+    )
+    .await
+    .expect("Failed to connect to database");
     let state = kitsune::initialise_state(&config, conn).await;
 
     tokio::spawn(self::http::run(state.clone(), config.server.clone()));
