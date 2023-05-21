@@ -140,6 +140,9 @@ pub enum Error {
     Database(#[from] diesel::result::Error),
 
     #[error(transparent)]
+    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+
+    #[error(transparent)]
     Der(#[from] der::Error),
 
     #[error(transparent)]

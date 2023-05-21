@@ -1,7 +1,8 @@
 use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use futures_util::{future::OptionFuture, FutureExt};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use futures_util::future::OptionFuture;
 use kitsune_db::{
     model::{
         account::{ActorType, NewAccount},
@@ -72,8 +73,8 @@ impl UserService {
         let url = self.url_service.user_url(user_id);
         let public_key_id = format!("{url}#main-key");
 
-        let new_user = self
-            .db_conn
+        let mut db_conn = self.db_conn.get().await?;
+        let new_user = db_conn
             .transaction(|tx| {
                 async move {
                     let account_id = diesel::insert_into(accounts::table)
@@ -97,8 +98,8 @@ impl UserService {
                             public_key: public_key_str.as_str(),
                             created_at: None,
                         })
-                        .select(accounts::id)
-                        .execute(tx)
+                        .returning(accounts::id)
+                        .get_result(tx)
                         .await?;
 
                     Ok::<_, Error>(
@@ -107,17 +108,17 @@ impl UserService {
                                 id: Uuid::now_v7(),
                                 account_id,
                                 username: register.username.as_str(),
-                                oidc_id: register.oidc_id,
+                                oidc_id: register.oidc_id.as_deref(),
                                 email: register.email.as_str(),
-                                password: hashed_password,
+                                password: hashed_password.as_deref(),
                                 domain: domain.as_str(),
                                 private_key: private_key_str.as_str(),
                             })
-                            .execute(tx)
+                            .get_result(tx)
                             .await?,
                     )
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 

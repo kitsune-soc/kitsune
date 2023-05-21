@@ -34,14 +34,16 @@ impl Default for PermissionCheck {
 #[macro_export]
 macro_rules! add_post_permission_check {
     ($permission_opts:expr => $query:expr) => {{
-        use diesel::{expression_methods::ExpressionMethods, QueryDsl};
+        use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
         use $crate::{
             model::post::Visibility,
             schema::{accounts_follows, posts, posts_mentions},
         };
 
-        let mut permission_opts = $permission_opts;
-        let mut post_query = $query.filter(posts::visibility.eq(Visibility::Public));
+        let mut permission_opts = &$permission_opts;
+        let mut post_query = $query
+            .filter(posts::visibility.eq(Visibility::Public))
+            .into_boxed();
 
         if permission_opts.include_unlisted {
             post_query = post_query.or_filter(posts::visibility.eq(Visibility::Unlisted));

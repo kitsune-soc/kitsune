@@ -1,6 +1,15 @@
-use crate::schema::accounts;
-use diesel::{AsExpression, FromSqlRow, Identifiable, Insertable, Queryable};
+use crate::{error::EnumConversionError, impl_columns, schema::accounts};
+use diesel::{
+    backend::RawValue,
+    deserialize::{self, FromSql},
+    pg::Pg,
+    serialize::{self, Output, ToSql},
+    sql_types::Integer,
+    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
+};
 use kitsune_type::ap::actor::ActorType as ApActorType;
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -15,7 +24,7 @@ pub struct Account {
     pub username: String,
     pub locked: bool,
     pub local: bool,
-    pub doamin: String,
+    pub domain: String,
     pub actor_type: ActorType,
     pub url: Option<String>,
     pub featured_collection_url: Option<String>,
@@ -28,6 +37,42 @@ pub struct Account {
     pub public_key: String,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
+}
+
+impl_columns! {
+    Account => (
+        accounts::id,
+        accounts::avatar_id,
+        accounts::header_id,
+        accounts::display_name,
+        accounts::note,
+        accounts::username,
+        accounts::locked,
+        accounts::local,
+        accounts::domain,
+        accounts::actor_type,
+        accounts::url,
+        accounts::featured_collection_url,
+        accounts::followers_url,
+        accounts::following_url,
+        accounts::inbox_url,
+        accounts::outbox_url,
+        accounts::shared_inbox_url,
+        accounts::public_key_id,
+        accounts::public_key,
+        accounts::created_at,
+        accounts::updated_at,
+    )
+}
+
+#[derive(AsChangeset, Default)]
+#[diesel(table_name = accounts)]
+pub struct UpdateAccount<'a> {
+    pub display_name: Option<&'a str>,
+    pub note: Option<&'a str>,
+    pub avatar_id: Option<Uuid>,
+    pub header_id: Option<Uuid>,
+    pub locked: Option<bool>,
 }
 
 #[derive(Clone, Insertable)]
@@ -60,6 +105,7 @@ pub struct NewAccount<'a> {
     Debug,
     Deserialize,
     Eq,
+    FromPrimitive,
     FromSqlRow,
     Ord,
     PartialEq,
@@ -110,5 +156,24 @@ impl From<ActorType> for ApActorType {
             ActorType::Person => Self::Person,
             ActorType::Service => Self::Service,
         }
+    }
+}
+
+impl FromSql<Integer, Pg> for ActorType
+where
+    i32: FromSql<Integer, Pg>,
+{
+    fn from_sql(bytes: RawValue<'_, Pg>) -> deserialize::Result<Self> {
+        let value = i32::from_sql(bytes)?;
+        Ok(Self::from_i32(value).ok_or(EnumConversionError(value))?)
+    }
+}
+
+impl ToSql<Integer, Pg> for ActorType
+where
+    i32: ToSql<Integer, Pg>,
+{
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+        <i32 as ToSql<Integer, _>>::to_sql(&(*self as i32), &mut out.reborrow())
     }
 }

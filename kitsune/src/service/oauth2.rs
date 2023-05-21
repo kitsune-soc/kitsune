@@ -10,7 +10,7 @@ use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use kitsune_db::{
     model::oauth2::{self, NewApplication, NewAuthorizationCode},
-    schema::oauth2_applications,
+    schema::{oauth2_applications, oauth2_authorization_codes},
     PgPool,
 };
 use std::str::FromStr;
@@ -64,7 +64,7 @@ impl Oauth2Service {
                 scopes: "",
                 website: None,
             })
-            .execute(&mut db_conn)
+            .get_result(&mut db_conn)
             .await
             .map_err(Error::from)
     }
@@ -77,15 +77,17 @@ impl Oauth2Service {
             user_id,
         }: AuthorisationCode,
     ) -> Result<Response> {
-        let authorization_code = NewAuthorizationCode {
-            code: generate_secret().as_str(),
-            application_id: application.id,
-            user_id,
-            expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await?;
+        let mut db_conn = self.db_conn.get().await?;
+        let authorization_code: oauth2::AuthorizationCode =
+            diesel::insert_into(oauth2_authorization_codes::table)
+                .values(NewAuthorizationCode {
+                    code: generate_secret().as_str(),
+                    application_id: application.id,
+                    user_id,
+                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                })
+                .get_result(&mut db_conn)
+                .await?;
 
         if application.redirect_uri == SHOW_TOKEN_URI {
             Ok(ShowTokenPage {

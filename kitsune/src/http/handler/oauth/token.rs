@@ -10,8 +10,11 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::AsyncPgConnection;
 use futures_util::FutureExt;
 use http::StatusCode;
+use kitsune_db::{model::oauth2, schema::oauth2_applications};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use utoipa::ToSchema;
@@ -63,29 +66,28 @@ pub enum TokenForm {
     RefreshToken(RefreshTokenData),
 }
 
-async fn get_application<C>(
-    db_conn: &C,
+async fn get_application(
+    db_conn: &mut AsyncPgConnection,
     id: Uuid,
     secret: String,
     redirect_uri: Option<String>,
-) -> Result<oauth2_applications::Model>
-where
-    C: ConnectionTrait,
-{
-    let mut query =
-        Oauth2Applications::find_by_id(id).filter(oauth2_applications::Column::Secret.eq(secret));
+) -> Result<oauth2::Application> {
+    let mut query = oauth2_applications::table
+        .find(id)
+        .filter(oauth2_applications::secret.eq(secret))
+        .into_boxed();
     if let Some(redirect_uri) = redirect_uri {
-        query = query.filter(oauth2_applications::Column::RedirectUri.eq(redirect_uri));
+        query = query.filter(oauth2_applications::redirect_uri.eq(redirect_uri));
     }
 
     query
-        .one(db_conn)
+        .get_result(db_conn)
         .await?
         .ok_or(Error::OAuthApplicationNotFound)
 }
 
 async fn authorization_code(
-    db_conn: DatabaseConnection,
+    db_conn: &mut AsyncPgConnection,
     data: AuthorizationCodeData,
 ) -> Result<Response> {
     let Some((authorization_code, Some(user))) =

@@ -2,11 +2,11 @@ use super::url::UrlService;
 use crate::error::{ApiError, Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
-use diesel::QueryDsl;
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    model::media_attachment::{MediaAttachment, NewMediaAttachment},
+    model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
     PgPool,
 };
@@ -71,8 +71,8 @@ impl AttachmentService {
         media_attachments::table
             .find(id)
             .get_result(&mut db_conn)
-            .await?
-            .ok_or_else(|| ApiError::NotFound.into())
+            .await
+            .map_err(Error::from)
     }
 
     /// Get the URL to an attachment
@@ -122,23 +122,26 @@ impl AttachmentService {
     }
 
     pub async fn update(&self, update: Update) -> Result<MediaAttachment> {
-        let mut update_statement = diesel::update(
+        let mut changeset = UpdateMediaAttachment::default();
+        if let Some(ref description) = update.description {
+            changeset = UpdateMediaAttachment {
+                description: Some(description),
+                ..changeset
+            };
+        }
+
+        let mut db_conn = self.db_conn.get().await?;
+        diesel::update(
             media_attachments::table.filter(
                 media_attachments::id
                     .eq(update.attachment_id)
                     .and(media_attachments::account_id.eq(update.account_id)),
             ),
-        );
-
-        if let Some(description) = update.description {
-            update_statement = update_statement.set(media_attachments::description.eq(description));
-        }
-
-        let mut db_conn = self.db_conn.get().await?;
-        update_statement
-            .execute(&mut db_conn)
-            .await
-            .map_err(Error::from)
+        )
+        .set(changeset)
+        .get_result(&mut db_conn)
+        .await
+        .map_err(Error::from)
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
@@ -161,12 +164,12 @@ impl AttachmentService {
                 id: Uuid::now_v7(),
                 account_id: upload.account_id,
                 content_type: upload.content_type.as_str(),
-                description: upload.description,
+                description: upload.description.as_deref(),
                 blurhash: None,
                 file_path: Some(upload.path.as_str()),
                 remote_url: None,
             })
-            .execute(&mut db_conn)
+            .get_result(&mut db_conn)
             .await?;
 
         Ok(media_attachment)

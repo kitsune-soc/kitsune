@@ -1,6 +1,6 @@
 use super::{account::Account, post::Post};
 use crate::schema::{media_attachments, posts_media_attachments};
-use diesel::{Associations, Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -17,6 +17,12 @@ pub struct MediaAttachment {
     pub remote_url: Option<String>,
     pub created_at: OffsetDateTime,
     pub updated_at: OffsetDateTime,
+}
+
+#[derive(AsChangeset, Default)]
+#[diesel(table_name = media_attachments)]
+pub struct UpdateMediaAttachment<'a> {
+    pub description: Option<&'a str>,
 }
 
 #[derive(Clone, Insertable)]

@@ -1,4 +1,6 @@
 use crate::error::{Error, Result};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
     schema::{accounts, posts, users},
     PgPool,
@@ -33,30 +35,36 @@ impl InstanceService {
     }
 
     pub async fn known_instances(&self) -> Result<u64> {
+        let mut db_conn = self.db_conn.get().await?;
         accounts::table
             .filter(accounts::local.eq(false))
             .select(accounts::domain)
             .group_by(accounts::domain)
             .count()
-            .get_result(&self.db_conn)
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
+        let mut db_conn = self.db_conn.get().await?;
         posts::table
             .filter(posts::is_local.eq(true))
             .count()
-            .get_result(&self.db_conn)
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 
     pub async fn user_count(&self) -> Result<u64> {
+        let mut db_conn = self.db_conn.get().await?;
         users::table
             .count()
-            .get_result(&self.db_conn)
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 }

@@ -16,9 +16,13 @@ use crate::{
 };
 use async_stream::try_stream;
 use derive_builder::Builder;
-use diesel::QueryDsl;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
+use diesel::{
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
+};
+use diesel_async::{
+    scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
+};
+use futures_util::{stream::BoxStream, Stream, StreamExt};
 use kitsune_db::{
     add_post_permission_check,
     model::{
@@ -36,7 +40,6 @@ use kitsune_db::{
     PgPool,
 };
 use pulldown_cmark::{html, Options, Parser};
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -140,9 +143,9 @@ impl PostService {
         if media_attachments::table
             .filter(media_attachments::id.eq_any(media_attachment_ids))
             .count()
-            .get_result(conn)
+            .get_result::<i64>(conn)
             .await?
-            != media_attachment_ids.len() as u64
+            != media_attachment_ids.len() as i64
         {
             return Err(ApiError::BadRequest.into());
         }
@@ -154,7 +157,8 @@ impl PostService {
                     .map(|media_id| NewPostMediaAttachment {
                         post_id,
                         media_attachment_id: *media_id,
-                    }),
+                    })
+                    .collect::<Vec<NewPostMediaAttachment>>(),
             )
             .execute(conn)
             .await?;
@@ -177,9 +181,10 @@ impl PostService {
                     .iter()
                     .map(|(account_id, mention_text)| NewMention {
                         post_id,
-                        account_id,
+                        account_id: *account_id,
                         mention_text,
-                    }),
+                    })
+                    .collect::<Vec<NewMention<'_>>>(),
             )
             .execute(conn)
             .await?;
@@ -212,15 +217,15 @@ impl PostService {
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let post = self
-            .db_conn
+        let mut db_conn = self.db_conn.get().await?;
+        let post = db_conn
             .transaction(move |tx| {
                 async move {
                     let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
                         (posts::table
                             .find(in_reply_to_id)
                             .count()
-                            .get_result(tx)
+                            .get_result::<i64>(tx)
                             .await?
                             != 0)
                             .then_some(in_reply_to_id)
@@ -228,13 +233,13 @@ impl PostService {
                         None
                     };
 
-                    let post = diesel::insert_into(posts::table)
+                    let post: Post = diesel::insert_into(posts::table)
                         .values(NewPost {
                             id,
                             account_id: create_post.author_id,
                             in_reply_to_id,
                             reposted_post_id: None,
-                            subject: create_post.subject,
+                            subject: create_post.subject.as_deref(),
                             content: content.as_str(),
                             is_sensitive: create_post.sensitive,
                             visibility: create_post.visibility,
@@ -242,7 +247,8 @@ impl PostService {
                             url: url.as_str(),
                             created_at: None,
                         })
-                        .execute(tx)
+                        .returning(Post::columns())
+                        .get_result(tx)
                         .await?;
 
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
@@ -250,7 +256,7 @@ impl PostService {
 
                     Ok::<_, Error>(post)
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 
@@ -286,8 +292,9 @@ impl PostService {
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
         let mut db_conn = self.db_conn.get().await?;
-        let post = posts::table
+        let post: Post = posts::table
             .find(delete_post.post_id)
+            .select(Post::columns())
             .first(&mut db_conn)
             .await?;
 
@@ -300,7 +307,7 @@ impl PostService {
                             .and(users_roles::role.eq(Role::Administrator)),
                     )
                     .count()
-                    .get_result(&mut db_conn)
+                    .get_result::<i64>(&mut db_conn)
                     .await?;
 
                 if admin_role_count == 0 {
@@ -344,29 +351,29 @@ impl PostService {
             .unwrap();
 
         let mut db_conn = self.db_conn.get().await?;
-        let post = add_post_permission_check!(permission_check => posts::table.find(post_id))
-            .first(&mut db_conn)
+        let post: Post = add_post_permission_check!(permission_check => posts::table.find(post_id))
+            .select(Post::columns())
+            .get_result(&mut db_conn)
             .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.favourite_url(id);
-        let favourite = diesel::insert_into(posts_favourites::table)
+        let favourite_id = diesel::insert_into(posts_favourites::table)
             .values(NewFavourite {
                 id,
                 account_id: favouriting_account_id,
                 post_id: post.id,
                 url,
-                created_at: None(OffsetDateTime::now_utc()),
+                created_at: None,
             })
-            .execute(&mut db_conn)
+            .returning(posts_favourites::id)
+            .get_result(&mut db_conn)
             .await?;
 
         self.job_service
             .enqueue(
                 Enqueue::builder()
-                    .job(DeliverFavourite {
-                        favourite_id: favourite.id,
-                    })
+                    .job(DeliverFavourite { favourite_id })
                     .build(),
             )
             .await?;
@@ -384,10 +391,12 @@ impl PostService {
             .get_by_id(post_id, Some(favouriting_account_id))
             .await?;
 
-        if let Some(favourite) = Favourite::belongs_to(&post)
+        let mut db_conn = self.db_conn.get().await?;
+        if let Some(favourite) = Favourite::belonging_to(&post)
             .filter(posts_favourites::account_id.eq(favouriting_account_id))
-            .one(&self.db_conn)
-            .await?
+            .get_result::<Favourite>(&mut db_conn)
+            .await
+            .optional()?
         {
             self.job_service
                 .enqueue(
@@ -411,13 +420,15 @@ impl PostService {
     ///
     /// This should never panic. If it does, please open an issue.
     pub async fn get_by_id(&self, id: Uuid, fetching_account_id: Option<Uuid>) -> Result<Post> {
+        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(fetching_account_id)
             .build()
             .unwrap();
 
         add_post_permission_check!(permission_check => posts::table.find(id))
-            .get_result(&self.db_conn)
+            .select(Post::columns())
+            .get_result(&mut db_conn)
             .await
             .map_err(Error::from)
     }
@@ -433,18 +444,21 @@ impl PostService {
         fetching_account_id: Option<Uuid>,
     ) -> impl Stream<Item = Result<Post>> + '_ {
         try_stream! {
-            let mut last_post = self.get_by_id(id, fetching_account_id).await?;
+            let mut last_post = Some(self.get_by_id(id, fetching_account_id).await?);
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build()
                 .unwrap();
 
             while let Some(post) = last_post.take() {
+                let mut db_conn = self.db_conn.get().await?;
                 let post = add_post_permission_check!(
                         permission_check => posts::table.filter(posts::in_reply_to_id.eq(post.id))
                     )
-                    .one(&self.db_conn)
-                    .await?;
+                    .select(Post::columns())
+                    .get_result::<Post>(&mut db_conn)
+                    .await
+                    .optional()?;
 
                 if let Some(ref post) = post {
                     yield post.clone();
@@ -472,10 +486,12 @@ impl PostService {
                 .build()
                 .unwrap();
 
+            let mut db_conn = self.db_conn.get().await?;
             let descendant_stream = add_post_permission_check!(
                     permission_check => posts::table.filter(posts::in_reply_to_id.eq(id))
                 )
-                .load_stream(&self.db_conn)
+                .select(Post::columns())
+                .load_stream::<Post>(&mut db_conn)
                 .await?;
 
             for await descendant in descendant_stream {

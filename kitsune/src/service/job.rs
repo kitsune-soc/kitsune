@@ -1,4 +1,5 @@
 use crate::{error::Result, job::Job};
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::job::{JobState, NewJob},
     schema::jobs,
@@ -27,6 +28,7 @@ impl JobService {
     {
         let context = serde_json::to_value(enqueue.job.into())?;
 
+        let mut db_conn = self.db_conn.get().await?;
         diesel::insert_into(jobs::table)
             .values(NewJob {
                 id: Uuid::now_v7(),
@@ -34,7 +36,7 @@ impl JobService {
                 context,
                 run_at: enqueue.run_at.unwrap_or_else(OffsetDateTime::now_utc),
             })
-            .execute(&self.db_conn)
+            .execute(&mut db_conn)
             .await?;
 
         Ok(())

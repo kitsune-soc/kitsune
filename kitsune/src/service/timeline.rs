@@ -1,5 +1,6 @@
 use crate::error::{Error, Result};
-use diesel::ExpressionMethods;
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     add_post_permission_check,
@@ -48,6 +49,7 @@ impl TimelineService {
         &self,
         get_home: GetHome,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        let mut db_conn = self.db_conn.get().await?;
         let mut query = posts::table
             .filter(
                 // Post is owned by the user
@@ -78,7 +80,9 @@ impl TimelineService {
                             .select(posts_mentions::post_id),
                     )),
             )
-            .order(posts::created_at.desc());
+            .order(posts::created_at.desc())
+            .select(Post::columns())
+            .into_boxed();
 
         if let Some(max_id) = get_home.max_id {
             query = query.filter(posts::id.lt(max_id));
@@ -87,7 +91,7 @@ impl TimelineService {
             query = query.filter(posts::id.gt(min_id));
         }
 
-        Ok(query.load_stream(&self.db_conn).await?.map_err(Error::from))
+        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
     }
 
     /// Get a stream of public posts
@@ -100,13 +104,15 @@ impl TimelineService {
         &self,
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .include_unlisted(false)
             .build()
             .unwrap();
 
         let mut query = add_post_permission_check!(permission_check => posts::table)
-            .order(posts::created_at.desc());
+            .order(posts::created_at.desc())
+            .select(Post::columns());
 
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::id.lt(max_id));
@@ -121,6 +127,6 @@ impl TimelineService {
             query = query.filter(posts::is_local.eq(false));
         }
 
-        Ok(query.stream(&self.db_conn).await?.map_err(Error::from))
+        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
     }
 }

@@ -15,12 +15,17 @@ use crate::{
 };
 use bytes::Bytes;
 use derive_builder::Builder;
-use diesel::{ExpressionMethods, QueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     add_post_permission_check,
-    model::{account::Account, follower::NewFollow, post::Post},
+    model::{
+        account::{Account, UpdateAccount},
+        follower::Follow as DbFollow,
+        follower::NewFollow,
+        post::Post,
+    },
     post_permission_check::PermissionCheck,
     schema::{accounts, accounts_follows, posts},
     PgPool,
@@ -123,14 +128,16 @@ impl AccountService {
     pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let (account, follower) = tokio::try_join!(
+        let (account, follower): (Account, Account) = tokio::try_join!(
             accounts::table
                 .find(follow.account_id)
+                .select(Account::columns())
                 .get_result(&mut db_conn),
             accounts::table
                 .find(follow.follower_id)
+                .select(Account::columns())
                 .get_result(&mut db_conn)
-        );
+        )?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.follow_url(id);
@@ -149,19 +156,13 @@ impl AccountService {
 
         let follow_id = diesel::insert_into(accounts_follows::table)
             .values(follow_model)
-            .select(accounts_follows::id)
-            .execute(&mut db_conn)
+            .returning(accounts_follows::id)
+            .get_result(&mut db_conn)
             .await?;
 
         if !account.local {
             self.job_service
-                .enqueue(
-                    Enqueue::builder()
-                        .job(DeliverFollow {
-                            follow_id: follow_id.last_insert_id,
-                        })
-                        .build(),
-                )
+                .enqueue(Enqueue::builder().job(DeliverFollow { follow_id }).build())
                 .await?;
         }
 
@@ -170,6 +171,7 @@ impl AccountService {
 
     /// Get an account by its username and domain
     pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<Account>> {
+        let mut db_conn = self.db_conn.get().await?;
         if let Some(domain) = get_user.domain {
             if let Some(account) = accounts::table
                 .filter(
@@ -177,9 +179,10 @@ impl AccountService {
                         .eq(get_user.username)
                         .and(accounts::domain.eq(domain)),
                 )
-                .optional()
-                .one(&self.db_conn)
-                .await?
+                .select(Account::columns())
+                .get_result(&mut db_conn)
+                .await
+                .optional()?
             {
                 return Ok(Some(account));
             } else if !get_user.use_webfinger {
@@ -202,8 +205,10 @@ impl AccountService {
                         .eq(get_user.username)
                         .and(accounts::local.eq(true)),
                 )
-                .first(&self.db_cnn)
+                .select(Account::columns())
+                .first(&mut db_conn)
                 .await
+                .optional()
                 .map_err(Error::from)
         }
     }
@@ -212,8 +217,10 @@ impl AccountService {
     pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<Account>> {
         accounts::table
             .find(account_id)
+            .select(Account::columns())
             .get_result(&mut self.db_conn.get().await?)
             .await
+            .optional()
             .map_err(Error::from)
     }
 
@@ -226,6 +233,7 @@ impl AccountService {
         &self,
         get_posts: GetPosts,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
             .build()
@@ -234,6 +242,7 @@ impl AccountService {
         let mut posts_query = add_post_permission_check!(
             permission_check => posts::table.filter(posts::account_id.eq(get_posts.account_id))
         )
+        .select(Post::columns())
         .order(posts::created_at.desc());
 
         if let Some(min_id) = get_posts.min_id {
@@ -245,7 +254,7 @@ impl AccountService {
         }
 
         Ok(posts_query
-            .stream(&self.db_conn)
+            .load_stream(&mut db_conn)
             .await?
             .map_err(Error::from))
     }
@@ -258,14 +267,16 @@ impl AccountService {
     pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let (account, follower) = tokio::try_join!(
+        let (account, follower): (Account, Account) = tokio::try_join!(
             accounts::table
                 .find(unfollow.account_id)
+                .select(Account::columns())
                 .get_result(&mut db_conn),
             accounts::table
                 .find(unfollow.follower_id)
+                .select(Account::columns())
                 .get_result(&mut db_conn)
-        );
+        )?;
 
         let follow = accounts_follows::table
             .filter(
@@ -273,9 +284,9 @@ impl AccountService {
                     .eq(account.id)
                     .and(accounts_follows::follower_id.eq(follower.id)),
             )
-            .optional()
-            .get_result(&self.db_conn)
-            .await?;
+            .get_result::<DbFollow>(&mut db_conn)
+            .await
+            .optional()?;
 
         if let Some(follow) = follow {
             if !account.local {
@@ -299,27 +310,46 @@ impl AccountService {
         A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
         H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
     {
-        let mut update_query = diesel::update(accounts::table.find(update.account_id));
+        let mut changeset = UpdateAccount::default();
 
-        if let Some(display_name) = update.display_name {
-            update_query = update_query.set(accounts::display_name.eq(display_name));
+        if let Some(ref display_name) = update.display_name {
+            changeset = UpdateAccount {
+                display_name: Some(display_name),
+                ..changeset
+            };
         }
-        if let Some(note) = update.note {
-            update_query = update_query.set(accounts::note.eq(note));
+        if let Some(ref note) = update.note {
+            changeset = UpdateAccount {
+                note: Some(note),
+                ..changeset
+            };
         }
         if let Some(avatar) = update.avatar {
             let media_attachment = self.attachment_service.upload(avatar).await?;
-            update_query = update_query.set(accounts::avatar_id.eq(media_attachment.id));
+            changeset = UpdateAccount {
+                avatar_id: Some(media_attachment.id),
+                ..changeset
+            };
         }
         if let Some(header) = update.header {
             let media_attachment = self.attachment_service.upload(header).await?;
-            update_query = update_query.set(accounts::header_id.eq(media_attachment.id));
+            changeset = UpdateAccount {
+                header_id: Some(media_attachment.id),
+                ..changeset
+            };
         }
         if let Some(locked) = update.locked {
-            update_query = update_query.set(accounts::locked.eq(locked));
+            changeset = UpdateAccount {
+                locked: Some(locked),
+                ..changeset
+            };
         }
 
-        let updated_account = update_query.execute(&mut self.db_conn.get().await?).await?;
+        let updated_account: Account = diesel::update(accounts::table.find(update.account_id))
+            .set(changeset)
+            .returning(Account::columns())
+            .get_result(&mut self.db_conn.get().await?)
+            .await?;
 
         self.job_service
             .enqueue(
