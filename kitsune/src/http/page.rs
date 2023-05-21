@@ -43,7 +43,7 @@ impl PostComponent {
 
         let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
             .inner_join(media_attachments::table)
-            .select(media_attachments::all_columns)
+            .select(DbMediaAttachment::as_select())
             .load_stream::<DbMediaAttachment>(&mut db_conn);
 
         let (author, attachments_stream) = tokio::try_join!(author_fut, attachments_stream_fut)?;

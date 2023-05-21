@@ -327,7 +327,7 @@ impl IntoMastodon for DbPost {
 
         let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
             .inner_join(media_attachments::table)
-            .select(media_attachments::all_columns)
+            .select(DbMediaAttachment::as_select())
             .load_stream::<DbMediaAttachment>(&mut db_conn)
             .map_err(Error::from)
             .and_then(|attachment_stream| {

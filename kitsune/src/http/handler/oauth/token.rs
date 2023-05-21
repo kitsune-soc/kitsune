@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     http::extractor::FormOrJson,
     service::oauth2::TOKEN_VALID_DURATION,
     util::{generate_secret, AccessTokenTtl},
@@ -14,7 +14,6 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::{
     scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
 };
-use futures_util::FutureExt;
 use http::StatusCode;
 use kitsune_db::{
     function::now,
@@ -275,22 +274,19 @@ async fn refresh_token(
                         application_id: access_token.application_id,
                         expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                     })
-                    .get_result(tx)
+                    .get_result::<oauth2::AccessToken>(tx)
                     .await?;
 
-                let refresh_token = oauth2_refresh_tokens::ActiveModel {
-                    token: ActiveValue::Set(refresh_token.token),
-                    access_token: ActiveValue::Set(new_access_token.token.clone()),
-                    ..Default::default()
-                }
-                .update(tx)
-                .await?;
+                let refresh_token = diesel::update(&refresh_token)
+                    .set(oauth2_refresh_tokens::access_token.eq(new_access_token.token.as_str()))
+                    .get_result::<oauth2::RefreshToken>(tx)
+                    .await?;
 
                 diesel::delete(&access_token).execute(tx).await?;
 
                 Ok::<_, Error>((new_access_token, refresh_token))
             }
-            .boxed()
+            .scope_boxed()
         })
         .await?;
 

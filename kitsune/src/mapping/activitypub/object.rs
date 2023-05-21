@@ -14,7 +14,7 @@ use kitsune_db::{
         mention::Mention,
         post::Post,
     },
-    schema::{accounts, media_attachments, posts, posts_mentions},
+    schema::{accounts, media_attachments, posts},
 };
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
@@ -73,7 +73,7 @@ impl IntoObject for Post {
         let mut db_conn = state.db_conn.get().await?;
         let account_fut = accounts::table
             .find(self.account_id)
-            .select(Account::columns())
+            .select(Account::as_select())
             .get_result(&mut db_conn);
 
         let in_reply_to_fut = OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
@@ -86,12 +86,12 @@ impl IntoObject for Post {
 
         let mentions_fut = Mention::belonging_to(&self)
             .inner_join(accounts::table)
-            .select((posts_mentions::all_columns, Account::as_select()))
+            .select((Mention::as_select(), Account::as_select()))
             .load::<(Mention, Account)>(&mut db_conn);
 
         let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
             .inner_join(media_attachments::table)
-            .select(media_attachments::all_columns)
+            .select(DbMediaAttachment::as_select())
             .load_stream::<DbMediaAttachment>(&mut db_conn);
 
         let (account, in_reply_to, mentions, attachment_stream) = tokio::try_join!(

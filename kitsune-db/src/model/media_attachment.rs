@@ -1,11 +1,11 @@
 use super::{account::Account, post::Post};
 use crate::schema::{media_attachments, posts_media_attachments};
-use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Associations, Clone, Deserialize, Identifiable, Serialize, Queryable)]
+#[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(belongs_to(Account), table_name = media_attachments)]
 pub struct MediaAttachment {
     pub id: Uuid,
