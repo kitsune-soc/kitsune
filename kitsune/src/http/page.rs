@@ -1,10 +1,17 @@
 use crate::error::{Error, Result};
 use crate::state::Zustand;
 use askama::Template;
+use diesel::{BelongingToDsl, QueryDsl};
+use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, TryStreamExt};
-use kitsune_db::model::media_attachment::PostMediaAttachment;
-use kitsune_db::model::post::Post;
-use kitsune_db::schema::{accounts, media_attachments};
+use kitsune_db::{
+    model::{
+        account::Account,
+        media_attachment::{MediaAttachment as DbMediaAttachment, PostMediaAttachment},
+        post::Post,
+    },
+    schema::{accounts, media_attachments},
+};
 use std::collections::VecDeque;
 
 pub struct MediaAttachment {
@@ -31,12 +38,13 @@ impl PostComponent {
 
         let author_fut = accounts::table
             .find(post.account_id)
-            .get_result(&mut db_conn);
+            .select(Account::columns())
+            .get_result::<Account>(&mut db_conn);
 
         let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
             .inner_join(media_attachments::table)
             .select(media_attachments::all_columns)
-            .load_stream(&mut db_conn);
+            .load_stream::<DbMediaAttachment>(&mut db_conn);
 
         let (author, attachments_stream) = tokio::try_join!(author_fut, attachments_stream_fut)?;
         let attachments = attachments_stream

@@ -9,10 +9,13 @@ use axum::{
     extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
 };
-use diesel::QueryDsl;
+use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    add_post_permission_check, model::post::Post, post_permission_check::PermissionCheck,
+    add_post_permission_check,
+    model::{account::Account, post::Post},
+    post_permission_check::PermissionCheck,
     schema::accounts,
 };
 use kitsune_type::ap::{
@@ -44,7 +47,8 @@ pub async fn get(
     let account = accounts::table
         .find(account_id)
         .filter(accounts::local.eq(true))
-        .one(&mut db_conn)
+        .select(Account::columns())
+        .get_result::<Account>(&mut db_conn)
         .await?;
 
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
@@ -68,7 +72,7 @@ pub async fn get(
         let id = format!("{}{original_uri}", url_service.base_url());
         let prev = format!(
             "{base_url}?page=true&min_id={}",
-            posts.first().map_or(Uuid::max(), |post| post.id)
+            posts.get(0).map_or(Uuid::max(), |post| post.id)
         );
         let next = format!(
             "{base_url}?page=true&max_id={}",
@@ -96,7 +100,7 @@ pub async fn get(
         let public_post_count =
             add_post_permission_check!(PermissionCheck::default() => Post::belonging_to(&account))
                 .count()
-                .get_result(&mut db_conn)
+                .get_result::<i64>(&mut db_conn)
                 .await?;
 
         let first = format!("{base_url}?page=true");
@@ -106,7 +110,7 @@ pub async fn get(
             context: ap_context(),
             id: base_url,
             r#type: CollectionType::OrderedCollection,
-            total_items: public_post_count,
+            total_items: public_post_count as u64,
             first: Some(first),
             last: Some(last),
         })

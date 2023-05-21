@@ -5,7 +5,8 @@ use axum::{
     response::{IntoResponse, Response},
     RequestPartsExt, TypedHeader,
 };
-use diesel::QueryDsl;
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
+use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
 use kitsune_db::{
@@ -50,17 +51,19 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let mut user_account_query = oauth2_access_tokens::table
             .inner_join(users::table)
-            .inner_join(accounts::table)
-            .filter(oauth2_access_tokens::token.eq(bearer_token.token()));
+            .inner_join(accounts::table.on(accounts::id.eq(users::account_id)))
+            .filter(oauth2_access_tokens::token.eq(bearer_token.token()))
+            .into_boxed();
 
         if ENFORCE_EXPIRATION {
             user_account_query = user_account_query
                 .filter(oauth2_access_tokens::expired_at.gt(OffsetDateTime::now_utc()));
         }
 
+        let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
         let (user, account) = user_account_query
-            .select((users::all_columns, accounts::all_columns))
-            .get_result(&state.db_conn)
+            .select((users::all_columns, Account::columns()))
+            .get_result(&mut db_conn)
             .await
             .map_err(Error::from)?;
 

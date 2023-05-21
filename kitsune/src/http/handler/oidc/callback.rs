@@ -10,6 +10,8 @@ use axum::{
     extract::{Query, State},
     response::Response,
 };
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
@@ -38,9 +40,9 @@ pub async fn get(
     let mut db_conn = db_conn.get().await?;
     let user = if let Some(user) = users::table
         .filter(users::oidc_id.eq(&user_info.subject))
-        .optional()
         .get_result(&mut db_conn)
-        .await?
+        .await
+        .optional()?
     {
         user
     } else {
@@ -55,7 +57,7 @@ pub async fn get(
 
     let application = oauth2_applications::table
         .find(user_info.oauth2.application_id)
-        .get_result(&db_conn)
+        .get_result(&mut db_conn)
         .await?;
 
     let authorisation_code = AuthorisationCode::builder()

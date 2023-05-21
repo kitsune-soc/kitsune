@@ -2,7 +2,13 @@ use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use diesel::QueryDsl;
-use kitsune_db::{model::media_attachment::MediaAttachment as DbMediaAttachment, schema::accounts};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{
+        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
+    },
+    schema::accounts,
+};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -25,7 +31,8 @@ impl MediaAttachment {
 
         accounts::table
             .find(self.account_id)
-            .get_result(&mut db_conn)
+            .select(DbAccount::columns())
+            .get_result::<DbAccount>(&mut db_conn)
             .await
             .map(Into::into)
             .map_err(Into::into)

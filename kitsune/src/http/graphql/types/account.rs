@@ -1,9 +1,15 @@
 use super::MediaAttachment;
 use crate::{http::graphql::ContextExt, service::account::GetPosts};
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use diesel::QueryDsl;
+use diesel::{OptionalExtension, QueryDsl};
+use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
-use kitsune_db::{model::account::Account as DbAccount, schema::media_attachments};
+use kitsune_db::{
+    model::{
+        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
+    },
+    schema::media_attachments,
+};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -31,9 +37,9 @@ impl Account {
         if let Some(avatar_id) = self.avatar_id {
             media_attachments::table
                 .find(avatar_id)
-                .optional()
-                .one(&mut db_conn)
+                .get_result::<DbMediaAttachment>(&mut db_conn)
                 .await
+                .optional()
                 .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
         } else {
@@ -47,9 +53,9 @@ impl Account {
         if let Some(header_id) = self.header_id {
             media_attachments::table
                 .find(header_id)
-                .optional()
-                .one(&mut db_conn)
+                .get_result::<DbMediaAttachment>(&mut db_conn)
                 .await
+                .optional()
                 .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
         } else {

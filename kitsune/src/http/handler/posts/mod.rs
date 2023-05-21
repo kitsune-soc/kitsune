@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Result},
+    error::Result,
     http::{
         cond,
         page::{PostComponent, PostPage},
@@ -23,11 +23,7 @@ async fn get_html(
     State(post_service): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<PostPage> {
-    let post = post_service
-        .get_by_id(id, None)
-        .await?
-        .ok_or(ApiError::NotFound)?;
-
+    let post = post_service.get_by_id(id, None).await?;
     let ancestors = post_service
         .get_ancestors(post.id, None)
         .try_fold(VecDeque::new(), |mut acc, item| {
@@ -60,8 +56,7 @@ async fn get(
     State(post): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Object>> {
-    let post = post.get_by_id(id, None).await?.ok_or(ApiError::NotFound)?;
-
+    let post = post.get_by_id(id, None).await?;
     Ok(ActivityPubJson(post.into_object(&state).await?))
 }
 

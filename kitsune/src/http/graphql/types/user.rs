@@ -1,8 +1,10 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
-    model::user::User as DbUser,
+    model::{account::Account as DbAccount, user::User as DbUser},
     schema::{accounts, users},
 };
 use time::OffsetDateTime;
@@ -28,9 +30,9 @@ impl User {
         users::table
             .find(self.id)
             .inner_join(accounts::table)
-            .select(accounts::all_columns)
-            .get_result(&mut db_conn)
-            .await?
+            .select(DbAccount::columns())
+            .get_result::<DbAccount>(&mut db_conn)
+            .await
             .map(Into::into)
             .map_err(Error::from)
     }

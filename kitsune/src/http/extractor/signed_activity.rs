@@ -11,7 +11,8 @@ use axum::{
     RequestExt,
 };
 use const_oid::db::rfc8410::ID_ED_25519;
-use diesel_async::AsyncPgConnection;
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::{request::Parts, StatusCode};
 use kitsune_db::{model::account::Account, schema::accounts};
 use kitsune_http_signatures::{
@@ -60,12 +61,13 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
-        if !verify_signature(&parts, &state.db_conn, Some(&remote_user)).await? {
+        let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
+        if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
             let remote_user = state.fetcher.fetch_actor(opts).await?;
 
-            if !verify_signature(&parts, &state.db_conn, Some(&remote_user)).await? {
+            if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }
@@ -81,8 +83,9 @@ async fn verify_signature(
 ) -> Result<bool> {
     let is_valid = HttpVerifier::default()
         .verify(parts, |key_id| async move {
-            let remote_user = accounts::table
+            let remote_user: Account = accounts::table
                 .filter(accounts::public_key_id.eq(key_id))
+                .select(Account::columns())
                 .first(db_conn)
                 .await?;
 

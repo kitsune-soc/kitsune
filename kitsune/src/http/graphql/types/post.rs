@@ -2,7 +2,11 @@ use super::Visibility;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use diesel::QueryDsl;
-use kitsune_db::{model::post::Post as DbPost, schema::accounts};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{account::Account as DbAccount, post::Post as DbPost},
+    schema::accounts,
+};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -29,7 +33,8 @@ impl Post {
 
         Ok(accounts::table
             .find(self.account_id)
-            .get_result(&mut db_conn)
+            .select(DbAccount::columns())
+            .get_result::<DbAccount>(&mut db_conn)
             .await?
             .into())
     }

@@ -1,5 +1,7 @@
 use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
 use kitsune_db::schema::{posts, users};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
@@ -17,13 +19,13 @@ use serde_json::Value;
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
     let mut db_conn = state.db_conn.get().await?;
 
-    let total_fut = users::table.count().get_result(&mut db_conn);
+    let total_fut = users::table.count().get_result::<i64>(&mut db_conn);
     let local_posts_fut = posts::table
         .filter(posts::is_local.eq(true))
         .count()
-        .get_result(&mut db_conn);
+        .get_result::<i64>(&mut db_conn);
 
-    let (total, local_posts) = tokio::try_join!(total_fut, local_posts_fut);
+    let (total, local_posts) = tokio::try_join!(total_fut, local_posts_fut)?;
 
     Ok(Json(TwoOne {
         version: Version::TwoOne,
@@ -41,12 +43,12 @@ async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
         open_registrations: true,
         usage: Usage {
             users: UsageUsers {
-                total,
+                total: total as u64,
                 active_halfyear: None,
                 active_month: None,
             },
             local_comments: None,
-            local_posts,
+            local_posts: local_posts as u64,
         },
         metadata: Value::Null,
     }))

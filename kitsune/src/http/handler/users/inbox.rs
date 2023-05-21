@@ -8,15 +8,16 @@ use crate::{
     state::Zustand,
 };
 use axum::{debug_handler, extract::State};
-use diesel::{QueryDsl, RunQueryDsl};
-use futures_util::{future::OptionFuture, FutureExt};
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use futures_util::future::OptionFuture;
 use kitsune_db::{
     add_post_permission_check,
     model::{
         account::Account,
         favourite::NewFavourite,
         follower::NewFollow,
-        post::{NewPost, Visibility},
+        post::{NewPost, Post, Visibility},
     },
     post_permission_check::PermissionCheck,
     schema::{accounts_follows, posts, posts_favourites},
@@ -48,8 +49,8 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
         .transpose()?
         .map(|in_reply_to| in_reply_to.id);
 
-        let new_post_id = state
-            .db_conn
+        let mut db_conn = state.db_conn.get().await?;
+        let new_post_id = db_conn
             .transaction(|tx| {
                 async move {
                     let visibility = Visibility::from_activitypub(&author, &object).unwrap();
@@ -68,8 +69,8 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
                             url: object.id.as_ref(),
                             created_at: Some(object.published),
                         })
-                        .select(posts::id)
-                        .execute(tx)
+                        .returning(posts::id)
+                        .get_result(tx)
                         .await?;
 
                     handle_attachments(tx, &author, new_post_id, object.attachment).await?;
@@ -77,7 +78,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
 
                     Ok::<_, Error>(new_post_id)
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 
@@ -97,15 +98,12 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
 
 async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let mut db_conn = state.db_conn.get().await?;
-    let Some((post_id,)): Option<Uuid> = posts::table
+    let post_id = posts::table
         .filter(posts::account_id.eq(author.id))
         .filter(posts::url.eq(activity.object()))
         .select(posts::id)
         .get_result(&mut db_conn)
-        .await?
-    else {
-        return Ok(())
-    };
+        .await?;
 
     diesel::delete(posts::table.find(post_id))
         .execute(&mut db_conn)
@@ -128,6 +126,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
     let approved_at = followed_user.locked.not().then(OffsetDateTime::now_utc);
 
+    let mut db_conn = state.db_conn.get().await?;
     let follow_id = diesel::insert_into(accounts_follows::table)
         .values(NewFollow {
             id: Uuid::now_v7(),
@@ -137,8 +136,8 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
             url: activity.id.as_str(),
             created_at: Some(activity.published),
         })
-        .select(accounts_follows::id)
-        .execute(&state.db_conn)
+        .returning(accounts_follows::id)
+        .get_result(&mut db_conn)
         .await?;
 
     if followed_user.local {
@@ -159,14 +158,12 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
         .build()
         .unwrap();
 
-    let Some(post) = add_post_permission_check!(
-            permission_check => posts::table.filter(posts::url.eq(activity.object()))
-        )
-        .get_result(&mut db_conn)
-        .await?
-    else {
-        return Ok(());
-    };
+    let post = add_post_permission_check!(
+        permission_check => posts::table.filter(posts::url.eq(activity.object()))
+    )
+    .select(Post::columns())
+    .get_result::<Post>(&mut db_conn)
+    .await?;
 
     diesel::insert_into(posts_favourites::table)
         .values(NewFavourite {

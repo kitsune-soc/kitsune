@@ -2,6 +2,8 @@ use crate::{
     error::Result, http::responder::ActivityPubJson, service::url::UrlService, state::Zustand,
 };
 use axum::extract::{OriginalUri, Path, State};
+use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
+use diesel_async::RunQueryDsl;
 use kitsune_db::schema::{accounts, accounts_follows};
 use kitsune_type::ap::{
     ap_context,
@@ -18,15 +20,14 @@ pub async fn get(
     let mut db_conn = state.db_conn.get().await?;
     let following_count = accounts_follows::table
         .inner_join(
-            accounts::table
-                .on(accounts_follows::follower_id
-                    .eq(accounts::id)
-                    .and(accounts_follows::approved_at.is_not_null()))
+            accounts::table.on(accounts_follows::follower_id
+                .eq(accounts::id)
+                .and(accounts_follows::approved_at.is_not_null())
                 .and(accounts::id.eq(account_id))
-                .and(accounts::local.eq(true)),
+                .and(accounts::local.eq(true))),
         )
         .count()
-        .get_result(&mut db_conn)
+        .get_result::<i64>(&mut db_conn)
         .await?;
 
     let id = format!("{}{}", url_service.base_url(), original_uri.path());
@@ -34,7 +35,7 @@ pub async fn get(
         context: ap_context(),
         id,
         r#type: CollectionType::OrderedCollection,
-        total_items: following_count,
+        total_items: following_count as u64,
         first: None,
         last: None,
     }))
