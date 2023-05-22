@@ -3,9 +3,8 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelpe
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    add_post_permission_check,
     model::post::{Post, Visibility},
-    post_permission_check::PermissionCheck,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_mentions},
     PgPool,
 };
@@ -110,7 +109,8 @@ impl TimelineService {
             .build()
             .unwrap();
 
-        let mut query = add_post_permission_check!(permission_check => posts::table)
+        let mut query = posts::table
+            .add_post_permission_check(permission_check)
             .order(posts::created_at.desc())
             .select(Post::as_select())
             .into_boxed();

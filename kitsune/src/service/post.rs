@@ -25,7 +25,6 @@ use diesel_async::{
 };
 use futures_util::{stream::BoxStream, Stream, StreamExt};
 use kitsune_db::{
-    add_post_permission_check,
     model::{
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
@@ -33,7 +32,7 @@ use kitsune_db::{
         post::{NewPost, Post, Visibility},
         user_role::Role,
     },
-    post_permission_check::PermissionCheck,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
         media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
         users_roles,
@@ -356,7 +355,9 @@ impl PostService {
             .unwrap();
 
         let mut db_conn = self.db_conn.get().await?;
-        let post: Post = add_post_permission_check!(permission_check => posts::table.find(post_id))
+        let post: Post = posts::table
+            .find(post_id)
+            .add_post_permission_check(permission_check)
             .select(Post::as_select())
             .get_result(&mut db_conn)
             .await?;
@@ -431,7 +432,9 @@ impl PostService {
             .build()
             .unwrap();
 
-        add_post_permission_check!(permission_check => posts::table.find(id))
+        posts::table
+            .find(id)
+            .add_post_permission_check(permission_check)
             .select(Post::as_select())
             .get_result(&mut db_conn)
             .await
@@ -457,9 +460,9 @@ impl PostService {
 
             while let Some(post) = last_post.take() {
                 let mut db_conn = self.db_conn.get().await?;
-                let post = add_post_permission_check!(
-                        permission_check => posts::table.filter(posts::in_reply_to_id.eq(post.id))
-                    )
+                let post = posts::table
+                    .filter(posts::in_reply_to_id.eq(post.id))
+                    .add_post_permission_check(permission_check)
                     .select(Post::as_select())
                     .get_result::<Post>(&mut db_conn)
                     .await
@@ -492,9 +495,9 @@ impl PostService {
                 .unwrap();
 
             let mut db_conn = self.db_conn.get().await?;
-            let descendant_stream = add_post_permission_check!(
-                    permission_check => posts::table.filter(posts::in_reply_to_id.eq(id))
-                )
+            let descendant_stream = posts::table
+                .filter(posts::in_reply_to_id.eq(id))
+                .add_post_permission_check(permission_check)
                 .select(Post::as_select())
                 .load_stream::<Post>(&mut db_conn)
                 .await?;

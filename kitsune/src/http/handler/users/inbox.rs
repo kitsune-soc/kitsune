@@ -12,14 +12,13 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelpe
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
 use kitsune_db::{
-    add_post_permission_check,
     model::{
         account::Account,
         favourite::NewFavourite,
         follower::NewFollow,
         post::{NewPost, Post, Visibility},
     },
-    post_permission_check::PermissionCheck,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_favourites},
 };
 use kitsune_type::ap::{Activity, ActivityType};
@@ -158,12 +157,12 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
         .build()
         .unwrap();
 
-    let post = add_post_permission_check!(
-        permission_check => posts::table.filter(posts::url.eq(activity.object()))
-    )
-    .select(Post::as_select())
-    .get_result::<Post>(&mut db_conn)
-    .await?;
+    let post = posts::table
+        .filter(posts::url.eq(activity.object()))
+        .add_post_permission_check(permission_check)
+        .select(Post::as_select())
+        .get_result::<Post>(&mut db_conn)
+        .await?;
 
     diesel::insert_into(posts_favourites::table)
         .values(NewFavourite {

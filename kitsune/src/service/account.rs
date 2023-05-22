@@ -22,14 +22,13 @@ use diesel::{
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    add_post_permission_check,
     model::{
         account::{Account, UpdateAccount},
         follower::Follow as DbFollow,
         follower::NewFollow,
         post::Post,
     },
-    post_permission_check::PermissionCheck,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, posts},
     PgPool,
 };
@@ -243,12 +242,12 @@ impl AccountService {
             .build()
             .unwrap();
 
-        let mut posts_query = add_post_permission_check!(
-            permission_check => posts::table.filter(posts::account_id.eq(get_posts.account_id))
-        )
-        .select(Post::as_select())
-        .order(posts::created_at.desc())
-        .into_boxed();
+        let mut posts_query = posts::table
+            .filter(posts::account_id.eq(get_posts.account_id))
+            .add_post_permission_check(permission_check)
+            .select(Post::as_select())
+            .order(posts::created_at.desc())
+            .into_boxed();
 
         if let Some(min_id) = get_posts.min_id {
             posts_query = posts_query.filter(posts::id.gt(min_id));

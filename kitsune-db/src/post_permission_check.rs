@@ -1,8 +1,18 @@
+use crate::{
+    model::post::Visibility,
+    schema::{accounts_follows, posts, posts_mentions},
+};
 use derive_builder::Builder;
+use diesel::{
+    pg::Pg,
+    query_dsl::{filter_dsl::FilterDsl, select_dsl::SelectDsl},
+    sql_types::Bool,
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods,
+};
 use uuid::Uuid;
 
 /// Parameters for adding a permission check to a post select query
-#[derive(Builder, Clone)]
+#[derive(Builder, Clone, Copy)]
 pub struct PermissionCheck {
     /// ID of the account that is fetching the posts
     #[builder(default)]
@@ -31,34 +41,31 @@ impl Default for PermissionCheck {
     }
 }
 
-#[macro_export]
-macro_rules! add_post_permission_check {
-    ($permission_opts:expr => $query:expr) => {{
-        use diesel::{
-            sql_types::Bool, BoolExpressionMethods, BoxableExpression, ExpressionMethods, QueryDsl,
-        };
-        use $crate::{
-            model::post::Visibility,
-            schema::{accounts_follows, posts, posts_mentions},
-        };
+pub trait PostPermissionCheckExt<Predicate>: FilterDsl<Predicate> {
+    fn add_post_permission_check(self, permission_check: PermissionCheck) -> Self::Output;
+}
 
-        let mut permission_opts = &$permission_opts;
+impl<T> PostPermissionCheckExt<Box<dyn BoxableExpression<posts::table, Pg, SqlType = Bool>>> for T
+where
+    T: FilterDsl<Box<dyn BoxableExpression<posts::table, Pg, SqlType = Bool>>>,
+{
+    fn add_post_permission_check(self, permission_check: PermissionCheck) -> Self::Output {
         let mut post_condition: Box<dyn BoxableExpression<_, _, SqlType = Bool>> =
             Box::new(posts::visibility.eq(Visibility::Public));
 
-        if permission_opts.include_unlisted {
+        if permission_check.include_unlisted {
             post_condition =
                 Box::new(post_condition.or(posts::visibility.eq(Visibility::Unlisted)));
         }
 
-        if let Some(fetching_account_id) = permission_opts.fetching_account_id {
+        if let Some(fetching_account_id) = permission_check.fetching_account_id {
             post_condition = Box::new(
                 post_condition.or(
                     // The post is owned by the user
                     (posts::account_id.eq(fetching_account_id))
                         .or(
                             // Post is follower-only, and the user is following the author
-                            (posts::visibility.eq(Visibility::FollowerOnly).and(
+                            posts::visibility.eq(Visibility::FollowerOnly).and(
                                 posts::account_id.eq_any(
                                     accounts_follows::table
                                         .filter(
@@ -68,22 +75,22 @@ macro_rules! add_post_permission_check {
                                         )
                                         .select(accounts_follows::account_id),
                                 ),
-                            )),
+                            ),
                         )
                         .or(
                             // Post is mention-only, and user is mentioned in the post
-                            (posts::visibility.eq(Visibility::MentionOnly).and(
+                            posts::visibility.eq(Visibility::MentionOnly).and(
                                 posts::id.eq_any(
                                     posts_mentions::table
                                         .filter(posts_mentions::account_id.eq(fetching_account_id))
                                         .select(posts_mentions::post_id),
                                 ),
-                            )),
+                            ),
                         ),
                 ),
             );
         }
 
-        $query.filter(post_condition)
-    }};
+        self.filter(post_condition)
+    }
 }

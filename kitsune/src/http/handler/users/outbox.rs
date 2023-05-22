@@ -13,9 +13,8 @@ use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    add_post_permission_check,
     model::{account::Account, post::Post},
-    post_permission_check::PermissionCheck,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
 };
 use kitsune_type::ap::{
@@ -97,11 +96,11 @@ pub async fn get(
         })
         .into_response())
     } else {
-        let public_post_count =
-            add_post_permission_check!(PermissionCheck::default() => Post::belonging_to(&account))
-                .count()
-                .get_result::<i64>(&mut db_conn)
-                .await?;
+        let public_post_count = Post::belonging_to(&account)
+            .add_post_permission_check(PermissionCheck::default())
+            .count()
+            .get_result::<i64>(&mut db_conn)
+            .await?;
 
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
