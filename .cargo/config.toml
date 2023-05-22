@@ -1,6 +1,6 @@
 [build]
 rustdocflags = ["--document-private-items"]
-rustflags = ["--cfg", "uuid_unstable"]
+rustflags = ["--cfg", "uuid_unstable", "-C", "target-feature=+aes"]
 
 [registries.crates-io]
 protocol = "sparse"
