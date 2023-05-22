@@ -54,7 +54,7 @@ where
     type Output = T::Output;
 
     fn add_post_permission_check(self, permission_check: PermissionCheck) -> Self::Output {
-        let mut post_condition: Box<dyn BoxableExpression<_, _, SqlType = Bool>> =
+        let mut post_condition: Box<dyn BoxableExpression<_, _, SqlType = _>> =
             Box::new(posts::visibility.eq(Visibility::Public));
 
         if permission_check.include_unlisted {
