@@ -108,6 +108,7 @@ mod test {
     use std::{env, sync::Arc};
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn parse_mentions() {
         let db_url = env::var("DATABASE_URL").unwrap();
         let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
