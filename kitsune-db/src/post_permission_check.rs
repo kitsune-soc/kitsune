@@ -41,14 +41,18 @@ impl Default for PermissionCheck {
     }
 }
 
-pub trait PostPermissionCheckExt<Predicate>: FilterDsl<Predicate> {
+pub trait PostPermissionCheckExt {
+    type Output;
+
     fn add_post_permission_check(self, permission_check: PermissionCheck) -> Self::Output;
 }
 
-impl<T> PostPermissionCheckExt<Box<dyn BoxableExpression<posts::table, Pg, SqlType = Bool>>> for T
+impl<T> PostPermissionCheckExt for T
 where
     T: FilterDsl<Box<dyn BoxableExpression<posts::table, Pg, SqlType = Bool>>>,
 {
+    type Output = T::Output;
+
     fn add_post_permission_check(self, permission_check: PermissionCheck) -> Self::Output {
         let mut post_condition: Box<dyn BoxableExpression<_, _, SqlType = Bool>> =
             Box::new(posts::visibility.eq(Visibility::Public));
