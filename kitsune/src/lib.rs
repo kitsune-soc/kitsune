@@ -15,6 +15,9 @@ extern crate metrics;
 #[macro_use]
 extern crate tracing;
 
+#[cfg(test)]
+mod test;
+
 pub mod activitypub;
 pub mod blocking;
 pub mod cache;

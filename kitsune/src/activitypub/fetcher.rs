@@ -347,149 +347,154 @@ mod test {
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
         service::{federation_filter::FederationFilterService, search::NoopSearchService},
+        test::database_test,
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use kitsune_db::{model::account::Account, schema::accounts};
     use pretty_assertions::assert_eq;
-    use std::{env, sync::Arc};
+    use std::sync::Arc;
 
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_actor() {
-        let db_url = env::var("DATABASE_URL").unwrap();
-        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
-        let fetcher = Fetcher::builder()
-            .db_conn(db_conn)
-            .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
-                    domains: Vec::new(),
-                })
-                .unwrap(),
-            )
-            .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .build();
+        database_test(|db_conn| async move {
+            let fetcher = Fetcher::builder()
+                .db_conn(db_conn)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
 
-        let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0".into())
-            .await
-            .expect("Fetch actor");
+            let user = fetcher
+                .fetch_actor("https://corteximplant.com/users/0x0".into())
+                .await
+                .expect("Fetch actor");
 
-        assert_eq!(user.username, "0x0");
-        assert_eq!(user.domain, "corteximplant.com");
-        assert_eq!(user.url, Some("https://corteximplant.com/users/0x0".into()));
-        assert_eq!(
-            user.inbox_url,
-            Some("https://corteximplant.com/users/0x0/inbox".into())
-        );
+            assert_eq!(user.username, "0x0");
+            assert_eq!(user.domain, "corteximplant.com");
+            assert_eq!(user.url, Some("https://corteximplant.com/users/0x0".into()));
+            assert_eq!(
+                user.inbox_url,
+                Some("https://corteximplant.com/users/0x0/inbox".into())
+            );
+        })
+        .await;
     }
 
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_note() {
-        let db_url = env::var("DATABASE_URL").unwrap();
-        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
-        let fetcher = Fetcher::builder()
-            .db_conn(db_conn.clone())
-            .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
-                    domains: Vec::new(),
-                })
-                .unwrap(),
-            )
-            .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .build();
+        database_test(|db_conn| async move {
+            let fetcher = Fetcher::builder()
+                .db_conn(db_conn.clone())
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
 
-        let note = fetcher
-            .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
-            .await
-            .expect("Fetch note");
-        assert_eq!(
-            note.url,
-            "https://corteximplant.com/users/0x0/statuses/109501674056556919"
-        );
+            let note = fetcher
+                .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+                .await
+                .expect("Fetch note");
+            assert_eq!(
+                note.url,
+                "https://corteximplant.com/users/0x0/statuses/109501674056556919"
+            );
 
-        let author = accounts::table
-            .find(note.account_id)
-            .select(Account::as_select())
-            .get_result::<Account>(&mut db_conn.get().await.unwrap())
-            .await
-            .expect("Get author");
+            let author = accounts::table
+                .find(note.account_id)
+                .select(Account::as_select())
+                .get_result::<Account>(&mut db_conn.get().await.unwrap())
+                .await
+                .expect("Get author");
 
-        assert_eq!(author.username, "0x0");
-        assert_eq!(
-            author.url,
-            Some("https://corteximplant.com/users/0x0".into())
-        );
+            assert_eq!(author.username, "0x0");
+            assert_eq!(
+                author.url,
+                Some("https://corteximplant.com/users/0x0".into())
+            );
+        })
+        .await;
     }
 
     #[tokio::test]
     #[serial_test::serial]
     async fn federation_allow() {
-        let db_url = env::var("DATABASE_URL").unwrap();
-        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
-        let fetcher = Fetcher::builder()
-            .db_conn(db_conn)
-            .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Allow {
-                    domains: vec!["corteximplant.com".into()],
-                })
-                .unwrap(),
-            )
-            .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .build();
+        database_test(|db_conn| async move {
+            let fetcher = Fetcher::builder()
+                .db_conn(db_conn)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Allow {
+                        domains: vec!["corteximplant.com".into()],
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
 
-        assert!(matches!(
-            fetcher.fetch_object("https://example.com/fakeobject").await,
-            Err(Error::Api(ApiError::Unauthorised))
-        ));
-        assert!(matches!(
-            fetcher
-                .fetch_object("https://other.badstuff.com/otherfake")
-                .await,
-            Err(Error::Api(ApiError::Unauthorised))
-        ));
-        assert!(matches!(
-            fetcher
-                .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
-                .await,
-            Ok(..)
-        ));
+            assert!(matches!(
+                fetcher.fetch_object("https://example.com/fakeobject").await,
+                Err(Error::Api(ApiError::Unauthorised))
+            ));
+            assert!(matches!(
+                fetcher
+                    .fetch_object("https://other.badstuff.com/otherfake")
+                    .await,
+                Err(Error::Api(ApiError::Unauthorised))
+            ));
+            assert!(matches!(
+                fetcher
+                    .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+                    .await,
+                Ok(..)
+            ));
+        })
+        .await;
     }
 
     #[tokio::test]
     #[serial_test::serial]
     async fn federation_deny() {
-        let db_url = env::var("DATABASE_URL").unwrap();
-        let db_conn = kitsune_db::connect(db_url.as_str(), 10).await.unwrap();
-        let fetcher = Fetcher::builder()
-            .db_conn(db_conn)
-            .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
-                    domains: vec!["example.com".into(), "*.badstuff.com".into()],
-                })
-                .unwrap(),
-            )
-            .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .build();
+        database_test(|db_conn| async move {
+            let fetcher = Fetcher::builder()
+                .db_conn(db_conn)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: vec!["example.com".into(), "*.badstuff.com".into()],
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
 
-        assert!(matches!(
-            fetcher.fetch_object("https://example.com/fakeobject").await,
-            Err(Error::Api(ApiError::Unauthorised))
-        ));
-        assert!(matches!(
-            fetcher
-                .fetch_object("https://other.badstuff.com/otherfake")
-                .await,
-            Err(Error::Api(ApiError::Unauthorised))
-        ));
+            assert!(matches!(
+                fetcher.fetch_object("https://example.com/fakeobject").await,
+                Err(Error::Api(ApiError::Unauthorised))
+            ));
+            assert!(matches!(
+                fetcher
+                    .fetch_object("https://other.badstuff.com/otherfake")
+                    .await,
+                Err(Error::Api(ApiError::Unauthorised))
+            ));
+        })
+        .await;
     }
 }
