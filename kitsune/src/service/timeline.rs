@@ -112,7 +112,8 @@ impl TimelineService {
 
         let mut query = add_post_permission_check!(permission_check => posts::table)
             .order(posts::created_at.desc())
-            .select(Post::as_select());
+            .select(Post::as_select())
+            .into_boxed();
 
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::id.lt(max_id));

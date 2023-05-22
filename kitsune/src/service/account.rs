@@ -247,7 +247,8 @@ impl AccountService {
             permission_check => posts::table.filter(posts::account_id.eq(get_posts.account_id))
         )
         .select(Post::as_select())
-        .order(posts::created_at.desc());
+        .order(posts::created_at.desc())
+        .into_boxed();
 
         if let Some(min_id) = get_posts.min_id {
             posts_query = posts_query.filter(posts::id.gt(min_id));

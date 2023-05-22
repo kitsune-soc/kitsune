@@ -34,52 +34,56 @@ impl Default for PermissionCheck {
 #[macro_export]
 macro_rules! add_post_permission_check {
     ($permission_opts:expr => $query:expr) => {{
-        use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+        use diesel::{
+            sql_types::Bool, BoolExpressionMethods, BoxableExpression, ExpressionMethods, QueryDsl,
+        };
         use $crate::{
             model::post::Visibility,
             schema::{accounts_follows, posts, posts_mentions},
         };
 
         let mut permission_opts = &$permission_opts;
-        let mut post_query = $query
-            .filter(posts::visibility.eq(Visibility::Public))
-            .into_boxed();
+        let mut post_condition: Box<dyn BoxableExpression<_, _, SqlType = Bool>> =
+            Box::new(posts::visibility.eq(Visibility::Public));
 
         if permission_opts.include_unlisted {
-            post_query = post_query.or_filter(posts::visibility.eq(Visibility::Unlisted));
+            post_condition =
+                Box::new(post_condition.or(posts::visibility.eq(Visibility::Unlisted)));
         }
 
         if let Some(fetching_account_id) = permission_opts.fetching_account_id {
-            post_query = post_query.or_filter(
-                // The post is owned by the user
-                (posts::account_id.eq(fetching_account_id))
-                    .or(
-                        // Post is follower-only, and the user is following the author
-                        (posts::visibility.eq(Visibility::FollowerOnly).and(
-                            posts::account_id.eq_any(
-                                accounts_follows::table
-                                    .filter(
-                                        accounts_follows::follower_id
-                                            .eq(fetching_account_id)
-                                            .and(accounts_follows::approved_at.is_not_null()),
-                                    )
-                                    .select(accounts_follows::account_id),
-                            ),
-                        )),
-                    )
-                    .or(
-                        // Post is mention-only, and user is mentioned in the post
-                        (posts::visibility.eq(Visibility::MentionOnly).and(
-                            posts::id.eq_any(
-                                posts_mentions::table
-                                    .filter(posts_mentions::account_id.eq(fetching_account_id))
-                                    .select(posts_mentions::post_id),
-                            ),
-                        )),
-                    ),
+            post_condition = Box::new(
+                post_condition.or(
+                    // The post is owned by the user
+                    (posts::account_id.eq(fetching_account_id))
+                        .or(
+                            // Post is follower-only, and the user is following the author
+                            (posts::visibility.eq(Visibility::FollowerOnly).and(
+                                posts::account_id.eq_any(
+                                    accounts_follows::table
+                                        .filter(
+                                            accounts_follows::follower_id
+                                                .eq(fetching_account_id)
+                                                .and(accounts_follows::approved_at.is_not_null()),
+                                        )
+                                        .select(accounts_follows::account_id),
+                                ),
+                            )),
+                        )
+                        .or(
+                            // Post is mention-only, and user is mentioned in the post
+                            (posts::visibility.eq(Visibility::MentionOnly).and(
+                                posts::id.eq_any(
+                                    posts_mentions::table
+                                        .filter(posts_mentions::account_id.eq(fetching_account_id))
+                                        .select(posts_mentions::post_id),
+                                ),
+                            )),
+                        ),
+                ),
             );
         }
 
-        post_query
+        $query.filter(post_condition)
     }};
 }
