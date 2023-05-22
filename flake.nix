@@ -22,7 +22,7 @@
           sqlite
           zlib
         ];
-        cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml);
+        cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml);  # TODO: Set the target CPU conditionally
         cargoToml = builtins.fromTOML (builtins.readFile ./kitsune/Cargo.toml);
         basePackage = {
           inherit (cargoToml.package) version;
