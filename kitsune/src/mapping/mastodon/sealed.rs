@@ -152,8 +152,8 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
         let (following, requested) = accounts_follows::table
             .filter(
                 accounts_follows::account_id
-                    .eq(requestor.id)
-                    .and(accounts_follows::follower_id.eq(target.id)),
+                    .eq(target.id)
+                    .and(accounts_follows::follower_id.eq(requestor.id)),
             )
             .get_result::<Follow>(&mut db_conn)
             .map(OptionalExtension::optional)
@@ -167,8 +167,8 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
         let followed_by = accounts_follows::table
             .filter(
                 accounts_follows::account_id
-                    .eq(target.id)
-                    .and(accounts_follows::follower_id.eq(requestor.id)),
+                    .eq(requestor.id)
+                    .and(accounts_follows::follower_id.eq(target.id)),
             )
             .count()
             .get_result::<i64>(&mut db_conn)
