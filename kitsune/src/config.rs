@@ -82,6 +82,7 @@ pub struct ServerConfiguration {
     pub oidc: Option<OidcConfiguration>,
     pub port: u16,
     pub prometheus_port: u16,
+    pub request_timeout_sec: u64,
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]

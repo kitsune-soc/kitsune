@@ -31,6 +31,7 @@ in    { cache =
             , oidc = None types.Oidc
             , port = 5000
             , prometheus_port = 9000
+            , request_timeout_sec = 60
             }
           : types.Server
       , search = makeSearchConfig "https://localhost:8081"
