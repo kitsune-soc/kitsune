@@ -87,7 +87,7 @@ impl From<DbAccount> for Account {
             note: value.note,
             username: value.username,
             locked: value.locked,
-            url: value.url.unwrap_or_default(),
+            url: value.url,
             created_at: value.created_at,
             updated_at: value.updated_at,
         }

@@ -71,7 +71,7 @@ impl UserService {
         let user_id = Uuid::now_v7();
         let domain = self.url_service.domain().to_string();
         let url = self.url_service.user_url(user_id);
-        let public_key_id = format!("{url}#main-key");
+        let public_key_id = self.url_service.public_key_id(user_id);
 
         let mut db_conn = self.db_conn.get().await?;
         let new_user = db_conn
@@ -87,7 +87,7 @@ impl UserService {
                             local: true,
                             domain: domain.as_str(),
                             actor_type: ActorType::Person,
-                            url: None,
+                            url: url.as_str(),
                             featured_collection_url: None,
                             followers_url: None,
                             following_url: None,

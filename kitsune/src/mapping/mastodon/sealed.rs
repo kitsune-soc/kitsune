@@ -100,10 +100,6 @@ impl IntoMastodon for DbAccount {
             state.url_service.default_header_url()
         };
 
-        let url = self
-            .url
-            .unwrap_or_else(|| state.url_service.user_url(self.id));
-
         Ok(Account {
             id: self.id,
             acct,
@@ -114,7 +110,7 @@ impl IntoMastodon for DbAccount {
             created_at: self.created_at,
             locked: self.locked,
             note: self.note.unwrap_or_default(),
-            url,
+            url: self.url,
             avatar_static: avatar.clone(),
             avatar,
             header_static: header.clone(),
@@ -216,15 +212,11 @@ impl IntoMastodon for DbMention {
             acct.push_str(&account.domain);
         }
 
-        let url = account
-            .url
-            .unwrap_or_else(|| state.url_service.user_url(account.id));
-
         Ok(Mention {
             id: account.id,
             acct,
             username: account.username,
-            url,
+            url: account.url,
         })
     }
 }

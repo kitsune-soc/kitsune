@@ -117,15 +117,11 @@ impl IntoObject for Post {
         let mut tag = Vec::new();
         let (mut to, cc) = self.visibility.base_to_cc(state, &account);
         for (mention, mentioned) in mentions {
-            let mentioned_url = mentioned
-                .url
-                .unwrap_or_else(|| state.service.url.user_url(account.id));
-
-            to.push(mentioned_url.clone());
+            to.push(mentioned.url.clone());
             tag.push(Tag {
                 r#type: TagType::Mention,
                 name: mention.mention_text,
-                href: Some(mentioned_url),
+                href: Some(mentioned.url),
                 icon: None,
             });
         }

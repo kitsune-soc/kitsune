@@ -13,7 +13,7 @@ diesel::table! {
         local -> Bool,
         domain -> Text,
         actor_type -> Int4,
-        url -> Nullable<Text>,
+        url -> Text,
         featured_collection_url -> Nullable<Text>,
         followers_url -> Nullable<Text>,
         following_url -> Nullable<Text>,

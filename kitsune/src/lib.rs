@@ -255,7 +255,6 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
 
     let post_resolver = PostResolver::builder()
         .account(account_service.clone())
-        .url(url_service.clone())
         .build();
 
     let post_service = PostService::builder()

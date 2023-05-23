@@ -52,7 +52,7 @@ impl IntoActivity for Favourite {
         let account_url = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn)
+            .get_result::<String>(&mut db_conn)
             .await?;
 
         let post_url = posts::table
@@ -60,9 +60,6 @@ impl IntoActivity for Favourite {
             .select(posts::url)
             .get_result(&mut db_conn)
             .await?;
-
-        let account_url =
-            account_url.unwrap_or_else(|| state.service.url.user_url(self.account_id));
 
         Ok(Activity {
             context: ap_context(),
@@ -79,9 +76,8 @@ impl IntoActivity for Favourite {
         let account_url = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn)
-            .await?
-            .unwrap_or_else(|| state.service.url.user_url(self.account_id));
+            .get_result::<String>(&mut db_conn)
+            .await?;
 
         Ok(Activity {
             context: ap_context(),
@@ -104,19 +100,14 @@ impl IntoActivity for Follow {
         let attributed_to = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn)
+            .get_result::<String>(&mut db_conn)
             .await?;
 
         let object = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn)
+            .get_result::<String>(&mut db_conn)
             .await?;
-
-        let (attributed_to, object) = (
-            attributed_to.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),
-            object.unwrap_or_else(|| state.service.url.user_url(self.follower_id)),
-        );
 
         Ok(Activity {
             context: ap_context(),
@@ -133,9 +124,8 @@ impl IntoActivity for Follow {
         let attributed_to = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
-            .get_result::<Option<String>>(&mut db_conn)
-            .await?
-            .unwrap_or_else(|| state.service.url.user_url(self.follower_id));
+            .get_result::<String>(&mut db_conn)
+            .await?;
 
         Ok(Activity {
             context: ap_context(),
