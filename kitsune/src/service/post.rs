@@ -452,25 +452,22 @@ impl PostService {
         fetching_account_id: Option<Uuid>,
     ) -> impl Stream<Item = Result<Post>> + '_ {
         try_stream! {
-            let mut last_post = Some(self.get_by_id(id, fetching_account_id).await?);
+            let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build()
                 .unwrap();
 
-            while let Some(post) = last_post.take() {
+            while let Some(in_reply_to_id) = last_post.in_reply_to_id {
                 let mut db_conn = self.db_conn.get().await?;
                 let post = posts::table
-                    .filter(posts::in_reply_to_id.eq(post.id))
+                    .find(in_reply_to_id)
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
                     .get_result::<Post>(&mut db_conn)
-                    .await
-                    .optional()?;
+                    .await?;
 
-                if let Some(ref post) = post {
-                    yield post.clone();
-                }
+                yield post.clone();
 
                 last_post = post;
             }
