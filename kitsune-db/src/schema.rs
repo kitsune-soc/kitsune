@@ -1,12 +1,8 @@
 // @generated automatically by Diesel CLI.
 
-pub mod sql_types {
-    pub use diesel_full_text_search::Tsvector;
-}
-
 diesel::table! {
     use diesel::sql_types::*;
-    use super::sql_types::Tsvector;
+    use diesel_full_text_search::Tsvector;
 
     accounts (id) {
         id -> Uuid,
@@ -37,6 +33,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     accounts_follows (id) {
         id -> Uuid,
         account_id -> Uuid,
@@ -49,6 +48,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     jobs (id) {
         id -> Uuid,
         state -> Int4,
@@ -61,6 +63,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     media_attachments (id) {
         id -> Uuid,
         account_id -> Uuid,
@@ -75,6 +80,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     oauth2_access_tokens (token) {
         token -> Text,
         user_id -> Nullable<Uuid>,
@@ -85,6 +93,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     oauth2_applications (id) {
         id -> Uuid,
         name -> Text,
@@ -98,6 +109,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     oauth2_authorization_codes (code) {
         code -> Text,
         application_id -> Uuid,
@@ -108,6 +122,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     oauth2_refresh_tokens (token) {
         token -> Text,
         access_token -> Text,
@@ -118,7 +135,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use super::sql_types::Tsvector;
+    use diesel_full_text_search::Tsvector;
 
     posts (id) {
         id -> Uuid,
@@ -139,6 +156,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     posts_favourites (id) {
         id -> Uuid,
         account_id -> Uuid,
@@ -149,6 +169,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     posts_media_attachments (post_id, media_attachment_id) {
         post_id -> Uuid,
         media_attachment_id -> Uuid,
@@ -156,6 +179,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     posts_mentions (post_id, account_id) {
         post_id -> Uuid,
         account_id -> Uuid,
@@ -164,6 +190,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users (id) {
         id -> Uuid,
         account_id -> Uuid,
@@ -179,6 +208,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users_roles (id) {
         id -> Uuid,
         user_id -> Uuid,
