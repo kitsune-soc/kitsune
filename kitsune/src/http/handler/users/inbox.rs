@@ -36,6 +36,30 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     Ok(())
 }
 
+async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+    let reposted_post = state.fetcher.fetch_object(activity.object()).await?;
+
+    let mut db_conn = state.db_conn.get().await?;
+    diesel::insert_into(posts::table)
+        .values(NewPost {
+            id: Uuid::now_v7(),
+            account_id: author.id,
+            in_reply_to_id: None,
+            reposted_post_id: Some(reposted_post.id),
+            is_sensitive: false,
+            subject: None,
+            content: "",
+            visibility: reposted_post.visibility,
+            is_local: false,
+            url: activity.id.as_str(),
+            created_at: None,
+        })
+        .execute(&mut db_conn)
+        .await?;
+
+    Ok(())
+}
+
 async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
         let in_reply_to_id = OptionFuture::from(
@@ -195,7 +219,7 @@ async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -
 
 async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let mut db_conn = state.db_conn.get().await?;
-    // An undo activity can apply for likes and follows
+    // An undo activity can apply for likes and follows and announces
     diesel::delete(
         posts_favourites::table.filter(
             posts_favourites::account_id
@@ -211,6 +235,16 @@ async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> 
             accounts_follows::follower_id
                 .eq(author.id)
                 .and(accounts_follows::url.eq(activity.object())),
+        ),
+    )
+    .execute(&mut db_conn)
+    .await?;
+
+    diesel::delete(
+        posts::table.filter(
+            posts::url
+                .eq(activity.object())
+                .and(posts::account_id.eq(author.id)),
         ),
     )
     .execute(&mut db_conn)
@@ -239,7 +273,7 @@ pub async fn post(
 
     match activity.r#type {
         ActivityType::Accept => accept_activity(&state, activity).await,
-        ActivityType::Announce => todo!(),
+        ActivityType::Announce => announce_activity(&state, author, activity).await,
         ActivityType::Block => todo!(),
         ActivityType::Create => create_activity(&state, author, activity).await,
         ActivityType::Delete => delete_activity(&state, author, activity).await,
