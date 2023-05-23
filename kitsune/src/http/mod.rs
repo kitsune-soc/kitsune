@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use self::{
     handler::{media, nodeinfo, oauth, oidc, posts, users, well_known},
     openapi::api_docs,
@@ -6,8 +8,10 @@ use crate::{config::ServerConfiguration, state::Zustand};
 use axum::{extract::DefaultBodyLimit, Router};
 use axum_prometheus::PrometheusMetricLayer;
 use tower_http::{
+    catch_panic::CatchPanicLayer,
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
+    timeout::TimeoutLayer,
     trace::TraceLayer,
 };
 use utoipa_swagger_ui::SwaggerUi;
@@ -49,7 +53,11 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     router
         .merge(graphql::routes(state.clone()))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
+        .layer(CatchPanicLayer::new())
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
+        .layer(TimeoutLayer::new(Duration::from_secs(
+            server_config.request_timeout_sec,
+        )))
         .fallback_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
         // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
         .layer(PrometheusMetricLayer::new())

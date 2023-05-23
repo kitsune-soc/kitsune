@@ -7,4 +7,5 @@ in  { frontend_dir : Text
     , oidc : Optional Oidc
     , port : Natural
     , prometheus_port : Natural
+    , request_timeout_sec : Natural
     }
