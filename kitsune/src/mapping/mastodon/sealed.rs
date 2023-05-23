@@ -94,12 +94,11 @@ impl IntoMastodon for DbAccount {
             state.url_service.default_avatar_url()
         };
 
-        let header = OptionFuture::from(
-            self.header_id
-                .map(|header_id| state.attachment_service.get_url(header_id)),
-        )
-        .await
-        .transpose()?;
+        let header = if let Some(header_id) = self.header_id {
+            state.attachment_service.get_url(header_id).await?
+        } else {
+            state.url_service.default_header_url()
+        };
 
         let url = self
             .url
