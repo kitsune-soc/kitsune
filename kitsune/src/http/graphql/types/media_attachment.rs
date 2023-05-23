@@ -1,8 +1,14 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use kitsune_db::entity::{media_attachments, prelude::Accounts};
-use sea_orm::EntityTrait;
+use diesel::{QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{
+        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
+    },
+    schema::accounts,
+};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -20,11 +26,15 @@ pub struct MediaAttachment {
 
 #[ComplexObject]
 impl MediaAttachment {
-    pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Option<Account>> {
-        Accounts::find_by_id(self.account_id)
-            .one(&ctx.state().db_conn)
+    pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Account> {
+        let mut db_conn = ctx.state().db_conn.get().await?;
+
+        accounts::table
+            .find(self.account_id)
+            .select(DbAccount::as_select())
+            .get_result::<DbAccount>(&mut db_conn)
             .await
-            .map(|account| account.map(Into::into))
+            .map(Into::into)
             .map_err(Into::into)
     }
 
@@ -38,8 +48,8 @@ impl MediaAttachment {
     }
 }
 
-impl From<media_attachments::Model> for MediaAttachment {
-    fn from(value: media_attachments::Model) -> Self {
+impl From<DbMediaAttachment> for MediaAttachment {
+    fn from(value: DbMediaAttachment) -> Self {
         Self {
             id: value.id,
             account_id: value.account_id,

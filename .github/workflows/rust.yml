@@ -40,6 +40,20 @@ jobs:
     name: Test
     needs: [fmt, clippy]
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v3
       - uses: mtoohey31/cache-flake-attrs@v2
@@ -48,3 +62,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"

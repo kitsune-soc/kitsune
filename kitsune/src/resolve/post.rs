@@ -98,77 +98,81 @@ mod test {
             federation_filter::FederationFilterService, job::JobService, search::NoopSearchService,
             url::UrlService,
         },
+        test::database_test,
         webfinger::Webfinger,
     };
-    use kitsune_db::entity::prelude::Accounts;
+    use diesel::{QueryDsl, SelectableHelper};
+    use diesel_async::RunQueryDsl;
+    use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
-    use sea_orm::EntityTrait;
     use std::sync::Arc;
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn parse_mentions() {
-        let db_conn = kitsune_db::connect("sqlite::memory:").await.unwrap();
-        let post = "Hello @0x0@corteximplant.com! How are you doing?";
+        database_test(|db_conn| async move {
+            let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
-        let fetcher = Fetcher::builder()
-            .db_conn(db_conn.clone())
-            .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
-                    domains: Vec::new(),
-                })
-                .unwrap(),
-            )
-            .search_service(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .build();
+            let fetcher = Fetcher::builder()
+                .db_conn(db_conn.clone())
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
 
-        let job_service = JobService::builder().db_conn(db_conn.clone()).build();
-        let url_service = UrlService::builder()
-            .domain("example.com")
-            .scheme("http")
-            .build();
-        let attachment_service = AttachmentService::builder()
-            .db_conn(db_conn.clone())
-            .media_proxy_enabled(false)
-            .storage_backend(FsStorage::new("uploads".into()))
-            .url_service(url_service.clone())
-            .build();
-        let account_service = AccountService::builder()
-            .attachment_service(attachment_service)
-            .db_conn(db_conn.clone())
-            .fetcher(fetcher)
-            .job_service(job_service)
-            .url_service(url_service.clone())
-            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
-            .build();
-        let mention_resolver = PostResolver::builder()
-            .account(account_service)
-            .url(url_service)
-            .build();
+            let job_service = JobService::builder().db_conn(db_conn.clone()).build();
+            let url_service = UrlService::builder()
+                .domain("example.com")
+                .scheme("http")
+                .build();
+            let attachment_service = AttachmentService::builder()
+                .db_conn(db_conn.clone())
+                .media_proxy_enabled(false)
+                .storage_backend(FsStorage::new("uploads".into()))
+                .url_service(url_service.clone())
+                .build();
+            let account_service = AccountService::builder()
+                .attachment_service(attachment_service)
+                .db_conn(db_conn.clone())
+                .fetcher(fetcher)
+                .job_service(job_service)
+                .url_service(url_service.clone())
+                .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+                .build();
+            let mention_resolver = PostResolver::builder()
+                .account(account_service)
+                .url(url_service)
+                .build();
 
-        let (mentioned_account_ids, content) = mention_resolver
-            .resolve(post)
-            .await
-            .expect("Failed to resolve mentions");
+            let (mentioned_account_ids, content) = mention_resolver
+                .resolve(post)
+                .await
+                .expect("Failed to resolve mentions");
 
-        assert_eq!(content, "Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
-        assert_eq!(mentioned_account_ids.len(), 1);
+            assert_eq!(content, "Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing?");
+            assert_eq!(mentioned_account_ids.len(), 1);
 
-        let (account_id, _mention_text) = &mentioned_account_ids[0];
-        let mentioned_account = Accounts::find_by_id(*account_id)
-            .one(&db_conn)
-            .await
-            .ok()
-            .flatten()
-            .expect("Failed to fetch account");
+            let (account_id, _mention_text) = &mentioned_account_ids[0];
+            let mentioned_account = accounts::table
+                .find(account_id)
+                .select(Account::as_select())
+                .get_result::<Account>(&mut db_conn.get().await.unwrap())
+                .await
+                .expect("Failed to fetch account");
 
-        assert_eq!(mentioned_account.username, "0x0");
-        assert_eq!(mentioned_account.domain, "corteximplant.com");
-        assert_eq!(
-            mentioned_account.url,
-            Some("https://corteximplant.com/users/0x0".into())
-        );
+            assert_eq!(mentioned_account.username, "0x0");
+            assert_eq!(mentioned_account.domain, "corteximplant.com");
+            assert_eq!(
+                mentioned_account.url,
+                Some("https://corteximplant.com/users/0x0".into())
+            );
+        }).await;
     }
 }

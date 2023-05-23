@@ -15,8 +15,7 @@ use rsa::{
     pkcs1,
     pkcs8::{self, der, spki},
 };
-use sea_orm::TransactionError;
-use std::{error::Error as StdError, str::ParseBoolError};
+use std::str::ParseBoolError;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
@@ -112,7 +111,10 @@ pub enum OidcError {
 #[derive(Debug, Error)]
 pub enum SearchError {
     #[error(transparent)]
-    Database(#[from] sea_orm::DbErr),
+    Database(#[from] diesel::result::Error),
+
+    #[error(transparent)]
+    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
 
     #[cfg(feature = "meilisearch")]
     #[error(transparent)]
@@ -138,7 +140,10 @@ pub enum Error {
     Cache(#[from] CacheError),
 
     #[error(transparent)]
-    Database(#[from] sea_orm::DbErr),
+    Database(#[from] diesel::result::Error),
+
+    #[error(transparent)]
+    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
 
     #[error(transparent)]
     Der(#[from] der::Error),
@@ -228,22 +233,10 @@ impl From<Error> for Response {
     }
 }
 
-impl<E> From<TransactionError<E>> for Error
-where
-    E: StdError + Into<Error>,
-{
-    fn from(err: TransactionError<E>) -> Self {
-        match err {
-            TransactionError::Connection(db) => Self::Database(db),
-            TransactionError::Transaction(err) => err.into(),
-        }
-    }
-}
-
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         match self {
-            Self::Database(sea_orm::DbErr::RecordNotFound(..)) => {
+            Self::Database(diesel::result::Error::NotFound) => {
                 StatusCode::NOT_FOUND.into_response()
             }
             err @ Self::Api(ApiError::NotFound) => {

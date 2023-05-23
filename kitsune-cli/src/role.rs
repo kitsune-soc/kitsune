@@ -1,16 +1,11 @@
 use crate::Result;
 use clap::{Args, Subcommand, ValueEnum};
-use kitsune_db::{
-    custom::Role as DbRole,
-    entity::{
-        prelude::{Users, UsersRoles},
-        users, users_roles,
-    },
+use diesel::{BelongingToDsl, BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use kitsune_db::model::{
+    user::User,
+    user_role::{NewUserRole, Role as DbRole, UserRole},
 };
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter,
-};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Subcommand)]
@@ -53,43 +48,44 @@ impl From<Role> for DbRole {
     }
 }
 
-async fn add_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = Users::find()
-        .filter(users::Column::Username.eq(username))
-        .one(&db_conn)
-        .await?
-    else {
-        eprintln!("User \"{username}\" not found!");
-        return Ok(());
+async fn add_role(db_conn: &mut AsyncPgConnection, username_str: &str, role: Role) -> Result<()> {
+    use kitsune_db::schema::{
+        users::dsl::{username, users},
+        users_roles,
     };
 
-    UsersRoles::insert(
-        users_roles::Model {
-            id: Uuid::now_v7(),
-            user_id: user.id,
-            role: role.into(),
-            created_at: OffsetDateTime::now_utc(),
-        }
-        .into_active_model(),
-    )
-    .exec_without_returning(&db_conn)
-    .await?;
+    let user = users
+        .filter(username.eq(username_str))
+        .first::<User>(db_conn)
+        .await?;
+
+    let new_role = NewUserRole {
+        id: Uuid::now_v7(),
+        user_id: user.id,
+        role: role.into(),
+    };
+
+    diesel::insert_into(users_roles::table)
+        .values(&new_role)
+        .execute(db_conn)
+        .await?;
 
     Ok(())
 }
 
-async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
-    let Some(user) = Users::find()
-        .filter(users::Column::Username.eq(username))
-        .one(&db_conn)
-        .await?
-    else {
-        eprintln!("User \"{username}\" not found!");
-        return Ok(());
-    };
-    let roles = user.find_related(UsersRoles).all(&db_conn).await?;
+async fn list_roles(db_conn: &mut AsyncPgConnection, username_str: &str) -> Result<()> {
+    use kitsune_db::schema::users;
 
-    println!("User \"{username}\" has the following roles:");
+    let user: User = users::table
+        .filter(users::username.eq(username_str))
+        .first(db_conn)
+        .await?;
+
+    let roles = UserRole::belonging_to(&user)
+        .load::<UserRole>(db_conn)
+        .await?;
+
+    println!("User \"{username_str}\" has the following roles:");
     for role in roles {
         println!("- {:?} (added at: {})", role.role, role.created_at);
     }
@@ -97,29 +93,32 @@ async fn list_roles(db_conn: DatabaseConnection, username: &str) -> Result<()> {
     Ok(())
 }
 
-async fn remove_role(db_conn: DatabaseConnection, username: &str, role: Role) -> Result<()> {
-    let Some(user) = Users::find()
-        .filter(users::Column::Username.eq(username))
-        .one(&db_conn)
-        .await?
-    else {
-        eprintln!("User \"{username}\" not found!");
-        return Ok(());
-    };
+async fn remove_role(
+    db_conn: &mut AsyncPgConnection,
+    username_str: &str,
+    role: Role,
+) -> Result<()> {
+    use kitsune_db::schema::{users, users_roles};
 
-    UsersRoles::delete_many()
-        .filter(
-            users_roles::Column::Role
-                .eq(DbRole::from(role))
-                .and(users_roles::Column::UserId.eq(user.id)),
-        )
-        .exec(&db_conn)
+    let user = users::table
+        .filter(users::username.eq(username_str))
+        .first::<User>(db_conn)
         .await?;
+
+    diesel::delete(
+        users_roles::table.filter(
+            users_roles::role
+                .eq(DbRole::from(role))
+                .and(users_roles::user_id.eq(user.id)),
+        ),
+    )
+    .execute(db_conn)
+    .await?;
 
     Ok(())
 }
 
-pub async fn handle(cmd: RoleSubcommand, db_conn: DatabaseConnection) -> Result<()> {
+pub async fn handle(cmd: RoleSubcommand, db_conn: &mut AsyncPgConnection) -> Result<()> {
     match cmd {
         RoleSubcommand::Add { username, role } => add_role(db_conn, &username, role).await?,
         RoleSubcommand::List { username } => list_roles(db_conn, &username).await?,

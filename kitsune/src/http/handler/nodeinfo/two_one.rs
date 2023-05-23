@@ -1,13 +1,11 @@
 use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
-use kitsune_db::entity::{
-    posts,
-    prelude::{Posts, Users},
-};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use kitsune_db::schema::{posts, users};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde_json::Value;
 
 #[debug_handler]
@@ -19,10 +17,13 @@ use serde_json::Value;
     ),
 )]
 async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
-    let total = Users::find().count(&state.db_conn).await?;
-    let local_posts = Posts::find()
-        .filter(posts::Column::IsLocal.eq(true))
-        .count(&state.db_conn)
+    let mut db_conn = state.db_conn.get().await?;
+
+    let total = users::table.count().get_result::<i64>(&mut db_conn).await?;
+    let local_posts = posts::table
+        .filter(posts::is_local.eq(true))
+        .count()
+        .get_result::<i64>(&mut db_conn)
         .await?;
 
     Ok(Json(TwoOne {
@@ -41,12 +42,12 @@ async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
         open_registrations: true,
         usage: Usage {
             users: UsageUsers {
-                total,
+                total: total as u64,
                 active_halfyear: None,
                 active_month: None,
             },
             local_comments: None,
-            local_posts,
+            local_posts: local_posts as u64,
         },
         metadata: Value::Null,
     }))

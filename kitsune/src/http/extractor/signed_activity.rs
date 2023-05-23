@@ -11,8 +11,10 @@ use axum::{
     RequestExt,
 };
 use const_oid::db::rfc8410::ID_ED_25519;
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::{request::Parts, StatusCode};
-use kitsune_db::entity::{accounts, prelude::Accounts};
+use kitsune_db::{model::account::Account, schema::accounts};
 use kitsune_http_signatures::{
     ring::signature::{
         UnparsedPublicKey, VerificationAlgorithm, ED25519, RSA_PKCS1_2048_8192_SHA256,
@@ -21,13 +23,12 @@ use kitsune_http_signatures::{
 };
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::{Document, SubjectPublicKeyInfoRef};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature
 ///
 /// This extractor ensures that the activity belongs to the person that signed this activity
 /// but not that the activity matches the object, so beware of that.
-pub struct SignedActivity(pub accounts::Model, pub Activity);
+pub struct SignedActivity(pub Account, pub Activity);
 
 #[async_trait]
 impl FromRequest<Zustand, Body> for SignedActivity {
@@ -60,12 +61,13 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
-        if !verify_signature(&parts, &state.db_conn, Some(&remote_user)).await? {
+        let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
+        if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
             let remote_user = state.fetcher.fetch_actor(opts).await?;
 
-            if !verify_signature(&parts, &state.db_conn, Some(&remote_user)).await? {
+            if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }
@@ -76,16 +78,16 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
 async fn verify_signature(
     parts: &Parts,
-    db_conn: &DatabaseConnection,
-    expected_account: Option<&accounts::Model>,
+    db_conn: &mut AsyncPgConnection,
+    expected_account: Option<&Account>,
 ) -> Result<bool> {
     let is_valid = HttpVerifier::default()
         .verify(parts, |key_id| async move {
-            let remote_user = Accounts::find()
-                .filter(accounts::Column::PublicKeyId.eq(key_id))
-                .one(db_conn)
-                .await?
-                .ok_or(ApiError::NotFound)?;
+            let remote_user: Account = accounts::table
+                .filter(accounts::public_key_id.eq(key_id))
+                .select(Account::as_select())
+                .first(db_conn)
+                .await?;
 
             // If we have an expected account, which we have in the case of an incoming new activity,
             // then we do this comparison.

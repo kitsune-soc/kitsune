@@ -16,26 +16,30 @@ use crate::{
 };
 use async_stream::try_stream;
 use derive_builder::Builder;
-use futures_util::{stream::BoxStream, FutureExt, Stream, StreamExt};
+use diesel::{
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
+    SelectableHelper,
+};
+use diesel_async::{
+    scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
+};
+use futures_util::{stream::BoxStream, Stream, StreamExt};
 use kitsune_db::{
-    custom::{Role, Visibility},
-    entity::{
+    model::{
+        favourite::{Favourite, NewFavourite},
+        media_attachment::NewPostMediaAttachment,
+        mention::NewMention,
+        post::{NewPost, Post, Visibility},
+        user_role::Role,
+    },
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
+    schema::{
         media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
-        prelude::{
-            MediaAttachments, Posts, PostsFavourites, PostsMediaAttachments, PostsMentions,
-            UsersRoles,
-        },
         users_roles,
     },
-    link::InReplyTo,
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
+    PgPool,
 };
 use pulldown_cmark::{html, Options, Parser};
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
-    IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, TransactionTrait,
-};
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -117,7 +121,7 @@ impl DeletePost {
 
 #[derive(Clone, TypedBuilder)]
 pub struct PostService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
@@ -127,64 +131,63 @@ pub struct PostService {
 }
 
 impl PostService {
-    async fn process_media_attachments<C>(
-        conn: &C,
+    async fn process_media_attachments(
+        conn: &mut AsyncPgConnection,
         post_id: Uuid,
         media_attachment_ids: &[Uuid],
-    ) -> Result<()>
-    where
-        C: ConnectionTrait,
-    {
+    ) -> Result<()> {
         if media_attachment_ids.is_empty() {
             return Ok(());
         }
 
-        if MediaAttachments::find()
-            .filter(media_attachments::Column::Id.is_in(media_attachment_ids.iter().copied()))
-            .count(conn)
+        if media_attachments::table
+            .filter(media_attachments::id.eq_any(media_attachment_ids))
+            .count()
+            .get_result::<i64>(conn)
             .await?
-            != media_attachment_ids.len() as u64
+            != media_attachment_ids.len() as i64
         {
             return Err(ApiError::BadRequest.into());
         }
 
-        PostsMediaAttachments::insert_many(media_attachment_ids.iter().map(|media_id| {
-            posts_media_attachments::Model {
-                post_id,
-                media_attachment_id: *media_id,
-            }
-            .into_active_model()
-        }))
-        .exec_without_returning(conn)
-        .await?;
+        diesel::insert_into(posts_media_attachments::table)
+            .values(
+                media_attachment_ids
+                    .iter()
+                    .map(|media_id| NewPostMediaAttachment {
+                        post_id,
+                        media_attachment_id: *media_id,
+                    })
+                    .collect::<Vec<NewPostMediaAttachment>>(),
+            )
+            .execute(conn)
+            .await?;
 
         Ok(())
     }
 
-    async fn process_mentions<C>(
-        conn: &C,
+    async fn process_mentions(
+        conn: &mut AsyncPgConnection,
         post_id: Uuid,
         mentioned_account_ids: Vec<(Uuid, String)>,
-    ) -> Result<()>
-    where
-        C: ConnectionTrait,
-    {
+    ) -> Result<()> {
         if mentioned_account_ids.is_empty() {
             return Ok(());
         }
 
-        PostsMentions::insert_many(mentioned_account_ids.into_iter().map(
-            |(account_id, mention_text)| {
-                posts_mentions::Model {
-                    post_id,
-                    account_id,
-                    mention_text,
-                }
-                .into_active_model()
-            },
-        ))
-        .exec_without_returning(conn)
-        .await?;
+        diesel::insert_into(posts_mentions::table)
+            .values(
+                mentioned_account_ids
+                    .iter()
+                    .map(|(account_id, mention_text)| NewMention {
+                        post_id,
+                        account_id: *account_id,
+                        mention_text,
+                    })
+                    .collect::<Vec<NewMention<'_>>>(),
+            )
+            .execute(conn)
+            .await?;
 
         Ok(())
     }
@@ -194,11 +197,15 @@ impl PostService {
     /// # Panics
     ///
     /// This should never ever panic. If it does, create a bug report.
-    pub async fn create(&self, create_post: CreatePost) -> Result<posts::Model> {
+    pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
         if create_post.content.chars().count() > self.instance_service.character_limit() {
             return Err(ApiError::BadRequest.into());
         }
 
+        let subject = create_post.subject.map(|mut subject| {
+            subject.clean_html();
+            subject
+        });
         let mut content = if create_post.process_markdown {
             let parser = Parser::new_ext(&create_post.content, Options::all());
             let mut buf = String::new();
@@ -214,41 +221,46 @@ impl PostService {
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let post = self
-            .db_conn
+        let mut db_conn = self.db_conn.get().await?;
+        let post = db_conn
             .transaction(move |tx| {
                 async move {
                     let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
-                        (Posts::find_by_id(in_reply_to_id).count(tx).await? != 0)
+                        (posts::table
+                            .find(in_reply_to_id)
+                            .count()
+                            .get_result::<i64>(tx)
+                            .await?
+                            != 0)
                             .then_some(in_reply_to_id)
                     } else {
                         None
                     };
 
-                    let post = posts::Model {
-                        id,
-                        account_id: create_post.author_id,
-                        in_reply_to_id,
-                        reposted_post_id: None,
-                        subject: create_post.subject,
-                        content,
-                        is_sensitive: create_post.sensitive,
-                        visibility: create_post.visibility,
-                        is_local: true,
-                        url,
-                        created_at: OffsetDateTime::now_utc(),
-                        updated_at: OffsetDateTime::now_utc(),
-                    }
-                    .into_active_model()
-                    .insert(tx)
-                    .await?;
+                    let post: Post = diesel::insert_into(posts::table)
+                        .values(NewPost {
+                            id,
+                            account_id: create_post.author_id,
+                            in_reply_to_id,
+                            reposted_post_id: None,
+                            subject: subject.as_deref(),
+                            content: content.as_str(),
+                            is_sensitive: create_post.sensitive,
+                            visibility: create_post.visibility,
+                            is_local: true,
+                            url: url.as_str(),
+                            created_at: None,
+                        })
+                        .returning(Post::as_returning())
+                        .get_result(tx)
+                        .await?;
 
                     Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
                     Ok::<_, Error>(post)
                 }
-                .boxed()
+                .scope_boxed()
             })
             .await?;
 
@@ -283,19 +295,23 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
-        let Some(post) = Posts::find_by_id(delete_post.post_id)
-            .one(&self.db_conn)
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+        let mut db_conn = self.db_conn.get().await?;
+        let post: Post = posts::table
+            .find(delete_post.post_id)
+            .select(Post::as_select())
+            .first(&mut db_conn)
+            .await?;
 
         if post.account_id != delete_post.account_id {
             if let Some(user_id) = delete_post.user_id {
-                let admin_role_count = UsersRoles::find()
-                    .filter(users_roles::Column::UserId.eq(user_id))
-                    .filter(users_roles::Column::Role.eq(Role::Administrator))
-                    .count(&self.db_conn)
+                let admin_role_count = users_roles::table
+                    .filter(
+                        users_roles::user_id
+                            .eq(user_id)
+                            .and(users_roles::role.eq(Role::Administrator)),
+                    )
+                    .count()
+                    .get_result::<i64>(&mut db_conn)
                     .await?;
 
                 if admin_role_count == 0 {
@@ -332,43 +348,38 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, create a bug report.
-    pub async fn favourite(
-        &self,
-        post_id: Uuid,
-        favouriting_account_id: Uuid,
-    ) -> Result<posts::Model> {
+    pub async fn favourite(&self, post_id: Uuid, favouriting_account_id: Uuid) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(Some(favouriting_account_id))
             .build()
             .unwrap();
 
-        let Some(post) = Posts::find_by_id(post_id)
-            .add_permission_checks(permission_check)
-            .one(&self.db_conn)
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+        let mut db_conn = self.db_conn.get().await?;
+        let post: Post = posts::table
+            .find(post_id)
+            .add_post_permission_check(permission_check)
+            .select(Post::as_select())
+            .get_result(&mut db_conn)
+            .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.favourite_url(id);
-        let favourite = posts_favourites::Model {
-            id,
-            account_id: favouriting_account_id,
-            post_id: post.id,
-            url,
-            created_at: OffsetDateTime::now_utc(),
-        }
-        .into_active_model()
-        .insert(&self.db_conn)
-        .await?;
+        let favourite_id = diesel::insert_into(posts_favourites::table)
+            .values(NewFavourite {
+                id,
+                account_id: favouriting_account_id,
+                post_id: post.id,
+                url,
+                created_at: None,
+            })
+            .returning(posts_favourites::id)
+            .get_result(&mut db_conn)
+            .await?;
 
         self.job_service
             .enqueue(
                 Enqueue::builder()
-                    .job(DeliverFavourite {
-                        favourite_id: favourite.id,
-                    })
+                    .job(DeliverFavourite { favourite_id })
                     .build(),
             )
             .await?;
@@ -381,23 +392,17 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, please open a bug report.
-    pub async fn unfavourite(
-        &self,
-        post_id: Uuid,
-        favouriting_account_id: Uuid,
-    ) -> Result<posts::Model> {
-        let Some(post) = self
+    pub async fn unfavourite(&self, post_id: Uuid, favouriting_account_id: Uuid) -> Result<Post> {
+        let post = self
             .get_by_id(post_id, Some(favouriting_account_id))
-            .await?
-        else {
-            return Err(ApiError::NotFound.into());
-        };
+            .await?;
 
-        if let Some(favourite) = post
-            .find_related(PostsFavourites)
-            .filter(posts_favourites::Column::AccountId.eq(favouriting_account_id))
-            .one(&self.db_conn)
-            .await?
+        let mut db_conn = self.db_conn.get().await?;
+        if let Some(favourite) = Favourite::belonging_to(&post)
+            .filter(posts_favourites::account_id.eq(favouriting_account_id))
+            .get_result::<Favourite>(&mut db_conn)
+            .await
+            .optional()?
         {
             self.job_service
                 .enqueue(
@@ -420,19 +425,18 @@ impl PostService {
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
-    pub async fn get_by_id(
-        &self,
-        id: Uuid,
-        fetching_account_id: Option<Uuid>,
-    ) -> Result<Option<posts::Model>> {
+    pub async fn get_by_id(&self, id: Uuid, fetching_account_id: Option<Uuid>) -> Result<Post> {
+        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(fetching_account_id)
             .build()
             .unwrap();
 
-        Posts::find_by_id(id)
-            .add_permission_checks(permission_check)
-            .one(&self.db_conn)
+        posts::table
+            .find(id)
+            .add_post_permission_check(permission_check)
+            .select(Post::as_select())
+            .get_result(&mut db_conn)
             .await
             .map_err(Error::from)
     }
@@ -446,7 +450,7 @@ impl PostService {
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
-    ) -> impl Stream<Item = Result<posts::Model>> + '_ {
+    ) -> impl Stream<Item = Result<Post>> + '_ {
         try_stream! {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
@@ -454,16 +458,16 @@ impl PostService {
                 .build()
                 .unwrap();
 
-            while let Some(post) = last_post.take() {
-                let post = post
-                    .find_linked(InReplyTo)
-                    .add_permission_checks(permission_check.clone())
-                    .one(&self.db_conn)
+            while let Some(in_reply_to_id) = last_post.in_reply_to_id {
+                let mut db_conn = self.db_conn.get().await?;
+                let post = posts::table
+                    .find(in_reply_to_id)
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .get_result::<Post>(&mut db_conn)
                     .await?;
 
-                if let Some(ref post) = post {
-                    yield post.clone();
-                }
+                yield post.clone();
 
                 last_post = post;
             }
@@ -480,17 +484,19 @@ impl PostService {
         &self,
         id: Uuid,
         fetching_account_id: Option<Uuid>,
-    ) -> BoxStream<'_, Result<posts::Model>> {
+    ) -> BoxStream<'_, Result<Post>> {
         try_stream! {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build()
                 .unwrap();
 
-            let descendant_stream = Posts::find()
-                .filter(posts::Column::InReplyToId.eq(id))
-                .add_permission_checks(permission_check)
-                .stream(&self.db_conn)
+            let mut db_conn = self.db_conn.get().await?;
+            let descendant_stream = posts::table
+                .filter(posts::in_reply_to_id.eq(id))
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .load_stream::<Post>(&mut db_conn)
                 .await?;
 
             for await descendant in descendant_stream {

@@ -5,27 +5,32 @@ use super::{
 };
 use crate::{
     activitypub::Fetcher,
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     job::deliver::{
         follow::DeliverFollow,
         unfollow::DeliverUnfollow,
         update::{DeliverUpdate, UpdateEntity},
     },
+    sanitize::CleanHtmlExt,
     webfinger::Webfinger,
 };
 use bytes::Bytes;
 use derive_builder::Builder;
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper,
+};
+use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    entity::{
-        accounts, accounts_followers, posts,
-        prelude::{Accounts, AccountsFollowers, Posts},
+    model::{
+        account::{Account, UpdateAccount},
+        follower::Follow as DbFollow,
+        follower::NewFollow,
+        post::Post,
     },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
-};
-use sea_orm::{
-    ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
-    QueryOrder,
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
+    schema::{accounts, accounts_follows, posts},
+    PgPool,
 };
 use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
@@ -109,7 +114,7 @@ impl<A, H> Update<A, H> {
 #[derive(Clone, TypedBuilder)]
 pub struct AccountService {
     attachment_service: AttachmentService,
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     fetcher: Fetcher,
     job_service: JobService,
     url_service: UrlService,
@@ -122,45 +127,45 @@ impl AccountService {
     /// # Returns
     ///
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
-    pub async fn follow(&self, follow: Follow) -> Result<(accounts::Model, accounts::Model)> {
-        let account = Accounts::find_by_id(follow.account_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
-        let follower = Accounts::find_by_id(follow.follower_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
+    pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        let account = accounts::table
+            .find(follow.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
+
+        let follower = accounts::table
+            .find(follow.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.follow_url(id);
-        let mut follow_model = accounts_followers::Model {
+        let mut follow_model = NewFollow {
             id,
             account_id: account.id,
             follower_id: follower.id,
             approved_at: None,
-            url,
-            created_at: OffsetDateTime::now_utc(),
-            updated_at: OffsetDateTime::now_utc(),
+            url: url.as_str(),
+            created_at: None,
         };
 
         if account.local && !account.locked {
             follow_model.approved_at = Some(OffsetDateTime::now_utc());
         }
 
-        let follow_id = AccountsFollowers::insert(follow_model.into_active_model())
-            .exec(&self.db_conn)
+        let follow_id = diesel::insert_into(accounts_follows::table)
+            .values(follow_model)
+            .returning(accounts_follows::id)
+            .get_result(&mut db_conn)
             .await?;
 
         if !account.local {
             self.job_service
-                .enqueue(
-                    Enqueue::builder()
-                        .job(DeliverFollow {
-                            follow_id: follow_id.last_insert_id,
-                        })
-                        .build(),
-                )
+                .enqueue(Enqueue::builder().job(DeliverFollow { follow_id }).build())
                 .await?;
         }
 
@@ -168,13 +173,19 @@ impl AccountService {
     }
 
     /// Get an account by its username and domain
-    pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<accounts::Model>> {
+    pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<Account>> {
+        let mut db_conn = self.db_conn.get().await?;
         if let Some(domain) = get_user.domain {
-            if let Some(account) = Accounts::find()
-                .filter(accounts::Column::Username.eq(get_user.username))
-                .filter(accounts::Column::Domain.eq(domain))
-                .one(&self.db_conn)
-                .await?
+            if let Some(account) = accounts::table
+                .filter(
+                    accounts::username
+                        .eq(get_user.username)
+                        .and(accounts::domain.eq(domain)),
+                )
+                .select(Account::as_select())
+                .get_result(&mut db_conn)
+                .await
+                .optional()?
             {
                 return Ok(Some(account));
             } else if !get_user.use_webfinger {
@@ -191,23 +202,28 @@ impl AccountService {
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            Accounts::find()
+            accounts::table
                 .filter(
-                    accounts::Column::Username
+                    accounts::username
                         .eq(get_user.username)
-                        .and(accounts::Column::Local.eq(true)),
+                        .and(accounts::local.eq(true)),
                 )
-                .one(&self.db_conn)
+                .select(Account::as_select())
+                .first(&mut db_conn)
                 .await
+                .optional()
                 .map_err(Error::from)
         }
     }
 
     /// Get an account by its ID
-    pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<accounts::Model>> {
-        Accounts::find_by_id(account_id)
-            .one(&self.db_conn)
+    pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<Account>> {
+        accounts::table
+            .find(account_id)
+            .select(Account::as_select())
+            .get_result(&mut self.db_conn.get().await?)
             .await
+            .optional()
             .map_err(Error::from)
     }
 
@@ -219,27 +235,30 @@ impl AccountService {
     pub async fn get_posts(
         &self,
         get_posts: GetPosts,
-    ) -> Result<impl Stream<Item = Result<posts::Model>> + '_> {
+    ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
             .build()
             .unwrap();
 
-        let mut posts_query = Posts::find()
-            .filter(posts::Column::AccountId.eq(get_posts.account_id))
-            .add_permission_checks(permission_check)
-            .order_by_desc(posts::Column::CreatedAt);
+        let mut posts_query = posts::table
+            .filter(posts::account_id.eq(get_posts.account_id))
+            .add_post_permission_check(permission_check)
+            .select(Post::as_select())
+            .order(posts::created_at.desc())
+            .into_boxed();
 
         if let Some(min_id) = get_posts.min_id {
-            posts_query = posts_query.filter(posts::Column::Id.gt(min_id));
+            posts_query = posts_query.filter(posts::id.gt(min_id));
         }
 
         if let Some(max_id) = get_posts.max_id {
-            posts_query = posts_query.filter(posts::Column::Id.lt(max_id));
+            posts_query = posts_query.filter(posts::id.lt(max_id));
         }
 
         Ok(posts_query
-            .stream(&self.db_conn)
+            .load_stream(&mut db_conn)
             .await?
             .map_err(Error::from))
     }
@@ -249,21 +268,30 @@ impl AccountService {
     /// # Returns
     ///
     /// Tuple of two account models. First account is the account that was being followed, second account is the account that was following
-    pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(accounts::Model, accounts::Model)> {
-        let account = Accounts::find_by_id(unfollow.account_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
-        let follower = Accounts::find_by_id(unfollow.follower_id)
-            .one(&self.db_conn)
-            .await?
-            .ok_or(ApiError::BadRequest)?;
+    pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
+        let mut db_conn = self.db_conn.get().await?;
 
-        let follow = AccountsFollowers::find()
-            .filter(accounts_followers::Column::AccountId.eq(account.id))
-            .filter(accounts_followers::Column::FollowerId.eq(follower.id))
-            .one(&self.db_conn)
+        let account = accounts::table
+            .find(unfollow.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
             .await?;
+
+        let follower = accounts::table
+            .find(unfollow.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn)
+            .await?;
+
+        let follow = accounts_follows::table
+            .filter(
+                accounts_follows::account_id
+                    .eq(account.id)
+                    .and(accounts_follows::follower_id.eq(follower.id)),
+            )
+            .get_result::<DbFollow>(&mut db_conn)
+            .await
+            .optional()?;
 
         if let Some(follow) = follow {
             if !account.local {
@@ -282,35 +310,53 @@ impl AccountService {
         Ok((account, follower))
     }
 
-    pub async fn update<A, H>(&self, update: Update<A, H>) -> Result<accounts::Model>
+    pub async fn update<A, H>(&self, mut update: Update<A, H>) -> Result<Account>
     where
         A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
         H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
     {
-        let mut active_model = accounts::ActiveModel {
-            id: ActiveValue::Set(update.account_id),
-            ..Default::default()
-        };
+        let mut changeset = UpdateAccount::default();
 
-        if let Some(display_name) = update.display_name {
-            active_model.display_name = ActiveValue::Set(Some(display_name));
+        if let Some(ref mut display_name) = update.display_name {
+            display_name.clean_html();
+            changeset = UpdateAccount {
+                display_name: Some(display_name),
+                ..changeset
+            };
         }
-        if let Some(note) = update.note {
-            active_model.note = ActiveValue::Set(Some(note));
+        if let Some(ref mut note) = update.note {
+            note.clean_html();
+            changeset = UpdateAccount {
+                note: Some(note),
+                ..changeset
+            };
         }
         if let Some(avatar) = update.avatar {
             let media_attachment = self.attachment_service.upload(avatar).await?;
-            active_model.avatar_id = ActiveValue::Set(Some(media_attachment.id));
+            changeset = UpdateAccount {
+                avatar_id: Some(media_attachment.id),
+                ..changeset
+            };
         }
         if let Some(header) = update.header {
             let media_attachment = self.attachment_service.upload(header).await?;
-            active_model.header_id = ActiveValue::Set(Some(media_attachment.id));
+            changeset = UpdateAccount {
+                header_id: Some(media_attachment.id),
+                ..changeset
+            };
         }
         if let Some(locked) = update.locked {
-            active_model.locked = ActiveValue::Set(locked);
+            changeset = UpdateAccount {
+                locked: Some(locked),
+                ..changeset
+            };
         }
 
-        let updated_account = Accounts::update(active_model).exec(&self.db_conn).await?;
+        let updated_account: Account = diesel::update(accounts::table.find(update.account_id))
+            .set(changeset)
+            .returning(Account::as_returning())
+            .get_result(&mut self.db_conn.get().await?)
+            .await?;
 
         self.job_service
             .enqueue(

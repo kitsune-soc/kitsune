@@ -5,10 +5,14 @@ use crate::{
     resolve::InboxResolver,
 };
 use async_trait::async_trait;
+use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
 use futures_util::{StreamExt, TryStreamExt};
-use kitsune_db::entity::prelude::{Accounts, Posts, Users};
+use kitsune_db::{
+    model::{account::Account, post::Post, user::User},
+    schema::{accounts, posts, users},
+};
 use kitsune_type::ap::ActivityType;
-use sea_orm::{EntityTrait, ModelTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -28,12 +32,16 @@ pub struct DeliverUpdate {
 impl Runnable for DeliverUpdate {
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
+        let mut db_conn = ctx.state.db_conn.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {
-                let Some((account, Some(user))) = Accounts::find_by_id(self.id)
-                    .find_also_related(Users)
-                    .one(&ctx.state.db_conn)
-                    .await?
+                let Some((account, user)) = accounts::table
+                    .find(self.id)
+                    .inner_join(users::table)
+                    .select((Account::as_select(), User::as_select()))
+                    .get_result(&mut db_conn)
+                    .await
+                    .optional()?
                 else {
                     return Ok(());
                 };
@@ -47,15 +55,15 @@ impl Runnable for DeliverUpdate {
                 )
             }
             UpdateEntity::Status => {
-                let Some((post, Some(account))) = Posts::find_by_id(self.id)
-                    .find_also_related(Accounts)
-                    .one(&ctx.state.db_conn)
-                    .await?
+                let Some((post, account, user)) = posts::table
+                    .find(self.id)
+                    .inner_join(accounts::table)
+                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                    .select((Post::as_select(), Account::as_select(), User::as_select()))
+                    .get_result(&mut db_conn)
+                    .await
+                    .optional()?
                 else {
-                    return Ok(());
-                };
-                let Some(user) = account.find_related(Users).one(&ctx.state.db_conn).await? else {
-                    error!("tried to update non-local post");
                     return Ok(());
                 };
 

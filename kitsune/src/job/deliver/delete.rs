@@ -5,9 +5,13 @@ use crate::{
     resolve::InboxResolver,
 };
 use async_trait::async_trait;
+use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
-use kitsune_db::entity::prelude::{Accounts, Posts, Users};
-use sea_orm::EntityTrait;
+use kitsune_db::{
+    model::{account::Account, post::Post, user::User},
+    schema::{accounts, posts, users},
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,17 +24,24 @@ pub struct DeliverDelete {
 impl Runnable for DeliverDelete {
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some(post) = Posts::find_by_id(self.post_id)
-            .one(&ctx.state.db_conn)
-            .await?
+        let mut db_conn = ctx.state.db_conn.get().await?;
+        let Some(post) = posts::table
+            .find(self.post_id)
+            .select(Post::as_select())
+            .get_result::<Post>(&mut db_conn)
+            .await
+            .optional()?
         else {
             return Ok(());
         };
 
-        let Some((account, Some(user))) = Accounts::find_by_id(post.account_id)
-            .find_also_related(Users)
-            .one(&ctx.state.db_conn)
-            .await?
+        let Some((account, user)) = accounts::table
+            .find(post.account_id)
+            .inner_join(users::table)
+            .select((Account::as_select(), User::as_select()))
+            .get_result::<(Account, User)>(&mut db_conn)
+            .await
+            .optional()?
         else {
             return Ok(());
         };
@@ -50,8 +61,8 @@ impl Runnable for DeliverDelete {
             .deliver_many(&account, &user, &delete_activity, inbox_stream)
             .await?;
 
-        Posts::delete_by_id(post_id)
-            .exec(&ctx.state.db_conn)
+        diesel::delete(posts::table.find(post_id))
+            .execute(&mut db_conn)
             .await?;
 
         Ok(())

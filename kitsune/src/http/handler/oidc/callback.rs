@@ -10,11 +10,12 @@ use axum::{
     extract::{Query, State},
     response::Response,
 };
-use kitsune_db::entity::{
-    prelude::{Oauth2Applications, Users},
-    users,
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    schema::{oauth2_applications, users},
+    PgPool,
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -24,7 +25,7 @@ pub struct CallbackQuery {
 }
 
 pub async fn get(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(user_service): State<UserService>,
     State(oauth_service): State<Oauth2Service>,
     State(oidc_service): State<Option<OidcService>>,
@@ -35,10 +36,13 @@ pub async fn get(
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
-    let user = if let Some(user) = Users::find()
-        .filter(users::Column::OidcId.eq(&user_info.subject))
-        .one(&db_conn)
-        .await?
+
+    let mut db_conn = db_conn.get().await?;
+    let user = if let Some(user) = users::table
+        .filter(users::oidc_id.eq(&user_info.subject))
+        .get_result(&mut db_conn)
+        .await
+        .optional()?
     {
         user
     } else {
@@ -51,13 +55,10 @@ pub async fn get(
         user_service.register(register).await?
     };
 
-    let application = Oauth2Applications::find_by_id(user_info.oauth2.application_id)
-        .one(&db_conn)
-        .await?
-        .ok_or_else(|| {
-            error!("OAuth2 application stored inside the login state not available anymore");
-            ApiError::InternalServerError
-        })?;
+    let application = oauth2_applications::table
+        .find(user_info.oauth2.application_id)
+        .get_result(&mut db_conn)
+        .await?;
 
     let authorisation_code = AuthorisationCode::builder()
         .application(application)

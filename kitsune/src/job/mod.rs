@@ -12,14 +12,14 @@ use crate::{
     state::Zustand,
 };
 use async_trait::async_trait;
+use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
+use futures_util::{stream::FuturesUnordered, StreamExt};
 use kitsune_db::{
-    custom::JobState,
-    entity::{jobs, prelude::Jobs},
-};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
+    model::job::{Job as DbJob, JobState, UpdateJob},
+    schema::jobs,
+    PgPool,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::Duration;
@@ -66,7 +66,7 @@ pub trait Runnable: DeserializeOwned + Serialize {
 
 // Takes owned values to make the lifetime of the returned future static
 #[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) {
+async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Result<()> {
     let job: Job = serde_json::from_value(db_job.context.clone())
         .expect("[Bug] Failed to deserialise job context");
 
@@ -82,67 +82,81 @@ async fn execute_one(db_job: jobs::Model, state: Zustand, deliverer: Deliverer) 
         error!("Job execution panicked");
     }
 
-    let mut update_model = db_job.clone().into_active_model();
-    update_model.updated_at = ActiveValue::Set(OffsetDateTime::now_utc());
+    let mut db_conn = state.db_conn.get().await?;
     #[allow(clippy::cast_possible_truncation)]
     match execution_result {
         Ok(Err(..)) | Err(..) => {
             increment_counter!("failed_jobs");
 
-            update_model.state = ActiveValue::Set(JobState::Failed);
             let fail_count = db_job.fail_count + 1;
-            update_model.fail_count = ActiveValue::Set(fail_count);
-
             #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
             let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
-            update_model.run_at = ActiveValue::Set(OffsetDateTime::now_utc() + backoff_duration);
+
+            diesel::update(&db_job)
+                .set(UpdateJob {
+                    fail_count,
+                    state: JobState::Failed,
+                    run_at: OffsetDateTime::now_utc() + backoff_duration,
+                })
+                .execute(&mut db_conn)
+                .await?;
         }
         _ => {
             increment_counter!("succeeded_jobs");
 
-            update_model.state = ActiveValue::Set(JobState::Succeeded);
+            diesel::update(&db_job)
+                .set(jobs::state.eq(JobState::Succeeded))
+                .execute(&mut db_conn)
+                .await?;
         }
     }
 
-    if let Err(err) = update_model.update(&state.db_conn).await {
-        error!(error = ?err, "Failed to update job information");
-    }
+    Ok(())
 }
 
-async fn get_jobs(db_conn: &DatabaseConnection, num_jobs: usize) -> Result<Vec<jobs::Model>> {
-    let txn = db_conn.begin().await?;
+async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
+    let mut db_conn = db_conn.get().await?;
 
-    let jobs = Jobs::find()
-        .filter(
-            jobs::Column::State
-                .eq(JobState::Queued)
-                .or(jobs::Column::State.eq(JobState::Failed))
-                .and(jobs::Column::RunAt.lte(OffsetDateTime::now_utc()))
-                // Re-execute job if it has been running for longer than an hour (probably the worker crashed or something)
-                .or(jobs::Column::State.eq(JobState::Running).and(
-                    jobs::Column::UpdatedAt
-                        .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
-                )),
-        )
-        .limit(num_jobs as u64)
-        .order_by_asc(jobs::Column::CreatedAt)
-        .lock_exclusive()
-        .all(&txn)
-        .await
-        .map_err(Error::from)?;
+    let jobs = db_conn
+        .transaction(|tx| {
+            async move {
+                let jobs = jobs::table
+                    .filter(
+                        (jobs::state
+                            .eq(JobState::Queued)
+                            .or(jobs::state.eq(JobState::Failed))
+                            .and(jobs::run_at.le(kitsune_db::function::now())))
+                        .or(jobs::state.eq(JobState::Running).and(
+                            jobs::updated_at
+                                .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
+                        )),
+                    )
+                    .limit(num_jobs as i64)
+                    .order(jobs::created_at.asc())
+                    .for_update()
+                    .load(tx)
+                    .await?;
 
-    let update_jobs = jobs.iter().map(|job| {
-        let mut update_job = job.clone().into_active_model();
-        update_job.state = ActiveValue::Set(JobState::Running);
-        update_job.updated_at = ActiveValue::Set(OffsetDateTime::now_utc());
-        update_job
-    });
+                // New scope to ensure `update_jobs` is getting dropped
+                // Otherwise this will prevent us from returning the `jobs` list
+                {
+                    let mut update_jobs = jobs
+                        .iter()
+                        .map(|job| {
+                            diesel::update(job)
+                                .set(jobs::state.eq(JobState::Running))
+                                .execute(tx)
+                        })
+                        .collect::<FuturesUnordered<_>>();
 
-    for update_job in update_jobs {
-        Jobs::update(update_job).exec(&txn).await?;
-    }
+                    while let Some(..) = update_jobs.next().await.transpose()? {}
+                }
 
-    txn.commit().await?;
+                Ok::<_, Error>(jobs)
+            }
+            .scope_boxed()
+        })
+        .await?;
 
     Ok(jobs)
 }

@@ -1,11 +1,12 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
-use kitsune_db::entity::{
-    prelude::{Accounts, Users},
-    users,
+use diesel::{QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{account::Account as DbAccount, user::User as DbUser},
+    schema::{accounts, users},
 };
-use sea_orm::{EntityTrait, ModelTrait};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -23,22 +24,22 @@ pub struct User {
 
 #[ComplexObject]
 impl User {
-    pub async fn account(&self, ctx: &Context<'_>) -> Result<Option<Account>> {
-        let user = Users::find_by_id(self.id)
-            .one(&ctx.state().db_conn)
-            .await?
-            .expect("[Bug] User without associated account");
+    pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
+        let mut db_conn = ctx.state().db_conn.get().await?;
 
-        user.find_related(Accounts)
-            .one(&ctx.state().db_conn)
+        users::table
+            .find(self.id)
+            .inner_join(accounts::table)
+            .select(DbAccount::as_select())
+            .get_result::<DbAccount>(&mut db_conn)
             .await
-            .map(|account| account.map(Into::into))
+            .map(Into::into)
             .map_err(Error::from)
     }
 }
 
-impl From<users::Model> for User {
-    fn from(value: users::Model) -> Self {
+impl From<DbUser> for User {
+    fn from(value: DbUser) -> Self {
         Self {
             id: value.id,
             account_id: value.account_id,

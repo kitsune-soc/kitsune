@@ -3,9 +3,16 @@ use crate::{
     job::{JobContext, Runnable},
 };
 use async_trait::async_trait;
-use kitsune_db::entity::prelude::{Accounts, AccountsFollowers, Users};
+use diesel::{
+    ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
+    SelectableHelper,
+};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    model::{account::Account, follower::Follow, user::User},
+    schema::{accounts, accounts_follows, users},
+};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
-use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -19,24 +26,28 @@ pub struct DeliverAccept {
 impl Runnable for DeliverAccept {
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
-        let Some(follow) = AccountsFollowers::find_by_id(self.follow_id)
-            .one(&ctx.state.db_conn)
-            .await?
+        let mut db_conn = ctx.state.db_conn.get().await?;
+        let Some(follow) = accounts_follows::table.find(self.follow_id)
+            .get_result::<Follow>(&mut db_conn)
+            .await
+            .optional()?
         else {
             return Ok(());
         };
-        let follower = Accounts::find_by_id(follow.follower_id)
-            .one(&ctx.state.db_conn)
-            .await?
-            .expect("[Bug] Missing follower");
-        let Some((followed_account, Some(followed_user))) = Accounts::find_by_id(follow.account_id)
-            .find_also_related(Users)
-            .one(&ctx.state.db_conn)
-            .await?
-        else {
-            error!("missing followed user");
-            return Ok(());
-        };
+
+        let follower_inbox_url = accounts::table
+            .find(follow.follower_id)
+            .select(accounts::inbox_url.assume_not_null())
+            .get_result::<String>(&mut db_conn)
+            .await?;
+
+        let (followed_account, followed_user) = accounts::table
+            .find(follow.account_id)
+            .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+            .select((Account::as_select(), User::as_select()))
+            .get_result::<(Account, User)>(&mut db_conn)
+            .await?;
+
         let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
 
         // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
@@ -55,7 +66,7 @@ impl Runnable for DeliverAccept {
 
         ctx.deliverer
             .deliver(
-                follower.inbox_url.as_deref().unwrap(),
+                &follower_inbox_url,
                 &followed_account,
                 &followed_user,
                 &accept_activity,

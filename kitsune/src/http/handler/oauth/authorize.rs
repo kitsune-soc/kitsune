@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     service::{
         oauth2::{AuthorisationCode, Oauth2Service},
         oidc::OidcService,
@@ -13,13 +13,14 @@ use axum::{
     response::{IntoResponse, Response},
     Form,
 };
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_db::entity::{
-    oauth2_applications,
-    prelude::{Oauth2Applications, Users},
-    users,
+use kitsune_db::{
+    model::{oauth2, user::User},
+    schema::{oauth2_applications, users},
+    PgPool,
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -45,7 +46,7 @@ struct AuthorizePage {
 }
 
 pub async fn get(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(oidc_service): State<Option<OidcService>>,
     State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
@@ -54,11 +55,12 @@ pub async fn get(
         return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
     }
 
-    let application = Oauth2Applications::find_by_id(query.client_id)
-        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&db_conn)
-        .await?
-        .ok_or(Error::OAuthApplicationNotFound)?;
+    let mut db_conn = db_conn.get().await?;
+    let application = oauth2_applications::table
+        .find(query.client_id)
+        .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+        .get_result::<oauth2::Application>(&mut db_conn)
+        .await?;
 
     if let Some(oidc_service) = oidc_service {
         let auth_url = oidc_service
@@ -76,22 +78,22 @@ pub async fn get(
 }
 
 pub async fn post(
-    State(db_conn): State<DatabaseConnection>,
+    State(db_conn): State<PgPool>,
     State(oauth2_service): State<Oauth2Service>,
     Query(query): Query<AuthorizeQuery>,
     Form(form): Form<AuthorizeForm>,
 ) -> Result<Response> {
-    let user = Users::find()
-        .filter(users::Column::Username.eq(form.username))
-        .one(&db_conn)
-        .await?
-        .ok_or(ApiError::NotFound)?;
+    let mut db_conn = db_conn.get().await?;
+    let user = users::table
+        .filter(users::username.eq(form.username))
+        .first::<User>(&mut db_conn)
+        .await?;
 
-    let application = Oauth2Applications::find_by_id(query.client_id)
-        .filter(oauth2_applications::Column::RedirectUri.eq(query.redirect_uri))
-        .one(&db_conn)
-        .await?
-        .ok_or(Error::OAuthApplicationNotFound)?;
+    let application = oauth2_applications::table
+        .find(query.client_id)
+        .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+        .get_result::<oauth2::Application>(&mut db_conn)
+        .await?;
 
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;

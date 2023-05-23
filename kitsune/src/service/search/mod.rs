@@ -1,7 +1,7 @@
 use crate::error::SearchError;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use kitsune_db::entity::{accounts, posts};
+use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use uuid::Uuid;
@@ -37,8 +37,8 @@ pub struct Account {
     pub created_at: u64,
 }
 
-impl From<accounts::Model> for Account {
-    fn from(value: accounts::Model) -> Self {
+impl From<DbAccount> for Account {
+    fn from(value: DbAccount) -> Self {
         let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
         Self {
             id: value.id,
@@ -59,8 +59,8 @@ pub struct Post {
     pub created_at: u64,
 }
 
-impl From<posts::Model> for Post {
-    fn from(value: posts::Model) -> Self {
+impl From<DbPost> for Post {
+    fn from(value: DbPost) -> Self {
         let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
         Self {
             id: value.id,
@@ -88,14 +88,14 @@ impl SearchItem {
     }
 }
 
-impl From<accounts::Model> for SearchItem {
-    fn from(account: accounts::Model) -> Self {
+impl From<DbAccount> for SearchItem {
+    fn from(account: DbAccount) -> Self {
         Self::Account(account.into())
     }
 }
 
-impl From<posts::Model> for SearchItem {
-    fn from(post: posts::Model) -> Self {
+impl From<DbPost> for SearchItem {
+    fn from(post: DbPost) -> Self {
         Self::Post(post.into())
     }
 }

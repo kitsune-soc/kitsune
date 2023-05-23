@@ -1,17 +1,16 @@
 use crate::error::{Error, Result};
-use kitsune_db::entity::{
-    accounts, posts,
-    prelude::{Accounts, Posts, Users},
-};
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QuerySelect,
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{
+    schema::{accounts, posts, users},
+    PgPool,
 };
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
 pub struct InstanceService {
-    db_conn: DatabaseConnection,
+    db_conn: PgPool,
     #[builder(setter(into))]
     name: Arc<str>,
     #[builder(setter(into))]
@@ -36,28 +35,36 @@ impl InstanceService {
     }
 
     pub async fn known_instances(&self) -> Result<u64> {
-        Accounts::find()
-            .filter(accounts::Column::Local.eq(false))
-            .select_only()
-            .column(accounts::Column::Domain)
-            .group_by(accounts::Column::Domain)
-            .count(&self.db_conn)
+        let mut db_conn = self.db_conn.get().await?;
+        accounts::table
+            .filter(accounts::local.eq(false))
+            .select(accounts::domain)
+            .distinct()
+            .count()
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
-        Posts::find()
-            .filter(posts::Column::IsLocal.eq(true))
-            .count(&self.db_conn)
+        let mut db_conn = self.db_conn.get().await?;
+        posts::table
+            .filter(posts::is_local.eq(true))
+            .count()
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 
     pub async fn user_count(&self) -> Result<u64> {
-        Users::find()
-            .count(&self.db_conn)
+        let mut db_conn = self.db_conn.get().await?;
+        users::table
+            .count()
+            .get_result::<i64>(&mut db_conn)
             .await
+            .map(|count| count as u64)
             .map_err(Error::from)
     }
 }

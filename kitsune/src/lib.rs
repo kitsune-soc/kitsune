@@ -1,6 +1,8 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss,
     clippy::doc_markdown,
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
@@ -12,6 +14,9 @@ extern crate metrics;
 
 #[macro_use]
 extern crate tracing;
+
+#[cfg(test)]
+mod test;
 
 pub mod activitypub;
 pub mod blocking;
@@ -58,6 +63,7 @@ use self::{
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
 use futures_util::future::OptionFuture;
+use kitsune_db::PgPool;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
@@ -67,7 +73,6 @@ use openidconnect::{
     core::{CoreClient, CoreProviderMetadata},
     ClientId, ClientSecret, IssuerUrl, RedirectUrl,
 };
-use sea_orm::DatabaseConnection;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
 
@@ -161,10 +166,7 @@ async fn prepare_oidc_client(
     .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
 }
 
-async fn prepare_search(
-    search_config: &SearchConfiguration,
-    db_conn: &DatabaseConnection,
-) -> SearchService {
+async fn prepare_search(search_config: &SearchConfiguration, db_conn: &PgPool) -> SearchService {
     match search_config {
         SearchConfiguration::Kitsune(config) => {
             GrpcSearchService::connect(&config.index_server, &config.search_servers)
@@ -190,7 +192,7 @@ async fn prepare_search(
 }
 
 #[allow(clippy::missing_panics_doc, clippy::too_many_lines)] // TODO: Refactor this method to get under the 100 lines
-pub async fn initialise_state(config: &Configuration, conn: DatabaseConnection) -> Zustand {
+pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
     let messaging_hub = prepare_messaging(config).await;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 

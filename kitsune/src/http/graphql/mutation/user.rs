@@ -1,11 +1,9 @@
 use super::handle_upload;
 use crate::{
     http::graphql::{types::Account, ContextExt},
-    sanitize::CleanHtmlExt,
+    service::account::Update,
 };
 use async_graphql::{Context, Error, Object, Result, Upload};
-use kitsune_db::entity::accounts;
-use sea_orm::{ActiveModelTrait, ActiveValue};
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -21,49 +19,35 @@ impl UserMutation {
         header: Option<Upload>,
         locked: Option<bool>,
     ) -> Result<Account> {
-        let state = ctx.state();
-        let user_data = ctx.user_data()?;
-        let mut active_user = accounts::ActiveModel {
-            id: ActiveValue::Set(user_data.account.id),
-            ..Default::default()
-        };
+        let account_service = &ctx.state().service.account;
+        let mut account_update = Update::builder();
 
-        if let Some(mut display_name) = display_name {
-            active_user.display_name = if display_name.is_empty() {
-                ActiveValue::Set(None)
-            } else {
-                display_name.clean_html();
-                ActiveValue::Set(Some(display_name))
-            };
+        if let Some(display_name) = display_name {
+            account_update = account_update.display_name(display_name);
         }
 
-        if let Some(mut note) = note {
-            active_user.note = if note.is_empty() {
-                ActiveValue::Set(None)
-            } else {
-                note.clean_html();
-                ActiveValue::Set(Some(note))
-            };
+        if let Some(note) = note {
+            account_update = account_update.note(note);
         }
 
-        if let Some(avatar) = avatar {
-            let media_attachment = handle_upload(ctx, avatar, None).await?;
-            active_user.avatar_id = ActiveValue::Set(Some(media_attachment.id));
+        if let Some(ref avatar) = avatar {
+            let media_attachment = handle_upload(ctx, avatar, None)?;
+            account_update = account_update.avatar(media_attachment);
         }
 
-        if let Some(header) = header {
-            let media_attachment = handle_upload(ctx, header, None).await?;
-            active_user.header_id = ActiveValue::Set(Some(media_attachment.id));
+        if let Some(ref header) = header {
+            let media_attachment = handle_upload(ctx, header, None)?;
+            account_update = account_update.header(media_attachment);
         }
 
         if let Some(locked) = locked {
-            active_user.locked = ActiveValue::Set(locked);
+            account_update = account_update.locked(locked);
         }
 
-        active_user
-            .update(&state.db_conn)
+        account_service
+            .update(account_update.build()?)
             .await
-            .map(Into::into)
+            .map(Account::from)
             .map_err(Error::from)
     }
 }

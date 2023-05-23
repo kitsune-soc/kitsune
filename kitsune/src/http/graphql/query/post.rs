@@ -7,7 +7,7 @@ pub struct PostQuery;
 
 #[Object]
 impl PostQuery {
-    pub async fn get_post_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<Post>> {
+    pub async fn get_post_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Post> {
         let state = ctx.state();
         let account_id = ctx.user_data().ok().map(|user_data| user_data.account.id);
 
@@ -15,7 +15,7 @@ impl PostQuery {
             .service
             .post
             .get_by_id(id, account_id)
-            .await?
-            .map(Into::into))
+            .await
+            .map(Into::into)?)
     }
 }

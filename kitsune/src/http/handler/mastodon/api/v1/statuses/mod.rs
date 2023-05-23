@@ -82,9 +82,7 @@ async fn get(
     Path(id): Path<Uuid>,
 ) -> Result<Response> {
     let account_id = user_data.as_ref().map(|user_data| user_data.0.account.id);
-    let Some(post) = post.get_by_id(id, account_id).await? else {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    };
+    let post = post.get_by_id(id, account_id).await?;
 
     let status = if let Some(AuthExtractor(ref user_data)) = user_data {
         mastodon_mapper.map((&user_data.account, post)).await?

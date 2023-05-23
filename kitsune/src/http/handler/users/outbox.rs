@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
@@ -9,19 +9,18 @@ use axum::{
     extract::{OriginalUri, Path, Query, State},
     response::{IntoResponse, Response},
 };
+use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    entity::{
-        accounts, posts,
-        prelude::{Accounts, Posts},
-    },
-    r#trait::{PermissionCheck, PostPermissionCheckExt},
+    model::{account::Account, post::Post},
+    post_permission_check::{PermissionCheck, PostPermissionCheckExt},
+    schema::accounts,
 };
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -42,13 +41,14 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Response> {
-    let Some(account) = Accounts::find_by_id(account_id)
-        .filter(accounts::Column::Local.eq(true))
-        .one(&state.db_conn)
-        .await?
-    else {
-        return Err(ApiError::NotFound.into());
-    };
+    let mut db_conn = state.db_conn.get().await?;
+
+    let account = accounts::table
+        .find(account_id)
+        .filter(accounts::local.eq(true))
+        .select(Account::as_select())
+        .get_result::<Account>(&mut db_conn)
+        .await?;
 
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
@@ -59,7 +59,7 @@ pub async fn get(
             .min_id(query.min_id)
             .build();
 
-        let posts: Vec<posts::Model> = state
+        let posts: Vec<Post> = state
             .service
             .account
             .get_posts(get_posts)
@@ -71,7 +71,7 @@ pub async fn get(
         let id = format!("{}{original_uri}", url_service.base_url());
         let prev = format!(
             "{base_url}?page=true&min_id={}",
-            posts.first().map_or(Uuid::max(), |post| post.id)
+            posts.get(0).map_or(Uuid::max(), |post| post.id)
         );
         let next = format!(
             "{base_url}?page=true&max_id={}",
@@ -96,10 +96,10 @@ pub async fn get(
         })
         .into_response())
     } else {
-        let public_post_count = Posts::find()
-            .filter(posts::Column::AccountId.eq(account.id))
-            .add_permission_checks(PermissionCheck::default())
-            .count(&state.db_conn)
+        let public_post_count = Post::belonging_to(&account)
+            .add_post_permission_check(PermissionCheck::default())
+            .count()
+            .get_result::<i64>(&mut db_conn)
             .await?;
 
         let first = format!("{base_url}?page=true");
@@ -109,7 +109,7 @@ pub async fn get(
             context: ap_context(),
             id: base_url,
             r#type: CollectionType::OrderedCollection,
-            total_items: public_post_count,
+            total_items: public_post_count as u64,
             first: Some(first),
             last: Some(last),
         })
