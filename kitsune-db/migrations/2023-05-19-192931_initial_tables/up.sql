@@ -7,7 +7,7 @@ CREATE TABLE accounts (
     local BOOLEAN NOT NULL,
     domain TEXT NOT NULL,
     actor_type INTEGER NOT NULL,
-    url TEXT UNIQUE,
+    url TEXT UNIQUE NOT NULL,
 
     -- ActivityPub-specific data
     featured_collection_url TEXT,

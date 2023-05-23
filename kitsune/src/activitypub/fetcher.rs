@@ -132,7 +132,7 @@ impl Fetcher {
                             local: false,
                             domain: url.host_str().unwrap(),
                             actor_type: actor.r#type.into(),
-                            url: Some(actor.id.as_str()),
+                            url: actor.id.as_str(),
                             featured_collection_url: actor.featured.as_deref(),
                             followers_url: Some(actor.followers.as_str()),
                             following_url: Some(actor.following.as_str()),
@@ -379,7 +379,7 @@ mod test {
 
             assert_eq!(user.username, "0x0");
             assert_eq!(user.domain, "corteximplant.com");
-            assert_eq!(user.url, Some("https://corteximplant.com/users/0x0".into()));
+            assert_eq!(user.url, "https://corteximplant.com/users/0x0");
             assert_eq!(
                 user.inbox_url,
                 Some("https://corteximplant.com/users/0x0/inbox".into())
@@ -422,10 +422,7 @@ mod test {
                 .expect("Get author");
 
             assert_eq!(author.username, "0x0");
-            assert_eq!(
-                author.url,
-                Some("https://corteximplant.com/users/0x0".into())
-            );
+            assert_eq!(author.url, "https://corteximplant.com/users/0x0");
         })
         .await;
     }

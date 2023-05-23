@@ -1,9 +1,6 @@
 use crate::{
     error::{Error, Result},
-    service::{
-        account::{AccountService, GetUser},
-        url::UrlService,
-    },
+    service::account::{AccountService, GetUser},
 };
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
@@ -14,7 +11,6 @@ use uuid::Uuid;
 #[derive(Clone, TypedBuilder)]
 pub struct PostResolver {
     account: AccountService,
-    url: UrlService,
 }
 
 impl PostResolver {
@@ -31,7 +27,6 @@ impl PostResolver {
                     .build();
 
                 if let Some(account) = self.account.get(get_user).await? {
-                    let account_url = account.url.unwrap_or_else(|| self.url.user_url(account.id));
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
                     mentioned_accounts.lock().insert(account.id, mention_text);
@@ -40,7 +35,7 @@ impl PostResolver {
                         tag: Cow::Borrowed("a"),
                         attributes: vec![
                             (Cow::Borrowed("class"), Cow::Borrowed("mention")),
-                            (Cow::Borrowed("href"), Cow::Owned(account_url)),
+                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
                         ],
                         content: Box::new(Element::Mention(mention)),
                     })
@@ -148,7 +143,6 @@ mod test {
                 .build();
             let mention_resolver = PostResolver::builder()
                 .account(account_service)
-                .url(url_service)
                 .build();
 
             let (mentioned_account_ids, content) = mention_resolver
@@ -171,7 +165,7 @@ mod test {
             assert_eq!(mentioned_account.domain, "corteximplant.com");
             assert_eq!(
                 mentioned_account.url,
-                Some("https://corteximplant.com/users/0x0".into())
+                "https://corteximplant.com/users/0x0"
             );
         }).await;
     }
