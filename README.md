@@ -28,6 +28,8 @@ We successfully federated with Mastodon on the following functionality:
 - Webfinger
 - Actors
 - Posts
+    - Reposts
+        - Incoming
     - Create
         - Incoming and outgoing
     - Delete
@@ -40,14 +42,16 @@ We successfully federated with Mastodon on the following functionality:
         - Outgoing
 - Likes
     - Added
+        - Incoming and outgoing 
     - Removed
+        - Incoming and outgoing  
 - Follows
     - Added
-        - Incoming
+        - Incoming and outgoing
     - Removed
-        - Incoming
+        - Incoming and outgoing
 
-(last updated: 09.04.2023)
+(last updated: 26.05.2023)
 
 ## Contributing
 
