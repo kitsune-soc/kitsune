@@ -1,7 +1,7 @@
 use super::user::User;
 use crate::{error::EnumConversionError, schema::users_roles};
 use diesel::{
-    backend::RawValue,
+    backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
@@ -42,7 +42,7 @@ impl FromSql<Integer, Pg> for Role
 where
     i32: FromSql<Integer, Pg>,
 {
-    fn from_sql(bytes: RawValue<'_, Pg>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let value = i32::from_sql(bytes)?;
         Ok(Self::from_i32(value).ok_or(EnumConversionError(value))?)
     }
