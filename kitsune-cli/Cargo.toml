@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
-diesel = "2.0.4"
-diesel-async = "0.2.2"
+diesel = "2.1.0"
+diesel-async = "0.3.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { version = "0.1.0", path = "../kitsune-db" }

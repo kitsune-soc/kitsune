@@ -6,10 +6,10 @@ build = "build.rs"
 
 [dependencies]
 derive_builder = "0.12.0"
-diesel = { version = "2.0.4", features = ["serde_json", "time", "uuid"] }
-diesel-async = { version = "0.2.2", features = ["deadpool", "postgres"] }
+diesel = { version = "2.1.0", features = ["serde_json", "time", "uuid"] }
+diesel-async = { version = "0.3.0", features = ["deadpool", "postgres"] }
 diesel_full_text_search = "2.0.0"
-diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "fdde99d8fd62559f74efdc247bf7f3ec99ec6df8", features = [
+diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "323d6a1af2b819abed72db15a4546cdc38d8e286", features = [
     "postgres",
 ] }
 kitsune-type = { version = "0.1.0", path = "../kitsune-type" }
