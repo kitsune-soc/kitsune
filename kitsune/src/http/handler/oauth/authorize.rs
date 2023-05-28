@@ -87,7 +87,11 @@ pub async fn post(
     let user = users::table
         .filter(users::username.eq(form.username))
         .first::<User>(&mut db_conn)
-        .await?;
+        .await
+        .map_err(|e| match e {
+            diesel::result::Error::NotFound => Error::PasswordMismatch,
+            e => e.into(),
+        })?;
 
     let application = oauth2_applications::table
         .find(query.client_id)
