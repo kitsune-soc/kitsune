@@ -321,6 +321,7 @@ impl Default for Client {
 }
 
 /// HTTP response
+#[derive(Debug)]
 pub struct Response {
     inner: HyperResponse<BoxBody<Bytes, BoxError>>,
 }
