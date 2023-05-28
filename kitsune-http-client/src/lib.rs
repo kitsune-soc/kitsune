@@ -11,7 +11,7 @@ use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
 use hyper::{
     body::Bytes,
     client::HttpConnector,
-    header::{HeaderName, HOST, USER_AGENT},
+    header::{HeaderName, USER_AGENT},
     http::{self, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
@@ -163,7 +163,7 @@ impl ClientBuilder {
             .with_native_roots()
             .https_or_http()
             .enable_http1()
-            //.enable_http2() TODO: Find out why HTTP/2 causes a "400 Bad Request" with some servers.
+            .enable_http2()
             .build();
 
         let client: HyperClient<HttpsConnector<HttpConnector>, Body> =
@@ -229,11 +229,6 @@ impl Client {
         req.headers_mut()
             .typed_insert(Date::from(SystemTime::now()));
 
-        if let Some(host) = req.uri().host() {
-            let value = HeaderValue::from_str(host).unwrap();
-            req.headers_mut().insert(HOST, value);
-        }
-
         req
     }
 
@@ -283,7 +278,6 @@ impl Client {
                     SignatureComponent::RequestTarget,
                     SignatureComponent::Header("Date"),
                     SignatureComponent::Header("Digest"),
-                    SignatureComponent::Header("Host"),
                 ],
                 private_key,
             )
