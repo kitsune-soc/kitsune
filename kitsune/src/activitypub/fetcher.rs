@@ -213,13 +213,19 @@ impl Fetcher {
                         };
                     }
 
-                    Ok::<_, Error>(
-                        diesel::update(&account)
-                            .set(update_changeset)
-                            .returning(Account::as_returning())
-                            .get_result(tx)
-                            .await?,
-                    )
+                    Ok::<_, Error>(match update_changeset {
+                        UpdateAccountMedia {
+                            avatar_id: None,
+                            header_id: None,
+                        } => account,
+                        _ => {
+                            diesel::update(&account)
+                                .set(update_changeset)
+                                .returning(Account::as_returning())
+                                .get_result(tx)
+                                .await?
+                        }
+                    })
                 }
                 .scope_boxed()
             })
