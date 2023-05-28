@@ -163,7 +163,7 @@ impl ClientBuilder {
             .with_native_roots()
             .https_or_http()
             .enable_http1()
-            .enable_http2()
+            //.enable_http2() TODO: Find out why HTTP/2 causes a "400 Bad Request" with some servers.
             .build();
 
         let client: HyperClient<HttpsConnector<HttpConnector>, Body> =
@@ -321,6 +321,7 @@ impl Default for Client {
 }
 
 /// HTTP response
+#[derive(Debug)]
 pub struct Response {
     inner: HyperResponse<BoxBody<Bytes, BoxError>>,
 }

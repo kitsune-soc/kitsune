@@ -56,8 +56,8 @@ pub struct Fetcher {
     #[builder(default =
         Client::builder()
             .default_header(
-                "Accept",
-                HeaderValue::from_static("application/activity+json"),
+                "accept",
+                HeaderValue::from_static("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""),
             )
             .unwrap()
             .user_agent(USER_AGENT)
