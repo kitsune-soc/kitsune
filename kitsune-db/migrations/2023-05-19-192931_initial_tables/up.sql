@@ -137,6 +137,10 @@ CREATE TABLE jobs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX "idx-jobs-state" ON jobs (state);
+CREATE INDEX "idx-jobs-run_at" ON jobs (run_at);
+CREATE INDEX "idx-jobs-updated_at" ON jobs (updated_at);
+
 SELECT diesel_manage_updated_at('accounts');
 SELECT diesel_manage_updated_at('accounts_follows');
 SELECT diesel_manage_updated_at('posts');

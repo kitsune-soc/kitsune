@@ -66,6 +66,9 @@ pub struct GetPosts {
     #[builder(default)]
     fetching_account_id: Option<Uuid>,
 
+    /// Limit of returned posts
+    limit: usize,
+
     /// Smallest ID
     ///
     /// Used for pagination
@@ -246,7 +249,8 @@ impl AccountService {
             .filter(posts::account_id.eq(get_posts.account_id))
             .add_post_permission_check(permission_check)
             .select(Post::as_select())
-            .order(posts::created_at.desc())
+            .order(posts::id.desc())
+            .limit(get_posts.limit as i64)
             .into_boxed();
 
         if let Some(min_id) = get_posts.min_id {

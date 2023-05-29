@@ -65,7 +65,7 @@ impl Account {
 
     pub async fn posts(&self, ctx: &Context<'_>) -> Result<Vec<super::Post>> {
         let account_service = &ctx.state().service.account;
-        let get_posts = GetPosts::builder().account_id(self.id).build();
+        let get_posts = GetPosts::builder().account_id(self.id).limit(40).build();
         let posts = account_service
             .get_posts(get_posts)
             .await?

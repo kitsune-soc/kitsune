@@ -8,7 +8,7 @@ use axum::{
     extract::{Path, Query, State},
     Json,
 };
-use futures_util::{FutureExt, StreamExt, TryStreamExt};
+use futures_util::{FutureExt, TryStreamExt};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use std::cmp::min;
@@ -56,13 +56,12 @@ pub async fn get(
         .fetching_account_id(fetching_account_id)
         .max_id(query.max_id)
         .min_id(query.min_id)
+        .limit(min(query.limit, MAX_LIMIT))
         .build();
-    let limit = min(query.limit, MAX_LIMIT);
 
     let statuses: Vec<Status> = account
         .get_posts(get_posts)
         .await?
-        .take(limit)
         .and_then(|post| {
             if let Some(AuthExtractor(ref user_data)) = user_data {
                 mastodon_mapper
