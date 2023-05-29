@@ -14,6 +14,7 @@ use uuid::Uuid;
 #[derive(Clone, TypedBuilder)]
 pub struct GetHome {
     fetching_account_id: Uuid,
+    limit: usize,
 
     #[builder(default)]
     max_id: Option<Uuid>,
@@ -24,6 +25,8 @@ pub struct GetHome {
 
 #[derive(Clone, TypedBuilder)]
 pub struct GetPublic {
+    limit: usize,
+
     #[builder(default)]
     max_id: Option<Uuid>,
 
@@ -79,7 +82,8 @@ impl TimelineService {
                             .select(posts_mentions::post_id),
                     )),
             )
-            .order(posts::created_at.desc())
+            .order(posts::id.desc())
+            .limit(get_home.limit as i64)
             .select(Post::as_select())
             .into_boxed();
 
@@ -111,7 +115,8 @@ impl TimelineService {
 
         let mut query = posts::table
             .add_post_permission_check(permission_check)
-            .order(posts::created_at.desc())
+            .order(posts::id.desc())
+            .limit(get_public.limit as i64)
             .select(Post::as_select())
             .into_boxed();
 

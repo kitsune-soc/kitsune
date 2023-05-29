@@ -51,6 +51,7 @@ async fn get_html(
         .account_id(account.id)
         .max_id(query.max_id)
         .min_id(query.min_id)
+        .limit(40)
         .build();
 
     let posts = account_service

@@ -57,6 +57,7 @@ pub async fn get(
             .account_id(account.id)
             .max_id(query.max_id)
             .min_id(query.min_id)
+            .limit(ACTIVITIES_PER_PAGE)
             .build();
 
         let posts: Vec<Post> = state
@@ -64,7 +65,6 @@ pub async fn get(
             .account
             .get_posts(get_posts)
             .await?
-            .take(ACTIVITIES_PER_PAGE)
             .try_collect()
             .await?;
 

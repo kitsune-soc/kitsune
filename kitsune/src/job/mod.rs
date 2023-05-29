@@ -132,7 +132,7 @@ async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
                         )),
                     )
                     .limit(num_jobs as i64)
-                    .order(jobs::created_at.asc())
+                    .order(jobs::id.asc())
                     .for_update()
                     .load(tx)
                     .await?;
