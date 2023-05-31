@@ -6,7 +6,7 @@ use crate::{
 use async_trait::async_trait;
 use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::{future::OptionFuture, FutureExt, TryStreamExt};
+use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_db::{
     model::{
         account::Account,
@@ -71,32 +71,39 @@ impl IntoObject for Post {
         }
 
         let mut db_conn = state.db_conn.get().await?;
-        let account = accounts::table
+        let account_fut = accounts::table
             .find(self.account_id)
             .select(Account::as_select())
             .get_result(&mut db_conn)
-            .await?;
+            .boxed();
 
-        let in_reply_to = OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
+        let in_reply_to_fut = OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
             posts::table
                 .find(in_reply_to_id)
                 .select(posts::url)
                 .get_result(&mut db_conn)
         }))
         .map(Option::transpose)
-        .await?;
+        .boxed();
 
-        let mentions = Mention::belonging_to(&self)
+        let mentions_fut = Mention::belonging_to(&self)
             .inner_join(accounts::table)
             .select((Mention::as_select(), Account::as_select()))
             .load::<(Mention, Account)>(&mut db_conn)
-            .await?;
+            .boxed();
 
-        let attachment_stream = PostMediaAttachment::belonging_to(&self)
+        let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
             .inner_join(media_attachments::table)
             .select(DbMediaAttachment::as_select())
             .load_stream::<DbMediaAttachment>(&mut db_conn)
-            .await?;
+            .boxed();
+
+        let (account, in_reply_to, mentions, attachment_stream) = tokio::try_join!(
+            account_fut,
+            in_reply_to_fut,
+            mentions_fut,
+            attachment_stream_fut
+        )?;
 
         let attachment = attachment_stream
             .map_err(Error::from)
@@ -151,26 +158,28 @@ impl IntoObject for Account {
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let icon = if let Some(avatar_id) = self.avatar_id {
-            let media_attachment = media_attachments::table
+
+        let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
+            media_attachments::table
                 .find(avatar_id)
                 .get_result::<DbMediaAttachment>(&mut db_conn)
-                .await?;
+                .map_err(Error::from)
+                .and_then(|media_attachment| media_attachment.into_object(state))
+        }))
+        .map(Option::transpose)
+        .boxed();
 
-            Some(media_attachment.into_object(state).await?)
-        } else {
-            None
-        };
-        let image = if let Some(header_id) = self.header_id {
-            let media_attachment = media_attachments::table
+        let image_fut = OptionFuture::from(self.header_id.map(|header_id| {
+            media_attachments::table
                 .find(header_id)
                 .get_result::<DbMediaAttachment>(&mut db_conn)
-                .await?;
+                .map_err(Error::from)
+                .and_then(|media_attachment| media_attachment.into_object(state))
+        }))
+        .map(Option::transpose)
+        .boxed();
 
-            Some(media_attachment.into_object(state).await?)
-        } else {
-            None
-        };
+        let (icon, image) = tokio::try_join!(icon_fut, image_fut)?;
 
         let user_url = state.service.url.user_url(self.id);
         let inbox = state.service.url.inbox_url(self.id);

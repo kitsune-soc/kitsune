@@ -3,6 +3,7 @@ use crate::{error::Result, state::Zustand};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
+use futures_util::FutureExt;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
     schema::{accounts, posts},
@@ -49,17 +50,19 @@ impl IntoActivity for Favourite {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let account_url = accounts::table
+        let account_url_fut = accounts::table
             .find(self.account_id)
             .select(accounts::url)
             .get_result::<String>(&mut db_conn)
-            .await?;
+            .boxed();
 
-        let post_url = posts::table
+        let post_url_fut = posts::table
             .find(self.post_id)
             .select(posts::url)
             .get_result(&mut db_conn)
-            .await?;
+            .boxed();
+
+        let (account_url, post_url) = tokio::try_join!(account_url_fut, post_url_fut)?;
 
         Ok(Activity {
             context: ap_context(),
@@ -97,17 +100,19 @@ impl IntoActivity for Follow {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let attributed_to = accounts::table
+        let attributed_to_fut = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
             .get_result::<String>(&mut db_conn)
-            .await?;
+            .boxed();
 
-        let object = accounts::table
+        let object_fut = accounts::table
             .find(self.account_id)
             .select(accounts::url)
             .get_result::<String>(&mut db_conn)
-            .await?;
+            .boxed();
+
+        let (attributed_to, object) = tokio::try_join!(attributed_to_fut, object_fut)?;
 
         Ok(Activity {
             context: ap_context(),

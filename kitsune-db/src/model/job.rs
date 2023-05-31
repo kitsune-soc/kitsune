@@ -27,7 +27,7 @@ pub struct Job {
 
 #[derive(AsChangeset)]
 #[diesel(table_name = jobs)]
-pub struct UpdateJob {
+pub struct UpdateFailedJob {
     pub fail_count: i32,
     pub state: JobState,
     pub run_at: OffsetDateTime,

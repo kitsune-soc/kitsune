@@ -17,7 +17,7 @@ use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl
 use enum_dispatch::enum_dispatch;
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
 use kitsune_db::{
-    model::job::{Job as DbJob, JobState, UpdateJob},
+    model::job::{Job as DbJob, JobState, UpdateFailedJob},
     schema::jobs,
     PgPool,
 };
@@ -93,7 +93,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
             let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
 
             diesel::update(&db_job)
-                .set(UpdateJob {
+                .set(UpdateFailedJob {
                     fail_count,
                     state: JobState::Failed,
                     run_at: OffsetDateTime::now_utc() + backoff_duration,
