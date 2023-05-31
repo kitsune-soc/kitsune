@@ -15,7 +15,7 @@ use async_trait::async_trait;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
-use futures_util::{stream::FuturesUnordered, StreamExt};
+use futures_util::{stream::FuturesUnordered, TryStreamExt};
 use kitsune_db::{
     model::job::{Job as DbJob, JobState, UpdateJob},
     schema::jobs,
@@ -140,16 +140,16 @@ async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
                 // New scope to ensure `update_jobs` is getting dropped
                 // Otherwise this will prevent us from returning the `jobs` list
                 {
-                    let mut update_jobs = jobs
-                        .iter()
+                    jobs.iter()
                         .map(|job| {
                             diesel::update(job)
                                 .set(jobs::state.eq(JobState::Running))
                                 .execute(tx)
                         })
-                        .collect::<FuturesUnordered<_>>();
-
-                    while let Some(..) = update_jobs.next().await.transpose()? {}
+                        .collect::<FuturesUnordered<_>>()
+                        .map_ok(|_| ())
+                        .try_collect::<()>()
+                        .await?;
                 }
 
                 Ok::<_, Error>(jobs)
