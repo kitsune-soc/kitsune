@@ -11,9 +11,9 @@ rayon = "1.7.0"
 ring = { version = "0.16.20", features = ["std"] }
 time = { version = "0.3.21", features = ["formatting", "parsing"] }
 thiserror = "1.0.40"
-tokio = { version = "1.28.1", features = ["sync"] }
+tokio = { version = "1.28.2", features = ["sync"] }
 
 [dev-dependencies]
 pem = "2.0.1"
 pkcs8 = { version = "0.10.2", features = ["alloc"] }
-tokio = { version = "1.28.1", features = ["macros", "rt"] }
+tokio = { version = "1.28.2", features = ["macros", "rt"] }
