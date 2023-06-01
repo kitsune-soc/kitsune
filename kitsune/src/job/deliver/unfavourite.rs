@@ -2,7 +2,7 @@ use crate::{
     error::Result,
     job::{JobContext, Runnable},
     mapping::IntoActivity,
-    util::assert_future_send,
+    try_join,
 };
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -33,23 +33,19 @@ impl Runnable for DeliverUnfavourite {
             return Ok(());
         };
 
-        let account_user_fut = assert_future_send(
-            accounts::table
-                .find(favourite.account_id)
-                .inner_join(users::table)
-                .select((Account::as_select(), User::as_select()))
-                .get_result(&mut db_conn),
-        );
+        let account_user_fut = accounts::table
+            .find(favourite.account_id)
+            .inner_join(users::table)
+            .select((Account::as_select(), User::as_select()))
+            .get_result(&mut db_conn);
 
-        let inbox_url_fut = assert_future_send(
-            posts::table
-                .find(favourite.post_id)
-                .inner_join(accounts::table)
-                .select(accounts::inbox_url)
-                .get_result::<Option<String>>(&mut db_conn),
-        );
+        let inbox_url_fut = posts::table
+            .find(favourite.post_id)
+            .inner_join(accounts::table)
+            .select(accounts::inbox_url)
+            .get_result::<Option<String>>(&mut db_conn);
 
-        let ((account, user), inbox_url) = tokio::try_join!(account_user_fut, inbox_url_fut)?;
+        let ((account, user), inbox_url) = try_join!(account_user_fut, inbox_url_fut)?;
 
         let favourite_id = favourite.id;
         if let Some(ref inbox_url) = inbox_url {

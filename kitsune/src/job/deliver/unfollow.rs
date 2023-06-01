@@ -2,7 +2,7 @@ use crate::{
     error::Result,
     job::{JobContext, Runnable},
     mapping::IntoActivity,
-    util::assert_future_send,
+    try_join,
 };
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -32,24 +32,20 @@ impl Runnable for DeliverUnfollow {
             return Ok(());
         };
 
-        let follower_info_fut = assert_future_send(
-            accounts::table
-                .find(follow.follower_id)
-                .inner_join(users::table)
-                .select((Account::as_select(), User::as_select()))
-                .get_result::<(Account, User)>(&mut db_conn),
-        );
+        let follower_info_fut = accounts::table
+            .find(follow.follower_id)
+            .inner_join(users::table)
+            .select((Account::as_select(), User::as_select()))
+            .get_result::<(Account, User)>(&mut db_conn);
 
-        let followed_account_inbox_url_fut = assert_future_send(
-            accounts::table
-                .find(follow.account_id)
-                .select(accounts::inbox_url)
-                .get_result::<Option<String>>(&mut db_conn),
-        );
+        let followed_account_inbox_url_fut = accounts::table
+            .find(follow.account_id)
+            .select(accounts::inbox_url)
+            .get_result::<Option<String>>(&mut db_conn);
 
         let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
 
-        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = tokio::try_join!(
+        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = try_join!(
             follower_info_fut,
             followed_account_inbox_url_fut,
             delete_fut

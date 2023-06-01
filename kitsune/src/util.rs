@@ -1,7 +1,6 @@
 use crate::state::Zustand;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
-use std::future::Future;
 use time::OffsetDateTime;
 
 #[must_use]
@@ -37,13 +36,24 @@ impl BaseToCc for Visibility {
     }
 }
 
-/// Hack around the bogus "higher-ranked lifetime" errors
-///
-/// Asserts `Send` bounds via its type signature and helps the compiler a little bit with it
-#[allow(clippy::inline_always)] // This is literally an empty function, only used for its type signature. 0 runtime implications.
-#[inline(always)]
-pub fn assert_future_send<O>(
-    fut: impl Future<Output = O> + Send,
-) -> impl Future<Output = O> + Send {
-    fut
+/// Wrapper around the [`tokio::try_join`] macro but it passes each future through
+/// a small no-op function that gives the compiler some trait bound hints
+#[macro_export]
+macro_rules! try_join {
+    ($($try_future:expr),+$(,)?) => {{
+        /// Hack around the bogus "higher-ranked lifetime" errors
+        ///
+        /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with it
+        #[allow(clippy::inline_always)] // This is literally an empty function, only used for its type signature. 0 runtime implications.
+        #[inline(always)]
+        fn assert_future_send<O>(
+            fut: impl ::core::future::Future<Output = O> + Send,
+        ) -> impl ::core::future::Future<Output = O> + Send {
+            fut
+        }
+
+        ::tokio::try_join!(
+            $( assert_future_send($try_future) ),+
+        )
+    }};
 }
