@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use crate::state::Zustand;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
@@ -34,4 +36,15 @@ impl BaseToCc for Visibility {
             Visibility::MentionOnly => (vec![], vec![]),
         }
     }
+}
+
+/// Hack around the bogus "higher-ranked lifetime" errors
+///
+/// Asserts `Send` bounds via its type signature and helps the compiler a little bit with it
+#[allow(clippy::inline_always)] // This is literally an empty function, only used for its type signature. 0 runtime implications.
+#[inline(always)]
+pub fn assert_future_send<O>(
+    fut: impl Future<Output = O> + Send,
+) -> impl Future<Output = O> + Send {
+    fut
 }

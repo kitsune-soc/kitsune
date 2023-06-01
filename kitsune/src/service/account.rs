@@ -12,6 +12,7 @@ use crate::{
         update::{DeliverUpdate, UpdateEntity},
     },
     sanitize::CleanHtmlExt,
+    util::assert_future_send,
     webfinger::Webfinger,
 };
 use bytes::Bytes;
@@ -20,7 +21,7 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
-use futures_util::{FutureExt, Stream, TryStreamExt};
+use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
     model::{
         account::{Account, UpdateAccount},
@@ -133,17 +134,19 @@ impl AccountService {
     pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let account_fut = accounts::table
-            .find(follow.account_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn)
-            .boxed();
+        let account_fut = assert_future_send(
+            accounts::table
+                .find(follow.account_id)
+                .select(Account::as_select())
+                .get_result(&mut db_conn),
+        );
 
-        let follower_fut = accounts::table
-            .find(follow.follower_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn)
-            .boxed();
+        let follower_fut = assert_future_send(
+            accounts::table
+                .find(follow.follower_id)
+                .select(Account::as_select())
+                .get_result(&mut db_conn),
+        );
 
         let (account, follower) = tokio::try_join!(account_fut, follower_fut)?;
 
@@ -277,17 +280,19 @@ impl AccountService {
     pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let account_fut = accounts::table
-            .find(unfollow.account_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn)
-            .boxed();
+        let account_fut = assert_future_send(
+            accounts::table
+                .find(unfollow.account_id)
+                .select(Account::as_select())
+                .get_result(&mut db_conn),
+        );
 
-        let follower_fut = accounts::table
-            .find(unfollow.follower_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn)
-            .boxed();
+        let follower_fut = assert_future_send(
+            accounts::table
+                .find(unfollow.follower_id)
+                .select(Account::as_select())
+                .get_result(&mut db_conn),
+        );
 
         let (account, follower) = tokio::try_join!(account_fut, follower_fut)?;
 

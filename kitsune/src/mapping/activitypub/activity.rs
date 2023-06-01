@@ -1,9 +1,8 @@
 use super::IntoObject;
-use crate::{error::Result, state::Zustand};
+use crate::{error::Result, state::Zustand, util::assert_future_send};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
-use futures_util::FutureExt;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
     schema::{accounts, posts},
@@ -50,17 +49,19 @@ impl IntoActivity for Favourite {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let account_url_fut = accounts::table
-            .find(self.account_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .boxed();
+        let account_url_fut = assert_future_send(
+            accounts::table
+                .find(self.account_id)
+                .select(accounts::url)
+                .get_result::<String>(&mut db_conn),
+        );
 
-        let post_url_fut = posts::table
-            .find(self.post_id)
-            .select(posts::url)
-            .get_result(&mut db_conn)
-            .boxed();
+        let post_url_fut = assert_future_send(
+            posts::table
+                .find(self.post_id)
+                .select(posts::url)
+                .get_result(&mut db_conn),
+        );
 
         let (account_url, post_url) = tokio::try_join!(account_url_fut, post_url_fut)?;
 
@@ -100,17 +101,19 @@ impl IntoActivity for Follow {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let attributed_to_fut = accounts::table
-            .find(self.follower_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .boxed();
+        let attributed_to_fut = assert_future_send(
+            accounts::table
+                .find(self.follower_id)
+                .select(accounts::url)
+                .get_result::<String>(&mut db_conn),
+        );
 
-        let object_fut = accounts::table
-            .find(self.account_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .boxed();
+        let object_fut = assert_future_send(
+            accounts::table
+                .find(self.account_id)
+                .select(accounts::url)
+                .get_result::<String>(&mut db_conn),
+        );
 
         let (attributed_to, object) = tokio::try_join!(attributed_to_fut, object_fut)?;
 

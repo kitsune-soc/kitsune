@@ -1,6 +1,7 @@
 use crate::{
     error::{Error, Result},
     service::{attachment::AttachmentService, url::UrlService},
+    util::assert_future_send,
 };
 use async_trait::async_trait;
 use diesel::{
@@ -64,23 +65,26 @@ impl IntoMastodon for DbAccount {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
 
-        let statuses_count_fut = posts::table
-            .filter(posts::account_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .boxed();
+        let statuses_count_fut = assert_future_send(
+            posts::table
+                .filter(posts::account_id.eq(self.id))
+                .count()
+                .get_result::<i64>(&mut db_conn),
+        );
 
-        let followers_count_fut = accounts_follows::table
-            .filter(accounts_follows::account_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .boxed();
+        let followers_count_fut = assert_future_send(
+            accounts_follows::table
+                .filter(accounts_follows::account_id.eq(self.id))
+                .count()
+                .get_result::<i64>(&mut db_conn),
+        );
 
-        let following_count_fut = accounts_follows::table
-            .filter(accounts_follows::follower_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .boxed();
+        let following_count_fut = assert_future_send(
+            accounts_follows::table
+                .filter(accounts_follows::follower_id.eq(self.id))
+                .count()
+                .get_result::<i64>(&mut db_conn),
+        );
 
         let (statuses_count, followers_count, following_count) =
             tokio::try_join!(statuses_count_fut, followers_count_fut, following_count_fut)?;
@@ -148,31 +152,33 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
         let mut db_conn = state.db_conn.get().await?;
 
         let (requestor, target) = self;
-        let following_requested_fut = accounts_follows::table
-            .filter(
-                accounts_follows::account_id
-                    .eq(target.id)
-                    .and(accounts_follows::follower_id.eq(requestor.id)),
-            )
-            .get_result::<Follow>(&mut db_conn)
-            .map(OptionalExtension::optional)
-            .map_ok(|optional_follow| {
-                optional_follow.map_or((false, false), |follow| {
-                    (follow.approved_at.is_some(), follow.approved_at.is_none())
-                })
-            })
-            .boxed();
+        let following_requested_fut = assert_future_send(
+            accounts_follows::table
+                .filter(
+                    accounts_follows::account_id
+                        .eq(target.id)
+                        .and(accounts_follows::follower_id.eq(requestor.id)),
+                )
+                .get_result::<Follow>(&mut db_conn)
+                .map(OptionalExtension::optional)
+                .map_ok(|optional_follow| {
+                    optional_follow.map_or((false, false), |follow| {
+                        (follow.approved_at.is_some(), follow.approved_at.is_none())
+                    })
+                }),
+        );
 
-        let followed_by_fut = accounts_follows::table
-            .filter(
-                accounts_follows::account_id
-                    .eq(requestor.id)
-                    .and(accounts_follows::follower_id.eq(target.id)),
-            )
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .map_ok(|count| count != 0)
-            .boxed();
+        let followed_by_fut = assert_future_send(
+            accounts_follows::table
+                .filter(
+                    accounts_follows::account_id
+                        .eq(requestor.id)
+                        .and(accounts_follows::follower_id.eq(target.id)),
+                )
+                .count()
+                .get_result::<i64>(&mut db_conn)
+                .map_ok(|count| count != 0),
+        );
 
         let ((following, requested), followed_by) =
             tokio::try_join!(following_requested_fut, followed_by_fut)?;
@@ -271,21 +277,23 @@ impl IntoMastodon for (&DbAccount, DbPost) {
 
         let (account, post) = self;
 
-        let favourited_fut = posts_favourites::table
-            .filter(posts_favourites::account_id.eq(account.id))
-            .filter(posts_favourites::post_id.eq(post.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .map_ok(|count| count != 0)
-            .boxed();
+        let favourited_fut = assert_future_send(
+            posts_favourites::table
+                .filter(posts_favourites::account_id.eq(account.id))
+                .filter(posts_favourites::post_id.eq(post.id))
+                .count()
+                .get_result::<i64>(&mut db_conn)
+                .map_ok(|count| count != 0),
+        );
 
-        let reblogged_fut = posts::table
-            .filter(posts::account_id.eq(account.id))
-            .filter(posts::reposted_post_id.eq(post.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .map_ok(|count| count != 0)
-            .boxed();
+        let reblogged_fut = assert_future_send(
+            posts::table
+                .filter(posts::account_id.eq(account.id))
+                .filter(posts::reposted_post_id.eq(post.id))
+                .count()
+                .get_result::<i64>(&mut db_conn)
+                .map_ok(|count| count != 0),
+        );
 
         let (favourited, reblogged) = tokio::try_join!(favourited_fut, reblogged_fut)?;
 
@@ -308,44 +316,49 @@ impl IntoMastodon for DbPost {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
 
-        let account_fut = accounts::table
-            .find(self.account_id)
-            .select(DbAccount::as_select())
-            .get_result::<DbAccount>(&mut db_conn)
-            .map_err(Error::from)
-            .and_then(|db_account| db_account.into_mastodon(state))
-            .boxed();
+        let account_fut = assert_future_send(
+            accounts::table
+                .find(self.account_id)
+                .select(DbAccount::as_select())
+                .get_result::<DbAccount>(&mut db_conn)
+                .map_err(Error::from)
+                .and_then(|db_account| db_account.into_mastodon(state)),
+        );
 
-        let reblog_count_fut = posts::table
-            .filter(posts::reposted_post_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .map_err(Error::from)
-            .boxed();
+        let reblog_count_fut = assert_future_send(
+            posts::table
+                .filter(posts::reposted_post_id.eq(self.id))
+                .count()
+                .get_result::<i64>(&mut db_conn)
+                .map_err(Error::from),
+        );
 
-        let favourites_count_fut = DbFavourite::belonging_to(&self)
-            .count()
-            .get_result::<i64>(&mut db_conn)
-            .map_err(Error::from)
-            .boxed();
+        let favourites_count_fut = assert_future_send(
+            DbFavourite::belonging_to(&self)
+                .count()
+                .get_result::<i64>(&mut db_conn)
+                .map_err(Error::from),
+        );
 
-        let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-            .inner_join(media_attachments::table)
-            .select(DbMediaAttachment::as_select())
-            .load_stream::<DbMediaAttachment>(&mut db_conn)
-            .map_err(Error::from)
-            .and_then(|attachment_stream| {
-                attachment_stream
-                    .map_err(Error::from)
-                    .and_then(|attachment| attachment.into_mastodon(state))
-                    .try_collect()
-            })
-            .boxed();
+        let media_attachments_fut = assert_future_send(
+            DbPostMediaAttachment::belonging_to(&self)
+                .inner_join(media_attachments::table)
+                .select(DbMediaAttachment::as_select())
+                .load_stream::<DbMediaAttachment>(&mut db_conn)
+                .map_err(Error::from)
+                .and_then(|attachment_stream| {
+                    attachment_stream
+                        .map_err(Error::from)
+                        .and_then(|attachment| attachment.into_mastodon(state))
+                        .try_collect()
+                }),
+        );
 
-        let mentions_stream_fut = DbMention::belonging_to(&self)
-            .load_stream::<DbMention>(&mut db_conn)
-            .map_err(Error::from)
-            .boxed();
+        let mentions_stream_fut = assert_future_send(
+            DbMention::belonging_to(&self)
+                .load_stream::<DbMention>(&mut db_conn)
+                .map_err(Error::from),
+        );
 
         let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = tokio::try_join!(
             account_fut,
