@@ -3204,7 +3204,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune"
-version = "0.0.1-pre.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "ammonia",
  "argon2",
@@ -3291,7 +3291,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cli"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "clap",
  "diesel",
@@ -3309,7 +3309,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-db"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "derive_builder",
  "diesel",
@@ -3329,7 +3329,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-client"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "derive_builder",
  "futures-core",
@@ -3348,7 +3348,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-signatures"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "base64 0.21.2",
  "derive_builder",
@@ -3364,7 +3364,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-messaging"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "ahash 0.8.3",
  "async-trait",
@@ -3380,7 +3380,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "autometrics",
  "dotenvy",
@@ -3409,7 +3409,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search-proto"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "prost",
  "protoc-bin-vendored",
@@ -3420,7 +3420,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-storage"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "async-trait",
  "aws-credential-types",
@@ -3440,7 +3440,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-type"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "pretty_assertions",
  "serde",
@@ -4489,7 +4489,7 @@ checksum = "767eb9f07d4a5ebcb39bbf2d452058a93c011373abf6832e24194a1c3f004794"
 
 [[package]]
 name = "post-process"
-version = "0.1.0"
+version = "0.0.1-pre.1"
 dependencies = [
  "futures-util",
  "insta",

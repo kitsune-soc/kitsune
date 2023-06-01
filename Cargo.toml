@@ -19,3 +19,6 @@ members = [
     "kitsune-type",
     "post-process",
 ]
+
+[workspace.package]
+version = "0.0.1-pre.1"

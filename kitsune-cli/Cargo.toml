@@ -1,6 +1,6 @@
 [package]
 name = "kitsune-cli"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 build = "build.rs"
 
@@ -10,7 +10,7 @@ diesel = "2.1.0"
 diesel-async = "0.3.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"
-kitsune-db = { version = "0.1.0", path = "../kitsune-db" }
+kitsune-db = { path = "../kitsune-db" }
 serde = { version = "1.0.163", features = ["derive"] }
 time = "0.3.21"
 tokio = { version = "1.28.2", features = ["full"] }
