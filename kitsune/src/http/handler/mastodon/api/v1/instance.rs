@@ -1,4 +1,5 @@
 use crate::{
+    consts::VERSION,
     error::Result,
     service::{instance::InstanceService, url::UrlService},
     state::Zustand,
@@ -31,7 +32,7 @@ async fn get(
         description: String::new(),
         max_toot_chars: instance_service.character_limit(),
         email: String::new(),
-        version: env!("CARGO_PKG_VERSION").into(),
+        version: VERSION.into(),
         urls: Urls {
             streaming_api: String::new(),
         },

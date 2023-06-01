@@ -1,4 +1,5 @@
 use crate::{
+    consts::VERSION,
     error::Result,
     http::{
         cond,
@@ -46,7 +47,7 @@ async fn get_html(
         ancestors,
         descendants,
         post: PostComponent::prepare(&state, post).await?,
-        version: env!("CARGO_PKG_VERSION"),
+        version: VERSION,
     })
 }
 

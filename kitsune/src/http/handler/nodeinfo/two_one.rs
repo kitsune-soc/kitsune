@@ -1,14 +1,17 @@
-use crate::{error::Result, state::Zustand};
+use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::schema::{posts, users};
+use kitsune_db::{
+    schema::{posts, users},
+    PgPool,
+};
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
 use serde_json::Value;
 
-#[debug_handler]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/nodeinfo/2.1",
@@ -16,8 +19,11 @@ use serde_json::Value;
         (status = 200, description = "Get response following the Nodeinfo 2.1 schema", body = TwoOne)
     ),
 )]
-async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
-    let mut db_conn = state.db_conn.get().await?;
+async fn get(
+    State(db_conn): State<PgPool>,
+    State(user_service): State<UserService>,
+) -> Result<Json<TwoOne>> {
+    let mut db_conn = db_conn.get().await?;
 
     let total = users::table.count().get_result::<i64>(&mut db_conn).await?;
     let local_posts = posts::table
@@ -30,7 +36,7 @@ async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
         version: Version::TwoOne,
         software: Software {
             name: env!("CARGO_PKG_NAME").into(),
-            version: env!("CARGO_PKG_VERSION").into(),
+            version: VERSION.into(),
             repository: env!("CARGO_PKG_REPOSITORY").into(),
             homepage: Some(env!("CARGO_PKG_HOMEPAGE").into()),
         },
@@ -39,7 +45,7 @@ async fn get(State(state): State<Zustand>) -> Result<Json<TwoOne>> {
             inbound: vec![],
             outbound: vec![],
         },
-        open_registrations: true,
+        open_registrations: user_service.registrations_open(),
         usage: Usage {
             users: UsageUsers {
                 total: total as u64,

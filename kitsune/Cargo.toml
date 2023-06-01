@@ -4,6 +4,7 @@ version = "0.0.1-pre.0"
 edition = "2021"
 repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://kitsune-soc.github.io"
+build = "build.rs"
 
 [dependencies]
 ammonia = "3.3.0"
@@ -37,6 +38,7 @@ axum-extra = { version = "0.7.4", features = ["query"] }
 axum-prometheus = "0.3.3"
 base64 = "0.21.2"
 bytes = "1.4.0"
+const_format = "0.2.31"
 const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe837092418458017353a9acab6081dc198", features = [
     "db",
 ] }
@@ -116,3 +118,6 @@ serial_test = "2.0.0"
 default = ["mastodon-api"]
 mastodon-api = []
 meilisearch = ["dep:meilisearch-sdk"]
+
+[build-dependencies]
+vergen = { version = "8.2.1", features = ["build", "git", "gitoxide"] }

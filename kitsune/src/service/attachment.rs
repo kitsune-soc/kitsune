@@ -1,5 +1,8 @@
 use super::url::UrlService;
-use crate::error::{ApiError, Error, Result};
+use crate::{
+    consts::USER_AGENT,
+    error::{ApiError, Error, Result},
+};
 use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
@@ -49,11 +52,7 @@ pub struct AttachmentService {
     #[builder(default =
         Client::builder()
             .content_length_limit(None)
-            .user_agent(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION")
-            ))
+            .user_agent(USER_AGENT)
             .unwrap()
             .build()
     )]
