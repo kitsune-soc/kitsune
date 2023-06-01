@@ -3,7 +3,6 @@ use crate::{
     http::extractor::MastodonAuthExtractor,
     mapping::MastodonMapper,
     service::account::{AccountService, GetUser},
-    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -19,7 +18,7 @@ pub struct LookupQuery {
     acct: String,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/lookup",

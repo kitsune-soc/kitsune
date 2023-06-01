@@ -3,7 +3,6 @@ use crate::{
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
     service::account::{AccountService, Unfollow},
-    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -13,7 +12,7 @@ use axum::{
 use kitsune_type::mastodon::relationship::Relationship;
 use uuid::Uuid;
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

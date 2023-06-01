@@ -3,7 +3,6 @@ use crate::{
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
     service::post::PostService,
-    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -13,7 +12,7 @@ use axum::{
 };
 use uuid::Uuid;
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     post,
     path = "/api/v1/statuses/{id}/unfavourite",
