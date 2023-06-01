@@ -1590,8 +1590,9 @@ dependencies = [
 
 [[package]]
 name = "diesel_full_text_search"
-version = "2.0.0"
-source = "git+https://github.com/aumetra/diesel_full_text_search?rev=875494d575950b6e047f456d820dc2f25c058611#875494d575950b6e047f456d820dc2f25c058611"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3975708a44577929dd7d921e5a4c1f95eef7c6a22d3e236d7d92fa108b535fdd"
 dependencies = [
  "diesel",
 ]
