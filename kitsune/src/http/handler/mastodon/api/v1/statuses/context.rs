@@ -1,6 +1,6 @@
 use crate::{
     error::Result, http::extractor::MastodonAuthExtractor, mapping::MastodonMapper,
-    service::post::PostService, state::Zustand,
+    service::post::PostService,
 };
 use axum::{
     debug_handler,
@@ -13,7 +13,7 @@ use kitsune_type::mastodon::status::Context;
 use std::collections::VecDeque;
 use uuid::Uuid;
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/context",

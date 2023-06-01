@@ -2,7 +2,6 @@ use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
-    state::Zustand,
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::extract::Query;
@@ -20,7 +19,7 @@ pub struct RelationshipQuery {
     id: Vec<Uuid>,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/relationships",
