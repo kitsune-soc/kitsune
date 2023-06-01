@@ -28,7 +28,7 @@ enum AppSubcommand {
 
 /// CLI for the Kitsune social media server
 #[derive(Parser)]
-#[command(about, author, version)]
+#[command(about, author, version = concat!(env!("CARGO_PKG_VERSION"), "-", env!("VERGEN_GIT_SHA")))]
 struct App {
     #[clap(subcommand)]
     subcommand: AppSubcommand,

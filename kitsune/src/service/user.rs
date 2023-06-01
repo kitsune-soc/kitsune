@@ -124,4 +124,9 @@ impl UserService {
 
         Ok(new_user)
     }
+
+    #[must_use]
+    pub fn registrations_open(&self) -> bool {
+        self.registrations_open
+    }
 }

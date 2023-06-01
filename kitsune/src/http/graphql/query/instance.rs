@@ -1,4 +1,7 @@
-use crate::http::graphql::{types::Instance, ContextExt};
+use crate::{
+    consts::VERSION,
+    http::graphql::{types::Instance, ContextExt},
+};
 use async_graphql::{Context, Object, Result};
 
 #[derive(Default)]
@@ -24,7 +27,7 @@ impl InstanceQuery {
             local_post_count,
             name,
             user_count,
-            version: env!("CARGO_PKG_VERSION"),
+            version: VERSION,
         })
     }
 }
