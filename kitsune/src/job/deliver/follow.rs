@@ -2,6 +2,7 @@ use crate::{
     error::Result,
     job::{JobContext, Runnable},
     mapping::IntoActivity,
+    util::assert_future_send,
 };
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -32,18 +33,23 @@ impl Runnable for DeliverFollow {
             return Ok(());
         };
 
-        let (follower, follower_user) = accounts::table
-            .find(follow.follower_id)
-            .inner_join(users::table)
-            .select((Account::as_select(), User::as_select()))
-            .get_result::<(Account, User)>(&mut db_conn)
-            .await?;
+        let follower_info_fut = assert_future_send(
+            accounts::table
+                .find(follow.follower_id)
+                .inner_join(users::table)
+                .select((Account::as_select(), User::as_select()))
+                .get_result::<(Account, User)>(&mut db_conn),
+        );
 
-        let followed_inbox = accounts::table
-            .find(follow.account_id)
-            .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn)
-            .await?;
+        let followed_inbox_fut = assert_future_send(
+            accounts::table
+                .find(follow.account_id)
+                .select(accounts::inbox_url)
+                .get_result::<Option<String>>(&mut db_conn),
+        );
+
+        let ((follower, follower_user), followed_inbox) =
+            tokio::try_join!(follower_info_fut, followed_inbox_fut)?;
 
         if let Some(followed_inbox) = followed_inbox {
             let follow_activity = follow.into_activity(ctx.state).await?;
