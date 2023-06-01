@@ -1,5 +1,8 @@
-use crate::error::{Error, Result};
-use crate::state::Zustand;
+use crate::{
+    error::{Error, Result},
+    state::Zustand,
+    util::assert_future_send,
+};
 use askama::Template;
 use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -36,17 +39,21 @@ impl PostComponent {
     pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
         let mut db_conn = state.db_conn.get().await?;
 
-        let author = accounts::table
-            .find(post.account_id)
-            .select(Account::as_select())
-            .get_result::<Account>(&mut db_conn)
-            .await?;
+        let author_fut = assert_future_send(
+            accounts::table
+                .find(post.account_id)
+                .select(Account::as_select())
+                .get_result::<Account>(&mut db_conn),
+        );
 
-        let attachments_stream = PostMediaAttachment::belonging_to(&post)
-            .inner_join(media_attachments::table)
-            .select(DbMediaAttachment::as_select())
-            .load_stream::<DbMediaAttachment>(&mut db_conn)
-            .await?;
+        let attachments_stream_fut = assert_future_send(
+            PostMediaAttachment::belonging_to(&post)
+                .inner_join(media_attachments::table)
+                .select(DbMediaAttachment::as_select())
+                .load_stream::<DbMediaAttachment>(&mut db_conn),
+        );
+
+        let (author, attachments_stream) = tokio::try_join!(author_fut, attachments_stream_fut)?;
 
         let attachments = attachments_stream
             .map_err(Error::from)
