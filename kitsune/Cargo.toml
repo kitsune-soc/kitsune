@@ -1,9 +1,9 @@
 [package]
 name = "kitsune"
-version = "0.0.1-pre.0"
+version.workspace = true
 edition = "2021"
 repository = "https://github.com/kitsune-soc/kitsune"
-homepage = "https://kitsune-soc.github.io"
+homepage = "https://joinkitsune.org"
 build = "build.rs"
 
 [dependencies]
