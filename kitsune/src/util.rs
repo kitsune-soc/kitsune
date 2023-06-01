@@ -41,9 +41,9 @@ impl BaseToCc for Visibility {
 #[macro_export]
 macro_rules! try_join {
     ($($try_future:expr),+$(,)?) => {{
-        /// Hack around the bogus "higher-ranked lifetime" errors
+        /// Hack around the [bogus "higher-ranked lifetime" errors](https://github.com/rust-lang/rust/issues/102211)
         ///
-        /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with it
+        /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with proving the bound
         #[allow(clippy::inline_always)] // This is literally an empty function, only used for its type signature. 0 runtime implications.
         #[inline(always)]
         fn assert_future_send<O>(
