@@ -1,8 +1,7 @@
-use std::future::Future;
-
 use crate::state::Zustand;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
+use std::future::Future;
 use time::OffsetDateTime;
 
 #[must_use]
