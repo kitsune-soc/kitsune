@@ -45,7 +45,7 @@ deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 diesel = "2.1.0"
 diesel-async = "0.3.0"
-diesel_full_text_search = "2.0.0"
+diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
 globset = { version = "0.4.10", features = ["simd-accel"] }

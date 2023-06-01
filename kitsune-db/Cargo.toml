@@ -8,7 +8,7 @@ build = "build.rs"
 derive_builder = "0.12.0"
 diesel = { version = "2.1.0", features = ["serde_json", "time", "uuid"] }
 diesel-async = { version = "0.3.0", features = ["deadpool", "postgres"] }
-diesel_full_text_search = "2.0.0"
+diesel_full_text_search = { version = "2.1.0", default-features = false }
 diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "323d6a1af2b819abed72db15a4546cdc38d8e286", features = [
     "postgres",
 ] }

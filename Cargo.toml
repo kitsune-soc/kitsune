@@ -19,6 +19,3 @@ members = [
     "kitsune-type",
     "post-process",
 ]
-
-[patch.crates-io]
-diesel_full_text_search = { git = "https://github.com/aumetra/diesel_full_text_search", rev = "875494d575950b6e047f456d820dc2f25c058611" }

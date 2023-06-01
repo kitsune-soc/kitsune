@@ -2,6 +2,7 @@ use crate::{
     error::Result,
     job::{JobContext, Runnable},
     mapping::IntoActivity,
+    try_join,
 };
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -31,20 +32,24 @@ impl Runnable for DeliverUnfollow {
             return Ok(());
         };
 
-        let (follower, follower_user) = accounts::table
+        let follower_info_fut = accounts::table
             .find(follow.follower_id)
             .inner_join(users::table)
             .select((Account::as_select(), User::as_select()))
-            .get_result::<(Account, User)>(&mut db_conn)
-            .await?;
+            .get_result::<(Account, User)>(&mut db_conn);
 
-        let followed_account_inbox_url = accounts::table
+        let followed_account_inbox_url_fut = accounts::table
             .find(follow.account_id)
             .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn)
-            .await?;
+            .get_result::<Option<String>>(&mut db_conn);
 
-        diesel::delete(&follow).execute(&mut db_conn).await?;
+        let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+
+        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = try_join!(
+            follower_info_fut,
+            followed_account_inbox_url_fut,
+            delete_fut
+        )?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
             let follow_activity = follow.into_negate_activity(ctx.state).await?;

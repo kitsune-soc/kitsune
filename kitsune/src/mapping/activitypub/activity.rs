@@ -1,5 +1,5 @@
 use super::IntoObject;
-use crate::{error::Result, state::Zustand};
+use crate::{error::Result, state::Zustand, try_join};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
@@ -49,17 +49,17 @@ impl IntoActivity for Favourite {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let account_url = accounts::table
+        let account_url_fut = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .await?;
+            .get_result::<String>(&mut db_conn);
 
-        let post_url = posts::table
+        let post_url_fut = posts::table
             .find(self.post_id)
             .select(posts::url)
-            .get_result(&mut db_conn)
-            .await?;
+            .get_result(&mut db_conn);
+
+        let (account_url, post_url) = try_join!(account_url_fut, post_url_fut)?;
 
         Ok(Activity {
             context: ap_context(),
@@ -97,17 +97,17 @@ impl IntoActivity for Follow {
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let mut db_conn = state.db_conn.get().await?;
-        let attributed_to = accounts::table
+        let attributed_to_fut = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .await?;
+            .get_result::<String>(&mut db_conn);
 
-        let object = accounts::table
+        let object_fut = accounts::table
             .find(self.account_id)
             .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
-            .await?;
+            .get_result::<String>(&mut db_conn);
+
+        let (attributed_to, object) = try_join!(attributed_to_fut, object_fut)?;
 
         Ok(Activity {
             context: ap_context(),

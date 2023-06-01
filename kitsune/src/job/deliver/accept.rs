@@ -1,6 +1,7 @@
 use crate::{
     error::Result,
     job::{JobContext, Runnable},
+    try_join,
 };
 use async_trait::async_trait;
 use diesel::{
@@ -35,18 +36,19 @@ impl Runnable for DeliverAccept {
             return Ok(());
         };
 
-        let follower_inbox_url = accounts::table
+        let follower_inbox_url_fut = accounts::table
             .find(follow.follower_id)
             .select(accounts::inbox_url.assume_not_null())
-            .get_result::<String>(&mut db_conn)
-            .await?;
+            .get_result::<String>(&mut db_conn);
 
-        let (followed_account, followed_user) = accounts::table
+        let followed_info_fut = accounts::table
             .find(follow.account_id)
             .inner_join(users::table.on(accounts::id.eq(users::account_id)))
             .select((Account::as_select(), User::as_select()))
-            .get_result::<(Account, User)>(&mut db_conn)
-            .await?;
+            .get_result::<(Account, User)>(&mut db_conn);
+
+        let (follower_inbox_url, (followed_account, followed_user)) =
+            try_join!(follower_inbox_url_fut, followed_info_fut)?;
 
         let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
 

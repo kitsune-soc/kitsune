@@ -15,9 +15,9 @@ use async_trait::async_trait;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
-use futures_util::{stream::FuturesUnordered, StreamExt};
+use futures_util::{stream::FuturesUnordered, TryStreamExt};
 use kitsune_db::{
-    model::job::{Job as DbJob, JobState, UpdateJob},
+    model::job::{Job as DbJob, JobState, UpdateFailedJob},
     schema::jobs,
     PgPool,
 };
@@ -93,7 +93,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
             let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
 
             diesel::update(&db_job)
-                .set(UpdateJob {
+                .set(UpdateFailedJob {
                     fail_count,
                     state: JobState::Failed,
                     run_at: OffsetDateTime::now_utc() + backoff_duration,
@@ -140,16 +140,16 @@ async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
                 // New scope to ensure `update_jobs` is getting dropped
                 // Otherwise this will prevent us from returning the `jobs` list
                 {
-                    let mut update_jobs = jobs
-                        .iter()
+                    jobs.iter()
                         .map(|job| {
                             diesel::update(job)
                                 .set(jobs::state.eq(JobState::Running))
                                 .execute(tx)
                         })
-                        .collect::<FuturesUnordered<_>>();
-
-                    while let Some(..) = update_jobs.next().await.transpose()? {}
+                        .collect::<FuturesUnordered<_>>()
+                        .map_ok(|_| ())
+                        .try_collect::<()>()
+                        .await?;
                 }
 
                 Ok::<_, Error>(jobs)
