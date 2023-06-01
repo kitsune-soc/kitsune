@@ -46,14 +46,14 @@ macro_rules! try_join {
         /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with proving the bound
         #[allow(clippy::inline_always)] // This is literally an empty function, only used for its type signature. 0 runtime implications.
         #[inline(always)]
-        fn assert_future_send<O>(
+        fn assert_send<O>(
             fut: impl ::core::future::Future<Output = O> + Send,
         ) -> impl ::core::future::Future<Output = O> + Send {
             fut
         }
 
         ::tokio::try_join!(
-            $( assert_future_send($try_future) ),+
+            $( assert_send($try_future) ),+
         )
     }};
 }
