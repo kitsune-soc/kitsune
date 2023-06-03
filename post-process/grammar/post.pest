@@ -69,7 +69,12 @@ link_content = {
 }
 
 link_postfix = _{
-    &(EOI | NEWLINE | WHITE_SPACE)
+    &(
+        EOI |
+        NEWLINE |
+        WHITE_SPACE |
+        "<" // Hack around the link parser not including HTML tags into links
+    )
 }
 
 link_schema = {
