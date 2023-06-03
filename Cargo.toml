@@ -19,6 +19,7 @@ members = [
     "kitsune-type",
     "post-process",
 ]
+resolver = "2"
 
 [workspace.package]
 version = "0.0.1-pre.1"
