@@ -1,12 +1,10 @@
-use std::time::Duration;
-
 use self::{
     handler::{media, nodeinfo, oauth, oidc, posts, users, well_known},
     openapi::api_docs,
 };
 use crate::{config::ServerConfiguration, state::Zustand};
 use axum::{extract::DefaultBodyLimit, Router};
-use axum_prometheus::PrometheusMetricLayer;
+use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
@@ -50,7 +48,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         router = router.merge(handler::mastodon::routes());
     }
 
-    router
+    router = router
         .merge(graphql::routes(state.clone()))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
         .layer(CatchPanicLayer::new())
@@ -58,9 +56,18 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .layer(TimeoutLayer::new(Duration::from_secs(
             server_config.request_timeout_sec,
         )))
-        .fallback_service(ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)))
+        .fallback_service(
+            ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
+        );
+
+    #[cfg(feature = "metrics")]
+    {
+        use axum_prometheus::PrometheusMetricLayer;
         // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
-        .layer(PrometheusMetricLayer::new())
+        router = router.layer(PrometheusMetricLayer::new());
+    }
+
+    router
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
