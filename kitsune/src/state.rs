@@ -4,13 +4,16 @@ use crate::{
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        oauth2::Oauth2Service, oidc::OidcService, post::PostService, search::SearchService,
-        timeline::TimelineService, url::UrlService, user::UserService,
+        oauth2::Oauth2Service, post::PostService, search::SearchService, timeline::TimelineService,
+        url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
 use kitsune_db::PgPool;
+
+#[cfg(feature = "oidc")]
+use crate::service::oidc::OidcService;
 
 macro_rules! impl_from_ref {
     ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
@@ -33,13 +36,20 @@ impl_from_ref! {
         FederationFilterService => |input: &Zustand| input.service.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
         Oauth2Service => |input: &Zustand| input.service.oauth2.clone(),
-        Option<OidcService> => |input: &Zustand| input.service.oidc.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         SearchService => |input: &Zustand| input.service.search.clone(),
         InstanceService => |input: &Zustand| input.service.instance.clone(),
         TimelineService => |input: &Zustand| input.service.timeline.clone(),
         UrlService => |input: &Zustand| input.service.url.clone(),
         UserService => |input: &Zustand| input.service.user.clone()
+    ]
+}
+
+#[cfg(feature = "oidc")]
+impl_from_ref! {
+    Zustand;
+    [
+        Option<OidcService> => |input: &Zustand| input.service.oidc.clone()
     ]
 }
 
@@ -70,6 +80,7 @@ pub struct Service {
     pub federation_filter: FederationFilterService,
     pub job: JobService,
     pub oauth2: Oauth2Service,
+    #[cfg(feature = "oidc")]
     pub oidc: Option<OidcService>,
     pub post: PostService,
     pub instance: InstanceService,

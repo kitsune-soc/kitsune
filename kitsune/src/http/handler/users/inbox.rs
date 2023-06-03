@@ -265,6 +265,7 @@ pub async fn post(
     State(federation_filter): State<FederationFilterService>,
     SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {
+    #[cfg(feature = "metrics")]
     increment_counter!("received_activities");
 
     if !federation_filter.is_entity_allowed(&activity)? {

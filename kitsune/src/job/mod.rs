@@ -86,6 +86,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
     #[allow(clippy::cast_possible_truncation)]
     match execution_result {
         Ok(Err(..)) | Err(..) => {
+            #[cfg(feature = "metrics")]
             increment_counter!("failed_jobs");
 
             let fail_count = db_job.fail_count + 1;
@@ -102,6 +103,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
                 .await?;
         }
         _ => {
+            #[cfg(feature = "metrics")]
             increment_counter!("succeeded_jobs");
 
             diesel::update(&db_job)

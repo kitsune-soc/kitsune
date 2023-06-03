@@ -1,14 +1,10 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
 use kitsune::{config::Configuration, http, job};
-use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
-use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
-use metrics_util::layers::Layer as _;
 use std::{env, future, process};
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
+use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -28,7 +24,16 @@ const STARTUP_FIGLET: &str = r#"
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#;
 
-fn initialise_logging(config: &Configuration) {
+#[cfg(feature = "metrics")]
+fn initialise_metrics<S>(config: &Configuration) -> impl Layer<S>
+where
+    S: for<'a> tracing_subscriber::registry::LookupSpan<'a> + tracing::Subscriber,
+{
+    use axum_prometheus::{AXUM_HTTP_REQUESTS_DURATION_SECONDS, SECONDS_DURATION_BUCKETS};
+    use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
+    use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
+    use metrics_util::layers::Layer as _;
+
     let (prometheus_recorder, server_future) = PrometheusBuilder::new()
         // Some defaults that would have been set by the `axum-prometheus` crate
         .set_buckets_for_metric(
@@ -41,17 +46,25 @@ fn initialise_logging(config: &Configuration) {
         .unwrap();
     tokio::spawn(server_future);
 
+    let recorder = TracingContextLayer::all().layer(prometheus_recorder);
+    metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
+
+    MetricsLayer::new()
+}
+
+fn initialise_logging(_config: &Configuration) {
     let env_filter = env::var("RUST_LOG").map_or_else(
         |_| Targets::default().with_default(LevelFilter::INFO),
         |targets| targets.parse().expect("Failed to parse RUST_LOG value"),
     );
-    let subscriber = Registry::default()
-        .with(tracing_subscriber::fmt::layer().with_filter(env_filter))
-        .with(MetricsLayer::new());
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    let subscriber =
+        Registry::default().with(tracing_subscriber::fmt::layer().with_filter(env_filter));
 
-    let recorder = TracingContextLayer::all().layer(prometheus_recorder);
-    metrics::set_boxed_recorder(Box::new(recorder)).unwrap();
+    #[cfg(feature = "metrics")]
+    #[allow(clippy::used_underscore_binding)]
+    let subscriber = subscriber.with(initialise_metrics(_config));
+
+    tracing::subscriber::set_global_default(subscriber).unwrap();
 }
 
 #[tokio::main]

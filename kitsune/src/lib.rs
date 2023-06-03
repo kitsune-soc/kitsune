@@ -9,6 +9,7 @@
     forbidden_lint_groups
 )]
 
+#[cfg(feature = "metrics")]
 #[macro_use]
 extern crate metrics;
 
@@ -39,8 +40,8 @@ use self::{
     activitypub::Fetcher,
     cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
     config::{
-        CacheConfiguration, Configuration, MessagingConfiguration, OidcConfiguration,
-        SearchConfiguration, StorageConfiguration,
+        CacheConfiguration, Configuration, MessagingConfiguration, SearchConfiguration,
+        StorageConfiguration,
     },
     resolve::PostResolver,
     service::{
@@ -50,9 +51,8 @@ use self::{
         instance::InstanceService,
         job::JobService,
         oauth2::Oauth2Service,
-        oidc::{async_client, OidcService},
         post::PostService,
-        search::{GrpcSearchService, NoopSearchService, SearchService, SqlSearchService},
+        search::{NoopSearchService, SearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -62,22 +62,33 @@ use self::{
 };
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
-use futures_util::future::OptionFuture;
 use kitsune_db::PgPool;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use once_cell::sync::OnceCell;
-use openidconnect::{
-    core::{CoreClient, CoreProviderMetadata},
-    ClientId, ClientSecret, IssuerUrl, RedirectUrl,
-};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
 
+#[cfg(feature = "kitsune-search")]
+use self::service::search::GrpcSearchService;
+
 #[cfg(feature = "meilisearch")]
 use self::service::search::MeiliSearchService;
+
+#[cfg(feature = "oidc")]
+use {
+    self::{
+        config::OidcConfiguration,
+        service::oidc::{async_client, OidcService},
+    },
+    futures_util::future::OptionFuture,
+    openidconnect::{
+        core::{CoreClient, CoreProviderMetadata},
+        ClientId, ClientSecret, IssuerUrl, RedirectUrl,
+    },
+};
 
 fn prepare_cache<K, V>(config: &Configuration, cache_name: &str) -> ArcCache<K, V>
 where
@@ -147,6 +158,7 @@ async fn prepare_messaging(config: &Configuration) -> MessagingHub {
     }
 }
 
+#[cfg(feature = "oidc")]
 async fn prepare_oidc_client(
     oidc_config: &OidcConfiguration,
     url_service: &UrlService,
@@ -166,17 +178,22 @@ async fn prepare_oidc_client(
     .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
 }
 
+#[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 async fn prepare_search(search_config: &SearchConfiguration, db_conn: &PgPool) -> SearchService {
     match search_config {
-        SearchConfiguration::Kitsune(config) => {
-            GrpcSearchService::connect(&config.index_server, &config.search_servers)
+        SearchConfiguration::Kitsune(_config) => {
+            #[cfg(feature = "kitsune-search")]
+            #[allow(clippy::used_underscore_binding)]
+            return GrpcSearchService::connect(&_config.index_server, &_config.search_servers)
                 .await
                 .expect("Failed to connect to the search servers")
-                .into()
+                .into();
+
+            #[cfg(not(feature = "kitsune-search"))]
+            panic!("Server compiled without Kitsune Search compatibility");
         }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(feature = "meilisearch")]
-            // To avoid an "unused variable" warning in case the feature is deactivated
             #[allow(clippy::used_underscore_binding)]
             return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                 .await
@@ -240,6 +257,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
         .character_limit(config.instance.character_limit)
         .build();
 
+    #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         OidcService::builder()
             .client(prepare_oidc_client(oidc_config, &url_service).await)
@@ -304,6 +322,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
             instance: instance_service,
             job: job_service,
             oauth2: oauth2_service,
+            #[cfg(feature = "oidc")]
             oidc: oidc_service,
             search: search_service,
             post: post_service,
