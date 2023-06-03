@@ -24,7 +24,7 @@ jobs:
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack --feature-powerset --all clippy -- -D warnings
+      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack --each-feature --all clippy -- -D warnings
 
   fmt:
     name: Formatting
