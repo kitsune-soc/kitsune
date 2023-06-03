@@ -123,9 +123,11 @@ pub enum SearchError {
     #[error(transparent)]
     Meilisearch(#[from] meilisearch_sdk::errors::Error),
 
+    #[cfg(feature = "kitsune-search")]
     #[error(transparent)]
     TonicStatus(#[from] tonic::Status),
 
+    #[cfg(feature = "kitsune-search")]
     #[error(transparent)]
     TonicTransport(#[from] tonic::transport::Error),
 }

@@ -52,7 +52,7 @@ use self::{
         job::JobService,
         oauth2::Oauth2Service,
         post::PostService,
-        search::{GrpcSearchService, NoopSearchService, SearchService, SqlSearchService},
+        search::{NoopSearchService, SearchService, SqlSearchService},
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
@@ -70,6 +70,9 @@ use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storag
 use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
+
+#[cfg(feature = "kitsune-search")]
+use self::service::search::GrpcSearchService;
 
 #[cfg(feature = "meilisearch")]
 use self::service::search::MeiliSearchService;
@@ -175,17 +178,22 @@ async fn prepare_oidc_client(
     .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
 }
 
+#[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 async fn prepare_search(search_config: &SearchConfiguration, db_conn: &PgPool) -> SearchService {
     match search_config {
-        SearchConfiguration::Kitsune(config) => {
-            GrpcSearchService::connect(&config.index_server, &config.search_servers)
+        SearchConfiguration::Kitsune(_config) => {
+            #[cfg(feature = "kitsune-search")]
+            #[allow(clippy::used_underscore_binding)]
+            return GrpcSearchService::connect(&config.index_server, &config.search_servers)
                 .await
                 .expect("Failed to connect to the search servers")
-                .into()
+                .into();
+
+            #[cfg(not(feature = "kitsune-search"))]
+            panic!("Server compiled without Kitsune Search compatibility");
         }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(feature = "meilisearch")]
-            // To avoid an "unused variable" warning in case the feature is deactivated
             #[allow(clippy::used_underscore_binding)]
             return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                 .await

@@ -6,20 +6,24 @@ use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use uuid::Uuid;
 
+#[cfg(feature = "kitsune-search")]
 mod grpc;
 #[cfg(feature = "meilisearch")]
 mod meilisearch;
 mod sql;
 
+#[cfg(feature = "kitsune-search")]
+pub use self::grpc::GrpcSearchService;
 #[cfg(feature = "meilisearch")]
 pub use self::meilisearch::MeiliSearchService;
-pub use self::{grpc::GrpcSearchService, sql::SqlSearchService};
+pub use self::sql::SqlSearchService;
 
 type Result<T, E = SearchError> = std::result::Result<T, E>;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
 pub enum SearchService {
+    #[cfg(feature = "kitsune-search")]
     Grpc(GrpcSearchService),
     #[cfg(feature = "meilisearch")]
     Meilisearch(MeiliSearchService),
