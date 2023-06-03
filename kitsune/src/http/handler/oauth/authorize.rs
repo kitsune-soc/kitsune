@@ -2,7 +2,6 @@ use crate::{
     error::{Error, Result},
     service::{
         oauth2::{AuthorisationCode, Oauth2Service},
-        oidc::OidcService,
         url::UrlService,
     },
 };
@@ -23,6 +22,9 @@ use kitsune_db::{
 };
 use serde::Deserialize;
 use uuid::Uuid;
+
+#[cfg(feature = "oidc")]
+use crate::service::oidc::OidcService;
 
 #[derive(Deserialize)]
 pub struct AuthorizeQuery {
@@ -47,7 +49,7 @@ struct AuthorizePage {
 
 pub async fn get(
     State(db_conn): State<PgPool>,
-    State(oidc_service): State<Option<OidcService>>,
+    #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     State(url_service): State<UrlService>,
     Query(query): Query<AuthorizeQuery>,
 ) -> Result<Response> {
@@ -62,19 +64,20 @@ pub async fn get(
         .get_result::<oauth2::Application>(&mut db_conn)
         .await?;
 
+    #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let auth_url = oidc_service
             .authorisation_url(application.id, query.state)
             .await?;
 
-        Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response())
-    } else {
-        Ok(AuthorizePage {
-            app_name: application.name,
-            domain: url_service.domain().into(),
-        }
-        .into_response())
+        return Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response());
     }
+
+    Ok(AuthorizePage {
+        app_name: application.name,
+        domain: url_service.domain().into(),
+    }
+    .into_response())
 }
 
 pub async fn post(

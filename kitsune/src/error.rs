@@ -6,10 +6,6 @@ use axum::{
 use deadpool_redis::PoolError;
 use http::StatusCode;
 use kitsune_messaging::BoxError;
-use openidconnect::{
-    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
-    StandardErrorResponse,
-};
 use redis::RedisError;
 use rsa::{
     pkcs1,
@@ -72,6 +68,13 @@ pub enum FederationFilterError {
     UrlParse(#[from] url::ParseError),
 }
 
+#[cfg(feature = "oidc")]
+use openidconnect::{
+    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
+    StandardErrorResponse,
+};
+
+#[cfg(feature = "oidc")]
 #[derive(Debug, Error)]
 pub enum OidcError {
     #[error(transparent)]
@@ -190,6 +193,7 @@ pub enum Error {
     #[error(transparent)]
     TokioJoin(#[from] tokio::task::JoinError),
 
+    #[cfg(feature = "oidc")]
     #[error(transparent)]
     Oidc(#[from] OidcError),
 

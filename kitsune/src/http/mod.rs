@@ -1,5 +1,5 @@
 use self::{
-    handler::{media, nodeinfo, oauth, oidc, posts, users, well_known},
+    handler::{media, nodeinfo, oauth, posts, users, well_known},
     openapi::api_docs,
 };
 use crate::{config::ServerConfiguration, state::Zustand};
@@ -38,11 +38,15 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
         .nest("/oauth", oauth::routes())
-        .nest("/oidc", oidc::routes())
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
         .nest_service("/public", ServeDir::new("public"));
+
+    #[cfg(feature = "oidc")]
+    {
+        router = router.nest("/oidc", handler::oidc::routes());
+    }
 
     #[cfg(feature = "graphql-api")]
     {
