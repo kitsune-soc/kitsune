@@ -14,16 +14,6 @@ askama = { version = "0.12.0", default-features = false, features = [
     "with-axum",
 ] }
 askama_axum = "0.3.0"
-async-graphql = { version = "5.0.9", default-features = false, features = [
-    "email-validator",
-    "playground",
-    "tempfile",
-    "time",
-    "tracing",
-    "unblock",
-    "uuid",
-] }
-async-graphql-axum = "5.0.9"
 async-recursion = "1.0.4"
 async-stream = "0.3.5"
 async-trait = "0.1.68"
@@ -103,6 +93,18 @@ zxcvbn = { version = "2.2.2", default-features = false }
 
 # Optional dependencies
 
+# "graphql" feature
+async-graphql = { version = "5.0.9", default-features = false, features = [
+    "email-validator",
+    "playground",
+    "tempfile",
+    "time",
+    "tracing",
+    "unblock",
+    "uuid",
+], optional = true }
+async-graphql-axum = { version = "5.0.9", optional = true }
+
 # "meilisearch" feature
 meilisearch-sdk = { version = "0.23.2", optional = true }
 
@@ -118,7 +120,8 @@ pretty_assertions = "1.3.0"
 serial_test = "2.0.0"
 
 [features]
-default = ["mastodon-api", "metrics"]
+default = ["graphql-api", "mastodon-api", "metrics"]
+graphql-api = ["dep:async-graphql", "dep:async-graphql-axum"]
 mastodon-api = []
 meilisearch = ["dep:meilisearch-sdk"]
 metrics = [

@@ -16,6 +16,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 mod cond;
 mod extractor;
+#[cfg(feature = "graphql")]
 mod graphql;
 mod handler;
 mod openapi;
@@ -43,13 +44,17 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/.well-known", well_known::routes())
         .nest_service("/public", ServeDir::new("public"));
 
+    #[cfg(feature = "graphql")]
+    {
+        router = router.merge(graphql::routes(state.clone()));
+    }
+
     #[cfg(feature = "mastodon-api")]
     {
         router = router.merge(handler::mastodon::routes());
     }
 
     router = router
-        .merge(graphql::routes(state.clone()))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
         .layer(CatchPanicLayer::new())
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
