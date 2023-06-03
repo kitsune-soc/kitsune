@@ -16,7 +16,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 mod cond;
 mod extractor;
-#[cfg(feature = "graphql")]
+#[cfg(feature = "graphql-api")]
 mod graphql;
 mod handler;
 mod openapi;
@@ -44,7 +44,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/.well-known", well_known::routes())
         .nest_service("/public", ServeDir::new("public"));
 
-    #[cfg(feature = "graphql")]
+    #[cfg(feature = "graphql-api")]
     {
         router = router.merge(graphql::routes(state.clone()));
     }
