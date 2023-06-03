@@ -184,7 +184,7 @@ async fn prepare_search(search_config: &SearchConfiguration, db_conn: &PgPool) -
         SearchConfiguration::Kitsune(_config) => {
             #[cfg(feature = "kitsune-search")]
             #[allow(clippy::used_underscore_binding)]
-            return GrpcSearchService::connect(&config.index_server, &config.search_servers)
+            return GrpcSearchService::connect(&_config.index_server, &_config.search_servers)
                 .await
                 .expect("Failed to connect to the search servers")
                 .into();
