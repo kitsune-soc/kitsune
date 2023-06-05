@@ -10,6 +10,11 @@ pub struct MeiliSearchService {
 }
 
 impl MeiliSearchService {
+    /// Connect to the Meilisearch instance and initialise the indices
+    ///
+    /// # Errors
+    ///
+    /// - Failed to connect to the instance
     #[allow(clippy::missing_panics_doc)]
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
         let service = Self {
