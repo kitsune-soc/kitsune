@@ -9,7 +9,7 @@
 #[macro_use]
 extern crate tracing;
 
-use kitsune_search::{config::Configuration, search::SearchIndex};
+use kitsune_search_server::{config::Configuration, search::SearchIndex};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -62,5 +62,5 @@ async fn main() {
     info!(port = config.port, "Starting up Kitsune search");
 
     let index = SearchIndex::prepare(&config).unwrap();
-    kitsune_search::grpc::start(config, index).await;
+    kitsune_search_server::grpc::start(config, index).await;
 }

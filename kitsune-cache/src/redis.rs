@@ -7,7 +7,7 @@ use std::{fmt::Display, marker::PhantomData, time::Duration};
 
 #[derive(Builder)]
 #[builder(pattern = "owned")]
-pub struct RedisCache<K, V>
+pub struct Redis<K, V>
 where
     K: ?Sized,
 {
@@ -25,7 +25,7 @@ where
     _value: PhantomData<V>,
 }
 
-impl<K, V> RedisCache<K, V>
+impl<K, V> Redis<K, V>
 where
     K: ?Sized,
 {
@@ -43,8 +43,8 @@ where
     }
 
     #[must_use]
-    pub fn builder() -> RedisCacheBuilder<K, V> {
-        RedisCacheBuilder::default()
+    pub fn builder() -> RedisBuilder<K, V> {
+        RedisBuilder::default()
     }
 
     fn compute_key(&self, key: impl Display) -> String {
@@ -53,7 +53,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> CacheBackend<K, V> for RedisCache<K, V>
+impl<K, V> CacheBackend<K, V> for Redis<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Serialize + DeserializeOwned + Send + Sync,
@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<K, V> Clone for RedisCache<K, V>
+impl<K, V> Clone for Redis<K, V>
 where
     K: ?Sized,
 {

@@ -6,6 +6,7 @@ use axum::{
 use http::StatusCode;
 use kitsune_cache::Error as CacheError;
 use kitsune_messaging::BoxError;
+use kitsune_search::Error as SearchError;
 use rsa::{
     pkcs1,
     pkcs8::{self, der, spki},
@@ -96,27 +97,6 @@ pub enum OidcError {
 
     #[error("Unknown CSRF token")]
     UnknownCsrfToken,
-}
-
-#[derive(Debug, Error)]
-pub enum SearchError {
-    #[error(transparent)]
-    Database(#[from] diesel::result::Error),
-
-    #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
-
-    #[cfg(feature = "meilisearch")]
-    #[error(transparent)]
-    Meilisearch(#[from] meilisearch_sdk::errors::Error),
-
-    #[cfg(feature = "kitsune-search")]
-    #[error(transparent)]
-    TonicStatus(#[from] tonic::Status),
-
-    #[cfg(feature = "kitsune-search")]
-    #[error(transparent)]
-    TonicTransport(#[from] tonic::transport::Error),
 }
 
 #[derive(Debug, Error)]

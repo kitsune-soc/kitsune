@@ -43,16 +43,9 @@ use self::{
     },
     resolve::PostResolver,
     service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        oauth2::Oauth2Service,
-        post::PostService,
-        search::{NoopSearchService, SearchService, SqlSearchService},
-        timeline::TimelineService,
-        url::UrlService,
+        account::AccountService, attachment::AttachmentService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
         user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
@@ -65,16 +58,17 @@ use kitsune_db::PgPool;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
+use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
 
 #[cfg(feature = "kitsune-search")]
-use self::service::search::GrpcSearchService;
+use kitsune_search::GrpcSearchService;
 
 #[cfg(feature = "meilisearch")]
-use self::service::search::MeiliSearchService;
+use kitsune_search::MeiliSearchService;
 
 #[cfg(feature = "oidc")]
 use {

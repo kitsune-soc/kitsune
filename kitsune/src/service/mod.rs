@@ -7,7 +7,6 @@ pub mod oauth2;
 #[cfg(feature = "oidc")]
 pub mod oidc;
 pub mod post;
-pub mod search;
 pub mod timeline;
 pub mod url;
 pub mod user;

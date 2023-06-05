@@ -3,10 +3,7 @@ use crate::{
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
-    service::{
-        federation_filter::FederationFilterService,
-        search::{SearchBackend, SearchService},
-    },
+    service::federation_filter::FederationFilterService,
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -23,6 +20,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_http_client::Client;
+use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -275,13 +273,14 @@ mod test {
         activitypub::Fetcher,
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
-        service::{federation_filter::FederationFilterService, search::NoopSearchService},
+        service::federation_filter::FederationFilterService,
         test::database_test,
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_search::NoopSearchService;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
 

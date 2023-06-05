@@ -1,3 +1,6 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+
 #[macro_use]
 extern crate tracing;
 
@@ -7,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc};
 
 pub use self::error::Error;
-pub use self::in_memory::InMemoryCache;
-pub use self::redis::RedisCache;
+pub use self::in_memory::InMemory as InMemoryCache;
+pub use self::redis::Redis as RedisCache;
 
 mod error;
 mod in_memory;

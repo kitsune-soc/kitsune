@@ -41,6 +41,7 @@ impl MeiliSearchService {
 
 #[async_trait]
 impl SearchBackend for MeiliSearchService {
+    #[instrument(skip_all)]
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         self.get_index(item.index())
             .add_documents(&[item], Some("id"))
@@ -51,6 +52,7 @@ impl SearchBackend for MeiliSearchService {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
         match item {
             SearchItem::Account(account) => {
@@ -70,6 +72,7 @@ impl SearchBackend for MeiliSearchService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         self.get_index(index)
             .delete_all_documents()
@@ -80,6 +83,7 @@ impl SearchBackend for MeiliSearchService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     async fn search(
         &self,
         index: SearchIndex,

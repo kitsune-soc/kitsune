@@ -3237,10 +3237,9 @@ dependencies = [
  "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-messaging",
- "kitsune-search-proto",
+ "kitsune-search",
  "kitsune-storage",
  "kitsune-type",
- "meilisearch-sdk",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-tracing-context",
@@ -3270,7 +3269,6 @@ dependencies = [
  "time",
  "tokio",
  "tokio-util",
- "tonic",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -3393,6 +3391,38 @@ dependencies = [
 name = "kitsune-search"
 version = "0.0.1-pre.1"
 dependencies = [
+ "async-trait",
+ "diesel",
+ "diesel-async",
+ "diesel_full_text_search",
+ "enum_dispatch",
+ "futures-util",
+ "kitsune-db",
+ "kitsune-search-proto",
+ "meilisearch-sdk",
+ "serde",
+ "strum",
+ "thiserror",
+ "tonic",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "kitsune-search-proto"
+version = "0.0.1-pre.1"
+dependencies = [
+ "prost",
+ "protoc-bin-vendored",
+ "serde",
+ "tonic",
+ "tonic-build",
+]
+
+[[package]]
+name = "kitsune-search-server"
+version = "0.0.1-pre.1"
+dependencies = [
  "autometrics",
  "dotenvy",
  "envy",
@@ -3416,17 +3446,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "kitsune-search-proto"
-version = "0.0.1-pre.1"
-dependencies = [
- "prost",
- "protoc-bin-vendored",
- "serde",
- "tonic",
- "tonic-build",
 ]
 
 [[package]]

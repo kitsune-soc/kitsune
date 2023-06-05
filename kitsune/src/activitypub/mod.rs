@@ -1,7 +1,6 @@
 use crate::{
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
-    service::search::{SearchBackend, SearchService},
 };
 use diesel::SelectableHelper;
 use diesel_async::{
@@ -16,6 +15,7 @@ use kitsune_db::{
     },
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
 };
+use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use typed_builder::TypedBuilder;
