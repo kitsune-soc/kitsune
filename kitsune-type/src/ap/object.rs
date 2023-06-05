@@ -2,13 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
-    #[serde(alias = "audio")] // Some implementations don't care about the casing here. Idk why??
     Audio,
-    #[serde(alias = "document")]
     Document,
-    #[serde(alias = "image")]
     Image,
-    #[serde(alias = "video")]
     Video,
 }
 
