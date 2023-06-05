@@ -4,13 +4,14 @@ use crate::{
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        oauth2::Oauth2Service, post::PostService, search::SearchService, timeline::TimelineService,
-        url::UrlService, user::UserService,
+        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
+        user::UserService,
     },
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
 use kitsune_db::PgPool;
+use kitsune_search::SearchService;
 
 #[cfg(feature = "oidc")]
 use crate::service::oidc::OidcService;

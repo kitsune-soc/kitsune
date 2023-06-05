@@ -86,19 +86,19 @@ mod test {
     use super::PostResolver;
     use crate::{
         activitypub::Fetcher,
-        cache::NoopCache,
         config::FederationFilterConfiguration,
         service::{
             account::AccountService, attachment::AttachmentService,
-            federation_filter::FederationFilterService, job::JobService, search::NoopSearchService,
-            url::UrlService,
+            federation_filter::FederationFilterService, job::JobService, url::UrlService,
         },
         test::database_test,
         webfinger::Webfinger,
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;

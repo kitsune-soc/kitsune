@@ -2,19 +2,21 @@
 opt-level = 3
 
 [profile.release]
-lto = 'thin'
+lto = true
 strip = true
 
 [workspace]
 members = [
     "kitsune",
+    "kitsune-cache",
     "kitsune-cli",
     "kitsune-db",
     "kitsune-http-client",
     "kitsune-http-signatures",
     "kitsune-messaging",
     "kitsune-search",
-    "kitsune-search/proto",
+    "kitsune-search-server",
+    "kitsune-search-server/proto",
     "kitsune-storage",
     "kitsune-type",
     "post-process",

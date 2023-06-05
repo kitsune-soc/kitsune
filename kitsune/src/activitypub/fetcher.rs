@@ -1,19 +1,16 @@
 use crate::{
     activitypub::{process_new_object, ProcessNewObject},
-    cache::{ArcCache, CacheBackend},
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
-    service::{
-        federation_filter::FederationFilterService,
-        search::{SearchBackend, SearchService},
-    },
+    service::federation_filter::FederationFilterService,
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use http::HeaderValue;
+use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
@@ -23,6 +20,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_http_client::Client;
+use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -273,15 +271,16 @@ impl Fetcher {
 mod test {
     use crate::{
         activitypub::Fetcher,
-        cache::NoopCache,
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
-        service::{federation_filter::FederationFilterService, search::NoopSearchService},
+        service::federation_filter::FederationFilterService,
         test::database_test,
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_search::NoopSearchService;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
 

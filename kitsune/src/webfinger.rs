@@ -1,10 +1,7 @@
-use crate::{
-    cache::{ArcCache, CacheBackend, RedisCache},
-    consts::USER_AGENT,
-    error::Result,
-};
+use crate::{consts::USER_AGENT, error::Result};
 use autometrics::autometrics;
 use http::HeaderValue;
+use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use std::{sync::Arc, time::Duration};
@@ -67,7 +64,7 @@ impl Webfinger {
 #[cfg(test)]
 mod test {
     use super::Webfinger;
-    use crate::cache::NoopCache;
+    use kitsune_cache::NoopCache;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
 

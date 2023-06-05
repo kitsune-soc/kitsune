@@ -12,11 +12,11 @@ use kitsune_db::{
 use uuid::Uuid;
 
 #[derive(Clone)]
-pub struct SqlSearchService {
+pub struct SearchService {
     db_conn: PgPool,
 }
 
-impl SqlSearchService {
+impl SearchService {
     #[must_use]
     pub fn new(db_conn: PgPool) -> Self {
         Self { db_conn }
@@ -24,7 +24,7 @@ impl SqlSearchService {
 }
 
 #[async_trait]
-impl SearchBackend for SqlSearchService {
+impl SearchBackend for SearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())
     }
@@ -37,6 +37,7 @@ impl SearchBackend for SqlSearchService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     async fn search(
         &self,
         index: SearchIndex,

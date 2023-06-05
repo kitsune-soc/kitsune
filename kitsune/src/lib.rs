@@ -21,7 +21,6 @@ mod test;
 
 pub mod activitypub;
 pub mod blocking;
-pub mod cache;
 pub mod config;
 pub mod consts;
 pub mod error;
@@ -38,23 +37,15 @@ pub mod webfinger;
 
 use self::{
     activitypub::Fetcher,
-    cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
     config::{
         CacheConfiguration, Configuration, MessagingConfiguration, SearchConfiguration,
         StorageConfiguration,
     },
     resolve::PostResolver,
     service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        oauth2::Oauth2Service,
-        post::PostService,
-        search::{NoopSearchService, SearchService, SqlSearchService},
-        timeline::TimelineService,
-        url::UrlService,
+        account::AccountService, attachment::AttachmentService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
         user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
@@ -62,20 +53,22 @@ use self::{
 };
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
+use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
+use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc, time::Duration};
 
 #[cfg(feature = "kitsune-search")]
-use self::service::search::GrpcSearchService;
+use kitsune_search::GrpcSearchService;
 
 #[cfg(feature = "meilisearch")]
-use self::service::search::MeiliSearchService;
+use kitsune_search::MeiliSearchService;
 
 #[cfg(feature = "oidc")]
 use {

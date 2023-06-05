@@ -1,5 +1,5 @@
-use kitsune_search::{config::Configuration, search::SearchIndex};
 use kitsune_search_proto::{index::index_client::IndexClient, search::search_client::SearchClient};
+use kitsune_search_server::{config::Configuration, search::SearchIndex};
 use rand::Rng;
 use tempfile::TempDir;
 use tonic::transport::Channel;
@@ -25,7 +25,7 @@ impl TestClient {
         };
 
         let search_index = SearchIndex::prepare(&config).unwrap();
-        tokio::spawn(kitsune_search::grpc::start(config, search_index));
+        tokio::spawn(kitsune_search_server::grpc::start(config, search_index));
 
         Self {
             index: IndexClient::connect(format!("http://localhost:{port}"))

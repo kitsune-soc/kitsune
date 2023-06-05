@@ -3,10 +3,7 @@ use axum::{
     extract::multipart::MultipartError,
     response::{IntoResponse, Response},
 };
-use deadpool_redis::PoolError;
 use http::StatusCode;
-use kitsune_messaging::BoxError;
-use redis::RedisError;
 use rsa::{
     pkcs1,
     pkcs8::{self, der, spki},
@@ -45,18 +42,6 @@ pub enum ApiError {
 }
 
 #[derive(Debug, Error)]
-pub enum CacheError {
-    #[error(transparent)]
-    Pool(#[from] PoolError),
-
-    #[error(transparent)]
-    Redis(#[from] RedisError),
-
-    #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
-}
-
-#[derive(Debug, Error)]
 pub enum FederationFilterError {
     #[error(transparent)]
     Glob(#[from] globset::Error),
@@ -81,7 +66,7 @@ pub enum OidcError {
     ClaimsVerification(#[from] ClaimsVerificationError),
 
     #[error(transparent)]
-    LoginState(#[from] CacheError),
+    LoginState(#[from] kitsune_cache::Error),
 
     #[error("Missing Email address")]
     MissingEmail,
@@ -112,27 +97,6 @@ pub enum OidcError {
 }
 
 #[derive(Debug, Error)]
-pub enum SearchError {
-    #[error(transparent)]
-    Database(#[from] diesel::result::Error),
-
-    #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
-
-    #[cfg(feature = "meilisearch")]
-    #[error(transparent)]
-    Meilisearch(#[from] meilisearch_sdk::errors::Error),
-
-    #[cfg(feature = "kitsune-search")]
-    #[error(transparent)]
-    TonicStatus(#[from] tonic::Status),
-
-    #[cfg(feature = "kitsune-search")]
-    #[error(transparent)]
-    TonicTransport(#[from] tonic::transport::Error),
-}
-
-#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
     #[error(transparent)]
@@ -142,7 +106,7 @@ pub enum Error {
     BrokenRecord,
 
     #[error(transparent)]
-    Cache(#[from] CacheError),
+    Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
     Database(#[from] diesel::result::Error),
@@ -154,7 +118,7 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
-    Event(BoxError),
+    Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]
     FederationFilter(#[from] FederationFilterError),
@@ -215,7 +179,7 @@ pub enum Error {
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
-    Search(#[from] SearchError),
+    Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),

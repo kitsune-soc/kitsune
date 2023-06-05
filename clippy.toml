@@ -1,1 +1,1 @@
-doc-valid-idents = ["ActivityPub", "SeaORM"]
+doc-valid-idents = ["ActivityPub", "gRPC"]

@@ -1,12 +1,12 @@
 use self::sealed::{IntoMastodon, MapperState};
 use crate::{
-    cache::{ArcCache, CacheBackend},
     error::Result,
     event::{post::EventType, PostEventConsumer},
     service::{attachment::AttachmentService, url::UrlService},
 };
 use derive_builder::Builder;
 use futures_util::StreamExt;
+use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::PgPool;
 use serde_json::Value;
 use typed_builder::TypedBuilder;

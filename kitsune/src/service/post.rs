@@ -1,7 +1,6 @@
 use super::{
     instance::InstanceService,
     job::{Enqueue, JobService},
-    search::{SearchBackend, SearchService},
     url::UrlService,
 };
 use crate::{
@@ -39,6 +38,7 @@ use kitsune_db::{
     },
     PgPool,
 };
+use kitsune_search::{SearchBackend, SearchService};
 use pulldown_cmark::{html, Options, Parser};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;

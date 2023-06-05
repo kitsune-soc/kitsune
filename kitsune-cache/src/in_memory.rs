@@ -12,7 +12,7 @@ struct CacheValue<V> {
     value: V,
 }
 
-pub struct InMemoryCache<K, V>
+pub struct InMemory<K, V>
 where
     K: ?Sized,
 {
@@ -22,7 +22,7 @@ where
     _key_ty: PhantomData<K>,
 }
 
-impl<K, V> InMemoryCache<K, V>
+impl<K, V> InMemory<K, V>
 where
     K: Display + ?Sized,
 {
@@ -38,7 +38,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> CacheBackend<K, V> for InMemoryCache<K, V>
+impl<K, V> CacheBackend<K, V> for InMemory<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Clone + Send + Sync,
@@ -87,7 +87,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::cache::{CacheBackend, InMemoryCache};
+    use crate::{CacheBackend, InMemoryCache};
     use std::time::Duration;
 
     #[tokio::test]

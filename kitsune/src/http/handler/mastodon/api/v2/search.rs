@@ -1,7 +1,6 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    service::search::{SearchBackend, SearchIndex, SearchService},
     state::Zustand,
 };
 use axum::{
@@ -18,6 +17,7 @@ use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
 };
+use kitsune_search::{SearchBackend, SearchIndex, SearchService};
 use kitsune_type::mastodon::SearchResult;
 use serde::Deserialize;
 use url::Url;

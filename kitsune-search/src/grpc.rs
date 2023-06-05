@@ -17,12 +17,17 @@ use uuid::Uuid;
 ///
 /// Connects to the `kitsune-search` backend via gRPC
 #[derive(Clone)]
-pub struct GrpcSearchService {
+pub struct SearchService {
     searcher: SearchClient<Channel>,
     indexer: IndexClient<Channel>,
 }
 
-impl GrpcSearchService {
+impl SearchService {
+    /// Connect to the search backend via gRPC
+    ///
+    /// # Errors
+    ///
+    /// - The servers aren't reachable
     pub async fn connect(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
         let index_channel = Endpoint::from_shared(index_endpoint.to_string())?
             .connect()
@@ -43,7 +48,7 @@ impl GrpcSearchService {
 }
 
 #[async_trait]
-impl SearchBackend for GrpcSearchService {
+impl SearchBackend for SearchService {
     #[instrument(skip_all)]
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {
         let request = match item {
@@ -93,7 +98,7 @@ impl SearchBackend for GrpcSearchService {
         Ok(())
     }
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self))]
     async fn reset_index(&self, index: SearchIndex) -> Result<()> {
         let request = ResetRequest {
             index: GrpcSearchIndex::from(index).into(),
@@ -103,7 +108,7 @@ impl SearchBackend for GrpcSearchService {
         Ok(())
     }
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self))]
     async fn search(
         &self,
         index: SearchIndex,
