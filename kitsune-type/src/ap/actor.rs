@@ -39,8 +39,8 @@ pub struct Actor {
     pub featured: Option<String>,
     pub inbox: String,
     pub outbox: String,
-    pub followers: String,
-    pub following: String,
+    pub followers: Option<String>,
+    pub following: Option<String>,
     #[serde(with = "time::serde::rfc3339")]
     pub published: OffsetDateTime,
 }

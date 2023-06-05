@@ -126,20 +126,22 @@ async fn get(
     }
 
     if Url::parse(&query.query).is_ok() {
-        if let Ok(account) = state.fetcher.fetch_actor(query.query.as_str().into()).await {
-            search_result
+        match state.fetcher.fetch_actor(query.query.as_str().into()).await {
+            Ok(account) => search_result
                 .accounts
-                .insert(0, state.mastodon_mapper.map(account).await?);
+                .insert(0, state.mastodon_mapper.map(account).await?),
+            Err(error) => debug!(?error, "couldn't fetch actor via url"),
         }
 
-        if let Ok(post) = state.fetcher.fetch_object(query.query.as_str()).await {
-            search_result.statuses.insert(
+        match state.fetcher.fetch_object(query.query.as_str()).await {
+            Ok(post) => search_result.statuses.insert(
                 0,
                 state
                     .mastodon_mapper
                     .map((&user_data.account, post))
                     .await?,
-            );
+            ),
+            Err(error) => debug!(?error, "couldn't fetch object via url"),
         }
     }
 

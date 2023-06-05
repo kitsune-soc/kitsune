@@ -51,7 +51,7 @@ impl IntoObject for DbMediaAttachment {
         Ok(MediaAttachment {
             r#type,
             name: self.description,
-            media_type: self.content_type,
+            media_type: Some(self.content_type),
             blurhash: self.blurhash,
             url,
         })
@@ -110,7 +110,7 @@ impl IntoObject for Post {
                     r#type: MediaAttachmentType::Document,
                     name: attachment.description,
                     blurhash: attachment.blurhash,
-                    media_type: attachment.content_type,
+                    media_type: Some(attachment.content_type),
                     url,
                 })
             })
@@ -140,6 +140,7 @@ impl IntoObject for Post {
             name: None,
             summary: self.subject,
             content: self.content,
+            media_type: None,
             attachment,
             tag,
             published: self.created_at,
@@ -196,8 +197,8 @@ impl IntoObject for Account {
             inbox,
             outbox,
             featured: None,
-            followers,
-            following,
+            followers: Some(followers),
+            following: Some(following),
             public_key: PublicKey {
                 id: self.public_key_id,
                 owner: user_url,

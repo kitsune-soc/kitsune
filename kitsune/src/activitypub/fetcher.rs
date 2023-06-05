@@ -135,8 +135,8 @@ impl Fetcher {
                             actor_type: actor.r#type.into(),
                             url: actor.id.as_str(),
                             featured_collection_url: actor.featured.as_deref(),
-                            followers_url: Some(actor.followers.as_str()),
-                            following_url: Some(actor.following.as_str()),
+                            followers_url: actor.followers.as_deref(),
+                            following_url: actor.following.as_deref(),
                             inbox_url: Some(actor.inbox.as_str()),
                             outbox_url: Some(actor.outbox.as_str()),
                             shared_inbox_url: actor
@@ -161,13 +161,19 @@ impl Fetcher {
                         .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
+                        let content_type = icon
+                            .media_type
+                            .as_deref()
+                            .or_else(|| mime_guess::from_path(&icon.url).first_raw())
+                            .ok_or(ApiError::BadRequest)?;
+
                         Some(
                             diesel::insert_into(media_attachments::table)
                                 .values(NewMediaAttachment {
                                     id: Uuid::now_v7(),
                                     account_id: account.id,
                                     description: icon.name.as_deref(),
-                                    content_type: icon.media_type.as_str(),
+                                    content_type,
                                     blurhash: icon.blurhash.as_deref(),
                                     file_path: None,
                                     remote_url: Some(icon.url.as_str()),
@@ -181,13 +187,19 @@ impl Fetcher {
                     };
 
                     let header_id = if let Some(image) = actor.image {
+                        let content_type = image
+                            .media_type
+                            .as_deref()
+                            .or_else(|| mime_guess::from_path(&image.url).first_raw())
+                            .ok_or(ApiError::BadRequest)?;
+
                         Some(
                             diesel::insert_into(media_attachments::table)
                                 .values(NewMediaAttachment {
                                     id: Uuid::now_v7(),
                                     account_id: account.id,
                                     description: image.name.as_deref(),
-                                    content_type: image.media_type.as_str(),
+                                    content_type,
                                     blurhash: image.blurhash.as_deref(),
                                     file_path: None,
                                     remote_url: Some(image.url.as_str()),

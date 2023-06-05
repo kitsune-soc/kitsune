@@ -164,7 +164,10 @@ pub struct Object {
     pub name: Option<String>,
     pub summary: Option<String>,
     pub content: String,
+    pub media_type: Option<String>,
+    #[serde(default)]
     pub attachment: Vec<MediaAttachment>,
+    #[serde(default)]
     pub tag: Vec<Tag>,
     #[serde(default)]
     pub sensitive: bool,

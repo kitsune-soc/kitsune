@@ -17,6 +17,7 @@ use kitsune_db::{
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
 };
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
+use pulldown_cmark::{html, Options, Parser};
 use typed_builder::TypedBuilder;
 use uuid::{Timestamp, Uuid};
 
@@ -41,14 +42,21 @@ async fn handle_attachments(
             attachments
                 .iter()
                 .zip(attachment_ids.iter().copied())
-                .map(|(attachment, attachment_id)| NewMediaAttachment {
-                    id: attachment_id,
-                    account_id: author.id,
-                    content_type: attachment.media_type.as_str(),
-                    description: attachment.name.as_deref(),
-                    blurhash: attachment.blurhash.as_deref(),
-                    file_path: None,
-                    remote_url: Some(attachment.url.as_str()),
+                .filter_map(|(attachment, attachment_id)| {
+                    let content_type = attachment
+                        .media_type
+                        .as_deref()
+                        .or_else(|| mime_guess::from_path(&attachment.url).first_raw())?;
+
+                    Some(NewMediaAttachment {
+                        id: attachment_id,
+                        account_id: author.id,
+                        content_type,
+                        description: attachment.name.as_deref(),
+                        blurhash: attachment.blurhash.as_deref(),
+                        file_path: None,
+                        remote_url: Some(attachment.url.as_str()),
+                    })
                 })
                 .collect::<Vec<NewMediaAttachment<'_>>>(),
         )
@@ -148,6 +156,13 @@ pub async fn process_new_object(
     } else {
         None
     };
+
+    if object.media_type.as_deref() == Some("text/markdown") {
+        let parser = Parser::new_ext(&object.content, Options::all());
+        let mut buf = String::new();
+        html::push_html(&mut buf, parser);
+        object.content = buf;
+    }
 
     if let Some(ref name) = object.name {
         object.content = format!(
