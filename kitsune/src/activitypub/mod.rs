@@ -26,59 +26,6 @@ pub mod fetcher;
 
 pub use self::{deliverer::Deliverer, fetcher::Fetcher};
 
-async fn handle_attachments(
-    db_conn: &mut AsyncPgConnection,
-    author: &Account,
-    post_id: Uuid,
-    attachments: Vec<MediaAttachment>,
-) -> Result<()> {
-    if attachments.is_empty() {
-        return Ok(());
-    }
-    let attachment_ids: Vec<Uuid> = (0..attachments.len()).map(|_| Uuid::now_v7()).collect();
-
-    diesel::insert_into(media_attachments::table)
-        .values(
-            attachments
-                .iter()
-                .zip(attachment_ids.iter().copied())
-                .filter_map(|(attachment, attachment_id)| {
-                    let content_type = attachment
-                        .media_type
-                        .as_deref()
-                        .or_else(|| mime_guess::from_path(&attachment.url).first_raw())?;
-
-                    Some(NewMediaAttachment {
-                        id: attachment_id,
-                        account_id: author.id,
-                        content_type,
-                        description: attachment.name.as_deref(),
-                        blurhash: attachment.blurhash.as_deref(),
-                        file_path: None,
-                        remote_url: Some(attachment.url.as_str()),
-                    })
-                })
-                .collect::<Vec<NewMediaAttachment<'_>>>(),
-        )
-        .execute(db_conn)
-        .await?;
-
-    diesel::insert_into(posts_media_attachments::table)
-        .values(
-            attachment_ids
-                .into_iter()
-                .map(|attachment_id| NewPostMediaAttachment {
-                    post_id,
-                    media_attachment_id: attachment_id,
-                })
-                .collect::<Vec<NewPostMediaAttachment>>(),
-        )
-        .execute(db_conn)
-        .await?;
-
-    Ok(())
-}
-
 async fn handle_mentions(
     db_conn: &mut AsyncPgConnection,
     author: &Account,
@@ -107,6 +54,50 @@ async fn handle_mentions(
         .await?;
 
     Ok(())
+}
+
+/// Process a bunch of ActivityPub attachments
+///
+/// # Returns
+///
+/// Returns a vector containing the IDs of the newly contained media attachments
+pub async fn process_attachments(
+    db_conn: &mut AsyncPgConnection,
+    author: &Account,
+    attachments: &[MediaAttachment],
+) -> Result<Vec<Uuid>> {
+    if attachments.is_empty() {
+        return Ok(Vec::new());
+    }
+    let attachment_ids: Vec<Uuid> = (0..attachments.len()).map(|_| Uuid::now_v7()).collect();
+
+    diesel::insert_into(media_attachments::table)
+        .values(
+            attachments
+                .iter()
+                .zip(attachment_ids.iter().copied())
+                .filter_map(|(attachment, attachment_id)| {
+                    let content_type = attachment
+                        .media_type
+                        .as_deref()
+                        .or_else(|| mime_guess::from_path(&attachment.url).first_raw())?;
+
+                    Some(NewMediaAttachment {
+                        id: attachment_id,
+                        account_id: author.id,
+                        content_type,
+                        description: attachment.name.as_deref(),
+                        blurhash: attachment.blurhash.as_deref(),
+                        file_path: None,
+                        remote_url: Some(attachment.url.as_str()),
+                    })
+                })
+                .collect::<Vec<NewMediaAttachment<'_>>>(),
+        )
+        .returning(media_attachments::id)
+        .load(db_conn)
+        .await
+        .map_err(Error::from)
 }
 
 #[derive(TypedBuilder)]
@@ -199,7 +190,20 @@ pub async fn process_new_object(
                     .get_result::<Post>(tx)
                     .await?;
 
-                handle_attachments(tx, &user, new_post.id, object.attachment).await?;
+                let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
+                diesel::insert_into(posts_media_attachments::table)
+                    .values(
+                        attachment_ids
+                            .into_iter()
+                            .map(|attachment_id| NewPostMediaAttachment {
+                                post_id: new_post.id,
+                                media_attachment_id: attachment_id,
+                            })
+                            .collect::<Vec<NewPostMediaAttachment>>(),
+                    )
+                    .execute(tx)
+                    .await?;
+
                 handle_mentions(tx, &user, new_post.id, &object.tag).await?;
 
                 Ok::<_, Error>(new_post)

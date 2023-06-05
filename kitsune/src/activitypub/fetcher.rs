@@ -17,10 +17,9 @@ use http::HeaderValue;
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
-        media_attachment::NewMediaAttachment,
         post::Post,
     },
-    schema::{accounts, media_attachments, posts},
+    schema::{accounts, posts},
     PgPool,
 };
 use kitsune_http_client::Client;
@@ -28,6 +27,8 @@ use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::{Timestamp, Uuid};
+
+use super::process_attachments;
 
 const MAX_FETCH_DEPTH: u32 = 50; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
@@ -161,53 +162,13 @@ impl Fetcher {
                         .await?;
 
                     let avatar_id = if let Some(icon) = actor.icon {
-                        let content_type = icon
-                            .media_type
-                            .as_deref()
-                            .or_else(|| mime_guess::from_path(&icon.url).first_raw())
-                            .ok_or(ApiError::BadRequest)?;
-
-                        Some(
-                            diesel::insert_into(media_attachments::table)
-                                .values(NewMediaAttachment {
-                                    id: Uuid::now_v7(),
-                                    account_id: account.id,
-                                    description: icon.name.as_deref(),
-                                    content_type,
-                                    blurhash: icon.blurhash.as_deref(),
-                                    file_path: None,
-                                    remote_url: Some(icon.url.as_str()),
-                                })
-                                .returning(media_attachments::id)
-                                .get_result::<Uuid>(tx)
-                                .await?,
-                        )
+                        process_attachments(tx, &account, &[icon]).await?.pop()
                     } else {
                         None
                     };
 
                     let header_id = if let Some(image) = actor.image {
-                        let content_type = image
-                            .media_type
-                            .as_deref()
-                            .or_else(|| mime_guess::from_path(&image.url).first_raw())
-                            .ok_or(ApiError::BadRequest)?;
-
-                        Some(
-                            diesel::insert_into(media_attachments::table)
-                                .values(NewMediaAttachment {
-                                    id: Uuid::now_v7(),
-                                    account_id: account.id,
-                                    description: image.name.as_deref(),
-                                    content_type,
-                                    blurhash: image.blurhash.as_deref(),
-                                    file_path: None,
-                                    remote_url: Some(image.url.as_str()),
-                                })
-                                .returning(media_attachments::id)
-                                .get_result::<Uuid>(tx)
-                                .await?,
-                        )
+                        process_attachments(tx, &account, &[image]).await?.pop()
                     } else {
                         None
                     };
