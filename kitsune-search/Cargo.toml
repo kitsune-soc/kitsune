@@ -21,7 +21,7 @@ kitsune-search-proto = { path = "../kitsune-search-server/proto", optional = tru
 tonic = { version = "0.9.2", optional = true }
 
 # "meilisearch" feature
-meilisearch-sdk = { version = "0.23.2", optional = true }
+meilisearch-sdk = { version = "0.24.0", optional = true }
 tracing = "0.1.37"
 
 [features]
