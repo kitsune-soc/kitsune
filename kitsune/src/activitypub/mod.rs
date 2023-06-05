@@ -124,8 +124,6 @@ pub async fn process_new_object(
         search_service,
     }: ProcessNewObject<'_>,
 ) -> Result<Post> {
-    object.clean_html();
-
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
     let user = if let Some(author) = author {
         author
@@ -142,14 +140,22 @@ pub async fn process_new_object(
         object.published.nanosecond(),
     );
 
-    let in_reply_to_id = if let Some(in_reply_to) = object.in_reply_to {
+    let in_reply_to_id = if let Some(ref in_reply_to) = object.in_reply_to {
         fetcher
-            .fetch_object_inner(&in_reply_to, call_depth + 1)
+            .fetch_object_inner(in_reply_to, call_depth + 1)
             .await?
             .map(|post| post.id)
     } else {
         None
     };
+
+    if let Some(ref name) = object.name {
+        object.content = format!(
+            r#"<p><a href="{}">{}</a></p>{}"#,
+            object.id, name, object.content
+        );
+    }
+    object.clean_html();
 
     let post = db_conn
         .transaction(|tx| {
