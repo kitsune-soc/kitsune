@@ -1,4 +1,8 @@
-use self::{actor::Actor, helper::StringOrObject, object::MediaAttachment};
+use self::{
+    actor::{Actor, ActorType},
+    helper::StringOrObject,
+    object::MediaAttachment,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use time::OffsetDateTime;
@@ -42,6 +46,20 @@ pub enum ActivityType {
     Reject,
     Undo,
     Update,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AttributedToListEntry {
+    pub r#type: ActorType,
+    pub id: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum AttributedToField {
+    Actor(Actor),
+    Url(String),
+    List(Vec<AttributedToListEntry>),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -130,6 +148,7 @@ pub enum ObjectType {
     Article,
     Image,
     Note,
+    Page,
     Video,
 }
 
@@ -140,8 +159,9 @@ pub struct Object {
     pub context: Value,
     pub id: String,
     pub r#type: ObjectType,
-    pub attributed_to: StringOrObject<Actor>,
+    pub attributed_to: AttributedToField,
     pub in_reply_to: Option<String>,
+    pub name: Option<String>,
     pub summary: Option<String>,
     pub content: String,
     pub attachment: Vec<MediaAttachment>,
@@ -157,10 +177,11 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn attributed_to(&self) -> &str {
+    pub fn attributed_to(&self) -> Option<&str> {
         match self.attributed_to {
-            StringOrObject::Object(ref actor) => &actor.id,
-            StringOrObject::String(ref id) => id,
+            AttributedToField::Actor(ref actor) => Some(&actor.id),
+            AttributedToField::Url(ref url) => Some(url),
+            AttributedToField::List(ref list) => list.iter().map(|item| item.id.as_str()).next(),
         }
     }
 }

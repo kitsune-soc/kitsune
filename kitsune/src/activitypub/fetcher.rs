@@ -57,7 +57,9 @@ pub struct Fetcher {
         Client::builder()
             .default_header(
                 "accept",
-                HeaderValue::from_static("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""),
+                HeaderValue::from_static(
+                    "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
+                ),
             )
             .unwrap()
             .user_agent(USER_AGENT)
@@ -270,7 +272,8 @@ impl Fetcher {
         let mut object: Object = self.client.get(url.as_str()).await?.json().await?;
         object.clean_html();
 
-        let user = self.fetch_actor(object.attributed_to().into()).await?;
+        let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
+        let user = self.fetch_actor(attributed_to.into()).await?;
         let visibility = Visibility::from_activitypub(&user, &object).unwrap();
 
         #[allow(clippy::cast_sign_loss)]

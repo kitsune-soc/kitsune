@@ -20,9 +20,8 @@ use kitsune_db::{
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
-    helper::StringOrObject,
     object::{MediaAttachment, MediaAttachmentType},
-    Object, ObjectType, Tag, TagType,
+    AttributedToField, Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
 use std::str::FromStr;
@@ -135,9 +134,10 @@ impl IntoObject for Post {
             context: ap_context(),
             id: self.url,
             r#type: ObjectType::Note,
-            attributed_to: StringOrObject::String(account_url),
+            attributed_to: AttributedToField::Url(account_url),
             in_reply_to,
             sensitive: self.is_sensitive,
+            name: None,
             summary: self.subject,
             content: self.content,
             attachment,

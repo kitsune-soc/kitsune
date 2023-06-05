@@ -73,6 +73,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
         .map(|in_reply_to| in_reply_to.id);
 
         let mut db_conn = state.db_conn.get().await?;
+        // Unify this with the fetcher logic
         let new_post_id = db_conn
             .transaction(|tx| {
                 async move {
