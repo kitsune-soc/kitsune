@@ -195,7 +195,7 @@ impl IntoObject for Account {
             manually_approves_followers: self.locked,
             endpoints: None,
             inbox,
-            outbox,
+            outbox: Some(outbox),
             featured: None,
             followers: Some(followers),
             following: Some(following),

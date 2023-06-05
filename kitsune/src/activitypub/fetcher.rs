@@ -60,7 +60,7 @@ pub struct Fetcher {
             .default_header(
                 "accept",
                 HeaderValue::from_static(
-                    "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
+                    "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\", application/activity+json",
                 ),
             )
             .unwrap()
@@ -139,7 +139,7 @@ impl Fetcher {
                             followers_url: actor.followers.as_deref(),
                             following_url: actor.following.as_deref(),
                             inbox_url: Some(actor.inbox.as_str()),
-                            outbox_url: Some(actor.outbox.as_str()),
+                            outbox_url: actor.outbox.as_deref(),
                             shared_inbox_url: actor
                                 .endpoints
                                 .and_then(|endpoints| endpoints.shared_inbox)
