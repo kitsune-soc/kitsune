@@ -1,5 +1,5 @@
-use super::{handle_attachments, handle_mentions};
 use crate::{
+    activitypub::{process_new_object, ProcessNewObject},
     cache::{ArcCache, CacheBackend},
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
@@ -18,8 +18,9 @@ use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
         media_attachment::NewMediaAttachment,
-        post::{NewPost, Post, PostConflictChangeset, Visibility},
+        post::Post,
     },
+    schema::{accounts, media_attachments, posts},
     PgPool,
 };
 use kitsune_http_client::Client;
@@ -86,8 +87,6 @@ impl Fetcher {
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
     pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<Account> {
-        use kitsune_db::schema::{accounts, media_attachments};
-
         let mut db_conn = self.db_conn.get().await?;
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
@@ -241,9 +240,11 @@ impl Fetcher {
     }
 
     #[async_recursion]
-    async fn fetch_object_inner(&self, url: &str, call_depth: u32) -> Result<Option<Post>> {
-        use kitsune_db::schema::posts;
-
+    pub(super) async fn fetch_object_inner(
+        &self,
+        url: &str,
+        call_depth: u32,
+    ) -> Result<Option<Post>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);
         }
@@ -269,69 +270,16 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let mut object: Object = self.client.get(url.as_str()).await?.json().await?;
-        object.clean_html();
+        let object: Object = self.client.get(url.as_str()).await?.json().await?;
 
-        let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
-        let user = self.fetch_actor(attributed_to.into()).await?;
-        let visibility = Visibility::from_activitypub(&user, &object).unwrap();
-
-        #[allow(clippy::cast_sign_loss)]
-        let uuid_timestamp = Timestamp::from_unix(
-            uuid::NoContext,
-            object.published.unix_timestamp() as u64,
-            object.published.nanosecond(),
-        );
-
-        let in_reply_to_id = if let Some(in_reply_to) = object.in_reply_to {
-            self.fetch_object_inner(&in_reply_to, call_depth + 1)
-                .await?
-                .map(|post| post.id)
-        } else {
-            None
-        };
-
-        let post = db_conn
-            .transaction(|tx| {
-                async move {
-                    let new_post = diesel::insert_into(posts::table)
-                        .values(NewPost {
-                            id: Uuid::new_v7(uuid_timestamp),
-                            account_id: user.id,
-                            in_reply_to_id,
-                            reposted_post_id: None,
-                            subject: object.summary.as_deref(),
-                            content: object.content.as_str(),
-                            is_sensitive: object.sensitive,
-                            visibility,
-                            is_local: false,
-                            url: object.id.as_str(),
-                            created_at: Some(object.published),
-                        })
-                        .on_conflict(posts::url)
-                        .do_update()
-                        .set(PostConflictChangeset {
-                            subject: object.summary.as_deref(),
-                            content: object.content.as_str(),
-                        })
-                        .returning(Post::as_returning())
-                        .get_result::<Post>(tx)
-                        .await?;
-
-                    handle_attachments(tx, &user, new_post.id, object.attachment).await?;
-                    handle_mentions(tx, &user, new_post.id, &object.tag).await?;
-
-                    Ok::<_, Error>(new_post)
-                }
-                .scope_boxed()
-            })
-            .await?;
-
-        if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
-                .add_to_index(post.clone().into())
-                .await?;
-        }
+        let process_data = ProcessNewObject::builder()
+            .call_depth(call_depth)
+            .db_conn(&mut db_conn)
+            .fetcher(self)
+            .object(object)
+            .search_service(&self.search_service)
+            .build();
+        let post = process_new_object(process_data).await?;
 
         self.post_cache.set(&post.url, &post).await?;
 
