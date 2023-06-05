@@ -20,9 +20,8 @@ use kitsune_db::{
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
-    helper::StringOrObject,
     object::{MediaAttachment, MediaAttachmentType},
-    Object, ObjectType, Tag, TagType,
+    AttributedToField, Object, ObjectType, Tag, TagType,
 };
 use mime::Mime;
 use std::str::FromStr;
@@ -52,7 +51,7 @@ impl IntoObject for DbMediaAttachment {
         Ok(MediaAttachment {
             r#type,
             name: self.description,
-            media_type: self.content_type,
+            media_type: Some(self.content_type),
             blurhash: self.blurhash,
             url,
         })
@@ -111,7 +110,7 @@ impl IntoObject for Post {
                     r#type: MediaAttachmentType::Document,
                     name: attachment.description,
                     blurhash: attachment.blurhash,
-                    media_type: attachment.content_type,
+                    media_type: Some(attachment.content_type),
                     url,
                 })
             })
@@ -135,11 +134,13 @@ impl IntoObject for Post {
             context: ap_context(),
             id: self.url,
             r#type: ObjectType::Note,
-            attributed_to: StringOrObject::String(account_url),
+            attributed_to: AttributedToField::Url(account_url),
             in_reply_to,
             sensitive: self.is_sensitive,
+            name: None,
             summary: self.subject,
             content: self.content,
+            media_type: None,
             attachment,
             tag,
             published: self.created_at,
@@ -194,10 +195,10 @@ impl IntoObject for Account {
             manually_approves_followers: self.locked,
             endpoints: None,
             inbox,
-            outbox,
+            outbox: Some(outbox),
             featured: None,
-            followers,
-            following,
+            followers: Some(followers),
+            following: Some(following),
             public_key: PublicKey {
                 id: self.public_key_id,
                 owner: user_url,

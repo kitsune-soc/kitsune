@@ -13,7 +13,7 @@ pub enum MediaAttachmentType {
 pub struct MediaAttachment {
     pub r#type: MediaAttachmentType,
     pub name: Option<String>,
-    pub media_type: String,
+    pub media_type: Option<String>,
     pub blurhash: Option<String>,
     pub url: String,
 }

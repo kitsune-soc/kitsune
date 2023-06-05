@@ -1,5 +1,5 @@
 use crate::{
-    activitypub::{handle_attachments, handle_mentions},
+    activitypub::{process_new_object, ProcessNewObject},
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
@@ -9,14 +9,13 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use futures_util::future::OptionFuture;
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::{
         account::Account,
         favourite::NewFavourite,
         follower::NewFollow,
-        post::{NewPost, Post, Visibility},
+        post::{NewPost, Post},
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_favourites},
@@ -62,55 +61,22 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
 
 async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
-        let in_reply_to_id = OptionFuture::from(
-            object
-                .in_reply_to
-                .as_ref()
-                .map(|post_url| state.fetcher.fetch_object(post_url)),
-        )
-        .await
-        .transpose()?
-        .map(|in_reply_to| in_reply_to.id);
-
         let mut db_conn = state.db_conn.get().await?;
-        let new_post_id = db_conn
-            .transaction(|tx| {
-                async move {
-                    let visibility = Visibility::from_activitypub(&author, &object).unwrap();
-
-                    let new_post_id = diesel::insert_into(posts::table)
-                        .values(NewPost {
-                            id: Uuid::now_v7(),
-                            account_id: author.id,
-                            in_reply_to_id,
-                            reposted_post_id: None,
-                            subject: object.summary.as_deref(),
-                            content: object.content.as_str(),
-                            is_sensitive: object.sensitive,
-                            visibility,
-                            is_local: false,
-                            url: object.id.as_ref(),
-                            created_at: Some(object.published),
-                        })
-                        .returning(posts::id)
-                        .get_result(tx)
-                        .await?;
-
-                    handle_attachments(tx, &author, new_post_id, object.attachment).await?;
-                    handle_mentions(tx, &author, new_post_id, &object.tag).await?;
-
-                    Ok::<_, Error>(new_post_id)
-                }
-                .scope_boxed()
-            })
-            .await?;
+        let process_data = ProcessNewObject::builder()
+            .author(author)
+            .db_conn(&mut db_conn)
+            .fetcher(&state.fetcher)
+            .object(object)
+            .search_service(&state.service.search)
+            .build();
+        let new_post = process_new_object(process_data).await?;
 
         state
             .event_emitter
             .post
             .emit(PostEvent {
                 r#type: EventType::Create,
-                post_id: new_post_id,
+                post_id: new_post.id,
             })
             .await
             .map_err(Error::Event)?;

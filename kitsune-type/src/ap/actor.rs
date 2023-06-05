@@ -38,10 +38,10 @@ pub struct Actor {
     pub endpoints: Option<Endpoints>,
     pub featured: Option<String>,
     pub inbox: String,
-    pub outbox: String,
-    pub followers: String,
-    pub following: String,
-    #[serde(with = "time::serde::rfc3339")]
+    pub outbox: Option<String>,
+    pub followers: Option<String>,
+    pub following: Option<String>,
+    #[serde(default = "OffsetDateTime::now_utc", with = "time::serde::rfc3339")]
     pub published: OffsetDateTime,
 }
 
