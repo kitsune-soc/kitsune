@@ -66,7 +66,7 @@ pub enum OidcError {
     ClaimsVerification(#[from] ClaimsVerificationError),
 
     #[error(transparent)]
-    LoginState(#[from] CacheError),
+    LoginState(#[from] kitsune_cache::Error),
 
     #[error("Missing Email address")]
     MissingEmail,

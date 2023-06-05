@@ -1,9 +1,7 @@
-use crate::{
-    cache::{ArcCache, CacheBackend},
-    error::{OidcError, Result},
-};
+use crate::error::{OidcError, Result};
 use http::Request;
 use hyper::Body;
+use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_http_client::{Client, Error};
 use openidconnect::{
     core::{CoreAuthenticationFlow, CoreClient},
