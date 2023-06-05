@@ -3232,6 +3232,7 @@ dependencies = [
  "hex",
  "http",
  "hyper",
+ "kitsune-cache",
  "kitsune-db",
  "kitsune-http-client",
  "kitsune-http-signatures",
@@ -3280,6 +3281,23 @@ dependencies = [
  "uuid",
  "vergen",
  "zxcvbn",
+]
+
+[[package]]
+name = "kitsune-cache"
+version = "0.0.1-pre.1"
+dependencies = [
+ "async-trait",
+ "dashmap",
+ "deadpool-redis",
+ "derive_builder",
+ "enum_dispatch",
+ "redis",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

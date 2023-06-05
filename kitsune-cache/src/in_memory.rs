@@ -87,7 +87,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::cache::{CacheBackend, InMemoryCache};
+    use crate::{CacheBackend, InMemoryCache};
     use std::time::Duration;
 
     #[tokio::test]

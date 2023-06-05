@@ -3,10 +3,9 @@ use axum::{
     extract::multipart::MultipartError,
     response::{IntoResponse, Response},
 };
-use deadpool_redis::PoolError;
 use http::StatusCode;
+use kitsune_cache::Error as CacheError;
 use kitsune_messaging::BoxError;
-use redis::RedisError;
 use rsa::{
     pkcs1,
     pkcs8::{self, der, spki},
@@ -42,18 +41,6 @@ pub enum ApiError {
 
     #[error("Username already taken")]
     UsernameTaken,
-}
-
-#[derive(Debug, Error)]
-pub enum CacheError {
-    #[error(transparent)]
-    Pool(#[from] PoolError),
-
-    #[error(transparent)]
-    Redis(#[from] RedisError),
-
-    #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
 }
 
 #[derive(Debug, Error)]

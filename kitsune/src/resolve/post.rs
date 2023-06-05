@@ -86,7 +86,6 @@ mod test {
     use super::PostResolver;
     use crate::{
         activitypub::Fetcher,
-        cache::NoopCache,
         config::FederationFilterConfiguration,
         service::{
             account::AccountService, attachment::AttachmentService,
@@ -98,6 +97,7 @@ mod test {
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;

@@ -1,6 +1,5 @@
 use crate::{
     activitypub::{process_new_object, ProcessNewObject},
-    cache::{ArcCache, CacheBackend},
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
@@ -14,6 +13,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use http::HeaderValue;
+use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
@@ -273,7 +273,6 @@ impl Fetcher {
 mod test {
     use crate::{
         activitypub::Fetcher,
-        cache::NoopCache,
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
         service::{federation_filter::FederationFilterService, search::NoopSearchService},
@@ -281,6 +280,7 @@ mod test {
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
     use pretty_assertions::assert_eq;
     use std::sync::Arc;

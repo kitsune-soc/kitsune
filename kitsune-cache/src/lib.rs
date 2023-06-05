@@ -1,16 +1,20 @@
-use crate::error::CacheError;
+#[macro_use]
+extern crate tracing;
+
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc};
 
-mod in_memory;
-mod redis;
-
+pub use self::error::Error;
 pub use self::in_memory::InMemoryCache;
 pub use self::redis::RedisCache;
 
-type CacheResult<T, E = CacheError> = Result<T, E>;
+mod error;
+mod in_memory;
+mod redis;
+
+type CacheResult<T, E = Error> = Result<T, E>;
 
 pub type ArcCache<K, V> = Arc<Cache<K, V>>;
 

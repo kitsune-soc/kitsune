@@ -21,7 +21,6 @@ mod test;
 
 pub mod activitypub;
 pub mod blocking;
-pub mod cache;
 pub mod config;
 pub mod consts;
 pub mod error;
@@ -38,7 +37,6 @@ pub mod webfinger;
 
 use self::{
     activitypub::Fetcher,
-    cache::{ArcCache, InMemoryCache, NoopCache, RedisCache},
     config::{
         CacheConfiguration, Configuration, MessagingConfiguration, SearchConfiguration,
         StorageConfiguration,
@@ -62,6 +60,7 @@ use self::{
 };
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
+use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
