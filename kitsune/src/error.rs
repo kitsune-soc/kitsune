@@ -4,9 +4,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use http::StatusCode;
-use kitsune_cache::Error as CacheError;
-use kitsune_messaging::BoxError;
-use kitsune_search::Error as SearchError;
 use rsa::{
     pkcs1,
     pkcs8::{self, der, spki},
@@ -109,7 +106,7 @@ pub enum Error {
     BrokenRecord,
 
     #[error(transparent)]
-    Cache(#[from] CacheError),
+    Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
     Database(#[from] diesel::result::Error),
@@ -121,7 +118,7 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
-    Event(BoxError),
+    Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]
     FederationFilter(#[from] FederationFilterError),
@@ -182,7 +179,7 @@ pub enum Error {
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
-    Search(#[from] SearchError),
+    Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
