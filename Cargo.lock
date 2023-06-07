@@ -215,10 +215,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayref"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b4930d2cb77ce62f89ee5d5289b4ac049559b1c45539271f5ed4fdc7db34545"
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "ascii_utils"
@@ -967,6 +979,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "blake2b_simd"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c2f0dc9a68c6317d884f97cc36cf5a3d20ba14ce404227df55e1af708ab04bc"
+dependencies = [
+ "arrayref",
+ "arrayvec 0.7.2",
+ "constant_time_eq 0.2.5",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1228,6 +1251,18 @@ dependencies = [
  "quote",
  "unicode-xid",
 ]
+
+[[package]]
+name = "constant_time_eq"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
+
+[[package]]
+name = "constant_time_eq"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13418e745008f7349ec7e449155f419a61b92b58a99cc3616942b926825ec76b"
 
 [[package]]
 name = "convert_case"
@@ -3250,6 +3285,9 @@ dependencies = [
  "mime_guess",
  "once_cell",
  "openidconnect",
+ "oxide-auth",
+ "oxide-auth-async",
+ "oxide-auth-axum",
  "parking_lot",
  "pin-project-lite",
  "post-process",
@@ -4188,6 +4226,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxide-auth"
+version = "0.5.3"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=d7269547cce4880ab72ad0ec37631576b1e93d60#d7269547cce4880ab72ad0ec37631576b1e93d60"
+dependencies = [
+ "base64 0.13.1",
+ "chrono",
+ "hmac",
+ "once_cell",
+ "rand",
+ "rmp-serde",
+ "rust-argon2",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sha2",
+ "subtle",
+ "url",
+]
+
+[[package]]
+name = "oxide-auth-async"
+version = "0.1.0"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=d7269547cce4880ab72ad0ec37631576b1e93d60#d7269547cce4880ab72ad0ec37631576b1e93d60"
+dependencies = [
+ "async-trait",
+ "base64 0.13.1",
+ "chrono",
+ "oxide-auth",
+ "url",
+]
+
+[[package]]
+name = "oxide-auth-axum"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5c4549a915268feef20fabcf85acd0172c0840c756a5d3974ca528100e52dcc"
+dependencies = [
+ "axum",
+ "oxide-auth",
+]
+
+[[package]]
 name = "p256"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4248,6 +4328,12 @@ dependencies = [
  "rand_core",
  "subtle",
 ]
+
+[[package]]
+name = "paste"
+version = "1.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 
 [[package]]
 name = "pem"
@@ -4577,7 +4663,7 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83f3aa1e3ca87d3b124db7461265ac176b40c277f37e503eaa29c9c75c037846"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "log",
  "typed-arena",
  "unicode-segmentation",
@@ -4990,6 +5076,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmp"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44519172358fd6d58656c86ab8e7fbc9e1490c3e8f14d35ed78ca0dd07403c9f"
+dependencies = [
+ "byteorder",
+ "num-traits",
+ "paste",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5b13be192e0220b8afb7222aa5813cb62cc269ebb5cac346ca6487681d2913e"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
+]
+
+[[package]]
 name = "rsa"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5030,6 +5138,18 @@ dependencies = [
  "spki 0.7.2",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rust-argon2"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b50162d19404029c1ceca6f6980fe40d45c8b369f6f44446fa14bb39573b5bb9"
+dependencies = [
+ "base64 0.13.1",
+ "blake2b_simd",
+ "constant_time_eq 0.1.5",
+ "crossbeam-utils",
 ]
 
 [[package]]
