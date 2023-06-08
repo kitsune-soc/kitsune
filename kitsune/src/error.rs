@@ -53,6 +53,21 @@ pub enum FederationFilterError {
     UrlParse(#[from] url::ParseError),
 }
 
+#[derive(Debug, Error)]
+pub enum Oauth2Error {
+    #[error("Missing grant type")]
+    MissingGrantType,
+
+    #[error(transparent)]
+    OxideAuth(#[from] oxide_auth::endpoint::OAuthError),
+
+    #[error("Unknown grant type")]
+    UnknownGrantType,
+
+    #[error(transparent)]
+    Web(#[from] oxide_auth_axum::WebError),
+}
+
 #[cfg(feature = "oidc")]
 use openidconnect::{
     core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
@@ -144,8 +159,8 @@ pub enum Error {
     #[error(transparent)]
     Multipart(#[from] MultipartError),
 
-    #[error("OAuth application not found")]
-    OAuthApplicationNotFound,
+    #[error(transparent)]
+    OAuth(#[from] Oauth2Error),
 
     #[error(transparent)]
     ParseBool(#[from] ParseBoolError),
@@ -212,7 +227,7 @@ impl IntoResponse for Error {
             err @ Self::Api(ApiError::NotFound) => {
                 (StatusCode::NOT_FOUND, err.to_string()).into_response()
             }
-            err @ (Self::Api(ApiError::BadRequest) | Self::OAuthApplicationNotFound) => {
+            err @ Self::Api(ApiError::BadRequest) => {
                 (StatusCode::BAD_REQUEST, err.to_string()).into_response()
             }
             err @ (Self::Api(ApiError::Unauthorised) | Self::PasswordMismatch) => {

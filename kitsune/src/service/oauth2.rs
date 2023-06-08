@@ -1,6 +1,6 @@
 use super::url::UrlService;
 use crate::{
-    error::{Error, Result},
+    error::{Error, Oauth2Error, Result},
     util::generate_secret,
 };
 use askama::Template;
@@ -140,7 +140,7 @@ pub struct KitsuneEndpoint {
 }
 
 impl Endpoint<OAuthRequest> for KitsuneEndpoint {
-    type Error = (); // Give OAuth its own error type. Finally. Like WTF took so long?
+    type Error = Oauth2Error;
 
     fn registrar(&self) -> Option<&(dyn Registrar + Sync)> {
         Some(&self.registrar)
@@ -159,7 +159,7 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 
     fn scopes(&mut self) -> Option<&mut dyn Scopes<OAuthRequest>> {
-        todo!()
+        None
     }
 
     fn response(
@@ -171,11 +171,11 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 
     fn error(&mut self, err: OAuthError) -> Self::Error {
-        todo!()
+        err.into()
     }
 
     fn web_error(&mut self, err: <OAuthRequest as WebRequest>::Error) -> Self::Error {
-        todo!()
+        err.into()
     }
 }
 
