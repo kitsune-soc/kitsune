@@ -9,7 +9,6 @@ use async_trait::async_trait;
 use axum::response::{Redirect, Response};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use http::StatusCode;
 use kitsune_db::{
     model::oauth2,
     schema::{
@@ -397,7 +396,21 @@ impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
         req: &mut OAuthRequest,
         solicitation: Solicitation<'_>,
     ) -> OwnerConsent<OAuthResponse> {
-        todo!();
+        let result = (move || {
+            let login_consent = req.query()?.unique_value("login_consent").as_deref();
+            let consent = match login_consent {
+                Some("accept") => OwnerConsent::Authorized(todo!()),
+                Some("denied") => OwnerConsent::Denied,
+                None => OwnerConsent::InProgress(todo!()),
+            };
+
+            Ok(consent)
+        })();
+
+        match result {
+            Ok(consent) => consent,
+            Err(err) => OwnerConsent::Error(err),
+        }
     }
 }
 
