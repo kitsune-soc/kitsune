@@ -18,6 +18,7 @@ use kitsune_db::{
     },
     PgPool,
 };
+use once_cell::sync::Lazy;
 use oxide_auth::{
     endpoint::{OAuthError, OwnerConsent, PreGrant, Scope, Scopes, Solicitation, WebRequest},
     primitives::{
@@ -33,6 +34,7 @@ use oxide_auth_async::{
 };
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use std::str::FromStr;
+use strum::{AsRefStr, EnumIter, IntoEnumIterator};
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -42,6 +44,17 @@ pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
+
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter)]
+#[strum(serialize_all = "lowercase")]
+pub enum OAuthScope {
+    #[strum(serialize = "admin:read")]
+    AdminRead,
+    #[strum(serialize = "admin:write")]
+    AdminWrite,
+    Read,
+    Write,
+}
 
 #[derive(Clone, TypedBuilder)]
 pub struct AuthorisationCode {
@@ -159,15 +172,22 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 
     fn scopes(&mut self) -> Option<&mut dyn Scopes<OAuthRequest>> {
-        None
+        static ALL_SCOPES: Lazy<Vec<Scope>> = Lazy::new(|| {
+            OAuthScope::iter()
+                .map(|scope| scope.as_ref().parse().unwrap())
+                .collect()
+        });
+
+        Some(&mut ALL_SCOPES.as_slice())
     }
 
     fn response(
         &mut self,
-        request: &mut OAuthRequest,
-        kind: oxide_auth::endpoint::Template<'_>,
+        _request: &mut OAuthRequest,
+        _kind: oxide_auth::endpoint::Template<'_>,
     ) -> Result<<OAuthRequest as WebRequest>::Response, Self::Error> {
-        todo!()
+        // Idk if thats correct. Just gotta try i guess??
+        Ok(OAuthResponse::default())
     }
 
     fn error(&mut self, err: OAuthError) -> Self::Error {
@@ -176,21 +196,6 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
 
     fn web_error(&mut self, err: <OAuthRequest as WebRequest>::Error) -> Self::Error {
         err.into()
-    }
-}
-
-struct KitsuneOwnerSolicitor {
-    _priv: (),
-}
-
-#[async_trait]
-impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
-    async fn check_consent(
-        &mut self,
-        req: &mut OAuthRequest,
-        solicitation: Solicitation<'_>,
-    ) -> OwnerConsent<OAuthResponse> {
-        todo!();
     }
 }
 
@@ -377,6 +382,21 @@ impl Issuer for KitsuneIssuer {
     }
 
     async fn recover_refresh(&mut self, refresh_token: &str) -> Result<Option<Grant>, ()> {
+        todo!();
+    }
+}
+
+struct KitsuneOwnerSolicitor {
+    _priv: (),
+}
+
+#[async_trait]
+impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
+    async fn check_consent(
+        &mut self,
+        req: &mut OAuthRequest,
+        solicitation: Solicitation<'_>,
+    ) -> OwnerConsent<OAuthResponse> {
         todo!();
     }
 }

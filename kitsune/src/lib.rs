@@ -60,9 +60,12 @@ use kitsune_messaging::{
 };
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
-use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fmt::Display, sync::Arc, time::Duration};
+use std::{
+    fmt::Display,
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
 #[cfg(feature = "kitsune-search")]
 use kitsune_search::GrpcSearchService;
@@ -92,7 +95,7 @@ where
         CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         CacheConfiguration::None => NoopCache.into(),
         CacheConfiguration::Redis(ref redis_config) => {
-            static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
+            static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
 
             let pool = REDIS_POOL.get_or_init(|| {
                 let config = deadpool_redis::Config::from_url(&redis_config.redis_url);

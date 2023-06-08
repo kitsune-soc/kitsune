@@ -118,7 +118,7 @@ pub async fn post(
         return Err(Error::PasswordMismatch);
     }
 
-    let authorisation_code = AuthorisationCode::builder()
+    /*let authorisation_code = AuthorisationCode::builder()
         .application(application)
         .state(query.state)
         .user_id(user.id)
@@ -126,5 +126,6 @@ pub async fn post(
 
     oauth2_service
         .create_authorisation_code_response(authorisation_code)
-        .await
+        .await*/
+    todo!();
 }
