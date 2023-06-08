@@ -13,6 +13,7 @@ CREATE TABLE oauth2_authorization_codes (
     code TEXT PRIMARY KEY,
     application_id UUID NOT NULL,
     user_id UUID NOT NULL,
+    scopes TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -25,6 +26,7 @@ CREATE TABLE oauth2_access_tokens (
     token TEXT PRIMARY KEY,
     user_id UUID,
     application_id UUID,
+    scopes TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expired_at TIMESTAMPTZ NOT NULL,
 

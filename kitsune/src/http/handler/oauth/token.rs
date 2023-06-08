@@ -128,6 +128,7 @@ async fn authorization_code(
                         token: generate_secret().as_str(),
                         user_id: Some(user.id),
                         application_id: Some(authorization_code.application_id),
+                        scopes: "",
                         expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                     })
                     .get_result::<oauth2::AccessToken>(tx)
@@ -174,6 +175,7 @@ async fn client_credentials(
                         token: generate_secret().as_str(),
                         user_id: None,
                         application_id: Some(application.id),
+                        scopes: "",
                         expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                     })
                     .get_result::<oauth2::AccessToken>(tx)
@@ -230,6 +232,7 @@ async fn password_grant(db_conn: &mut AsyncPgConnection, data: PasswordData) -> 
             token: generate_secret().as_str(),
             user_id: Some(user.id),
             application_id: None,
+            scopes: "",
             expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
         })
         .get_result::<oauth2::AccessToken>(db_conn)
@@ -272,6 +275,7 @@ async fn refresh_token(
                         user_id: access_token.user_id,
                         token: generate_secret().as_str(),
                         application_id: access_token.application_id,
+                        scopes: "",
                         expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                     })
                     .get_result::<oauth2::AccessToken>(tx)

@@ -19,7 +19,7 @@ use kitsune_db::{
     PgPool,
 };
 use oxide_auth::{
-    endpoint::{OAuthError, PreGrant, Scope, Scopes, WebRequest},
+    endpoint::{OAuthError, OwnerConsent, PreGrant, Scope, Scopes, Solicitation, WebRequest},
     primitives::{
         grant::{Extensions, Grant},
         issuer::{RefreshedToken, TokenType},
@@ -31,7 +31,7 @@ use oxide_auth_async::{
     endpoint::{Endpoint, OwnerSolicitor},
     primitives::{Authorizer, Issuer, Registrar},
 };
-use oxide_auth_axum::OAuthRequest;
+use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use std::str::FromStr;
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
@@ -46,6 +46,7 @@ const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 #[derive(Clone, TypedBuilder)]
 pub struct AuthorisationCode {
     application: oauth2::Application,
+    scopes: Scope,
     state: Option<String>,
     user_id: Uuid,
 }
@@ -92,6 +93,7 @@ impl Oauth2Service {
         &self,
         AuthorisationCode {
             application,
+            scopes,
             state,
             user_id,
         }: AuthorisationCode,
@@ -103,6 +105,7 @@ impl Oauth2Service {
                     code: generate_secret().as_str(),
                     application_id: application.id,
                     user_id,
+                    scopes: scopes.to_string().as_str(),
                     expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                 })
                 .get_result(&mut db_conn)
@@ -132,6 +135,7 @@ impl Oauth2Service {
 pub struct KitsuneEndpoint {
     authorizer: KitsuneAuthorizer,
     issuer: KitsuneIssuer,
+    owner_solicitor: KitsuneOwnerSolicitor,
     registrar: KitsuneRegistrar,
 }
 
@@ -151,7 +155,7 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 
     fn owner_solicitor(&mut self) -> Option<&mut (dyn OwnerSolicitor<OAuthRequest> + Send)> {
-        todo!()
+        Some(&mut self.owner_solicitor)
     }
 
     fn scopes(&mut self) -> Option<&mut dyn Scopes<OAuthRequest>> {
@@ -175,6 +179,21 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 }
 
+struct KitsuneOwnerSolicitor {
+    _priv: (),
+}
+
+#[async_trait]
+impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
+    async fn check_consent(
+        &mut self,
+        req: &mut OAuthRequest,
+        solicitation: Solicitation<'_>,
+    ) -> OwnerConsent<OAuthResponse> {
+        todo!();
+    }
+}
+
 struct KitsuneAuthorizer {
     db_pool: PgPool,
 }
@@ -184,6 +203,7 @@ impl Authorizer for KitsuneAuthorizer {
     async fn authorize(&mut self, grant: Grant) -> Result<String, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
+        let scopes = grant.scope.to_string();
         let expired_at = OffsetDateTime::from_unix_timestamp(grant.until.timestamp())
             .unwrap()
             .replace_nanosecond(grant.until.timestamp_subsec_nanos())
@@ -195,6 +215,7 @@ impl Authorizer for KitsuneAuthorizer {
                 code: generate_secret().as_str(),
                 application_id,
                 user_id,
+                scopes: scopes.as_str(),
                 expired_at,
             })
             .returning(oauth2_authorization_codes::code)
@@ -214,6 +235,7 @@ impl Authorizer for KitsuneAuthorizer {
             .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(code, app)| {
+            let scope = app.scopes.parse().unwrap();
             let redirect_uri = app.redirect_uri.parse().unwrap();
             let until = chrono::NaiveDateTime::from_timestamp_opt(
                 code.expired_at.unix_timestamp(),
@@ -225,7 +247,7 @@ impl Authorizer for KitsuneAuthorizer {
             Grant {
                 owner_id: code.user_id.to_string(),
                 client_id: code.application_id.to_string(),
-                scope: todo!(),
+                scope,
                 redirect_uri,
                 until,
                 extensions: Extensions::default(),
@@ -245,6 +267,7 @@ impl Issuer for KitsuneIssuer {
     async fn issue(&mut self, grant: Grant) -> Result<IssuedToken, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
+        let scopes = grant.scope.to_string();
         let expired_at = OffsetDateTime::from_unix_timestamp(grant.until.timestamp())
             .unwrap()
             .replace_nanosecond(grant.until.timestamp_subsec_nanos())
@@ -259,6 +282,7 @@ impl Issuer for KitsuneIssuer {
                             token: generate_secret().as_str(),
                             user_id: Some(user_id),
                             application_id: Some(application_id),
+                            scopes: scopes.as_str(),
                             expired_at,
                         })
                         .returning(oauth2::AccessToken::as_returning())
@@ -311,6 +335,7 @@ impl Issuer for KitsuneIssuer {
                             user_id: access_token.user_id,
                             token: generate_secret().as_str(),
                             application_id: access_token.application_id,
+                            scopes: access_token.scopes.as_str(),
                             expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
                         })
                         .get_result::<oauth2::AccessToken>(tx)

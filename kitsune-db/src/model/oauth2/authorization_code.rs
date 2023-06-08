@@ -16,6 +16,7 @@ pub struct AuthorizationCode {
     pub code: String,
     pub application_id: Uuid,
     pub user_id: Uuid,
+    pub scopes: String,
     pub created_at: OffsetDateTime,
     pub expired_at: OffsetDateTime,
 }
@@ -26,5 +27,6 @@ pub struct NewAuthorizationCode<'a> {
     pub code: &'a str,
     pub application_id: Uuid,
     pub user_id: Uuid,
+    pub scopes: &'a str,
     pub expired_at: OffsetDateTime,
 }
