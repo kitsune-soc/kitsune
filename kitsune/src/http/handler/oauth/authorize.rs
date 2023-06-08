@@ -24,7 +24,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 #[cfg(feature = "oidc")]
-use crate::service::oidc::OidcService;
+use {crate::service::oidc::OidcService, axum::response::Redirect};
 
 #[derive(Deserialize)]
 pub struct AuthorizeQuery {
@@ -70,7 +70,7 @@ pub async fn get(
             .authorisation_url(application.id, query.state)
             .await?;
 
-        return Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response());
+        return Ok(Redirect::to(auth_url.as_str()).into_response());
     }
 
     Ok(AuthorizePage {

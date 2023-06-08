@@ -6,7 +6,7 @@ use crate::{
 use askama::Template;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
-use axum::response::Response;
+use axum::response::{Redirect, Response};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use http::StatusCode;
@@ -140,7 +140,7 @@ impl Oauth2Service {
                 url.query_pairs_mut().append_pair("state", &state);
             }
 
-            Ok((StatusCode::FOUND, [("Location", url.as_str())]).into_response())
+            Ok(Redirect::to(url.as_str()).into_response())
         }
     }
 }
