@@ -25,6 +25,7 @@ axum = { version = "0.6.18", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.7.4", features = ["query"] }
 base64 = "0.21.2"
 bytes = "1.4.0"
+chrono = { version = "0.4.26", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..
 const_format = "0.2.31"
 const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe837092418458017353a9acab6081dc198", features = [
     "db",

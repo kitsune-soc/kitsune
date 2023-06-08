@@ -1,11 +1,11 @@
 use super::{access_token::AccessToken, application::Application};
 use crate::schema::oauth2_refresh_tokens;
-use diesel::{Associations, Identifiable, Insertable, Queryable};
+use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Associations, Clone, Deserialize, Identifiable, Serialize, Queryable)]
+#[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(
     belongs_to(
         AccessToken,
