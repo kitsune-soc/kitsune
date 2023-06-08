@@ -2,9 +2,15 @@ use crate::{
     activitypub::Fetcher,
     event::PostEventEmitter,
     service::{
-        account::AccountService, attachment::AttachmentService,
-        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
+        account::AccountService,
+        attachment::AttachmentService,
+        federation_filter::FederationFilterService,
+        instance::InstanceService,
+        job::JobService,
+        oauth2::{Oauth2Service, OauthEndpoint},
+        post::PostService,
+        timeline::TimelineService,
+        url::UrlService,
         user::UserService,
     },
     webfinger::Webfinger,
@@ -102,6 +108,7 @@ pub struct Zustand {
     pub fetcher: Fetcher,
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: crate::mapping::MastodonMapper,
+    pub oauth_endpoint: OauthEndpoint,
     pub service: Service,
     pub webfinger: Webfinger,
 }

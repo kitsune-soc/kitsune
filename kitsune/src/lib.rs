@@ -43,9 +43,15 @@ use self::{
     },
     resolve::PostResolver,
     service::{
-        account::AccountService, attachment::AttachmentService,
-        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
+        account::AccountService,
+        attachment::AttachmentService,
+        federation_filter::FederationFilterService,
+        instance::InstanceService,
+        job::JobService,
+        oauth2::{Oauth2Service, OauthEndpoint},
+        post::PostService,
+        timeline::TimelineService,
+        url::UrlService,
         user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
@@ -305,13 +311,14 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
         .unwrap();
 
     Zustand {
-        db_conn: conn,
+        db_conn: conn.clone(),
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
         },
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
+        oauth_endpoint: OauthEndpoint::from(conn),
         service: Service {
             account: account_service,
             federation_filter: federation_filter_service,

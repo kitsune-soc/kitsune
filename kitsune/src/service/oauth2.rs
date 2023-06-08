@@ -17,14 +17,13 @@ use kitsune_db::{
     },
     PgPool,
 };
-use once_cell::sync::Lazy;
 use oxide_auth::{
     endpoint::{OAuthError, OwnerConsent, PreGrant, Scope, Scopes, Solicitation, WebRequest},
     primitives::{
         grant::{Extensions, Grant},
         issuer::{RefreshedToken, TokenType},
         prelude::IssuedToken,
-        registrar::{BoundClient, ClientUrl, RegistrarError},
+        registrar::{BoundClient, ClientUrl, ExactUrl, RegisteredUrl, RegistrarError},
     },
 };
 use oxide_auth_async::{
@@ -32,8 +31,11 @@ use oxide_auth_async::{
     primitives::{Authorizer, Issuer, Registrar},
 };
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
-use std::str::FromStr;
-use strum::{AsRefStr, EnumIter, IntoEnumIterator};
+use std::{
+    borrow::Cow,
+    str::{self, FromStr},
+};
+use strum::{AsRefStr, EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -44,8 +46,8 @@ pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
-#[derive(AsRefStr, Clone, Copy, Debug, EnumIter)]
-#[strum(serialize_all = "lowercase")]
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumString, EnumVariantNames)]
+#[strum(serialize_all = "lowercase", use_phf)]
 pub enum OAuthScope {
     #[strum(serialize = "admin:read")]
     AdminRead,
@@ -144,14 +146,40 @@ impl Oauth2Service {
     }
 }
 
-pub struct KitsuneEndpoint {
-    authorizer: KitsuneAuthorizer,
-    issuer: KitsuneIssuer,
-    owner_solicitor: KitsuneOwnerSolicitor,
-    registrar: KitsuneRegistrar,
+#[derive(Clone)]
+pub struct OauthEndpoint {
+    authorizer: OauthAuthorizer,
+    issuer: OauthIssuer,
+    owner_solicitor: OauthOwnerSolicitor,
+    registrar: OauthRegistrar,
+    scopes: Vec<Scope>,
 }
 
-impl Endpoint<OAuthRequest> for KitsuneEndpoint {
+impl From<PgPool> for OauthEndpoint {
+    fn from(db_pool: PgPool) -> Self {
+        let authorizer = OauthAuthorizer {
+            db_pool: db_pool.clone(),
+        };
+        let issuer = OauthIssuer {
+            db_pool: db_pool.clone(),
+        };
+        let owner_solicitor = OauthOwnerSolicitor { _priv: () };
+        let registrar = OauthRegistrar { db_pool };
+        let scopes = OAuthScope::iter()
+            .map(|scope| scope.as_ref().parse().unwrap())
+            .collect();
+
+        Self {
+            authorizer,
+            issuer,
+            owner_solicitor,
+            registrar,
+            scopes,
+        }
+    }
+}
+
+impl Endpoint<OAuthRequest> for OauthEndpoint {
     type Error = Oauth2Error;
 
     fn registrar(&self) -> Option<&(dyn Registrar + Sync)> {
@@ -171,13 +199,7 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 
     fn scopes(&mut self) -> Option<&mut dyn Scopes<OAuthRequest>> {
-        static ALL_SCOPES: Lazy<Vec<Scope>> = Lazy::new(|| {
-            OAuthScope::iter()
-                .map(|scope| scope.as_ref().parse().unwrap())
-                .collect()
-        });
-
-        Some(&mut ALL_SCOPES.as_slice())
+        Some(&mut self.scopes)
     }
 
     fn response(
@@ -198,12 +220,13 @@ impl Endpoint<OAuthRequest> for KitsuneEndpoint {
     }
 }
 
-struct KitsuneAuthorizer {
+#[derive(Clone)]
+struct OauthAuthorizer {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Authorizer for KitsuneAuthorizer {
+impl Authorizer for OauthAuthorizer {
     async fn authorize(&mut self, grant: Grant) -> Result<String, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
@@ -262,12 +285,13 @@ impl Authorizer for KitsuneAuthorizer {
     }
 }
 
-struct KitsuneIssuer {
+#[derive(Clone)]
+struct OauthIssuer {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Issuer for KitsuneIssuer {
+impl Issuer for OauthIssuer {
     async fn issue(&mut self, grant: Grant) -> Result<IssuedToken, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
@@ -323,10 +347,7 @@ impl Issuer for KitsuneIssuer {
         let (refresh_token, access_token) = oauth2_refresh_tokens::table
             .find(refresh_token)
             .inner_join(oauth2_access_tokens::table)
-            .select((
-                oauth2::RefreshToken::as_select(),
-                oauth2::AccessToken::as_select(),
-            ))
+            .select(<(oauth2::RefreshToken, oauth2::AccessToken)>::as_select())
             .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(&mut db_conn)
             .await
             .map_err(|_| ())?;
@@ -377,31 +398,98 @@ impl Issuer for KitsuneIssuer {
     }
 
     async fn recover_token(&mut self, access_token: &str) -> Result<Option<Grant>, ()> {
-        todo!();
+        let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
+        let oauth_data = oauth2_access_tokens::table
+            .find(access_token)
+            .inner_join(oauth2_applications::table)
+            .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
+            .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
+            .await
+            .optional()
+            .map_err(|_| ())?;
+
+        let oauth_data = oauth_data.map(|(access_token, app)| {
+            let scope = app.scopes.parse().unwrap();
+            let redirect_uri = app.redirect_uri.parse().unwrap();
+            let until = chrono::NaiveDateTime::from_timestamp_opt(
+                access_token.expired_at.unix_timestamp(),
+                access_token.expired_at.nanosecond(),
+            )
+            .unwrap()
+            .and_utc();
+
+            Grant {
+                owner_id: access_token
+                    .user_id
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .unwrap_or_default(),
+                client_id: app.id.to_string(),
+                scope,
+                redirect_uri,
+                until,
+                extensions: Extensions::default(),
+            }
+        });
+
+        Ok(oauth_data)
     }
 
     async fn recover_refresh(&mut self, refresh_token: &str) -> Result<Option<Grant>, ()> {
-        todo!();
+        let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
+        let oauth_data = oauth2_refresh_tokens::table
+            .find(refresh_token)
+            .inner_join(oauth2_access_tokens::table)
+            .inner_join(oauth2_applications::table)
+            .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
+            .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
+            .await
+            .optional()
+            .map_err(|_| ())?;
+
+        let oauth_data = oauth_data.map(|(access_token, app)| {
+            let scope = access_token.scopes.parse().unwrap();
+            let redirect_uri = app.redirect_uri.parse().unwrap();
+            let until = chrono::NaiveDateTime::MAX.and_utc();
+
+            Grant {
+                owner_id: access_token
+                    .user_id
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .unwrap_or_default(),
+                client_id: app.id.to_string(),
+                scope,
+                redirect_uri,
+                until,
+                extensions: Extensions::default(),
+            }
+        });
+
+        Ok(oauth_data)
     }
 }
 
-struct KitsuneOwnerSolicitor {
+#[derive(Clone)]
+struct OauthOwnerSolicitor {
     _priv: (),
 }
 
 #[async_trait]
-impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
+impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
     async fn check_consent(
         &mut self,
         req: &mut OAuthRequest,
         solicitation: Solicitation<'_>,
     ) -> OwnerConsent<OAuthResponse> {
         let result = (move || {
-            let login_consent = req.query()?.unique_value("login_consent").as_deref();
-            let consent = match login_consent {
+            let query = req.query()?;
+            let login_consent = query.unique_value("login_consent");
+
+            let consent = match login_consent.as_deref() {
                 Some("accept") => OwnerConsent::Authorized(todo!()),
                 Some("denied") => OwnerConsent::Denied,
-                None => OwnerConsent::InProgress(todo!()),
+                Some(..) | None => OwnerConsent::InProgress(todo!()),
             };
 
             Ok(consent)
@@ -414,17 +502,25 @@ impl OwnerSolicitor<OAuthRequest> for KitsuneOwnerSolicitor {
     }
 }
 
-struct KitsuneRegistrar {
+#[derive(Clone)]
+struct OauthRegistrar {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Registrar for KitsuneRegistrar {
+impl Registrar for OauthRegistrar {
     async fn bound_redirect<'a>(
         &self,
         bound: ClientUrl<'a>,
     ) -> Result<BoundClient<'a>, RegistrarError> {
-        todo!();
+        if let Some(redirect_uri) = bound.redirect_uri {
+            Ok(BoundClient {
+                client_id: bound.client_id,
+                redirect_uri: Cow::Owned(RegisteredUrl::Exact(redirect_uri.into_owned())),
+            })
+        } else {
+            Err(RegistrarError::Unspecified)
+        }
     }
 
     async fn negotiate<'a>(
@@ -432,7 +528,51 @@ impl Registrar for KitsuneRegistrar {
         client: BoundClient<'a>,
         scope: Option<Scope>,
     ) -> Result<PreGrant, RegistrarError> {
-        todo!();
+        let client_id: Uuid = client
+            .client_id
+            .parse()
+            .map_err(|_| RegistrarError::PrimitiveError)?;
+
+        let mut db_conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|_| RegistrarError::PrimitiveError)?;
+
+        let client = oauth2_applications::table
+            .find(client_id)
+            .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
+            .get_result::<oauth2::Application>(&mut db_conn)
+            .await
+            .optional()
+            .map_err(|_| RegistrarError::PrimitiveError)?
+            .ok_or(RegistrarError::Unspecified)?;
+
+        let client_id = client.id.to_string();
+        let redirect_uri = ExactUrl::new(client.redirect_uri)
+            .map_err(|_| RegistrarError::PrimitiveError)?
+            .into();
+
+        let scope = if let Some(scope) = scope {
+            let valid_scopes: Vec<&str> = scope
+                .iter()
+                .filter(|scope| OAuthScope::from_str(scope).is_ok())
+                .collect();
+
+            if valid_scopes.is_empty() {
+                OAuthScope::Read.as_ref().parse().unwrap()
+            } else {
+                valid_scopes.join(" ").parse().unwrap()
+            }
+        } else {
+            OAuthScope::Read.as_ref().parse().unwrap()
+        };
+
+        Ok(PreGrant {
+            client_id,
+            redirect_uri,
+            scope,
+        })
     }
 
     async fn check(
@@ -440,6 +580,30 @@ impl Registrar for KitsuneRegistrar {
         client_id: &str,
         passphrase: Option<&[u8]>,
     ) -> Result<(), RegistrarError> {
-        todo!();
+        let client_id: Uuid = client_id
+            .parse()
+            .map_err(|_| RegistrarError::PrimitiveError)?;
+        let mut client_query = oauth2_applications::table.find(client_id).into_boxed();
+
+        if let Some(passphrase) = passphrase {
+            let passphrase =
+                str::from_utf8(passphrase).map_err(|_| RegistrarError::PrimitiveError)?;
+            client_query = client_query.filter(oauth2_applications::secret.eq(passphrase));
+        }
+
+        let mut db_conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|_| RegistrarError::PrimitiveError)?;
+
+        client_query
+            .select(oauth2_applications::id)
+            .execute(&mut db_conn)
+            .await
+            .optional()
+            .map_err(|_| RegistrarError::PrimitiveError)?
+            .map(|_| ())
+            .ok_or(RegistrarError::Unspecified)
     }
 }

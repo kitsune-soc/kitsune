@@ -1,10 +1,10 @@
 use crate::schema::oauth2_applications;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Clone, Deserialize, Identifiable, Serialize, Queryable)]
+#[derive(Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(table_name = oauth2_applications)]
 pub struct Application {
     pub id: Uuid,

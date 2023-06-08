@@ -1,17 +1,18 @@
 use crate::{
     error::{Error, Oauth2Error, Result},
-    service::oauth2::KitsuneEndpoint,
+    service::oauth2::OauthEndpoint,
 };
-use axum::extract::State;
+use axum::{debug_handler, extract::State};
 use oxide_auth::endpoint::QueryParameter;
 use oxide_auth_async::endpoint::{
     access_token::AccessTokenFlow, client_credentials::ClientCredentialsFlow, refresh::RefreshFlow,
 };
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(post, path = "/oauth/token")]
 pub async fn post(
-    State(oauth_endpoint): State<KitsuneEndpoint>,
+    State(oauth_endpoint): State<OauthEndpoint>,
     oauth_req: OAuthRequest,
 ) -> Result<OAuthResponse> {
     let grant_type = oauth_req
