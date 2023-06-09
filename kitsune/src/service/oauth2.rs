@@ -494,6 +494,7 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
         req: &mut OAuthRequest,
         solicitation: Solicitation<'_>,
     ) -> OwnerConsent<OAuthResponse> {
+        // TODO: CLEAN ALL OF THIS UP ASAP
         let result = (|| {
             let login_consent = {
                 let query = match req.query() {
