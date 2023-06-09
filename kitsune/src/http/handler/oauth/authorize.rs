@@ -1,25 +1,23 @@
 use crate::{
     error::{Error, Result},
-    service::{
-        oauth2::{AuthorisationCode, Oauth2Service},
-        url::UrlService,
-    },
+    service::oauth2::{Oauth2Service, OauthEndpoint},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
     extract::{Query, State},
-    response::{IntoResponse, Response},
+    response::Response,
     Form,
 };
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use kitsune_db::{
     model::{oauth2, user::User},
     schema::{oauth2_applications, users},
     PgPool,
 };
+use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
+use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -41,31 +39,28 @@ pub struct AuthorizeForm {
 }
 
 #[derive(Template)]
-#[template(path = "oauth/authorize.html")]
+#[template(path = "oauth/login.html")]
 struct AuthorizePage {
     app_name: String,
     domain: String,
 }
 
 pub async fn get(
-    State(db_conn): State<PgPool>,
+    State(_db_conn): State<PgPool>,
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
-    State(url_service): State<UrlService>,
-    Query(query): Query<AuthorizeQuery>,
-) -> Result<Response> {
-    if query.response_type != "code" {
-        return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
-    }
-
-    let mut db_conn = db_conn.get().await?;
-    let application = oauth2_applications::table
-        .find(query.client_id)
-        .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-        .get_result::<oauth2::Application>(&mut db_conn)
-        .await?;
-
+    State(oauth_endpoint): State<OauthEndpoint>,
+    oauth_req: OAuthRequest,
+) -> Result<OAuthResponse> {
     #[cfg(feature = "oidc")]
+    #[allow(clippy::used_underscore_binding)]
     if let Some(oidc_service) = oidc_service {
+        let mut db_conn = db_conn.get().await?;
+        let application = oauth2_applications::table
+            .find(query.client_id)
+            .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+            .get_result::<oauth2::Application>(&mut _db_conn)
+            .await?;
+
         let auth_url = oidc_service
             .authorisation_url(application.id, query.state)
             .await?;
@@ -73,11 +68,10 @@ pub async fn get(
         return Ok(Redirect::to(auth_url.as_str()).into_response());
     }
 
-    Ok(AuthorizePage {
-        app_name: application.name,
-        domain: url_service.domain().into(),
-    }
-    .into_response())
+    let mut flow = AuthorizationFlow::prepare(oauth_endpoint)?;
+    AuthorizationFlow::execute(&mut flow, oauth_req)
+        .await
+        .map_err(Error::from)
 }
 
 pub async fn post(

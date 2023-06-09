@@ -53,11 +53,9 @@ form {
   border: 10px solid;
   border-image-slice: 1;
   border-width: 4px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 18px;
   font-weight: 300;
   display: flex;
@@ -78,6 +76,12 @@ form .field {
   font-size: 20px;
 }
 
+div.consent-forms {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+}
+
 .label {
   text-transform: uppercase;
 }
@@ -88,11 +92,9 @@ form .field {
   border: 10px solid;
   border-image-slice: 1;
   border-width: 3px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 16px;
   font-weight: bold;
   max-width: 80%;
@@ -130,11 +132,9 @@ form .field {
   border: 10px solid;
   border-image-slice: 1;
   border-width: 4px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 20px;
   font-weight: 300;
   display: flex;

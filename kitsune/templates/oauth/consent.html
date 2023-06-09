@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/public/template.css">
+  <title>OAuth Login</title>
+</head>
+
+<body>
+  <p class="header">Kitsune</p>
+  <span class="appName">{{app_name}}</span> wants access to do the following with your Kitsune account:
+  <div class="consent-forms">
+    <form method="post">
+      <input type="hidden" name="login_consent" value="accept" />
+      <input class="formButton" type="submit" value="Accept" />
+    </form>
+    <form method="post">
+      <input type="hidden" name="login_consent" value="deny" />
+      <input class="formButton" type="submit" value="Deny" />
+    </form>
+  </div>
+  <div class="disclaimer">
+    <p>
+      Attention: <span class="appName">{{app_name}}</span> is able to use your
+      data, so beware bitches, people can steal your shit! Be safe out there!
+    </p>
+  </div>
+</body>
+
+</html>
