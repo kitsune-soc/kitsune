@@ -19,9 +19,7 @@ use kitsune_db::{
     PgPool,
 };
 use oxide_auth::{
-    endpoint::{
-        OAuthError, OwnerConsent, PreGrant, QueryParameter, Scope, Scopes, Solicitation, WebRequest,
-    },
+    endpoint::{OAuthError, OwnerConsent, PreGrant, Scope, Scopes, Solicitation, WebRequest},
     primitives::{
         grant::{Extensions, Grant},
         issuer::{RefreshedToken, TokenType},
@@ -502,8 +500,7 @@ impl Issuer for OauthIssuer {
 
 #[derive(Clone, TypedBuilder)]
 pub struct OauthOwnerSolicitor {
-    #[builder(default)]
-    authenticated_user: Option<User>,
+    authenticated_user: User,
     db_pool: PgPool,
 }
 
@@ -528,10 +525,7 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
             async move {
                 let consent = match login_consent.as_deref() {
                     Some("accept") => {
-                        let body = req.body().ok_or(WebError::Body)?;
-                        let user_id = body.unique_value("user_id").ok_or(WebError::Body)?;
-
-                        OwnerConsent::Authorized(user_id.into_owned())
+                        OwnerConsent::Authorized(self.authenticated_user.id.to_string())
                     }
                     Some("deny") => OwnerConsent::Denied,
                     Some(..) | None => {

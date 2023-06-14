@@ -10,7 +10,12 @@
 </head>
 
 <body>
-  <p class="header">{{domain}}</p>
+  <p class="header">Kitsune</p>
+  {% for (_level, msg) in flash_messages %}
+  <div class="message">
+    {{ msg }}
+  </div>
+  {% endfor %}
   <form method="post">
     <div>
       <label class="label" for="username">Username</label><br />
@@ -20,12 +25,6 @@
     </div>
     <input class="formButton" type="submit" value="Submit" />
   </form>
-  <div class="disclaimer">
-    <p>
-      Attention: <span class="appName">{{app_name}}</span> is able to use your
-      data, so beware bitches, people can steal your shit! Be safe out there!
-    </p>
-  </div>
 </body>
 
 </html>
