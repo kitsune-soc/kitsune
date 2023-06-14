@@ -1,3 +1,5 @@
+[profile.dev.package.num-bigint-dig]
+opt-level = 3
 
 [profile.release]
 lto = true
