@@ -85,7 +85,7 @@ struct PageQueryParams {
 }
 
 impl PageQueryParams {
-    fn extract(query: &Cow<'_, dyn QueryParameter + 'static>) -> Option<Self> {
+    fn extract(query: &(dyn QueryParameter + 'static)) -> Option<Self> {
         Some(Self {
             client_id: query.unique_value("client_id")?.into_owned(),
             redirect_uri: query.unique_value("redirect_uri")?.into_owned(),
@@ -541,12 +541,10 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
                     Ok(query) => query,
                     Err(err) => return future::ready(Err(err)).left_future(),
                 };
-                let query_params = match PageQueryParams::extract(&query) {
-                    Some(query_params) => query_params,
-                    None => {
-                        return future::ready(Err(WebError::Endpoint(OAuthError::BadRequest)))
-                            .left_future()
-                    }
+
+                let Some(query_params) = PageQueryParams::extract(query.as_ref()) else {
+                    return future::ready(Err(WebError::Endpoint(OAuthError::BadRequest)))
+                        .left_future();
                 };
 
                 (
