@@ -16,7 +16,7 @@ use tantivy::{
 pub type Bounds<'a> = (Bound<&'a [u8]>, Bound<&'a [u8]>);
 
 /// Prepare a range query that matches the provided byte field with some lower and upper bounds
-fn prepare_range_query(field: Field, (left, right): Bounds<'_>) -> RangeQuery {
+fn prepare_range_query(schema: &Schema, field: Field, (left, right): Bounds<'_>) -> RangeQuery {
     // We vendored the exactly same API, there will be no change in behaviour
     #[allow(unstable_name_collisions)]
     let (left, right) = (
@@ -24,7 +24,12 @@ fn prepare_range_query(field: Field, (left, right): Bounds<'_>) -> RangeQuery {
         right.map(|val| Term::from_field_bytes(field, val)),
     );
 
-    RangeQuery::new_term_bounds(field, Type::Bytes, &left, &right)
+    RangeQuery::new_term_bounds(
+        schema.get_field_name(field).to_string(),
+        Type::Bytes,
+        &left,
+        &right,
+    )
 }
 
 /// Trait for preparing a tantivy query for some schema
@@ -113,7 +118,11 @@ impl PrepareQuery for AccountSchema {
 
         BooleanQuery::intersection(vec![
             Box::new(BooleanQuery::union(queries)),
-            Box::new(prepare_range_query(self.id, id_bounds)),
+            Box::new(prepare_range_query(
+                &self.tantivy_schema,
+                self.id,
+                id_bounds,
+            )),
         ])
     }
 }
@@ -180,7 +189,11 @@ impl PrepareQuery for PostSchema {
 
         BooleanQuery::intersection(vec![
             Box::new(BooleanQuery::union(queries)),
-            Box::new(prepare_range_query(self.id, id_bounds)),
+            Box::new(prepare_range_query(
+                &self.tantivy_schema,
+                self.id,
+                id_bounds,
+            )),
         ])
     }
 }
