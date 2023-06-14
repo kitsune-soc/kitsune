@@ -19,7 +19,9 @@ use kitsune_db::{
     PgPool,
 };
 use oxide_auth::{
-    endpoint::{OAuthError, OwnerConsent, PreGrant, Scope, Scopes, Solicitation, WebRequest},
+    endpoint::{
+        OAuthError, OwnerConsent, PreGrant, QueryParameter, Scope, Scopes, Solicitation, WebRequest,
+    },
     primitives::{
         grant::{Extensions, Grant},
         issuer::{RefreshedToken, TokenType},
@@ -71,6 +73,27 @@ pub struct AuthorisationCode {
 #[template(path = "oauth/consent.html")]
 struct ConsentPage<'a> {
     app_name: &'a str,
+    query: PageQueryParams,
+}
+
+struct PageQueryParams {
+    client_id: String,
+    redirect_uri: String,
+    response_type: String,
+    scope: String,
+    state: Option<String>,
+}
+
+impl PageQueryParams {
+    fn extract(query: &Cow<'_, dyn QueryParameter + 'static>) -> Option<Self> {
+        Some(Self {
+            client_id: query.unique_value("client_id")?.into_owned(),
+            redirect_uri: query.unique_value("redirect_uri")?.into_owned(),
+            response_type: query.unique_value("response_type")?.into_owned(),
+            scope: query.unique_value("scope")?.into_owned(),
+            state: query.unique_value("state").map(Cow::into_owned),
+        })
+    }
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -513,13 +536,23 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
     ) -> OwnerConsent<OAuthResponse> {
         // TODO: CLEAN ALL OF THIS UP ASAP
         let result = (|| {
-            let login_consent = {
+            let (login_consent, query) = {
                 let query = match req.query() {
                     Ok(query) => query,
                     Err(err) => return future::ready(Err(err)).left_future(),
                 };
+                let query_params = match PageQueryParams::extract(&query) {
+                    Some(query_params) => query_params,
+                    None => {
+                        return future::ready(Err(WebError::Endpoint(OAuthError::BadRequest)))
+                            .left_future()
+                    }
+                };
 
-                query.unique_value("login_consent").map(Cow::into_owned)
+                (
+                    query.unique_value("login_consent").map(Cow::into_owned),
+                    query_params,
+                )
             };
 
             async move {
@@ -552,6 +585,7 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
 
                         let body = ConsentPage {
                             app_name: &app_name,
+                            query,
                         }
                         .render()
                         .map_err(|err| WebError::InternalError(Some(err.to_string())))?;

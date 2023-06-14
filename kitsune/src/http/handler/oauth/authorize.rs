@@ -27,7 +27,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 #[cfg(feature = "oidc")]
-use {crate::service::oidc::OidcService, axum::response::Redirect};
+use crate::service::oidc::OidcService;
 
 #[derive(Deserialize)]
 pub struct LoginForm {
