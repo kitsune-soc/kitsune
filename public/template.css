@@ -47,9 +47,9 @@ body {
   margin: 25px auto;
 }
 
-form {
+form,
+.message {
   background: linear-gradient(to top left, var(--dark2), var(--dark1));
-  padding: 8vh 4.5vh;
   border: 10px solid;
   border-image-slice: 1;
   border-width: 4px;
@@ -64,6 +64,14 @@ form {
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
+}
+
+form {
+  padding: 8vh 4.5vh;
+}
+
+.message {
+  padding: 2vh;
 }
 
 form .field {
