@@ -22,7 +22,11 @@ aws-credential-types = { version = "0.55.3", features = [
 ] }
 aws-sdk-s3 = "0.28.0"
 axum = { version = "0.6.18", features = ["headers", "macros", "multipart"] }
-axum-extra = { version = "0.7.4", features = ["query"] }
+axum-extra = { version = "0.7.4", features = [
+    "cookie",
+    "cookie-signed",
+    "query",
+] }
 base64 = "0.21.2"
 bytes = "1.4.0"
 chrono = { version = "0.4.26", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..

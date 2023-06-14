@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    service::oauth2::{Oauth2Service, OauthEndpoint},
+    service::oauth2::{Oauth2Service, OauthEndpoint, OauthOwnerSolicitor},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
@@ -46,7 +46,7 @@ struct AuthorizePage {
 }
 
 pub async fn get(
-    State(_db_conn): State<PgPool>,
+    State(db_conn): State<PgPool>,
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     State(oauth_endpoint): State<OauthEndpoint>,
     oauth_req: OAuthRequest,
@@ -58,7 +58,7 @@ pub async fn get(
         let application = oauth2_applications::table
             .find(query.client_id)
             .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-            .get_result::<oauth2::Application>(&mut _db_conn)
+            .get_result::<oauth2::Application>(&mut db_conn)
             .await?;
 
         let auth_url = oidc_service
@@ -68,7 +68,8 @@ pub async fn get(
         return Ok(Redirect::to(auth_url.as_str()).into_response());
     }
 
-    let mut flow = AuthorizationFlow::prepare(oauth_endpoint)?;
+    let solicitor = OauthOwnerSolicitor::builder().db_pool(db_conn).build();
+    let mut flow = AuthorizationFlow::prepare(oauth_endpoint.with_solicitor(solicitor))?;
     AuthorizationFlow::execute(&mut flow, oauth_req)
         .await
         .map_err(Error::from)

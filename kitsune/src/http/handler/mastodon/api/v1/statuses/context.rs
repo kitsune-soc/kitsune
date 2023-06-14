@@ -5,7 +5,6 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Path, State},
-    response::{IntoResponse, Response},
     Json,
 };
 use futures_util::TryStreamExt;
@@ -31,7 +30,7 @@ pub async fn get(
     State(post): State<PostService>,
     user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
-) -> Result<Response> {
+) -> Result<Json<Context>> {
     let account_id = user_data.map(|user_data| user_data.0.account.id);
 
     let ancestors = post
@@ -51,6 +50,5 @@ pub async fn get(
     Ok(Json(Context {
         ancestors,
         descendants,
-    })
-    .into_response())
+    }))
 }

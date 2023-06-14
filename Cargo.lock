@@ -841,6 +841,7 @@ dependencies = [
  "axum",
  "axum-core",
  "bytes",
+ "cookie",
  "futures-util",
  "http",
  "http-body",
@@ -1271,6 +1272,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
 dependencies = [
  "unicode-segmentation",
+]
+
+[[package]]
+name = "cookie"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
+dependencies = [
+ "base64 0.21.2",
+ "hmac",
+ "percent-encoding",
+ "rand",
+ "sha2",
+ "subtle",
+ "time",
+ "version_check",
 ]
 
 [[package]]
@@ -4229,7 +4246,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth"
 version = "0.5.3"
-source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/fix-send-issue#870b395004cdfc999a33839e58e4b97b84930e10"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=ed63dcc70d674bd0c79edc5533caed3c21176cd3#ed63dcc70d674bd0c79edc5533caed3c21176cd3"
 dependencies = [
  "base64 0.13.1",
  "chrono",
@@ -4249,7 +4266,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth-async"
 version = "0.1.0"
-source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/fix-send-issue#870b395004cdfc999a33839e58e4b97b84930e10"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=ed63dcc70d674bd0c79edc5533caed3c21176cd3#ed63dcc70d674bd0c79edc5533caed3c21176cd3"
 dependencies = [
  "async-trait",
  "base64 0.13.1",

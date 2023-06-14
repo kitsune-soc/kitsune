@@ -3,13 +3,8 @@ use crate::{
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
-use axum::{
-    debug_handler,
-    extract::State,
-    response::{IntoResponse, Response},
-    routing, Json, Router,
-};
-use axum_extra::extract::Query;
+use axum::{debug_handler, extract::State, routing, Json, Router};
+use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -68,14 +63,14 @@ async fn get(
     State(search): State<SearchService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
-) -> Result<Response> {
+) -> Result<Either<Json<SearchResult>, StatusCode>> {
     let mut db_conn = state.db_conn.get().await?;
 
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {
             SearchType::Accounts => SearchIndex::Account,
             SearchType::Statuses => SearchIndex::Post,
-            SearchType::Hashtags => return Ok(StatusCode::BAD_REQUEST.into_response()),
+            SearchType::Hashtags => return Ok(Either::E2(StatusCode::BAD_REQUEST)),
         };
 
         vec![index]
@@ -145,7 +140,7 @@ async fn get(
         }
     }
 
-    Ok(Json(search_result).into_response())
+    Ok(Either::E1(Json(search_result)))
 }
 
 pub fn routes() -> Router<Zustand> {

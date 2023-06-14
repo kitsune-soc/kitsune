@@ -11,7 +11,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use kitsune_db::{
-    model::oauth2,
+    model::{oauth2, user::User},
     schema::{
         oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
         oauth2_refresh_tokens,
@@ -157,12 +157,30 @@ impl Oauth2Service {
 }
 
 #[derive(Clone)]
-pub struct OauthEndpoint {
+pub struct OauthEndpoint<S = Vacant> {
     authorizer: OauthAuthorizer,
     issuer: OauthIssuer,
-    owner_solicitor: OauthOwnerSolicitor,
+    owner_solicitor: S,
     registrar: OauthRegistrar,
     scopes: Vec<Scope>,
+}
+
+impl<S> OauthEndpoint<S> {
+    pub fn with_solicitor<NewSolicitor>(
+        self,
+        owner_solicitor: NewSolicitor,
+    ) -> OauthEndpoint<NewSolicitor>
+    where
+        NewSolicitor: OwnerSolicitor<OAuthRequest> + Send,
+    {
+        OauthEndpoint {
+            authorizer: self.authorizer,
+            issuer: self.issuer,
+            owner_solicitor,
+            registrar: self.registrar,
+            scopes: self.scopes,
+        }
+    }
 }
 
 impl From<PgPool> for OauthEndpoint {
@@ -173,9 +191,6 @@ impl From<PgPool> for OauthEndpoint {
         let issuer = OauthIssuer {
             db_pool: db_pool.clone(),
         };
-        let owner_solicitor = OauthOwnerSolicitor {
-            db_pool: db_pool.clone(),
-        };
         let registrar = OauthRegistrar { db_pool };
         let scopes = OAuthScope::iter()
             .map(|scope| scope.as_ref().parse().unwrap())
@@ -184,14 +199,17 @@ impl From<PgPool> for OauthEndpoint {
         Self {
             authorizer,
             issuer,
-            owner_solicitor,
+            owner_solicitor: Vacant,
             registrar,
             scopes,
         }
     }
 }
 
-impl Endpoint<OAuthRequest> for OauthEndpoint {
+impl<S> Endpoint<OAuthRequest> for OauthEndpoint<S>
+where
+    S: OwnerSolicitor<OAuthRequest> + Send,
+{
     type Error = Oauth2Error;
 
     fn registrar(&self) -> Option<&(dyn Registrar + Sync)> {
@@ -482,8 +500,10 @@ impl Issuer for OauthIssuer {
     }
 }
 
-#[derive(Clone)]
-struct OauthOwnerSolicitor {
+#[derive(Clone, TypedBuilder)]
+pub struct OauthOwnerSolicitor {
+    #[builder(default)]
+    authenticated_user: Option<User>,
     db_pool: PgPool,
 }
 
@@ -667,5 +687,21 @@ impl Registrar for OauthRegistrar {
             .map_err(|_| RegistrarError::PrimitiveError)?
             .map(|_| ())
             .ok_or(RegistrarError::Unspecified)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Vacant;
+
+impl<T> oxide_auth::endpoint::OwnerSolicitor<T> for Vacant
+where
+    T: WebRequest,
+{
+    fn check_consent(
+        &mut self,
+        _req: &mut T,
+        _solicitation: Solicitation<'_>,
+    ) -> OwnerConsent<T::Response> {
+        OwnerConsent::Denied
     }
 }

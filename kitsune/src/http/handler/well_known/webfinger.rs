@@ -1,9 +1,9 @@
 use crate::{error::Result, service::url::UrlService, state::Zustand};
 use axum::{
     extract::{Query, State},
-    response::{IntoResponse, Response},
     routing, Json, Router,
 };
+use axum_extra::either::Either;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -30,14 +30,14 @@ async fn get(
     State(db_conn): State<PgPool>,
     State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
-) -> Result<Response> {
+) -> Result<Either<Json<Resource>, StatusCode>> {
     let username_at_instance = query.resource.trim_start_matches("acct:");
     let Some((username, instance)) = username_at_instance.split_once('@') else {
-        return Ok(StatusCode::BAD_REQUEST.into_response());
+        return Ok(Either::E2(StatusCode::BAD_REQUEST));
     };
 
     if instance != url_service.domain() {
-        return Ok(StatusCode::NOT_FOUND.into_response());
+        return Ok(Either::E2(StatusCode::NOT_FOUND));
     }
 
     let account = accounts::table
@@ -51,7 +51,7 @@ async fn get(
         .await?;
     let account_url = url_service.user_url(account.id);
 
-    Ok(Json(Resource {
+    Ok(Either::E1(Json(Resource {
         subject: query.resource,
         aliases: vec![account_url.clone()],
         links: vec![Link {
@@ -59,8 +59,7 @@ async fn get(
             r#type: Some("application/activity+json".into()),
             href: Some(account_url),
         }],
-    })
-    .into_response())
+    })))
 }
 
 pub fn routes() -> Router<Zustand> {

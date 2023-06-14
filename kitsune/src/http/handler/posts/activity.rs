@@ -4,12 +4,15 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Path, State},
-    response::{IntoResponse, Response},
 };
+use kitsune_type::ap::Activity;
 use uuid::Uuid;
 
 #[debug_handler]
-pub async fn get(State(state): State<Zustand>, Path(id): Path<Uuid>) -> Result<Response> {
+pub async fn get(
+    State(state): State<Zustand>,
+    Path(id): Path<Uuid>,
+) -> Result<ActivityPubJson<Activity>> {
     let post = state.service.post.get_by_id(id, None).await?;
-    Ok(ActivityPubJson(post.into_activity(&state).await?).into_response())
+    Ok(ActivityPubJson(post.into_activity(&state).await?))
 }

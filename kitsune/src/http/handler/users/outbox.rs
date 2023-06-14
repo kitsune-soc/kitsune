@@ -5,10 +5,8 @@ use crate::{
     service::{account::GetPosts, url::UrlService},
     state::Zustand,
 };
-use axum::{
-    extract::{OriginalUri, Path, Query, State},
-    response::{IntoResponse, Response},
-};
+use axum::extract::{OriginalUri, Path, Query, State};
+use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
@@ -40,7 +38,7 @@ pub async fn get(
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
-) -> Result<Response> {
+) -> Result<Either<ActivityPubJson<CollectionPage>, ActivityPubJson<Collection>>> {
     let mut db_conn = state.db_conn.get().await?;
 
     let account = accounts::table
@@ -85,7 +83,7 @@ pub async fn get(
             .try_collect()
             .await?;
 
-        Ok(ActivityPubJson(CollectionPage {
+        Ok(Either::E1(ActivityPubJson(CollectionPage {
             context: ap_context(),
             r#type: PageType::OrderedCollectionPage,
             id,
@@ -93,8 +91,7 @@ pub async fn get(
             next,
             part_of: base_url,
             ordered_items,
-        })
-        .into_response())
+        })))
     } else {
         let public_post_count = Post::belonging_to(&account)
             .add_post_permission_check(PermissionCheck::default())
@@ -105,14 +102,13 @@ pub async fn get(
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());
 
-        Ok(ActivityPubJson(Collection {
+        Ok(Either::E2(ActivityPubJson(Collection {
             context: ap_context(),
             id: base_url,
             r#type: CollectionType::OrderedCollection,
             total_items: public_post_count as u64,
             first: Some(first),
             last: Some(last),
-        })
-        .into_response())
+        })))
     }
 }

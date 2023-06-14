@@ -8,11 +8,10 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Path, State},
-    response::{IntoResponse, Response},
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_type::mastodon::status::Visibility;
+use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -49,7 +48,7 @@ async fn delete(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-) -> Result<Response> {
+) -> Result<StatusCode> {
     let delete_post = DeletePost::builder()
         .account_id(user_data.account.id)
         .user_id(user_data.user.id)
@@ -59,7 +58,7 @@ async fn delete(
 
     post.delete(delete_post).await?;
 
-    Ok(StatusCode::OK.into_response())
+    Ok(StatusCode::OK)
 }
 
 #[debug_handler(state = Zustand)]
@@ -80,7 +79,7 @@ async fn get(
     State(post): State<PostService>,
     user_data: Option<MastodonAuthExtractor>,
     Path(id): Path<Uuid>,
-) -> Result<Response> {
+) -> Result<Json<Status>> {
     let account_id = user_data.as_ref().map(|user_data| user_data.0.account.id);
     let post = post.get_by_id(id, account_id).await?;
 
@@ -90,7 +89,7 @@ async fn get(
         mastodon_mapper.map(post).await?
     };
 
-    Ok(Json(status).into_response())
+    Ok(Json(status))
 }
 
 #[debug_handler(state = Zustand)]
@@ -110,7 +109,7 @@ async fn post(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     FormOrJson(form): FormOrJson<CreateForm>,
-) -> Result<Response> {
+) -> Result<Json<Status>> {
     let mut create_post = CreatePost::builder()
         .author_id(user_data.account.id)
         .content(form.status)
@@ -130,7 +129,7 @@ async fn post(
         .map(post.create(create_post.build().unwrap()).await?)
         .await?;
 
-    Ok(Json(status).into_response())
+    Ok(Json(status))
 }
 
 pub fn routes() -> Router<Zustand> {
