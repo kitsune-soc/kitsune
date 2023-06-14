@@ -4,7 +4,6 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kitsune-soc/kitsune/rust.yml?style=for-the-badge)
 [![dependency status](https://deps.rs/repo/github/kitsune-soc/kitsune/status.svg?style=for-the-badge)](https://deps.rs/repo/github/kitsune-soc/kitsune)
-[![Matrix](https://img.shields.io/matrix/kitsune-space:matrix.org?label=Matrix%20chat&style=for-the-badge)](https://matrix.to/#/#kitsune-space:matrix.org)
 
 </div>
 
@@ -15,6 +14,13 @@ Due to its decentralised nature, you can self-host Kitsune on your own hardware 
 Kitsune itself is pretty lightweight and should run even on a Raspberry Pi (even though we haven't tested that yet).
 
 **[Documentation](https://docs.joinkitsune.org)**
+
+### Chat
+
+Both chat options are bridged. Feel free to join whichever you're more comfortable with:  
+
+[![Matrix](https://img.shields.io/matrix/kitsune-space:matrix.org?label=Matrix%20chat&style=for-the-badge)](https://matrix.to/#/#kitsune-space:matrix.org)
+[![Discord](https://img.shields.io/discord/1118538521423138856?label=Discord%20chat&style=for-the-badge)](https://discord.gg/YGAtX7nfrG)
 
 ## ⚠ Disclaimer
 
