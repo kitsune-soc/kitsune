@@ -4243,7 +4243,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth"
 version = "0.5.3"
-source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=ed63dcc70d674bd0c79edc5533caed3c21176cd3#ed63dcc70d674bd0c79edc5533caed3c21176cd3"
+source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/add-error-impl#98825f504e70057d907e4a7c209f886b710ba6ea"
 dependencies = [
  "base64 0.13.1",
  "chrono",
@@ -4263,7 +4263,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth-async"
 version = "0.1.0"
-source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=ed63dcc70d674bd0c79edc5533caed3c21176cd3#ed63dcc70d674bd0c79edc5533caed3c21176cd3"
+source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/add-error-impl#98825f504e70057d907e4a7c209f886b710ba6ea"
 dependencies = [
  "async-trait",
  "base64 0.13.1",

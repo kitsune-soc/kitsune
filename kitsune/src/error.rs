@@ -179,6 +179,9 @@ pub enum Error {
     Oidc(#[from] OidcError),
 
     #[error(transparent)]
+    ParseScope(#[from] oxide_auth::primitives::scope::ParseScopeErr),
+
+    #[error(transparent)]
     PasswordHash(#[from] password_hash::Error),
 
     #[error("Password mismatch")]

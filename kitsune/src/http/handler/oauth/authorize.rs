@@ -11,7 +11,7 @@ use axum::{
     Form,
 };
 use axum_extra::{
-    either::Either,
+    either::{Either, Either3},
     extract::{
         cookie::{Cookie, Expiration, SameSite},
         SignedCookieJar,
@@ -27,7 +27,20 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 #[cfg(feature = "oidc")]
-use crate::service::oidc::OidcService;
+use {
+    crate::service::oidc::OidcService,
+    axum::extract::Query,
+    kitsune_db::{model::oauth2, schema::oauth2_applications},
+};
+
+#[cfg(feature = "oidc")]
+#[derive(Deserialize)]
+pub struct AuthorizeQuery {
+    client_id: Uuid,
+    redirect_uri: String,
+    scope: String,
+    state: Option<String>,
+}
 
 #[derive(Deserialize)]
 pub struct LoginForm {
@@ -42,28 +55,28 @@ pub struct LoginPage {
 }
 
 pub async fn get(
-    State(db_pool): State<PgPool>,
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
+    #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+    State(db_pool): State<PgPool>,
     State(oauth_endpoint): State<OauthEndpoint>,
     cookies: SignedCookieJar,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
-) -> Result<Either<OAuthResponse, LoginPage>> {
+) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
     #[cfg(feature = "oidc")]
-    #[allow(clippy::used_underscore_binding)]
     if let Some(oidc_service) = oidc_service {
         let mut db_conn = db_pool.get().await?;
         let application = oauth2_applications::table
             .find(query.client_id)
             .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-            .get_result::<oauth2::Application>(&mut db_pool)
+            .get_result::<oauth2::Application>(&mut db_conn)
             .await?;
 
         let auth_url = oidc_service
-            .authorisation_url(application.id, query.state)
+            .authorisation_url(application.id, query.scope, query.state)
             .await?;
 
-        return Ok(Redirect::to(auth_url.as_str()).into_response());
+        return Ok(Either3::E3(Redirect::to(auth_url.as_str())));
     }
 
     let authenticated_user = if let Some(user_id) = cookies.get("user_id") {
@@ -71,7 +84,7 @@ pub async fn get(
         let id = user_id.value().parse::<Uuid>()?;
         users::table.find(id).get_result(&mut db_conn).await?
     } else {
-        return Ok(Either::E2(LoginPage { flash_messages }));
+        return Ok(Either3::E2(LoginPage { flash_messages }));
     };
 
     let solicitor = OauthOwnerSolicitor::builder()
@@ -82,7 +95,7 @@ pub async fn get(
     let mut flow = AuthorizationFlow::prepare(oauth_endpoint.with_solicitor(solicitor))?;
     AuthorizationFlow::execute(&mut flow, oauth_req)
         .await
-        .map(Either::E1)
+        .map(Either3::E1)
         .map_err(Error::from)
 }
 

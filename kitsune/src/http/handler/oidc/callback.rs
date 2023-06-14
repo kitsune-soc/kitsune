@@ -64,6 +64,7 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
+        .scopes(user_info.oauth2.scope.parse()?)
         .build();
 
     oauth_service

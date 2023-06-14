@@ -30,6 +30,7 @@ pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, Error> {
 #[derive(Debug)]
 pub struct Oauth2Info {
     pub application_id: Uuid,
+    pub scope: String,
     pub state: Option<String>,
 }
 
@@ -44,6 +45,7 @@ pub struct UserInfo {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Oauth2LoginState {
     application_id: Uuid,
+    scope: String,
     state: Option<String>,
 }
 
@@ -74,6 +76,7 @@ impl OidcService {
     pub async fn authorisation_url(
         &self,
         oauth2_application_id: Uuid,
+        oauth2_scope: String,
         oauth2_state: Option<String>,
     ) -> Result<Url> {
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -94,6 +97,7 @@ impl OidcService {
             pkce_verifier,
             oauth2: Oauth2LoginState {
                 application_id: oauth2_application_id,
+                scope: oauth2_scope,
                 state: oauth2_state,
             },
         };
@@ -150,6 +154,7 @@ impl OidcService {
             email: claims.email().ok_or(OidcError::MissingEmail)?.to_string(),
             oauth2: Oauth2Info {
                 application_id: oauth2.application_id,
+                scope: oauth2.scope,
                 state: oauth2.state,
             },
         })
