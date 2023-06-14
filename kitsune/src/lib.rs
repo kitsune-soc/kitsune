@@ -67,6 +67,7 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
+use state::SessionConfig;
 use std::{
     fmt::Display,
     sync::{Arc, OnceLock},
@@ -334,6 +335,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
             url: url_service,
             user: user_service,
         },
+        session_config: SessionConfig::generate(),
         webfinger,
     }
 }

@@ -846,6 +846,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-flash"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "919d104c8fdd083e19a9ba8b579b1c10ecea38c131a65acdea052a6af561d397"
+dependencies = [
+ "async-trait",
+ "axum-core",
+ "axum-extra",
+ "base64 0.21.2",
+ "cookie",
+ "http",
+ "serde",
+ "serde_json",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3239,6 +3257,7 @@ dependencies = [
  "aws-sdk-s3",
  "axum",
  "axum-extra",
+ "axum-flash",
  "axum-prometheus",
  "base64 0.21.2",
  "bytes",

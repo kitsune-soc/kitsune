@@ -9,6 +9,7 @@ use axum::{
     response::Response,
     Form,
 };
+use axum_extra::extract::SignedCookieJar;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -33,14 +34,14 @@ pub struct AuthorizeQuery {
 }
 
 #[derive(Deserialize)]
-pub struct AuthorizeForm {
+pub struct LoginForm {
     username: String,
     password: String,
 }
 
 #[derive(Template)]
 #[template(path = "oauth/login.html")]
-struct AuthorizePage {
+struct LoginPage {
     app_name: String,
     domain: String,
 }
@@ -49,6 +50,7 @@ pub async fn get(
     State(db_conn): State<PgPool>,
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     State(oauth_endpoint): State<OauthEndpoint>,
+    cookies: SignedCookieJar,
     oauth_req: OAuthRequest,
 ) -> Result<OAuthResponse> {
     #[cfg(feature = "oidc")]
@@ -79,7 +81,7 @@ pub async fn post(
     State(db_conn): State<PgPool>,
     State(oauth2_service): State<Oauth2Service>,
     Query(query): Query<AuthorizeQuery>,
-    Form(form): Form<AuthorizeForm>,
+    Form(form): Form<LoginForm>,
 ) -> Result<Response> {
     let mut db_conn = db_conn.get().await?;
     let user = users::table

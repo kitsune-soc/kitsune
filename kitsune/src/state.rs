@@ -16,6 +16,7 @@ use crate::{
     webfinger::Webfinger,
 };
 use axum::extract::FromRef;
+use axum_extra::extract::cookie;
 use kitsune_db::PgPool;
 use kitsune_search::SearchService;
 
@@ -76,6 +77,39 @@ pub struct EventEmitter {
     pub post: PostEventEmitter,
 }
 
+#[derive(Clone)]
+pub struct SessionConfig {
+    pub cookie_key: cookie::Key,
+    pub flash_config: axum_flash::Config,
+}
+
+impl SessionConfig {
+    /// Randomly generates the keys for the cookie jars
+    #[must_use]
+    pub fn generate() -> Self {
+        let cookie_key = cookie::Key::generate();
+        let mut flash_config = axum_flash::Config::new(axum_flash::Key::generate());
+
+        #[cfg(debug_assertions)]
+        {
+            flash_config = flash_config.use_secure_cookies(false);
+        }
+
+        Self {
+            cookie_key,
+            flash_config,
+        }
+    }
+}
+
+impl_from_ref! {
+    Zustand;
+    [
+        cookie::Key => |input: &Zustand| input.session_config.cookie_key.clone(),
+        axum_flash::Config => |input: &Zustand| input.session_config.flash_config.clone()
+    ]
+}
+
 /// Service collection
 ///
 /// This contains all the "services" that Kitsune consists of.
@@ -110,5 +144,6 @@ pub struct Zustand {
     pub mastodon_mapper: crate::mapping::MastodonMapper,
     pub oauth_endpoint: OauthEndpoint,
     pub service: Service,
+    pub session_config: SessionConfig,
     pub webfinger: Webfinger,
 }
