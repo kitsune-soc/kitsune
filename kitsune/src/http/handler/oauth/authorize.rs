@@ -120,11 +120,10 @@ pub async fn post(
         .await
         .optional()?
     else {
-        return Ok(
-            Either::E2(
-                (flash.error(Error::PasswordMismatch.to_string()), Redirect::to(redirect_to))
-            )
-        );
+        return Ok(Either::E2((
+            flash.error(Error::PasswordMismatch.to_string()),
+            Redirect::to(redirect_to),
+        )));
     };
 
     let is_valid = crate::blocking::cpu(move || {
@@ -146,14 +145,18 @@ pub async fn post(
         )));
     }
 
-    let user_id_cookie = Cookie::build("user_id", user.id.to_string())
-        .secure(true)
+    #[allow(unused_mut)]
+    let mut user_id_cookie = Cookie::build("user_id", user.id.to_string())
         .same_site(SameSite::Strict)
-        .expires(Expiration::Session)
-        .finish();
+        .expires(Expiration::Session);
+
+    #[cfg(not(debug_assertions))]
+    {
+        user_id_cookie = user_id_cookie.secure(true);
+    }
 
     Ok(Either::E1((
-        cookies.add(user_id_cookie),
+        cookies.add(user_id_cookie.finish()),
         Redirect::to(redirect_to),
     )))
 }

@@ -88,6 +88,7 @@ impl SessionConfig {
     #[must_use]
     pub fn generate() -> Self {
         let cookie_key = cookie::Key::generate();
+        #[allow(unused_mut)]
         let mut flash_config = axum_flash::Config::new(axum_flash::Key::generate());
 
         #[cfg(debug_assertions)]
