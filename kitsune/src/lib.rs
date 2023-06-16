@@ -263,12 +263,13 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
 
     #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
-        OidcService::builder()
-            .client(prepare_oidc_client(oidc_config, &url_service).await)
+        Ok(OidcService::builder()
+            .client(prepare_oidc_client(oidc_config, &url_service).await?)
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
-            .build()
+            .build())
     }))
-    .await;
+    .await
+    .transpose()?;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
