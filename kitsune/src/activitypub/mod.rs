@@ -50,6 +50,7 @@ async fn handle_mentions(
                 })
                 .collect::<Vec<NewMention<'_>>>(),
         )
+        .on_conflict_do_nothing()
         .execute(db_conn)
         .await?;
 
