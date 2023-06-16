@@ -1,10 +1,12 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use anyhow::Context;
 use kitsune::{config::Configuration, http, job};
 use std::{env, future, process};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
+use url::Url;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -52,11 +54,12 @@ where
     MetricsLayer::new()
 }
 
-fn initialise_logging(_config: &Configuration) {
-    let env_filter = env::var("RUST_LOG").map_or_else(
-        |_| Targets::default().with_default(LevelFilter::INFO),
-        |targets| targets.parse().expect("Failed to parse RUST_LOG value"),
-    );
+fn initialise_logging(_config: &Configuration) -> anyhow::Result<()> {
+    let env_filter = env::var("RUST_LOG")
+        .map_err(anyhow::Error::from)
+        .and_then(|targets| targets.parse().context("Failed to parse RUST_LOG value"))
+        .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
+
     let subscriber =
         Registry::default().with(tracing_subscriber::fmt::layer().with_filter(env_filter));
 
@@ -64,11 +67,35 @@ fn initialise_logging(_config: &Configuration) {
     #[allow(clippy::used_underscore_binding)]
     let subscriber = subscriber.with(initialise_metrics(_config));
 
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    tracing::subscriber::set_global_default(subscriber)
+        .context("Couldn't install the global tracing subscriber")?;
+
+    Ok(())
+}
+
+fn postgres_url_diagnostics(db_url: &str) -> String {
+    let url = match Url::parse(db_url) {
+        Ok(url) => url,
+        Err(err) => {
+            return format!(
+                "Failed to parse the connection string as a URL. Check the syntax!: {err}"
+            );
+        }
+    };
+
+    let message = if url.scheme().starts_with("postgres") && url.has_host() {
+        "Your connection string has the correct syntax"
+    } else if url.scheme() == "sqlite" {
+        "SQLite is no longer supported as of v0.0.1-pre.1, please use PostgreSQL (our only supported DBMS)\n(This is a temporary diagnostic message and will probably be removed in the future)"
+    } else {
+        "Your connection string doesn't seem to be valid. Please check it again!"
+    };
+
+    message.into()
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     println!("{STARTUP_FIGLET}");
 
     let args: Vec<String> = env::args().take(2).collect();
@@ -77,22 +104,18 @@ async fn main() {
         process::exit(1);
     }
 
-    let config = match Configuration::load(&args[1]) {
-        Ok(config) => config,
-        Err(err) => {
-            eprintln!("{err}");
-            process::exit(1);
-        }
-    };
-    initialise_logging(&config);
+    let config = Configuration::load(&args[1])?;
+    initialise_logging(&config)?;
 
     let conn = kitsune_db::connect(
         &config.database.url,
         config.database.max_connections as usize,
     )
     .await
-    .expect("Failed to connect to database");
-    let state = kitsune::initialise_state(&config, conn).await;
+    .context("Failed to connect to and migrate the database")
+    .with_context(|| postgres_url_diagnostics(&config.database.url))?;
+
+    let state = kitsune::initialise_state(&config, conn).await?;
 
     tokio::spawn(self::http::run(state.clone(), config.server.clone()));
     tokio::spawn(self::job::run_dispatcher(
@@ -101,4 +124,6 @@ async fn main() {
     ));
 
     future::pending::<()>().await;
+
+    Ok(())
 }
