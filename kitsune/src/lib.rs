@@ -57,6 +57,7 @@ use self::{
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
+use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
@@ -116,7 +117,7 @@ where
                 .redis_conn(pool.clone())
                 .ttl(Duration::from_secs(60)) // TODO: Parameterise this
                 .build()
-                .unwrap()
+                .expect("[Bug] Failed to build the Redis cache")
                 .into()
         }
     };
@@ -146,79 +147,89 @@ fn prepare_storage(config: &Configuration) -> Storage {
     }
 }
 
-async fn prepare_messaging(config: &Configuration) -> MessagingHub {
-    match config.messaging {
+async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHub> {
+    let backend = match config.messaging {
         MessagingConfiguration::InProcess => {
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
         }
         MessagingConfiguration::Redis(ref redis_config) => {
             let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.redis_url)
                 .await
-                .expect("Failed to construct messaging backend");
+                .context("Failed to initialise Redis messaging backend")?;
 
             MessagingHub::new(redis_messaging_backend)
         }
-    }
+    };
+
+    Ok(backend)
 }
 
 #[cfg(feature = "oidc")]
 async fn prepare_oidc_client(
     oidc_config: &OidcConfiguration,
     url_service: &UrlService,
-) -> CoreClient {
+) -> anyhow::Result<CoreClient> {
     let provider_metadata = CoreProviderMetadata::discover_async(
-        IssuerUrl::new(oidc_config.server_url.clone()).unwrap(),
+        IssuerUrl::new(oidc_config.server_url.clone()).context("Invalid OIDC issuer URL")?,
         async_client,
     )
     .await
-    .unwrap();
+    .context("Couldn't discover the OIDC provider metadata")?;
 
-    CoreClient::from_provider_metadata(
+    let client = CoreClient::from_provider_metadata(
         provider_metadata,
         ClientId::new(oidc_config.client_id.clone()),
         Some(ClientSecret::new(oidc_config.client_secret.clone())),
     )
-    .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri()).unwrap())
+    .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri())?);
+
+    Ok(client)
 }
 
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
-async fn prepare_search(search_config: &SearchConfiguration, db_conn: &PgPool) -> SearchService {
-    match search_config {
+async fn prepare_search(
+    search_config: &SearchConfiguration,
+    db_conn: &PgPool,
+) -> anyhow::Result<SearchService> {
+    let service = match search_config {
         SearchConfiguration::Kitsune(_config) => {
-            #[cfg(feature = "kitsune-search")]
-            #[allow(clippy::used_underscore_binding)]
-            return GrpcSearchService::connect(&_config.index_server, &_config.search_servers)
-                .await
-                .expect("Failed to connect to the search servers")
-                .into();
-
             #[cfg(not(feature = "kitsune-search"))]
             panic!("Server compiled without Kitsune Search compatibility");
+
+            #[cfg(feature = "kitsune-search")]
+            #[allow(clippy::used_underscore_binding)]
+            GrpcSearchService::connect(&_config.index_server, &_config.search_servers)
+                .await
+                .context("Failed to connect to the search servers")?
+                .into()
         }
         SearchConfiguration::Meilisearch(_config) => {
-            #[cfg(feature = "meilisearch")]
-            #[allow(clippy::used_underscore_binding)]
-            return MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                .await
-                .expect("Failed to connect to Meilisearch")
-                .into();
-
             #[cfg(not(feature = "meilisearch"))]
             panic!("Server compiled without Meilisearch compatibility");
+
+            #[cfg(feature = "meilisearch")]
+            #[allow(clippy::used_underscore_binding)]
+            MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                .await
+                .context("Failed to connect to Meilisearch")?
+                .into()
         }
         SearchConfiguration::Sql => SqlSearchService::new(db_conn.clone()).into(),
         SearchConfiguration::None => NoopSearchService.into(),
-    }
+    };
+
+    Ok(service)
 }
 
 #[allow(clippy::missing_panics_doc, clippy::too_many_lines)] // TODO: Refactor this method to get under the 100 lines
-pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
-    let messaging_hub = prepare_messaging(config).await;
+pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::Result<Zustand> {
+    let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
-    let search_service = prepare_search(&config.search, &conn).await;
+    let search_service = prepare_search(&config.search, &conn).await?;
     let federation_filter_service =
-        FederationFilterService::new(&config.instance.federation_filter).unwrap();
+        FederationFilterService::new(&config.instance.federation_filter)
+            .context("Couldn't build the federation filter (check your glob syntax)")?;
 
     let fetcher = Fetcher::builder()
         .db_conn(conn.clone())
@@ -262,12 +273,15 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
 
     #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
-        OidcService::builder()
-            .client(prepare_oidc_client(oidc_config, &url_service).await)
+        let service = OidcService::builder()
+            .client(prepare_oidc_client(oidc_config, &url_service).await?)
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
-            .build()
+            .build();
+
+        anyhow::Ok(service)
     }))
-    .await;
+    .await
+    .transpose()?;
 
     let oauth2_service = Oauth2Service::builder()
         .db_conn(conn.clone())
@@ -309,9 +323,9 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
         .mastodon_cache(prepare_cache(config, "MASTODON-ENTITY"))
         .url_service(url_service.clone())
         .build()
-        .unwrap();
+        .expect("[Bug] Failed to initialise Mastodon mapper");
 
-    Zustand {
+    Ok(Zustand {
         db_conn: conn.clone(),
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
@@ -337,5 +351,5 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> Zustand {
         },
         session_config: SessionConfig::generate(),
         webfinger,
-    }
+    })
 }
