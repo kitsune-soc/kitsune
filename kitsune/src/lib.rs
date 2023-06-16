@@ -263,10 +263,12 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
 
     #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
-        Ok(OidcService::builder()
+        let service = OidcService::builder()
             .client(prepare_oidc_client(oidc_config, &url_service).await?)
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
-            .build())
+            .build();
+
+        anyhow::Ok(service)
     }))
     .await
     .transpose()?;
