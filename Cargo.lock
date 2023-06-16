@@ -3202,6 +3202,7 @@ name = "kitsune"
 version = "0.0.1-pre.1"
 dependencies = [
  "ammonia",
+ "anyhow",
  "argon2",
  "askama",
  "askama_axum",
