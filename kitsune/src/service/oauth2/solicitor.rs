@@ -15,6 +15,7 @@ use uuid::Uuid;
 #[derive(Template)]
 #[template(path = "oauth/consent.html")]
 struct ConsentPage<'a> {
+    authenticated_username: &'a str,
     app_name: &'a str,
     query: PageQueryParams,
     scopes: &'a [OAuthScope],
@@ -87,6 +88,7 @@ impl OAuthOwnerSolicitor {
                     .expect("[Bug] Scopes weren't normalised");
 
                 let body = ConsentPage {
+                    authenticated_username: &self.authenticated_user.username,
                     app_name: &app_name,
                     query,
                     scopes: &scopes,

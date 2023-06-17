@@ -42,10 +42,9 @@
     </form>
   </div>
   <div class="disclaimer">
-    <p>
-      Attention: <span class="appName">{{app_name}}</span> is able to use your
-      data, so beware bitches, people can steal your shit! Be safe out there!
-    </p>
+    Authenticated as <span class="authUsername">{{ authenticated_username }}</span> ~
+    <a href="#"
+      onclick="document.cookie='user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';window.navigation.reload();">Logout</a>
   </div>
 </body>
 

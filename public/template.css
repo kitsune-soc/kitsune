@@ -20,6 +20,12 @@
   font-family: Play;
 }
 
+a {
+  font-weight: 500;
+  color: var(--shade1light);
+  text-decoration: inherit;
+}
+
 body {
   /* background-image: url("/public/assets/BG.webp");
   background-size: cover;
@@ -109,10 +115,14 @@ div.consent-forms {
   max-width: 80%;
 }
 
+.authUsername,
 .appName {
   color: var(--shade2light);
-  text-transform: uppercase;
   font-weight: bold;
+}
+
+.appName {
+  text-transform: uppercase;
 }
 
 .formButton {
