@@ -6,6 +6,7 @@ use crate::{
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::{Redirect, Response};
+use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::oauth2,
@@ -28,10 +29,24 @@ mod solicitor;
 
 pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
 
-pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
-
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
+static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
+
+#[inline]
+fn time_to_chrono(ts: time::OffsetDateTime) -> chrono::DateTime<Utc> {
+    chrono::NaiveDateTime::from_timestamp_opt(ts.unix_timestamp(), ts.nanosecond())
+        .unwrap()
+        .and_utc()
+}
+
+#[inline]
+fn chrono_to_time(ts: chrono::DateTime<Utc>) -> time::OffsetDateTime {
+    time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
+        .unwrap()
+        .replace_nanosecond(ts.timestamp_subsec_nanos())
+        .unwrap()
+}
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
 #[strum(serialize_all = "lowercase", use_phf)]
@@ -109,7 +124,7 @@ impl OAuth2Service {
                     application_id: application.id,
                     user_id,
                     scopes: scopes.to_string().as_str(),
-                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                    expired_at: OffsetDateTime::now_utc() + AUTH_TOKEN_VALID_DURATION,
                 })
                 .get_result(&mut db_conn)
                 .await?;

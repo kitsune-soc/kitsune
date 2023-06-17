@@ -1,3 +1,4 @@
+use super::{chrono_to_time, time_to_chrono};
 use crate::util::generate_secret;
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
@@ -9,7 +10,6 @@ use kitsune_db::{
 };
 use oxide_auth::primitives::grant::{Extensions, Grant};
 use oxide_auth_async::primitives::Authorizer;
-use time::OffsetDateTime;
 
 #[derive(Clone)]
 pub struct OAuthAuthorizer {
@@ -22,10 +22,7 @@ impl Authorizer for OAuthAuthorizer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
-        let expired_at = OffsetDateTime::from_unix_timestamp(grant.until.timestamp())
-            .unwrap()
-            .replace_nanosecond(grant.until.timestamp_subsec_nanos())
-            .unwrap();
+        let expired_at = chrono_to_time(grant.until);
 
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         diesel::insert_into(oauth2_authorization_codes::table)
@@ -55,19 +52,13 @@ impl Authorizer for OAuthAuthorizer {
         let oauth_data = oauth_data.map(|(code, app)| {
             let scope = app.scopes.parse().unwrap();
             let redirect_uri = app.redirect_uri.parse().unwrap();
-            let until = chrono::NaiveDateTime::from_timestamp_opt(
-                code.expired_at.unix_timestamp(),
-                code.expired_at.nanosecond(),
-            )
-            .unwrap()
-            .and_utc();
 
             Grant {
                 owner_id: code.user_id.to_string(),
                 client_id: code.application_id.to_string(),
                 scope,
                 redirect_uri,
-                until,
+                until: time_to_chrono(code.expired_at),
                 extensions: Extensions::default(),
             }
         });

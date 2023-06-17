@@ -1,4 +1,4 @@
-use super::TOKEN_VALID_DURATION;
+use super::{chrono_to_time, time_to_chrono};
 use crate::{error::Error, util::generate_secret};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
@@ -14,7 +14,6 @@ use oxide_auth::primitives::{
     prelude::IssuedToken,
 };
 use oxide_auth_async::primitives::Issuer;
-use time::OffsetDateTime;
 
 #[derive(Clone)]
 pub struct OAuthIssuer {
@@ -27,10 +26,7 @@ impl Issuer for OAuthIssuer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
-        let expired_at = OffsetDateTime::from_unix_timestamp(grant.until.timestamp())
-            .unwrap()
-            .replace_nanosecond(grant.until.timestamp_subsec_nanos())
-            .unwrap();
+        let expired_at = chrono_to_time(grant.until);
 
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         let (access_token, refresh_token) = db_conn
@@ -73,7 +69,7 @@ impl Issuer for OAuthIssuer {
         })
     }
 
-    async fn refresh(&mut self, refresh_token: &str, _grant: Grant) -> Result<RefreshedToken, ()> {
+    async fn refresh(&mut self, refresh_token: &str, grant: Grant) -> Result<RefreshedToken, ()> {
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         let (refresh_token, access_token) = oauth2_refresh_tokens::table
             .find(refresh_token)
@@ -92,7 +88,7 @@ impl Issuer for OAuthIssuer {
                             token: generate_secret().as_str(),
                             application_id: access_token.application_id,
                             scopes: access_token.scopes.as_str(),
-                            expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                            expired_at: chrono_to_time(grant.until),
                         })
                         .get_result::<oauth2::AccessToken>(tx)
                         .await?;
@@ -113,17 +109,10 @@ impl Issuer for OAuthIssuer {
             .await
             .map_err(|_| ())?;
 
-        let until = chrono::NaiveDateTime::from_timestamp_opt(
-            access_token.expired_at.unix_timestamp(),
-            access_token.expired_at.nanosecond(),
-        )
-        .unwrap()
-        .and_utc();
-
         Ok(RefreshedToken {
             token: access_token.token,
             refresh: Some(refresh_token.token),
-            until,
+            until: time_to_chrono(access_token.expired_at),
             token_type: TokenType::Bearer,
         })
     }
@@ -142,12 +131,7 @@ impl Issuer for OAuthIssuer {
         let oauth_data = oauth_data.map(|(access_token, app)| {
             let scope = app.scopes.parse().unwrap();
             let redirect_uri = app.redirect_uri.parse().unwrap();
-            let until = chrono::NaiveDateTime::from_timestamp_opt(
-                access_token.expired_at.unix_timestamp(),
-                access_token.expired_at.nanosecond(),
-            )
-            .unwrap()
-            .and_utc();
+            let until = time_to_chrono(access_token.expired_at);
 
             Grant {
                 owner_id: access_token
