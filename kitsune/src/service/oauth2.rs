@@ -9,7 +9,6 @@ use async_trait::async_trait;
 use axum::response::{Redirect, Response};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use futures_util::FutureExt;
 use kitsune_db::{
     model::{oauth2, user::User},
     schema::{
@@ -36,7 +35,6 @@ use oxide_auth_async::{
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
 use std::{
     borrow::Cow,
-    future,
     str::{self, FromStr},
 };
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString, IntoEnumIterator};
@@ -530,6 +528,67 @@ pub struct OAuthOwnerSolicitor {
     db_pool: PgPool,
 }
 
+impl OAuthOwnerSolicitor {
+    async fn check_consent(
+        &self,
+        login_consent: Option<&str>,
+        query: PageQueryParams,
+        solicitation: &Solicitation<'_>,
+    ) -> Result<OwnerConsent<OAuthResponse>, WebError> {
+        let consent = match login_consent {
+            Some("accept") => OwnerConsent::Authorized(self.authenticated_user.id.to_string()),
+            Some("deny") => OwnerConsent::Denied,
+            Some(..) | None => {
+                let client_id: Uuid = solicitation
+                    .pre_grant()
+                    .client_id
+                    .parse()
+                    .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
+
+                let mut db_conn = self
+                    .db_pool
+                    .get()
+                    .await
+                    .map_err(|_| WebError::InternalError(None))?;
+
+                let app_name = oauth2_applications::table
+                    .find(client_id)
+                    .select(oauth2_applications::name)
+                    .get_result::<String>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(|_| WebError::InternalError(None))?
+                    .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
+
+                let scopes = solicitation
+                    .pre_grant()
+                    .scope
+                    .iter()
+                    .map(OAuthScope::from_str)
+                    .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
+                    .expect("[Bug] Scopes weren't normalised");
+
+                let body = ConsentPage {
+                    app_name: &app_name,
+                    query,
+                    scopes: &scopes,
+                }
+                .render()
+                .map_err(|err| WebError::InternalError(Some(err.to_string())))?;
+
+                OwnerConsent::InProgress(
+                    OAuthResponse::default()
+                        .content_type("text/html")
+                        .unwrap()
+                        .body(&body),
+                )
+            }
+        };
+
+        Ok(consent)
+    }
+}
+
 #[async_trait]
 impl OwnerSolicitor<OAuthRequest> for OAuthOwnerSolicitor {
     async fn check_consent(
@@ -537,83 +596,22 @@ impl OwnerSolicitor<OAuthRequest> for OAuthOwnerSolicitor {
         req: &mut OAuthRequest,
         solicitation: Solicitation<'_>,
     ) -> OwnerConsent<OAuthResponse> {
-        // TODO: CLEAN ALL OF THIS UP ASAP
-        let result = (|| {
-            let (login_consent, query) = {
-                let query = match req.query() {
-                    Ok(query) => query,
-                    Err(err) => return future::ready(Err(err)).left_future(),
-                };
-
-                let Some(query_params) = PageQueryParams::extract(query.as_ref()) else {
-                    return future::ready(Err(WebError::Endpoint(OAuthError::BadRequest)))
-                        .left_future();
-                };
-
-                (
-                    query.unique_value("login_consent").map(Cow::into_owned),
-                    query_params,
-                )
+        let (login_consent, query) = {
+            let query = match req.query() {
+                Ok(query) => query,
+                Err(err) => return OwnerConsent::Error(err),
             };
 
-            async move {
-                let consent = match login_consent.as_deref() {
-                    Some("accept") => {
-                        OwnerConsent::Authorized(self.authenticated_user.id.to_string())
-                    }
-                    Some("deny") => OwnerConsent::Denied,
-                    Some(..) | None => {
-                        let client_id: Uuid = solicitation
-                            .pre_grant()
-                            .client_id
-                            .parse()
-                            .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
+            let login_consent = query.unique_value("login_consent").map(Cow::into_owned);
+            let Some(query_params) = PageQueryParams::extract(query.as_ref()) else {
+                return OwnerConsent::Error(WebError::Endpoint(OAuthError::BadRequest));
+            };
 
-                        let mut db_conn = self
-                            .db_pool
-                            .get()
-                            .await
-                            .map_err(|_| WebError::InternalError(None))?;
+            (login_consent, query_params)
+        };
 
-                        let app_name = oauth2_applications::table
-                            .find(client_id)
-                            .select(oauth2_applications::name)
-                            .get_result::<String>(&mut db_conn)
-                            .await
-                            .optional()
-                            .map_err(|_| WebError::InternalError(None))?
-                            .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
-
-                        let scopes = solicitation
-                            .pre_grant()
-                            .scope
-                            .iter()
-                            .map(OAuthScope::from_str)
-                            .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
-                            .expect("[Bug] Scopes weren't normalised");
-
-                        let body = ConsentPage {
-                            app_name: &app_name,
-                            query,
-                            scopes: &scopes,
-                        }
-                        .render()
-                        .map_err(|err| WebError::InternalError(Some(err.to_string())))?;
-
-                        OwnerConsent::InProgress(
-                            OAuthResponse::default()
-                                .content_type("text/html")
-                                .unwrap()
-                                .body(&body),
-                        )
-                    }
-                };
-
-                Ok(consent)
-            }
-            .right_future()
-        })()
-        .await;
+        let result =
+            Self::check_consent(self, login_consent.as_deref(), query, &solicitation).await;
 
         match result {
             Ok(consent) => consent,
