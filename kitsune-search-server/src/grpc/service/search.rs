@@ -37,7 +37,7 @@ impl Search for SearchService {
                 .as_deref()
                 .map_or(Bound::Unbounded, Bound::Included),
         );
-        let (query, searcher, id_field, indexed_at_field) = match req.get_ref().index() {
+        let (query, searcher, id_field) = match req.get_ref().index() {
             GrpcSearchIndex::Account => (
                 index.schemas.account.prepare_query(
                     &req.get_ref().query,
@@ -46,7 +46,6 @@ impl Search for SearchService {
                 ),
                 self.account.searcher(),
                 index.schemas.account.id,
-                index.schemas.account.indexed_at,
             ),
             GrpcSearchIndex::Post => (
                 index.schemas.post.prepare_query(
@@ -56,13 +55,12 @@ impl Search for SearchService {
                 ),
                 self.post.searcher(),
                 index.schemas.post.id,
-                index.schemas.post.indexed_at,
             ),
         };
 
         let top_docs_collector = TopDocs::with_limit(req.get_ref().max_results as usize)
             .and_offset(req.get_ref().offset as usize)
-            .order_by_fast_field::<DateTime>(indexed_at_field);
+            .order_by_fast_field::<DateTime>("indexed_at");
         let results = searcher
             .search(&query, &top_docs_collector)
             .map_err(|e| Status::internal(e.to_string()))?;

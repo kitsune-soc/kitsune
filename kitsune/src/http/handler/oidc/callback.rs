@@ -1,7 +1,7 @@
 use crate::{
     error::{ApiError, Result},
     service::{
-        oauth2::{AuthorisationCode, Oauth2Service},
+        oauth2::{AuthorisationCode, OAuth2Service},
         oidc::OidcService,
         user::{Register, UserService},
     },
@@ -27,7 +27,7 @@ pub struct CallbackQuery {
 pub async fn get(
     State(db_conn): State<PgPool>,
     State(user_service): State<UserService>,
-    State(oauth_service): State<Oauth2Service>,
+    State(oauth_service): State<OAuth2Service>,
     State(oidc_service): State<Option<OidcService>>,
     Query(query): Query<CallbackQuery>,
 ) -> Result<Response> {
@@ -64,6 +64,7 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
+        .scopes(user_info.oauth2.scope.parse()?)
         .build();
 
     oauth_service

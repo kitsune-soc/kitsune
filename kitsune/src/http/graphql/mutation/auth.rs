@@ -1,6 +1,6 @@
 use crate::{
     http::graphql::{
-        types::{Oauth2Application, User},
+        types::{OAuth2Application, User},
         ContextExt,
     },
     service::{oauth2::CreateApp, user::Register},
@@ -36,7 +36,7 @@ impl AuthMutation {
         ctx: &Context<'_>,
         name: String,
         redirect_uri: String,
-    ) -> Result<Oauth2Application> {
+    ) -> Result<OAuth2Application> {
         let create_app = CreateApp::builder()
             .name(name)
             .redirect_uris(redirect_uri)

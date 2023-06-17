@@ -57,7 +57,7 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         if ENFORCE_EXPIRATION {
             user_account_query = user_account_query
-                .filter(oauth2_access_tokens::expired_at.gt(OffsetDateTime::now_utc()));
+                .filter(oauth2_access_tokens::expires_at.gt(OffsetDateTime::now_utc()));
         }
 
         let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;

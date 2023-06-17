@@ -1,106 +1,130 @@
 use crate::{
     error::{Error, Result},
-    service::{
-        oauth2::{AuthorisationCode, Oauth2Service},
-        url::UrlService,
-    },
+    service::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
-    extract::{Query, State},
-    response::{IntoResponse, Response},
+    debug_handler,
+    extract::{OriginalUri, State},
+    response::Redirect,
     Form,
 };
-use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::RunQueryDsl;
-use http::StatusCode;
-use kitsune_db::{
-    model::{oauth2, user::User},
-    schema::{oauth2_applications, users},
-    PgPool,
+use axum_extra::{
+    either::{Either, Either3},
+    extract::{
+        cookie::{Cookie, Expiration, SameSite},
+        SignedCookieJar,
+    },
 };
+use axum_flash::{Flash, IncomingFlashes};
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::RunQueryDsl;
+use kitsune_db::{model::user::User, schema::users, PgPool};
+use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
+use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
 use uuid::Uuid;
 
 #[cfg(feature = "oidc")]
-use crate::service::oidc::OidcService;
+use {
+    crate::service::oidc::OidcService,
+    axum::extract::Query,
+    kitsune_db::{model::oauth2, schema::oauth2_applications},
+};
 
+#[cfg(feature = "oidc")]
 #[derive(Deserialize)]
 pub struct AuthorizeQuery {
-    response_type: String,
     client_id: Uuid,
     redirect_uri: String,
+    scope: String,
     state: Option<String>,
 }
 
 #[derive(Deserialize)]
-pub struct AuthorizeForm {
+pub struct LoginForm {
     username: String,
     password: String,
 }
 
 #[derive(Template)]
-#[template(path = "oauth/authorize.html")]
-struct AuthorizePage {
-    app_name: String,
-    domain: String,
+#[template(path = "oauth/login.html")]
+pub struct LoginPage {
+    flash_messages: IncomingFlashes,
 }
 
 pub async fn get(
-    State(db_conn): State<PgPool>,
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
-    State(url_service): State<UrlService>,
-    Query(query): Query<AuthorizeQuery>,
-) -> Result<Response> {
-    if query.response_type != "code" {
-        return Ok((StatusCode::BAD_REQUEST, "Invalid response type").into_response());
-    }
-
-    let mut db_conn = db_conn.get().await?;
-    let application = oauth2_applications::table
-        .find(query.client_id)
-        .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-        .get_result::<oauth2::Application>(&mut db_conn)
-        .await?;
-
+    #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+    State(db_pool): State<PgPool>,
+    State(oauth_endpoint): State<OAuthEndpoint>,
+    cookies: SignedCookieJar,
+    flash_messages: IncomingFlashes,
+    oauth_req: OAuthRequest,
+) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
-        let auth_url = oidc_service
-            .authorisation_url(application.id, query.state)
+        let mut db_conn = db_pool.get().await?;
+        let application = oauth2_applications::table
+            .find(query.client_id)
+            .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+            .get_result::<oauth2::Application>(&mut db_conn)
             .await?;
 
-        return Ok((StatusCode::FOUND, [("Location", auth_url.as_str())]).into_response());
+        let auth_url = oidc_service
+            .authorisation_url(application.id, query.scope, query.state)
+            .await?;
+
+        return Ok(Either3::E3(Redirect::to(auth_url.as_str())));
     }
 
-    Ok(AuthorizePage {
-        app_name: application.name,
-        domain: url_service.domain().into(),
-    }
-    .into_response())
+    let authenticated_user = if let Some(user_id) = cookies.get("user_id") {
+        let mut db_conn = db_pool.get().await?;
+        let id = user_id.value().parse::<Uuid>()?;
+        users::table.find(id).get_result(&mut db_conn).await?
+    } else {
+        return Ok(Either3::E2(LoginPage { flash_messages }));
+    };
+
+    let solicitor = OAuthOwnerSolicitor::builder()
+        .authenticated_user(authenticated_user)
+        .db_pool(db_pool)
+        .build();
+
+    let mut flow = AuthorizationFlow::prepare(oauth_endpoint.with_solicitor(solicitor))?;
+    AuthorizationFlow::execute(&mut flow, oauth_req)
+        .await
+        .map(Either3::E1)
+        .map_err(Error::from)
 }
 
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
     State(db_conn): State<PgPool>,
-    State(oauth2_service): State<Oauth2Service>,
-    Query(query): Query<AuthorizeQuery>,
-    Form(form): Form<AuthorizeForm>,
-) -> Result<Response> {
+    OriginalUri(original_url): OriginalUri,
+    cookies: SignedCookieJar,
+    flash: Flash,
+    Form(form): Form<LoginForm>,
+) -> Result<Either<(SignedCookieJar, Redirect), (Flash, Redirect)>> {
+    let redirect_to = if let Some(path_and_query) = original_url.path_and_query() {
+        path_and_query.as_str()
+    } else {
+        original_url.path()
+    };
+
     let mut db_conn = db_conn.get().await?;
-    let user = users::table
+    let Some(user) = users::table
         .filter(users::username.eq(form.username))
         .first::<User>(&mut db_conn)
         .await
-        .map_err(|e| match e {
-            diesel::result::Error::NotFound => Error::PasswordMismatch,
-            e => e.into(),
-        })?;
-
-    let application = oauth2_applications::table
-        .find(query.client_id)
-        .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-        .get_result::<oauth2::Application>(&mut db_conn)
-        .await?;
+        .optional()?
+    else {
+        return Ok(Either::E2((
+            flash.error(Error::PasswordMismatch.to_string()),
+            Redirect::to(redirect_to),
+        )));
+    };
 
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
@@ -115,16 +139,26 @@ pub async fn post(
     .await??;
 
     if !is_valid {
-        return Err(Error::PasswordMismatch);
+        return Ok(Either::E2((
+            flash.error(Error::PasswordMismatch.to_string()),
+            Redirect::to(redirect_to),
+        )));
     }
 
-    let authorisation_code = AuthorisationCode::builder()
-        .application(application)
-        .state(query.state)
-        .user_id(user.id)
-        .build();
+    // TODO: Bad because no expiration. Either encode an expiration into the cookie and make this basically a shitty JWT
+    // or store session IDs instead that are stored in a TTL data structure (these would need to be either storable in-memory or in Redis; similar to OIDC data)
+    #[allow(unused_mut)]
+    let mut user_id_cookie = Cookie::build("user_id", user.id.to_string())
+        .same_site(SameSite::Strict)
+        .expires(Expiration::Session);
 
-    oauth2_service
-        .create_authorisation_code_response(authorisation_code)
-        .await
+    #[cfg(not(debug_assertions))]
+    {
+        user_id_cookie = user_id_cookie.secure(true);
+    }
+
+    Ok(Either::E1((
+        cookies.add(user_id_cookie.finish()),
+        Redirect::to(redirect_to),
+    )))
 }

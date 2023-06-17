@@ -20,6 +20,12 @@
   font-family: Play;
 }
 
+a {
+  font-weight: 500;
+  color: var(--shade1light);
+  text-decoration: inherit;
+}
+
 body {
   /* background-image: url("/public/assets/BG.webp");
   background-size: cover;
@@ -47,17 +53,15 @@ body {
   margin: 25px auto;
 }
 
-form {
+form,
+.message {
   background: linear-gradient(to top left, var(--dark2), var(--dark1));
-  padding: 8vh 4.5vh;
   border: 10px solid;
   border-image-slice: 1;
   border-width: 4px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 18px;
   font-weight: 300;
   display: flex;
@@ -66,6 +70,15 @@ form {
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
+}
+
+form {
+  padding: 8vh 4.5vh;
+}
+
+.message,
+.consent-forms form {
+  padding: 2vh;
 }
 
 form .field {
@@ -78,6 +91,12 @@ form .field {
   font-size: 20px;
 }
 
+div.consent-forms {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+}
+
 .label {
   text-transform: uppercase;
 }
@@ -88,20 +107,22 @@ form .field {
   border: 10px solid;
   border-image-slice: 1;
   border-width: 3px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 16px;
   font-weight: bold;
   max-width: 80%;
 }
 
+.authUsername,
 .appName {
   color: var(--shade2light);
-  text-transform: uppercase;
   font-weight: bold;
+}
+
+.appName {
+  text-transform: uppercase;
 }
 
 .formButton {
@@ -130,11 +151,9 @@ form .field {
   border: 10px solid;
   border-image-slice: 1;
   border-width: 4px;
-  border-image-source: linear-gradient(
-    to left,
-    var(--shade1light),
-    var(--shade1dark)
-  );
+  border-image-source: linear-gradient(to left,
+      var(--shade1light),
+      var(--shade1dark));
   font-size: 20px;
   font-weight: 300;
   display: flex;

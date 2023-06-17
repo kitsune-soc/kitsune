@@ -1,12 +1,12 @@
 use crate::{error::Result, mapping::MastodonMapper, state::Zustand};
 use axum::{
     extract::{Path, State},
-    response::{IntoResponse, Response},
     routing, Json, Router,
 };
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
+use kitsune_type::mastodon;
 use uuid::Uuid;
 
 pub mod follow;
@@ -29,7 +29,7 @@ async fn get(
     State(db_conn): State<PgPool>,
     State(mastodon_mapper): State<MastodonMapper>,
     Path(id): Path<Uuid>,
-) -> Result<Response> {
+) -> Result<Json<mastodon::Account>> {
     let mut db_conn = db_conn.get().await?;
     let account = accounts::table
         .find(id)
@@ -37,7 +37,7 @@ async fn get(
         .get_result::<Account>(&mut db_conn)
         .await?;
 
-    Ok(Json(mastodon_mapper.map(account).await?).into_response())
+    Ok(Json(mastodon_mapper.map(account).await?))
 }
 
 pub fn routes() -> Router<Zustand> {

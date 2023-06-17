@@ -1,8 +1,6 @@
 //!
 //! Standard-compliant OAuth2 flows
 //!
-//! Implemented (somewhat) in accordance to [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
-//!
 
 use crate::state::Zustand;
 use axum::{

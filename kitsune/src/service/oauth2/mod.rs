@@ -5,28 +5,66 @@ use crate::{
 };
 use askama::Template;
 use askama_axum::IntoResponse;
-use axum::response::Response;
+use axum::response::{Redirect, Response};
+use chrono::Utc;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use kitsune_db::{
-    model::oauth2::{self, NewApplication, NewAuthorizationCode},
+    model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
     PgPool,
 };
-use std::str::FromStr;
+use oxide_auth::endpoint::Scope;
+use std::str::{self, FromStr};
+use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
 
-pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
+mod authorizer;
+mod endpoint;
+mod issuer;
+mod registrar;
+mod solicitor;
+
+pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
+static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
+
+#[inline]
+fn time_to_chrono(ts: time::OffsetDateTime) -> chrono::DateTime<Utc> {
+    chrono::NaiveDateTime::from_timestamp_opt(ts.unix_timestamp(), ts.nanosecond())
+        .unwrap()
+        .and_utc()
+}
+
+#[inline]
+fn chrono_to_time(ts: chrono::DateTime<Utc>) -> time::OffsetDateTime {
+    time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
+        .unwrap()
+        .replace_nanosecond(ts.timestamp_subsec_nanos())
+        .unwrap()
+}
+
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
+#[strum(serialize_all = "lowercase", use_phf)]
+pub enum OAuthScope {
+    #[strum(message = "Read admin-related data", serialize = "admin:read")]
+    AdminRead,
+    #[strum(message = "Write admin-related data", serialize = "admin:write")]
+    AdminWrite,
+    #[strum(message = "Read on your behalf")]
+    Read,
+    #[strum(message = "Write on your behalf")]
+    Write,
+}
 
 #[derive(Clone, TypedBuilder)]
 pub struct AuthorisationCode {
     application: oauth2::Application,
+    scopes: Scope,
     state: Option<String>,
     user_id: Uuid,
 }
@@ -46,17 +84,17 @@ struct ShowTokenPage {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct Oauth2Service {
+pub struct OAuth2Service {
     db_conn: PgPool,
     url_service: UrlService,
 }
 
-impl Oauth2Service {
+impl OAuth2Service {
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
         let mut db_conn = self.db_conn.get().await?;
 
         diesel::insert_into(oauth2_applications::table)
-            .values(NewApplication {
+            .values(oauth2::NewApplication {
                 id: Uuid::now_v7(),
                 secret: generate_secret().as_str(),
                 name: create_app.name.as_str(),
@@ -73,6 +111,7 @@ impl Oauth2Service {
         &self,
         AuthorisationCode {
             application,
+            scopes,
             state,
             user_id,
         }: AuthorisationCode,
@@ -80,11 +119,12 @@ impl Oauth2Service {
         let mut db_conn = self.db_conn.get().await?;
         let authorization_code: oauth2::AuthorizationCode =
             diesel::insert_into(oauth2_authorization_codes::table)
-                .values(NewAuthorizationCode {
+                .values(oauth2::NewAuthorizationCode {
                     code: generate_secret().as_str(),
                     application_id: application.id,
                     user_id,
-                    expired_at: OffsetDateTime::now_utc() + TOKEN_VALID_DURATION,
+                    scopes: scopes.to_string().as_str(),
+                    expires_at: OffsetDateTime::now_utc() + AUTH_TOKEN_VALID_DURATION,
                 })
                 .get_result(&mut db_conn)
                 .await?;
@@ -105,7 +145,7 @@ impl Oauth2Service {
                 url.query_pairs_mut().append_pair("state", &state);
             }
 
-            Ok((StatusCode::FOUND, [("Location", url.as_str())]).into_response())
+            Ok(Redirect::to(url.as_str()).into_response())
         }
     }
 }

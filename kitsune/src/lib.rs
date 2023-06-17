@@ -43,9 +43,15 @@ use self::{
     },
     resolve::PostResolver,
     service::{
-        account::AccountService, attachment::AttachmentService,
-        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        oauth2::Oauth2Service, post::PostService, timeline::TimelineService, url::UrlService,
+        account::AccountService,
+        attachment::AttachmentService,
+        federation_filter::FederationFilterService,
+        instance::InstanceService,
+        job::JobService,
+        oauth2::{OAuth2Service, OAuthEndpoint},
+        post::PostService,
+        timeline::TimelineService,
+        url::UrlService,
         user::UserService,
     },
     state::{EventEmitter, Service, Zustand},
@@ -61,9 +67,13 @@ use kitsune_messaging::{
 };
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
-use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fmt::Display, sync::Arc, time::Duration};
+use state::SessionConfig;
+use std::{
+    fmt::Display,
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
 #[cfg(feature = "kitsune-search")]
 use kitsune_search::GrpcSearchService;
@@ -93,7 +103,7 @@ where
         CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         CacheConfiguration::None => NoopCache.into(),
         CacheConfiguration::Redis(ref redis_config) => {
-            static REDIS_POOL: OnceCell<deadpool_redis::Pool> = OnceCell::new();
+            static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
 
             let pool = REDIS_POOL.get_or_init(|| {
                 let config = deadpool_redis::Config::from_url(&redis_config.redis_url);
@@ -273,7 +283,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
     .await
     .transpose()?;
 
-    let oauth2_service = Oauth2Service::builder()
+    let oauth2_service = OAuth2Service::builder()
         .db_conn(conn.clone())
         .url_service(url_service.clone())
         .build();
@@ -316,13 +326,14 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
         .expect("[Bug] Failed to initialise Mastodon mapper");
 
     Ok(Zustand {
-        db_conn: conn,
+        db_conn: conn.clone(),
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
         },
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
+        oauth_endpoint: OAuthEndpoint::from(conn),
         service: Service {
             account: account_service,
             federation_filter: federation_filter_service,
@@ -338,6 +349,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
             url: url_service,
             user: user_service,
         },
+        session_config: SessionConfig::generate(),
         webfinger,
     })
 }

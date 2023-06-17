@@ -15,11 +15,11 @@ use crate::{
 };
 use axum::{
     extract::{Path, Query, State},
-    response::{IntoResponse, Response},
     routing::{self, post},
     Router,
 };
 use futures_util::{future::OptionFuture, TryStreamExt};
+use kitsune_type::ap::actor::Actor;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -89,13 +89,13 @@ async fn get(
     _: State<UrlService>,        // Needed to get the same types for the conditional routing
     Path(account_id): Path<Uuid>,
     _: Query<PageQuery>, // Needed to get the same types for the conditional routing
-) -> Result<Response> {
+) -> Result<ActivityPubJson<Actor>> {
     let account = account_service
         .get_by_id(account_id)
         .await?
         .ok_or(ApiError::NotFound)?;
 
-    Ok(ActivityPubJson(account.into_object(&state).await?).into_response())
+    Ok(ActivityPubJson(account.into_object(&state).await?))
 }
 
 pub fn routes() -> Router<Zustand> {

@@ -7,9 +7,9 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Path, State},
-    response::{IntoResponse, Response},
     Json,
 };
+use kitsune_type::mastodon::Status;
 use uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
@@ -28,8 +28,8 @@ pub async fn post(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-) -> Result<Response> {
+) -> Result<Json<Status>> {
     let post = post.unfavourite(id, user_data.account.id).await?;
 
-    Ok(Json(mastodon_mapper.map((&user_data.account, post)).await?).into_response())
+    Ok(Json(mastodon_mapper.map((&user_data.account, post)).await?))
 }
