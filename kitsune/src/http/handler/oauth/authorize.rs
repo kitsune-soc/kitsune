@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    service::oauth2::{OauthEndpoint, OauthOwnerSolicitor},
+    service::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
@@ -58,7 +58,7 @@ pub async fn get(
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
     State(db_pool): State<PgPool>,
-    State(oauth_endpoint): State<OauthEndpoint>,
+    State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
@@ -87,7 +87,7 @@ pub async fn get(
         return Ok(Either3::E2(LoginPage { flash_messages }));
     };
 
-    let solicitor = OauthOwnerSolicitor::builder()
+    let solicitor = OAuthOwnerSolicitor::builder()
         .authenticated_user(authenticated_user)
         .db_pool(db_pool)
         .build();

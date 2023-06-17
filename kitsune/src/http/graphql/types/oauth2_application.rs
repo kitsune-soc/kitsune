@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, SimpleObject)]
 #[graphql(name = "OAuth2Application")]
-pub struct Oauth2Application {
+pub struct OAuth2Application {
     pub id: Uuid,
     pub name: String,
     pub secret: String,
@@ -14,7 +14,7 @@ pub struct Oauth2Application {
     pub updated_at: OffsetDateTime,
 }
 
-impl From<oauth2::Application> for Oauth2Application {
+impl From<oauth2::Application> for OAuth2Application {
     fn from(value: oauth2::Application) -> Self {
         Self {
             id: value.id,

@@ -54,7 +54,7 @@ pub enum FederationFilterError {
 }
 
 #[derive(Debug, Error)]
-pub enum Oauth2Error {
+pub enum OAuth2Error {
     #[error("Missing grant type")]
     MissingGrantType,
 
@@ -160,7 +160,7 @@ pub enum Error {
     Multipart(#[from] MultipartError),
 
     #[error(transparent)]
-    OAuth(#[from] Oauth2Error),
+    OAuth(#[from] OAuth2Error),
 
     #[error(transparent)]
     ParseBool(#[from] ParseBoolError),

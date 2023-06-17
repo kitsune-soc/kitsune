@@ -1,6 +1,6 @@
 use crate::{
-    error::{Error, Oauth2Error, Result},
-    service::oauth2::OauthEndpoint,
+    error::{Error, OAuth2Error, Result},
+    service::oauth2::OAuthEndpoint,
 };
 use axum::{debug_handler, extract::State};
 use oxide_auth::endpoint::QueryParameter;
@@ -12,13 +12,13 @@ use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(post, path = "/oauth/token")]
 pub async fn post(
-    State(oauth_endpoint): State<OauthEndpoint>,
+    State(oauth_endpoint): State<OAuthEndpoint>,
     oauth_req: OAuthRequest,
 ) -> Result<OAuthResponse> {
     let grant_type = oauth_req
         .body()
         .and_then(|body| body.unique_value("grant_type"))
-        .ok_or(Oauth2Error::MissingGrantType)?;
+        .ok_or(OAuth2Error::MissingGrantType)?;
 
     match grant_type.as_ref() {
         "authorization_code" => {
@@ -33,7 +33,7 @@ pub async fn post(
             let mut flow = RefreshFlow::prepare(oauth_endpoint)?;
             RefreshFlow::execute(&mut flow, oauth_req).await
         }
-        _ => Err(Oauth2Error::UnknownGrantType),
+        _ => Err(OAuth2Error::UnknownGrantType),
     }
     .map_err(Error::from)
 }

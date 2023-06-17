@@ -48,7 +48,7 @@ use self::{
         federation_filter::FederationFilterService,
         instance::InstanceService,
         job::JobService,
-        oauth2::{Oauth2Service, OauthEndpoint},
+        oauth2::{OAuth2Service, OAuthEndpoint},
         post::PostService,
         timeline::TimelineService,
         url::UrlService,
@@ -283,7 +283,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
     .await
     .transpose()?;
 
-    let oauth2_service = Oauth2Service::builder()
+    let oauth2_service = OAuth2Service::builder()
         .db_conn(conn.clone())
         .url_service(url_service.clone())
         .build();
@@ -333,7 +333,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
-        oauth_endpoint: OauthEndpoint::from(conn),
+        oauth_endpoint: OAuthEndpoint::from(conn),
         service: Service {
             account: account_service,
             federation_filter: federation_filter_service,

@@ -1,6 +1,6 @@
 use super::url::UrlService;
 use crate::{
-    error::{Error, Oauth2Error, Result},
+    error::{Error, OAuth2Error, Result},
     util::generate_secret,
 };
 use askama::Template;
@@ -111,12 +111,12 @@ struct ShowTokenPage {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct Oauth2Service {
+pub struct OAuth2Service {
     db_conn: PgPool,
     url_service: UrlService,
 }
 
-impl Oauth2Service {
+impl OAuth2Service {
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
         let mut db_conn = self.db_conn.get().await?;
 
@@ -178,23 +178,23 @@ impl Oauth2Service {
 }
 
 #[derive(Clone)]
-pub struct OauthEndpoint<S = Vacant> {
-    authorizer: OauthAuthorizer,
-    issuer: OauthIssuer,
+pub struct OAuthEndpoint<S = Vacant> {
+    authorizer: OAuthAuthorizer,
+    issuer: OAuthIssuer,
     owner_solicitor: S,
-    registrar: OauthRegistrar,
+    registrar: OAuthRegistrar,
     scopes: Vec<Scope>,
 }
 
-impl<S> OauthEndpoint<S> {
+impl<S> OAuthEndpoint<S> {
     pub fn with_solicitor<NewSolicitor>(
         self,
         owner_solicitor: NewSolicitor,
-    ) -> OauthEndpoint<NewSolicitor>
+    ) -> OAuthEndpoint<NewSolicitor>
     where
         NewSolicitor: OwnerSolicitor<OAuthRequest> + Send,
     {
-        OauthEndpoint {
+        OAuthEndpoint {
             authorizer: self.authorizer,
             issuer: self.issuer,
             owner_solicitor,
@@ -204,15 +204,15 @@ impl<S> OauthEndpoint<S> {
     }
 }
 
-impl From<PgPool> for OauthEndpoint {
+impl From<PgPool> for OAuthEndpoint {
     fn from(db_pool: PgPool) -> Self {
-        let authorizer = OauthAuthorizer {
+        let authorizer = OAuthAuthorizer {
             db_pool: db_pool.clone(),
         };
-        let issuer = OauthIssuer {
+        let issuer = OAuthIssuer {
             db_pool: db_pool.clone(),
         };
-        let registrar = OauthRegistrar { db_pool };
+        let registrar = OAuthRegistrar { db_pool };
         let scopes = OAuthScope::iter()
             .map(|scope| scope.as_ref().parse().unwrap())
             .collect();
@@ -227,11 +227,11 @@ impl From<PgPool> for OauthEndpoint {
     }
 }
 
-impl<S> Endpoint<OAuthRequest> for OauthEndpoint<S>
+impl<S> Endpoint<OAuthRequest> for OAuthEndpoint<S>
 where
     S: OwnerSolicitor<OAuthRequest> + Send,
 {
-    type Error = Oauth2Error;
+    type Error = OAuth2Error;
 
     fn registrar(&self) -> Option<&(dyn Registrar + Sync)> {
         Some(&self.registrar)
@@ -272,12 +272,12 @@ where
 }
 
 #[derive(Clone)]
-struct OauthAuthorizer {
+struct OAuthAuthorizer {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Authorizer for OauthAuthorizer {
+impl Authorizer for OAuthAuthorizer {
     async fn authorize(&mut self, grant: Grant) -> Result<String, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
@@ -337,12 +337,12 @@ impl Authorizer for OauthAuthorizer {
 }
 
 #[derive(Clone)]
-struct OauthIssuer {
+struct OAuthIssuer {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Issuer for OauthIssuer {
+impl Issuer for OAuthIssuer {
     async fn issue(&mut self, grant: Grant) -> Result<IssuedToken, ()> {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
@@ -522,13 +522,13 @@ impl Issuer for OauthIssuer {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct OauthOwnerSolicitor {
+pub struct OAuthOwnerSolicitor {
     authenticated_user: User,
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
+impl OwnerSolicitor<OAuthRequest> for OAuthOwnerSolicitor {
     async fn check_consent(
         &mut self,
         req: &mut OAuthRequest,
@@ -611,12 +611,12 @@ impl OwnerSolicitor<OAuthRequest> for OauthOwnerSolicitor {
 }
 
 #[derive(Clone)]
-struct OauthRegistrar {
+struct OAuthRegistrar {
     db_pool: PgPool,
 }
 
 #[async_trait]
-impl Registrar for OauthRegistrar {
+impl Registrar for OAuthRegistrar {
     async fn bound_redirect<'a>(
         &self,
         bound: ClientUrl<'a>,
