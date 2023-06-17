@@ -18,7 +18,7 @@ pub struct AccessToken {
     pub application_id: Option<Uuid>,
     pub scopes: String,
     pub created_at: OffsetDateTime,
-    pub expired_at: OffsetDateTime,
+    pub expires_at: OffsetDateTime,
 }
 
 #[derive(Clone, Insertable)]
@@ -28,5 +28,5 @@ pub struct NewAccessToken<'a> {
     pub user_id: Option<Uuid>,
     pub application_id: Option<Uuid>,
     pub scopes: &'a str,
-    pub expired_at: OffsetDateTime,
+    pub expires_at: OffsetDateTime,
 }

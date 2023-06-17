@@ -89,7 +89,7 @@ diesel::table! {
         application_id -> Nullable<Uuid>,
         scopes -> Text,
         created_at -> Timestamptz,
-        expired_at -> Timestamptz,
+        expires_at -> Timestamptz,
     }
 }
 
@@ -119,7 +119,7 @@ diesel::table! {
         user_id -> Uuid,
         scopes -> Text,
         created_at -> Timestamptz,
-        expired_at -> Timestamptz,
+        expires_at -> Timestamptz,
     }
 }
 

@@ -22,7 +22,7 @@ impl Authorizer for OAuthAuthorizer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
-        let expired_at = chrono_to_time(grant.until);
+        let expires_at = chrono_to_time(grant.until);
 
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         diesel::insert_into(oauth2_authorization_codes::table)
@@ -31,7 +31,7 @@ impl Authorizer for OAuthAuthorizer {
                 application_id,
                 user_id,
                 scopes: scopes.as_str(),
-                expired_at,
+                expires_at,
             })
             .returning(oauth2_authorization_codes::code)
             .get_result(&mut db_conn)
@@ -58,7 +58,7 @@ impl Authorizer for OAuthAuthorizer {
                 client_id: code.application_id.to_string(),
                 scope,
                 redirect_uri,
-                until: time_to_chrono(code.expired_at),
+                until: time_to_chrono(code.expires_at),
                 extensions: Extensions::default(),
             }
         });

@@ -15,7 +15,7 @@ CREATE TABLE oauth2_authorization_codes (
     user_id UUID NOT NULL,
     scopes TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- Foreign key constraints
     FOREIGN KEY (application_id) REFERENCES oauth2_applications(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -28,7 +28,7 @@ CREATE TABLE oauth2_access_tokens (
     application_id UUID,
     scopes TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expired_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
 
     -- Foreign key constraints
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,

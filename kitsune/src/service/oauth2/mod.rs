@@ -124,7 +124,7 @@ impl OAuth2Service {
                     application_id: application.id,
                     user_id,
                     scopes: scopes.to_string().as_str(),
-                    expired_at: OffsetDateTime::now_utc() + AUTH_TOKEN_VALID_DURATION,
+                    expires_at: OffsetDateTime::now_utc() + AUTH_TOKEN_VALID_DURATION,
                 })
                 .get_result(&mut db_conn)
                 .await?;

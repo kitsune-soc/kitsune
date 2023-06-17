@@ -18,7 +18,7 @@ pub struct AuthorizationCode {
     pub user_id: Uuid,
     pub scopes: String,
     pub created_at: OffsetDateTime,
-    pub expired_at: OffsetDateTime,
+    pub expires_at: OffsetDateTime,
 }
 
 #[derive(Clone, Insertable)]
@@ -28,5 +28,5 @@ pub struct NewAuthorizationCode<'a> {
     pub application_id: Uuid,
     pub user_id: Uuid,
     pub scopes: &'a str,
-    pub expired_at: OffsetDateTime,
+    pub expires_at: OffsetDateTime,
 }

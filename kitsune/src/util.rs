@@ -15,7 +15,7 @@ pub trait AccessTokenTtl {
 
 impl AccessTokenTtl for AccessToken {
     fn ttl(&self) -> time::Duration {
-        self.expired_at - OffsetDateTime::now_utc()
+        self.expires_at - OffsetDateTime::now_utc()
     }
 }
 

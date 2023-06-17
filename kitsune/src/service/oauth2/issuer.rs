@@ -26,7 +26,7 @@ impl Issuer for OAuthIssuer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
-        let expired_at = chrono_to_time(grant.until);
+        let expires_at = chrono_to_time(grant.until);
 
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         let (access_token, refresh_token) = db_conn
@@ -38,7 +38,7 @@ impl Issuer for OAuthIssuer {
                             user_id: Some(user_id),
                             application_id: Some(application_id),
                             scopes: scopes.as_str(),
-                            expired_at,
+                            expires_at,
                         })
                         .returning(oauth2::AccessToken::as_returning())
                         .get_result::<oauth2::AccessToken>(tx)
@@ -88,7 +88,7 @@ impl Issuer for OAuthIssuer {
                             token: generate_secret().as_str(),
                             application_id: access_token.application_id,
                             scopes: access_token.scopes.as_str(),
-                            expired_at: chrono_to_time(grant.until),
+                            expires_at: chrono_to_time(grant.until),
                         })
                         .get_result::<oauth2::AccessToken>(tx)
                         .await?;
@@ -112,7 +112,7 @@ impl Issuer for OAuthIssuer {
         Ok(RefreshedToken {
             token: access_token.token,
             refresh: Some(refresh_token.token),
-            until: time_to_chrono(access_token.expired_at),
+            until: time_to_chrono(access_token.expires_at),
             token_type: TokenType::Bearer,
         })
     }
@@ -131,7 +131,7 @@ impl Issuer for OAuthIssuer {
         let oauth_data = oauth_data.map(|(access_token, app)| {
             let scope = app.scopes.parse().unwrap();
             let redirect_uri = app.redirect_uri.parse().unwrap();
-            let until = time_to_chrono(access_token.expired_at);
+            let until = time_to_chrono(access_token.expires_at);
 
             Grant {
                 owner_id: access_token
