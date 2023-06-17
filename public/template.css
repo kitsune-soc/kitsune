@@ -70,7 +70,8 @@ form {
   padding: 8vh 4.5vh;
 }
 
-.message {
+.message,
+.consent-forms form {
   padding: 2vh;
 }
 

@@ -19,7 +19,16 @@
 
 <body>
   <p class="header">Kitsune</p>
-  <span class="appName">{{app_name}}</span> wants access to do the following with your Kitsune account:
+  <div class="consent-text">
+    <span class="appName">{{app_name}}</span> wants the following access to your Kitsune account:
+    <p>
+    <ul>
+      {% for scope in scopes %}
+      <li>{{ scope.get_message().unwrap() }}</li>
+      {% endfor %}
+    </ul>
+    </p>
+  </div>
   <div class="consent-forms">
     <form method="get">
       {% call add_query_params() %}

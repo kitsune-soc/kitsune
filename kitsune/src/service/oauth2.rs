@@ -39,7 +39,7 @@ use std::{
     future,
     str::{self, FromStr},
 };
-use strum::{AsRefStr, EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
+use strum::{AsRefStr, EnumIter, EnumMessage, EnumString, IntoEnumIterator};
 use time::{Duration, OffsetDateTime};
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -50,14 +50,16 @@ pub static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
-#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumString, EnumVariantNames)]
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
 #[strum(serialize_all = "lowercase", use_phf)]
 pub enum OAuthScope {
-    #[strum(serialize = "admin:read")]
+    #[strum(message = "Read admin-related data", serialize = "admin:read")]
     AdminRead,
-    #[strum(serialize = "admin:write")]
+    #[strum(message = "Write admin-related data", serialize = "admin:write")]
     AdminWrite,
+    #[strum(message = "Read on your behalf")]
     Read,
+    #[strum(message = "Write on your behalf")]
     Write,
 }
 
@@ -74,6 +76,7 @@ pub struct AuthorisationCode {
 struct ConsentPage<'a> {
     app_name: &'a str,
     query: PageQueryParams,
+    scopes: &'a [OAuthScope],
 }
 
 struct PageQueryParams {
@@ -581,9 +584,18 @@ impl OwnerSolicitor<OAuthRequest> for OAuthOwnerSolicitor {
                             .map_err(|_| WebError::InternalError(None))?
                             .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
 
+                        let scopes = solicitation
+                            .pre_grant()
+                            .scope
+                            .iter()
+                            .map(OAuthScope::from_str)
+                            .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
+                            .expect("[Bug] Scopes weren't normalised");
+
                         let body = ConsentPage {
                             app_name: &app_name,
                             query,
+                            scopes: &scopes,
                         }
                         .render()
                         .map_err(|err| WebError::InternalError(Some(err.to_string())))?;
