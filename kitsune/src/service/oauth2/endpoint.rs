@@ -92,7 +92,6 @@ where
         _request: &mut OAuthRequest,
         _kind: oxide_auth::endpoint::Template<'_>,
     ) -> Result<<OAuthRequest as WebRequest>::Response, Self::Error> {
-        // Idk if thats correct. Just gotta try i guess??
         Ok(OAuthResponse::default())
     }
 
