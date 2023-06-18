@@ -1,7 +1,7 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
+use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
-use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::link_preview::{LinkPreview, NewLinkPreview},
     schema::link_previews,
@@ -96,7 +96,7 @@ impl Client {
             .unwrap();
 
         let response = HttpClient::execute(&self.http_client, request).await?;
-        let (_expire, embed_data): (Timestamp, Embed) = response.json().await?;
+        let (_expire, embed_data): EmbedWithExpire = response.json().await?;
         let embed_data_value = serde_json::to_value(embed_data.clone()).unwrap();
 
         let mut db_conn = self.db_pool.get().await?;

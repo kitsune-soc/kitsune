@@ -424,7 +424,9 @@ impl IntoMastodon for LinkPreview {
     }
 
     async fn into_mastodon(self, _state: MapperState<'_>) -> Result<Self::Output> {
-        let Embed::V1(embed_data) = serde_json::from_value(self.embed_data).unwrap();
+        let Embed::V1(embed_data) = serde_json::from_value(self.embed_data).unwrap() else {
+            panic!("Incompatible embed data found in database than known to our SDK. Please update Kitsune");
+        };
 
         let title = embed_data.title.unwrap_or_default();
         let description = embed_data.description.unwrap_or_default();
@@ -449,11 +451,16 @@ impl IntoMastodon for LinkPreview {
             (.., Some(vid)) => {
                 let width = vid.width.unwrap_or_default();
                 let height = vid.height.unwrap_or_default();
+                let tag_name = if vid.mime.as_deref() == Some(mime::TEXT_HTML.as_ref()) {
+                    "iframe"
+                } else {
+                    "video"
+                };
 
                 (
                     format!(
-                        r#"<iframe src="{}" width="{}" height="{}"></iframe>"#,
-                        vid.url, width, height
+                        r#"<{tag_name} src="{}" width="{width}" height="{height}"></{tag_name}>"#,
+                        vid.url,
                     ),
                     width,
                     height,
