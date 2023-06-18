@@ -18,6 +18,7 @@ use crate::{
 use axum::extract::FromRef;
 use axum_extra::extract::cookie;
 use kitsune_db::PgPool;
+use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
 
 #[cfg(feature = "oidc")]
@@ -139,6 +140,7 @@ pub struct Service {
 #[derive(Clone, FromRef)]
 pub struct Zustand {
     pub db_conn: PgPool,
+    pub embed_client: Option<EmbedClient>,
     pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,
     #[cfg(feature = "mastodon-api")]

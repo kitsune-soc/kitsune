@@ -2,6 +2,8 @@ let Cache = ./types/cache.dhall
 
 let Database = ./types/database.dhall
 
+let Embed = ./types/embed.dhall
+
 let FederationFilter = ./types/federation_filter.dhall
 
 let FsStorage = ./types/storage/fs.dhall
@@ -33,6 +35,7 @@ let Url = ./types/url.dhall
 let Config =
       { cache : Cache
       , database : Database
+      , embed : Optional Embed
       , instance : Instance
       , messaging : Messaging
       , server : Server
@@ -44,6 +47,7 @@ let Config =
 in  { Cache
     , Config
     , Database
+    , Embed
     , FederationFilter
     , FsStorage
     , Instance

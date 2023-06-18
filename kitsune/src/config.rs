@@ -21,6 +21,11 @@ pub struct DatabaseConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize, StaticType)]
+pub struct EmbedConfiguration {
+    pub url: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, StaticType)]
 pub enum FederationFilterConfiguration {
     Allow { domains: Vec<String> },
     Deny { domains: Vec<String> },
@@ -116,6 +121,7 @@ pub struct UrlConfiguration {
 pub struct Configuration {
     pub cache: CacheConfiguration,
     pub database: DatabaseConfiguration,
+    pub embed: Option<EmbedConfiguration>,
     pub instance: InstanceConfiguration,
     pub messaging: MessagingConfiguration,
     pub server: ServerConfiguration,

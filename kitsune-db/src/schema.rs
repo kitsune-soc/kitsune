@@ -66,6 +66,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
+    link_previews (url) {
+        url -> Text,
+        embed_data -> Jsonb,
+        expires_at -> Timestamptz,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     media_attachments (id) {
         id -> Uuid,
         account_id -> Uuid,
@@ -154,6 +167,7 @@ diesel::table! {
         updated_at -> Timestamptz,
         subject_ts -> Tsvector,
         content_ts -> Tsvector,
+        link_preview_url -> Nullable<Text>,
     }
 }
 
@@ -228,6 +242,7 @@ diesel::joinable!(oauth2_authorization_codes -> users (user_id));
 diesel::joinable!(oauth2_refresh_tokens -> oauth2_access_tokens (access_token));
 diesel::joinable!(oauth2_refresh_tokens -> oauth2_applications (application_id));
 diesel::joinable!(posts -> accounts (account_id));
+diesel::joinable!(posts -> link_previews (link_preview_url));
 diesel::joinable!(posts_favourites -> accounts (account_id));
 diesel::joinable!(posts_favourites -> posts (post_id));
 diesel::joinable!(posts_media_attachments -> media_attachments (media_attachment_id));
@@ -241,6 +256,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     accounts,
     accounts_follows,
     jobs,
+    link_previews,
     media_attachments,
     oauth2_access_tokens,
     oauth2_applications,

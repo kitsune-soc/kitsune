@@ -48,6 +48,7 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
             is_sensitive: false,
             subject: None,
             content: "",
+            link_preview_url: None,
             visibility: reposted_post.visibility,
             is_local: false,
             url: activity.id.as_str(),
@@ -65,6 +66,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
         let process_data = ProcessNewObject::builder()
             .author(author)
             .db_conn(&mut db_conn)
+            .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
             .object(object)
             .search_service(&state.service.search)

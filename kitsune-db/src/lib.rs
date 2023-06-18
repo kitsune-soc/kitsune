@@ -10,6 +10,7 @@ pub use crate::error::{Error, Result};
 mod error;
 
 pub mod function;
+pub mod json;
 pub mod model;
 pub mod post_permission_check;
 pub mod schema;

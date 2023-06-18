@@ -12,6 +12,7 @@ in    { cache =
       , database =
             { url = "postgres://localhost/kitsune", max_connections = 20 }
           : types.Database
+      , embed = None types.Embed
       , instance =
             { name = "Kitsune"
             , description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
