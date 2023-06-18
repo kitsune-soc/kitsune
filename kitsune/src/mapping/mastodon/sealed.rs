@@ -22,11 +22,10 @@ use kitsune_db::{
         mention::Mention as DbMention,
         post::Post as DbPost,
     },
-    schema::{
-        accounts, accounts_follows, link_previews, media_attachments, posts, posts_favourites,
-    },
+    schema::{accounts, accounts_follows, media_attachments, posts, posts_favourites},
     PgPool,
 };
+use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
 use kitsune_type::mastodon::{
     account::Source, media_attachment::MediaType, preview_card::PreviewType,
@@ -42,6 +41,7 @@ use uuid::Uuid;
 pub struct MapperState<'a> {
     pub attachment_service: &'a AttachmentService,
     pub db_conn: &'a PgPool,
+    pub embed_client: Option<&'a EmbedClient>,
     pub url_service: &'a UrlService,
 }
 
@@ -341,31 +341,26 @@ impl IntoMastodon for DbPost {
             .load_stream::<DbMention>(&mut db_conn)
             .map_err(Error::from);
 
-        let preview_card = OptionFuture::from(self.link_preview_url.as_ref().map(|url| {
-            link_previews::table
-                .find(url)
-                .select(LinkPreview::as_select())
-                .get_result::<LinkPreview>(&mut db_conn)
-                .map_err(Error::from)
-                .and_then(|link_preview| link_preview.into_mastodon(state))
-        }))
-        .map(Option::transpose);
-
-        let (
-            account,
-            reblog_count,
-            favourites_count,
-            media_attachments,
-            mentions_stream,
-            preview_card,
-        ) = try_join!(
+        let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = try_join!(
             account_fut,
             reblog_count_fut,
             favourites_count_fut,
             media_attachments_fut,
             mentions_stream_fut,
-            preview_card,
         )?;
+
+        let link_preview = OptionFuture::from(
+            self.link_preview_url
+                .as_ref()
+                .and_then(|url| state.embed_client.map(|client| client.fetch_embed(url))),
+        )
+        .await
+        .transpose()?;
+
+        let preview_card =
+            OptionFuture::from(link_preview.map(|preview| preview.into_mastodon(state)))
+                .await
+                .transpose()?;
 
         let mentions = mentions_stream
             .map_err(Error::from)
@@ -416,7 +411,7 @@ impl IntoMastodon for DbPost {
 }
 
 #[async_trait]
-impl IntoMastodon for LinkPreview {
+impl IntoMastodon for LinkPreview<Embed> {
     type Output = PreviewCard;
 
     fn id(&self) -> Option<Uuid> {
@@ -424,7 +419,7 @@ impl IntoMastodon for LinkPreview {
     }
 
     async fn into_mastodon(self, _state: MapperState<'_>) -> Result<Self::Output> {
-        let Embed::V1(embed_data) = serde_json::from_value(self.embed_data).unwrap() else {
+        let kitsune_db::json::Json(Embed::V1(embed_data)) = self.embed_data else {
             panic!("Incompatible embed data found in database than known to our SDK. Please update Kitsune");
         };
 

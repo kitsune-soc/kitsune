@@ -8,6 +8,7 @@ use derive_builder::Builder;
 use futures_util::StreamExt;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::PgPool;
+use kitsune_embed::Client as EmbedClient;
 use serde_json::Value;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -79,6 +80,7 @@ pub struct MastodonMapper {
     _cache_invalidator: (),
     attachment_service: AttachmentService,
     db_conn: PgPool,
+    embed_client: Option<EmbedClient>,
     mastodon_cache: ArcCache<Uuid, Value>,
     url_service: UrlService,
 }
@@ -96,6 +98,7 @@ impl MastodonMapper {
         MapperState {
             attachment_service: &self.attachment_service,
             db_conn: &self.db_conn,
+            embed_client: self.embed_client.as_ref(),
             url_service: &self.url_service,
         }
     }

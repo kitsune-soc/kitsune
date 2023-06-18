@@ -331,6 +331,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
                 .expect("Failed to register status event consumer"),
         )
         .db_conn(conn.clone())
+        .embed_client(embed_client.clone())
         .mastodon_cache(prepare_cache(config, "MASTODON-ENTITY"))
         .url_service(url_service.clone())
         .build()

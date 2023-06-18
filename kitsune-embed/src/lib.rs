@@ -3,7 +3,8 @@ use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use kitsune_db::{
-    model::link_preview::{LinkPreview, NewLinkPreview},
+    json::Json,
+    model::link_preview::{ConflictLinkPreviewChangeset, LinkPreview, NewLinkPreview},
     schema::link_previews,
     PgPool,
 };
@@ -11,6 +12,7 @@ use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
+use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 
 pub use embed_sdk;
@@ -43,12 +45,6 @@ pub enum Error {
     Pool(#[from] deadpool::PoolError),
 }
 
-#[derive(Clone)]
-pub struct FragmentEmbed {
-    pub url: String,
-    pub embed: Embed,
-}
-
 #[derive(Clone, TypedBuilder)]
 pub struct Client {
     db_pool: PgPool,
@@ -62,30 +58,28 @@ impl Client {
     /// Fetches embed data for an HTML fragment
     ///
     /// It parses the HTML fragment, selects the first link and fetched embed data for it
-    pub async fn fetch_embed_for_fragment(&self, fragment: &str) -> Result<Option<FragmentEmbed>> {
+    pub async fn fetch_embed_for_fragment(
+        &self,
+        fragment: &str,
+    ) -> Result<Option<LinkPreview<Embed>>> {
         let Some(url) = first_link_from_fragment(fragment) else {
             return Ok(None);
         };
-        let embed = self.fetch_embed(&url).await?;
-
-        Ok(Some(FragmentEmbed {
-            url: url.to_string(),
-            embed,
-        }))
+        self.fetch_embed(&url).await.map(Some)
     }
 
-    pub async fn fetch_embed(&self, url: &str) -> Result<Embed> {
+    pub async fn fetch_embed(&self, url: &str) -> Result<LinkPreview<Embed>> {
         {
             let mut db_conn = self.db_pool.get().await?;
             if let Some(data) = link_previews::table
                 .find(url)
-                .get_result::<LinkPreview>(&mut db_conn)
+                .get_result::<LinkPreview<Embed>>(&mut db_conn)
                 .await
                 .optional()?
             {
-                let embed_data = serde_json::from_value(data.embed_data)
-                    .expect("[Bug] Invalid data in database");
-                return Ok(embed_data);
+                if data.expires_at > OffsetDateTime::now_utc() {
+                    return Ok(data);
+                }
             }
         }
 
@@ -96,16 +90,22 @@ impl Client {
             .unwrap();
 
         let response = HttpClient::execute(&self.http_client, request).await?;
-        let (_expire, embed_data): EmbedWithExpire = response.json().await?;
-        let embed_data_value = serde_json::to_value(embed_data.clone()).unwrap();
+        let (expires_at, embed_data): EmbedWithExpire = response.json().await?;
 
         let mut db_conn = self.db_pool.get().await?;
-        diesel::insert_into(link_previews::table)
+        let embed_data = diesel::insert_into(link_previews::table)
             .values(NewLinkPreview {
                 url,
-                embed_data: &embed_data_value,
+                embed_data: Json(&embed_data),
+                expires_at: expires_at.assume_utc(),
             })
-            .execute(&mut db_conn)
+            .on_conflict(link_previews::url)
+            .do_update()
+            .set(ConflictLinkPreviewChangeset {
+                embed_data: Json(&embed_data),
+                expires_at: expires_at.assume_utc(),
+            })
+            .get_result(&mut db_conn)
             .await?;
 
         Ok(embed_data)

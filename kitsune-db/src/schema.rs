@@ -69,6 +69,9 @@ diesel::table! {
     link_previews (url) {
         url -> Text,
         embed_data -> Jsonb,
+        expires_at -> Timestamptz,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
     }
 }
 
