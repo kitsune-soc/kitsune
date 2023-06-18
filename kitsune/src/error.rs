@@ -133,6 +133,9 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
+    Embed(#[from] kitsune_embed::Error),
+
+    #[error(transparent)]
     Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]

@@ -19,6 +19,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     PgPool,
 };
+use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{actor::Actor, Object};
@@ -68,6 +69,7 @@ pub struct Fetcher {
     )]
     client: Client,
     db_conn: PgPool,
+    embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
     search_service: SearchService,
@@ -246,6 +248,7 @@ impl Fetcher {
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
             .db_conn(&mut db_conn)
+            .embed_client(self.embed_client.as_ref())
             .fetcher(self)
             .object(object)
             .search_service(&self.search_service)
@@ -290,6 +293,7 @@ mod test {
         database_test(|db_conn| async move {
             let fetcher = Fetcher::builder()
                 .db_conn(db_conn)
+                .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
                         domains: Vec::new(),
@@ -323,6 +327,7 @@ mod test {
         database_test(|db_conn| async move {
             let fetcher = Fetcher::builder()
                 .db_conn(db_conn.clone())
+                .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
                         domains: Vec::new(),
@@ -362,6 +367,7 @@ mod test {
         database_test(|db_conn| async move {
             let fetcher = Fetcher::builder()
                 .db_conn(db_conn)
+                .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Allow {
                         domains: vec!["corteximplant.com".into()],
@@ -399,6 +405,7 @@ mod test {
         database_test(|db_conn| async move {
             let fetcher = Fetcher::builder()
                 .db_conn(db_conn)
+                .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
                         domains: vec!["example.com".into(), "*.badstuff.com".into()],

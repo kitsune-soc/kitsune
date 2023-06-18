@@ -62,6 +62,7 @@ use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
+use kitsune_embed::Client as EmbedClient;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
@@ -227,12 +228,21 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
     let search_service = prepare_search(&config.search, &conn).await?;
+
+    let embed_client = config.embed.as_ref().map(|embed_config| {
+        EmbedClient::builder()
+            .db_pool(conn.clone())
+            .embed_service(&embed_config.url)
+            .build()
+    });
+
     let federation_filter_service =
         FederationFilterService::new(&config.instance.federation_filter)
             .context("Couldn't build the federation filter (check your glob syntax)")?;
 
     let fetcher = Fetcher::builder()
         .db_conn(conn.clone())
+        .embed_client(embed_client.clone())
         .federation_filter(federation_filter_service.clone())
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
         .search_service(search_service.clone())
@@ -294,6 +304,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
 
     let post_service = PostService::builder()
         .db_conn(conn.clone())
+        .embed_client(embed_client.clone())
         .instance_service(instance_service.clone())
         .job_service(job_service.clone())
         .post_resolver(post_resolver)
@@ -327,6 +338,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
 
     Ok(Zustand {
         db_conn: conn.clone(),
+        embed_client,
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),
         },

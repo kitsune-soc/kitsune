@@ -15,6 +15,7 @@ use kitsune_db::{
     },
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
 };
+use kitsune_embed::Client as EmbedClient;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
@@ -108,6 +109,7 @@ pub struct ProcessNewObject<'a> {
     #[builder(default = 0)]
     call_depth: u32,
     db_conn: &'a mut AsyncPgConnection,
+    embed_client: Option<&'a EmbedClient>,
     object: Object,
     fetcher: &'a Fetcher,
     search_service: &'a SearchService,
@@ -119,6 +121,7 @@ pub async fn process_new_object(
         author,
         call_depth,
         db_conn,
+        embed_client,
         mut object,
         fetcher,
         search_service,
@@ -156,6 +159,15 @@ pub async fn process_new_object(
         object.content = buf;
     }
 
+    let link_preview_url = if let Some(embed_client) = embed_client {
+        embed_client
+            .fetch_embed_for_fragment(&object.content)
+            .await?
+            .map(|fragment_embed| fragment_embed.url)
+    } else {
+        None
+    };
+
     if let Some(ref name) = object.name {
         object.content = format!(
             r#"<p><a href="{}">{}</a></p>{}"#,
@@ -175,6 +187,7 @@ pub async fn process_new_object(
                         reposted_post_id: None,
                         subject: object.summary.as_deref(),
                         content: object.content.as_str(),
+                        link_preview_url: link_preview_url.as_deref(),
                         is_sensitive: object.sensitive,
                         visibility,
                         is_local: false,

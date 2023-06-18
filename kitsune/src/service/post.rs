@@ -38,6 +38,7 @@ use kitsune_db::{
     },
     PgPool,
 };
+use kitsune_embed::Client as EmbedClient;
 use kitsune_search::{SearchBackend, SearchService};
 use pulldown_cmark::{html, Options, Parser};
 use typed_builder::TypedBuilder;
@@ -122,6 +123,7 @@ impl DeletePost {
 #[derive(Clone, TypedBuilder)]
 pub struct PostService {
     db_conn: PgPool,
+    embed_client: Option<EmbedClient>,
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
@@ -217,6 +219,14 @@ impl PostService {
         content.clean_html();
 
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
+        let link_preview_url = if let Some(ref embed_client) = self.embed_client {
+            embed_client
+                .fetch_embed_for_fragment(&content)
+                .await?
+                .map(|fragment_embed| fragment_embed.url)
+        } else {
+            None
+        };
 
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
@@ -245,6 +255,7 @@ impl PostService {
                             reposted_post_id: None,
                             subject: subject.as_deref(),
                             content: content.as_str(),
+                            link_preview_url: link_preview_url.as_deref(),
                             is_sensitive: create_post.sensitive,
                             visibility: create_post.visibility,
                             is_local: true,

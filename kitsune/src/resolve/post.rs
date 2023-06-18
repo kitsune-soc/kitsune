@@ -111,6 +111,7 @@ mod test {
 
             let fetcher = Fetcher::builder()
                 .db_conn(db_conn.clone())
+                .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
                         domains: Vec::new(),

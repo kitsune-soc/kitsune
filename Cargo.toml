@@ -11,6 +11,7 @@ members = [
     "kitsune-cache",
     "kitsune-cli",
     "kitsune-db",
+    "kitsune-embed",
     "kitsune-http-client",
     "kitsune-http-signatures",
     "kitsune-messaging",
