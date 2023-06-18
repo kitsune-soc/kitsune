@@ -1,9 +1,9 @@
 use crate::schema::link_previews;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Deserialize, Serialize, Identifiable, Queryable)]
+#[derive(Clone, Deserialize, Serialize, Identifiable, Queryable, Selectable)]
 #[diesel(
     primary_key(url),
     table_name = link_previews,

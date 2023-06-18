@@ -15,21 +15,26 @@ use kitsune_db::{
         account::Account as DbAccount,
         favourite::Favourite as DbFavourite,
         follower::Follow,
+        link_preview::LinkPreview,
         media_attachment::{
             MediaAttachment as DbMediaAttachment, PostMediaAttachment as DbPostMediaAttachment,
         },
         mention::Mention as DbMention,
         post::Post as DbPost,
     },
-    schema::{accounts, accounts_follows, media_attachments, posts, posts_favourites},
+    schema::{
+        accounts, accounts_follows, link_previews, media_attachments, posts, posts_favourites,
+    },
     PgPool,
 };
+use kitsune_embed::{embed_sdk::EmbedType, Embed};
 use kitsune_type::mastodon::{
-    account::Source, media_attachment::MediaType, relationship::Relationship, status::Mention,
-    Account, MediaAttachment, Status,
+    account::Source, media_attachment::MediaType, preview_card::PreviewType,
+    relationship::Relationship, status::Mention, Account, MediaAttachment, PreviewCard, Status,
 };
 use mime::Mime;
 use serde::{de::DeserializeOwned, Serialize};
+use smol_str::SmolStr;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -336,12 +341,30 @@ impl IntoMastodon for DbPost {
             .load_stream::<DbMention>(&mut db_conn)
             .map_err(Error::from);
 
-        let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = try_join!(
+        let preview_card = OptionFuture::from(self.link_preview_url.as_ref().map(|url| {
+            link_previews::table
+                .find(url)
+                .select(LinkPreview::as_select())
+                .get_result::<LinkPreview>(&mut db_conn)
+                .map_err(Error::from)
+                .and_then(|link_preview| link_preview.into_mastodon(state))
+        }))
+        .map(Option::transpose);
+
+        let (
+            account,
+            reblog_count,
+            favourites_count,
+            media_attachments,
+            mentions_stream,
+            preview_card,
+        ) = try_join!(
             account_fut,
             reblog_count_fut,
             favourites_count_fut,
             media_attachments_fut,
-            mentions_stream_fut
+            mentions_stream_fut,
+            preview_card,
         )?;
 
         let mentions = mentions_stream
@@ -387,6 +410,79 @@ impl IntoMastodon for DbPost {
             reblog,
             favourited: false,
             reblogged: false,
+            card: preview_card,
+        })
+    }
+}
+
+#[async_trait]
+impl IntoMastodon for LinkPreview {
+    type Output = PreviewCard;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, _state: MapperState<'_>) -> Result<Self::Output> {
+        let Embed::V1(embed_data) = serde_json::from_value(self.embed_data).unwrap();
+
+        let title = embed_data.title.unwrap_or_default();
+        let description = embed_data.description.unwrap_or_default();
+        let (author_name, author_url) = embed_data
+            .author
+            .map(|author| (author.name, author.url.unwrap_or_default()))
+            .unwrap_or_default();
+
+        let (provider_name, provider_url) = (
+            embed_data.provider.name.unwrap_or_default(),
+            embed_data.provider.url.unwrap_or_default(),
+        );
+
+        let r#type = match embed_data.ty {
+            EmbedType::Img => PreviewType::Photo,
+            EmbedType::Vid => PreviewType::Video,
+            _ => PreviewType::Link,
+        };
+
+        let image = embed_data.thumb.map(|thumb| thumb.url.clone());
+        let (html, width, height, embed_url) = match (embed_data.img, embed_data.video) {
+            (.., Some(vid)) => {
+                let width = vid.width.unwrap_or_default();
+                let height = vid.height.unwrap_or_default();
+
+                (
+                    format!(
+                        r#"<iframe src="{}" width="{}" height="{}"></iframe>"#,
+                        vid.url, width, height
+                    ),
+                    width,
+                    height,
+                    SmolStr::default(),
+                )
+            }
+            (Some(img), ..) => (
+                String::default(),
+                img.width.unwrap_or_default(),
+                img.height.unwrap_or_default(),
+                img.url.clone(),
+            ),
+            _ => (String::default(), 0, 0, SmolStr::default()),
+        };
+
+        Ok(PreviewCard {
+            url: self.url,
+            title,
+            description,
+            r#type,
+            author_name,
+            author_url,
+            provider_name,
+            provider_url,
+            html,
+            width,
+            height,
+            image,
+            embed_url,
         })
     }
 }

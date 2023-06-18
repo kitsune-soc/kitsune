@@ -1,4 +1,4 @@
-use super::{Account, MediaAttachment};
+use super::{Account, MediaAttachment, PreviewCard};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use time::OffsetDateTime;
@@ -51,4 +51,5 @@ pub struct Status {
     pub reblog: Option<Box<Status>>,
     pub favourited: bool,
     pub reblogged: bool,
+    pub card: Option<PreviewCard>,
 }

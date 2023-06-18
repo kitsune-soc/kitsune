@@ -1,6 +1,5 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
-use embed_sdk::Embed;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -14,10 +13,14 @@ use scraper::{Html, Selector};
 use smol_str::SmolStr;
 use typed_builder::TypedBuilder;
 
+pub use embed_sdk;
+pub use embed_sdk::Embed;
+
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-static LINK_SELECTOR: Lazy<Selector> =
-    Lazy::new(|| Selector::parse("a").expect("[Bug] Failed to parse link HTML selector"));
+static LINK_SELECTOR: Lazy<Selector> = Lazy::new(|| {
+    Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
+});
 
 fn first_link_from_fragment(fragment: &str) -> Option<String> {
     let parsed_fragment = Html::parse_fragment(fragment);
