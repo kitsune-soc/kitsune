@@ -2,15 +2,28 @@ use diesel::{
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
-    serialize::{self, ToSql},
+    serialize::{self, IsNull, ToSql},
     sql_types::Jsonb,
     AsExpression, FromSqlRow,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    fmt::Debug,
+    error::Error,
+    fmt::{self, Debug},
+    io::Write,
     ops::{Deref, DerefMut},
 };
+
+#[derive(Debug)]
+pub struct JsonError(&'static str);
+
+impl fmt::Display for JsonError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "JSONB error: {}", self.0)
+    }
+}
+
+impl Error for JsonError {}
 
 #[derive(FromSqlRow, AsExpression, Serialize, Deserialize, Debug, Clone)]
 #[diesel(sql_type = Jsonb)]
@@ -36,8 +49,12 @@ where
     T: DeserializeOwned,
 {
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
-        let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
-        Ok(Self(serde_json::from_value(value)?))
+        let bytes = bytes.as_bytes();
+        if bytes[0] != 1 {
+            return Err(JsonError("Unsupported JSONB encoding version").into());
+        }
+
+        Ok(Self(serde_json::from_slice(&bytes[1..])?))
     }
 }
 
@@ -46,7 +63,9 @@ where
     T: Debug + Serialize,
 {
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
-        let value = serde_json::to_value(self)?;
-        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
+        out.write_all(&[1])?;
+        serde_json::to_writer(out, self)
+            .map(|_| IsNull::No)
+            .map_err(Into::into)
     }
 }
