@@ -16,13 +16,13 @@ use kitsune_type::ap::ActivityType;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum UpdateEntity {
     Account,
     Status,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverUpdate {
     pub entity: UpdateEntity,
     pub id: Uuid,

@@ -35,7 +35,7 @@ const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 
 #[enum_dispatch(Runnable)]
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Job {
     DeliverAccept,
     DeliverCreate,
@@ -66,10 +66,8 @@ pub trait Runnable: DeserializeOwned + Serialize {
 
 // Takes owned values to make the lifetime of the returned future static
 #[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Result<()> {
-    let job: Job = serde_json::from_value(db_job.context.clone())
-        .expect("[Bug] Failed to deserialise job context");
-
+async fn execute_one(db_job: DbJob<Job>, state: Zustand, deliverer: Deliverer) -> Result<()> {
+    let job = &db_job.context;
     let execution_result = CatchPanic::new(job.run(JobContext {
         deliverer: &deliverer,
         state: &state,
@@ -116,7 +114,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
     Ok(())
 }
 
-async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
+async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob<Job>>> {
     let mut db_conn = db_conn.get().await?;
 
     let jobs = db_conn

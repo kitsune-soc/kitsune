@@ -25,7 +25,7 @@ impl fmt::Display for JsonError {
 
 impl Error for JsonError {}
 
-#[derive(FromSqlRow, AsExpression, Serialize, Deserialize, Debug, Clone)]
+#[derive(AsExpression, Clone, Debug, Deserialize, FromSqlRow, Serialize)]
 #[diesel(sql_type = Jsonb)]
 #[serde(transparent)]
 pub struct Json<T>(pub T);
@@ -53,8 +53,7 @@ where
         if bytes[0] != 1 {
             return Err(JsonError("Unsupported JSONB encoding version").into());
         }
-
-        Ok(Self(serde_json::from_slice(&bytes[1..])?))
+        Ok(serde_json::from_slice(&bytes[1..])?)
     }
 }
 

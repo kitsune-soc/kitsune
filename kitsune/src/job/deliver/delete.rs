@@ -15,7 +15,7 @@ use kitsune_db::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverDelete {
     pub post_id: Uuid,
 }

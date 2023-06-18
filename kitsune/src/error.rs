@@ -206,6 +206,9 @@ pub enum Error {
     SerdeJson(#[from] serde_json::Error),
 
     #[error(transparent)]
+    SimdJson(#[from] simd_json::Error),
+
+    #[error(transparent)]
     Spki(#[from] spki::Error),
 
     #[error(transparent)]
