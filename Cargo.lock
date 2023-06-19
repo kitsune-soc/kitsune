@@ -1730,7 +1730,6 @@ dependencies = [
  "byteorder",
  "diesel_derives",
  "itoa",
- "serde_json",
  "time",
  "uuid",
 ]
@@ -3551,7 +3550,7 @@ dependencies = [
  "num-derive",
  "num-traits 0.2.15",
  "serde",
- "serde_json",
+ "simd-json",
  "thiserror",
  "tracing-log",
  "uuid",

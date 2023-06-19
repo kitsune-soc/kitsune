@@ -53,7 +53,7 @@ where
         if bytes[0] != 1 {
             return Err(JsonError("Unsupported JSONB encoding version").into());
         }
-        Ok(serde_json::from_slice(&bytes[1..])?)
+        Ok(simd_json::from_reader(&bytes[1..])?)
     }
 }
 
@@ -63,7 +63,7 @@ where
 {
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(&[1])?;
-        serde_json::to_writer(out, self)
+        simd_json::to_writer(out, self)
             .map(|_| IsNull::No)
             .map_err(Into::into)
     }
