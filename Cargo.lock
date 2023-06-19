@@ -3456,6 +3456,7 @@ dependencies = [
  "kitsune-search",
  "kitsune-storage",
  "kitsune-type",
+ "kitsune-uuid",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-tracing-context",
@@ -3496,7 +3497,6 @@ dependencies = [
  "url",
  "utoipa",
  "utoipa-swagger-ui",
- "uuid",
  "vergen",
  "zxcvbn",
 ]
@@ -3528,11 +3528,11 @@ dependencies = [
  "dotenvy",
  "envy",
  "kitsune-db",
+ "kitsune-uuid",
  "serde",
  "time",
  "tokio",
  "tracing-subscriber",
- "uuid",
  "vergen",
 ]
 
@@ -3547,13 +3547,13 @@ dependencies = [
  "diesel_migrations_async",
  "iso8601-timestamp",
  "kitsune-type",
+ "kitsune-uuid",
  "num-derive",
  "num-traits 0.2.15",
  "serde",
  "simd-json",
  "thiserror",
  "tracing-log",
- "uuid",
 ]
 
 [[package]]
@@ -3639,13 +3639,13 @@ dependencies = [
  "futures-util",
  "kitsune-db",
  "kitsune-search-proto",
+ "kitsune-uuid",
  "meilisearch-sdk",
  "serde",
  "strum",
  "thiserror",
  "tonic",
  "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -3713,20 +3713,22 @@ name = "kitsune-type"
 version = "0.0.1-pre.1"
 dependencies = [
  "iso8601-timestamp",
+ "kitsune-uuid",
  "pretty_assertions",
  "serde",
  "simd-json",
  "smol_str",
  "utoipa",
- "uuid",
 ]
 
 [[package]]
 name = "kitsune-uuid"
 version = "0.0.1-pre.1"
 dependencies = [
+ "async-graphql",
  "diesel",
  "serde",
+ "thiserror",
  "uuid",
  "uuid-simd",
 ]

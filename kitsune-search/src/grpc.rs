@@ -157,12 +157,7 @@ impl From<SearchIndex> for GrpcSearchIndex {
 
 impl From<GrpcSearchResult> for SearchResult {
     fn from(value: GrpcSearchResult) -> Self {
-        let id = Uuid::from_bytes(
-            value
-                .id
-                .try_into()
-                .expect("Received non-UUID from search service"),
-        );
+        let id = Uuid::from_slice(&value.id).expect("Received non-UUID from search service");
 
         Self { id }
     }

@@ -15,7 +15,7 @@ serde = { version = "1.0.164", features = ["derive"] }
 time = "0.3.22"
 tokio = { version = "1.28.2", features = ["full"] }
 tracing-subscriber = "0.3.17"
-uuid = { version = "1.3.4", features = ["v7"] }
+uuid = { package = "kitsune-uuid", path = "../kitsune-uuid" }
 
 [build-dependencies]
 vergen = { version = "8.2.1", features = ["build", "git", "gitoxide"] }
