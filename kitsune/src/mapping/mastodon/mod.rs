@@ -9,7 +9,8 @@ use futures_util::StreamExt;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use serde_json::Value;
+use serde::Deserialize;
+use simd_json::OwnedValue;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -21,7 +22,7 @@ impl<T> MapperMarker for T where T: IntoMastodon {}
 
 #[derive(TypedBuilder)]
 struct CacheInvalidationActor {
-    cache: ArcCache<Uuid, Value>,
+    cache: ArcCache<Uuid, OwnedValue>,
     event_consumer: PostEventConsumer,
 }
 
@@ -81,7 +82,7 @@ pub struct MastodonMapper {
     attachment_service: AttachmentService,
     db_conn: PgPool,
     embed_client: Option<EmbedClient>,
-    mastodon_cache: ArcCache<Uuid, Value>,
+    mastodon_cache: ArcCache<Uuid, OwnedValue>,
     url_service: UrlService,
 }
 
@@ -119,7 +120,7 @@ impl MastodonMapper {
                 .mastodon_cache
                 .get(&id)
                 .await?
-                .map(serde_json::from_value)
+                .map(<T::Output as Deserialize>::deserialize)
             {
                 Some(Ok(entity)) => return Ok(entity),
                 Some(Err(err)) => error!(error = %err, "Failed to deserialise entity from cache"),
@@ -129,7 +130,9 @@ impl MastodonMapper {
 
         let entity = input.into_mastodon(self.mapper_state()).await?;
         if let Some(id) = input_id {
-            let entity = serde_json::to_value(entity.clone()).unwrap();
+            // TODO: Somehow skip this intermediate byte encoding step
+            let mut entity = simd_json::to_vec(&entity).unwrap();
+            let entity = simd_json::to_owned_value(&mut entity).unwrap();
             self.mastodon_cache.set(&id, &entity).await?;
         }
 

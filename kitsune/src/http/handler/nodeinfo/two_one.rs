@@ -9,7 +9,7 @@ use kitsune_db::{
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
-use serde_json::Value;
+use simd_json::{Builder, OwnedValue};
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
@@ -55,7 +55,7 @@ async fn get(
             local_comments: None,
             local_posts: local_posts as u64,
         },
-        metadata: Value::Null,
+        metadata: OwnedValue::null(),
     }))
 }
 

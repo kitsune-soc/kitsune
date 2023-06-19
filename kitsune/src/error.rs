@@ -203,9 +203,6 @@ pub enum Error {
     Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
-
-    #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]

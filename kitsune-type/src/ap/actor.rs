@@ -1,7 +1,7 @@
 use super::object::MediaAttachment;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use simd_json::OwnedValue;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ActorType {
@@ -24,7 +24,7 @@ impl ActorType {
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: ActorType,
     pub name: Option<String>,

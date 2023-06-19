@@ -20,7 +20,7 @@ mod test {
     use crate::webfinger::Resource;
     use pretty_assertions::assert_eq;
 
-    const GARGRON_WEBFINGER_RESOURCE: &str = r#"
+    const GARGRON_WEBFINGER_RESOURCE: &[u8] = br#"
     {
         "subject": "acct:Gargron@mastodon.social",
         "aliases": [
@@ -48,8 +48,9 @@ mod test {
 
     #[test]
     fn deserialise_gargron() {
-        let deserialised: Resource = serde_json::from_str(GARGRON_WEBFINGER_RESOURCE)
-            .expect("Failed to deserialise resource");
+        let mut webfinger_resource = GARGRON_WEBFINGER_RESOURCE.to_vec();
+        let deserialised: Resource =
+            simd_json::from_slice(&mut webfinger_resource).expect("Failed to deserialise resource");
 
         assert_eq!(deserialised.subject, "acct:Gargron@mastodon.social");
         assert_eq!(

@@ -48,7 +48,7 @@ impl Deliverer {
             return Ok(());
         }
 
-        let body = serde_json::to_string(&activity)?;
+        let body = simd_json::to_string(&activity)?;
         let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 

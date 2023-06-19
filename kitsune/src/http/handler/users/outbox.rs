@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::Result,
     http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
@@ -18,6 +18,7 @@ use kitsune_db::{
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
+    Activity,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -38,7 +39,7 @@ pub async fn get(
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
-) -> Result<Either<ActivityPubJson<CollectionPage>, ActivityPubJson<Collection>>> {
+) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
     let mut db_conn = state.db_conn.get().await?;
 
     let account = accounts::table
@@ -77,9 +78,6 @@ pub async fn get(
         );
         let ordered_items = stream::iter(posts)
             .then(|post| post.into_activity(&state))
-            .and_then(
-                |activity| async move { serde_json::to_value(&activity).map_err(Error::from) },
-            )
             .try_collect()
             .await?;
 

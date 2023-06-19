@@ -5,7 +5,7 @@ use self::{
 };
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use simd_json::{json, OwnedValue};
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
@@ -16,7 +16,7 @@ pub mod object;
 
 pub use self::helper::Privacy;
 
-pub fn ap_context() -> Value {
+pub fn ap_context() -> OwnedValue {
     json!([
         "https://www.w3.org/ns/activitystreams",
         "https://w3id.org/security/v1",
@@ -115,7 +115,7 @@ impl ObjectField {
 #[serde(rename_all = "camelCase")]
 pub struct Activity {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: ActivityType,
     pub actor: StringOrObject<Actor>,
@@ -156,7 +156,7 @@ pub enum ObjectType {
 #[serde(rename_all = "camelCase")]
 pub struct Object {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: ObjectType,
     pub attributed_to: AttributedToField,

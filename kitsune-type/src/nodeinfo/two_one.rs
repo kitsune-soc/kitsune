@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use simd_json::OwnedValue;
 use utoipa::ToSchema;
 
 #[derive(Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize, ToSchema)]
@@ -105,7 +105,7 @@ pub struct Usage {
     pub local_comments: Option<u64>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 /// Definitions of Nodeinfo 2.1
 pub struct TwoOne {
@@ -116,7 +116,7 @@ pub struct TwoOne {
     pub open_registrations: bool,
     pub usage: Usage,
     #[schema(value_type = Object)]
-    pub metadata: Value,
+    pub metadata: OwnedValue,
 }
 
 #[cfg(test)]
@@ -127,8 +127,8 @@ mod test {
 
     #[test]
     fn deserialize_akkoma_nodeinfo() {
-        let raw = include_str!("../../tests/nodeinfo_2.1.json");
-        let two_one: TwoOne = serde_json::from_str(raw).unwrap();
+        let mut raw = include_bytes!("../../tests/nodeinfo_2.1.json").to_vec();
+        let two_one: TwoOne = simd_json::from_slice(&mut raw).unwrap();
 
         assert_str_eq!(two_one.software.name, "akkoma");
         assert_eq!(two_one.protocols, [Protocol::ActivityPub]);

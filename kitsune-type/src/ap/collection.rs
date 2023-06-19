@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use simd_json::OwnedValue;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum CollectionType {
@@ -10,7 +10,7 @@ pub enum CollectionType {
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: CollectionType,
     pub total_items: u64,
@@ -25,13 +25,13 @@ pub enum PageType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CollectionPage {
+pub struct CollectionPage<T> {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: PageType,
     pub next: String,
     pub prev: String,
     pub part_of: String,
-    pub ordered_items: Vec<Value>,
+    pub ordered_items: Vec<T>,
 }
