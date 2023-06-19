@@ -3352,8 +3352,9 @@ dependencies = [
 
 [[package]]
 name = "iso8601-timestamp"
-version = "0.2.10"
-source = "git+https://github.com/aumetra/iso8601-timestamp.git?rev=664bf4be14ba26c2a3ed46887f1bbaa434cf41a8#664bf4be14ba26c2a3ed46887f1bbaa434cf41a8"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bd7663ae5b511b3d13c7d374dbe73b03da3da8e66b83950390173bc7c7325cc"
 dependencies = [
  "diesel",
  "generic-array",

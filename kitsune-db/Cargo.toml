@@ -12,7 +12,7 @@ diesel_full_text_search = { version = "2.1.0", default-features = false }
 diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "296db45f2b2120a496f7231537685fe5974c0829", features = [
     "postgres",
 ] }
-iso8601-timestamp = { version = "0.2.10", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.2.11", features = ["diesel-pg"] }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.3.3"
 num-traits = "0.2.15"
