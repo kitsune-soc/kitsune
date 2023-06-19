@@ -88,8 +88,8 @@ impl From<DbAccount> for Account {
             username: value.username,
             locked: value.locked,
             url: value.url,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            created_at: value.created_at.assume_utc(),
+            updated_at: value.updated_at.assume_utc(),
         }
     }
 }

@@ -138,7 +138,7 @@ impl Fetcher {
                                 .as_deref(),
                             public_key_id: actor.public_key.id.as_str(),
                             public_key: actor.public_key.public_key_pem.as_str(),
-                            created_at: Some(actor.published.assume_utc()),
+                            created_at: Some(actor.published),
                         })
                         .on_conflict(accounts::url)
                         .do_update()

@@ -56,7 +56,7 @@ impl From<DbMediaAttachment> for MediaAttachment {
             content_type: value.content_type,
             description: value.description,
             blurhash: value.blurhash,
-            created_at: value.created_at,
+            created_at: value.created_at.assume_utc(),
         }
     }
 }

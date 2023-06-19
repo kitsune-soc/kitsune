@@ -9,6 +9,7 @@ use diesel::{
     AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
     Selectable,
 };
+use iso8601_timestamp::Timestamp;
 use kitsune_type::{
     ap::{helper::CcTo, Privacy},
     mastodon::status::Visibility as MastodonVisibility,
@@ -16,7 +17,6 @@ use kitsune_type::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
@@ -33,8 +33,8 @@ pub struct Post {
     pub visibility: Visibility,
     pub is_local: bool,
     pub url: String,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(AsChangeset)]
@@ -58,7 +58,7 @@ pub struct NewPost<'a> {
     pub visibility: Visibility,
     pub is_local: bool,
     pub url: &'a str,
-    pub created_at: Option<OffsetDateTime>,
+    pub created_at: Option<Timestamp>,
 }
 
 #[derive(

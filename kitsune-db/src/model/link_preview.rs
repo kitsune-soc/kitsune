@@ -1,7 +1,7 @@
 use crate::{json::Json, schema::link_previews};
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 
 #[derive(Clone, Deserialize, Serialize, Identifiable, Queryable, Selectable)]
 #[diesel(
@@ -11,9 +11,9 @@ use time::OffsetDateTime;
 pub struct LinkPreview<T> {
     pub url: String,
     pub embed_data: Json<T>,
-    pub expires_at: OffsetDateTime,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub expires_at: Timestamp,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]
@@ -21,12 +21,12 @@ pub struct LinkPreview<T> {
 pub struct NewLinkPreview<'a, T> {
     pub url: &'a str,
     pub embed_data: Json<T>,
-    pub expires_at: OffsetDateTime,
+    pub expires_at: Timestamp,
 }
 
 #[derive(AsChangeset, Clone)]
 #[diesel(table_name = link_previews)]
 pub struct ConflictLinkPreviewChangeset<T> {
     pub embed_data: Json<T>,
-    pub expires_at: OffsetDateTime,
+    pub expires_at: Timestamp,
 }

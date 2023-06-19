@@ -1,6 +1,6 @@
 use crate::schema::users;
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
-use time::OffsetDateTime;
+use iso8601_timestamp::Timestamp;
 use uuid::Uuid;
 
 #[derive(Clone, Identifiable, Selectable, Queryable)]
@@ -13,8 +13,8 @@ pub struct User {
     pub password: Option<String>,
     pub domain: String,
     pub private_key: String,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]

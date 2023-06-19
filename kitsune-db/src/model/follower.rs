@@ -1,7 +1,7 @@
 use crate::schema::accounts_follows;
 use diesel::{Identifiable, Insertable, Queryable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Serialize, Identifiable, Queryable)]
@@ -10,10 +10,10 @@ pub struct Follow {
     pub id: Uuid,
     pub account_id: Uuid,
     pub follower_id: Uuid,
-    pub approved_at: Option<OffsetDateTime>,
+    pub approved_at: Option<Timestamp>,
     pub url: String,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]
@@ -22,7 +22,7 @@ pub struct NewFollow<'a> {
     pub id: Uuid,
     pub account_id: Uuid,
     pub follower_id: Uuid,
-    pub approved_at: Option<OffsetDateTime>,
+    pub approved_at: Option<Timestamp>,
     pub url: &'a str,
-    pub created_at: Option<OffsetDateTime>,
+    pub created_at: Option<Timestamp>,
 }

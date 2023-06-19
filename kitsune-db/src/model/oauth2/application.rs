@@ -1,7 +1,7 @@
 use crate::schema::oauth2_applications;
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
@@ -13,8 +13,8 @@ pub struct Application {
     pub scopes: String,
     pub redirect_uri: String,
     pub website: Option<String>,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]

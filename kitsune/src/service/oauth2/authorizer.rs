@@ -1,4 +1,4 @@
-use super::{chrono_to_time, time_to_chrono};
+use super::{chrono_to_timestamp, timestamp_to_chrono};
 use crate::util::generate_secret;
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
@@ -22,7 +22,7 @@ impl Authorizer for OAuthAuthorizer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
-        let expires_at = chrono_to_time(grant.until);
+        let expires_at = chrono_to_timestamp(grant.until);
 
         let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
         diesel::insert_into(oauth2_authorization_codes::table)
@@ -58,7 +58,7 @@ impl Authorizer for OAuthAuthorizer {
                 client_id: code.application_id.to_string(),
                 scope,
                 redirect_uri,
-                until: time_to_chrono(code.expires_at),
+                until: timestamp_to_chrono(code.expires_at),
                 extensions: Extensions::default(),
             }
         });

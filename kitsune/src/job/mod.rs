@@ -16,6 +16,7 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::job::{Job as DbJob, JobState, UpdateFailedJob},
     schema::jobs,
@@ -23,7 +24,6 @@ use kitsune_db::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::Duration;
-use time::OffsetDateTime;
 use tokio::task::JoinSet;
 
 mod catch_panic;
@@ -95,7 +95,7 @@ async fn execute_one(db_job: DbJob<Job>, state: Zustand, deliverer: Deliverer) -
                 .set(UpdateFailedJob {
                     fail_count,
                     state: JobState::Failed,
-                    run_at: OffsetDateTime::now_utc() + backoff_duration,
+                    run_at: Timestamp::now_utc() + backoff_duration,
                 })
                 .execute(&mut db_conn)
                 .await?;
@@ -127,8 +127,7 @@ async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob<Job>>> 
                             .or(jobs::state.eq(JobState::Failed))
                             .and(jobs::run_at.le(kitsune_db::function::now())))
                         .or(jobs::state.eq(JobState::Running).and(
-                            jobs::updated_at
-                                .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
+                            jobs::updated_at.lt(Timestamp::now_utc() - time::Duration::hours(1)),
                         )),
                     )
                     .limit(num_jobs as i64)

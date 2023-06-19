@@ -67,7 +67,7 @@ impl IntoActivity for Favourite {
             r#type: ActivityType::Like,
             actor: StringOrObject::String(account_url),
             object: ObjectField::Url(post_url),
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 
@@ -115,7 +115,7 @@ impl IntoActivity for Follow {
             actor: StringOrObject::String(attributed_to),
             r#type: ActivityType::Follow,
             object: ObjectField::Url(object),
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 
@@ -132,7 +132,7 @@ impl IntoActivity for Follow {
             id: format!("{}#undo", self.url),
             r#type: ActivityType::Undo,
             actor: StringOrObject::String(attributed_to),
-            published: self.created_at.into(),
+            published: self.created_at,
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
         })
     }
@@ -160,7 +160,7 @@ impl IntoActivity for Post {
                 r#type: ActivityType::Announce,
                 actor: StringOrObject::String(account_url),
                 object: ObjectField::Url(reposted_post_url),
-                published: self.created_at.into(),
+                published: self.created_at,
             })
         } else {
             let created_at = self.created_at;
@@ -171,7 +171,7 @@ impl IntoActivity for Post {
                 id: format!("{}/activity", object.id),
                 r#type: ActivityType::Create,
                 actor: StringOrObject::String(account_url),
-                published: created_at.into(),
+                published: created_at,
                 object: ObjectField::Object(object),
             })
         }

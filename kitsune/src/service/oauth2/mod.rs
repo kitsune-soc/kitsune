@@ -8,6 +8,7 @@ use askama_axum::IntoResponse;
 use axum::response::{Redirect, Response};
 use chrono::Utc;
 use diesel_async::RunQueryDsl;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
@@ -16,7 +17,7 @@ use kitsune_db::{
 use oxide_auth::endpoint::Scope;
 use std::str::{self, FromStr};
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
-use time::{Duration, OffsetDateTime};
+use time::Duration;
 use typed_builder::TypedBuilder;
 use url::Url;
 use uuid::Uuid;
@@ -34,18 +35,22 @@ const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
 
 #[inline]
-fn time_to_chrono(ts: time::OffsetDateTime) -> chrono::DateTime<Utc> {
-    chrono::NaiveDateTime::from_timestamp_opt(ts.unix_timestamp(), ts.nanosecond())
+fn timestamp_to_chrono(ts: iso8601_timestamp::Timestamp) -> chrono::DateTime<Utc> {
+    let secs = ts
+        .duration_since(iso8601_timestamp::Timestamp::UNIX_EPOCH)
+        .whole_seconds();
+    chrono::NaiveDateTime::from_timestamp_opt(secs, ts.nanosecond())
         .unwrap()
         .and_utc()
 }
 
 #[inline]
-fn chrono_to_time(ts: chrono::DateTime<Utc>) -> time::OffsetDateTime {
+fn chrono_to_timestamp(ts: chrono::DateTime<Utc>) -> iso8601_timestamp::Timestamp {
     time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
         .unwrap()
         .replace_nanosecond(ts.timestamp_subsec_nanos())
         .unwrap()
+        .into()
 }
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
@@ -124,7 +129,7 @@ impl OAuth2Service {
                     application_id: application.id,
                     user_id,
                     scopes: scopes.to_string().as_str(),
-                    expires_at: OffsetDateTime::now_utc() + AUTH_TOKEN_VALID_DURATION,
+                    expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
                 })
                 .get_result(&mut db_conn)
                 .await?;

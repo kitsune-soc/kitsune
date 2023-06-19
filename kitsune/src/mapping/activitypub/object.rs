@@ -143,7 +143,7 @@ impl IntoObject for Post {
             media_type: None,
             attachment,
             tag,
-            published: self.created_at.into(),
+            published: self.created_at,
             to,
             cc,
         })
@@ -204,7 +204,7 @@ impl IntoObject for Account {
                 owner: user_url,
                 public_key_pem: self.public_key,
             },
-            published: self.created_at.into(),
+            published: self.created_at,
         })
     }
 }

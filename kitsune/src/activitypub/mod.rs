@@ -185,7 +185,7 @@ pub async fn process_new_object(
                         visibility,
                         is_local: false,
                         url: object.id.as_str(),
-                        created_at: Some(object.published.assume_utc()),
+                        created_at: Some(object.published),
                     })
                     .on_conflict(posts::url)
                     .do_update()

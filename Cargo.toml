@@ -29,5 +29,6 @@ resolver = "2"
 version = "0.0.1-pre.1"
 
 [patch.crates-io] # Patch to get client credential support for async
+iso8601-timestamp = { git = "https://github.com/aumetra/iso8601-timestamp.git", rev = "664bf4be14ba26c2a3ed46887f1bbaa434cf41a8" }
 oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "aumetra/add-error-impl" }
 oxide-auth-async = { git = "https://github.com/aumetra/oxide-auth.git", branch = "aumetra/add-error-impl" }

@@ -51,8 +51,8 @@ impl From<DbPost> for Post {
             content: value.content,
             visibility: value.visibility.into(),
             url: value.url,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            created_at: value.created_at.assume_utc(),
+            updated_at: value.updated_at.assume_utc(),
         }
     }
 }

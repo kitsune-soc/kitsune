@@ -2,7 +2,6 @@ use crate::state::Zustand;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[inline]
@@ -31,7 +30,7 @@ pub trait AccessTokenTtl {
 impl AccessTokenTtl for AccessToken {
     #[inline]
     fn ttl(&self) -> time::Duration {
-        self.expires_at - OffsetDateTime::now_utc()
+        *self.expires_at - *Timestamp::now_utc()
     }
 }
 

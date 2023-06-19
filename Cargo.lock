@@ -3354,9 +3354,9 @@ dependencies = [
 [[package]]
 name = "iso8601-timestamp"
 version = "0.2.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "368d05885f276773b79b4578869a60ab91e880415d17fb2a8d193aea74188a29"
+source = "git+https://github.com/aumetra/iso8601-timestamp.git?rev=664bf4be14ba26c2a3ed46887f1bbaa434cf41a8#664bf4be14ba26c2a3ed46887f1bbaa434cf41a8"
 dependencies = [
+ "diesel",
  "generic-array",
  "serde",
  "time",
@@ -3546,13 +3546,13 @@ dependencies = [
  "diesel-async",
  "diesel_full_text_search",
  "diesel_migrations_async",
+ "iso8601-timestamp",
  "kitsune-type",
  "num-derive",
  "num-traits 0.2.15",
  "serde",
  "serde_json",
  "thiserror",
- "time",
  "tracing-log",
  "uuid",
 ]
@@ -3565,6 +3565,7 @@ dependencies = [
  "diesel-async",
  "embed-sdk",
  "http",
+ "iso8601-timestamp",
  "kitsune-db",
  "kitsune-http-client",
  "once_cell",
@@ -3572,7 +3573,6 @@ dependencies = [
  "serde_json",
  "smol_str",
  "thiserror",
- "time",
  "typed-builder",
 ]
 
