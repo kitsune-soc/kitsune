@@ -29,7 +29,7 @@ axum-extra = { version = "0.7.4", features = [
     "query",
 ] }
 axum-flash = "0.7.0"
-base64 = "0.21.2"
+base64-simd = "0.8.0"
 bytes = "1.4.0"
 chrono = { version = "0.4.26", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..
 const_format = "0.2.31"
@@ -46,7 +46,7 @@ enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
 globset = { version = "0.4.10", features = ["simd-accel"] }
 headers = "0.3.8"
-hex = "0.4.3"
+hex-simd = "0.8.0"
 http = "0.2.9"
 hyper = { version = "0.14.26", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"

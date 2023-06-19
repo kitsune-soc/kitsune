@@ -1,5 +1,4 @@
 use crate::{util::UnixTimestampExt, Error, Result, SignatureComponent};
-use base64::{engine::general_purpose, Engine};
 use derive_builder::Builder;
 use http::{header::DATE, request::Parts};
 use std::{
@@ -36,7 +35,7 @@ impl<'a> SignatureHeader<'a> {
         for (key, value) in kv_pairs {
             match key {
                 "keyId" => builder.key_id(value),
-                "signature" => builder.signature(general_purpose::STANDARD.decode(value)?),
+                "signature" => builder.signature(base64_simd::STANDARD.decode_to_vec(value)?),
                 "headers" => {
                     let components = value
                         .split_whitespace()
@@ -117,7 +116,7 @@ impl TryFrom<SignatureHeader<'_>> for String {
     type Error = SystemTimeError;
 
     fn try_from(value: SignatureHeader<'_>) -> Result<Self, Self::Error> {
-        let signature = general_purpose::STANDARD.encode(value.signature);
+        let signature = base64_simd::STANDARD.encode_to_string(value.signature);
         let headers = value
             .signature_components
             .iter()

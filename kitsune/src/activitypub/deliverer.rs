@@ -4,7 +4,6 @@ use crate::{
     service::federation_filter::FederationFilterService,
 };
 use autometrics::autometrics;
-use base64::{engine::general_purpose, Engine};
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
 use kitsune_db::model::{account::Account, user::User};
@@ -49,7 +48,7 @@ impl Deliverer {
         }
 
         let body = simd_json::to_string(&activity)?;
-        let body_digest = general_purpose::STANDARD.encode(Sha256::digest(body.as_bytes()));
+        let body_digest = base64_simd::STANDARD.encode_to_string(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 
         let request = Request::builder()

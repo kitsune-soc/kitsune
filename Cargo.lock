@@ -3008,6 +3008,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "hex-simd"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7685beb53fc20efc2605f32f5d51e9ba18b8ef237961d1760169d2290d3bee"
+dependencies = [
+ "outref",
+ "vsimd",
+]
+
+[[package]]
 name = "hkdf"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3428,7 +3438,7 @@ dependencies = [
  "axum-extra",
  "axum-flash",
  "axum-prometheus",
- "base64 0.21.2",
+ "base64-simd",
  "bytes",
  "chrono",
  "const-oid 0.10.0-pre",
@@ -3443,7 +3453,7 @@ dependencies = [
  "futures-util",
  "globset",
  "headers",
- "hex",
+ "hex-simd",
  "http",
  "hyper",
  "iso8601-timestamp",
@@ -3598,7 +3608,7 @@ dependencies = [
 name = "kitsune-http-signatures"
 version = "0.0.1-pre.1"
 dependencies = [
- "base64 0.21.2",
+ "base64-simd",
  "derive_builder",
  "http",
  "pem",
