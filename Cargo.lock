@@ -3632,6 +3632,7 @@ name = "kitsune-search"
 version = "0.0.1-pre.1"
 dependencies = [
  "async-trait",
+ "bytes",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",

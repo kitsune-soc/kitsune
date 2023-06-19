@@ -1,76 +1,76 @@
 use serde::{Deserialize, Serialize};
-use serde_dhall::StaticType;
+use smol_str::SmolStr;
 use std::path::Path;
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct RedisCacheConfiguration {
-    pub redis_url: String,
+    pub redis_url: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum CacheConfiguration {
     Redis(RedisCacheConfiguration),
     InMemory,
     None,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct DatabaseConfiguration {
-    pub url: String,
+    pub url: SmolStr,
     pub max_connections: u32,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct EmbedConfiguration {
-    pub url: String,
+    pub url: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum FederationFilterConfiguration {
-    Allow { domains: Vec<String> },
-    Deny { domains: Vec<String> },
+    Allow { domains: Vec<SmolStr> },
+    Deny { domains: Vec<SmolStr> },
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct InstanceConfiguration {
-    pub name: String,
-    pub description: String,
+    pub name: SmolStr,
+    pub description: SmolStr,
     pub character_limit: usize,
     pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct OidcConfiguration {
-    pub server_url: String,
-    pub client_id: String,
-    pub client_secret: String,
+    pub server_url: SmolStr,
+    pub client_id: SmolStr,
+    pub client_secret: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct RedisMessagingConfiguration {
-    pub redis_url: String,
+    pub redis_url: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum MessagingConfiguration {
     Redis(RedisMessagingConfiguration),
     InProcess,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct KitsuneSearchConfiguration {
-    pub index_server: String,
-    pub search_servers: Vec<String>,
+    pub index_server: SmolStr,
+    pub search_servers: Vec<SmolStr>,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct MeiliSearchConfiguration {
-    pub instance_url: String,
-    pub api_key: String,
+    pub instance_url: SmolStr,
+    pub api_key: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum SearchConfiguration {
     Kitsune(KitsuneSearchConfiguration),
     Meilisearch(MeiliSearchConfiguration),
@@ -78,9 +78,9 @@ pub enum SearchConfiguration {
     None,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct ServerConfiguration {
-    pub frontend_dir: String,
+    pub frontend_dir: SmolStr,
     pub job_workers: usize,
     pub max_upload_size: usize,
     pub media_proxy_enabled: bool,
@@ -90,34 +90,34 @@ pub struct ServerConfiguration {
     pub request_timeout_sec: u64,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct FsStorageConfiguration {
-    pub upload_dir: String,
+    pub upload_dir: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct S3StorageConfiguration {
-    pub bucket_name: String,
-    pub endpoint_url: String,
-    pub region: String,
+    pub bucket_name: SmolStr,
+    pub endpoint_url: SmolStr,
+    pub region: SmolStr,
     pub force_path_style: bool,
-    pub access_key: String,
-    pub secret_access_key: String,
+    pub access_key: SmolStr,
+    pub secret_access_key: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum StorageConfiguration {
     Fs(FsStorageConfiguration),
     S3(S3StorageConfiguration),
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct UrlConfiguration {
-    pub scheme: String,
-    pub domain: String,
+    pub scheme: SmolStr,
+    pub domain: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize, StaticType)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Configuration {
     pub cache: CacheConfiguration,
     pub database: DatabaseConfiguration,
@@ -137,7 +137,7 @@ impl Configuration {
         P: AsRef<Path>,
     {
         serde_dhall::from_file(path)
-            .static_type_annotation()
+            //.static_type_annotation() // SmolStr usage makes this impossible (unfortunately)
             .parse()
     }
 }

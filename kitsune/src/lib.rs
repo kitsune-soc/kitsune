@@ -107,7 +107,7 @@ where
             static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
 
             let pool = REDIS_POOL.get_or_init(|| {
-                let config = deadpool_redis::Config::from_url(&redis_config.redis_url);
+                let config = deadpool_redis::Config::from_url(redis_config.redis_url.clone());
                 config
                     .create_pool(Some(deadpool_redis::Runtime::Tokio1))
                     .unwrap()
@@ -133,7 +133,7 @@ fn prepare_storage(config: &Configuration) -> Storage {
         }
         StorageConfiguration::S3(ref s3_config) => {
             let s3_client_config = aws_sdk_s3::Config::builder()
-                .region(Region::new(s3_config.region.clone()))
+                .region(Region::new(s3_config.region.to_string()))
                 .endpoint_url(s3_config.endpoint_url.as_str())
                 .force_path_style(s3_config.force_path_style)
                 .credentials_provider(Credentials::from_keys(
@@ -143,7 +143,7 @@ fn prepare_storage(config: &Configuration) -> Storage {
                 ))
                 .build();
 
-            S3Storage::new(s3_config.bucket_name.clone(), s3_client_config).into()
+            S3Storage::new(s3_config.bucket_name.to_string(), s3_client_config).into()
         }
     }
 }
@@ -171,7 +171,7 @@ async fn prepare_oidc_client(
     url_service: &UrlService,
 ) -> anyhow::Result<CoreClient> {
     let provider_metadata = CoreProviderMetadata::discover_async(
-        IssuerUrl::new(oidc_config.server_url.clone()).context("Invalid OIDC issuer URL")?,
+        IssuerUrl::new(oidc_config.server_url.to_string()).context("Invalid OIDC issuer URL")?,
         async_client,
     )
     .await
@@ -179,8 +179,8 @@ async fn prepare_oidc_client(
 
     let client = CoreClient::from_provider_metadata(
         provider_metadata,
-        ClientId::new(oidc_config.client_id.clone()),
-        Some(ClientSecret::new(oidc_config.client_secret.clone())),
+        ClientId::new(oidc_config.client_id.to_string()),
+        Some(ClientSecret::new(oidc_config.client_secret.to_string())),
     )
     .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri())?);
 
@@ -199,10 +199,13 @@ async fn prepare_search(
 
             #[cfg(feature = "kitsune-search")]
             #[allow(clippy::used_underscore_binding)]
-            GrpcSearchService::connect(&_config.index_server, &_config.search_servers)
-                .await
-                .context("Failed to connect to the search servers")?
-                .into()
+            GrpcSearchService::connect(
+                &_config.index_server,
+                _config.search_servers.iter().map(ToString::to_string),
+            )
+            .await
+            .context("Failed to connect to the search servers")?
+            .into()
         }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]
@@ -232,7 +235,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
     let embed_client = config.embed.as_ref().map(|embed_config| {
         EmbedClient::builder()
             .db_pool(conn.clone())
-            .embed_service(&embed_config.url)
+            .embed_service(embed_config.url.clone())
             .build()
     });
 

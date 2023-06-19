@@ -27,7 +27,7 @@ mod util;
 pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
-        let mut tmp = frontend_dir.clone();
+        let mut tmp = frontend_dir.to_string();
         tmp.push_str("index.html");
         tmp
     };
@@ -66,7 +66,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
             server_config.request_timeout_sec,
         )))
         .fallback_service(
-            ServeDir::new(frontend_dir).fallback(ServeFile::new(frontend_index_path)),
+            ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
 
     #[cfg(feature = "metrics")]
