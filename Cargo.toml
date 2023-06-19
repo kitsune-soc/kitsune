@@ -21,6 +21,7 @@ members = [
     "kitsune-search-server/proto",
     "kitsune-storage",
     "kitsune-type",
+    "kitsune-uuid",
     "post-process",
 ]
 resolver = "2"

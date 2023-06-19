@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
+
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
 use diesel::{ExpressionMethods, QueryDsl};
@@ -39,7 +43,7 @@ async fn clear_completed_jobs(db_conn: &mut AsyncPgConnection) -> Result<()> {
         .execute(db_conn)
         .await?;
 
-    println!("Deleted {} succeeded jobs from the database", delete_result);
+    println!("Deleted {delete_result} succeeded jobs from the database");
 
     Ok(())
 }

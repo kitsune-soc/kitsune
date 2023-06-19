@@ -1,3 +1,12 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    forbidden_lint_groups
+)]
+
 use diesel_async::{
     pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
     AsyncPgConnection,
@@ -13,6 +22,7 @@ pub mod function;
 pub mod json;
 pub mod model;
 pub mod post_permission_check;
+#[allow(clippy::wildcard_imports)]
 pub mod schema;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
