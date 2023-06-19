@@ -119,7 +119,9 @@ where
     fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.project();
         match ready!(this.inner.poll_next(cx)) {
-            Some(Ok(msg)) => Poll::Ready(Some(serde_json::from_slice(&msg).map_err(Into::into))),
+            Some(Ok(mut msg)) => {
+                Poll::Ready(Some(simd_json::from_slice(&mut msg).map_err(Into::into)))
+            }
             Some(Err(err)) => Poll::Ready(Some(Err(err))),
             None => Poll::Ready(None),
         }
@@ -160,7 +162,7 @@ where
     /// - Message failed to serialise
     /// - Message failed to enqueue
     pub async fn emit(&self, message: M) -> Result<()> {
-        let message = serde_json::to_vec(&message)?;
+        let message = simd_json::to_vec(&message)?;
         self.backend.enqueue(&self.channel_name, message).await
     }
 }

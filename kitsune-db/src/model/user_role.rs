@@ -8,10 +8,10 @@ use diesel::{
     sql_types::Integer,
     AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
 };
+use iso8601_timestamp::Timestamp;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(
@@ -63,7 +63,7 @@ pub struct UserRole {
     pub id: Uuid,
     pub user_id: Uuid,
     pub role: Role,
-    pub created_at: OffsetDateTime,
+    pub created_at: Timestamp,
 }
 
 #[derive(Clone, Deserialize, Insertable, Serialize)]

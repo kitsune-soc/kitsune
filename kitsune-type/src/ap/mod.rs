@@ -3,9 +3,9 @@ use self::{
     helper::StringOrObject,
     object::MediaAttachment,
 };
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use time::OffsetDateTime;
+use simd_json::{json, OwnedValue};
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
@@ -16,7 +16,7 @@ pub mod object;
 
 pub use self::helper::Privacy;
 
-pub fn ap_context() -> Value {
+pub fn ap_context() -> OwnedValue {
     json!([
         "https://www.w3.org/ns/activitystreams",
         "https://w3id.org/security/v1",
@@ -115,13 +115,13 @@ impl ObjectField {
 #[serde(rename_all = "camelCase")]
 pub struct Activity {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: ActivityType,
     pub actor: StringOrObject<Actor>,
     pub object: ObjectField,
-    #[serde(default = "OffsetDateTime::now_utc", with = "time::serde::rfc3339")]
-    pub published: OffsetDateTime,
+    #[serde(default = "Timestamp::now_utc")]
+    pub published: Timestamp,
 }
 
 impl Activity {
@@ -156,7 +156,7 @@ pub enum ObjectType {
 #[serde(rename_all = "camelCase")]
 pub struct Object {
     #[serde(default, rename = "@context")]
-    pub context: Value,
+    pub context: OwnedValue,
     pub id: String,
     pub r#type: ObjectType,
     pub attributed_to: AttributedToField,
@@ -171,8 +171,7 @@ pub struct Object {
     pub tag: Vec<Tag>,
     #[serde(default)]
     pub sensitive: bool,
-    #[serde(with = "time::serde::rfc3339")]
-    pub published: OffsetDateTime,
+    pub published: Timestamp,
     #[serde(default)]
     pub to: Vec<String>,
     #[serde(default)]

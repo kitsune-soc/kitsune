@@ -22,6 +22,7 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::{Account, UpdateAccount},
@@ -33,7 +34,6 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, posts},
     PgPool,
 };
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -158,7 +158,7 @@ impl AccountService {
         };
 
         if account.local && !account.locked {
-            follow_model.approved_at = Some(OffsetDateTime::now_utc());
+            follow_model.approved_at = Some(Timestamp::now_utc());
         }
 
         let follow_id = diesel::insert_into(accounts_follows::table)

@@ -5,16 +5,16 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     PgPool,
 };
-use std::sync::Arc;
+use smol_str::SmolStr;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
 pub struct InstanceService {
     db_conn: PgPool,
     #[builder(setter(into))]
-    name: Arc<str>,
+    name: SmolStr,
     #[builder(setter(into))]
-    description: Arc<str>,
+    description: SmolStr,
     character_limit: usize,
 }
 

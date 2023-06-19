@@ -1,6 +1,7 @@
 use crate::{
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
+    util::timestamp_to_uuid,
 };
 use diesel::SelectableHelper;
 use diesel_async::{
@@ -20,7 +21,7 @@ use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use typed_builder::TypedBuilder;
-use uuid::{Timestamp, Uuid};
+use uuid::Uuid;
 
 pub mod deliverer;
 pub mod fetcher;
@@ -135,14 +136,6 @@ pub async fn process_new_object(
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
-
-    #[allow(clippy::cast_sign_loss)]
-    let uuid_timestamp = Timestamp::from_unix(
-        uuid::NoContext,
-        object.published.unix_timestamp() as u64,
-        object.published.nanosecond(),
-    );
-
     let in_reply_to_id = if let Some(ref in_reply_to) = object.in_reply_to {
         fetcher
             .fetch_object_inner(in_reply_to, call_depth + 1)
@@ -181,7 +174,7 @@ pub async fn process_new_object(
             async move {
                 let new_post = diesel::insert_into(posts::table)
                     .values(NewPost {
-                        id: Uuid::new_v7(uuid_timestamp),
+                        id: timestamp_to_uuid(object.published),
                         account_id: user.id,
                         in_reply_to_id,
                         reposted_post_id: None,

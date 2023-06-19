@@ -11,5 +11,5 @@ pub enum Error {
     Redis(#[from] RedisError),
 
     #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
+    SimdJson(#[from] simd_json::Error),
 }

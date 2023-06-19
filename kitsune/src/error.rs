@@ -203,7 +203,7 @@ pub enum Error {
     Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
+    SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]
     Spki(#[from] spki::Error),

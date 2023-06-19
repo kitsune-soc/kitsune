@@ -4,7 +4,7 @@ use axum::{
     body::Body,
     extract::FromRequest,
     response::{IntoResponse, Response},
-    Form, Json, RequestExt, TypedHeader,
+    Form, RequestExt, TypedHeader,
 };
 use headers::ContentType;
 use mime::Mime;
@@ -12,6 +12,7 @@ use serde::de::DeserializeOwned;
 
 pub use self::{
     auth::{AuthExtractor, UserData},
+    json::Json,
     signed_activity::SignedActivity,
 };
 
@@ -19,6 +20,7 @@ pub use self::{
 pub use self::auth::MastodonAuthExtractor;
 
 mod auth;
+mod json;
 mod signed_activity;
 
 pub struct FormOrJson<T>(pub T);

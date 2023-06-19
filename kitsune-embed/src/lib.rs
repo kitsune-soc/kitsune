@@ -1,7 +1,12 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     json::Json,
     model::link_preview::{ConflictLinkPreviewChangeset, LinkPreview, NewLinkPreview},
@@ -12,7 +17,6 @@ use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
-use time::OffsetDateTime;
 use typed_builder::TypedBuilder;
 
 pub use embed_sdk;
@@ -77,7 +81,7 @@ impl Client {
                 .await
                 .optional()?
             {
-                if data.expires_at > OffsetDateTime::now_utc() {
+                if data.expires_at > Timestamp::now_utc() {
                     return Ok(data);
                 }
             }
@@ -97,13 +101,13 @@ impl Client {
             .values(NewLinkPreview {
                 url,
                 embed_data: Json(&embed_data),
-                expires_at: expires_at.assume_utc(),
+                expires_at,
             })
             .on_conflict(link_previews::url)
             .do_update()
             .set(ConflictLinkPreviewChangeset {
                 embed_data: Json(&embed_data),
-                expires_at: expires_at.assume_utc(),
+                expires_at,
             })
             .get_result(&mut db_conn)
             .await?;

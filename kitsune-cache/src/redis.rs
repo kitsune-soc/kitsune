@@ -76,7 +76,8 @@ where
 
         debug!(%key, "Fetching cache entry");
         if let Some(serialised) = conn.get::<_, Option<String>>(&key).await? {
-            let deserialised = serde_json::from_str(&serialised)?;
+            let mut serialised_bytes = serialised.into_bytes();
+            let deserialised = simd_json::from_slice(&mut serialised_bytes)?;
             Ok(Some(deserialised))
         } else {
             Ok(None)
@@ -87,7 +88,7 @@ where
     async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
         let mut conn = self.redis_conn.get().await?;
         let key = self.compute_key(key);
-        let serialised = serde_json::to_string(value)?;
+        let serialised = simd_json::to_string(value)?;
 
         debug!(%key, ttl = ?self.ttl, "Setting cache entry");
         #[allow(clippy::cast_possible_truncation)]

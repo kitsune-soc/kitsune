@@ -2,6 +2,7 @@
 opt-level = 3
 
 [profile.release]
+codegen-units = 1
 lto = true
 strip = true
 
@@ -20,6 +21,7 @@ members = [
     "kitsune-search-server/proto",
     "kitsune-storage",
     "kitsune-type",
+    "kitsune-uuid",
     "post-process",
 ]
 resolver = "2"

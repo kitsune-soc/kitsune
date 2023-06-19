@@ -45,8 +45,8 @@ impl From<DbUser> for User {
             account_id: value.account_id,
             username: value.username,
             email: value.email,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            created_at: value.created_at.assume_utc(),
+            updated_at: value.updated_at.assume_utc(),
         }
     }
 }

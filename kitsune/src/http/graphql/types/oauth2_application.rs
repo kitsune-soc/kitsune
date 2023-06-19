@@ -21,8 +21,8 @@ impl From<oauth2::Application> for OAuth2Application {
             name: value.name,
             secret: value.secret,
             redirect_uri: value.redirect_uri,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            created_at: value.created_at.assume_utc(),
+            updated_at: value.updated_at.assume_utc(),
         }
     }
 }

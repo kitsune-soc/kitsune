@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use smol_str::SmolStr;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -9,9 +9,9 @@ use uuid::Uuid;
 #[derive(Clone, TypedBuilder)]
 pub struct UrlService {
     #[builder(setter(into))]
-    scheme: Arc<str>,
+    scheme: SmolStr,
     #[builder(setter(into))]
-    domain: Arc<str>,
+    domain: SmolStr,
 }
 
 impl UrlService {

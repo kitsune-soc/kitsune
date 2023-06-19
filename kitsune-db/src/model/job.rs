@@ -1,28 +1,28 @@
-use crate::{error::EnumConversionError, schema::jobs};
+use crate::{error::EnumConversionError, json::Json, schema::jobs};
 use diesel::{
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable,
+    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
 };
+use iso8601_timestamp::Timestamp;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
-#[derive(Clone, Deserialize, Serialize, Identifiable, Queryable)]
-pub struct Job {
+#[derive(Clone, Deserialize, Serialize, Identifiable, Queryable, Selectable)]
+#[diesel(table_name = jobs)]
+pub struct Job<T> {
     pub id: Uuid,
     pub state: JobState,
-    pub context: Value,
-    pub run_at: OffsetDateTime,
+    pub context: Json<T>,
+    pub run_at: Timestamp,
     pub fail_count: i32,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(AsChangeset)]
@@ -30,16 +30,16 @@ pub struct Job {
 pub struct UpdateFailedJob {
     pub fail_count: i32,
     pub state: JobState,
-    pub run_at: OffsetDateTime,
+    pub run_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]
 #[diesel(table_name = jobs)]
-pub struct NewJob {
+pub struct NewJob<T> {
     pub id: Uuid,
     pub state: JobState,
-    pub context: Value,
-    pub run_at: OffsetDateTime,
+    pub context: Json<T>,
+    pub run_at: Timestamp,
 }
 
 #[derive(

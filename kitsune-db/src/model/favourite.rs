@@ -1,8 +1,8 @@
 use super::{account::Account, post::Post};
 use crate::schema::posts_favourites;
 use diesel::{Associations, Identifiable, Insertable, Queryable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Serialize, Queryable)]
@@ -16,7 +16,7 @@ pub struct Favourite {
     pub account_id: Uuid,
     pub post_id: Uuid,
     pub url: String,
-    pub created_at: OffsetDateTime,
+    pub created_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]
@@ -26,5 +26,5 @@ pub struct NewFavourite {
     pub account_id: Uuid,
     pub post_id: Uuid,
     pub url: String,
-    pub created_at: Option<OffsetDateTime>,
+    pub created_at: Option<Timestamp>,
 }

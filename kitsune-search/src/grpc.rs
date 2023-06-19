@@ -1,5 +1,6 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
+use bytes::Bytes;
 use futures_util::stream;
 use kitsune_search_proto::{
     common::SearchIndex as GrpcSearchIndex,
@@ -28,14 +29,17 @@ impl SearchService {
     /// # Errors
     ///
     /// - The servers aren't reachable
-    pub async fn connect(index_endpoint: &str, search_endpoints: &[String]) -> Result<Self> {
+    pub async fn connect<I, T>(index_endpoint: &str, search_endpoints: I) -> Result<Self>
+    where
+        I: Iterator<Item = T> + Clone,
+        T: Into<Bytes>,
+    {
         let index_channel = Endpoint::from_shared(index_endpoint.to_string())?
             .connect()
             .await?;
 
         let search_endpoints: Vec<Endpoint> = search_endpoints
-            .iter()
-            .cloned()
+            .clone()
             .map(Endpoint::from_shared)
             .collect::<Result<_, tonic::transport::Error>>()?;
         let search_channel = Channel::balance_list(search_endpoints.into_iter());
@@ -153,12 +157,7 @@ impl From<SearchIndex> for GrpcSearchIndex {
 
 impl From<GrpcSearchResult> for SearchResult {
     fn from(value: GrpcSearchResult) -> Self {
-        let id = Uuid::from_bytes(
-            value
-                .id
-                .try_into()
-                .expect("Received non-UUID from search service"),
-        );
+        let id = Uuid::from_slice(&value.id).expect("Received non-UUID from search service");
 
         Self { id }
     }

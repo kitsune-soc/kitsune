@@ -10,7 +10,7 @@ use tokio::sync::oneshot::error::RecvError;
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
-    Base64Decode(#[from] base64::DecodeError),
+    Base64(#[from] base64_simd::Error),
 
     #[error("Signature is expired")]
     ExpiredSignature,

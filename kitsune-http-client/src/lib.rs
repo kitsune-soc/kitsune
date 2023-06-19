@@ -5,6 +5,7 @@
 #![allow(forbidden_lint_groups)]
 
 use self::util::BoxCloneService;
+use bytes::Buf;
 use futures_core::Stream;
 use headers::{Date, HeaderMapExt};
 use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
@@ -358,7 +359,7 @@ impl Response {
         T: DeserializeOwned,
     {
         let bytes = self.bytes().await?;
-        Ok(serde_json::from_slice(&bytes).map_err(BoxError::from)?)
+        Ok(simd_json::from_reader(bytes.reader()).map_err(BoxError::from)?)
     }
 
     /// Get the status of the request

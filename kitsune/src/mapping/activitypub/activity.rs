@@ -3,12 +3,12 @@ use crate::{error::Result, state::Zustand, try_join};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
     schema::{accounts, posts},
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
-use time::OffsetDateTime;
 
 #[async_trait]
 pub trait IntoActivity {
@@ -33,7 +33,7 @@ impl IntoActivity for Account {
             r#type: ActivityType::Update,
             actor: StringOrObject::String(account_url),
             object: ObjectField::Actor(self.into_object(state).await?),
-            published: OffsetDateTime::now_utc(),
+            published: Timestamp::now_utc(),
         })
     }
 
@@ -85,7 +85,7 @@ impl IntoActivity for Favourite {
             r#type: ActivityType::Undo,
             actor: StringOrObject::String(account_url.clone()),
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
-            published: OffsetDateTime::now_utc(),
+            published: Timestamp::now_utc(),
         })
     }
 }
@@ -187,7 +187,7 @@ impl IntoActivity for Post {
                 r#type: ActivityType::Undo,
                 actor: StringOrObject::String(account_url),
                 object: ObjectField::Url(self.url),
-                published: OffsetDateTime::now_utc(),
+                published: Timestamp::now_utc(),
             }
         } else {
             let object = self.into_object(state).await?;
@@ -197,7 +197,7 @@ impl IntoActivity for Post {
                 id: format!("{}#delete", object.id),
                 r#type: ActivityType::Delete,
                 actor: StringOrObject::String(account_url),
-                published: OffsetDateTime::now_utc(),
+                published: Timestamp::now_utc(),
                 object: ObjectField::Object(object),
             }
         };

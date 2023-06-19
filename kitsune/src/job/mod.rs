@@ -16,6 +16,7 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use enum_dispatch::enum_dispatch;
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::job::{Job as DbJob, JobState, UpdateFailedJob},
     schema::jobs,
@@ -23,7 +24,6 @@ use kitsune_db::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::Duration;
-use time::OffsetDateTime;
 use tokio::task::JoinSet;
 
 mod catch_panic;
@@ -35,7 +35,7 @@ const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 
 #[enum_dispatch(Runnable)]
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Job {
     DeliverAccept,
     DeliverCreate,
@@ -66,10 +66,8 @@ pub trait Runnable: DeserializeOwned + Serialize {
 
 // Takes owned values to make the lifetime of the returned future static
 #[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Result<()> {
-    let job: Job = serde_json::from_value(db_job.context.clone())
-        .expect("[Bug] Failed to deserialise job context");
-
+async fn execute_one(db_job: DbJob<Job>, state: Zustand, deliverer: Deliverer) -> Result<()> {
+    let job = &db_job.context;
     let execution_result = CatchPanic::new(job.run(JobContext {
         deliverer: &deliverer,
         state: &state,
@@ -97,7 +95,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
                 .set(UpdateFailedJob {
                     fail_count,
                     state: JobState::Failed,
-                    run_at: OffsetDateTime::now_utc() + backoff_duration,
+                    run_at: Timestamp::now_utc() + backoff_duration,
                 })
                 .execute(&mut db_conn)
                 .await?;
@@ -116,7 +114,7 @@ async fn execute_one(db_job: DbJob, state: Zustand, deliverer: Deliverer) -> Res
     Ok(())
 }
 
-async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
+async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob<Job>>> {
     let mut db_conn = db_conn.get().await?;
 
     let jobs = db_conn
@@ -129,8 +127,7 @@ async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob>> {
                             .or(jobs::state.eq(JobState::Failed))
                             .and(jobs::run_at.le(kitsune_db::function::now())))
                         .or(jobs::state.eq(JobState::Running).and(
-                            jobs::updated_at
-                                .lt(OffsetDateTime::now_utc() - time::Duration::hours(1)),
+                            jobs::updated_at.lt(Timestamp::now_utc() - time::Duration::hours(1)),
                         )),
                     )
                     .limit(num_jobs as i64)

@@ -7,11 +7,11 @@ use diesel::{
     sql_types::Integer,
     AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
 };
+use iso8601_timestamp::Timestamp;
 use kitsune_type::ap::actor::ActorType as ApActorType;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Identifiable, Serialize, Selectable, Queryable)]
@@ -35,8 +35,8 @@ pub struct Account {
     pub shared_inbox_url: Option<String>,
     pub public_key_id: String,
     pub public_key: String,
-    pub created_at: OffsetDateTime,
-    pub updated_at: OffsetDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(AsChangeset)]
@@ -86,7 +86,7 @@ pub struct NewAccount<'a> {
     pub shared_inbox_url: Option<&'a str>,
     pub public_key_id: &'a str,
     pub public_key: &'a str,
-    pub created_at: Option<OffsetDateTime>,
+    pub created_at: Option<Timestamp>,
 }
 
 #[derive(

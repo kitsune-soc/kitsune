@@ -1,6 +1,6 @@
 use futures_util::StreamExt;
 use kitsune_messaging::{redis::RedisMessagingBackend, MessagingHub};
-use serde_json::{json, Value};
+use simd_json::{json, OwnedValue};
 use std::time::Duration;
 
 #[tokio::main(flavor = "current_thread")]
@@ -10,16 +10,16 @@ async fn main() {
         .unwrap();
     let hub = MessagingHub::new(redis_backend);
 
-    let consumer = hub.consumer::<Value>("test".into()).await.unwrap();
+    let consumer = hub.consumer::<OwnedValue>("test".into()).await.unwrap();
     tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 1: {:?}]", msg) }));
 
-    let consumer = hub.consumer::<Value>("test".into()).await.unwrap();
+    let consumer = hub.consumer::<OwnedValue>("test".into()).await.unwrap();
     tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 2: {:?}]", msg) }));
 
-    let consumer = hub.consumer::<Value>("test2".into()).await.unwrap();
+    let consumer = hub.consumer::<OwnedValue>("test2".into()).await.unwrap();
     tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 3: {:?}]", msg) }));
 
-    let consumer = hub.consumer::<Value>("test2".into()).await.unwrap();
+    let consumer = hub.consumer::<OwnedValue>("test2".into()).await.unwrap();
     tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 4: {:?}]", msg) }));
 
     for i in 1..=3 {

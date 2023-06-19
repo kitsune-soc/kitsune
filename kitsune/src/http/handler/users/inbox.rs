@@ -10,6 +10,7 @@ use crate::{
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
@@ -22,13 +23,12 @@ use kitsune_db::{
 };
 use kitsune_type::ap::{Activity, ActivityType};
 use std::ops::Not;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let mut db_conn = state.db_conn.get().await?;
     diesel::update(accounts_follows::table.filter(accounts_follows::url.eq(activity.object())))
-        .set(accounts_follows::approved_at.eq(OffsetDateTime::now_utc()))
+        .set(accounts_follows::approved_at.eq(Timestamp::now_utc()))
         .execute(&mut db_conn)
         .await?;
 
@@ -115,7 +115,7 @@ async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -
 
 async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
-    let approved_at = followed_user.locked.not().then(OffsetDateTime::now_utc);
+    let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
 
     let mut db_conn = state.db_conn.get().await?;
     let follow_id = diesel::insert_into(accounts_follows::table)
@@ -162,7 +162,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
             account_id: author.id,
             post_id: post.id,
             url: activity.id,
-            created_at: Some(OffsetDateTime::now_utc()),
+            created_at: Some(Timestamp::now_utc()),
         })
         .execute(&mut db_conn)
         .await?;

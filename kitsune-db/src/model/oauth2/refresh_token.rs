@@ -1,8 +1,8 @@
 use super::{access_token::AccessToken, application::Application};
 use crate::schema::oauth2_refresh_tokens;
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
@@ -19,7 +19,7 @@ pub struct RefreshToken {
     pub token: String,
     pub access_token: String,
     pub application_id: Uuid,
-    pub created_at: OffsetDateTime,
+    pub created_at: Timestamp,
 }
 
 #[derive(Clone, Insertable)]

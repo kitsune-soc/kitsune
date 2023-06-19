@@ -4,12 +4,12 @@ version.workspace = true
 edition = "2021"
 
 [dependencies]
+iso8601-timestamp = "0.2.11"
 serde = { version = "1.0.164", features = ["derive"] }
-serde_json = "1.0.96"
+simd-json = "0.10.3"
 smol_str = { version = "0.2.0", features = ["serde"] }
-time = { version = "0.3.22", features = ["formatting", "parsing", "serde"] }
 utoipa = { version = "3.3.0", features = ["chrono", "uuid"] }
-uuid = { version = "1.3.4", features = ["serde"] }
+uuid = { package = "kitsune-uuid", path = "../kitsune-uuid" }
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
