@@ -1,12 +1,27 @@
 use crate::state::Zustand;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
 use time::OffsetDateTime;
+use uuid::Uuid;
 
+#[inline]
 #[must_use]
 pub fn generate_secret() -> String {
     let token_data: [u8; 32] = rand::random();
     hex::encode(token_data)
+}
+
+#[inline]
+#[must_use]
+pub fn timestamp_to_uuid(timestamp: Timestamp) -> Uuid {
+    let seconds = timestamp
+        .duration_since(Timestamp::UNIX_EPOCH)
+        .whole_seconds();
+    let uuid_timestamp =
+        uuid::Timestamp::from_unix(uuid::NoContext, seconds as u64, timestamp.nanosecond());
+
+    Uuid::new_v7(uuid_timestamp)
 }
 
 pub trait AccessTokenTtl {
@@ -14,6 +29,7 @@ pub trait AccessTokenTtl {
 }
 
 impl AccessTokenTtl for AccessToken {
+    #[inline]
     fn ttl(&self) -> time::Duration {
         self.expires_at - OffsetDateTime::now_utc()
     }
@@ -24,6 +40,7 @@ pub trait BaseToCc {
 }
 
 impl BaseToCc for Visibility {
+    #[inline]
     fn base_to_cc(&self, state: &Zustand, account: &Account) -> (Vec<String>, Vec<String>) {
         let followers_url = state.service.url.followers_url(account.id);
 

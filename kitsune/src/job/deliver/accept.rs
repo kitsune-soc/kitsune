@@ -9,13 +9,13 @@ use diesel::{
     SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -63,7 +63,7 @@ impl Runnable for DeliverAccept {
             r#type: ActivityType::Accept,
             actor: StringOrObject::String(followed_account_url),
             object: ObjectField::Url(follow.url),
-            published: OffsetDateTime::now_utc(),
+            published: Timestamp::now_utc(),
         };
 
         ctx.deliverer

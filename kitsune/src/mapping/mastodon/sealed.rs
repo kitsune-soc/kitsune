@@ -113,7 +113,7 @@ impl IntoMastodon for DbAccount {
             group: self.actor_type.is_group(),
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
-            created_at: self.created_at,
+            created_at: self.created_at.into(),
             locked: self.locked,
             note: self.note.unwrap_or_default(),
             url: self.url,
@@ -387,7 +387,7 @@ impl IntoMastodon for DbPost {
 
         Ok(Status {
             id: self.id,
-            created_at: self.created_at,
+            created_at: self.created_at.into(),
             in_reply_to_account_id: None,
             in_reply_to_id: self.in_reply_to_id,
             sensitive: self.is_sensitive,

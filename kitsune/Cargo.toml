@@ -49,6 +49,7 @@ headers = "0.3.8"
 hex = "0.4.3"
 http = "0.2.9"
 hyper = { version = "0.14.26", features = ["deprecated"] }
+iso8601-timestamp = "0.2.10"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }

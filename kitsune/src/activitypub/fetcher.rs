@@ -1,9 +1,11 @@
+use super::process_attachments;
 use crate::{
     activitypub::{process_new_object, ProcessNewObject},
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
     service::federation_filter::FederationFilterService,
+    util::timestamp_to_uuid,
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -25,9 +27,6 @@ use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
-use uuid::{Timestamp, Uuid};
-
-use super::process_attachments;
 
 const MAX_FETCH_DEPTH: u32 = 50; // Maximum call depth of fetching new posts. Prevents unbounded recursion
 
@@ -116,17 +115,10 @@ impl Fetcher {
 
         let account: Account = db_conn
             .transaction(|tx| {
-                #[allow(clippy::cast_sign_loss)]
-                let uuid_timestamp = Timestamp::from_unix(
-                    uuid::NoContext,
-                    actor.published.unix_timestamp() as u64,
-                    actor.published.nanosecond(),
-                );
-
                 async move {
                     let account = diesel::insert_into(accounts::table)
                         .values(NewAccount {
-                            id: Uuid::new_v7(uuid_timestamp),
+                            id: timestamp_to_uuid(actor.published),
                             display_name: actor.name.as_deref(),
                             note: actor.subject.as_deref(),
                             username: actor.preferred_username.as_str(),
@@ -146,7 +138,7 @@ impl Fetcher {
                                 .as_deref(),
                             public_key_id: actor.public_key.id.as_str(),
                             public_key: actor.public_key.public_key_pem.as_str(),
-                            created_at: Some(actor.published),
+                            created_at: Some(actor.published.assume_utc()),
                         })
                         .on_conflict(accounts::url)
                         .do_update()

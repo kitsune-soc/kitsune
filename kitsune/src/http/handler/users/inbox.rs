@@ -125,7 +125,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
             follower_id: author.id,
             approved_at,
             url: activity.id.as_str(),
-            created_at: Some(activity.published),
+            created_at: Some(activity.published.assume_utc()),
         })
         .returning(accounts_follows::id)
         .get_result(&mut db_conn)

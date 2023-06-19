@@ -3446,6 +3446,7 @@ dependencies = [
  "hex",
  "http",
  "hyper",
+ "iso8601-timestamp",
  "kitsune-cache",
  "kitsune-db",
  "kitsune-embed",
@@ -3712,11 +3713,11 @@ dependencies = [
 name = "kitsune-type"
 version = "0.0.1-pre.1"
 dependencies = [
+ "iso8601-timestamp",
  "pretty_assertions",
  "serde",
  "serde_json",
  "smol_str",
- "time",
  "utoipa",
  "uuid",
 ]

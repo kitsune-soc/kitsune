@@ -3,9 +3,9 @@ use self::{
     helper::StringOrObject,
     object::MediaAttachment,
 };
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use time::OffsetDateTime;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
@@ -120,8 +120,8 @@ pub struct Activity {
     pub r#type: ActivityType,
     pub actor: StringOrObject<Actor>,
     pub object: ObjectField,
-    #[serde(default = "OffsetDateTime::now_utc", with = "time::serde::rfc3339")]
-    pub published: OffsetDateTime,
+    #[serde(default = "Timestamp::now_utc")]
+    pub published: Timestamp,
 }
 
 impl Activity {
@@ -171,8 +171,7 @@ pub struct Object {
     pub tag: Vec<Tag>,
     #[serde(default)]
     pub sensitive: bool,
-    #[serde(with = "time::serde::rfc3339")]
-    pub published: OffsetDateTime,
+    pub published: Timestamp,
     #[serde(default)]
     pub to: Vec<String>,
     #[serde(default)]

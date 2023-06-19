@@ -63,17 +63,17 @@ pub struct MastodonMapper {
         field(
             type = "Option<PostEventConsumer>",
             build = "CacheInvalidationActor::builder()
-                        .cache(
-                            self.mastodon_cache
-                                .clone()
-                                .ok_or(MastodonMapperBuilderError::UninitializedField(\"mastodon_cache\"))?
-                        )
-                        .event_consumer(
-                            self._cache_invalidator
-                                .ok_or(MastodonMapperBuilderError::UninitializedField(\"cache_invalidator\"))?
-                        )
-                        .build()
-                        .spawn();",
+                .cache(
+                    self.mastodon_cache
+                        .clone()
+                        .ok_or(MastodonMapperBuilderError::UninitializedField(\"mastodon_cache\"))?
+                )
+                .event_consumer(
+                    self._cache_invalidator
+                        .ok_or(MastodonMapperBuilderError::UninitializedField(\"cache_invalidator\"))?
+                )
+                .build()
+                .spawn();",
         ),
         setter(name = "cache_invalidator", strip_option)
     )]

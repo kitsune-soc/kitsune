@@ -1,5 +1,5 @@
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub struct Field {
     pub name: String,
     pub value: String,
-    pub verified_at: Option<OffsetDateTime>,
+    pub verified_at: Option<Timestamp>,
 }
 
 #[derive(Clone, Deserialize, Serialize, ToSchema)]
@@ -27,8 +27,7 @@ pub struct Account {
     pub group: bool,
     pub username: String,
     pub display_name: String,
-    #[serde(with = "time::serde::rfc3339")]
-    pub created_at: OffsetDateTime,
+    pub created_at: Timestamp,
     pub locked: bool,
     pub note: String,
     pub url: String,
