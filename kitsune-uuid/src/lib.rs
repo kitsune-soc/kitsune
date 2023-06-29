@@ -11,7 +11,7 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{
-    fmt,
+    fmt::{self, Debug},
     ops::{Deref, DerefMut},
     str::{self, FromStr},
 };
@@ -37,7 +37,7 @@ pub enum Error {
     Uuid(#[from] uuid::Error),
 }
 
-#[derive(AsExpression, Clone, Copy, Debug, FromSqlRow, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(AsExpression, Clone, Copy, FromSqlRow, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[diesel(sql_type = diesel::sql_types::Uuid)]
 #[repr(transparent)]
 pub struct Uuid(pub uuid::Uuid);
@@ -71,6 +71,12 @@ impl Uuid {
 impl AsRef<uuid::Uuid> for Uuid {
     fn as_ref(&self) -> &uuid::Uuid {
         &self.0
+    }
+}
+
+impl Debug for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self}")
     }
 }
 

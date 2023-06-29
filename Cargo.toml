@@ -15,6 +15,7 @@ members = [
     "kitsune-embed",
     "kitsune-http-client",
     "kitsune-http-signatures",
+    "kitsune-job",
     "kitsune-messaging",
     "kitsune-search",
     "kitsune-search-server",

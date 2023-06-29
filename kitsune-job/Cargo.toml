@@ -1,0 +1,28 @@
+[package]
+name = "kitsune-job"
+edition = "2021"
+version.workspace = true
+
+[dependencies]
+ahash = "0.7.6"
+async-trait = "0.1.68"
+deadpool-redis = "0.12.0"
+either = { version = "1.8.1", default-features = false }
+exponential-backoff = "1.2.0"
+iso8601-timestamp = { version = "0.2.11", features = ["diesel-pg"] }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-uuid = { version = "0.0.1-pre.1", path = "../kitsune-uuid" }
+once_cell = "1.18.0"
+rand = "0.8.5"
+redis = { version = "0.23.0", features = ["ahash", "aio", "tokio-rustls-comp"] }
+serde = { version = "1.0.164", features = ["derive"] }
+simd-json = "0.10.3"
+smol_str = "0.2.0"
+thiserror = "1.0.40"
+tokio = { version = "1.28.2", features = ["rt", "sync"] }
+tracing = "0.1.37"
+typed-builder = "0.14.0"
+typetag = "0.2.8"
+
+[dev-dependencies]
+tokio = { version = "1.28.2", features = ["macros"] }
