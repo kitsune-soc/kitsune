@@ -43,6 +43,12 @@ pub enum Error {
 pub struct Uuid(pub uuid::Uuid);
 
 impl Uuid {
+    fn as_ascii_bytes(&self) -> [u8; 36] {
+        let mut dst = [0; 36];
+        let _ = format_hyphenated(self.0.as_bytes(), Out::from_mut(&mut dst), AsciiCase::Lower);
+        dst
+    }
+
     pub fn from_slice(bytes: &[u8]) -> Result<Self, Error> {
         uuid::Uuid::from_slice(bytes).map(Self).map_err(Error::from)
     }
@@ -171,15 +177,8 @@ impl<'de> Deserialize<'de> for Uuid {
 
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut dst = [0; 36];
-        let display = unsafe {
-            str::from_utf8_unchecked(format_hyphenated(
-                self.0.as_bytes(),
-                Out::from_mut(&mut dst),
-                AsciiCase::Lower,
-            ))
-        };
-
+        let bytes = self.as_ascii_bytes();
+        let display = unsafe { str::from_utf8_unchecked(&bytes) };
         write!(f, "{display}")
     }
 }
@@ -210,16 +209,8 @@ impl redis::ToRedisArgs for Uuid {
     where
         W: ?Sized + redis::RedisWrite,
     {
-        let mut dst = [0; 36];
-        let str_val = unsafe {
-            str::from_utf8_unchecked(format_hyphenated(
-                self.0.as_bytes(),
-                Out::from_mut(&mut dst),
-                AsciiCase::Lower,
-            ))
-        };
-
-        redis::ToRedisArgs::write_redis_args(&str_val, out);
+        let bytes = self.as_ascii_bytes();
+        redis::ToRedisArgs::write_redis_args(&bytes.as_slice(), out);
     }
 }
 
@@ -228,14 +219,8 @@ impl Serialize for Uuid {
     where
         S: serde::Serializer,
     {
-        let mut dst = [0; 36];
-        serializer.serialize_str(unsafe {
-            str::from_utf8_unchecked(format_hyphenated(
-                self.0.as_bytes(),
-                Out::from_mut(&mut dst),
-                AsciiCase::Lower,
-            ))
-        })
+        let bytes = self.as_ascii_bytes();
+        serializer.serialize_str(unsafe { str::from_utf8_unchecked(&bytes) })
     }
 }
 
