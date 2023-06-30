@@ -8,6 +8,16 @@ local function getTimestamp()
     return redisTime[1]
 end
 
+local function unpackObject(obj)
+    local arr = {}
+    for k, v in pairs(obj) do
+        table.insert(arr, k)
+        table.insert(arr, v)
+    end
+
+    return unpack(arr)
+end
+
 local jobStream = KEYS[1]
 local scheduledJobSet = KEYS[2]
 
@@ -17,6 +27,7 @@ if #readyJobs > 0 then
     redis.call("ZREM", scheduledJobSet, unpack(readyJobs))
 end
 
-for _, jobId in ipairs(readyJobs) do
-    redis.call("XADD", jobStream, "*", "job_id", jobId)
+for _, rawJobData in ipairs(readyJobs) do
+    local jobData = cjson.decode(rawJobData)
+    redis.call("XADD", jobStream, "*", unpackObject(jobData))
 end

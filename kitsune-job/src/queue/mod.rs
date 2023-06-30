@@ -1,5 +1,5 @@
 use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
-use crate::error::Result;
+use crate::{error::Result, impl_to_redis_args};
 use deadpool_redis::Pool as RedisPool;
 use either::Either;
 use iso8601_timestamp::Timestamp;
@@ -9,6 +9,7 @@ use redis::{
     streams::{StreamReadOptions, StreamReadReply},
     AsyncCommands, RedisResult,
 };
+use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use std::{str::FromStr, time::Duration};
 use tokio::sync::OnceCell;
@@ -17,14 +18,27 @@ use typed_builder::TypedBuilder;
 mod scheduled;
 mod util;
 
+const BLOCK_TIME: Duration = Duration::from_secs(2);
 const CONSUMER_GROUP: &str = "kitsune-job-runners";
 //const MIN_IDLE_TIME: Duration = Duration::from_secs(3600); // One hour should be enough to not overlap with job executions
 const MIN_IDLE_TIME: Duration = Duration::from_secs(1);
 
 #[derive(TypedBuilder)]
 pub struct JobDetails {
+    #[builder(default)]
+    fail_count: u32,
+    #[builder(default = Uuid::now_v7())]
+    job_id: Uuid,
     #[builder(default, setter(strip_option))]
     run_at: Option<Timestamp>,
+}
+
+impl_to_redis_args! {
+    #[derive(Deserialize, Serialize)]
+    struct JobMeta {
+        job_id: Uuid,
+        fail_count: u32,
+    }
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -34,10 +48,7 @@ pub struct JobQueue {
     #[builder(setter(into))]
     queue_name: SmolStr,
     redis_pool: RedisPool,
-    #[builder(
-        default = SmolStr::from(format!("{queue_name}:scheduled")),
-        setter(skip),
-    )]
+    #[builder(default = SmolStr::from(format!("{queue_name}:scheduled")))]
     scheduled_queue_name: SmolStr,
 
     #[builder(default, setter(skip))]
@@ -81,28 +92,30 @@ impl JobQueue {
 
     pub async fn enqueue(&self, job_details: JobDetails) -> Result<()> {
         let mut redis_conn = self.redis_pool.get().await?;
-        let job_id = Uuid::now_v7();
+        let job_meta = JobMeta {
+            job_id: job_details.job_id,
+            fail_count: job_details.fail_count,
+        };
 
         if let Some(run_at) = job_details.run_at {
             let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
             redis_conn
                 .zadd(
                     self.scheduled_queue_name.as_str(),
-                    job_id.to_string(),
+                    simd_json::to_string(&job_meta)?,
                     score,
                 )
                 .await?;
         } else {
-            redis_conn
-                .xadd(
-                    self.queue_name.as_str(),
-                    "*",
-                    &[("job_id", job_id.to_string())],
-                )
+            redis::cmd("XADD")
+                .arg(self.queue_name.as_str())
+                .arg("*")
+                .arg(job_meta)
+                .query_async(&mut redis_conn)
                 .await?;
         }
 
-        todo!("Add payload into database");
+        //todo!("Add payload into database");
 
         Ok(())
     }
@@ -126,25 +139,29 @@ impl JobQueue {
         let claimed_ids = if claimed_ids.len() == max_jobs {
             Either::Left(claimed_ids.into_iter())
         } else {
-            // TODO: Block for only ~2sec in case we claimed some jobs with the previous command
-            let read_opts = StreamReadOptions::default()
+            let mut read_opts = StreamReadOptions::default()
                 .count(max_jobs - claimed_ids.len())
                 .group(CONSUMER_GROUP, self.consumer_name.as_str());
 
-            let StreamReadReply { keys }: StreamReadReply = redis_conn
+            if !claimed_ids.is_empty() {
+                read_opts = read_opts.block(BLOCK_TIME.as_millis() as usize);
+            }
+
+            let read_reply: Option<StreamReadReply> = redis_conn
                 .xread_options(&[self.queue_name.as_str()], &[">"], &read_opts)
                 .await?;
 
-            Either::Right(
-                claimed_ids
-                    .into_iter()
-                    .chain(keys.into_iter().flat_map(|key| key.ids)),
-            )
+            let read_ids = read_reply
+                .into_iter()
+                .flat_map(|reply| reply.keys.into_iter().flat_map(|key| key.ids));
+
+            Either::Right(claimed_ids.into_iter().chain(read_ids))
         };
 
         let id_iterator = claimed_ids.map(|id| {
             let job_id: String =
                 redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
+
             Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID")
         });
 

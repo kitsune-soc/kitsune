@@ -204,6 +204,25 @@ impl FromStr for Uuid {
     }
 }
 
+#[cfg(feature = "redis")]
+impl redis::ToRedisArgs for Uuid {
+    fn write_redis_args<W>(&self, out: &mut W)
+    where
+        W: ?Sized + redis::RedisWrite,
+    {
+        let mut dst = [0; 36];
+        let str_val = unsafe {
+            str::from_utf8_unchecked(format_hyphenated(
+                self.0.as_bytes(),
+                Out::from_mut(&mut dst),
+                AsciiCase::Lower,
+            ))
+        };
+
+        redis::ToRedisArgs::write_redis_args(&str_val, out);
+    }
+}
+
 impl Serialize for Uuid {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
