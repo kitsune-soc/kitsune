@@ -9,7 +9,7 @@ derive_builder = "0.12.0"
 futures-core = "0.3.28"
 headers = "0.3.8"
 http-body = "0.4.5"
-hyper = { version = "0.14.26", features = [
+hyper = { version = "0.14.27", features = [
     "client",
     "deprecated",
     "http1",
@@ -22,7 +22,7 @@ pin-project-lite = "0.2.9"
 serde = "1.0.164"
 simd-json = "0.10.3"
 tower = "0.4.13"
-tower-http = { version = "0.4.0", features = [
+tower-http = { version = "0.4.1", features = [
     "decompression-full",
     "follow-redirect",
     "map-response-body",
@@ -30,4 +30,4 @@ tower-http = { version = "0.4.0", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.28.2", features = ["macros", "rt"] }
+tokio = { version = "1.29.1", features = ["macros", "rt"] }

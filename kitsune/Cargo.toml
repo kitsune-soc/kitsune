@@ -48,7 +48,7 @@ globset = { version = "0.4.10", features = ["simd-accel"] }
 headers = "0.3.8"
 hex-simd = "0.8.0"
 http = "0.2.9"
-hyper = { version = "0.14.26", features = ["deprecated"] }
+hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-db = { path = "../kitsune-db" }
@@ -85,9 +85,9 @@ strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.6.0"
 thiserror = "1.0.40"
 time = "0.3.22"
-tokio = { version = "1.28.2", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
-tower-http = { version = "0.4.0", features = [
+tower-http = { version = "0.4.1", features = [
     "catch-panic",
     "cors",
     "fs",

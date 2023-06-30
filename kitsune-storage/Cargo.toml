@@ -14,7 +14,7 @@ http = "0.2.9"
 http-body = "0.4.5"
 pin-project-lite = "0.2.9"
 sync_wrapper = "0.1.2"
-tokio = { version = "1.28.2", features = ["fs", "io-util"] }
+tokio = { version = "1.29.1", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.8", features = ["io"] }
 
 [dev-dependencies]
@@ -22,4 +22,4 @@ aws-credential-types = { version = "0.55.3", features = [
     "hardcoded-credentials",
 ] }
 tempfile = "3.6.0"
-tokio = { version = "1.28.2", features = ["macros", "rt"] }
+tokio = { version = "1.29.1", features = ["macros", "rt"] }

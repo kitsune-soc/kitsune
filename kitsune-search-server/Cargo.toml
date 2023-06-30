@@ -10,7 +10,7 @@ autometrics = { version = "0.5.0", default-features = false, features = [
 dotenvy = "0.15.7"
 envy = "0.4.2"
 futures-util = "0.3.28"
-human-size = { version = "0.4.2", features = ["serde"] }
+human-size = { version = "0.4.3", features = ["serde"] }
 kitsune-search-proto = { path = "proto" }
 metrics = "0.21.0"
 metrics-exporter-prometheus = "0.12.1"
@@ -21,10 +21,10 @@ prost = "0.11.9"
 serde = { version = "1.0.164", features = ["derive"] }
 tantivy = "0.20.2"
 time = "0.3.22"
-tokio = { version = "1.28.2", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }
 tonic = "0.9.2"
 tonic-health = "0.9.2"
-tower-http = { version = "0.4.0", features = ["add-extension", "trace"] }
+tower-http = { version = "0.4.1", features = ["add-extension", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 
