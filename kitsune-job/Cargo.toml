@@ -10,12 +10,18 @@ deadpool-redis = "0.12.0"
 diesel = "2.1.0"
 either = { version = "1.8.1", default-features = false }
 exponential-backoff = "1.2.0"
+futures-util = { version = "0.3.28", default-features = false }
 iso8601-timestamp = { version = "0.2.11", features = ["diesel-pg"] }
-kitsune-db = { path = "../kitsune-db" }
 kitsune-uuid = { path = "../kitsune-uuid", features = ["redis"] }
 once_cell = "1.18.0"
 rand = "0.8.5"
-redis = { version = "0.23.0", features = ["ahash", "aio", "tokio-rustls-comp"] }
+redis = { version = "0.23.0", default-features = false, features = [
+    "ahash",
+    "aio",
+    "script",
+    "streams",
+    "tokio-rustls-comp",
+] }
 serde = { version = "1.0.164", features = ["derive"] }
 simd-json = "0.10.3"
 smol_str = "0.2.0"

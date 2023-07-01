@@ -13,9 +13,10 @@
 #[macro_use]
 extern crate tracing;
 
-use self::error::Result;
+use self::error::{BoxError, Result};
 use async_trait::async_trait;
-use std::time::Duration;
+use futures_util::Stream;
+use kitsune_uuid::Uuid;
 
 pub use self::{
     error::Error,
@@ -26,10 +27,39 @@ mod error;
 mod macros;
 mod queue;
 
-const MAX_RETRIES: u32 = 10;
-const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
-
 #[async_trait]
 pub trait Runnable {
-    async fn run(&self) -> Result<()>;
+    type Context: Send + Sync + 'static;
+
+    async fn run(&self, ctx: &Self::Context) -> Result<()>;
+}
+
+#[async_trait]
+pub trait JobContextRepository {
+    /// Some job context
+    ///
+    /// To support multiple job types per repository, consider using the enum dispatch technique
+    type JobContext: Runnable + Send + Sync + 'static;
+    type Error: Into<BoxError>;
+    type Stream: Stream<Item = Result<(Uuid, Self::JobContext), Self::Error>>;
+
+    /// Batch fetch job contexts
+    ///
+    /// The stream has to return `([Job ID], [Job context])`, this gives you an advantage that the order isn't enforced.
+    /// You can return them as you find them
+    async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
+    where
+        I: Iterator<Item = Uuid>;
+
+    /// Remove job context from the database
+    async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error>;
+
+    /// Store job context into the database
+    ///
+    /// Make sure the job can be efficiently found via the job ID (such as using the job ID as the primary key of a database table)
+    async fn store_context(
+        &self,
+        job_id: Uuid,
+        context: Self::JobContext,
+    ) -> Result<(), Self::Error>;
 }

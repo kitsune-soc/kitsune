@@ -13,7 +13,10 @@ async fn main() {
         .build();
 
     for _ in 0..100 {
-        queue.enqueue(JobDetails::builder().build()).await.unwrap();
+        queue
+            .enqueue(JobDetails::builder().context(()).build())
+            .await
+            .unwrap();
     }
 
     for _ in 0..100 {

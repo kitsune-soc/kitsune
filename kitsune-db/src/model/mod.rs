@@ -1,7 +1,7 @@
 pub mod account;
 pub mod favourite;
 pub mod follower;
-pub mod job;
+pub mod job_context;
 pub mod link_preview;
 pub mod media_attachment;
 pub mod mention;
