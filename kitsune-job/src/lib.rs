@@ -28,10 +28,16 @@ mod macros;
 mod queue;
 
 #[async_trait]
-pub trait Runnable {
+pub trait Runnable: Clone {
+    /// User-defined context that is getting passed to the job when run
+    ///
+    /// This way you can reference services, configurations, etc.
     type Context: Send + Sync + 'static;
 
-    async fn run(&self, ctx: &Self::Context) -> Result<()>;
+    type Error: Into<BoxError>;
+
+    /// Run the job
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
@@ -45,7 +51,7 @@ pub trait JobContextRepository {
 
     /// Batch fetch job contexts
     ///
-    /// The stream has to return `([Job ID], [Job context])`, this gives you an advantage that the order isn't enforced.
+    /// The stream has to return `([Job ID], [Job context])`, this gives you the advantage that the order isn't enforced.
     /// You can return them as you find them
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
     where

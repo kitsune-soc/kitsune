@@ -22,6 +22,7 @@ mod scheduled;
 mod util;
 
 const BLOCK_TIME: Duration = Duration::from_secs(2);
+const COMPLETE_ERROR_SLEEP_TIME: Duration = Duration::from_secs(5);
 const CONSUMER_GROUP: &str = "kitsune-job-runners";
 //const MIN_IDLE_TIME: Duration = Duration::from_secs(3600); // One hour should be enough to not overlap with job executions
 const MIN_IDLE_TIME: Duration = Duration::from_secs(1);
@@ -29,18 +30,12 @@ const MIN_IDLE_TIME: Duration = Duration::from_secs(1);
 const MAX_RETRIES: u32 = 10;
 const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
 
-enum JobState<C> {
-    Succeeded {
-        job_id: Uuid,
-    },
-    Failed {
-        context: C,
-        fail_count: u32,
-        job_id: Uuid,
-    },
+enum JobState {
+    Succeeded { job_id: Uuid },
+    Failed { fail_count: u32, job_id: Uuid },
 }
 
-impl<C> JobState<C> {
+impl JobState {
     fn job_id(&self) -> Uuid {
         match self {
             Self::Succeeded { job_id } | Self::Failed { job_id, .. } => *job_id,
@@ -121,6 +116,27 @@ where
         Ok(())
     }
 
+    fn enqueue_redis_cmd(
+        &self,
+        job_meta: &JobMeta,
+        run_at: Option<Timestamp>,
+    ) -> Result<redis::Cmd> {
+        let cmd = if let Some(run_at) = run_at {
+            let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
+            redis::Cmd::zadd(
+                self.scheduled_queue_name.as_str(),
+                simd_json::to_string(job_meta)?,
+                score,
+            )
+        } else {
+            let mut cmd = redis::cmd("XADD");
+            cmd.arg(self.queue_name.as_str()).arg("*").arg(job_meta);
+            cmd
+        };
+
+        Ok(cmd)
+    }
+
     pub async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
         let mut redis_conn = self.redis_pool.get().await?;
         let job_meta = JobMeta {
@@ -128,23 +144,9 @@ where
             fail_count: job_details.fail_count,
         };
 
-        if let Some(run_at) = job_details.run_at {
-            let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
-            redis_conn
-                .zadd(
-                    self.scheduled_queue_name.as_str(),
-                    simd_json::to_string(&job_meta)?,
-                    score,
-                )
-                .await?;
-        } else {
-            redis::cmd("XADD")
-                .arg(self.queue_name.as_str())
-                .arg("*")
-                .arg(&job_meta)
-                .query_async(&mut redis_conn)
-                .await?;
-        }
+        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
+            .query_async(&mut redis_conn)
+            .await?;
 
         self.context_repository
             .store_context(job_meta.job_id, job_details.context)
@@ -208,41 +210,38 @@ where
         Ok(job_meta_iterator)
     }
 
-    async fn complete_job(&self, state: JobState<CR::JobContext>) -> Result<()> {
-        let mut conn = self.redis_pool.get().await?;
-        redis::pipe()
+    async fn complete_job(&self, state: &JobState) -> Result<()> {
+        let mut pipeline = redis::pipe();
+        pipeline
             .atomic()
             .xack(self.queue_name.as_str(), CONSUMER_GROUP, &[state.job_id()])
-            .xdel(self.queue_name.as_str(), &[state.job_id()])
-            .query_async(&mut conn)
-            .await?;
+            .xdel(self.queue_name.as_str(), &[state.job_id()]);
 
-        self.context_repository
-            .remove_context(state.job_id())
-            .await
-            .map_err(|err| Error::ContextRepository(err.into()))?;
-
-        if let JobState::Failed {
-            context,
-            fail_count,
-            job_id,
-        } = state
-        {
+        if let JobState::Failed { fail_count, job_id } = state {
             let backoff = Backoff::new(MAX_RETRIES, MIN_BACKOFF_DURATION, None);
-            if let Some(backoff_duration) = backoff.next(fail_count) {
-                self.enqueue(
-                    JobDetails::builder()
-                        .context(context)
-                        .fail_count(fail_count + 1)
-                        .job_id(job_id)
-                        .run_at(Timestamp::now_utc() + backoff_duration)
-                        .build(),
-                )
-                .await?;
+            if let Some(backoff_duration) = backoff.next(*fail_count) {
+                let job_meta = JobMeta {
+                    job_id: *job_id,
+                    fail_count: fail_count + 1,
+                };
+                let backoff_timestamp = Timestamp::now_utc() + backoff_duration;
+                let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
+
+                pipeline.add_command(enqueue_cmd);
             }
         }
 
-        todo!()
+        let mut conn = self.redis_pool.get().await?;
+        pipeline.query_async(&mut conn).await?;
+
+        if let JobState::Succeeded { job_id } = state {
+            self.context_repository
+                .remove_context(*job_id)
+                .await
+                .map_err(|err| Error::ContextRepository(err.into()))?;
+        }
+
+        Ok(())
     }
 
     pub async fn spawn_jobs(
@@ -278,12 +277,14 @@ where
             let run_ctx = Arc::clone(&run_ctx);
 
             join_set.spawn(async move {
-                let job_state = if let Err(ref error) = job_ctx.run(&run_ctx).await {
-                    error!(?error, "Failed run job");
+                // TODO: Add a reclaim interval of "MIN_IDLE_TIME - 2 minutes" where we run "XCLAIM" on the current job
+                // This is to ensure long running jobs aren't re-executed by accident
+                // And potentially set the MIN_IDLE_TIME on smth 10min instead
+                let job_state = if let Err(error) = job_ctx.run(&run_ctx).await {
+                    error!(error = ?error.into(), "Failed run job");
 
                     let job_meta = &job_meta[&job_id];
                     JobState::Failed {
-                        context: job_ctx,
                         fail_count: job_meta.fail_count,
                         job_id,
                     }
@@ -291,7 +292,10 @@ where
                     JobState::Succeeded { job_id }
                 };
 
-                let _ = this.complete_job(job_state).await;
+                while let Err(error) = this.complete_job(&job_state).await {
+                    error!(?error, "job completion routine failed");
+                    tokio::time::sleep(COMPLETE_ERROR_SLEEP_TIME).await;
+                }
             });
         }
 
