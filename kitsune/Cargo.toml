@@ -68,7 +68,7 @@ oxide-auth-async = "0.1.0"
 oxide-auth-axum = "0.3.0"
 parking_lot = "0.12.1"
 pin-project-lite = "0.2.10"
-post-process = { path = "../post-process" }
+post-process = { path = "../lib/post-process" }
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [
     "simd",
 ] }

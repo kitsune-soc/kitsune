@@ -20,8 +20,8 @@ members = [
     "kitsune-storage",
     "kitsune-type",
     "lib/athena",
+    "lib/post-process",
     "lib/speedy-uuid",
-    "post-process",
 ]
 resolver = "2"
 
