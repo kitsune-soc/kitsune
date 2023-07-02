@@ -25,7 +25,6 @@ mod scheduled;
 mod util;
 
 const BLOCK_TIME: Duration = Duration::from_secs(2);
-const CONSUMER_GROUP: &str = "kitsune-job-runners";
 const ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
 const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
@@ -98,6 +97,8 @@ impl_to_redis_args! {
 
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
+    #[builder(default = "kitsune-job-runners".into(), setter(into))]
+    consumer_group: SmolStr,
     #[builder(default = Uuid::now_v7().to_string().into(), setter(into))]
     consumer_name: SmolStr,
     #[builder(setter(into))]
@@ -134,7 +135,11 @@ where
         self.group_initialised
             .get_or_try_init(|| async {
                 let result: RedisResult<()> = redis_conn
-                    .xgroup_create_mkstream(self.queue_name.as_str(), CONSUMER_GROUP, "0")
+                    .xgroup_create_mkstream(
+                        self.queue_name.as_str(),
+                        self.consumer_group.as_str(),
+                        "0",
+                    )
                     .await;
 
                 if let Err(err) = result {
@@ -200,7 +205,7 @@ where
         let StreamAutoClaimReply { claimed_ids, .. }: StreamAutoClaimReply =
             redis::cmd("XAUTOCLAIM")
                 .arg(self.queue_name.as_str())
-                .arg(CONSUMER_GROUP)
+                .arg(self.consumer_group.as_str())
                 .arg(self.consumer_name.as_str())
                 .arg(MIN_IDLE_TIME.as_millis() as u64)
                 .arg("0-0")
@@ -214,7 +219,7 @@ where
         } else {
             let mut read_opts = StreamReadOptions::default()
                 .count(max_jobs - claimed_ids.len())
-                .group(CONSUMER_GROUP, self.consumer_name.as_str());
+                .group(self.consumer_group.as_str(), self.consumer_name.as_str());
 
             if !claimed_ids.is_empty() {
                 read_opts = read_opts.block(BLOCK_TIME.as_millis() as usize);
@@ -254,7 +259,7 @@ where
             .ignore()
             .xack(
                 self.queue_name.as_str(),
-                CONSUMER_GROUP,
+                self.consumer_group.as_str(),
                 &[state.stream_id()],
             )
             .xdel(self.queue_name.as_str(), &[state.stream_id()]);
@@ -295,7 +300,7 @@ where
         let mut conn = self.redis_pool.get().await?;
         conn.xclaim(
             self.queue_name.as_str(),
-            CONSUMER_GROUP,
+            self.consumer_group.as_str(),
             self.consumer_name.as_str(),
             0,
             &[job_data.stream_id.as_str()],
@@ -379,6 +384,7 @@ where
 impl<CR> Clone for JobQueue<CR> {
     fn clone(&self) -> Self {
         Self {
+            consumer_group: self.consumer_group.clone(),
             consumer_name: self.consumer_name.clone(),
             context_repository: self.context_repository.clone(),
             queue_name: self.queue_name.clone(),
