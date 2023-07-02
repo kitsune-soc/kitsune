@@ -1,4 +1,4 @@
-use crate::job::MAX_CONCURRENT_REQUESTS;
+use crate::job::{JobContext, MAX_CONCURRENT_REQUESTS};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -18,10 +18,11 @@ pub struct DeliverCreate {
 
 #[async_trait]
 impl Runnable for DeliverCreate {
+    type Context = JobContext;
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(post) = posts::table.find(self.post_id)
             .select(Post::as_select())

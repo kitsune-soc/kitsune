@@ -5,6 +5,7 @@ use self::deliver::{
 };
 use async_trait::async_trait;
 use athena::Runnable;
+use kitsune_db::PgPool;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -41,6 +42,10 @@ macro_rules! impl_from {
     };
 }
 
+pub struct JobContext {
+    pub db_pool: PgPool,
+}
+
 impl_from! {
     #[derive(Debug, Deserialize, Serialize)]
     pub enum Job {
@@ -57,6 +62,7 @@ impl_from! {
 
 #[async_trait]
 impl Runnable for Job {
+    type Context = JobContext;
     type Error = anyhow::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

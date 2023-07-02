@@ -1,4 +1,4 @@
-use crate::job::MAX_CONCURRENT_REQUESTS;
+use crate::job::{JobContext, MAX_CONCURRENT_REQUESTS};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
@@ -26,10 +26,11 @@ pub struct DeliverUpdate {
 
 #[async_trait]
 impl Runnable for DeliverUpdate {
+    type Context = JobContext;
     type Error = anyhow::Error;
 
-    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
-        let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
+        let inbox_resolver = InboxResolver::new(ctx.db_conn.clone());
         let mut db_conn = ctx.state.db_conn.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {

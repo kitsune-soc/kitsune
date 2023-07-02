@@ -1,6 +1,10 @@
 #[doc(hidden)]
 pub use tokio;
 
+// TODO: Put attachment and URL service here
+//       Needs to be shared between Kitsune and the ActivityPub crate
+//       We need an ActivityPub crate because we need to reference the code from the job scheduler crate (kitsune-job)
+
 /// Wrapper around the [`tokio::try_join`] macro but it passes each future through
 /// a small no-op function that gives the compiler some trait bound hints
 #[macro_export]

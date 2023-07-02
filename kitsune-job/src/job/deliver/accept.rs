@@ -1,3 +1,4 @@
+use crate::job::JobContext;
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{
@@ -6,6 +7,7 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
+use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
@@ -21,10 +23,11 @@ pub struct DeliverAccept {
 
 #[async_trait]
 impl Runnable for DeliverAccept {
+    type Context = JobContext;
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(follow) = accounts_follows::table.find(self.follow_id)
             .get_result::<Follow>(&mut db_conn)

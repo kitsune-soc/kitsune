@@ -1,7 +1,9 @@
+use crate::job::JobContext;
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
@@ -16,10 +18,11 @@ pub struct DeliverUnfavourite {
 
 #[async_trait]
 impl Runnable for DeliverUnfavourite {
+    type Context = JobContext;
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(favourite) = posts_favourites::table
             .find(self.favourite_id)

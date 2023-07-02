@@ -11,6 +11,7 @@ diesel = "2.1.0"
 diesel-async = "0.3.1"
 futures-util = "0.3.28"
 iso8601-timestamp = "0.2.11"
+kitsune-common = { path = "../kitsune-common" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-type = { path = "../kitsune-type" }
 mimalloc = "0.1.37"
