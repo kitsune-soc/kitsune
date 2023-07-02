@@ -34,8 +34,8 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, posts},
     PgPool,
 };
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(Clone, TypedBuilder)]
 pub struct Follow {

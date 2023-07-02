@@ -1,8 +1,8 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
+use speedy_uuid::Uuid;
 use strum::IntoEnumIterator;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct MeiliSearchService {

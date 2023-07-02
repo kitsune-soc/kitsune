@@ -1,7 +1,7 @@
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Field {

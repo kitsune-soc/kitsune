@@ -6,7 +6,6 @@ use either::Either;
 use exponential_backoff::Backoff;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
-use kitsune_uuid::Uuid;
 use rand::Rng;
 use redis::{
     aio::ConnectionLike,
@@ -15,6 +14,7 @@ use redis::{
 };
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
+use speedy_uuid::Uuid;
 use std::{
     fmt::Debug, future::Future, ops::RangeInclusive, str::FromStr, sync::Arc, time::Duration,
 };

@@ -13,8 +13,8 @@ use axum::{
 use http::StatusCode;
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 pub mod context;
 pub mod favourite;

@@ -1,12 +1,12 @@
 use async_trait::async_trait;
+use athena::{JobContextRepository, JobDetails, JobQueue, Runnable};
 use deadpool_redis::{Config, Runtime};
 use futures_util::{
     stream::{self, BoxStream},
     StreamExt,
 };
 use iso8601_timestamp::Timestamp;
-use kitsune_job::{JobContextRepository, JobDetails, JobQueue, Runnable};
-use kitsune_uuid::Uuid;
+use speedy_uuid::Uuid;
 use std::{
     io,
     sync::{

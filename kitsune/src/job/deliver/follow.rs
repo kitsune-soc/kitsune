@@ -12,7 +12,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, users},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverFollow {

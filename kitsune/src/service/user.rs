@@ -15,8 +15,8 @@ use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
 };
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(Clone, TypedBuilder)]
 pub struct Register {

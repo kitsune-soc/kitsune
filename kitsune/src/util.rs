@@ -4,7 +4,7 @@ use hex_simd::AsciiCase;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 const TOKEN_LENGTH: usize = 32;
 
@@ -24,7 +24,7 @@ pub fn timestamp_to_uuid(timestamp: Timestamp) -> Uuid {
         .duration_since(Timestamp::UNIX_EPOCH)
         .whole_seconds();
     let uuid_timestamp =
-        uuid::Timestamp::from_unix(uuid::NoContext, seconds as u64, timestamp.nanosecond());
+        speedy_uuid::Timestamp::from_unix(uuid::NoContext, seconds as u64, timestamp.nanosecond());
 
     Uuid::new_v7(uuid_timestamp)
 }

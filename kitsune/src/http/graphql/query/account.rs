@@ -3,7 +3,7 @@ use async_graphql::{Context, Object, Result};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::account::Account as DbAccount, schema::accounts};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Default)]
 pub struct AccountQuery;

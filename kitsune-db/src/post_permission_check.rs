@@ -9,7 +9,7 @@ use diesel::{
     sql_types::Bool,
     BoolExpressionMethods, BoxableExpression, ExpressionMethods,
 };
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 /// Parameters for adding a permission check to a post select query
 #[derive(Builder, Clone, Copy)]

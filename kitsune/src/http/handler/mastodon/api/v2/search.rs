@@ -15,9 +15,9 @@ use kitsune_db::{
 use kitsune_search::{SearchBackend, SearchIndex, SearchService};
 use kitsune_type::mastodon::SearchResult;
 use serde::Deserialize;
+use speedy_uuid::Uuid;
 use url::Url;
 use utoipa::{IntoParams, ToSchema};
-use uuid::Uuid;
 
 fn default_page_limit() -> u64 {
     40

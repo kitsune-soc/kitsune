@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 pub mod account;
 pub mod instance;

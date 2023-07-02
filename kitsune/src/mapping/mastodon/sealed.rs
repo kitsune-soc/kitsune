@@ -34,8 +34,8 @@ use kitsune_type::mastodon::{
 use mime::Mime;
 use serde::{de::DeserializeOwned, Serialize};
 use smol_str::SmolStr;
+use speedy_uuid::Uuid;
 use std::str::FromStr;
-use uuid::Uuid;
 
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {

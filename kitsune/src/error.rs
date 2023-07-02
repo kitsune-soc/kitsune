@@ -215,7 +215,7 @@ pub enum Error {
     UrlParse(#[from] url::ParseError),
 
     #[error(transparent)]
-    Uuid(#[from] uuid::Error),
+    Uuid(#[from] speedy_uuid::Error),
 }
 
 impl From<Error> for Response {

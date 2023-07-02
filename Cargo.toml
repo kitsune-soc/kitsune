@@ -13,14 +13,14 @@ members = [
     "kitsune-embed",
     "kitsune-http-client",
     "kitsune-http-signatures",
-    "kitsune-job",
     "kitsune-messaging",
     "kitsune-search",
     "kitsune-search-server",
     "kitsune-search-server/proto",
     "kitsune-storage",
     "kitsune-type",
-    "kitsune-uuid",
+    "lib/athena",
+    "lib/speedy-uuid",
     "post-process",
 ]
 resolver = "2"

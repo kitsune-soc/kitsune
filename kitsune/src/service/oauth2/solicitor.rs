@@ -7,10 +7,10 @@ use kitsune_db::{model::user::User, schema::oauth2_applications, PgPool};
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, QueryParameter, Solicitation, WebRequest};
 use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
+use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use strum::EnumMessage;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(Template)]
 #[template(path = "oauth/consent.html")]

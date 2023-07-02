@@ -24,7 +24,7 @@ use kitsune_db::{model::user::User, schema::users, PgPool};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[cfg(feature = "oidc")]
 use {

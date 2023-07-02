@@ -21,7 +21,7 @@ use axum::{
 use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_type::ap::actor::Actor;
 use serde::Deserialize;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 mod followers;
 mod following;

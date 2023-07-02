@@ -18,5 +18,5 @@ pub enum Error {
     SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]
-    Uuid(#[from] kitsune_uuid::Error),
+    Uuid(#[from] speedy_uuid::Error),
 }

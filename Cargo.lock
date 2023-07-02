@@ -474,6 +474,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "athena"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.7.6",
+ "async-trait",
+ "deadpool-redis",
+ "either",
+ "exponential-backoff",
+ "futures-util",
+ "iso8601-timestamp",
+ "once_cell",
+ "rand",
+ "redis",
+ "serde",
+ "simd-json",
+ "smol_str",
+ "speedy-uuid",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "typed-builder",
+]
+
+[[package]]
 name = "atomic"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3576,7 +3601,6 @@ dependencies = [
  "kitsune-search",
  "kitsune-storage",
  "kitsune-type",
- "kitsune-uuid",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-tracing-context",
@@ -3604,6 +3628,7 @@ dependencies = [
  "sha2",
  "simd-json",
  "smol_str",
+ "speedy-uuid",
  "strum",
  "tempfile",
  "thiserror",
@@ -3648,8 +3673,8 @@ dependencies = [
  "dotenvy",
  "envy",
  "kitsune-db",
- "kitsune-uuid",
  "serde",
+ "speedy-uuid",
  "time",
  "tokio",
  "tracing-subscriber",
@@ -3667,11 +3692,11 @@ dependencies = [
  "diesel_migrations_async",
  "iso8601-timestamp",
  "kitsune-type",
- "kitsune-uuid",
  "num-derive",
  "num-traits 0.2.15",
  "serde",
  "simd-json",
+ "speedy-uuid",
  "thiserror",
  "tracing-log",
 ]
@@ -3731,31 +3756,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kitsune-job"
-version = "0.0.1-pre.1"
-dependencies = [
- "ahash 0.7.6",
- "async-trait",
- "deadpool-redis",
- "either",
- "exponential-backoff",
- "futures-util",
- "iso8601-timestamp",
- "kitsune-uuid",
- "once_cell",
- "rand",
- "redis",
- "serde",
- "simd-json",
- "smol_str",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "typed-builder",
-]
-
-[[package]]
 name = "kitsune-messaging"
 version = "0.0.1-pre.1"
 dependencies = [
@@ -3784,9 +3784,9 @@ dependencies = [
  "futures-util",
  "kitsune-db",
  "kitsune-search-proto",
- "kitsune-uuid",
  "meilisearch-sdk",
  "serde",
+ "speedy-uuid",
  "strum",
  "thiserror",
  "tonic",
@@ -3858,25 +3858,12 @@ name = "kitsune-type"
 version = "0.0.1-pre.1"
 dependencies = [
  "iso8601-timestamp",
- "kitsune-uuid",
  "pretty_assertions",
  "serde",
  "simd-json",
  "smol_str",
+ "speedy-uuid",
  "utoipa",
-]
-
-[[package]]
-name = "kitsune-uuid"
-version = "0.0.1-pre.1"
-dependencies = [
- "async-graphql",
- "diesel",
- "redis",
- "serde",
- "thiserror",
- "uuid",
- "uuid-simd",
 ]
 
 [[package]]
@@ -6293,6 +6280,19 @@ checksum = "2538b18701741680e0322a2302176d3253a35388e2e62f172f64f4f16605f877"
 dependencies = [
  "libc",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "speedy-uuid"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "diesel",
+ "redis",
+ "serde",
+ "thiserror",
+ "uuid",
+ "uuid-simd",
 ]
 
 [[package]]

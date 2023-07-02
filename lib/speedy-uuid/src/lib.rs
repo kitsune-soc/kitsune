@@ -17,7 +17,7 @@ use std::{
 };
 use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
 
-pub use uuid::{NoContext, Timestamp};
+pub use uuid::{self, NoContext, Timestamp};
 
 macro_rules! next_element {
     ($seq:ident, $self:ident) => {

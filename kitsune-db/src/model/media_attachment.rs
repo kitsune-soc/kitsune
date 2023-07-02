@@ -3,7 +3,7 @@ use crate::schema::{media_attachments, posts_media_attachments};
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(belongs_to(Account), table_name = media_attachments)]

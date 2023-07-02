@@ -17,7 +17,7 @@ use kitsune_type::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
 #[diesel(belongs_to(Account), table_name = posts)]

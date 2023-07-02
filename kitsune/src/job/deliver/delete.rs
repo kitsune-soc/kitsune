@@ -13,7 +13,7 @@ use kitsune_db::{
     schema::{accounts, posts, users},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverDelete {

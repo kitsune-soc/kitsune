@@ -16,7 +16,7 @@ use kitsune_db::{
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverAccept {

@@ -16,7 +16,7 @@ extern crate tracing;
 use self::error::{BoxError, Result};
 use async_trait::async_trait;
 use futures_util::Stream;
-use kitsune_uuid::Uuid;
+use speedy_uuid::Uuid;
 
 pub use self::{
     error::Error,

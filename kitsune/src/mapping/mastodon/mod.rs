@@ -11,8 +11,8 @@ use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use serde::Deserialize;
 use simd_json::OwnedValue;
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 mod sealed;
 

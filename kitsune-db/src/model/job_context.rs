@@ -2,7 +2,7 @@ use crate::{json::Json, schema::job_context};
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone, Deserialize, Serialize, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = job_context)]

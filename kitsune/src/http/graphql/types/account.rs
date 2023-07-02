@@ -10,8 +10,8 @@ use kitsune_db::{
     },
     schema::media_attachments,
 };
+use speedy_uuid::Uuid;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
 pub struct Account {

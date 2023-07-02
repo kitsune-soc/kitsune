@@ -7,8 +7,8 @@ use kitsune_db::{
     model::{account::Account as DbAccount, post::Post as DbPost},
     schema::accounts,
 };
+use speedy_uuid::Uuid;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
 pub struct Post {

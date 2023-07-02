@@ -1,9 +1,9 @@
 use super::{Account, MediaAttachment, PreviewCard};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use std::collections::VecDeque;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, ToSchema)]
 pub struct Context {

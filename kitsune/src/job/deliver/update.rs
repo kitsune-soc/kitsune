@@ -14,7 +14,7 @@ use kitsune_db::{
 };
 use kitsune_type::ap::ActivityType;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum UpdateEntity {

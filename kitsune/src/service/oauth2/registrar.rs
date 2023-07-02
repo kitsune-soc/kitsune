@@ -7,11 +7,11 @@ use oxide_auth::{
     primitives::registrar::{BoundClient, ClientUrl, ExactUrl, RegisteredUrl, RegistrarError},
 };
 use oxide_auth_async::primitives::Registrar;
+use speedy_uuid::Uuid;
 use std::{
     borrow::Cow,
     str::{self, FromStr},
 };
-use uuid::Uuid;
 
 use super::OAuthScope;
 

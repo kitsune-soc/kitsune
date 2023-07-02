@@ -4,9 +4,9 @@ use crate::{
 };
 use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
+use speedy_uuid::Uuid;
 use std::{borrow::Cow, collections::HashMap};
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(Clone, TypedBuilder)]
 pub struct PostResolver {

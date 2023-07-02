@@ -12,7 +12,7 @@ use kitsune_type::ap::actor::ActorType as ApActorType;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone, Deserialize, Identifiable, Serialize, Selectable, Queryable)]
 pub struct Account {

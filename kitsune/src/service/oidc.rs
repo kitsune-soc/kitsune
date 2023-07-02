@@ -9,9 +9,9 @@ use openidconnect::{
     OAuth2TokenResponse, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse,
 };
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 use url::Url;
-use uuid::Uuid;
 
 #[allow(clippy::missing_panics_doc)]
 pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, Error> {

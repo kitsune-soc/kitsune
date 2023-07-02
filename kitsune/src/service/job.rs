@@ -7,8 +7,8 @@ use kitsune_db::{
     schema::jobs,
     PgPool,
 };
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(TypedBuilder)]
 pub struct Enqueue<T> {
