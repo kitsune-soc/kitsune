@@ -67,7 +67,7 @@ oxide-auth = "0.5.3"
 oxide-auth-async = "0.1.0"
 oxide-auth-axum = "0.3.0"
 parking_lot = "0.12.1"
-pin-project-lite = "0.2.9"
+pin-project-lite = "0.2.10"
 post-process = { path = "../post-process" }
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [
     "simd",
@@ -152,4 +152,4 @@ metrics = [
 oidc = ["dep:openidconnect"]
 
 [build-dependencies]
-vergen = { version = "8.2.1", features = ["build", "git", "gitoxide"] }
+vergen = { version = "8.2.3", features = ["build", "git", "gitoxide"] }
