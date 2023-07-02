@@ -12,7 +12,8 @@ members = [
     "kitsune-db",
     "kitsune-embed",
     "kitsune-http-client",
-    "kitsune-http-signatures",
+    "kitsune-http-signatures",     #
+    "kitsune-job",
     "kitsune-messaging",
     "kitsune-search",
     "kitsune-search-server",
@@ -29,5 +30,5 @@ resolver = "2"
 version = "0.0.1-pre.1"
 
 [patch.crates-io] # Patch to get client credential support for async
-oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "aumetra/add-error-impl" }
-oxide-auth-async = { git = "https://github.com/aumetra/oxide-auth.git", branch = "aumetra/add-error-impl" }
+oxide-auth = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431" }
+oxide-auth-async = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431" }

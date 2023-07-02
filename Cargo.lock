@@ -3756,6 +3756,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-job"
+version = "0.0.1-pre.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "athena",
+ "diesel",
+ "diesel-async",
+ "enum_dispatch",
+ "futures-util",
+ "iso8601-timestamp",
+ "kitsune-db",
+ "kitsune-type",
+ "mimalloc",
+ "serde",
+ "speedy-uuid",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kitsune-messaging"
 version = "0.0.1-pre.1"
 dependencies = [
@@ -4669,7 +4691,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth"
 version = "0.5.3"
-source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/add-error-impl#98825f504e70057d907e4a7c209f886b710ba6ea"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431#89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431"
 dependencies = [
  "base64 0.13.1",
  "chrono",
@@ -4689,7 +4711,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth-async"
 version = "0.1.0"
-source = "git+https://github.com/aumetra/oxide-auth.git?branch=aumetra/add-error-impl#98825f504e70057d907e4a7c209f886b710ba6ea"
+source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431#89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431"
 dependencies = [
  "async-trait",
  "base64 0.13.1",
@@ -5087,7 +5109,7 @@ checksum = "767eb9f07d4a5ebcb39bbf2d452058a93c011373abf6832e24194a1c3f004794"
 
 [[package]]
 name = "post-process"
-version = "0.0.1-pre.1"
+version = "0.1.0"
 dependencies = [
  "futures-util",
  "insta",

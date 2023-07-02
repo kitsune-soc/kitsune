@@ -1,9 +1,6 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable},
-    try_join,
-};
+use crate::{error::Result, job::JobContext, try_join};
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{
     ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
     SelectableHelper,
@@ -25,6 +22,8 @@ pub struct DeliverAccept {
 
 #[async_trait]
 impl Runnable for DeliverAccept {
+    type Error = anyhow::Error;
+
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
         let mut db_conn = ctx.state.db_conn.get().await?;
