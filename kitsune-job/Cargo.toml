@@ -9,7 +9,6 @@ async-trait = "0.1.68"
 athena = { path = "../lib/athena" }
 diesel = "2.1.0"
 diesel-async = "0.3.1"
-enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
 iso8601-timestamp = "0.2.11"
 kitsune-db = { path = "../kitsune-db" }

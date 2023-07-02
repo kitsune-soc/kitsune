@@ -1,4 +1,3 @@
-use crate::{error::Result, job::JobContext, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{
@@ -25,7 +24,7 @@ impl Runnable for DeliverAccept {
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(follow) = accounts_follows::table.find(self.follow_id)
             .get_result::<Follow>(&mut db_conn)
@@ -43,7 +42,7 @@ impl Runnable for DeliverAccept {
         let followed_info_fut = accounts::table
             .find(follow.account_id)
             .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-            .select((Account::as_select(), User::as_select()))
+            .select(<(Account, User)>::as_select())
             .get_result::<(Account, User)>(&mut db_conn);
 
         let (follower_inbox_url, (followed_account, followed_user)) =

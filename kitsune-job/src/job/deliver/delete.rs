@@ -1,10 +1,6 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS},
-    mapping::IntoActivity,
-    resolve::InboxResolver,
-};
+use crate::job::MAX_CONCURRENT_REQUESTS;
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
@@ -22,8 +18,10 @@ pub struct DeliverDelete {
 
 #[async_trait]
 impl Runnable for DeliverDelete {
+    type Error = anyhow::Error;
+
     #[instrument(skip_all, fields(post_id = %self.post_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(post) = posts::table
             .find(self.post_id)
@@ -38,7 +36,7 @@ impl Runnable for DeliverDelete {
         let Some((account, user)) = accounts::table
             .find(post.account_id)
             .inner_join(users::table)
-            .select((Account::as_select(), User::as_select()))
+            .select(<(Account, User)>::as_select())
             .get_result::<(Account, User)>(&mut db_conn)
             .await
             .optional()?

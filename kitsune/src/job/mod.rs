@@ -28,24 +28,7 @@ use tokio::task::JoinSet;
 
 mod catch_panic;
 
-pub mod deliver;
-
-const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
-const MAX_CONCURRENT_REQUESTS: usize = 10;
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
-
-#[enum_dispatch(Runnable)]
-#[derive(Debug, Deserialize, Serialize)]
-pub enum Job {
-    DeliverAccept,
-    DeliverCreate,
-    DeliverDelete,
-    DeliverFavourite,
-    DeliverFollow,
-    DeliverUnfavourite,
-    DeliverUnfollow,
-    DeliverUpdate,
-}
 
 #[derive(Clone, Copy)]
 pub struct JobContext<'a> {

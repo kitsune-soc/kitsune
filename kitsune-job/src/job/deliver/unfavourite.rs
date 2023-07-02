@@ -1,10 +1,5 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable},
-    mapping::IntoActivity,
-    try_join,
-};
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -21,8 +16,10 @@ pub struct DeliverUnfavourite {
 
 #[async_trait]
 impl Runnable for DeliverUnfavourite {
+    type Error = anyhow::Error;
+
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(favourite) = posts_favourites::table
             .find(self.favourite_id)
@@ -36,7 +33,7 @@ impl Runnable for DeliverUnfavourite {
         let account_user_fut = accounts::table
             .find(favourite.account_id)
             .inner_join(users::table)
-            .select((Account::as_select(), User::as_select()))
+            .select(<(Account, User)>::as_select())
             .get_result(&mut db_conn);
 
         let inbox_url_fut = posts::table

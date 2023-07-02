@@ -1,10 +1,6 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable, MAX_CONCURRENT_REQUESTS},
-    mapping::IntoActivity,
-    resolve::InboxResolver,
-};
+use crate::job::MAX_CONCURRENT_REQUESTS;
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{StreamExt, TryStreamExt};
@@ -30,7 +26,9 @@ pub struct DeliverUpdate {
 
 #[async_trait]
 impl Runnable for DeliverUpdate {
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    type Error = anyhow::Error;
+
+    async fn run(&self, ctx: JobContext<'_>) -> Result<(), Self::Error> {
         let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
         let mut db_conn = ctx.state.db_conn.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
@@ -38,7 +36,7 @@ impl Runnable for DeliverUpdate {
                 let Some((account, user)) = accounts::table
                     .find(self.id)
                     .inner_join(users::table)
-                    .select((Account::as_select(), User::as_select()))
+                    .select(<(Account, User)>::as_select())
                     .get_result(&mut db_conn)
                     .await
                     .optional()?
@@ -59,7 +57,7 @@ impl Runnable for DeliverUpdate {
                     .find(self.id)
                     .inner_join(accounts::table)
                     .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                    .select((Post::as_select(), Account::as_select(), User::as_select()))
+                    .select(<(Post, Account, User)>::as_select())
                     .get_result(&mut db_conn)
                     .await
                     .optional()?
