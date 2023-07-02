@@ -25,8 +25,8 @@ mod scheduled;
 mod util;
 
 const BLOCK_TIME: Duration = Duration::from_secs(2);
-const COMPLETE_ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
 const CONSUMER_GROUP: &str = "kitsune-job-runners";
+const ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
 const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
 const MAX_RETRIES: u32 = 10;
@@ -44,9 +44,8 @@ where
             Err(error) => {
                 error!(?error, "job completion routine failed");
 
-                let sleep_duration = Duration::from_secs(
-                    rand::thread_rng().gen_range(COMPLETE_ERROR_SLEEP_RANGE_SECS),
-                );
+                let sleep_duration =
+                    Duration::from_secs(rand::thread_rng().gen_range(ERROR_SLEEP_RANGE_SECS));
                 tokio::time::sleep(sleep_duration).await;
             }
         }
