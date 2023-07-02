@@ -221,9 +221,11 @@ where
                 .count(max_jobs - claimed_ids.len())
                 .group(self.consumer_group.as_str(), self.consumer_name.as_str());
 
-            if !claimed_ids.is_empty() {
-                read_opts = read_opts.block(BLOCK_TIME.as_millis() as usize);
-            }
+            read_opts = if claimed_ids.is_empty() {
+                read_opts.block(0)
+            } else {
+                read_opts.block(BLOCK_TIME.as_millis() as usize)
+            };
 
             let read_reply: Option<StreamReadReply> = redis_conn
                 .xread_options(&[self.queue_name.as_str()], &[">"], &read_opts)
@@ -314,6 +316,7 @@ where
         &self,
         max_jobs: usize,
         run_ctx: Arc<<CR::JobContext as Runnable>::Context>,
+        existing_joinset: Option<JoinSet<()>>,
     ) -> Result<JoinSet<()>> {
         let job_data = self.fetch_job_data(max_jobs).await?;
         let context_stream = self
@@ -331,7 +334,7 @@ where
             .collect::<AHashMap<Uuid, JobData>>();
         let job_data = Arc::new(job_data);
 
-        let mut join_set = JoinSet::new();
+        let mut join_set = existing_joinset.unwrap_or_else(JoinSet::new);
         while let Some((job_id, job_ctx)) = context_stream
             .next()
             .await

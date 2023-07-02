@@ -4,10 +4,17 @@ use futures_util::{
     stream::{self, BoxStream},
     StreamExt,
 };
-use iso8601_timestamp::{Duration, Timestamp};
+use iso8601_timestamp::Timestamp;
 use kitsune_job::{JobContextRepository, JobDetails, JobQueue, Runnable};
 use kitsune_uuid::Uuid;
-use std::{io, sync::Arc};
+use std::{
+    io,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 #[derive(Clone)]
 struct JobCtx;
@@ -18,7 +25,8 @@ impl Runnable for JobCtx {
     type Error = io::Error;
 
     async fn run(&self, _ctx: &Self::Context) -> Result<(), Self::Error> {
-        println!("ran job!");
+        static COUNTER: AtomicU32 = AtomicU32::new(1);
+        println!("ran job {}!", COUNTER.fetch_add(1, Ordering::AcqRel));
         Ok(())
     }
 }
@@ -77,13 +85,25 @@ async fn main() {
             .enqueue(
                 JobDetails::builder()
                     .context(JobCtx)
-                    .run_at(Timestamp::now_utc() + Duration::SECOND)
+                    .run_at(Timestamp::now_utc() + Duration::from_secs(1))
                     .build(),
             )
             .await
             .unwrap();
     }
 
-    let mut jobs = queue.spawn_jobs(20, Arc::new(())).await.unwrap();
-    while jobs.join_next().await.is_some() {}
+    loop {
+        let mut jobs = if let Ok(join_set) = tokio::time::timeout(
+            Duration::from_secs(5),
+            queue.spawn_jobs(20, Arc::new(()), None),
+        )
+        .await
+        {
+            join_set.unwrap()
+        } else {
+            return;
+        };
+
+        while jobs.join_next().await.is_some() {}
+    }
 }
