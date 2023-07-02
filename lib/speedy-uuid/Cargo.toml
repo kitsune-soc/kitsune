@@ -5,9 +5,12 @@ version = "0.1.0"
 
 [dependencies]
 async-graphql = { version = "5.0.10", default-features = false, optional = true }
-diesel = { version = "2.1.0", features = ["postgres_backend", "uuid"] }
+diesel = { version = "2.1.0", features = [
+    "postgres_backend",
+    "uuid",
+], optional = true }
 redis = { version = "0.23.0", default-features = false, optional = true }
-serde = "1.0.164"
+serde = { version = "1.0.164", optional = true }
 thiserror = "1.0.40"
 uuid = { version = "1.4.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }

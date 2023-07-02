@@ -2,14 +2,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
-use diesel::{
-    backend::Backend, deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types, AsExpression,
-    FromSqlRow,
-};
-use serde::{
-    de::{self, Error as _},
-    Deserialize, Serialize,
-};
 use std::{
     fmt::{self, Debug},
     ops::{Deref, DerefMut},
@@ -37,8 +29,9 @@ pub enum Error {
     Uuid(#[from] uuid::Error),
 }
 
-#[derive(AsExpression, Clone, Copy, FromSqlRow, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[diesel(sql_type = diesel::sql_types::Uuid)]
+#[cfg_attr(feature = "diesel", derive(diesel::AsExpression, diesel::FromSqlRow))]
+#[cfg_attr(feature = "diesel", diesel(sql_type = diesel::sql_types::Uuid))]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct Uuid(pub uuid::Uuid);
 
@@ -100,81 +93,6 @@ impl DerefMut for Uuid {
     }
 }
 
-impl<'de> Deserialize<'de> for Uuid {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        fn de_error<E: de::Error>(e: impl fmt::Display) -> E {
-            E::custom(format_args!("UUID parsing failed: {e}"))
-        }
-
-        if deserializer.is_human_readable() {
-            struct UuidVisitor;
-
-            impl<'vi> de::Visitor<'vi> for UuidVisitor {
-                type Value = Uuid;
-
-                fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    write!(formatter, "a UUID string")
-                }
-
-                fn visit_str<E: de::Error>(self, value: &str) -> Result<Uuid, E> {
-                    value.parse().map_err(de_error)
-                }
-
-                fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<Uuid, E> {
-                    uuid::Uuid::from_slice(value).map(Uuid).map_err(de_error)
-                }
-
-                fn visit_seq<A>(self, mut seq: A) -> Result<Uuid, A::Error>
-                where
-                    A: de::SeqAccess<'vi>,
-                {
-                    let bytes = [
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                        next_element!(seq, self),
-                    ];
-
-                    Ok(Uuid(uuid::Uuid::from_bytes(bytes)))
-                }
-            }
-
-            deserializer.deserialize_str(UuidVisitor)
-        } else {
-            struct UuidBytesVisitor;
-
-            impl<'vi> de::Visitor<'vi> for UuidBytesVisitor {
-                type Value = Uuid;
-
-                fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    write!(formatter, "bytes")
-                }
-
-                fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<Uuid, E> {
-                    uuid::Uuid::from_slice(value).map(Uuid).map_err(de_error)
-                }
-            }
-
-            deserializer.deserialize_bytes(UuidBytesVisitor)
-        }
-    }
-}
-
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = self.as_ascii_bytes();
@@ -203,6 +121,27 @@ impl FromStr for Uuid {
     }
 }
 
+#[cfg(feature = "diesel")]
+mod diesel_impl {
+    use crate::Uuid;
+    use diesel::{backend::Backend, deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types};
+
+    impl FromSql<sql_types::Uuid, Pg> for Uuid {
+        fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+            <uuid::Uuid as FromSql<sql_types::Uuid, Pg>>::from_sql(bytes).map(Self)
+        }
+    }
+
+    impl ToSql<sql_types::Uuid, Pg> for Uuid {
+        fn to_sql<'b>(
+            &'b self,
+            out: &mut diesel::serialize::Output<'b, '_, Pg>,
+        ) -> diesel::serialize::Result {
+            <uuid::Uuid as ToSql<sql_types::Uuid, Pg>>::to_sql(self, out)
+        }
+    }
+}
+
 #[cfg(feature = "redis")]
 impl redis::ToRedisArgs for Uuid {
     fn write_redis_args<W>(&self, out: &mut W)
@@ -214,28 +153,98 @@ impl redis::ToRedisArgs for Uuid {
     }
 }
 
-impl Serialize for Uuid {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let bytes = self.as_ascii_bytes();
-        serializer.serialize_str(unsafe { str::from_utf8_unchecked(&bytes) })
-    }
-}
+#[cfg(feature = "serde")]
+mod serde_impl {
+    use crate::Uuid;
+    use serde::{
+        de::{self, Error as _},
+        Deserialize, Serialize,
+    };
+    use std::{fmt, str};
 
-impl FromSql<sql_types::Uuid, Pg> for Uuid {
-    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        <uuid::Uuid as FromSql<sql_types::Uuid, Pg>>::from_sql(bytes).map(Self)
-    }
-}
+    impl<'de> Deserialize<'de> for Uuid {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            fn de_error<E: de::Error>(e: impl fmt::Display) -> E {
+                E::custom(format_args!("UUID parsing failed: {e}"))
+            }
 
-impl ToSql<sql_types::Uuid, Pg> for Uuid {
-    fn to_sql<'b>(
-        &'b self,
-        out: &mut diesel::serialize::Output<'b, '_, Pg>,
-    ) -> diesel::serialize::Result {
-        <uuid::Uuid as ToSql<sql_types::Uuid, Pg>>::to_sql(self, out)
+            if deserializer.is_human_readable() {
+                struct UuidVisitor;
+
+                impl<'vi> de::Visitor<'vi> for UuidVisitor {
+                    type Value = Uuid;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        write!(formatter, "a UUID string")
+                    }
+
+                    fn visit_str<E: de::Error>(self, value: &str) -> Result<Uuid, E> {
+                        value.parse().map_err(de_error)
+                    }
+
+                    fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<Uuid, E> {
+                        uuid::Uuid::from_slice(value).map(Uuid).map_err(de_error)
+                    }
+
+                    fn visit_seq<A>(self, mut seq: A) -> Result<Uuid, A::Error>
+                    where
+                        A: de::SeqAccess<'vi>,
+                    {
+                        let bytes = [
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                            next_element!(seq, self),
+                        ];
+
+                        Ok(Uuid(uuid::Uuid::from_bytes(bytes)))
+                    }
+                }
+
+                deserializer.deserialize_str(UuidVisitor)
+            } else {
+                struct UuidBytesVisitor;
+
+                impl<'vi> de::Visitor<'vi> for UuidBytesVisitor {
+                    type Value = Uuid;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        write!(formatter, "bytes")
+                    }
+
+                    fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<Uuid, E> {
+                        uuid::Uuid::from_slice(value).map(Uuid).map_err(de_error)
+                    }
+                }
+
+                deserializer.deserialize_bytes(UuidBytesVisitor)
+            }
+        }
+    }
+
+    impl Serialize for Uuid {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            let bytes = self.as_ascii_bytes();
+            serializer.serialize_str(unsafe { str::from_utf8_unchecked(&bytes) })
+        }
     }
 }
 
