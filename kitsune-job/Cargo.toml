@@ -30,5 +30,4 @@ tracing = "0.1.37"
 typed-builder = "0.14.0"
 
 [dev-dependencies]
-tokio = { version = "1.29.1", features = ["macros"] }
 tracing-subscriber = "0.3.17"
