@@ -34,7 +34,7 @@ pub trait Runnable: Clone {
     /// This way you can reference services, configurations, etc.
     type Context: Send + Sync + 'static;
 
-    type Error: Into<BoxError>;
+    type Error: Into<BoxError> + Send;
 
     /// Run the job
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error>;

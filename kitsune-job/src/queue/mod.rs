@@ -7,6 +7,7 @@ use exponential_backoff::Backoff;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
 use kitsune_uuid::Uuid;
+use rand::Rng;
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
@@ -14,21 +15,43 @@ use redis::{
 };
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use std::{str::FromStr, sync::Arc, time::Duration};
-use tokio::{sync::OnceCell, task::JoinSet};
+use std::{
+    fmt::Debug, future::Future, ops::RangeInclusive, str::FromStr, sync::Arc, time::Duration,
+};
+use tokio::{sync::OnceCell, task::JoinSet, time::Instant};
 use typed_builder::TypedBuilder;
 
 mod scheduled;
 mod util;
 
 const BLOCK_TIME: Duration = Duration::from_secs(2);
-const COMPLETE_ERROR_SLEEP_TIME: Duration = Duration::from_secs(5);
+const COMPLETE_ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
 const CONSUMER_GROUP: &str = "kitsune-job-runners";
-//const MIN_IDLE_TIME: Duration = Duration::from_secs(3600); // One hour should be enough to not overlap with job executions
-const MIN_IDLE_TIME: Duration = Duration::from_secs(1);
+const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
 const MAX_RETRIES: u32 = 10;
 const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
+
+async fn rerun_until_success<F, Fut, Ok, Err>(func: F) -> Ok
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = Result<Ok, Err>>,
+    Err: Debug,
+{
+    loop {
+        match func().await {
+            Ok(val) => break val,
+            Err(error) => {
+                error!(?error, "job completion routine failed");
+
+                let sleep_duration = Duration::from_secs(
+                    rand::thread_rng().gen_range(COMPLETE_ERROR_SLEEP_RANGE_SECS),
+                );
+                tokio::time::sleep(sleep_duration).await;
+            }
+        }
+    }
+}
 
 enum JobState<'a> {
     Succeeded {
@@ -269,6 +292,20 @@ where
         Ok(())
     }
 
+    async fn reclaim_job(&self, job_data: &JobData) -> Result<()> {
+        let mut conn = self.redis_pool.get().await?;
+        conn.xclaim(
+            self.queue_name.as_str(),
+            CONSUMER_GROUP,
+            self.consumer_name.as_str(),
+            0,
+            &[job_data.stream_id.as_str()],
+        )
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn spawn_jobs(
         &self,
         max_jobs: usize,
@@ -302,11 +339,23 @@ where
             let run_ctx = Arc::clone(&run_ctx);
 
             join_set.spawn(async move {
-                // TODO: Add a reclaim interval of "MIN_IDLE_TIME - 2 minutes" where we run "XCLAIM" on the current job
-                // This is to ensure long running jobs aren't re-executed by accident
-                // And potentially set the MIN_IDLE_TIME on smth 10min instead
                 let job_data = &job_data[&job_id];
-                let job_state = if let Err(error) = job_ctx.run(&run_ctx).await {
+                let mut run_fut = job_ctx.run(&run_ctx);
+
+                let tick_period = MIN_IDLE_TIME - Duration::from_secs(2 * 60);
+                let mut tick_interval =
+                    tokio::time::interval_at(Instant::now() + tick_period, tick_period);
+
+                let result = loop {
+                    tokio::select! {
+                        result = &mut run_fut => break result,
+                        _ = tick_interval.tick() => {
+                            rerun_until_success(|| this.reclaim_job(job_data)).await;
+                        }
+                    }
+                };
+
+                let job_state = if let Err(error) = result {
                     error!(error = ?error.into(), "Failed run job");
                     JobState::Failed {
                         fail_count: job_data.meta.fail_count,
@@ -320,10 +369,7 @@ where
                     }
                 };
 
-                while let Err(error) = this.complete_job(&job_state).await {
-                    error!(?error, "job completion routine failed");
-                    tokio::time::sleep(COMPLETE_ERROR_SLEEP_TIME).await;
-                }
+                rerun_until_success(|| this.complete_job(&job_state)).await;
             });
         }
 
