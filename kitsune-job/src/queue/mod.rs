@@ -285,7 +285,7 @@ where
 
         {
             let mut conn = self.redis_pool.get().await?;
-            pipeline.query_async::<_, ()>(&mut conn).await.unwrap();
+            pipeline.query_async::<_, ()>(&mut conn).await?;
         }
 
         if let JobState::Succeeded { job_id, .. } = state {
