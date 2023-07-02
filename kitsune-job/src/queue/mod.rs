@@ -30,15 +30,22 @@ const MIN_IDLE_TIME: Duration = Duration::from_secs(1);
 const MAX_RETRIES: u32 = 10;
 const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
 
-enum JobState {
-    Succeeded { job_id: Uuid },
-    Failed { fail_count: u32, job_id: Uuid },
+enum JobState<'a> {
+    Succeeded {
+        job_id: Uuid,
+        stream_id: &'a str,
+    },
+    Failed {
+        fail_count: u32,
+        job_id: Uuid,
+        stream_id: &'a str,
+    },
 }
 
-impl JobState {
-    fn job_id(&self) -> Uuid {
+impl JobState<'_> {
+    fn stream_id(&self) -> &str {
         match self {
-            Self::Succeeded { job_id } | Self::Failed { job_id, .. } => *job_id,
+            Self::Succeeded { stream_id, .. } | Self::Failed { stream_id, .. } => stream_id,
         }
     }
 }
@@ -52,6 +59,11 @@ pub struct JobDetails<C> {
     job_id: Uuid,
     #[builder(default, setter(strip_option))]
     run_at: Option<Timestamp>,
+}
+
+struct JobData {
+    stream_id: String,
+    meta: JobMeta,
 }
 
 impl_to_redis_args! {
@@ -138,28 +150,28 @@ where
     }
 
     pub async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
-        let mut redis_conn = self.redis_pool.get().await?;
         let job_meta = JobMeta {
             job_id: job_details.job_id,
             fail_count: job_details.fail_count,
         };
-
-        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
-            .query_async(&mut redis_conn)
-            .await?;
 
         self.context_repository
             .store_context(job_meta.job_id, job_details.context)
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
+        let mut redis_conn = self.redis_pool.get().await?;
+        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
+            .query_async(&mut redis_conn)
+            .await?;
+
         Ok(())
     }
 
-    async fn fetch_job_ids(
+    async fn fetch_job_data(
         &self,
         max_jobs: usize,
-    ) -> Result<impl Iterator<Item = JobMeta> + Clone> {
+    ) -> Result<impl Iterator<Item = JobData> + Clone> {
         let mut redis_conn = self.redis_pool.get().await?;
         self.initialise_group(&mut redis_conn).await?;
 
@@ -197,27 +209,38 @@ where
             Either::Right(claimed_ids.into_iter().chain(read_ids))
         };
 
-        let job_meta_iterator = claimed_ids.map(|id| {
+        let job_data_iterator = claimed_ids.map(|id| {
             let job_id: String =
                 redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
             let job_id = Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID");
             let fail_count: u32 =
                 redis::from_redis_value(&id.map["fail_count"]).expect("[Bug] Malformed fail count");
 
-            JobMeta { job_id, fail_count }
+            JobData {
+                stream_id: id.id,
+                meta: JobMeta { job_id, fail_count },
+            }
         });
 
-        Ok(job_meta_iterator)
+        Ok(job_data_iterator)
     }
 
-    async fn complete_job(&self, state: &JobState) -> Result<()> {
+    async fn complete_job(&self, state: &JobState<'_>) -> Result<()> {
         let mut pipeline = redis::pipe();
         pipeline
             .atomic()
-            .xack(self.queue_name.as_str(), CONSUMER_GROUP, &[state.job_id()])
-            .xdel(self.queue_name.as_str(), &[state.job_id()]);
+            .ignore()
+            .xack(
+                self.queue_name.as_str(),
+                CONSUMER_GROUP,
+                &[state.stream_id()],
+            )
+            .xdel(self.queue_name.as_str(), &[state.stream_id()]);
 
-        if let JobState::Failed { fail_count, job_id } = state {
+        if let JobState::Failed {
+            fail_count, job_id, ..
+        } = state
+        {
             let backoff = Backoff::new(MAX_RETRIES, MIN_BACKOFF_DURATION, None);
             if let Some(backoff_duration) = backoff.next(*fail_count) {
                 let job_meta = JobMeta {
@@ -231,10 +254,12 @@ where
             }
         }
 
-        let mut conn = self.redis_pool.get().await?;
-        pipeline.query_async(&mut conn).await?;
+        {
+            let mut conn = self.redis_pool.get().await?;
+            pipeline.query_async::<_, ()>(&mut conn).await.unwrap();
+        }
 
-        if let JobState::Succeeded { job_id } = state {
+        if let JobState::Succeeded { job_id, .. } = state {
             self.context_repository
                 .remove_context(*job_id)
                 .await
@@ -249,21 +274,21 @@ where
         max_jobs: usize,
         run_ctx: Arc<<CR::JobContext as Runnable>::Context>,
     ) -> Result<JoinSet<()>> {
-        let job_meta = self.fetch_job_ids(max_jobs).await?;
+        let job_data = self.fetch_job_data(max_jobs).await?;
         let context_stream = self
             .context_repository
-            .fetch_context(job_meta.clone().map(|meta| meta.job_id))
+            .fetch_context(job_data.clone().map(|data| data.meta.job_id))
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
         tokio::pin!(context_stream);
 
-        // Collect all the job metadata into a hashmap indexed by the job ID
+        // Collect all the job data into a hashmap indexed by the job ID
         // This is because we don't enforce an ordering with the batch fetching
-        let job_meta = job_meta
-            .map(|meta| (meta.job_id, meta))
-            .collect::<AHashMap<Uuid, JobMeta>>();
-        let job_meta = Arc::new(job_meta);
+        let job_data = job_data
+            .map(|data| (data.meta.job_id, data))
+            .collect::<AHashMap<Uuid, JobData>>();
+        let job_data = Arc::new(job_data);
 
         let mut join_set = JoinSet::new();
         while let Some((job_id, job_ctx)) = context_stream
@@ -273,23 +298,26 @@ where
             .map_err(|err| Error::ContextRepository(err.into()))?
         {
             let this = self.clone();
-            let job_meta = Arc::clone(&job_meta);
+            let job_data = Arc::clone(&job_data);
             let run_ctx = Arc::clone(&run_ctx);
 
             join_set.spawn(async move {
                 // TODO: Add a reclaim interval of "MIN_IDLE_TIME - 2 minutes" where we run "XCLAIM" on the current job
                 // This is to ensure long running jobs aren't re-executed by accident
                 // And potentially set the MIN_IDLE_TIME on smth 10min instead
+                let job_data = &job_data[&job_id];
                 let job_state = if let Err(error) = job_ctx.run(&run_ctx).await {
                     error!(error = ?error.into(), "Failed run job");
-
-                    let job_meta = &job_meta[&job_id];
                     JobState::Failed {
-                        fail_count: job_meta.fail_count,
+                        fail_count: job_data.meta.fail_count,
                         job_id,
+                        stream_id: &job_data.stream_id,
                     }
                 } else {
-                    JobState::Succeeded { job_id }
+                    JobState::Succeeded {
+                        job_id,
+                        stream_id: &job_data.stream_id,
+                    }
                 };
 
                 while let Err(error) = this.complete_job(&job_state).await {

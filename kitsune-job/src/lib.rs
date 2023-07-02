@@ -55,7 +55,7 @@ pub trait JobContextRepository {
     /// You can return them as you find them
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
     where
-        I: Iterator<Item = Uuid>;
+        I: Iterator<Item = Uuid> + Send + 'static;
 
     /// Remove job context from the database
     async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error>;
