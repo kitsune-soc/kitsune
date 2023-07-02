@@ -13,16 +13,46 @@ mod deliver;
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
-#[derive(Debug, Deserialize, Serialize)]
-pub enum Job {
-    DeliverAccept(DeliverAccept),
-    DeliverCreate(DeliverCreate),
-    DeliverDelete(DeliverDelete),
-    DeliverFavourite(DeliverFavourite),
-    DeliverFollow(DeliverFollow),
-    DeliverUnfavourite(DeliverUnfavourite),
-    DeliverUnfollow(DeliverUnfollow),
-    DeliverUpdate(DeliverUpdate),
+macro_rules! impl_from {
+    (
+        $(#[$top_annotation:meta])*
+        $vb:vis enum $name:ident {
+        $(
+            $(#[$branch_annotation:meta])*
+            $branch_name:ident ($from_type:ty)
+        ),+
+        $(,)*
+    }) => {
+        $(#[$top_annotation])*
+        $vb enum $name {
+            $(
+                $(#[$branch_annotation])*
+                $branch_name($from_type),
+            )*
+        }
+
+        $(
+            impl From<$from_type> for $name {
+                fn from(val: $from_type) -> Self {
+                    Self::$branch_name(val)
+                }
+            }
+        )*
+    };
+}
+
+impl_from! {
+    #[derive(Debug, Deserialize, Serialize)]
+    pub enum Job {
+        DeliverAccept(DeliverAccept),
+        DeliverCreate(DeliverCreate),
+        DeliverDelete(DeliverDelete),
+        DeliverFavourite(DeliverFavourite),
+        DeliverFollow(DeliverFollow),
+        DeliverUnfavourite(DeliverUnfavourite),
+        DeliverUnfollow(DeliverUnfollow),
+        DeliverUpdate(DeliverUpdate),
+    }
 }
 
 #[async_trait]

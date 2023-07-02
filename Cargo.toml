@@ -9,10 +9,11 @@ members = [
     "kitsune",
     "kitsune-cache",
     "kitsune-cli",
+    "kitsune-common",
     "kitsune-db",
     "kitsune-embed",
     "kitsune-http-client",
-    "kitsune-http-signatures",     #
+    "kitsune-http-signatures",
     "kitsune-job",
     "kitsune-messaging",
     "kitsune-search",
