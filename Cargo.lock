@@ -3566,6 +3566,7 @@ dependencies = [
  "async-recursion",
  "async-stream",
  "async-trait",
+ "athena",
  "autometrics",
  "aws-credential-types",
  "aws-sdk-s3",
@@ -3593,7 +3594,6 @@ dependencies = [
  "hyper",
  "iso8601-timestamp",
  "kitsune-cache",
- "kitsune-common",
  "kitsune-db",
  "kitsune-embed",
  "kitsune-http-client",
@@ -3680,13 +3680,6 @@ dependencies = [
  "tokio",
  "tracing-subscriber",
  "vergen",
-]
-
-[[package]]
-name = "kitsune-common"
-version = "0.0.1-pre.1"
-dependencies = [
- "tokio",
 ]
 
 [[package]]

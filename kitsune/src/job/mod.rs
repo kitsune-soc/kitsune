@@ -1,146 +1,86 @@
-use self::{
-    catch_panic::CatchPanic,
-    deliver::{
-        accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
-        favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
-        unfollow::DeliverUnfollow, update::DeliverUpdate,
-    },
+use self::deliver::{
+    accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
+    favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
+    unfollow::DeliverUnfollow, update::DeliverUpdate,
 };
-use crate::{
-    activitypub::Deliverer,
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::{activitypub::Deliverer, error::Result, state::Zustand};
 use async_trait::async_trait;
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use enum_dispatch::enum_dispatch;
-use futures_util::{stream::FuturesUnordered, TryStreamExt};
-use iso8601_timestamp::Timestamp;
-use kitsune_db::{
-    model::job::{Job as DbJob, JobState, UpdateFailedJob},
-    schema::jobs,
-    PgPool,
-};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use athena::Runnable;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::task::JoinSet;
 
 mod catch_panic;
+pub mod deliver;
 
 const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
+const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
+const MAX_CONCURRENT_REQUESTS: usize = 10;
 
-#[derive(Clone, Copy)]
-pub struct JobContext<'a> {
-    deliverer: &'a Deliverer,
-    state: &'a Zustand,
+macro_rules! impl_from {
+    (
+        $(#[$top_annotation:meta])*
+        $vb:vis enum $name:ident {
+        $(
+            $(#[$branch_annotation:meta])*
+            $branch_name:ident ($from_type:ty)
+        ),+
+        $(,)*
+    }) => {
+        $(#[$top_annotation])*
+        $vb enum $name {
+            $(
+                $(#[$branch_annotation])*
+                $branch_name($from_type),
+            )*
+        }
+
+        $(
+            impl From<$from_type> for $name {
+                fn from(val: $from_type) -> Self {
+                    Self::$branch_name(val)
+                }
+            }
+        )*
+    };
+}
+
+pub struct JobContext {
+    deliverer: Deliverer,
+    state: Zustand,
+}
+
+impl_from! {
+    #[derive(Debug, Deserialize, Serialize)]
+    pub enum Job {
+        DeliverAccept(DeliverAccept),
+        DeliverCreate(DeliverCreate),
+        DeliverDelete(DeliverDelete),
+        DeliverFavourite(DeliverFavourite),
+        DeliverFollow(DeliverFollow),
+        DeliverUnfavourite(DeliverUnfavourite),
+        DeliverUnfollow(DeliverUnfollow),
+        DeliverUpdate(DeliverUpdate),
+    }
 }
 
 #[async_trait]
-#[enum_dispatch]
-pub trait Runnable: DeserializeOwned + Serialize {
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()>;
+impl Runnable for Job {
+    type Context = JobContext;
+    type Error = anyhow::Error;
 
-    /// Defaults to exponential backoff
-    fn backoff(&self, previous_tries: u32) -> u64 {
-        u64::pow(2, previous_tries)
-    }
-}
-
-// Takes owned values to make the lifetime of the returned future static
-#[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: DbJob<Job>, state: Zustand, deliverer: Deliverer) -> Result<()> {
-    let job = &db_job.context;
-    let execution_result = CatchPanic::new(job.run(JobContext {
-        deliverer: &deliverer,
-        state: &state,
-    }))
-    .await;
-
-    if let Ok(Err(ref err)) = execution_result {
-        error!(error = ?err, "Job execution failed");
-    } else if execution_result.is_err() {
-        error!("Job execution panicked");
-    }
-
-    let mut db_conn = state.db_conn.get().await?;
-    #[allow(clippy::cast_possible_truncation)]
-    match execution_result {
-        Ok(Err(..)) | Err(..) => {
-            #[cfg(feature = "metrics")]
-            increment_counter!("failed_jobs");
-
-            let fail_count = db_job.fail_count + 1;
-            #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
-            let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
-
-            diesel::update(&db_job)
-                .set(UpdateFailedJob {
-                    fail_count,
-                    state: JobState::Failed,
-                    run_at: Timestamp::now_utc() + backoff_duration,
-                })
-                .execute(&mut db_conn)
-                .await?;
-        }
-        _ => {
-            #[cfg(feature = "metrics")]
-            increment_counter!("succeeded_jobs");
-
-            diesel::update(&db_job)
-                .set(jobs::state.eq(JobState::Succeeded))
-                .execute(&mut db_conn)
-                .await?;
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
+        match self {
+            Self::DeliverAccept(job) => job.run(ctx).await,
+            Self::DeliverCreate(job) => job.run(ctx).await,
+            Self::DeliverDelete(job) => job.run(ctx).await,
+            Self::DeliverFavourite(job) => job.run(ctx).await,
+            Self::DeliverFollow(job) => job.run(ctx).await,
+            Self::DeliverUnfavourite(job) => job.run(ctx).await,
+            Self::DeliverUnfollow(job) => job.run(ctx).await,
+            Self::DeliverUpdate(job) => job.run(ctx).await,
         }
     }
-
-    Ok(())
-}
-
-async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob<Job>>> {
-    let mut db_conn = db_conn.get().await?;
-
-    let jobs = db_conn
-        .transaction(|tx| {
-            async move {
-                let jobs = jobs::table
-                    .filter(
-                        (jobs::state
-                            .eq(JobState::Queued)
-                            .or(jobs::state.eq(JobState::Failed))
-                            .and(jobs::run_at.le(kitsune_db::function::now())))
-                        .or(jobs::state.eq(JobState::Running).and(
-                            jobs::updated_at.lt(Timestamp::now_utc() - time::Duration::hours(1)),
-                        )),
-                    )
-                    .limit(num_jobs as i64)
-                    .order(jobs::id.asc())
-                    .for_update()
-                    .load(tx)
-                    .await?;
-
-                // New scope to ensure `update_jobs` is getting dropped
-                // Otherwise this will prevent us from returning the `jobs` list
-                {
-                    jobs.iter()
-                        .map(|job| {
-                            diesel::update(job)
-                                .set(jobs::state.eq(JobState::Running))
-                                .execute(tx)
-                        })
-                        .collect::<FuturesUnordered<_>>()
-                        .map_ok(|_| ())
-                        .try_collect::<()>()
-                        .await?;
-                }
-
-                Ok::<_, Error>(jobs)
-            }
-            .scope_boxed()
-        })
-        .await?;
-
-    Ok(jobs)
 }
 
 #[instrument(skip(state))]

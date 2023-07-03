@@ -10,7 +10,6 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},

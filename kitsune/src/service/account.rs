@@ -12,6 +12,7 @@ use crate::{
         update::{DeliverUpdate, UpdateEntity},
     },
     sanitize::CleanHtmlExt,
+    try_join,
     webfinger::Webfinger,
 };
 use bytes::Bytes;
@@ -22,7 +23,6 @@ use diesel::{
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use iso8601_timestamp::Timestamp;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{
         account::{Account, UpdateAccount},

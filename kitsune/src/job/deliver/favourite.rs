@@ -1,9 +1,8 @@
-use crate::job::JobContext;
+use crate::{job::JobContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
@@ -44,7 +43,7 @@ impl Runnable for DeliverFavourite {
         let ((account, user), inbox_url) = try_join!(account_user_fut, inbox_url_fut)?;
 
         if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_activity(ctx.state).await?;
+            let activity = favourite.into_activity(&ctx.state).await?;
 
             ctx.deliverer
                 .deliver(inbox_url, &account, &user, &activity)

@@ -1,9 +1,8 @@
-use crate::job::JobContext;
+use crate::{job::JobContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
@@ -48,7 +47,7 @@ impl Runnable for DeliverFollow {
             try_join!(follower_info_fut, followed_inbox_fut)?;
 
         if let Some(followed_inbox) = followed_inbox {
-            let follow_activity = follow.into_activity(ctx.state).await?;
+            let follow_activity = follow.into_activity(&ctx.state).await?;
 
             ctx.deliverer
                 .deliver(&followed_inbox, &follower, &follower_user, &follow_activity)

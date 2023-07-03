@@ -1,7 +1,0 @@
-[package]
-name = "kitsune-common"
-edition = "2021"
-version.workspace = true
-
-[dependencies]
-tokio = { version = "1.29.1", features = ["macros"] }

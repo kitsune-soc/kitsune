@@ -1,9 +1,8 @@
-use crate::job::JobContext;
+use crate::{job::JobContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
@@ -52,7 +51,7 @@ impl Runnable for DeliverUnfollow {
         )?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
-            let follow_activity = follow.into_negate_activity(ctx.state).await?;
+            let follow_activity = follow.into_negate_activity(&ctx.state).await?;
 
             ctx.deliverer
                 .deliver(

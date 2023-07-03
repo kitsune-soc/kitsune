@@ -1,9 +1,8 @@
-use crate::job::JobContext;
+use crate::{job::JobContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use kitsune_common::try_join;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
@@ -49,7 +48,7 @@ impl Runnable for DeliverUnfavourite {
 
         let favourite_id = favourite.id;
         if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_negate_activity(ctx.state).await?;
+            let activity = favourite.into_negate_activity(&ctx.state).await?;
             ctx.deliverer
                 .deliver(inbox_url, &account, &user, &activity)
                 .await?;

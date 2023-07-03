@@ -1,4 +1,8 @@
-use crate::job::{JobContext, MAX_CONCURRENT_REQUESTS};
+use crate::{
+    job::{JobContext, MAX_CONCURRENT_REQUESTS},
+    mapping::IntoActivity,
+    resolve::InboxResolver,
+};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
@@ -30,7 +34,7 @@ impl Runnable for DeliverUpdate {
     type Error = anyhow::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let inbox_resolver = InboxResolver::new(ctx.db_conn.clone());
+        let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
         let mut db_conn = ctx.state.db_conn.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {
@@ -47,7 +51,7 @@ impl Runnable for DeliverUpdate {
                 let inbox_stream = inbox_resolver.resolve_followers(&account).await?;
 
                 (
-                    account.clone().into_activity(ctx.state).await?,
+                    account.clone().into_activity(&ctx.state).await?,
                     account,
                     user,
                     inbox_stream.left_stream(),
@@ -67,7 +71,7 @@ impl Runnable for DeliverUpdate {
                 };
 
                 let inbox_stream = inbox_resolver.resolve(&post).await?;
-                let mut activity = post.into_activity(ctx.state).await?;
+                let mut activity = post.into_activity(&ctx.state).await?;
 
                 // Patch in the update
                 activity.r#type = ActivityType::Update;

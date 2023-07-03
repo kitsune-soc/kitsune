@@ -1,4 +1,8 @@
-use crate::job::{JobContext, MAX_CONCURRENT_REQUESTS};
+use crate::{
+    job::{JobContext, MAX_CONCURRENT_REQUESTS},
+    mapping::IntoActivity,
+    resolve::InboxResolver,
+};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -47,7 +51,7 @@ impl Runnable for DeliverCreate {
             .try_chunks(MAX_CONCURRENT_REQUESTS)
             .map_err(|err| err.1);
 
-        let activity = post.into_activity(ctx.state).await?;
+        let activity = post.into_activity(&ctx.state).await?;
 
         // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
         ctx.deliverer

@@ -1,4 +1,8 @@
-use crate::job::{JobContext, MAX_CONCURRENT_REQUESTS};
+use crate::{
+    job::{JobContext, MAX_CONCURRENT_REQUESTS},
+    mapping::IntoActivity,
+    resolve::InboxResolver,
+};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -53,7 +57,7 @@ impl Runnable for DeliverDelete {
             .map_err(|err| err.1);
 
         let post_id = post.id;
-        let delete_activity = post.into_negate_activity(ctx.state).await?;
+        let delete_activity = post.into_negate_activity(&ctx.state).await?;
 
         // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
         ctx.deliverer
