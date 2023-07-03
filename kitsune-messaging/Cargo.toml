@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 ahash = "0.8.3"
-async-trait = "0.1.68"
+async-trait = "0.1.69"
 futures-util = "0.3.28"
 pin-project-lite = "0.2.10"
 redis = { version = "0.23.0", features = [
@@ -13,7 +13,7 @@ redis = { version = "0.23.0", features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
-serde = "1.0.164"
+serde = "1.0.166"
 simd-json = "0.10.3"
 tokio = { version = "1.29.1", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
