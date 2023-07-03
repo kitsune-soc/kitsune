@@ -28,7 +28,7 @@ mod macros;
 mod queue;
 
 #[async_trait]
-pub trait Runnable {
+pub trait Runnable: Clone {
     /// User-defined context that is getting passed to the job when run
     ///
     /// This way you can reference services, configurations, etc.

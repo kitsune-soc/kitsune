@@ -1,6 +1,9 @@
-use crate::job::JobContext;
+use crate::{
+    error::Result,
+    job::{JobContext, Runnable},
+    try_join,
+};
 use async_trait::async_trait;
-use athena::Runnable;
 use diesel::{
     ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
     SelectableHelper,
