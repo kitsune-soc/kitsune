@@ -1,4 +1,4 @@
-use crate::{job::JobContext, mapping::IntoActivity, try_join};
+use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -17,7 +17,7 @@ pub struct DeliverFollow {
 
 #[async_trait]
 impl Runnable for DeliverFollow {
-    type Context = JobContext;
+    type Context = JobRunnerContext;
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

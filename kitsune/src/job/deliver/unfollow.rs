@@ -1,4 +1,4 @@
-use crate::{job::JobContext, mapping::IntoActivity, try_join};
+use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
@@ -17,7 +17,7 @@ pub struct DeliverUnfollow {
 
 #[async_trait]
 impl Runnable for DeliverUnfollow {
-    type Context = JobContext;
+    type Context = JobRunnerContext;
     type Error = anyhow::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

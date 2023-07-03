@@ -15,6 +15,7 @@ use std::{
     },
     time::Duration,
 };
+use tokio::task::JoinSet;
 
 #[derive(Clone)]
 struct JobCtx;
@@ -92,10 +93,11 @@ async fn main() {
             .unwrap();
     }
 
+    let mut jobs = JoinSet::new();
     loop {
-        let mut jobs = if let Ok(join_set) = tokio::time::timeout(
+        if let Ok(join_set) = tokio::time::timeout(
             Duration::from_secs(5),
-            queue.spawn_jobs(20, Arc::new(()), None),
+            queue.spawn_jobs(20, Arc::new(()), &mut jobs),
         )
         .await
         {

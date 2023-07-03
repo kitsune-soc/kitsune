@@ -6,7 +6,7 @@ use either::Either;
 use exponential_backoff::Backoff;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
-use rand::Rng;
+use just_retry::rerun_until_success;
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
@@ -15,9 +15,7 @@ use redis::{
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{
-    fmt::Debug, future::Future, ops::RangeInclusive, str::FromStr, sync::Arc, time::Duration,
-};
+use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::{sync::OnceCell, task::JoinSet, time::Instant};
 use typed_builder::TypedBuilder;
 
@@ -25,31 +23,10 @@ mod scheduled;
 mod util;
 
 const BLOCK_TIME: Duration = Duration::from_secs(2);
-const ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
 const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
 const MAX_RETRIES: u32 = 10;
 const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
-
-async fn rerun_until_success<F, Fut, Ok, Err>(func: F) -> Ok
-where
-    F: Fn() -> Fut,
-    Fut: Future<Output = Result<Ok, Err>>,
-    Err: Debug,
-{
-    loop {
-        match func().await {
-            Ok(val) => break val,
-            Err(error) => {
-                error!(?error, "job completion routine failed");
-
-                let sleep_duration =
-                    Duration::from_secs(rand::thread_rng().gen_range(ERROR_SLEEP_RANGE_SECS));
-                tokio::time::sleep(sleep_duration).await;
-            }
-        }
-    }
-}
 
 enum JobState<'a> {
     Succeeded {
@@ -73,12 +50,13 @@ impl JobState<'_> {
 
 #[derive(TypedBuilder)]
 pub struct JobDetails<C> {
+    #[builder(setter(into))]
     context: C,
     #[builder(default)]
     fail_count: u32,
-    #[builder(default = Uuid::now_v7())]
+    #[builder(default = Uuid::now_v7(), setter(into))]
     job_id: Uuid,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(into))]
     run_at: Option<Timestamp>,
 }
 
@@ -316,8 +294,8 @@ where
         &self,
         max_jobs: usize,
         run_ctx: Arc<<CR::JobContext as Runnable>::Context>,
-        existing_joinset: Option<JoinSet<()>>,
-    ) -> Result<JoinSet<()>> {
+        join_set: &mut JoinSet<()>,
+    ) -> Result<()> {
         let job_data = self.fetch_job_data(max_jobs).await?;
         let context_stream = self
             .context_repository
@@ -334,7 +312,6 @@ where
             .collect::<AHashMap<Uuid, JobData>>();
         let job_data = Arc::new(job_data);
 
-        let mut join_set = existing_joinset.unwrap_or_else(JoinSet::new);
         while let Some((job_id, job_ctx)) = context_stream
             .next()
             .await
@@ -380,7 +357,7 @@ where
             });
         }
 
-        Ok(join_set)
+        Ok(())
     }
 }
 

@@ -51,6 +51,7 @@ hex-simd = "0.8.0"
 http = "0.2.9"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
+just-retry = { path = "../lib/just-retry" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }

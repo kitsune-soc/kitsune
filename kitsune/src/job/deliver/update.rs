@@ -1,5 +1,5 @@
 use crate::{
-    job::{JobContext, MAX_CONCURRENT_REQUESTS},
+    job::{JobRunnerContext, MAX_CONCURRENT_REQUESTS},
     mapping::IntoActivity,
     resolve::InboxResolver,
 };
@@ -30,7 +30,7 @@ pub struct DeliverUpdate {
 
 #[async_trait]
 impl Runnable for DeliverUpdate {
-    type Context = JobContext;
+    type Context = JobRunnerContext;
     type Error = anyhow::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

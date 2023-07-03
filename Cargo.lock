@@ -484,6 +484,7 @@ dependencies = [
  "exponential-backoff",
  "futures-util",
  "iso8601-timestamp",
+ "just-retry",
  "once_cell",
  "rand",
  "redis",
@@ -3553,6 +3554,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "just-retry"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "kitsune"
 version = "0.0.1-pre.1"
 dependencies = [
@@ -3593,6 +3603,7 @@ dependencies = [
  "http",
  "hyper",
  "iso8601-timestamp",
+ "just-retry",
  "kitsune-cache",
  "kitsune-db",
  "kitsune-embed",

@@ -117,6 +117,9 @@ pub enum Error {
     #[error(transparent)]
     Api(#[from] ApiError),
 
+    #[error(transparent)]
+    Athena(#[from] athena::Error),
+
     #[error("Broken database record encountered")]
     BrokenRecord,
 

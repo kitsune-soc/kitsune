@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    job::{JobContext, Runnable},
+    job::{JobRunnerContext, Runnable},
     try_join,
 };
 use async_trait::async_trait;
@@ -25,7 +25,7 @@ pub struct DeliverAccept {
 
 #[async_trait]
 impl Runnable for DeliverAccept {
-    type Context = JobContext;
+    type Context = JobRunnerContext;
     type Error = anyhow::Error;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

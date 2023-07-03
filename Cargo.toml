@@ -20,6 +20,7 @@ members = [
     "kitsune-storage",
     "kitsune-type",
     "lib/athena",
+    "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
 ]
