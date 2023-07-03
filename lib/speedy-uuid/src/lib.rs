@@ -11,15 +11,6 @@ use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
 
 pub use uuid;
 
-macro_rules! next_element {
-    ($seq:ident, $self:ident) => {
-        match $seq.next_element()? {
-            Some(e) => e,
-            None => return Err(A::Error::invalid_length(16, &$self)),
-        }
-    };
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
@@ -161,6 +152,15 @@ mod serde_impl {
         Deserialize, Serialize,
     };
     use std::{fmt, str};
+
+    macro_rules! next_element {
+        ($seq:ident, $self:ident) => {
+            match $seq.next_element()? {
+                Some(e) => e,
+                None => return Err(A::Error::invalid_length(16, &$self)),
+            }
+        };
+    }
 
     impl<'de> Deserialize<'de> for Uuid {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
