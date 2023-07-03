@@ -24,7 +24,6 @@ use typed_builder::TypedBuilder;
 mod catch_panic;
 pub mod deliver;
 
-const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
@@ -100,6 +99,7 @@ pub struct KitsuneContextRepo {
 }
 
 impl KitsuneContextRepo {
+    #[must_use]
     pub fn new(db_pool: PgPool) -> Self {
         Self { db_pool }
     }
@@ -179,7 +179,7 @@ pub async fn run_dispatcher(
             just_retry::sleep_a_bit().await;
         }
 
-        let join_all = async { while let Some(..) = job_joinset.join_next().await {} };
+        let join_all = async { while job_joinset.join_next().await.is_some() {} };
         let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, join_all).await;
     }
 }

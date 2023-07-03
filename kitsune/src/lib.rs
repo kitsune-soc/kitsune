@@ -38,9 +38,10 @@ pub mod webfinger;
 use self::{
     activitypub::Fetcher,
     config::{
-        CacheConfiguration, Configuration, MessagingConfiguration, SearchConfiguration,
-        StorageConfiguration,
+        CacheConfiguration, Configuration, JobQueueConfiguration, MessagingConfiguration,
+        SearchConfiguration, StorageConfiguration,
     },
+    job::KitsuneContextRepo,
     resolve::PostResolver,
     service::{
         account::AccountService,
@@ -58,6 +59,7 @@ use self::{
     webfinger::Webfinger,
 };
 use anyhow::Context;
+use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
@@ -225,8 +227,29 @@ async fn prepare_search(
     Ok(service)
 }
 
+pub fn prepare_job_queue(
+    db_pool: PgPool,
+    config: &JobQueueConfiguration,
+) -> anyhow::Result<JobQueue<KitsuneContextRepo>> {
+    let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
+    let redis_pool = deadpool_redis::Config::from_url(config.redis_url.as_str())
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
+    let queue = JobQueue::builder()
+        .context_repository(context_repo)
+        .queue_name("kitsune-jobs")
+        .redis_pool(redis_pool)
+        .build();
+
+    Ok(queue)
+}
+
 #[allow(clippy::missing_panics_doc, clippy::too_many_lines)] // TODO: Refactor this method to get under the 100 lines
-pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::Result<Zustand> {
+pub async fn initialise_state(
+    config: &Configuration,
+    conn: PgPool,
+    job_queue: JobQueue<KitsuneContextRepo>,
+) -> anyhow::Result<Zustand> {
     let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
@@ -254,7 +277,7 @@ pub async fn initialise_state(config: &Configuration, conn: PgPool) -> anyhow::R
 
     let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
-    let job_service = JobService::builder().db_conn(conn.clone()).build();
+    let job_service = JobService::builder().job_queue(job_queue).build();
 
     let url_service = UrlService::builder()
         .scheme(config.url.scheme.as_str())

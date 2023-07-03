@@ -17,6 +17,7 @@ pin_project! {
 }
 
 impl<F> CatchPanic<F> {
+    #[allow(dead_code)]
     pub fn new(inner: F) -> Self {
         Self {
             inner,

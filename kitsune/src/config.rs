@@ -41,6 +41,11 @@ pub struct InstanceConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+pub struct JobQueueConfiguration {
+    pub redis_url: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct OidcConfiguration {
     pub server_url: SmolStr,
     pub client_id: SmolStr,
@@ -123,6 +128,7 @@ pub struct Configuration {
     pub database: DatabaseConfiguration,
     pub embed: Option<EmbedConfiguration>,
     pub instance: InstanceConfiguration,
+    pub job_queue: JobQueueConfiguration,
     pub messaging: MessagingConfiguration,
     pub server: ServerConfiguration,
     pub search: SearchConfiguration,

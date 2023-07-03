@@ -23,6 +23,7 @@ in    { cache =
             , registrations_open = True
             }
           : types.Instance
+      , job_queue = { redis_url = "redis://localhost" } : types.JobQueue
       , messaging = types.Messaging.InProcess
       , server =
             { frontend_dir = "./kitsune-fe/dist"
