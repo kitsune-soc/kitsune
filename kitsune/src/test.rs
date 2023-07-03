@@ -32,3 +32,22 @@ where
 
     out
 }
+
+pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
+where
+    F: FnOnce(deadpool_redis::Pool) -> Fut,
+    Fut: Future,
+{
+    let redis_url = env::var("REDIS_URL").expect("Missing redis URL");
+    let config = deadpool_redis::Config::from_url(redis_url);
+    let pool = config
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+        .unwrap();
+
+    let out = func(pool.clone()).await;
+
+    let mut conn = pool.get().await.unwrap();
+    let _: () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
+
+    out
+}
