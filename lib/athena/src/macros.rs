@@ -1,6 +1,6 @@
 /// Implements the [`ToRedisArgs`](::redis::ToRedisArgs) trait in a way that serialises the structure into
 ///
-/// ```
+/// ```text
 /// [field name] [field value] [field name] [field value] ...
 /// ```
 #[macro_export]
