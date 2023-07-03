@@ -196,8 +196,12 @@ impl AccountService {
                 return Ok(None);
             }
 
-            let Some(actor_url) = self.webfinger.fetch_actor_url(get_user.username, domain).await? else {
-                return Ok(None)
+            let Some(actor_url) = self
+                .webfinger
+                .fetch_actor_url(get_user.username, domain)
+                .await?
+            else {
+                return Ok(None);
             };
 
             self.fetcher

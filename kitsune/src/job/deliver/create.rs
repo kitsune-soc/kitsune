@@ -28,7 +28,8 @@ impl Runnable for DeliverCreate {
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
-        let Some(post) = posts::table.find(self.post_id)
+        let Some(post) = posts::table
+            .find(self.post_id)
             .select(Post::as_select())
             .get_result::<Post>(&mut db_conn)
             .await
