@@ -12,7 +12,7 @@ impl FromRedisValue for StreamAutoClaimReply {
     fn from_redis_value(v: &redis::Value) -> RedisResult<Self> {
         type AutoClaimReturnValue = (
             String,
-            Vec<AHashMap<String, AHashMap<String, redis::Value>>>,
+            Vec<Vec<(String, AHashMap<String, redis::Value>)>>,
             Vec<String>,
         );
 
