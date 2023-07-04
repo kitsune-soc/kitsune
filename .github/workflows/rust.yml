@@ -1,6 +1,7 @@
 name: "Rust checks"
 
 on:
+  merge_group:
   pull_request:
   push:
     branches:
