@@ -1,10 +1,12 @@
 use rand::Rng;
 use std::{fmt::Debug, future::Future, ops::RangeInclusive, time::Duration};
 
-const ERROR_SLEEP_RANGE_SECS: RangeInclusive<u64> = 3..=6;
+const ERROR_SLEEP_RANGE_SECS: RangeInclusive<f64> = 3.0..=6.0;
 
 pub async fn sleep_a_bit() {
-    let sleep_duration = Duration::from_secs(rand::thread_rng().gen_range(ERROR_SLEEP_RANGE_SECS));
+    let sleep_duration =
+        Duration::from_secs_f64(rand::thread_rng().gen_range(ERROR_SLEEP_RANGE_SECS));
+
     tokio::time::sleep(sleep_duration).await;
 }
 
@@ -18,7 +20,7 @@ where
         match func().await {
             Ok(val) => break val,
             Err(error) => {
-                tracing::error!(?error, "job completion routine failed");
+                tracing::error!(?error, "rerun iteration failed");
                 sleep_a_bit().await;
             }
         }

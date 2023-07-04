@@ -62,7 +62,7 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
         let (user, account) = user_account_query
-            .select((User::as_select(), Account::as_select()))
+            .select(<(User, Account)>::as_select())
             .get_result(&mut db_conn)
             .await
             .map_err(Error::from)?;

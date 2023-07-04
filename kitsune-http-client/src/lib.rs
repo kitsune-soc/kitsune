@@ -224,9 +224,7 @@ impl Client {
     }
 
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
-        req.headers_mut()
-            .extend(self.default_headers.clone().into_iter());
-
+        req.headers_mut().extend(self.default_headers.clone());
         req.headers_mut()
             .typed_insert(Date::from(SystemTime::now()));
 
