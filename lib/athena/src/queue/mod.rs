@@ -81,12 +81,14 @@ impl_to_redis_args! {
 
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
-    #[builder(default = "kitsune-job-runners".into(), setter(into))]
+    #[builder(default = "athena-job-runners".into(), setter(into))]
     consumer_group: SmolStr,
     #[builder(default = Uuid::now_v7().to_string().into(), setter(into))]
     consumer_name: SmolStr,
     #[builder(setter(into))]
     context_repository: Arc<CR>,
+    #[builder(default = MAX_RETRIES)]
+    max_retries: u32,
     #[builder(setter(into))]
     queue_name: SmolStr,
     redis_pool: RedisPool,
@@ -254,7 +256,7 @@ where
             JobState::Failed {
                 fail_count, job_id, ..
             } => {
-                let backoff = Backoff::new(MAX_RETRIES, MIN_BACKOFF_DURATION, None);
+                let backoff = Backoff::new(self.max_retries, MIN_BACKOFF_DURATION, None);
                 if let Some(backoff_duration) = backoff.next(*fail_count) {
                     let job_meta = JobMeta {
                         job_id: *job_id,
@@ -379,6 +381,7 @@ impl<CR> Clone for JobQueue<CR> {
             consumer_group: self.consumer_group.clone(),
             consumer_name: self.consumer_name.clone(),
             context_repository: self.context_repository.clone(),
+            max_retries: self.max_retries,
             queue_name: self.queue_name.clone(),
             redis_pool: self.redis_pool.clone(),
             scheduled_queue_name: self.scheduled_queue_name.clone(),
