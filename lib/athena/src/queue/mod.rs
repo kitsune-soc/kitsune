@@ -41,6 +41,12 @@ enum JobState<'a> {
 }
 
 impl JobState<'_> {
+    fn job_id(&self) -> Uuid {
+        match self {
+            Self::Succeeded { job_id, .. } | Self::Failed { job_id, .. } => *job_id,
+        }
+    }
+
     fn stream_id(&self) -> &str {
         match self {
             Self::Succeeded { stream_id, .. } | Self::Failed { stream_id, .. } => stream_id,
@@ -244,31 +250,37 @@ where
             )
             .xdel(self.queue_name.as_str(), &[state.stream_id()]);
 
-        if let JobState::Failed {
-            fail_count, job_id, ..
-        } = state
-        {
-            let backoff = Backoff::new(MAX_RETRIES, MIN_BACKOFF_DURATION, None);
-            if let Some(backoff_duration) = backoff.next(*fail_count) {
-                let job_meta = JobMeta {
-                    job_id: *job_id,
-                    fail_count: fail_count + 1,
-                };
-                let backoff_timestamp = Timestamp::now_utc() + backoff_duration;
-                let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
+        let remove_context = match state {
+            JobState::Failed {
+                fail_count, job_id, ..
+            } => {
+                let backoff = Backoff::new(MAX_RETRIES, MIN_BACKOFF_DURATION, None);
+                if let Some(backoff_duration) = backoff.next(*fail_count) {
+                    let job_meta = JobMeta {
+                        job_id: *job_id,
+                        fail_count: fail_count + 1,
+                    };
+                    let backoff_timestamp = Timestamp::now_utc() + backoff_duration;
+                    let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
 
-                pipeline.add_command(enqueue_cmd);
+                    pipeline.add_command(enqueue_cmd);
+
+                    false // Do not delete the context if we were able to retry the job one more time
+                } else {
+                    true // We hit the maximum amount of retries, we won't re-enqueue the job, so we can just remove the context
+                }
             }
-        }
+            JobState::Succeeded { .. } => true, // Execution succeeded, we don't need the context anymore
+        };
 
         {
             let mut conn = self.redis_pool.get().await?;
             pipeline.query_async::<_, ()>(&mut conn).await?;
         }
 
-        if let JobState::Succeeded { job_id, .. } = state {
+        if remove_context {
             self.context_repository
-                .remove_context(*job_id)
+                .remove_context(state.job_id())
                 .await
                 .map_err(|err| Error::ContextRepository(err.into()))?;
         }
