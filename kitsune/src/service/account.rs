@@ -34,8 +34,8 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, posts},
     PgPool,
 };
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(Clone, TypedBuilder)]
 pub struct Follow {
@@ -196,8 +196,12 @@ impl AccountService {
                 return Ok(None);
             }
 
-            let Some(actor_url) = self.webfinger.fetch_actor_url(get_user.username, domain).await? else {
-                return Ok(None)
+            let Some(actor_url) = self
+                .webfinger
+                .fetch_actor_url(get_user.username, domain)
+                .await?
+            else {
+                return Ok(None);
             };
 
             self.fetcher

@@ -12,7 +12,7 @@ use iso8601_timestamp::Timestamp;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(
     AsExpression,

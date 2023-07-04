@@ -7,7 +7,7 @@ use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::mastodon;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 pub mod follow;
 pub mod lookup;

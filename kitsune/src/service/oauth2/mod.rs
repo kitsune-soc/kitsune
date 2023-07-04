@@ -15,12 +15,12 @@ use kitsune_db::{
     PgPool,
 };
 use oxide_auth::endpoint::Scope;
+use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use url::Url;
-use uuid::Uuid;
 
 mod authorizer;
 mod endpoint;

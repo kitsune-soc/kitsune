@@ -1,204 +1,185 @@
-use self::{
-    catch_panic::CatchPanic,
-    deliver::{
-        accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
-        favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
-        unfollow::DeliverUnfollow, update::DeliverUpdate,
-    },
+use self::deliver::{
+    accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
+    favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
+    unfollow::DeliverUnfollow, update::DeliverUpdate,
 };
-use crate::{
-    activitypub::Deliverer,
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::{activitypub::Deliverer, error::Result, state::Zustand};
 use async_trait::async_trait;
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use enum_dispatch::enum_dispatch;
-use futures_util::{stream::FuturesUnordered, TryStreamExt};
-use iso8601_timestamp::Timestamp;
+use athena::{JobContextRepository, JobQueue, Runnable};
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
 use kitsune_db::{
-    model::job::{Job as DbJob, JobState, UpdateFailedJob},
-    schema::jobs,
+    json::Json,
+    model::job_context::{JobContext, NewJobContext},
+    schema::job_context,
     PgPool,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::time::Duration;
+use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
+use std::{sync::Arc, time::Duration};
 use tokio::task::JoinSet;
+use typed_builder::TypedBuilder;
 
 mod catch_panic;
-
 pub mod deliver;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
-const PAUSE_BETWEEN_QUERIES: Duration = Duration::from_secs(5);
 
-#[enum_dispatch(Runnable)]
-#[derive(Debug, Deserialize, Serialize)]
-pub enum Job {
-    DeliverAccept,
-    DeliverCreate,
-    DeliverDelete,
-    DeliverFavourite,
-    DeliverFollow,
-    DeliverUnfavourite,
-    DeliverUnfollow,
-    DeliverUpdate,
+macro_rules! impl_from {
+    (
+        $(#[$top_annotation:meta])*
+        $vb:vis enum $name:ident {
+        $(
+            $(#[$branch_annotation:meta])*
+            $branch_name:ident ($from_type:ty)
+        ),+
+        $(,)*
+    }) => {
+        $(#[$top_annotation])*
+        $vb enum $name {
+            $(
+                $(#[$branch_annotation])*
+                $branch_name($from_type),
+            )*
+        }
+
+        $(
+            impl From<$from_type> for $name {
+                fn from(val: $from_type) -> Self {
+                    Self::$branch_name(val)
+                }
+            }
+        )*
+    };
 }
 
-#[derive(Clone, Copy)]
-pub struct JobContext<'a> {
-    deliverer: &'a Deliverer,
-    state: &'a Zustand,
+pub struct JobRunnerContext {
+    deliverer: Deliverer,
+    state: Zustand,
+}
+
+impl_from! {
+    #[derive(Debug, Deserialize, Serialize)]
+    pub enum Job {
+        DeliverAccept(DeliverAccept),
+        DeliverCreate(DeliverCreate),
+        DeliverDelete(DeliverDelete),
+        DeliverFavourite(DeliverFavourite),
+        DeliverFollow(DeliverFollow),
+        DeliverUnfavourite(DeliverUnfavourite),
+        DeliverUnfollow(DeliverUnfollow),
+        DeliverUpdate(DeliverUpdate),
+    }
 }
 
 #[async_trait]
-#[enum_dispatch]
-pub trait Runnable: DeserializeOwned + Serialize {
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()>;
+impl Runnable for Job {
+    type Context = JobRunnerContext;
+    type Error = anyhow::Error;
 
-    /// Defaults to exponential backoff
-    fn backoff(&self, previous_tries: u32) -> u64 {
-        u64::pow(2, previous_tries)
-    }
-}
-
-// Takes owned values to make the lifetime of the returned future static
-#[instrument(skip_all, fields(job_id = %db_job.id))]
-async fn execute_one(db_job: DbJob<Job>, state: Zustand, deliverer: Deliverer) -> Result<()> {
-    let job = &db_job.context;
-    let execution_result = CatchPanic::new(job.run(JobContext {
-        deliverer: &deliverer,
-        state: &state,
-    }))
-    .await;
-
-    if let Ok(Err(ref err)) = execution_result {
-        error!(error = ?err, "Job execution failed");
-    } else if execution_result.is_err() {
-        error!("Job execution panicked");
-    }
-
-    let mut db_conn = state.db_conn.get().await?;
-    #[allow(clippy::cast_possible_truncation)]
-    match execution_result {
-        Ok(Err(..)) | Err(..) => {
-            #[cfg(feature = "metrics")]
-            increment_counter!("failed_jobs");
-
-            let fail_count = db_job.fail_count + 1;
-            #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
-            let backoff_duration = time::Duration::seconds(job.backoff(fail_count as u32) as i64);
-
-            diesel::update(&db_job)
-                .set(UpdateFailedJob {
-                    fail_count,
-                    state: JobState::Failed,
-                    run_at: Timestamp::now_utc() + backoff_duration,
-                })
-                .execute(&mut db_conn)
-                .await?;
-        }
-        _ => {
-            #[cfg(feature = "metrics")]
-            increment_counter!("succeeded_jobs");
-
-            diesel::update(&db_job)
-                .set(jobs::state.eq(JobState::Succeeded))
-                .execute(&mut db_conn)
-                .await?;
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
+        match self {
+            Self::DeliverAccept(job) => job.run(ctx).await,
+            Self::DeliverCreate(job) => job.run(ctx).await,
+            Self::DeliverDelete(job) => job.run(ctx).await,
+            Self::DeliverFavourite(job) => job.run(ctx).await,
+            Self::DeliverFollow(job) => job.run(ctx).await,
+            Self::DeliverUnfavourite(job) => job.run(ctx).await,
+            Self::DeliverUnfollow(job) => job.run(ctx).await,
+            Self::DeliverUpdate(job) => job.run(ctx).await,
         }
     }
-
-    Ok(())
 }
 
-async fn get_jobs(db_conn: &PgPool, num_jobs: usize) -> Result<Vec<DbJob<Job>>> {
-    let mut db_conn = db_conn.get().await?;
-
-    let jobs = db_conn
-        .transaction(|tx| {
-            async move {
-                let jobs = jobs::table
-                    .filter(
-                        (jobs::state
-                            .eq(JobState::Queued)
-                            .or(jobs::state.eq(JobState::Failed))
-                            .and(jobs::run_at.le(kitsune_db::function::now())))
-                        .or(jobs::state.eq(JobState::Running).and(
-                            jobs::updated_at.lt(Timestamp::now_utc() - time::Duration::hours(1)),
-                        )),
-                    )
-                    .limit(num_jobs as i64)
-                    .order(jobs::id.asc())
-                    .for_update()
-                    .load(tx)
-                    .await?;
-
-                // New scope to ensure `update_jobs` is getting dropped
-                // Otherwise this will prevent us from returning the `jobs` list
-                {
-                    jobs.iter()
-                        .map(|job| {
-                            diesel::update(job)
-                                .set(jobs::state.eq(JobState::Running))
-                                .execute(tx)
-                        })
-                        .collect::<FuturesUnordered<_>>()
-                        .map_ok(|_| ())
-                        .try_collect::<()>()
-                        .await?;
-                }
-
-                Ok::<_, Error>(jobs)
-            }
-            .scope_boxed()
-        })
-        .await?;
-
-    Ok(jobs)
+#[derive(TypedBuilder)]
+pub struct KitsuneContextRepo {
+    db_pool: PgPool,
 }
 
-#[instrument(skip(state))]
-pub async fn run_dispatcher(state: Zustand, num_job_workers: usize) {
+impl KitsuneContextRepo {
+    #[must_use]
+    pub fn new(db_pool: PgPool) -> Self {
+        Self { db_pool }
+    }
+}
+
+#[async_trait]
+impl JobContextRepository for KitsuneContextRepo {
+    type JobContext = Job;
+    type Error = anyhow::Error;
+    type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
+
+    async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
+    where
+        I: Iterator<Item = Uuid> + Send + 'static,
+    {
+        let mut conn = self.db_pool.get().await?;
+        let stream = job_context::table
+            .filter(job_context::id.eq_any(job_ids))
+            .load_stream::<JobContext<Job>>(&mut conn)
+            .await?;
+
+        Ok(stream
+            .map_ok(|ctx| (ctx.id, ctx.context.0))
+            .map_err(anyhow::Error::from)
+            .boxed())
+    }
+
+    async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error> {
+        let mut conn = self.db_pool.get().await?;
+        diesel::delete(job_context::table.find(job_id))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn store_context(
+        &self,
+        job_id: Uuid,
+        context: Self::JobContext,
+    ) -> Result<(), Self::Error> {
+        let mut conn = self.db_pool.get().await?;
+        diesel::insert_into(job_context::table)
+            .values(NewJobContext {
+                id: job_id,
+                context: Json(context),
+            })
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+}
+
+#[instrument(skip(job_queue, state))]
+pub async fn run_dispatcher(
+    job_queue: JobQueue<KitsuneContextRepo>,
+    state: Zustand,
+    num_job_workers: usize,
+) {
     let deliverer = Deliverer::builder()
         .federation_filter(state.service.federation_filter.clone())
         .build();
+    let ctx = Arc::new(JobRunnerContext { deliverer, state });
 
-    let mut executor = JoinSet::new();
-    let mut pause_between_queries = tokio::time::interval(PAUSE_BETWEEN_QUERIES);
-    let mut do_pause = false;
-
+    let mut job_joinset = JoinSet::new();
     loop {
-        if do_pause {
-            pause_between_queries.tick().await;
-            do_pause = false;
-        }
-
-        let num_jobs = num_job_workers - executor.len();
-        let jobs = match get_jobs(&state.db_conn, num_jobs).await {
-            Ok(jobs) => jobs,
-            Err(err) => {
-                error!(error = %err, "Failed to get jobs from database");
-                continue;
-            }
-        };
-
-        if jobs.is_empty() && executor.is_empty() {
-            do_pause = true;
-            continue;
-        }
-
-        for job in jobs {
-            executor.spawn(execute_one(job, state.clone(), deliverer.clone()));
-        }
-
-        if tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, executor.join_next())
+        while let Err(error) = job_queue
+            .spawn_jobs(
+                num_job_workers - job_joinset.len(),
+                Arc::clone(&ctx),
+                &mut job_joinset,
+            )
             .await
-            .is_err()
         {
-            debug!("Reached timeout. Waiting for job");
+            error!(?error, "failed to spawn more jobs");
+            just_retry::sleep_a_bit().await;
         }
+
+        let join_all = async { while job_joinset.join_next().await.is_some() {} };
+        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, join_all).await;
     }
 }

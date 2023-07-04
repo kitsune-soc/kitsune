@@ -7,8 +7,8 @@ use kitsune_db::{
     model::{account::Account as DbAccount, user::User as DbUser},
     schema::{accounts, users},
 };
+use speedy_uuid::Uuid;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
 #[graphql(complex)]

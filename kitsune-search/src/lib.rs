@@ -9,8 +9,8 @@ use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use strum::EnumIter;
-use uuid::Uuid;
 
 mod error;
 #[cfg(feature = "kitsune-search")]

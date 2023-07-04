@@ -127,22 +127,15 @@ CREATE INDEX "idx-posts-in_reply_to_id" ON posts (in_reply_to_id);
 CREATE INDEX "idx-posts-reposted_post_id" ON posts (reposted_post_id);
 CREATE INDEX "idx-posts-visibility" ON posts (visibility);
 
-CREATE TABLE jobs (
+CREATE TABLE job_context (
     id UUID PRIMARY KEY,
-    state INTEGER NOT NULL,
     context JSONB NOT NULL,
-    run_at TIMESTAMPTZ NOT NULL,
-    fail_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-CREATE INDEX "idx-jobs-state" ON jobs (state);
-CREATE INDEX "idx-jobs-run_at" ON jobs (run_at);
-CREATE INDEX "idx-jobs-updated_at" ON jobs (updated_at);
 
 SELECT diesel_manage_updated_at('accounts');
 SELECT diesel_manage_updated_at('accounts_follows');
 SELECT diesel_manage_updated_at('posts');
 SELECT diesel_manage_updated_at('users');
-SELECT diesel_manage_updated_at('jobs');
+SELECT diesel_manage_updated_at('job_context');

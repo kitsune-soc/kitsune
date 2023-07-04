@@ -15,8 +15,8 @@ use kitsune_db::{
 };
 use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, Storage, StorageBackend};
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 

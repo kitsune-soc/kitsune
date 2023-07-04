@@ -2,7 +2,7 @@ use crate::schema::oauth2_applications;
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(table_name = oauth2_applications)]

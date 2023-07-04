@@ -1,7 +1,7 @@
 use async_graphql::SimpleObject;
 use kitsune_db::model::oauth2;
+use speedy_uuid::Uuid;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, SimpleObject)]
 #[graphql(name = "OAuth2Application")]

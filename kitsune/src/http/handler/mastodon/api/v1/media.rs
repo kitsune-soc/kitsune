@@ -16,8 +16,8 @@ use axum::{
 use futures_util::TryFutureExt;
 use kitsune_type::mastodon::MediaAttachment;
 use serde::Deserialize;
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 #[derive(ToSchema)]
 pub struct CreateAttachment {

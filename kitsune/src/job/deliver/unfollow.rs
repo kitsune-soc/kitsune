@@ -1,10 +1,6 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable},
-    mapping::IntoActivity,
-    try_join,
-};
+use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -12,7 +8,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, users},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverUnfollow {
@@ -21,7 +17,10 @@ pub struct DeliverUnfollow {
 
 #[async_trait]
 impl Runnable for DeliverUnfollow {
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    type Context = JobRunnerContext;
+    type Error = anyhow::Error;
+
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let Some(follow) = accounts_follows::table
             .find(self.follow_id)
@@ -35,7 +34,7 @@ impl Runnable for DeliverUnfollow {
         let follower_info_fut = accounts::table
             .find(follow.follower_id)
             .inner_join(users::table)
-            .select((Account::as_select(), User::as_select()))
+            .select(<(Account, User)>::as_select())
             .get_result::<(Account, User)>(&mut db_conn);
 
         let followed_account_inbox_url_fut = accounts::table
@@ -52,7 +51,7 @@ impl Runnable for DeliverUnfollow {
         )?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
-            let follow_activity = follow.into_negate_activity(ctx.state).await?;
+            let follow_activity = follow.into_negate_activity(&ctx.state).await?;
 
             ctx.deliverer
                 .deliver(

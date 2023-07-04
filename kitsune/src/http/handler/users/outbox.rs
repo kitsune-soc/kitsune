@@ -21,7 +21,7 @@ use kitsune_type::ap::{
     Activity,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 const ACTIVITIES_PER_PAGE: usize = 10;
 

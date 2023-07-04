@@ -20,8 +20,8 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 pub mod deliverer;
 pub mod fetcher;

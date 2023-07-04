@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 #[derive(Clone, Copy, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]

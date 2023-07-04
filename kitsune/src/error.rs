@@ -117,6 +117,9 @@ pub enum Error {
     #[error(transparent)]
     Api(#[from] ApiError),
 
+    #[error(transparent)]
+    Athena(#[from] athena::Error),
+
     #[error("Broken database record encountered")]
     BrokenRecord,
 
@@ -215,7 +218,7 @@ pub enum Error {
     UrlParse(#[from] url::ParseError),
 
     #[error(transparent)]
-    Uuid(#[from] uuid::Error),
+    Uuid(#[from] speedy_uuid::Error),
 }
 
 impl From<Error> for Response {

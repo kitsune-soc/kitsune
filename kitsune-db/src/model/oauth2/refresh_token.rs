@@ -3,7 +3,7 @@ use crate::schema::oauth2_refresh_tokens;
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(

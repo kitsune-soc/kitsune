@@ -2,7 +2,7 @@ use super::{account::Account, post::Post};
 use crate::schema::posts_mentions;
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
 #[diesel(

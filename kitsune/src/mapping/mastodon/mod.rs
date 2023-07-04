@@ -11,8 +11,8 @@ use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use serde::Deserialize;
 use simd_json::OwnedValue;
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 mod sealed;
 
@@ -130,9 +130,7 @@ impl MastodonMapper {
 
         let entity = input.into_mastodon(self.mapper_state()).await?;
         if let Some(id) = input_id {
-            // TODO: Somehow skip this intermediate byte encoding step
-            let mut entity = simd_json::to_vec(&entity).unwrap();
-            let entity = simd_json::to_owned_value(&mut entity).unwrap();
+            let entity = simd_json::serde::to_owned_value(&entity).unwrap();
             self.mastodon_cache.set(&id, &entity).await?;
         }
 

@@ -1,10 +1,6 @@
-use crate::{
-    error::Result,
-    job::{JobContext, Runnable},
-    mapping::IntoActivity,
-    try_join,
-};
+use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
 use async_trait::async_trait;
+use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -12,7 +8,7 @@ use kitsune_db::{
     schema::{accounts, posts, posts_favourites, users},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DeliverFavourite {
@@ -21,8 +17,11 @@ pub struct DeliverFavourite {
 
 #[async_trait]
 impl Runnable for DeliverFavourite {
+    type Context = JobRunnerContext;
+    type Error = anyhow::Error;
+
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
-    async fn run(&self, ctx: JobContext<'_>) -> Result<()> {
+    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;
         let favourite = posts_favourites::table
             .find(self.favourite_id)
@@ -32,7 +31,7 @@ impl Runnable for DeliverFavourite {
         let account_user_fut = accounts::table
             .find(favourite.account_id)
             .inner_join(users::table)
-            .select((Account::as_select(), User::as_select()))
+            .select(<(Account, User)>::as_select())
             .get_result(&mut db_conn);
 
         let inbox_url_fut = posts::table
@@ -44,7 +43,7 @@ impl Runnable for DeliverFavourite {
         let ((account, user), inbox_url) = try_join!(account_user_fut, inbox_url_fut)?;
 
         if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_activity(ctx.state).await?;
+            let activity = favourite.into_activity(&ctx.state).await?;
 
             ctx.deliverer
                 .deliver(inbox_url, &account, &user, &activity)

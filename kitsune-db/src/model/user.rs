@@ -1,7 +1,7 @@
 use crate::schema::users;
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone, Identifiable, Selectable, Queryable)]
 pub struct User {

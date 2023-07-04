@@ -9,8 +9,8 @@ use kitsune_db::{
     },
     schema::accounts,
 };
+use speedy_uuid::Uuid;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, SimpleObject)]
 #[graphql(complex)]

@@ -3,7 +3,7 @@ use crate::schema::posts_favourites;
 use diesel::{Associations, Identifiable, Insertable, Queryable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Associations, Clone, Deserialize, Identifiable, Serialize, Queryable)]
 #[diesel(

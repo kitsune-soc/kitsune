@@ -1,14 +1,10 @@
-use crate::{error::Result, job::Job};
-use diesel_async::RunQueryDsl;
-use iso8601_timestamp::Timestamp;
-use kitsune_db::{
-    json::Json,
-    model::job::{JobState, NewJob},
-    schema::jobs,
-    PgPool,
+use crate::{
+    error::Result,
+    job::{Job, KitsuneContextRepo},
 };
+use athena::{JobDetails, JobQueue};
+use iso8601_timestamp::Timestamp;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 #[derive(TypedBuilder)]
 pub struct Enqueue<T> {
@@ -19,7 +15,7 @@ pub struct Enqueue<T> {
 
 #[derive(Clone, TypedBuilder)]
 pub struct JobService {
-    db_conn: PgPool,
+    job_queue: JobQueue<KitsuneContextRepo>,
 }
 
 impl JobService {
@@ -27,16 +23,13 @@ impl JobService {
     where
         Job: From<T>,
     {
-        let mut db_conn = self.db_conn.get().await?;
-        diesel::insert_into(jobs::table)
-            .values(NewJob {
-                id: Uuid::now_v7(),
-                state: JobState::Queued,
-                context: Json(Job::from(enqueue.job)),
-                run_at: enqueue.run_at.unwrap_or_else(Timestamp::now_utc),
-            })
-            .on_conflict_do_nothing()
-            .execute(&mut db_conn)
+        self.job_queue
+            .enqueue(
+                JobDetails::builder()
+                    .context(enqueue.job)
+                    .run_at(enqueue.run_at)
+                    .build(),
+            )
             .await?;
 
         Ok(())

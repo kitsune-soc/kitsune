@@ -1,6 +1,6 @@
 use crate::http::graphql::{types::Post, ContextExt};
 use async_graphql::{Context, Object, Result};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Default)]
 pub struct PostQuery;

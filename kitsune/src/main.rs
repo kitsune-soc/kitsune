@@ -115,10 +115,13 @@ async fn main() -> anyhow::Result<()> {
     .context("Failed to connect to and migrate the database")
     .with_context(|| postgres_url_diagnostics(&config.database.url))?;
 
-    let state = kitsune::initialise_state(&config, conn).await?;
+    let job_queue = kitsune::prepare_job_queue(conn.clone(), &config.job_queue)
+        .context("Failed to connect to the Redis instance for the job scheduler")?;
+    let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
 
     tokio::spawn(self::http::run(state.clone(), config.server.clone()));
     tokio::spawn(self::job::run_dispatcher(
+        job_queue,
         state.clone(),
         config.server.job_workers,
     ));

@@ -11,9 +11,9 @@ use axum::{
 use futures_util::TryStreamExt;
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
+use speedy_uuid::Uuid;
 use std::cmp::min;
 use utoipa::IntoParams;
-use uuid::Uuid;
 
 const MAX_LIMIT: usize = 40;
 

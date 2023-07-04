@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
+use speedy_uuid::Uuid;
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize, ToSchema)]
 pub struct Relationship {

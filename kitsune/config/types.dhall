@@ -10,6 +10,8 @@ let FsStorage = ./types/storage/fs.dhall
 
 let Instance = ./types/instance.dhall
 
+let JobQueue = ./types/job_queue.dhall
+
 let Kitsune = ./types/search/kitsune.dhall
 
 let Meilisearch = ./types/search/meilisearch.dhall
@@ -37,6 +39,7 @@ let Config =
       , database : Database
       , embed : Optional Embed
       , instance : Instance
+      , job_queue : JobQueue
       , messaging : Messaging
       , server : Server
       , search : Search
@@ -51,6 +54,7 @@ in  { Cache
     , FederationFilter
     , FsStorage
     , Instance
+    , JobQueue
     , Kitsune
     , Meilisearch
     , Messaging

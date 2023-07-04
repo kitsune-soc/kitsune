@@ -51,12 +51,9 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::Tsvector;
 
-    jobs (id) {
+    job_context (id) {
         id -> Uuid,
-        state -> Int4,
         context -> Jsonb,
-        run_at -> Timestamptz,
-        fail_count -> Int4,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
     }
@@ -255,7 +252,7 @@ diesel::joinable!(users_roles -> users (user_id));
 diesel::allow_tables_to_appear_in_same_query!(
     accounts,
     accounts_follows,
-    jobs,
+    job_context,
     link_previews,
     media_attachments,
     oauth2_access_tokens,

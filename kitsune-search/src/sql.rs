@@ -9,7 +9,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     PgPool,
 };
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SearchService {

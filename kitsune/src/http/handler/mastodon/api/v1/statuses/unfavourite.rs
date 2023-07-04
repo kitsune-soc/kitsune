@@ -10,7 +10,7 @@ use axum::{
     Json,
 };
 use kitsune_type::mastodon::Status;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(

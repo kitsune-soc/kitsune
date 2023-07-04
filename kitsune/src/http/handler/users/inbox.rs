@@ -22,8 +22,8 @@ use kitsune_db::{
     schema::{accounts_follows, posts, posts_favourites},
 };
 use kitsune_type::ap::{Activity, ActivityType};
+use speedy_uuid::Uuid;
 use std::ops::Not;
-use uuid::Uuid;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     let mut db_conn = state.db_conn.get().await?;

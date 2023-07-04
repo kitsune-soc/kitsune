@@ -10,9 +10,9 @@ use kitsune_search_proto::{
     },
     search::{search_client::SearchClient, SearchRequest, SearchResult as GrpcSearchResult},
 };
+use speedy_uuid::Uuid;
 use std::future;
 use tonic::transport::{Channel, Endpoint};
-use uuid::Uuid;
 
 /// Search service
 ///

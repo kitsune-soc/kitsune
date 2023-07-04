@@ -1,1 +1,1 @@
-{ url: Text }
+{ url : Text }

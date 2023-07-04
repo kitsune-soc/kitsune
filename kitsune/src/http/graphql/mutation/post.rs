@@ -6,7 +6,7 @@ use crate::{
     service::post::{CreatePost, DeletePost},
 };
 use async_graphql::{Context, Object, Result};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Default)]
 pub struct PostMutation;

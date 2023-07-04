@@ -2,7 +2,7 @@ use crate::schema::accounts_follows;
 use diesel::{Identifiable, Insertable, Queryable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Clone, Deserialize, Serialize, Identifiable, Queryable)]
 #[diesel(table_name = accounts_follows)]

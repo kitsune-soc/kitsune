@@ -6,7 +6,7 @@ use kitsune_db::model::{
     user::User,
     user_role::{NewUserRole, Role as DbRole, UserRole},
 };
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[derive(Subcommand)]
 pub enum RoleSubcommand {

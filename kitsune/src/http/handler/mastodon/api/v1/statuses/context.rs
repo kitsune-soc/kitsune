@@ -9,8 +9,8 @@ use axum::{
 };
 use futures_util::TryStreamExt;
 use kitsune_type::mastodon::status::Context;
+use speedy_uuid::Uuid;
 use std::collections::VecDeque;
-use uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(

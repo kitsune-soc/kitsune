@@ -6,7 +6,7 @@ use axum::{
     extract::{Path, State},
 };
 use kitsune_type::ap::Activity;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 #[debug_handler]
 pub async fn get(

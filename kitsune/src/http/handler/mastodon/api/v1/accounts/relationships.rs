@@ -11,8 +11,8 @@ use futures_util::StreamExt;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
+use speedy_uuid::Uuid;
 use utoipa::IntoParams;
-use uuid::Uuid;
 
 #[derive(Deserialize, IntoParams)]
 pub struct RelationshipQuery {

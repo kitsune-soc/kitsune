@@ -9,7 +9,7 @@ use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},
 };
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 pub async fn get(
     State(state): State<Zustand>,

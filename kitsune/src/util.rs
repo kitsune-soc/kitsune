@@ -4,7 +4,7 @@ use hex_simd::AsciiCase;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
-use uuid::Uuid;
+use speedy_uuid::{uuid, Uuid};
 
 const TOKEN_LENGTH: usize = 32;
 

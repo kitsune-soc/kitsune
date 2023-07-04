@@ -7,7 +7,7 @@ use axum::{
 };
 use http::header::CONTENT_TYPE;
 use hyper::Body;
-use uuid::Uuid;
+use speedy_uuid::Uuid;
 
 async fn get(
     State(attachment_service): State<AttachmentService>,

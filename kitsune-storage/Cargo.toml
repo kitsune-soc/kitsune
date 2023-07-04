@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.68"
+async-trait = "0.1.69"
 aws-sdk-s3 = "0.28.0"
 aws-smithy-http = "0.55.3"
 bytes = "1.4.0"
@@ -12,9 +12,9 @@ enum_dispatch = "0.3.11"
 futures-util = "0.3.28"
 http = "0.2.9"
 http-body = "0.4.5"
-pin-project-lite = "0.2.9"
+pin-project-lite = "0.2.10"
 sync_wrapper = "0.1.2"
-tokio = { version = "1.28.2", features = ["fs", "io-util"] }
+tokio = { version = "1.29.1", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.8", features = ["io"] }
 
 [dev-dependencies]
@@ -22,4 +22,4 @@ aws-credential-types = { version = "0.55.3", features = [
     "hardcoded-credentials",
 ] }
 tempfile = "3.6.0"
-tokio = { version = "1.28.2", features = ["macros", "rt"] }
+tokio = { version = "1.29.1", features = ["macros", "rt"] }

@@ -1,6 +1,6 @@
 use smol_str::SmolStr;
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-use uuid::Uuid;
 
 /// Small "service" to centralise the creation of URLs
 ///

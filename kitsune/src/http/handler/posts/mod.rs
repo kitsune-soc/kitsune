@@ -13,8 +13,8 @@ use crate::{
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
 use futures_util::TryStreamExt;
 use kitsune_type::ap::Object;
+use speedy_uuid::Uuid;
 use std::collections::VecDeque;
-use uuid::Uuid;
 
 mod activity;
 
