@@ -1,0 +1,27 @@
+[package]
+name = "wtflang"
+edition = "2021"
+version.workspace = true
+build = "build.rs"
+
+[dependencies]
+phf = "0.11.2"
+whichlang = { version = "0.1.0", optional = true }
+
+[build-dependencies]
+csv = "1.2.2"
+heck = "0.4.1"
+phf_codegen = "0.11.2"
+serde = { version = "1.0.166", features = ["derive"] }
+
+[features]
+default = []
+
+english-names = []
+french-names = []
+
+from-two-letter = []
+from-three-letter = []
+
+to-two-letter = []
+to-three-letter = []

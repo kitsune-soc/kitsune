@@ -23,6 +23,7 @@ members = [
     "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
+    "lib/wtflang",
 ]
 resolver = "2"
 

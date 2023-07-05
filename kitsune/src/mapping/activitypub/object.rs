@@ -86,7 +86,7 @@ impl IntoObject for Post {
 
         let mentions_fut = Mention::belonging_to(&self)
             .inner_join(accounts::table)
-            .select((Mention::as_select(), Account::as_select()))
+            .select(<(Mention, Account)>::as_select())
             .load::<(Mention, Account)>(&mut db_conn);
 
         let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
