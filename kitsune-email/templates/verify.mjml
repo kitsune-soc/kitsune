@@ -1,0 +1,40 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="monospace" line-height="17px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+
+        <mj-text align="center" font-size="30px">
+          Kitsune
+        </mj-text>
+
+        <mj-divider></mj-divider>
+
+        <mj-text font-size="25px">
+          Verify your account
+        </mj-text>
+
+        <mj-text>
+          Congratulations to your new account on {{domain}}!
+          <p>Verify your email address to unlock your account (@{{username}})!</p>
+        </mj-text>
+
+        <mj-button href="{{verify_link}}">
+          Verify my account!
+        </mj-button>
+
+        <mj-text>
+          You didn't register an account? Feel free to just ignore this email!
+        </mj-text>
+
+        <mj-text align="center" font-size="10px">
+          {{domain}} powered by <a style="text-decoration:none;" href="https://joinkitsune.org">Kitsune</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

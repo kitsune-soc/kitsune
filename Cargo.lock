@@ -496,7 +496,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "typed-builder",
+ "typed-builder 0.14.0",
 ]
 
 [[package]]
@@ -1982,6 +1982,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "email_address"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2153bd83ebc09db15bcbdc3e2194d901804952e3dc96967e1cd3b0c5c32d112"
+
+[[package]]
 name = "embed-sdk"
 version = "0.1.0"
 source = "git+https://github.com/Lantern-chat/embed-service.git?rev=a2b73a9b24163f20202c9b09857c29137d98708b#a2b73a9b24163f20202c9b09857c29137d98708b"
@@ -3346,6 +3352,16 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e14ddfc70884202db2244c223200c204c2bda1bc6e0998d11b5e024d657209e6"
+dependencies = [
+ "unicode-bidi",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "idna"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d20d6b07bfbc108882d88ed8e37d39636dcc260e15e30c45e6ba089610b917c"
@@ -3650,7 +3666,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "typed-builder",
+ "typed-builder 0.14.0",
  "url",
  "utoipa",
  "utoipa-swagger-ui",
@@ -3714,6 +3730,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-email"
+version = "0.0.1-pre.1"
+dependencies = [
+ "askama",
+ "askama_axum",
+ "insta",
+ "lettre",
+ "mrml",
+ "thiserror",
+ "typed-builder 0.15.0",
+]
+
+[[package]]
 name = "kitsune-embed"
 version = "0.0.1-pre.1"
 dependencies = [
@@ -3728,7 +3757,7 @@ dependencies = [
  "scraper",
  "smol_str",
  "thiserror",
- "typed-builder",
+ "typed-builder 0.14.0",
 ]
 
 [[package]]
@@ -3894,6 +3923,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 dependencies = [
  "spin 0.5.2",
+]
+
+[[package]]
+name = "lettre"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76bd09637ae3ec7bd605b8e135e757980b3968430ff2b1a4a94fb7769e50166d"
+dependencies = [
+ "email_address",
+ "idna 0.3.0",
 ]
 
 [[package]]
@@ -4384,6 +4423,57 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "mrml"
+version = "2.0.0-rc3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "816d352b1e037f8b5f37e156cee698f6b4588c3a234888e396af8957c8a32657"
+dependencies = [
+ "indexmap 1.9.3",
+ "mrml-macros",
+ "mrml-parse-macros",
+ "rand",
+ "rustc-hash",
+ "thiserror",
+ "xmlparser",
+]
+
+[[package]]
+name = "mrml-common-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "646bbe56cd666665355ddc095162c603c64511e897bd5033376abdcf8b9be623"
+dependencies = [
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "mrml-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c2c5bffc248ce37d7c1b55389cf4ccae1a7647e4ed295684906c9ab0cd762bd"
+dependencies = [
+ "Inflector",
+ "mrml-common-macros",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "mrml-parse-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "012179ed2e5f76915544bc78e8aeed10f49fdc06f60f1250c7a993568569c7c7"
+dependencies = [
+ "Inflector",
+ "darling 0.14.4",
+ "mrml-common-macros",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -6650,18 +6740,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.40"
+version = "1.0.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978c9a314bd8dc99be594bc3c175faaa9794be04a5a5e153caba6915336cebac"
+checksum = "c16a64ba9387ef3fdae4f9c1a7f07a0997fce91985c0336f1ddc1822b3b37802"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.40"
+version = "1.0.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
+checksum = "d14928354b01c4d6a4f0e549069adef399a284e7995c7ccca94e8a07a5346c59"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7113,6 +7203,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "typed-builder"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d2135600ca28125d27c63643ed7789b9f467a316e3a8ad98a9abeeb3eec4a83"
+dependencies = [
+ "typed-builder-macro",
+]
+
+[[package]]
+name = "typed-builder-macro"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "952108e5d54c3c3f6552e8c5cdb3600adf49c22a4ea82066dea90d2f5c71c526"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.23",
+]
+
+[[package]]
 name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7191,7 +7301,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50bff7831e19200a85b17131d085c25d7811bc4e186efdaf54bbd132994a88cb"
 dependencies = [
  "form_urlencoded",
- "idna",
+ "idna 0.4.0",
  "percent-encoding",
  "serde",
 ]
