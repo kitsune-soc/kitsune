@@ -24,9 +24,15 @@ impl RenderableEmail for VerifyEmail<'_> {
             .expect("[Bug] Missing title in MJML template");
         let body = parsed_mjml.render(&RenderOptions::default())?;
 
+        let plain_text = format!(
+            "Verify your account (@{}) on {}: {}",
+            self.username, self.domain, self.verify_link
+        );
+
         Ok(RenderedEmail {
             subject: title,
             body,
+            plain_text,
         })
     }
 }

@@ -6,7 +6,6 @@ version.workspace = true
 [dependencies]
 askama = "0.12.0"
 askama_axum = "0.3.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
-async-trait = "0.1.71"
 lettre = { version = "0.10.4", default-features = false, features = [
     "builder",
     "hostname",
@@ -15,7 +14,7 @@ lettre = { version = "0.10.4", default-features = false, features = [
     "tokio1",
     "tokio1-rustls-tls",
     "tracing",
-], optional = true }
+] }
 mrml = { version = "2.0.0-rc3", default-features = false, features = [
     "orderedmap",
     "parse",

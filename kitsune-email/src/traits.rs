@@ -1,25 +1,14 @@
-use crate::error::{BoxError, Result};
-use async_trait::async_trait;
+use crate::error::Result;
 
 #[derive(Debug)]
 pub struct RenderedEmail {
     pub subject: String,
     pub body: String,
+
+    /// Ugly plain text fallback for the clients that refuse to render our absolutely stunning HTML
+    pub plain_text: String,
 }
 
 pub trait RenderableEmail {
     fn render_email(&self) -> Result<RenderedEmail>;
-}
-
-#[async_trait]
-pub trait MailingBackend {
-    type Error: Into<BoxError>;
-
-    async fn send_email<'a, I>(
-        &self,
-        addresses: I,
-        email: RenderedEmail,
-    ) -> Result<(), Self::Error>
-    where
-        I: Iterator<Item = &'a str> + Send;
 }

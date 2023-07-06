@@ -3,39 +3,56 @@
 #![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 
 use crate::{
-    error::{Error, Result},
-    traits::{MailingBackend, RenderableEmail},
+    error::{BoxError, Error, Result},
+    traits::RenderableEmail,
+};
+use lettre::{
+    message::{Mailbox, MultiPart, SinglePart},
+    AsyncTransport, Message,
 };
 use std::iter;
 use typed_builder::TypedBuilder;
 
-pub mod backend;
+pub use lettre;
+
 pub mod error;
 pub mod mails;
 pub mod traits;
 
 #[derive(TypedBuilder)]
-pub struct Sender<B> {
+pub struct MailSender<B> {
     backend: B,
 }
 
-impl<B> Sender<B>
+impl<B> MailSender<B>
 where
-    B: MailingBackend,
+    B: AsyncTransport + Sync,
+    <B as AsyncTransport>::Error: Into<BoxError>,
 {
-    pub async fn send<'a, I, M>(&self, addresses: I, email: &M) -> Result<()>
+    pub async fn send<'a, I, M>(&self, mailboxes: I, email: &M) -> Result<()>
     where
-        I: Iterator<Item = &'a str> + Send,
+        I: Iterator<Item = Mailbox> + Send,
         M: RenderableEmail,
     {
         let rendered_email = email.render_email()?;
-        self.backend
-            .send_email(addresses, rendered_email)
-            .await
-            .map_err(|err| Error::MailingBackend(err.into()))
+        for mailbox in mailboxes {
+            let message = Message::builder()
+                .to(mailbox)
+                .subject(rendered_email.subject.as_str())
+                .multipart(
+                    MultiPart::builder().singlepart(SinglePart::html(rendered_email.body.clone())),
+                )?;
+
+            self.backend
+                .send(message)
+                .await
+                .map_err(|err| Error::Transport(err.into()))?;
+        }
+
+        Ok(())
     }
 
-    pub async fn send_one<M>(&self, address: &str, email: &M) -> Result<()>
+    pub async fn send_one<M>(&self, address: Mailbox, email: &M) -> Result<()>
     where
         M: RenderableEmail,
     {
