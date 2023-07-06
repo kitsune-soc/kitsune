@@ -1,5 +1,6 @@
 <mjml>
   <mj-head>
+    <mj-title>Verify your {{domain}} account</mj-title>
     <mj-attributes>
       <mj-all font-family="monospace" line-height="17px" />
     </mj-attributes>

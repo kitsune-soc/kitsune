@@ -1,53 +1,44 @@
-use askama::Template;
-use mrml::{mjml::Mjml, prelude::render::Options as RenderOptions};
-use thiserror::Error;
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
+
+use crate::{
+    error::{Error, Result},
+    traits::{MailingBackend, RenderableEmail},
+};
+use std::iter;
 use typed_builder::TypedBuilder;
 
-type Result<T, E = Error> = std::result::Result<T, E>;
+pub mod backend;
+pub mod error;
+pub mod mails;
+pub mod traits;
 
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error(transparent)]
-    Templating(#[from] askama::Error),
-
-    #[error(transparent)]
-    RenderParsing(#[from] mrml::prelude::parse::Error),
-
-    #[error(transparent)]
-    Rendering(#[from] mrml::prelude::render::Error),
+#[derive(TypedBuilder)]
+pub struct Sender<B> {
+    backend: B,
 }
 
-#[derive(Template, TypedBuilder)]
-#[template(escape = "html", path = "verify.mjml")]
-struct VerifyMail<'a> {
-    domain: &'a str,
-    username: &'a str,
-    verify_link: &'a str,
-}
-
-impl VerifyMail<'_> {
-    fn render_email(&self) -> Result<String> {
-        let rendered_mjml = self.render()?;
-        let parsed_mjml = Mjml::parse(rendered_mjml)?;
-
-        parsed_mjml
-            .render(&RenderOptions::default())
-            .map_err(Error::from)
+impl<B> Sender<B>
+where
+    B: MailingBackend,
+{
+    pub async fn send<'a, I, M>(&self, addresses: I, email: &M) -> Result<()>
+    where
+        I: Iterator<Item = &'a str> + Send,
+        M: RenderableEmail,
+    {
+        let rendered_email = email.render_email()?;
+        self.backend
+            .send_email(addresses, rendered_email)
+            .await
+            .map_err(|err| Error::MailingBackend(err.into()))
     }
-}
 
-#[cfg(test)]
-mod test {
-    use crate::VerifyMail;
-    use insta::assert_snapshot;
-
-    #[test]
-    fn test_render() {
-        let mail = VerifyMail {
-            domain: "citadel-station.example",
-            username: "shodan",
-            verify_link: "https://citadel-station.example/verify/perfect-immortal-machine",
-        };
-        assert_snapshot!(mail.render_email().unwrap());
+    pub async fn send_one<M>(&self, address: &str, email: &M) -> Result<()>
+    where
+        M: RenderableEmail,
+    {
+        self.send(iter::once(address), email).await
     }
 }
