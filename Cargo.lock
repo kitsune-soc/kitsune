@@ -3746,7 +3746,6 @@ version = "0.0.1-pre.1"
 dependencies = [
  "askama",
  "askama_axum",
- "insta",
  "lettre",
  "mrml",
  "thiserror",

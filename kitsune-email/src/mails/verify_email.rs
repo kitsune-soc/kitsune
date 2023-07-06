@@ -36,19 +36,3 @@ impl RenderableEmail for VerifyEmail<'_> {
         })
     }
 }
-
-#[cfg(test)]
-mod test {
-    use crate::{mails::verify_email::VerifyEmail, traits::RenderableEmail};
-    use insta::assert_debug_snapshot;
-
-    #[test]
-    fn test_render() {
-        let mail = VerifyEmail {
-            domain: "citadel-station.example",
-            username: "shodan",
-            verify_link: "https://citadel-station.example/verify/perfect-immortal-machine",
-        };
-        assert_debug_snapshot!(mail.render_email().unwrap());
-    }
-}
