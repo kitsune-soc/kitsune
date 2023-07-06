@@ -19,5 +19,5 @@ num-traits = "0.2.15"
 serde = { version = "1.0.166", features = ["derive"] }
 simd-json = "0.10.3"
 speedy-uuid = { path = "../lib/speedy-uuid", features = ["diesel"] }
-thiserror = "1.0.40"
+thiserror = "1.0.41"
 tracing-log = "0.1.3"
