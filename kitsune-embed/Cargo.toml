@@ -14,5 +14,5 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 once_cell = "1.18.0"
 scraper = { version = "0.17.1", default-features = false }
 smol_str = "0.2.0"
-thiserror = "1.0.41"
+thiserror = "1.0.43"
 typed-builder = "0.15.0"

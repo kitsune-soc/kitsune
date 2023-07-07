@@ -81,7 +81,7 @@ rand = "0.8.5"
 rayon = "1.7.0"
 redis = "0.23.0"
 rsa = "0.9.2"
-serde = { version = "1.0.166", features = ["derive"] }
+serde = { version = "1.0.167", features = ["derive"] }
 serde_dhall = { version = "0.12.1", default-features = false }
 sha2 = "0.10.7"
 simd-json = "0.10.3"
@@ -89,7 +89,7 @@ smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.6.0"
-thiserror = "1.0.41"
+thiserror = "1.0.43"
 time = "0.3.22"
 tokio = { version = "1.29.1", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
@@ -137,7 +137,7 @@ pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 
 [features]
-default = ["graphql-api", "kitsune-search", "mastodon-api", "metrics"]
+default = ["graphql-api", "mastodon-api", "metrics"]
 graphql-api = [
     "dep:async-graphql",
     "dep:async-graphql-axum",

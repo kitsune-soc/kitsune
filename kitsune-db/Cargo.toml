@@ -16,8 +16,8 @@ iso8601-timestamp = { version = "0.2.11", features = ["diesel-pg"] }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.0"
 num-traits = "0.2.15"
-serde = { version = "1.0.166", features = ["derive"] }
+serde = { version = "1.0.167", features = ["derive"] }
 simd-json = "0.10.3"
 speedy-uuid = { path = "../lib/speedy-uuid", features = ["diesel"] }
-thiserror = "1.0.41"
+thiserror = "1.0.43"
 tracing-log = "0.1.3"

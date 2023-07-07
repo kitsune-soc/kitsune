@@ -11,7 +11,7 @@ diesel-async = "0.3.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { path = "../kitsune-db" }
-serde = { version = "1.0.166", features = ["derive"] }
+serde = { version = "1.0.167", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 time = "0.3.22"
 tokio = { version = "1.29.1", features = ["full"] }

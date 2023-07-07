@@ -20,5 +20,5 @@ mrml = { version = "2.0.0-rc3", default-features = false, features = [
     "parse",
     "render",
 ] }
-thiserror = "1.0.41"
+thiserror = "1.0.43"
 typed-builder = "0.15.0"
