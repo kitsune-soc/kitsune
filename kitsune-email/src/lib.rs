@@ -7,7 +7,7 @@ use crate::{
     traits::RenderableEmail,
 };
 use lettre::{
-    message::{Mailbox, MultiPart, SinglePart},
+    message::{Mailbox, MultiPart},
     AsyncTransport, Message,
 };
 use std::iter;
@@ -39,9 +39,11 @@ where
             let message = Message::builder()
                 .to(mailbox)
                 .subject(rendered_email.subject.as_str())
-                .multipart(
-                    MultiPart::builder().singlepart(SinglePart::html(rendered_email.body.clone())),
-                )?;
+                // I love email. I love how it is stuck in the 70s. So cute.
+                .multipart(MultiPart::alternative_plain_html(
+                    rendered_email.plain_text.clone(),
+                    rendered_email.body.clone(),
+                ))?;
 
             self.backend
                 .send(message)

@@ -217,6 +217,9 @@ pub enum Error {
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
 
+    #[error("Unconfirmed email address. Check your inbox!")]
+    UnconfirmedEmailAddress,
+
     #[error(transparent)]
     Uuid(#[from] speedy_uuid::Error),
 }

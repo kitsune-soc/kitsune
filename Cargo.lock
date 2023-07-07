@@ -3551,6 +3551,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b02a5381cc465bd3041d84623d0fa3b66738b52b8e2fc3bab8ad63ab032f4a"
 
 [[package]]
+name = "jemalloc-sys"
+version = "0.5.3+5.3.0-patched"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9bd5d616ea7ed58b571b2e209a65759664d7fb021a0819d7a790afc67e47ca1"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
+name = "jemallocator"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16c2514137880c52b0b4822b563fadd38257c1f380858addb74a400889696ea6"
+dependencies = [
+ "jemalloc-sys",
+ "libc",
+]
+
+[[package]]
 name = "jobserver"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3630,6 +3650,7 @@ dependencies = [
  "http",
  "hyper",
  "iso8601-timestamp",
+ "jemallocator",
  "just-retry",
  "kitsune-cache",
  "kitsune-db",
@@ -3644,7 +3665,6 @@ dependencies = [
  "metrics-exporter-prometheus",
  "metrics-tracing-context",
  "metrics-util",
- "mimalloc",
  "mime",
  "mime_guess",
  "once_cell",
@@ -3864,12 +3884,12 @@ dependencies = [
  "envy",
  "futures-util",
  "human-size",
+ "jemallocator",
  "kitsune-search-proto",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-tracing-context",
  "metrics-util",
- "mimalloc",
  "prost",
  "rand",
  "serde",
@@ -4045,16 +4065,6 @@ name = "libm"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7012b1bbb0719e1097c47611d3898568c546d597c2e74d66f6087edd5233ff4"
-
-[[package]]
-name = "libmimalloc-sys"
-version = "0.1.33"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4ac0e912c8ef1b735e92369695618dc5b1819f5a7bf3f167301a3ba1cea515e"
-dependencies = [
- "cc",
- "libc",
-]
 
 [[package]]
 name = "libnghttp2-sys"
@@ -4386,15 +4396,6 @@ dependencies = [
  "migrations_internals",
  "proc-macro2",
  "quote",
-]
-
-[[package]]
-name = "mimalloc"
-version = "0.1.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e2894987a3459f3ffb755608bd82188f8ed00d0ae077f1edea29c068d639d98"
-dependencies = [
- "libmimalloc-sys",
 ]
 
 [[package]]

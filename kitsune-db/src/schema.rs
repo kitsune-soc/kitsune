@@ -215,6 +215,8 @@ diesel::table! {
         password -> Nullable<Text>,
         domain -> Text,
         private_key -> Text,
+        confirmed_at -> Nullable<Timestamptz>,
+        confirmation_token -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
     }

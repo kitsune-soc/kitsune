@@ -126,6 +126,13 @@ pub async fn post(
         )));
     };
 
+    if user.confirmed_at.is_none() {
+        return Ok(Either::E2((
+            flash.error(Error::UnconfirmedEmailAddress.to_string()),
+            Redirect::to(redirect_to),
+        )));
+    }
+
     let is_valid = crate::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();

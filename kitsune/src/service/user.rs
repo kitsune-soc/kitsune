@@ -1,5 +1,9 @@
 use super::url::UrlService;
-use crate::error::{ApiError, Error, Result};
+use crate::{
+    error::{ApiError, Error, Result},
+    try_join,
+    util::generate_secret,
+};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
@@ -68,18 +72,18 @@ impl UserService {
         let public_key_str = private_key.as_ref().to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-        let user_id = Uuid::now_v7();
+        let account_id = Uuid::now_v7();
         let domain = self.url_service.domain().to_string();
-        let url = self.url_service.user_url(user_id);
-        let public_key_id = self.url_service.public_key_id(user_id);
+        let url = self.url_service.user_url(account_id);
+        let public_key_id = self.url_service.public_key_id(account_id);
 
         let mut db_conn = self.db_conn.get().await?;
         let new_user = db_conn
             .transaction(|tx| {
                 async move {
-                    let account_id = diesel::insert_into(accounts::table)
+                    let account_fut = diesel::insert_into(accounts::table)
                         .values(NewAccount {
-                            id: user_id,
+                            id: account_id,
                             display_name: None,
                             username: register.username.as_str(),
                             locked: false,
@@ -98,25 +102,26 @@ impl UserService {
                             public_key: public_key_str.as_str(),
                             created_at: None,
                         })
-                        .returning(accounts::id)
-                        .get_result(tx)
-                        .await?;
+                        .execute(tx);
 
-                    Ok::<_, Error>(
-                        diesel::insert_into(users::table)
-                            .values(NewUser {
-                                id: Uuid::now_v7(),
-                                account_id,
-                                username: register.username.as_str(),
-                                oidc_id: register.oidc_id.as_deref(),
-                                email: register.email.as_str(),
-                                password: hashed_password.as_deref(),
-                                domain: domain.as_str(),
-                                private_key: private_key_str.as_str(),
-                            })
-                            .get_result(tx)
-                            .await?,
-                    )
+                    let confirmation_token = generate_secret();
+                    let user_fut = diesel::insert_into(users::table)
+                        .values(NewUser {
+                            id: Uuid::now_v7(),
+                            account_id,
+                            username: register.username.as_str(),
+                            oidc_id: register.oidc_id.as_deref(),
+                            email: register.email.as_str(),
+                            password: hashed_password.as_deref(),
+                            domain: domain.as_str(),
+                            private_key: private_key_str.as_str(),
+                            confirmation_token: confirmation_token.as_str(),
+                        })
+                        .get_result(tx);
+
+                    let (_account, user) = try_join!(account_fut, user_fut)?;
+
+                    Ok::<_, Error>(user)
                 }
                 .scope_boxed()
             })

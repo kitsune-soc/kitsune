@@ -61,6 +61,10 @@ CREATE TABLE users (
     domain TEXT NOT NULL,
     private_key TEXT NOT NULL,
 
+     -- Email confirmation
+    confirmed_at TIMESTAMPTZ,
+    confirmation_token TEXT NOT NULL,
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -70,6 +74,8 @@ CREATE TABLE users (
     -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
+
+CREATE INDEX "idx-users-confirmation_token" ON users (confirmation_token);
 
 CREATE TABLE posts (
     id UUID PRIMARY KEY,
