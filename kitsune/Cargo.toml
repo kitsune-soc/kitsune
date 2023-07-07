@@ -58,6 +58,7 @@ just-retry = { path = "../lib/just-retry" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
+kitsune-email = { path = "../kitsune-email" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-messaging = { path = "../kitsune-messaging" }

@@ -5,8 +5,10 @@ use crate::{
     util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::{ActorType, NewAccount},
@@ -47,6 +49,16 @@ pub struct UserService {
 }
 
 impl UserService {
+    pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
+        let mut db_conn = self.db_conn.get().await?;
+        diesel::update(users::table.find(user_id))
+            .set(users::confirmed_at.eq(Timestamp::now_utc()))
+            .execute(&mut db_conn)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());

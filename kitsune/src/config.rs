@@ -21,6 +21,13 @@ pub struct DatabaseConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+pub struct EmailConfiguration {
+    pub host: SmolStr,
+    pub username: SmolStr,
+    pub password: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct EmbedConfiguration {
     pub url: SmolStr,
 }
@@ -126,6 +133,7 @@ pub struct UrlConfiguration {
 pub struct Configuration {
     pub cache: CacheConfiguration,
     pub database: DatabaseConfiguration,
+    pub email: Option<EmailConfiguration>,
     pub embed: Option<EmbedConfiguration>,
     pub instance: InstanceConfiguration,
     pub job_queue: JobQueueConfiguration,

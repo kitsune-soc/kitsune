@@ -7,6 +7,7 @@ use crate::{
         federation_filter::FederationFilterService,
         instance::InstanceService,
         job::JobService,
+        mailing::MailingService,
         oauth2::{OAuth2Service, OAuthEndpoint},
         post::PostService,
         timeline::TimelineService,
@@ -122,6 +123,7 @@ pub struct Service {
     pub attachment: AttachmentService,
     pub federation_filter: FederationFilterService,
     pub job: JobService,
+    pub mailing: MailingService,
     pub oauth2: OAuth2Service,
     #[cfg(feature = "oidc")]
     pub oidc: Option<OidcService>,

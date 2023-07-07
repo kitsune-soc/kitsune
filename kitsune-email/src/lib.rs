@@ -19,7 +19,7 @@ pub mod error;
 pub mod mails;
 pub mod traits;
 
-#[derive(TypedBuilder)]
+#[derive(Clone, TypedBuilder)]
 pub struct MailSender<B> {
     backend: B,
 }

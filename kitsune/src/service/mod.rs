@@ -3,6 +3,7 @@ pub mod attachment;
 pub mod federation_filter;
 pub mod instance;
 pub mod job;
+pub mod mailing;
 pub mod oauth2;
 #[cfg(feature = "oidc")]
 pub mod oidc;

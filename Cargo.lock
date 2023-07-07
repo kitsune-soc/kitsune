@@ -3654,6 +3654,7 @@ dependencies = [
  "just-retry",
  "kitsune-cache",
  "kitsune-db",
+ "kitsune-email",
  "kitsune-embed",
  "kitsune-http-client",
  "kitsune-http-signatures",

@@ -62,8 +62,13 @@ use anyhow::Context;
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
+use config::EmailConfiguration;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
+use kitsune_email::{
+    lettre::{AsyncSmtpTransport, Tokio1Executor},
+    MailSender,
+};
 use kitsune_embed::Client as EmbedClient;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
@@ -71,6 +76,7 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
+use service::mailing::MailingService;
 use state::SessionConfig;
 use std::{
     fmt::Display,
@@ -148,6 +154,16 @@ fn prepare_storage(config: &Configuration) -> Storage {
             S3Storage::new(s3_config.bucket_name.to_string(), s3_client_config).into()
         }
     }
+}
+
+fn prepare_mail_sender(
+    config: &EmailConfiguration,
+) -> anyhow::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
+    let transport = AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())?
+        .credentials((config.username.as_str(), config.password.as_str()).into())
+        .build();
+
+    Ok(MailSender::builder().backend(transport).build())
 }
 
 async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHub> {
@@ -307,6 +323,12 @@ pub async fn initialise_state(
         .character_limit(config.instance.character_limit)
         .build();
 
+    let mail_sender = config.email.as_ref().map(prepare_mail_sender).transpose()?;
+    let mailing_service = MailingService::builder()
+        .sender(mail_sender)
+        .url_service(url_service.clone())
+        .build();
+
     #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         let service = OidcService::builder()
@@ -378,6 +400,7 @@ pub async fn initialise_state(
             federation_filter: federation_filter_service,
             instance: instance_service,
             job: job_service,
+            mailing: mailing_service,
             oauth2: oauth2_service,
             #[cfg(feature = "oidc")]
             oidc: oidc_service,

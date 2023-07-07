@@ -156,6 +156,9 @@ pub enum Error {
     #[error(transparent)]
     KeyRejected(#[from] kitsune_http_signatures::ring::error::KeyRejected),
 
+    #[error(transparent)]
+    Mailing(#[from] kitsune_email::error::Error),
+
     #[error("Malformed ActivityPub object")]
     MalformedApObject,
 
