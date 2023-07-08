@@ -19,6 +19,7 @@ mod extractor;
 #[cfg(feature = "graphql-api")]
 mod graphql;
 mod handler;
+mod middleware;
 mod openapi;
 mod page;
 mod responder;
@@ -38,7 +39,10 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .nest("/confirm-account", confirm_account::routes())
         .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
-        .nest("/oauth", oauth::routes())
+        .nest(
+            "/oauth",
+            oauth::routes().layer(axum::middleware::from_fn(middleware::json_to_urlencoded)),
+        )
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
