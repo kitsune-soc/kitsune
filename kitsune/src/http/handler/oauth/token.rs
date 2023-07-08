@@ -23,10 +23,12 @@ pub async fn post(
     match grant_type.as_ref() {
         "authorization_code" => {
             let mut flow = AccessTokenFlow::prepare(oauth_endpoint)?;
+            flow.allow_credentials_in_body(true);
             AccessTokenFlow::execute(&mut flow, oauth_req).await
         }
         "client_credentials" => {
             let mut flow = ClientCredentialsFlow::prepare(oauth_endpoint)?;
+            flow.allow_credentials_in_body(true);
             ClientCredentialsFlow::execute(&mut flow, oauth_req).await
         }
         "refresh_token" => {

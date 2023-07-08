@@ -44,7 +44,6 @@ pub struct InstanceConfiguration {
     pub name: SmolStr,
     pub description: SmolStr,
     pub character_limit: usize,
-    pub email_confirmation: bool,
     pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
 }
