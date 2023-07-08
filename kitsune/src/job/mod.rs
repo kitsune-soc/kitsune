@@ -23,6 +23,7 @@ use typed_builder::TypedBuilder;
 
 mod catch_panic;
 pub mod deliver;
+pub mod mailing;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;

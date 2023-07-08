@@ -8,13 +8,13 @@ use typed_builder::TypedBuilder;
 
 #[derive(Template, TypedBuilder)]
 #[template(escape = "html", path = "verify.mjml")]
-pub struct VerifyEmail<'a> {
+pub struct ConfirmAccount<'a> {
     domain: &'a str,
     username: &'a str,
     verify_link: &'a str,
 }
 
-impl RenderableEmail for VerifyEmail<'_> {
+impl RenderableEmail for ConfirmAccount<'_> {
     fn render_email(&self) -> Result<RenderedEmail> {
         let rendered_mjml = self.render()?;
         let parsed_mjml = Mjml::parse(rendered_mjml)?;
@@ -25,7 +25,7 @@ impl RenderableEmail for VerifyEmail<'_> {
         let body = parsed_mjml.render(&RenderOptions::default())?;
 
         let plain_text = format!(
-            "Verify your account (@{}) on {}: {}",
+            "Confirm your account (@{}) on {}: {}",
             self.username, self.domain, self.verify_link
         );
 

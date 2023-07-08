@@ -1,3 +1,4 @@
+pub mod confirm_account;
 #[cfg(feature = "mastodon-api")]
 pub mod mastodon;
 pub mod media;

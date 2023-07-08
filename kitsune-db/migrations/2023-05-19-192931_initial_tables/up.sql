@@ -70,12 +70,11 @@ CREATE TABLE users (
 
     -- UNIQUE constraints
     UNIQUE (username, domain),
+    UNIQUE (confirmation_token),
 
     -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
-
-CREATE INDEX "idx-users-confirmation_token" ON users (confirmation_token);
 
 CREATE TABLE posts (
     id UUID PRIMARY KEY,

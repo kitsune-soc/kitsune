@@ -1,1 +1,1 @@
-pub mod verify_email;
+pub mod confirm_account;

@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-title>Verify your {{domain}} account</mj-title>
+    <mj-title>Confirm your {{domain}} account</mj-title>
     <mj-attributes>
       <mj-all font-family="monospace" line-height="17px" />
     </mj-attributes>
@@ -16,16 +16,16 @@
         <mj-divider></mj-divider>
 
         <mj-text font-size="25px">
-          Verify your account
+          Confirm your account
         </mj-text>
 
         <mj-text>
           Congratulations to your new account on {{domain}}!
-          <p>Verify your email address to unlock your account (@{{username}})!</p>
+          <p>Click the button below to unlock your account (@{{username}})!</p>
         </mj-text>
 
         <mj-button href="{{verify_link}}">
-          Verify my account!
+          Confirm my account!
         </mj-button>
 
         <mj-text>
