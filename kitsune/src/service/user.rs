@@ -1,8 +1,18 @@
-use super::url::UrlService;
-use crate::error::{ApiError, Error, Result};
+use super::{
+    job::{Enqueue, JobService},
+    url::UrlService,
+};
+use crate::{
+    error::{ApiError, Error, Result},
+    job::mailing::confirmation::SendConfirmationMail,
+    try_join,
+    util::generate_secret,
+};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::{ActorType, NewAccount},
@@ -38,11 +48,36 @@ pub struct Register {
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
     db_conn: PgPool,
+    job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
 }
 
 impl UserService {
+    pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
+        let mut db_conn = self.db_conn.get().await?;
+        diesel::update(
+            users::table
+                .filter(users::confirmation_token.eq(confirmation_token))
+                .filter(users::confirmed_at.is_null()),
+        )
+        .set(users::confirmed_at.eq(Timestamp::now_utc()))
+        .execute(&mut db_conn)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
+        let mut db_conn = self.db_conn.get().await?;
+        diesel::update(users::table.find(user_id))
+            .set(users::confirmed_at.eq(Timestamp::now_utc()))
+            .execute(&mut db_conn)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());
@@ -68,18 +103,18 @@ impl UserService {
         let public_key_str = private_key.as_ref().to_public_key_pem(LineEnding::LF)?;
         let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
 
-        let user_id = Uuid::now_v7();
+        let account_id = Uuid::now_v7();
         let domain = self.url_service.domain().to_string();
-        let url = self.url_service.user_url(user_id);
-        let public_key_id = self.url_service.public_key_id(user_id);
+        let url = self.url_service.user_url(account_id);
+        let public_key_id = self.url_service.public_key_id(account_id);
 
         let mut db_conn = self.db_conn.get().await?;
         let new_user = db_conn
             .transaction(|tx| {
                 async move {
-                    let account_id = diesel::insert_into(accounts::table)
+                    let account_fut = diesel::insert_into(accounts::table)
                         .values(NewAccount {
-                            id: user_id,
+                            id: account_id,
                             display_name: None,
                             username: register.username.as_str(),
                             locked: false,
@@ -98,28 +133,39 @@ impl UserService {
                             public_key: public_key_str.as_str(),
                             created_at: None,
                         })
-                        .returning(accounts::id)
-                        .get_result(tx)
-                        .await?;
+                        .execute(tx);
 
-                    Ok::<_, Error>(
-                        diesel::insert_into(users::table)
-                            .values(NewUser {
-                                id: Uuid::now_v7(),
-                                account_id,
-                                username: register.username.as_str(),
-                                oidc_id: register.oidc_id.as_deref(),
-                                email: register.email.as_str(),
-                                password: hashed_password.as_deref(),
-                                domain: domain.as_str(),
-                                private_key: private_key_str.as_str(),
-                            })
-                            .get_result(tx)
-                            .await?,
-                    )
+                    let confirmation_token = generate_secret();
+                    let user_fut = diesel::insert_into(users::table)
+                        .values(NewUser {
+                            id: Uuid::now_v7(),
+                            account_id,
+                            username: register.username.as_str(),
+                            oidc_id: register.oidc_id.as_deref(),
+                            email: register.email.as_str(),
+                            password: hashed_password.as_deref(),
+                            domain: domain.as_str(),
+                            private_key: private_key_str.as_str(),
+                            confirmation_token: confirmation_token.as_str(),
+                        })
+                        .get_result::<User>(tx);
+
+                    let (_account, user) = try_join!(account_fut, user_fut)?;
+
+                    Ok::<_, Error>(user)
                 }
                 .scope_boxed()
             })
+            .await?;
+
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(SendConfirmationMail {
+                        user_id: new_user.id,
+                    })
+                    .build(),
+            )
             .await?;
 
         Ok(new_user)

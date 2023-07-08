@@ -12,11 +12,13 @@ in    { cache =
       , database =
             { url = "postgres://localhost/kitsune", max_connections = 20 }
           : types.Database
+      , email = None types.Email
       , embed = None types.Embed
       , instance =
             { name = "Kitsune"
             , description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
             , character_limit = 5000
+            , email_confirmation = False
             , federation_filter =
                   types.FederationFilter.Deny { domains = [] : List Text }
                 : types.FederationFilter

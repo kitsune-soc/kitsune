@@ -21,6 +21,14 @@ pub struct DatabaseConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+pub struct EmailConfiguration {
+    pub from_address: SmolStr,
+    pub host: SmolStr,
+    pub username: SmolStr,
+    pub password: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct EmbedConfiguration {
     pub url: SmolStr,
 }
@@ -36,6 +44,7 @@ pub struct InstanceConfiguration {
     pub name: SmolStr,
     pub description: SmolStr,
     pub character_limit: usize,
+    pub email_confirmation: bool,
     pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
 }
@@ -126,6 +135,7 @@ pub struct UrlConfiguration {
 pub struct Configuration {
     pub cache: CacheConfiguration,
     pub database: DatabaseConfiguration,
+    pub email: Option<EmailConfiguration>,
     pub embed: Option<EmbedConfiguration>,
     pub instance: InstanceConfiguration,
     pub job_queue: JobQueueConfiguration,

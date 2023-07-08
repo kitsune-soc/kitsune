@@ -1,7 +1,10 @@
-use self::deliver::{
-    accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
-    favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
-    unfollow::DeliverUnfollow, update::DeliverUpdate,
+use self::{
+    deliver::{
+        accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
+        favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
+        unfollow::DeliverUnfollow, update::DeliverUpdate,
+    },
+    mailing::confirmation::SendConfirmationMail,
 };
 use crate::{activitypub::Deliverer, error::Result, state::Zustand};
 use async_trait::async_trait;
@@ -23,6 +26,7 @@ use typed_builder::TypedBuilder;
 
 mod catch_panic;
 pub mod deliver;
+pub mod mailing;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
@@ -71,6 +75,7 @@ impl_from! {
         DeliverUnfavourite(DeliverUnfavourite),
         DeliverUnfollow(DeliverUnfollow),
         DeliverUpdate(DeliverUpdate),
+        SendConfirmationMail(SendConfirmationMail),
     }
 }
 
@@ -89,6 +94,7 @@ impl Runnable for Job {
             Self::DeliverUnfavourite(job) => job.run(ctx).await,
             Self::DeliverUnfollow(job) => job.run(ctx).await,
             Self::DeliverUpdate(job) => job.run(ctx).await,
+            Self::SendConfirmationMail(job) => job.run(ctx).await,
         }
     }
 }

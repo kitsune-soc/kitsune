@@ -1,5 +1,5 @@
 use self::{
-    handler::{media, nodeinfo, oauth, posts, users, well_known},
+    handler::{confirm_account, media, nodeinfo, oauth, posts, users, well_known},
     openapi::api_docs,
 };
 use crate::{config::ServerConfiguration, state::Zustand};
@@ -35,6 +35,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     // This warning will come up if the server is compiled without the Mastodon API compatibility
     #[allow(unused_mut)]
     let mut router = Router::new()
+        .nest("/confirm-account", confirm_account::routes())
         .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
         .nest("/oauth", oauth::routes())

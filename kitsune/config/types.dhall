@@ -2,6 +2,8 @@ let Cache = ./types/cache.dhall
 
 let Database = ./types/database.dhall
 
+let Email = ./types/email.dhall
+
 let Embed = ./types/embed.dhall
 
 let FederationFilter = ./types/federation_filter.dhall
@@ -37,6 +39,7 @@ let Url = ./types/url.dhall
 let Config =
       { cache : Cache
       , database : Database
+      , email : Optional Email
       , embed : Optional Embed
       , instance : Instance
       , job_queue : JobQueue
@@ -50,6 +53,7 @@ let Config =
 in  { Cache
     , Config
     , Database
+    , Email
     , Embed
     , FederationFilter
     , FsStorage

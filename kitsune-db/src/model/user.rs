@@ -13,6 +13,10 @@ pub struct User {
     pub password: Option<String>,
     pub domain: String,
     pub private_key: String,
+
+    pub confirmed_at: Option<Timestamp>,
+    pub confirmation_token: String,
+
     pub created_at: Timestamp,
     pub updated_at: Timestamp,
 }
@@ -28,4 +32,5 @@ pub struct NewUser<'a> {
     pub password: Option<&'a str>,
     pub domain: &'a str,
     pub private_key: &'a str,
+    pub confirmation_token: &'a str,
 }

@@ -4,11 +4,11 @@ version.workspace = true
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.69"
+async-trait = "0.1.71"
 aws-sdk-s3 = "0.28.0"
 aws-smithy-http = "0.55.3"
 bytes = "1.4.0"
-enum_dispatch = "0.3.11"
+enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
 http = "0.2.9"
 http-body = "0.4.5"

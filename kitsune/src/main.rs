@@ -9,7 +9,7 @@ use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry}
 use url::Url;
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 const STARTUP_FIGLET: &str = r#"
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

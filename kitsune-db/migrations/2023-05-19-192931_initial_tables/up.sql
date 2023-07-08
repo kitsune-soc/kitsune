@@ -61,11 +61,16 @@ CREATE TABLE users (
     domain TEXT NOT NULL,
     private_key TEXT NOT NULL,
 
+     -- Email confirmation
+    confirmed_at TIMESTAMPTZ,
+    confirmation_token TEXT NOT NULL,
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- UNIQUE constraints
     UNIQUE (username, domain),
+    UNIQUE (confirmation_token),
 
     -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id)
