@@ -9,6 +9,9 @@ use http::{Request, StatusCode};
 use hyper::Body;
 use simd_json::OwnedValue;
 
+/// Some clients send their OAuth credentials as JSON payloads. This against the OAuth2 RFC but alas, we want high compatibility with Mastodon clients
+///
+/// This middleware deserialises the body into its DOM representation if the header "Content-Type" is set to "application/json" and reencodes it into the URL-encoded version
 pub async fn json_to_urlencoded(req: Request<Body>, next: Next<Body>) -> Response {
     if req.headers().typed_get::<ContentType>() != Some(ContentType::json()) {
         return next.run(req).await;
