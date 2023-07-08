@@ -160,7 +160,13 @@ fn prepare_storage(config: &Configuration) -> Storage {
 fn prepare_mail_sender(
     config: &EmailConfiguration,
 ) -> anyhow::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
-    let transport = AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())?
+    let transport_builder = if config.starttls {
+        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())?
+    } else {
+        AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())?
+    };
+
+    let transport = transport_builder
         .credentials((config.username.as_str(), config.password.as_str()).into())
         .build();
 

@@ -26,6 +26,7 @@ pub struct EmailConfiguration {
     pub host: SmolStr,
     pub username: SmolStr,
     pub password: SmolStr,
+    pub starttls: bool,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
