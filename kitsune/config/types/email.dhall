@@ -1,1 +1,1 @@
-{ host : Text, username : Text, password : Text }
+{ from_address : Text, host : Text, username : Text, password : Text }

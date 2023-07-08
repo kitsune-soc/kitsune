@@ -55,16 +55,15 @@ pub struct UserService {
 
 impl UserService {
     pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
-        let user_id = {
-            let mut db_conn = self.db_conn.get().await?;
+        let mut db_conn = self.db_conn.get().await?;
+        diesel::update(
             users::table
                 .filter(users::confirmation_token.eq(confirmation_token))
-                .select(users::id)
-                .get_result(&mut db_conn)
-                .await?
-        };
-
-        self.mark_as_confirmed(user_id).await?;
+                .filter(users::confirmed_at.is_null()),
+        )
+        .set(users::confirmed_at.eq(Timestamp::now_utc()))
+        .execute(&mut db_conn)
+        .await?;
 
         Ok(())
     }

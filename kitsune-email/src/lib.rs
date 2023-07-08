@@ -10,7 +10,7 @@ use lettre::{
     message::{Mailbox, MultiPart},
     AsyncTransport, Message,
 };
-use std::iter;
+use std::{iter, sync::Arc};
 use typed_builder::TypedBuilder;
 
 pub use lettre;
@@ -22,6 +22,8 @@ pub mod traits;
 #[derive(Clone, TypedBuilder)]
 pub struct MailSender<B> {
     backend: B,
+    #[builder(setter(into))]
+    from_mailbox: Arc<Mailbox>,
 }
 
 impl<B> MailSender<B>
@@ -37,6 +39,7 @@ where
         let rendered_email = email.render_email()?;
         for mailbox in mailboxes {
             let message = Message::builder()
+                .from(self.from_mailbox.as_ref().clone())
                 .to(mailbox)
                 .subject(rendered_email.subject.as_str())
                 // I love email. I love how it is stuck in the 70s. So cute.

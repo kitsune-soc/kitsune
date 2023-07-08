@@ -24,5 +24,5 @@ async fn get(
 }
 
 pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
+    Router::new().route("/:confirmation_token", routing::get(get))
 }

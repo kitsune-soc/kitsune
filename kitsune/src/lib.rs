@@ -66,7 +66,7 @@ use config::EmailConfiguration;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{AsyncSmtpTransport, Tokio1Executor},
+    lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
     MailSender,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -80,6 +80,7 @@ use service::mailing::MailingService;
 use state::SessionConfig;
 use std::{
     fmt::Display,
+    str::FromStr,
     sync::{Arc, OnceLock},
     time::Duration,
 };
@@ -163,7 +164,10 @@ fn prepare_mail_sender(
         .credentials((config.username.as_str(), config.password.as_str()).into())
         .build();
 
-    Ok(MailSender::builder().backend(transport).build())
+    Ok(MailSender::builder()
+        .backend(transport)
+        .from_mailbox(Mailbox::from_str(config.from_address.as_str())?)
+        .build())
 }
 
 async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHub> {

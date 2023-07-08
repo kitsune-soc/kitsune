@@ -22,6 +22,7 @@ pub struct DatabaseConfiguration {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct EmailConfiguration {
+    pub from_address: SmolStr,
     pub host: SmolStr,
     pub username: SmolStr,
     pub password: SmolStr,
