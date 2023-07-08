@@ -1,6 +1,10 @@
-use super::url::UrlService;
+use super::{
+    job::{Enqueue, JobService},
+    url::UrlService,
+};
 use crate::{
     error::{ApiError, Error, Result},
+    job::mailing::confirmation::SendConfirmationMail,
     try_join,
     util::generate_secret,
 };
@@ -44,6 +48,7 @@ pub struct Register {
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
     db_conn: PgPool,
+    job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
 }
@@ -144,7 +149,7 @@ impl UserService {
                             private_key: private_key_str.as_str(),
                             confirmation_token: confirmation_token.as_str(),
                         })
-                        .get_result(tx);
+                        .get_result::<User>(tx);
 
                     let (_account, user) = try_join!(account_fut, user_fut)?;
 
@@ -152,6 +157,16 @@ impl UserService {
                 }
                 .scope_boxed()
             })
+            .await?;
+
+        self.job_service
+            .enqueue(
+                Enqueue::builder()
+                    .job(SendConfirmationMail {
+                        user_id: new_user.id,
+                    })
+                    .build(),
+            )
             .await?;
 
         Ok(new_user)

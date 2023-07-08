@@ -4,10 +4,12 @@ use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::users};
+use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SendConfirmationMail {
-    user_id: Uuid,
+    pub user_id: Uuid,
 }
 
 #[async_trait]

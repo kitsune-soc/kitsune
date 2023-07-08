@@ -365,6 +365,7 @@ pub async fn initialise_state(
 
     let user_service = UserService::builder()
         .db_conn(conn.clone())
+        .job_service(job_service.clone())
         .registrations_open(config.instance.registrations_open)
         .url_service(url_service.clone())
         .build();
