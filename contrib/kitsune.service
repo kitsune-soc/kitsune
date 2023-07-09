@@ -2,11 +2,8 @@
 Description = Kitsune Social Media Server
 After=network.target caddy.service postgresql.service redis.service
 
-!!!
-Delete all of the "!" and everything inside of them before use.
-Assumes caddy use for reverse proxy. If you use something else I believe you can edit the above line and replace "caddy.service" with, for example,
-nginx.service (Not exact nginx service name) and I think it will still work fine.
-!!!
+# This service file assumes you use Caddy as a reverse proxy. 
+# If you use a different service, edit the above `After` line and replace "caddy.service" with the appropriate service (for example, "nginx.service")
 
 [Service]
 Type=simple
