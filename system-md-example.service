@@ -1,0 +1,14 @@
+[Unit]
+Description = Kitsune Social Media Server
+After=network.target caddy.service postgresql.service redis.service
+
+[Service]
+Type=simple
+User=kitsune
+Environment="RUST_LOG=debug"
+WorkingDirectory=/path-to-kitsune-root-folder
+ExecStart=/path-to-kitsune-executable /path-to-kitsune-config
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
