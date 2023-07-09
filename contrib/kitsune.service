@@ -1,0 +1,17 @@
+[Unit]
+Description = Kitsune Social Media Server
+After=network.target caddy.service postgresql.service redis.service
+
+# This service file assumes you use Caddy as a reverse proxy. 
+# If you use a different service, edit the above `After` line and replace "caddy.service" with the appropriate service (for example, "nginx.service")
+
+[Service]
+Type=simple
+User=kitsune
+Environment="RUST_LOG=debug"
+WorkingDirectory=/path-to-kitsune-root-folder
+ExecStart=/path-to-kitsune-executable /path-to-kitsune-config
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
