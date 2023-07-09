@@ -1,3 +1,6 @@
+#Example file for Caddy
+#This should go in /etc/caddy/Caddyfile
+
 example.domain {
     reverse_proxy 127.0.0.1:port # Should be port 5000 by default
 }
