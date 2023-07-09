@@ -1,0 +1,10 @@
+example.domain {
+    reverse_proxy 127.0.0.1:port # Should be port 5000 by default
+}
+
+#Example if you need to use specific certificates.
+#The following example uses cloudflare origin server certificates.
+#example.domain {
+#    tls /pathtofile/file.pem /pathtofile/file.key
+#    reverse_proxy 127.0.0.1:port
+#}
