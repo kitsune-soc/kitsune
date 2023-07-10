@@ -37,7 +37,12 @@
             allowBuiltinFetchGit = true;
           };
 
-          src = pkgs.lib.cleanSource ./.;
+          src = pkgs.lib.cleanSourceWith {
+            src = pkgs.lib.cleanSource ./.;
+            filter = name: type:
+              let baseName = baseNameOf (toString name);
+              in !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
+          };
           nativeBuildInputs = baseDependencies;
 
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig"; # Not sure why this is broken but it is
