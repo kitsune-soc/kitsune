@@ -24,8 +24,15 @@
         ];
         cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml);  # TODO: Set the target CPU conditionally
         cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+        src = pkgs.lib.cleanSourceWith {
+          src = pkgs.lib.cleanSource ./.;
+          filter = name: type:
+            let baseName = baseNameOf (toString name);
+            in !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
+        };
+        version = cargoToml.workspace.package.version;
         basePackage = {
-          inherit (cargoToml.workspace.package) version;
+          inherit version src;
 
           meta = {
             description = "ActivityPub-federated microblogging";
@@ -37,12 +44,6 @@
             allowBuiltinFetchGit = true;
           };
 
-          src = pkgs.lib.cleanSourceWith {
-            src = pkgs.lib.cleanSource ./.;
-            filter = name: type:
-              let baseName = baseNameOf (toString name);
-              in !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
-          };
           nativeBuildInputs = baseDependencies;
 
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig"; # Not sure why this is broken but it is
@@ -80,6 +81,22 @@
             pname = "kitsune-search";
             cargoBuildFlags = "-p kitsune-search";
           });
+          frontend = pkgs.mkYarnPackage {
+            inherit version;
+
+            src = "${src}/kitsune-fe";
+
+            buildPhase = ''
+              yarn --offline build
+            '';
+
+            installPhase = ''
+              mkdir -p $out
+              cp -R deps/kitsune-fe/dist $out
+            '';
+
+            distPhase = "true";
+          };
         };
         devShells = rec {
           default = backend;
