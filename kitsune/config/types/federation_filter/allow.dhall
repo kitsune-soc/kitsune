@@ -1,1 +1,0 @@
-{ domains : List Text }

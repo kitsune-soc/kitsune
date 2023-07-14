@@ -1,1 +1,0 @@
-{ scheme : Text, domain : Text }

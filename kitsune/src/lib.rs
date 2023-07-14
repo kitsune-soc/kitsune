@@ -116,7 +116,7 @@ where
             static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
 
             let pool = REDIS_POOL.get_or_init(|| {
-                let config = deadpool_redis::Config::from_url(redis_config.redis_url.clone());
+                let config = deadpool_redis::Config::from_url(redis_config.url.clone());
                 config
                     .create_pool(Some(deadpool_redis::Runtime::Tokio1))
                     .unwrap()
@@ -182,7 +182,7 @@ async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHu
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
         }
         MessagingConfiguration::Redis(ref redis_config) => {
-            let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.redis_url)
+            let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
                 .await
                 .context("Failed to initialise Redis messaging backend")?;
 
@@ -284,7 +284,7 @@ pub async fn initialise_state(
     let embed_client = config.embed.as_ref().map(|embed_config| {
         EmbedClient::builder()
             .db_pool(conn.clone())
-            .embed_service(embed_config.url.clone())
+            .embed_service(embed_config.service_url.clone())
             .build()
     });
 

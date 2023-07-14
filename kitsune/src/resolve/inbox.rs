@@ -52,7 +52,7 @@ impl InboxResolver {
             .map_err(Error::from)
     }
 
-    //#[instrument(skip_all, fields(post_id = %post.id))]
+    #[instrument(skip_all, fields(post_id = %post.id))]
     pub async fn resolve(
         &self,
         post: &Post,
