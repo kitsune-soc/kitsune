@@ -3,45 +3,27 @@ let
   inherit (lib) types mkEnableOption mkOption;
   inherit (builtins) toJSON;
   cfg = config.services.kitsune;
-  configFile = pkgs.writeText "config.dhall" ''
-    let types = ${cfg.packages.service}/config/types.dhall
-    in    { cache =
-                types.Cache.Redis { redis_url = "redis+unix:///run/redis-kitsune-cache/redis.sock" }
-              : types.Cache
-          , database =
-                { url = "postgres://kitsune:kitsune@localhost/kitsune", max_connections = 20 }
-              : types.Database
-          , email = None types.Email
-          , embed = None types.Embed
-          , instance =
-                { name = ${toJSON cfg.name}
-                , description = ${toJSON cfg.description}
-                , character_limit = 5000
-                , federation_filter =
-                      types.FederationFilter.Deny { domains = [] : List Text }
-                    : types.FederationFilter
-                , registrations_open = ${if cfg.registrationsOpen then "True" else "False"}
-                }
-              : types.Instance
-          , job_queue = { redis_url = "redis+unix:///run/redis-kitsune-jobqueue/redis.sock" } : types.JobQueue
-          , messaging = types.Messaging.InProcess
-          , server =
-                { frontend_dir = "${cfg.packages.service}/kitsune-fe"
-                , job_workers = 20
-                , max_upload_size = 5 * 1024 * 1024
-                , media_proxy_enabled = False
-                , oidc = None types.Oidc
-                , port = 5000
-                , prometheus_port = 9000
-                , request_timeout_sec = 60
-                }
-              : types.Server
-          , search = types.Search.Sql
-          , storage = types.Storage.Fs { upload_dir = ${toJSON "${cfg.dataDir}/uploads"} } : types.Storage
-          , url = { scheme = ${toJSON cfg.url.scheme}, domain = ${toJSON cfg.url.domain} } : types.Url
-          }
-        : types.Config
-  '';
+  format = pkgs.formats.toml {};
+  configFile = format.generate "config.toml" cfg.config;
+
+  # based on gist linked in <https://discourse.nixos.org/t/problems-with-types-oneof-and-submodules/15197>
+  taggedSubmodule = typeTag: options:
+    let
+      submodule = types.submodule {
+        freeformType = format.type;
+        options = options // {
+          type = mkOption {
+            type = types.enum [ typeTag ];
+          };
+        };
+      };
+    in
+    submodule // {
+      check = v: (submodule.check v) && (v.type == typeTag);
+    };
+  oneOfTagged = definitions:
+    types.oneOf (lib.attrValues (lib.mapAttrs taggedSubmodule definitions));
+
 in {
   options = {
     services.kitsune = {
@@ -61,30 +43,199 @@ in {
       };
 
       dataDir = mkOption {
-        type = types.str;
+        type = types.path;
         default = "/var/lib/kitsune";
         readOnly = true;
       };
 
-      name = mkOption {
-        type = types.str;
-      };
-
-      description = mkOption {
-        type = types.str;
-      };
-
-      registrationsOpen = mkOption {
-        type = types.bool;
-      };
-
-      url = {
-        scheme = mkOption {
-          type = types.str;
-        };
-
-        domain = mkOption {
-          type = types.str;
+      config = mkOption {
+        type = types.submodule {
+          freeformType = format.type;
+          options = {
+            cache = mkOption {
+              type = oneOfTagged {
+                in-memory = {};
+                redis = {
+                  url = mkOption {
+                    type = types.nonEmptyStr;
+                    default = "redis+unix:///run/redis-kitsune-cache/redis.sock";
+                  };
+                };
+              };
+              default = {
+                type = "redis";
+              };
+            };
+            database = mkOption {
+              type = types.submodule {
+                freeformType = format.type;
+                options = {
+                  url = mkOption {
+                    type = types.nonEmptyStr;
+                    default = "postgres://kitsune:kitsune@localhost/kitsune";
+                  };
+                  max-connections = mkOption {
+                    type = types.ints.positive;
+                    default = 20;
+                  };
+                };
+              };
+              default = {};
+            };
+            instance = mkOption {
+              type = types.submodule {
+                freeformType = format.type;
+                options = {
+                  name = mkOption {
+                    type = types.str;
+                  };
+                  description = mkOption {
+                    type = types.str;
+                  };
+                  character-limit = mkOption {
+                    type = types.ints.positive;
+                    default = 5000;
+                  };
+                  registrations-open = mkOption {
+                    type = types.bool;
+                  };
+                  federation-filter = mkOption {
+                    type = oneOfTagged {
+                      deny = {
+                        domains = mkOption {
+                          type = types.listOf types.str;
+                          default = [];
+                        };
+                      };
+                      allow = {
+                        domains = mkOption {
+                          type = types.listOf types.str;
+                          default = [];
+                        };
+                      };
+                    };
+                    default = {
+                      type = "deny";
+                    };
+                  };
+                };
+              };
+            };
+            job-queue = mkOption {
+              type = types.submodule {
+                freeformType = format.type;
+                options = {
+                  redis-url = mkOption {
+                    type = types.nonEmptyStr;
+                    default = "redis+unix:///run/redis-kitsune-jobqueue/redis.sock";
+                  };
+                  num-workers = mkOption {
+                    type = types.ints.positive;
+                    default = 20;
+                  };
+                };
+              };
+              default = {};
+            };
+            messaging = mkOption {
+              type = oneOfTagged {
+                in-process = {};
+                redis = {
+                  url = mkOption {
+                    type = types.nonEmptyStr;
+                    default = "redis+unix:///run/redis-kitsune-messaging/redis.sock";
+                  };
+                };
+              };
+              default = {
+                type = "redis";
+              };
+            };
+            server = mkOption {
+              type = types.submodule {
+                freeformType = format.type;
+                options = {
+                  frontend-dir = mkOption {
+                    type = types.path;
+                    default = "${cfg.packages.service}/kitsune-fe";
+                  };
+                  max-upload-size = mkOption {
+                    type = types.ints.positive;
+                    default = 5242880;
+                  };
+                  media-proxy-enabled = mkOption {
+                    type = types.bool;
+                    default = false;
+                  };
+                  port = mkOption {
+                    type = types.port;
+                    default = 5000;
+                  };
+                  prometheus-port = mkOption {
+                    type = types.port;
+                    default = 9000;
+                  };
+                  request-timeout-secs = mkOption {
+                    type = types.ints.positive;
+                    default = 60;
+                  };
+                };
+              };
+              default = {};
+            };
+            search = mkOption {
+              type = oneOfTagged {
+                kitsune = {
+                  index-server = mkOption {
+                    type = types.nonEmptyStr;
+                  };
+                  search-servers = mkOption {
+                    type = types.listOf types.nonEmptyStr;
+                  };
+                };
+                meilisearch = {
+                  instance-url = mkOption {
+                    type = types.nonEmptyStr;
+                  };
+                };
+                sql = {};
+                none = {};
+              };
+              default = { type = "sql"; };
+            };
+            storage = mkOption {
+              type = oneOfTagged {
+                fs = {
+                  upload-dir = mkOption {
+                    type = types.path;
+                    default = "${cfg.dataDir}/uploads";
+                  };
+                };
+                s3 = {
+                  todo = mkOption {
+                    type = types.enum [];
+                  };
+                };
+              };
+              default = {
+                type = "fs";
+              };
+            };
+            url = mkOption {
+              type = types.submodule {
+                freeformType = format.type;
+                options = {
+                  scheme = mkOption {
+                    type = types.nonEmptyStr;
+                  };
+                  domain = mkOption {
+                    type = types.nonEmptyStr;
+                  };
+                };
+              };
+              default = {};
+            };
+          };
         };
       };
     };
@@ -99,6 +250,7 @@ in {
       extraGroups = [
         "redis-kitsune-cache"
         "redis-kitsune-jobqueue"
+        "redis-kitsune-messaging"
       ];
       home = cfg.dataDir;
     };
@@ -108,6 +260,7 @@ in {
     services.redis = {
       servers."kitsune-cache".enable = true;
       servers."kitsune-jobqueue".enable = true;
+      servers."kitsune-messaging".enable = true;
     };
 
     systemd.services.kitsune = {
@@ -117,6 +270,7 @@ in {
         "postgresql.service"
         "redis-kitsune-cache.service"
         "redis-kitsune-jobqueue.service"
+        "redis-kitsune-messaging.service"
       ];
 
       wants = [ "network-online.target" ];

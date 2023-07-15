@@ -8,7 +8,6 @@ in {
     installPhase = ''
       mkdir -p $out
       cp -R ${packages.main}/bin $out
-      cp -R ${packages.main.src}/kitsune/config $out
       cp -R ${packages.main.src}/public $out
       cp -R ${packages.frontend}/dist $out/kitsune-fe
     '';
