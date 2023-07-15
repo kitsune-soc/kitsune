@@ -68,7 +68,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .layer(CatchPanicLayer::new())
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .layer(TimeoutLayer::new(Duration::from_secs(
-            server_config.request_timeout_sec,
+            server_config.request_timeout_secs,
         )))
         .fallback_service(
             ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),

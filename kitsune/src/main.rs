@@ -104,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
         process::exit(1);
     }
 
-    let config = Configuration::load(&args[1])?;
+    let config = Configuration::load(&args[1]).await?;
     initialise_logging(&config)?;
 
     let conn = kitsune_db::connect(
@@ -123,7 +123,7 @@ async fn main() -> anyhow::Result<()> {
     tokio::spawn(self::job::run_dispatcher(
         job_queue,
         state.clone(),
-        config.server.job_workers,
+        config.job_queue.num_workers.get(),
     ));
 
     future::pending::<()>().await;

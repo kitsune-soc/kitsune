@@ -2,4 +2,5 @@
 /dump.rdb
 /uploads
 /config.dhall
+/config.toml
 /test.db
