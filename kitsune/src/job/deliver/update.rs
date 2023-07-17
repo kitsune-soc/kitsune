@@ -31,7 +31,7 @@ pub struct DeliverUpdate {
 #[async_trait]
 impl Runnable for DeliverUpdate {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());

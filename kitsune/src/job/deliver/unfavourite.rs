@@ -18,7 +18,7 @@ pub struct DeliverUnfavourite {
 #[async_trait]
 impl Runnable for DeliverUnfavourite {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

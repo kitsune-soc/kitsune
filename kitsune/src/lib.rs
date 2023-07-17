@@ -58,11 +58,11 @@ use self::{
     state::{EventEmitter, Service, Zustand},
     webfinger::Webfinger,
 };
-use anyhow::Context;
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
 use config::EmailConfiguration;
+use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_db::PgPool;
 use kitsune_email::{
@@ -159,7 +159,7 @@ fn prepare_storage(config: &Configuration) -> Storage {
 
 fn prepare_mail_sender(
     config: &EmailConfiguration,
-) -> anyhow::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
+) -> eyre::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
     let transport_builder = if config.starttls {
         AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())?
     } else {
@@ -176,7 +176,7 @@ fn prepare_mail_sender(
         .build())
 }
 
-async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHub> {
+async fn prepare_messaging(config: &Configuration) -> eyre::Result<MessagingHub> {
     let backend = match config.messaging {
         MessagingConfiguration::InProcess => {
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
@@ -197,7 +197,7 @@ async fn prepare_messaging(config: &Configuration) -> anyhow::Result<MessagingHu
 async fn prepare_oidc_client(
     oidc_config: &OidcConfiguration,
     url_service: &UrlService,
-) -> anyhow::Result<CoreClient> {
+) -> eyre::Result<CoreClient> {
     let provider_metadata = CoreProviderMetadata::discover_async(
         IssuerUrl::new(oidc_config.server_url.to_string()).context("Invalid OIDC issuer URL")?,
         async_client,
@@ -219,7 +219,7 @@ async fn prepare_oidc_client(
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_conn: &PgPool,
-) -> anyhow::Result<SearchService> {
+) -> eyre::Result<SearchService> {
     let service = match search_config {
         SearchConfiguration::Kitsune(_config) => {
             #[cfg(not(feature = "kitsune-search"))]
@@ -256,7 +256,7 @@ async fn prepare_search(
 pub fn prepare_job_queue(
     db_pool: PgPool,
     config: &JobQueueConfiguration,
-) -> anyhow::Result<JobQueue<KitsuneContextRepo>> {
+) -> eyre::Result<JobQueue<KitsuneContextRepo>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
     let redis_pool = deadpool_redis::Config::from_url(config.redis_url.as_str())
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
@@ -275,7 +275,7 @@ pub async fn initialise_state(
     config: &Configuration,
     conn: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
-) -> anyhow::Result<Zustand> {
+) -> eyre::Result<Zustand> {
     let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
@@ -346,7 +346,7 @@ pub async fn initialise_state(
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
             .build();
 
-        anyhow::Ok(service)
+        eyre::Ok(service)
     }))
     .await
     .transpose()?;

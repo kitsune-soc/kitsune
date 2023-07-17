@@ -15,7 +15,7 @@ pub struct SendConfirmationMail {
 #[async_trait]
 impl Runnable for SendConfirmationMail {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let (mailing_service, user_service) = (&ctx.state.service.mailing, &ctx.state.service.user);

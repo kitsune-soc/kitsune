@@ -22,14 +22,14 @@ redis = { version = "0.23.0", default-features = false, features = [
     "streams",
     "tokio-rustls-comp",
 ] }
-serde = { version = "1.0.167", features = ["derive"] }
+serde = { version = "1.0.171", features = ["derive"] }
 simd-json = "0.10.3"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
 thiserror = "1.0.43"
 tokio = { version = "1.29.1", features = ["macros", "rt", "sync"] }
 tracing = "0.1.37"
-typed-builder = "0.15.0"
+typed-builder = "0.15.1"
 
 [dev-dependencies]
 tracing-subscriber = "0.3.17"

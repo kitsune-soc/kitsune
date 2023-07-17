@@ -19,7 +19,7 @@ hyper = { version = "0.14.27", features = [
 hyper-rustls = { version = "0.24.1", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 pin-project-lite = "0.2.10"
-serde = "1.0.167"
+serde = "1.0.171"
 simd-json = "0.10.3"
 tower = "0.4.13"
 tower-http = { version = "0.4.1", features = [

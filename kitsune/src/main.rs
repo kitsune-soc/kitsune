@@ -1,7 +1,8 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use anyhow::Context;
+use color_eyre::Help;
+use eyre::Context;
 use kitsune::{config::Configuration, http, job};
 use std::{env, future, process};
 use tracing::level_filters::LevelFilter;
@@ -54,9 +55,9 @@ where
     MetricsLayer::new()
 }
 
-fn initialise_logging(_config: &Configuration) -> anyhow::Result<()> {
+fn initialise_logging(_config: &Configuration) -> eyre::Result<()> {
     let env_filter = env::var("RUST_LOG")
-        .map_err(anyhow::Error::from)
+        .map_err(eyre::Report::from)
         .and_then(|targets| targets.parse().context("Failed to parse RUST_LOG value"))
         .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
 
@@ -84,7 +85,7 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
     };
 
     let message = if url.scheme().starts_with("postgres") && url.has_host() {
-        "Your connection string has the correct syntax"
+        "Your connection string has the correct syntax. Is the host up?"
     } else if url.scheme() == "sqlite" {
         "SQLite is no longer supported as of v0.0.1-pre.1, please use PostgreSQL (our only supported DBMS)\n(This is a temporary diagnostic message and will probably be removed in the future)"
     } else {
@@ -95,7 +96,9 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
+
     println!("{STARTUP_FIGLET}");
 
     let args: Vec<String> = env::args().take(2).collect();
@@ -113,7 +116,7 @@ async fn main() -> anyhow::Result<()> {
     )
     .await
     .context("Failed to connect to and migrate the database")
-    .with_context(|| postgres_url_diagnostics(&config.database.url))?;
+    .with_suggestion(|| postgres_url_diagnostics(&config.database.url))?;
 
     let job_queue = kitsune::prepare_job_queue(conn.clone(), &config.job_queue)
         .context("Failed to connect to the Redis instance for the job scheduler")?;

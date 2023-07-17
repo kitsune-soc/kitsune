@@ -18,7 +18,7 @@ pub struct DeliverFollow {
 #[async_trait]
 impl Runnable for DeliverFollow {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
