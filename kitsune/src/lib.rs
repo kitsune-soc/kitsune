@@ -346,7 +346,7 @@ pub async fn initialise_state(
             .login_state(prepare_cache(config, "OIDC-LOGIN-STATE"))
             .build();
 
-        eyre::Ok(service)
+        Ok::<_, eyre::Report>(service)
     }))
     .await
     .transpose()?;
