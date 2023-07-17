@@ -1,10 +1,15 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use color_eyre::Help;
+use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
-use kitsune::{config::Configuration, http, job};
-use std::{env, future, process};
+use kitsune::{config::Configuration, consts::VERSION, http, job};
+use std::{
+    borrow::Cow,
+    env, future,
+    panic::{self, PanicInfo},
+    process,
+};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
 use url::Url;
@@ -26,6 +31,36 @@ const STARTUP_FIGLET: &str = r#"
 ┃                                                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#;
+
+fn install_handlers() -> eyre::Result<()> {
+    let (eyre_panic_hook, eyre_hook) = HookBuilder::new().into_hooks();
+    let metadata = human_panic::Metadata {
+        version: Cow::Borrowed(VERSION),
+        ..human_panic::metadata!()
+    };
+
+    let eyre_panic_hook = move |panic_info: &PanicInfo<'_>| {
+        eprintln!("{}", eyre_panic_hook.panic_report(panic_info));
+    };
+    let human_panic_hook = move |panic_info: &PanicInfo<'_>| {
+        let path = human_panic::handle_dump(&metadata, panic_info);
+        human_panic::print_msg(path, &metadata).ok();
+    };
+
+    eyre_hook.install()?;
+    panic::set_hook(Box::new(move |panic_info| {
+        let hook: &(dyn Fn(&PanicInfo<'_>) + Send + Sync) =
+            if cfg!(debug_assertions) || env::var("RUST_BACKTRACE").is_ok() {
+                &eyre_panic_hook
+            } else {
+                &human_panic_hook
+            };
+
+        hook(panic_info);
+    }));
+
+    Ok(())
+}
 
 #[cfg(feature = "metrics")]
 fn initialise_metrics<S>(config: &Configuration) -> impl Layer<S>
@@ -97,7 +132,7 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
-    color_eyre::install()?;
+    install_handlers()?;
 
     println!("{STARTUP_FIGLET}");
 

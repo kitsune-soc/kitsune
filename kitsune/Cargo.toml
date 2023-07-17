@@ -50,6 +50,7 @@ globset = { version = "0.4.11", features = ["simd-accel"] }
 headers = "0.3.8"
 hex-simd = "0.8.0"
 http = "0.2.9"
+human-panic = "1.1.5"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
 jemallocator = { version = "0.5.0", default-features = false, features = [
