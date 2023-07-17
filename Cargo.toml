@@ -1,3 +1,6 @@
+[profile.dev.package.backtrace]
+opt-level = 3
+
 [profile.dev.package.num-bigint-dig]
 opt-level = 3
 

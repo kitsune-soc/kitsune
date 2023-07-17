@@ -168,11 +168,11 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub async fn load<P>(path: P) -> anyhow::Result<Self>
+    pub async fn load<P>(path: P) -> eyre::Result<Self>
     where
         P: AsRef<Path>,
     {
         let content = fs::read_to_string(path).await?;
-        toml::from_str(&content).map_err(anyhow::Error::from)
+        toml::from_str(&content).map_err(eyre::Report::from)
     }
 }

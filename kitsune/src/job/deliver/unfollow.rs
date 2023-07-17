@@ -18,7 +18,7 @@ pub struct DeliverUnfollow {
 #[async_trait]
 impl Runnable for DeliverUnfollow {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mut db_conn = ctx.state.db_conn.get().await?;

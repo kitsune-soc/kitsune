@@ -82,7 +82,7 @@ impl_from! {
 #[async_trait]
 impl Runnable for Job {
     type Context = JobRunnerContext;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         match self {
@@ -114,7 +114,7 @@ impl KitsuneContextRepo {
 #[async_trait]
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
-    type Error = anyhow::Error;
+    type Error = eyre::Report;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
@@ -129,7 +129,7 @@ impl JobContextRepository for KitsuneContextRepo {
 
         Ok(stream
             .map_ok(|ctx| (ctx.id, ctx.context.0))
-            .map_err(anyhow::Error::from)
+            .map_err(eyre::Report::from)
             .boxed())
     }
 

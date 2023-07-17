@@ -1,9 +1,15 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use anyhow::Context;
-use kitsune::{config::Configuration, http, job};
-use std::{env, future, process};
+use color_eyre::{config::HookBuilder, Help};
+use eyre::Context;
+use kitsune::{config::Configuration, consts::VERSION, http, job};
+use std::{
+    borrow::Cow,
+    env, future,
+    panic::{self, PanicInfo},
+    process,
+};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
 use url::Url;
@@ -25,6 +31,36 @@ const STARTUP_FIGLET: &str = r#"
 ┃                                                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#;
+
+fn install_handlers() -> eyre::Result<()> {
+    let (eyre_panic_hook, eyre_hook) = HookBuilder::new().into_hooks();
+    let metadata = human_panic::Metadata {
+        version: Cow::Borrowed(VERSION),
+        ..human_panic::metadata!()
+    };
+
+    let eyre_panic_hook = move |panic_info: &PanicInfo<'_>| {
+        eprintln!("{}", eyre_panic_hook.panic_report(panic_info));
+    };
+    let human_panic_hook = move |panic_info: &PanicInfo<'_>| {
+        let path = human_panic::handle_dump(&metadata, panic_info);
+        human_panic::print_msg(path, &metadata).ok();
+    };
+
+    eyre_hook.install()?;
+    panic::set_hook(Box::new(move |panic_info| {
+        let hook: &(dyn Fn(&PanicInfo<'_>) + Send + Sync) =
+            if cfg!(debug_assertions) || env::var("RUST_BACKTRACE").is_ok() {
+                &eyre_panic_hook
+            } else {
+                &human_panic_hook
+            };
+
+        hook(panic_info);
+    }));
+
+    Ok(())
+}
 
 #[cfg(feature = "metrics")]
 fn initialise_metrics<S>(config: &Configuration) -> impl Layer<S>
@@ -54,9 +90,9 @@ where
     MetricsLayer::new()
 }
 
-fn initialise_logging(_config: &Configuration) -> anyhow::Result<()> {
+fn initialise_logging(_config: &Configuration) -> eyre::Result<()> {
     let env_filter = env::var("RUST_LOG")
-        .map_err(anyhow::Error::from)
+        .map_err(eyre::Report::from)
         .and_then(|targets| targets.parse().context("Failed to parse RUST_LOG value"))
         .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
 
@@ -84,7 +120,7 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
     };
 
     let message = if url.scheme().starts_with("postgres") && url.has_host() {
-        "Your connection string has the correct syntax"
+        "Your connection string has the correct syntax. Is the host up?"
     } else if url.scheme() == "sqlite" {
         "SQLite is no longer supported as of v0.0.1-pre.1, please use PostgreSQL (our only supported DBMS)\n(This is a temporary diagnostic message and will probably be removed in the future)"
     } else {
@@ -95,7 +131,9 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> eyre::Result<()> {
+    install_handlers()?;
+
     println!("{STARTUP_FIGLET}");
 
     let args: Vec<String> = env::args().take(2).collect();
@@ -113,7 +151,7 @@ async fn main() -> anyhow::Result<()> {
     )
     .await
     .context("Failed to connect to and migrate the database")
-    .with_context(|| postgres_url_diagnostics(&config.database.url))?;
+    .with_suggestion(|| postgres_url_diagnostics(&config.database.url))?;
 
     let job_queue = kitsune::prepare_job_queue(conn.clone(), &config.job_queue)
         .context("Failed to connect to the Redis instance for the job scheduler")?;

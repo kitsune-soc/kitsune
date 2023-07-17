@@ -5,12 +5,12 @@ version.workspace = true
 
 [dependencies]
 async-trait = "0.1.71"
-dashmap = "5.4.0"
+dashmap = "5.5.0"
 deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 enum_dispatch = "0.3.12"
 redis = "0.23.0"
-serde = "1.0.167"
+serde = "1.0.171"
 simd-json = "0.10.3"
 thiserror = "1.0.43"
 tracing = "0.1.37"
