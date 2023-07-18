@@ -1,6 +1,9 @@
-use super::MediaAttachment;
+use super::{MediaAttachment, Post};
 use crate::{http::graphql::ContextExt, service::account::GetPosts};
-use async_graphql::{ComplexObject, Context, Result, SimpleObject};
+use async_graphql::{
+    connection::{self, Connection, Edge},
+    ComplexObject, Context, Result, SimpleObject,
+};
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
@@ -63,17 +66,42 @@ impl Account {
         }
     }
 
-    pub async fn posts(&self, ctx: &Context<'_>) -> Result<Vec<super::Post>> {
-        let account_service = &ctx.state().service.account;
-        let get_posts = GetPosts::builder().account_id(self.id).limit(40).build();
-        let posts = account_service
-            .get_posts(get_posts)
-            .await?
-            .map_ok(Into::into)
-            .try_collect()
-            .await?;
+    pub async fn posts(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> Result<Connection<Uuid, Post>> {
+        connection::query(
+            after,
+            before,
+            first,
+            last,
+            |after, before, _first, _last| async move {
+                let account_service = &ctx.state().service.account;
+                let get_posts = GetPosts::builder()
+                    .account_id(self.id)
+                    .max_id(after)
+                    .min_id(before)
+                    .limit(40)
+                    .build();
 
-        Ok(posts)
+                let mut post_stream = account_service
+                    .get_posts(get_posts)
+                    .await?
+                    .map_ok(Post::from);
+
+                let mut connection = Connection::new(true, true); // TODO: Set actual values
+                while let Some(post) = post_stream.try_next().await? {
+                    connection.edges.push(Edge::new(post.id, post));
+                }
+
+                Ok::<_, async_graphql::Error>(connection)
+            },
+        )
+        .await
     }
 }
 

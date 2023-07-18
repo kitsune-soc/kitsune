@@ -1,11 +1,15 @@
-use super::Visibility;
+use super::{Account, MediaAttachment, Visibility};
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use diesel::{QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use futures_util::TryStreamExt;
 use kitsune_db::{
-    model::{account::Account as DbAccount, post::Post as DbPost},
-    schema::accounts,
+    model::{
+        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
+        post::Post as DbPost,
+    },
+    schema::{accounts, media_attachments, posts_media_attachments},
 };
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
@@ -28,7 +32,7 @@ pub struct Post {
 
 #[ComplexObject]
 impl Post {
-    pub async fn account(&self, ctx: &Context<'_>) -> Result<super::Account> {
+    pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
         let mut db_conn = ctx.state().db_conn.get().await?;
 
         Ok(accounts::table
@@ -37,6 +41,22 @@ impl Post {
             .get_result::<DbAccount>(&mut db_conn)
             .await?
             .into())
+    }
+
+    pub async fn attachments(&self, ctx: &Context<'_>) -> Result<Vec<MediaAttachment>> {
+        let mut db_conn = ctx.state().db_conn.get().await?;
+
+        let attachments = media_attachments::table
+            .inner_join(posts_media_attachments::table)
+            .filter(posts_media_attachments::post_id.eq(self.id))
+            .select(DbMediaAttachment::as_select())
+            .load_stream(&mut db_conn)
+            .await?
+            .map_ok(Into::into)
+            .try_collect()
+            .await?;
+
+        Ok(attachments)
     }
 }
 

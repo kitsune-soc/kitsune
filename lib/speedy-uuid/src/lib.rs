@@ -265,8 +265,22 @@ mod test {
 #[cfg(feature = "async-graphql")]
 mod async_graphql_impl {
     use super::Uuid;
-    use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+    use async_graphql::{
+        connection::CursorType, InputValueError, InputValueResult, Scalar, ScalarType, Value,
+    };
     use std::str::FromStr;
+
+    impl CursorType for Uuid {
+        type Error = crate::Error;
+
+        fn decode_cursor(s: &str) -> Result<Self, Self::Error> {
+            s.parse()
+        }
+
+        fn encode_cursor(&self) -> String {
+            self.to_string()
+        }
+    }
 
     /// A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
     /// Strings within GraphQL. UUIDs are used to assign unique identifiers to
