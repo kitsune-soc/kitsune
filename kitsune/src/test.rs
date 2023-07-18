@@ -1,9 +1,8 @@
+use crate::util::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use kitsune_db::PgPool;
 use std::{env, panic};
-
-use crate::util::catch_panic::CatchPanic;
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where

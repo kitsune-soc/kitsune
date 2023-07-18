@@ -83,6 +83,7 @@ impl Account {
                 let account_service = &ctx.state().service.account;
                 let get_posts = GetPosts::builder()
                     .account_id(self.id)
+                    .fetching_account_id(ctx.user_data().ok().map(|user_data| user_data.account.id))
                     .max_id(after)
                     .min_id(before)
                     .limit(40)
