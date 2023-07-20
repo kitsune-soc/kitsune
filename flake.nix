@@ -106,11 +106,45 @@
               dhall
               diesel-cli
               redis
+              postgresql
               rust-bin.stable.latest.default
             ]
             ++
             baseDependencies;
-          };
+            shellHook = ''
+              export BOLD="\[\033[1m\]"
+              export RESET="\[\033[0m\]"
+              export FLAMING_KITSUNE_COLOR="\[\033[38;5;208m\]"
+              export PS1="$BOLD~狐~$FLAMING_KITSUNE_COLOR$PS1$RESET"
+
+              export PG_HOST=127.0.0.3
+              export PG_PORT=45999
+              export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
+
+              #something more sophisticated to kill OUR postgres and not a system one?
+              #like using the lockfile it makes or a job we start?
+              pkill postgres 
+              pidwait postgres
+              
+              export PG_DIR=data
+              mkdir -p $PG_DIR
+              rm -rf $PG_DIR/*
+              initdb -D $PG_DIR --no-locale --encoding=UTF8 >/dev/null
+
+              # setsid is here so that ctrl+c in the shell does not kill the server. 
+              # For some reason only setsid works, no nohup or stdin redir
+              setsid postgres -D $PG_DIR -h $PG_HOST -p $PG_PORT -k . 2>/dev/null >/dev/null &
+              sleep 3
+              createdb -h $PG_HOST -p $PG_PORT $USER
+              
+              export REDIS_PORT=6379
+              export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
+              pkill redis-server
+              pidwait redis-server
+              setsid redis-server --bind 127.0.0.1 --port $REDIS_PORT >/dev/null &
+              
+            '';
+           };
           frontend = pkgs.mkShell {
             buildInputs = with pkgs; [
               nodejs
