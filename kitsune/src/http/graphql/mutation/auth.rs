@@ -14,8 +14,25 @@ use zxcvbn::zxcvbn;
 const MIN_PASSWORD_STRENGTH: u8 = 3;
 
 /// Custom scalar type to have nicer error messages with the custom validator
-#[aliri_braid::braid(clone = "omit", debug = "omit", display = "omit")]
-pub struct Password;
+pub struct Password(String);
+
+impl Password {
+    fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<String> for Password {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<Password> for String {
+    fn from(p: Password) -> Self {
+        p.0
+    }
+}
 
 #[Scalar]
 impl ScalarType for Password {
@@ -31,7 +48,7 @@ impl ScalarType for Password {
     }
 
     fn to_value(&self) -> async_graphql::Value {
-        async_graphql::Value::String(self.as_str().into())
+        async_graphql::Value::String(self.0.clone())
     }
 }
 
