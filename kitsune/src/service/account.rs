@@ -5,6 +5,7 @@ use super::{
 };
 use crate::{
     activitypub::Fetcher,
+    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
     error::{Error, Result},
     job::deliver::{
         follow::DeliverFollow,
@@ -35,6 +36,7 @@ use kitsune_db::{
     PgPool,
 };
 use speedy_uuid::Uuid;
+use std::cmp::min;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
@@ -68,6 +70,7 @@ pub struct GetPosts {
     fetching_account_id: Option<Uuid>,
 
     /// Limit of returned posts
+    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     /// Smallest ID
@@ -255,7 +258,7 @@ impl AccountService {
             .add_post_permission_check(permission_check)
             .select(Post::as_select())
             .order(posts::id.desc())
-            .limit(get_posts.limit as i64)
+            .limit(min(get_posts.limit, API_MAX_LIMIT) as i64)
             .into_boxed();
 
         if let Some(min_id) = get_posts.min_id {

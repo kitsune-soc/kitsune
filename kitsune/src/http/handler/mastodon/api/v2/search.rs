@@ -1,4 +1,7 @@
+use std::cmp::min;
+
 use crate::{
+    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
@@ -20,7 +23,7 @@ use url::Url;
 use utoipa::{IntoParams, ToSchema};
 
 fn default_page_limit() -> u64 {
-    40
+    API_DEFAULT_LIMIT as u64
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -85,7 +88,7 @@ async fn get(
             .search(
                 index,
                 query.query.clone(),
-                query.limit,
+                min(query.limit, API_MAX_LIMIT as u64),
                 query.offset,
                 query.min_id,
                 query.max_id,

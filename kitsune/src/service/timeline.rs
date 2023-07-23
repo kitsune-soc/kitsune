@@ -1,4 +1,7 @@
-use crate::error::{Error, Result};
+use crate::{
+    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    error::{Error, Result},
+};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
@@ -9,11 +12,14 @@ use kitsune_db::{
     PgPool,
 };
 use speedy_uuid::Uuid;
+use std::cmp::min;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
 pub struct GetHome {
     fetching_account_id: Uuid,
+
+    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     #[builder(default)]
@@ -25,6 +31,7 @@ pub struct GetHome {
 
 #[derive(Clone, TypedBuilder)]
 pub struct GetPublic {
+    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     #[builder(default)]
@@ -83,7 +90,7 @@ impl TimelineService {
                     )),
             )
             .order(posts::id.desc())
-            .limit(get_home.limit as i64)
+            .limit(min(get_home.limit, API_MAX_LIMIT) as i64)
             .select(Post::as_select())
             .into_boxed();
 
@@ -116,7 +123,7 @@ impl TimelineService {
         let mut query = posts::table
             .add_post_permission_check(permission_check)
             .order(posts::id.desc())
-            .limit(get_public.limit as i64)
+            .limit(min(get_public.limit, API_MAX_LIMIT) as i64)
             .select(Post::as_select())
             .into_boxed();
 
