@@ -6,6 +6,7 @@ use crate::{
     service::{oauth2::CreateApp, user::Register},
 };
 use async_graphql::{Context, CustomValidator, InputValueError, Object, Result};
+use std::fmt::Write;
 use zxcvbn::zxcvbn;
 
 const MIN_PASSWORD_STRENGTH: u8 = 3;
@@ -19,7 +20,23 @@ impl CustomValidator<String> for PasswordValidator {
         };
 
         if entropy.score() < MIN_PASSWORD_STRENGTH {
-            return Err("Password too weak".into());
+            let feedback_str = entropy.feedback().as_ref().map_or_else(
+                || "Password too weak".into(),
+                |feedback| {
+                    let mut feedback_str = String::from('\n');
+                    for suggestion in feedback.suggestions() {
+                        let _ = writeln!(feedback_str, "- {suggestion}");
+                    }
+
+                    if let Some(warning) = feedback.warning() {
+                        let _ = write!(feedback_str, "\nWarning: {warning}");
+                    }
+
+                    feedback_str
+                },
+            );
+
+            return Err(feedback_str.into());
         }
 
         Ok(())
