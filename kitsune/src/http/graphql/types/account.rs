@@ -79,15 +79,19 @@ impl Account {
             before,
             first,
             last,
-            |after, before, _first, _last| async move {
+            |after, before, first, _last| async move {
                 let account_service = &ctx.state().service.account;
                 let get_posts = GetPosts::builder()
                     .account_id(self.id)
                     .fetching_account_id(ctx.user_data().ok().map(|user_data| user_data.account.id))
                     .max_id(after)
-                    .min_id(before)
-                    .limit(40)
-                    .build();
+                    .min_id(before);
+
+                let get_posts = if let Some(first) = first {
+                    get_posts.limit(first).build()
+                } else {
+                    get_posts.build()
+                };
 
                 let mut post_stream = account_service
                     .get_posts(get_posts)

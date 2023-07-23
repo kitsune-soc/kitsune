@@ -1,4 +1,5 @@
 use crate::{
+    consts::API_DEFAULT_LIMIT,
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
@@ -12,13 +13,10 @@ use futures_util::TryStreamExt;
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use std::cmp::min;
 use utoipa::IntoParams;
 
-const MAX_LIMIT: usize = 40;
-
 fn default_limit() -> usize {
-    20
+    API_DEFAULT_LIMIT
 }
 
 #[derive(Deserialize, IntoParams)]
@@ -50,7 +48,7 @@ pub async fn get(
         .fetching_account_id(user_data.account.id)
         .max_id(query.max_id)
         .min_id(query.min_id)
-        .limit(min(query.limit, MAX_LIMIT))
+        .limit(query.limit)
         .build();
 
     let statuses: Vec<Status> = timeline
