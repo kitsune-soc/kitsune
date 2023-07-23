@@ -15,6 +15,7 @@ use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, SimpleObject)]
+#[graphql(complex)]
 pub struct Post {
     pub id: Uuid,
     #[graphql(skip)]
