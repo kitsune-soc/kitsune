@@ -9,6 +9,7 @@ type InstanceInfo =
         domain: string;
         localPostCount: number;
         name: string;
+        registrationsOpen: boolean;
         userCount: number;
         version: string;
       };
@@ -22,6 +23,7 @@ function useInstanceInfo(): Ref<InstanceInfo> {
         description
         domain
         localPostCount
+        registrationsOpen
         name
         userCount
         version

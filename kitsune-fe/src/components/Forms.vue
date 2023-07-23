@@ -3,7 +3,11 @@
     <form class="forms-login" @submit="login">
       <input class="formButton" type="submit" value="Login" />
     </form>
-    <form class="forms-register" @submit="register">
+    <form
+      v-if="instanceData?.instance.registrationsOpen"
+      class="forms-register"
+      @submit="register"
+    >
       <div class="field-group">
         <label class="label" for="username">Username</label>
         <input
