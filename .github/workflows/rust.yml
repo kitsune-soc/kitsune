@@ -10,7 +10,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-C debuginfo=0 -C target-cpu=native --cfg uuid_unstable"
+  RUSTFLAGS: "-C debuginfo=0 -C target-cpu=x86-64-v3 --cfg uuid_unstable"
 
 jobs:
   clippy:
@@ -19,23 +19,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: mtoohey31/cache-flake-attrs@v2
-        with:
-          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo hack --each-feature --all clippy -- -D warnings
+      - run: nix develop -c cargo hack --each-feature --all clippy -- -D warnings
 
   fmt:
     name: Formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: mtoohey31/cache-flake-attrs@v2
-        with:
-          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo fmt --all -- --check
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix develop -c cargo fmt --all -- --check
   
   test:
     name: Test
@@ -66,12 +64,11 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v3
-      - uses: mtoohey31/cache-flake-attrs@v2
-        with:
-          key: ${{ runner.os }}-nix-${{ hashFiles('./flake.lock', './flake.nix') }}
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
-      - run: nix --extra-experimental-features nix-command --extra-experimental-features flakes develop -c cargo test --all-features -- --show-output
+      - run: nix develop -c cargo test --all-features -- --show-output
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
           REDIS_URL: "redis://localhost"

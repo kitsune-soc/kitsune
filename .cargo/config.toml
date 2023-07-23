@@ -4,8 +4,6 @@ rustflags = [
     "--cfg",
     "uuid_unstable",
     "-C",
-    "target-feature=+aes",
-    "-C",
     "target-cpu=native",   # This probably isn't good, could lead to some weird issues but better than end-users having to struggle with arcane `simd-json` errors
 ]
 
