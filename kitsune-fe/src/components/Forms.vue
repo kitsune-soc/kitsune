@@ -169,7 +169,7 @@
     margin: 10px auto;
     border-radius: 2px;
     font-size: 20px;
-    color: #fff
+    color: #fff;
   }
 
   .formButton {
