@@ -5,16 +5,40 @@ use crate::{
     },
     service::{oauth2::CreateApp, user::Register},
 };
-use async_graphql::{Context, CustomValidator, InputValueError, Object, Result};
+use async_graphql::{
+    Context, CustomValidator, InputValueError, Object, Result, Scalar, ScalarType,
+};
 use std::fmt::Write;
 use zxcvbn::zxcvbn;
 
 const MIN_PASSWORD_STRENGTH: u8 = 3;
 
+/// Custom scalar type to have nicer error messages with the custom validator
+#[aliri_braid::braid(clone = "omit", debug = "omit", display = "omit")]
+pub struct Password;
+
+#[Scalar]
+impl ScalarType for Password {
+    fn parse(value: async_graphql::Value) -> async_graphql::InputValueResult<Self> {
+        match value {
+            async_graphql::Value::String(s) => Ok(s.into()),
+            _ => Err(InputValueError::expected_type(value)),
+        }
+    }
+
+    fn is_valid(value: &async_graphql::Value) -> bool {
+        matches!(value, async_graphql::Value::String(..))
+    }
+
+    fn to_value(&self) -> async_graphql::Value {
+        async_graphql::Value::String(self.as_str().into())
+    }
+}
+
 struct PasswordValidator;
 
-impl CustomValidator<String> for PasswordValidator {
-    fn check(&self, value: &String) -> Result<(), InputValueError<String>> {
+impl CustomValidator<Password> for PasswordValidator {
+    fn check(&self, value: &Password) -> Result<(), InputValueError<Password>> {
         let Ok(entropy) = zxcvbn(value.as_str(), &[]) else {
             return Err("Password strength validation failed".into());
         };
@@ -68,14 +92,14 @@ impl AuthMutation {
         ctx: &Context<'_>,
         #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
         #[graphql(validator(email))] email: String,
-        #[graphql(secret, validator(custom = "PasswordValidator"))] password: String,
+        #[graphql(secret, validator(custom = "PasswordValidator"))] password: Password,
     ) -> Result<User> {
         let state = ctx.state();
 
         let register = Register::builder()
             .username(username)
             .email(email)
-            .password(password)
+            .password(password.into())
             .build();
         let new_user = state.service.user.register(register).await?;
 

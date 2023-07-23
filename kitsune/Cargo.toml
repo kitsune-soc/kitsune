@@ -114,6 +114,7 @@ zxcvbn = { version = "2.2.2", default-features = false }
 # --- Optional dependencies ---
 
 # "graphql" feature
+aliri_braid = { version = "0.4.0", optional = true }
 async-graphql = { version = "5.0.10", default-features = false, features = [
     "email-validator",
     "playground",
@@ -142,6 +143,7 @@ serial_test = "2.0.0"
 [features]
 default = ["graphql-api", "mastodon-api", "metrics"]
 graphql-api = [
+    "dep:aliri_braid",
     "dep:async-graphql",
     "dep:async-graphql-axum",
     "speedy-uuid/async-graphql",
