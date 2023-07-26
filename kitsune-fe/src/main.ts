@@ -6,6 +6,10 @@ import App from './App.vue';
 import { apolloClient } from './apollo';
 import { router } from './router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { createPinia } from 'pinia';
+import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
+
+const pinia = createPinia().use(piniaPluginPersistedState);
 
 createApp({
   setup() {
@@ -14,5 +18,6 @@ createApp({
   render: () => h(App),
 })
   .component('font-awesome-icon', FontAwesomeIcon)
+  .use(pinia)
   .use(router)
   .mount('#app');

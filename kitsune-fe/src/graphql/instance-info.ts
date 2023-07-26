@@ -1,6 +1,6 @@
 import { useQuery } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-import { Ref, toRefs } from 'vue';
+import { Ref } from 'vue';
 
 type InstanceInfo =
   | {
@@ -17,7 +17,7 @@ type InstanceInfo =
   | undefined;
 
 function useInstanceInfo(): Ref<InstanceInfo> {
-  let { result } = useQuery(gql`
+  const { result } = useQuery(gql`
     query getInstanceInfo {
       instance {
         description

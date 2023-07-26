@@ -10,7 +10,9 @@
         </h2>
         <fieldset v-if="instanceInfo" class="main-intro-description">
           <legend>About</legend>
-          <span v-html="instanceInfo.instance.description" />
+          <!-- This usage of v-html is fine. The data is loaded from the remote server and set by the administrator -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="instanceInfo?.instance.description" />
         </fieldset>
         <p v-if="instanceInfo">
           <span class="stat-highlight">{{ instanceInfo.instance.name }}</span>
