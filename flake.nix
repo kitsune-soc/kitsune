@@ -109,6 +109,9 @@
             ]
             ++
             baseDependencies;
+            shellHook = ''
+              source ./.devshell_prompt.sh
+            '';
           };
           backend-full = pkgs.mkShell {
             buildInputs = with pkgs; [
@@ -159,6 +162,9 @@
               nodejs
               yarn
             ];
+            shellHook = ''
+              source ./.devshell_prompt.sh
+            '';
           };
         };
       }
