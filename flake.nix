@@ -103,7 +103,16 @@
           backend = pkgs.mkShell {
             buildInputs = with pkgs; [
               cargo-insta
-              dhall
+              diesel-cli
+              redis
+              rust-bin.stable.latest.default
+            ]
+            ++
+            baseDependencies;
+          };
+          backend-full = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              cargo-insta
               diesel-cli
               redis
               postgresql
@@ -144,7 +153,7 @@
               setsid  redis-server --bind 127.0.0.1 --port $REDIS_PORT >/dev/null &
               
             '';
-           };
+          };
           frontend = pkgs.mkShell {
             buildInputs = with pkgs; [
               nodejs
