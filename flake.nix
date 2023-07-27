@@ -123,17 +123,19 @@
 
               #something more sophisticated to kill OUR postgres and not a system one?
               #like using the lockfile it makes or a job we start?
-              pkill postgres 
-              pidwait postgres
-              
               export PG_DIR=data
+              POSTGRES_INVOCATION="postgres -D $PG_DIR -h $PG_HOST -p $PG_PORT -k ."
+
+              pkill -f "$POSTGRES_INVOCATION" 
+              pidwait -f "$POSTGRES_INVOCATION" 
+              
               mkdir -p $PG_DIR
               rm -rf $PG_DIR/*
               initdb -D $PG_DIR --no-locale --encoding=UTF8 >/dev/null
 
               # setsid is here so that ctrl+c in the shell does not kill the server. 
               # For some reason only setsid works, no nohup or stdin redir
-              setsid postgres -D $PG_DIR -h $PG_HOST -p $PG_PORT -k . 2>/dev/null >/dev/null &
+              setsid $POSTGRES_INVOCATION 2>/dev/null >/dev/null &
               sleep 3
               createdb -h $PG_HOST -p $PG_PORT $USER
               
