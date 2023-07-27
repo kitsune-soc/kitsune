@@ -141,9 +141,10 @@
               
               export REDIS_PORT=6379
               export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
-              pkill redis-server
-              pidwait redis-server
-              setsid redis-server --bind 127.0.0.1 --port $REDIS_PORT >/dev/null &
+
+              pkill -f "redis-server 127.0.0.1:$REDIS_PORT"
+              pidwait -f "redis-server 127.0.0.1:$REDIS_PORT"
+              setsid  redis-server --bind 127.0.0.1 --port $REDIS_PORT >/dev/null &
               
             '';
            };
