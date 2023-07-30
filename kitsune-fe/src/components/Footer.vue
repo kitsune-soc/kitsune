@@ -1,7 +1,7 @@
 <template>
   <footer>
-    <div v-if="instanceData" class="footer">
-      <span>Kitsune v{{ instanceData.instance.version }}</span>
+    <div class="footer">
+      <span>Kitsune v{{ instanceData?.instance.version }}</span>
       <a target="_blank" href="https://github.com/kitsune-soc/kitsune"
         >Source code</a
       >
