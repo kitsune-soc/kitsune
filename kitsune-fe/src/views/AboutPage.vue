@@ -1,6 +1,11 @@
 <template>
   <div class="about-page">
-    <h1 class="title">Kitsune hosted on {{ instanceData?.instance.domain }}</h1>
+    <h1 class="title">
+      Kitsune hosted on
+      <router-link to="/">
+        {{ instanceData?.instance.domain }}
+      </router-link>
+    </h1>
 
     <fieldset>
       <legend>Instance description</legend>
@@ -19,6 +24,11 @@
 </script>
 
 <style scoped lang="scss">
+  h1 {
+    font-size: 3em;
+    line-height: 1.1;
+  }
+
   .about-page {
     max-width: 80ch;
     margin: auto;

@@ -1,5 +1,9 @@
 <template>
-  <router-link :class="['nav-bar-link', $props.class]" :to="to">
+  <router-link
+    :class="['nav-bar-link', $props.class]"
+    :to="to"
+    draggable="false"
+  >
     <font-awesome-icon class="icon" :icon="icon" />
     <span class="detail">{{ detail }}</span>
   </router-link>
@@ -22,7 +26,9 @@
     display: inline-block;
     padding: 15px;
     color: $shade1dark;
+
     cursor: pointer;
+    user-select: none;
 
     border-bottom: 4px solid;
     border-color: transparent;
