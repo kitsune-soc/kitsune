@@ -1,5 +1,5 @@
 <template>
-  <div class="forms-forms">
+  <div class="forms">
     <FormKit
       type="form"
       name="login-form"
@@ -44,6 +44,14 @@
         validation-label="Password confirmation"
       />
     </FormKit>
+
+    <Modal :closed="!modalData.show" :title="modalData.title">
+      <span v-html="modalData.content" />
+
+      <p>
+        <button @click="modalData.show = false">Close</button>
+      </p>
+    </Modal>
   </div>
 </template>
 
@@ -53,6 +61,14 @@
   import { useInstanceInfo } from '../graphql/instance-info';
   import { useOAuthApplicationStore } from '../store/oauth_application';
   import { getApplicationCredentials } from '../lib/oauth2';
+  import Modal from './Modal.vue';
+  import { reactive } from 'vue';
+
+  const modalData = reactive({
+    show: false,
+    title: '',
+    content: '',
+  });
 
   type RegisterData = {
     username: string;
@@ -80,13 +96,18 @@
   const instanceData = useInstanceInfo();
 
   onRegisterDone(() => {
-    // TODO: Use actual modal
-    alert('Registered successfully');
+    modalData.title = 'Register';
+    modalData.content = 'Registered successful!';
+    modalData.show = true;
   });
 
   onRegisterError((err) => {
-    // TODO: Use actual modal
-    alert(`Registration failed: ${err}`);
+    modalData.title = 'Register';
+    modalData.content = `Registration failed: ${err.message}`.replaceAll(
+      '\n',
+      '<br />',
+    );
+    modalData.show = true;
   });
 
   async function login(): Promise<void> {
@@ -153,7 +174,7 @@
     color: #fff;
   }
 
-  .forms-forms {
+  .forms {
     display: flex;
     flex-direction: column;
     justify-content: center;
