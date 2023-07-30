@@ -4,6 +4,7 @@ import {
   OAuthApplication,
   useOAuthApplicationStore,
 } from '../store/oauth_application';
+import { provideApolloClient } from '../apollo';
 
 export async function getApplicationCredentials(): Promise<OAuthApplication> {
   const oauthApplicationStore = useOAuthApplicationStore();
@@ -11,15 +12,20 @@ export async function getApplicationCredentials(): Promise<OAuthApplication> {
     return oauthApplicationStore.application;
   }
 
-  const { mutate: registerOAuthApplication } = useMutation(gql`
-    mutation registerOauthApplication($name: String!, $redirect_uri: String!) {
-      registerOauthApplication(name: $name, redirectUri: $redirect_uri) {
-        id
-        secret
-        redirectUri
+  const { mutate: registerOAuthApplication } = provideApolloClient(() => {
+    return useMutation(gql`
+      mutation registerOauthApplication(
+        $name: String!
+        $redirect_uri: String!
+      ) {
+        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {
+          id
+          secret
+          redirectUri
+        }
       }
-    }
-  `);
+    `);
+  });
 
   const response = await registerOAuthApplication({
     name: 'Kitsune FE',

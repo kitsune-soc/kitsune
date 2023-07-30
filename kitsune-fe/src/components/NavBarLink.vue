@@ -38,7 +38,7 @@
     }
 
     & .icon {
-      margin-right: 7px;
+      margin-right: 10px;
     }
 
     @include only-on-mobile {

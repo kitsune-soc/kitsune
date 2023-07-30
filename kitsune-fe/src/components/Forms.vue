@@ -1,8 +1,47 @@
 <template>
   <div class="forms-forms">
+    <FormKit type="form" @submit="login" submit-label="Login"></FormKit>
     <form class="forms-login" @submit="login">
       <input class="formButton" type="submit" value="Login" />
     </form>
+
+    <FormKit
+      v-if="instanceData?.instance.registrationsOpen"
+      type="form"
+      @submit="register"
+      submit-label="Register"
+    >
+      <FormKit
+        type="text"
+        name="username"
+        validation="required"
+        label="Username"
+        placeholder="aumetra"
+      />
+
+      <FormKit
+        type="email"
+        name="email"
+        validation="email|required"
+        label="Email address"
+        placeholder="aumetra@citadel-station.example"
+      />
+
+      <FormKit
+        type="password"
+        name="password"
+        validation="required"
+        label="Password"
+      />
+
+      <FormKit
+        type="password"
+        name="password_confirm"
+        validation="required|confirm"
+        label="Confirm password"
+        validation-label="Password confirmation"
+      />
+    </FormKit>
     <form
       v-if="instanceData?.instance.registrationsOpen"
       class="forms-register"
@@ -10,33 +49,13 @@
     >
       <div class="field-group">
         <label class="label" for="username">Username</label>
-        <input
-          v-model="registerData.username"
-          class="field"
-          type="text"
-          name="username"
-        />
+        <input class="field" type="text" name="username" />
         <label class="label" for="email">Email</label>
-        <input
-          v-model="registerData.email"
-          class="field"
-          type="email"
-          name="email"
-        />
+        <input class="field" type="email" name="email" />
         <label class="label" for="password">Password</label>
-        <input
-          v-model="registerData.password"
-          class="field"
-          type="password"
-          name="password"
-        />
+        <input class="field" type="password" name="password" />
         <label class="label" for="confirm-password">Confirm Password</label>
-        <input
-          v-model="registerData.passwordConfirm"
-          class="field"
-          type="password"
-          name="confirm-password"
-        />
+        <input class="field" type="password" name="confirm-password" />
       </div>
       <input class="formButton" type="submit" value="Register" />
     </form>
@@ -46,13 +65,20 @@
 <script setup lang="ts">
   import { useMutation } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
-  import { reactive } from 'vue';
   import { useInstanceInfo } from '../graphql/instance-info';
+  import { useOAuthApplicationStore } from '../store/oauth_application';
+  import { getApplicationCredentials } from '../lib/oauth2';
+
+  type RegisterData = {
+    username: string;
+    email: string;
+    password: string;
+  };
 
   const {
     mutate: registerUser,
-    onDone,
-    onError,
+    onDone: onRegisterDone,
+    onError: onRegisterError,
   } = useMutation(gql`
     mutation registerUser(
       $username: String!
@@ -65,53 +91,34 @@
     }
   `);
 
+  const oauthApplicationStore = useOAuthApplicationStore();
   const instanceData = useInstanceInfo();
 
-  onDone(() => {
+  onRegisterDone(() => {
     // TODO: Use actual modal
     alert('Registered successfully');
   });
 
-  onError((err) => {
+  onRegisterError((err) => {
     // TODO: Use actual modal
     alert(`Registration failed: ${err}`);
   });
 
-  const registerData = reactive({
-    username: '',
-    email: '',
-    password: '',
-    passwordConfirm: '',
-  });
-
-  const login = (event: Event) => {
-    event.preventDefault();
-
-    // TODO: Actually log in and not redirect to Elk
-    window.location.href = `https://elk.zone/${instanceData.value?.instance.domain}/public/local`;
-  };
-
-  const register = (event: Event) => {
-    event.preventDefault();
-
-    if (
-      registerData.username.trim() === '' ||
-      registerData.email === '' ||
-      registerData.password === ''
-    ) {
-      return;
+  async function login(): Promise<void> {
+    if (!oauthApplicationStore.application) {
+      await getApplicationCredentials();
     }
+  }
 
-    if (registerData.password !== registerData.passwordConfirm) {
-      return;
-    }
+  async function register(registerData: RegisterData): Promise<void> {
+    console.log(registerData);
 
-    registerUser({
+    await registerUser({
       username: registerData.username,
       email: registerData.email,
       password: registerData.password,
     });
-  };
+  }
 </script>
 
 <style scoped lang="scss">
