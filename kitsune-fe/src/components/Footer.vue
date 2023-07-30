@@ -23,6 +23,6 @@
     align-items: flex-end;
     padding: 10px 0;
     gap: 25px;
-    margin-bottom: 25px;
+    margin: 25px 0;
   }
 </style>

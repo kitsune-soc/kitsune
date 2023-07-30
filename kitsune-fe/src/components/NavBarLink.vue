@@ -5,8 +5,18 @@
   </router-link>
 </template>
 
+<script lang="ts" setup>
+  defineProps<{
+    class?: string;
+    to: string;
+    icon: string;
+    detail: string;
+  }>();
+</script>
+
 <style lang="scss" scoped>
   @use '../styles/colours' as *;
+  @use '../styles/mixins' as *;
 
   .nav-bar-link {
     display: inline-block;
@@ -21,14 +31,18 @@
       color: white;
     }
 
-    @media only screen and (max-width: 850px) {
+    & .icon {
+      margin-right: 7px;
+    }
+
+    @include only-on-mobile {
       & .detail {
         display: none;
       }
-    }
 
-    & .icon {
-      margin-right: 7px;
+      & .icon {
+        margin-right: 0px;
+      }
     }
 
     &.router-link-active {
@@ -38,12 +52,3 @@
     }
   }
 </style>
-
-<script lang="ts" setup>
-  defineProps<{
-    class?: string;
-    to: string;
-    icon: string;
-    detail: string;
-  }>();
-</script>

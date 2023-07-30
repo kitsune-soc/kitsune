@@ -53,6 +53,7 @@
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
+  @use '../styles/mixins' as *;
 
   .nav-bar {
     position: fixed;
@@ -66,6 +67,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    @include only-on-mobile {
+      padding: 0;
+      padding-top: 5px;
+
+      & .detail {
+        display: none;
+      }
+
+      & .icon {
+        margin-right: 0px;
+      }
+    }
 
     &-profile {
       display: flex;

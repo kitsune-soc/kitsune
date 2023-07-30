@@ -8,24 +8,25 @@
             <use xlink:href="/header.svg#logo" />
           </svg>
         </h2>
-        <fieldset v-if="instanceInfo" class="main-intro-description">
-          <legend>About</legend>
-          <!-- This usage of v-html is fine. The data is loaded from the remote server and set by the administrator -->
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <span v-html="instanceInfo?.instance.description" />
-        </fieldset>
-        <p v-if="instanceInfo">
-          <span class="stat-highlight">{{ instanceInfo.instance.name }}</span>
+
+        <p>
+          <span class="stat-highlight">
+            {{ instanceInfo?.instance.name }}
+          </span>
           is home to
-          <span class="stat-highlight">{{
-            instanceInfo.instance.userCount
-          }}</span>
+          <span class="stat-highlight">
+            {{ instanceInfo?.instance.userCount }}
+          </span>
           users who authored
-          <span class="stat-highlight">{{
-            instanceInfo.instance.localPostCount
-          }}</span>
+          <span class="stat-highlight">
+            {{ instanceInfo?.instance.localPostCount }}
+          </span>
           posts!
         </p>
+
+        <strong class="about-link">
+          <router-link to="/about">About this instance</router-link>
+        </strong>
       </div>
       <Forms />
     </div>
@@ -48,7 +49,7 @@
     &-container {
       display: flex;
       align-items: center;
-      height: 88vh;
+      height: 80vh;
       width: 95vw;
       margin: 0 auto;
       padding: 0 4vw;
