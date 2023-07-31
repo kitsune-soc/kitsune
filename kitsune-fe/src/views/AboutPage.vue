@@ -3,14 +3,14 @@
     <h1 class="title">
       Kitsune hosted on
       <router-link to="/">
-        {{ instanceData?.instance.domain }}
+        {{ instanceData?.domain }}
       </router-link>
     </h1>
 
     <fieldset>
       <legend>Instance description</legend>
 
-      <span v-html="instanceData?.instance.description" />
+      <span v-html="instanceData?.description" />
     </fieldset>
     <Footer />
   </div>

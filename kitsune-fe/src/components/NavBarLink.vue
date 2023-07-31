@@ -5,7 +5,7 @@
     draggable="false"
   >
     <font-awesome-icon class="icon" :icon="icon" />
-    <span class="detail">{{ detail }}</span>
+    <span v-if="detail" class="detail">{{ detail }}</span>
   </router-link>
 </template>
 
@@ -14,7 +14,7 @@
     class?: string;
     to: string;
     icon: string;
-    detail: string;
+    detail?: string;
   }>();
 </script>
 

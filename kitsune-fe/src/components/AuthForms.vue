@@ -8,7 +8,7 @@
     />
 
     <FormKit
-      v-if="instanceData?.instance.registrationsOpen"
+      v-if="instanceData?.registrationsOpen"
       type="form"
       @submit="register"
       submit-label="Register"

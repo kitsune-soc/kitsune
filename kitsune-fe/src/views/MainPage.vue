@@ -11,15 +11,15 @@
 
         <p>
           <span class="stat-highlight">
-            {{ instanceInfo?.instance.name }}
+            {{ instanceInfo?.name }}
           </span>
           is home to
           <span class="stat-highlight">
-            {{ instanceInfo?.instance.userCount }}
+            {{ instanceInfo?.userCount }}
           </span>
           users who authored
           <span class="stat-highlight">
-            {{ instanceInfo?.instance.localPostCount }}
+            {{ instanceInfo?.localPostCount }}
           </span>
           posts!
         </p>
@@ -28,7 +28,8 @@
           <router-link to="/about">About this instance</router-link>
         </strong>
       </div>
-      <Forms />
+
+      <AuthForms />
     </div>
     <Footer />
   </div>
@@ -36,7 +37,7 @@
 
 <script setup lang="ts">
   import Footer from '../components/Footer.vue';
-  import Forms from '../components/Forms.vue';
+  import AuthForms from '../components/AuthForms.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceInfo = useInstanceInfo();
