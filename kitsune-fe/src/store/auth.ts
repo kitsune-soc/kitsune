@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-type TokenData = {
+export type TokenData = {
   token: string;
   refreshToken: string;
   expiresAt: Date;
