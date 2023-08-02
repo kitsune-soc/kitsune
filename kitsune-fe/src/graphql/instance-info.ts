@@ -1,4 +1,5 @@
 import { useQuery } from '@vue/apollo-composable';
+
 import gql from 'graphql-tag';
 import { ComputedRef, Ref, computed } from 'vue';
 

@@ -8,6 +8,10 @@ const routes = [
   { path: '/messages', component: () => import('./views/MainPage.vue') },
   { path: '/local', component: () => import('./views/MainPage.vue') },
   { path: '/federated', component: () => import('./views/MainPage.vue') },
+  {
+    path: '/oauth-callback',
+    component: () => import('./views/OAuthCallback.vue'),
+  },
 ];
 
 export const router = createRouter({

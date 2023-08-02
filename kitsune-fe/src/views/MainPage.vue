@@ -36,8 +36,8 @@
 </template>
 
 <script setup lang="ts">
-  import Footer from '../components/Footer.vue';
   import AuthForms from '../components/AuthForms.vue';
+  import Footer from '../components/Footer.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceInfo = useInstanceInfo();

@@ -4,7 +4,6 @@
       <legend>
         {{ title }}
       </legend>
-
       <slot />
     </fieldset>
   </div>

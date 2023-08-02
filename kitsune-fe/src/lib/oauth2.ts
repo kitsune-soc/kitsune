@@ -1,13 +1,15 @@
 import { useMutation } from '@vue/apollo-composable';
+
 import gql from 'graphql-tag';
+
+import { provideApolloClient } from '../apollo';
+import { TokenData, useAuthStore } from '../store/auth';
 import {
   OAuthApplication,
   useOAuthApplicationStore,
 } from '../store/oauth_application';
-import { provideApolloClient } from '../apollo';
-import { TokenData, useAuthStore } from '../store/auth';
 
-export async function getApplicationCredentials(): Promise<OAuthApplication> {
+async function getApplicationCredentials(): Promise<OAuthApplication> {
   const oauthApplicationStore = useOAuthApplicationStore();
   if (oauthApplicationStore.application) {
     return oauthApplicationStore.application;
@@ -38,6 +40,11 @@ export async function getApplicationCredentials(): Promise<OAuthApplication> {
   oauthApplicationStore.application = applicationData;
 
   return oauthApplicationStore.application!;
+}
+
+export async function authorizationUrl(): Promise<string> {
+  const applicationCredentials = await getApplicationCredentials();
+  return `${window.location.origin}/oauth/authorize?response_type=code&client_id=${applicationCredentials.id}&redirect_uri=${applicationCredentials.redirectUri}&scope=read+write`;
 }
 
 type OAuthResponse = {

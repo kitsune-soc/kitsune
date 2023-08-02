@@ -65,24 +65,26 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
 
     router = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
-        .layer(CatchPanicLayer::new())
-        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
-        .layer(TimeoutLayer::new(Duration::from_secs(
-            server_config.request_timeout_secs,
-        )))
-        .fallback_service(
+        .nest_service(
+            "/",
             ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
 
     #[cfg(feature = "metrics")]
     {
         use axum_prometheus::PrometheusMetricLayer;
+
         // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
         router = router.layer(PrometheusMetricLayer::new());
     }
 
     router
+        .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
+        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
+        .layer(TimeoutLayer::new(Duration::from_secs(
+            server_config.request_timeout_secs,
+        )))
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

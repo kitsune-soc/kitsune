@@ -57,12 +57,14 @@
 
 <script setup lang="ts">
   import { useMutation } from '@vue/apollo-composable';
+
   import gql from 'graphql-tag';
-  import { useInstanceInfo } from '../graphql/instance-info';
-  import { useOAuthApplicationStore } from '../store/oauth_application';
-  import { getApplicationCredentials } from '../lib/oauth2';
-  import Modal from './Modal.vue';
   import { reactive } from 'vue';
+  import { useRouter } from 'vue-router';
+
+  import { useInstanceInfo } from '../graphql/instance-info';
+  import { authorizationUrl } from '../lib/oauth2';
+  import Modal from './Modal.vue';
 
   const modalData = reactive({
     show: false,
@@ -92,9 +94,6 @@
     }
   `);
 
-  const oauthApplicationStore = useOAuthApplicationStore();
-  const instanceData = useInstanceInfo();
-
   onRegisterDone(() => {
     modalData.title = 'Register';
     modalData.content = 'Registered successful!';
@@ -110,10 +109,12 @@
     modalData.show = true;
   });
 
+  const instanceData = useInstanceInfo();
+  const router = useRouter();
+
   async function login(): Promise<void> {
-    if (!oauthApplicationStore.application) {
-      await getApplicationCredentials();
-    }
+    const url = await authorizationUrl();
+    await router.push(url);
   }
 
   async function register(registerData: RegisterData): Promise<void> {

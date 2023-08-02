@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
   import { useInstanceInfo } from '../graphql/instance-info';
+
   const instanceData = useInstanceInfo();
 </script>
 

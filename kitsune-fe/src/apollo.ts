@@ -3,8 +3,9 @@ import {
   createHttpLink,
   InMemoryCache,
 } from '@apollo/client/core';
-import { BACKEND_PREFIX } from './consts';
 import { provideApolloClient as vueProvideApolloClient } from '@vue/apollo-composable';
+
+import { BACKEND_PREFIX } from './consts';
 
 const httpLink = createHttpLink({
   uri: `${BACKEND_PREFIX}/graphql`,
