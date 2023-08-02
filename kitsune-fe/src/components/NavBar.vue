@@ -7,7 +7,8 @@
     </div>
     <div class="nav-bar-profile">
       <div class="nav-bar-element profile-menu-button">
-        <img src="https://avatarfiles.alphacoders.com/267/thumb-267407.png" />
+        <!-- Without this weird double quote stuff Vite would have tried to do some fucked up shit -->
+        <img :src="'/public/assets/default-avatar.png'" />
       </div>
       <div class="nav-bar-element">
         <font-awesome-icon

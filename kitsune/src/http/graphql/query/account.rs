@@ -20,4 +20,9 @@ impl AccountQuery {
             .await
             .map(Into::into)?)
     }
+
+    pub async fn my_account(&self, ctx: &Context<'_>) -> Result<Account> {
+        let account = &ctx.user_data()?.account;
+        self.get_account_by_id(ctx, account.id).await
+    }
 }

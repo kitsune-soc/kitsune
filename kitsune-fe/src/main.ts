@@ -7,7 +7,7 @@ import { DefaultApolloClient } from '@vue/apollo-composable';
 
 import { createPinia } from 'pinia';
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
-import { createApp, h, provide } from 'vue';
+import { createApp } from 'vue';
 
 import App from './App.vue';
 import { apolloClient } from './apollo';
@@ -17,13 +17,9 @@ import './styles/root.scss';
 
 const pinia = createPinia().use(piniaPluginPersistedState);
 
-createApp({
-  setup() {
-    provide(DefaultApolloClient, apolloClient);
-  },
-  render: () => h(App),
-})
+createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)
+  .provide(DefaultApolloClient, apolloClient)
   .use(FormkitPlugin, defaultFormkitConfig)
   .use(pinia)
   .use(router)
