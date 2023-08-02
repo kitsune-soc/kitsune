@@ -3635,6 +3635,7 @@ dependencies = [
  "toml",
  "tower-http",
  "tracing",
+ "tracing-error",
  "tracing-subscriber",
  "typed-builder",
  "url",

@@ -11,6 +11,7 @@ use std::{
     process,
 };
 use tracing::level_filters::LevelFilter;
+use tracing_error::ErrorLayer;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
 use url::Url;
 
@@ -96,8 +97,9 @@ fn initialise_logging(_config: &Configuration) -> eyre::Result<()> {
         .and_then(|targets| targets.parse().context("Failed to parse RUST_LOG value"))
         .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
 
-    let subscriber =
-        Registry::default().with(tracing_subscriber::fmt::layer().with_filter(env_filter));
+    let subscriber = Registry::default()
+        .with(tracing_subscriber::fmt::layer().with_filter(env_filter))
+        .with(ErrorLayer::default());
 
     #[cfg(feature = "metrics")]
     #[allow(clippy::used_underscore_binding)]

@@ -29,7 +29,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.to_string();
-        tmp.push_str("index.html");
+        tmp.push_str("/index.html");
         tmp
     };
 
@@ -65,9 +65,9 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
 
     router = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
-        .nest_service(
-            "/",
-            ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
+        .fallback_service(
+            ServeDir::new(frontend_dir.as_str())
+                .not_found_service(ServeFile::new(frontend_index_path)),
         );
 
     #[cfg(feature = "metrics")]

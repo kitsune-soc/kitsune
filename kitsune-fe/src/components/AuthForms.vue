@@ -60,7 +60,6 @@
 
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
-  import { useRouter } from 'vue-router';
 
   import { useInstanceInfo } from '../graphql/instance-info';
   import { authorizationUrl } from '../lib/oauth2';
@@ -110,11 +109,10 @@
   });
 
   const instanceData = useInstanceInfo();
-  const router = useRouter();
 
   async function login(): Promise<void> {
     const url = await authorizationUrl();
-    await router.push(url);
+    window.location.href = url;
   }
 
   async function register(registerData: RegisterData): Promise<void> {
