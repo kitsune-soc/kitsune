@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.71"
+async-trait = "0.1.72"
 aws-sdk-s3 = "0.28.0"
-aws-smithy-http = "0.55.3"
+aws-smithy-http = "0.56.0"
 bytes = "1.4.0"
 enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
@@ -21,5 +21,5 @@ tokio-util = { version = "0.7.8", features = ["io"] }
 aws-credential-types = { version = "0.55.3", features = [
     "hardcoded-credentials",
 ] }
-tempfile = "3.6.0"
+tempfile = "3.7.0"
 tokio = { version = "1.29.1", features = ["macros", "rt"] }
