@@ -3,15 +3,15 @@
     <FormKit
       type="form"
       name="login-form"
-      @submit="login"
       submit-label="Login"
+      @submit="login"
     />
 
     <FormKit
       v-if="instanceData?.registrationsOpen"
       type="form"
-      @submit="register"
       submit-label="Register"
+      @submit="register"
     >
       <FormKit
         type="text"

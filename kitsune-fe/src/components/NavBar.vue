@@ -1,8 +1,8 @@
 <template>
   <nav class="nav-bar">
     <div class="nav-bar-links">
-      <template v-for="link in links">
-        <NavBarLink :to="link.to" :icon="link.icon" :detail="link.detail" />
+      <template v-for="(details, route) in links" :key="route">
+        <NavBarLink :to="route" :icon="details.icon" :detail="details.detail" />
       </template>
     </div>
     <div class="nav-bar-profile">
@@ -22,33 +22,33 @@
 <script setup lang="ts">
   import NavBarLink from './NavBarLink.vue';
 
-  const links = [
-    {
-      to: '/timeline/home',
+  type RouteInfo = {
+    icon: string;
+    detail: string;
+  };
+
+  const links: Record<string, RouteInfo> = {
+    '/timeline/home': {
       icon: 'fa-house fa-solid',
       detail: 'Home',
     },
-    {
-      to: '/notifications',
+    '/notifications': {
       icon: 'fa-bell fa-solid',
       detail: 'Notification',
     },
-    {
-      to: '/messages',
+    '/messages': {
       icon: 'fa-envelope fa-solid',
       detail: 'Messages',
     },
-    {
-      to: '/timeline/local',
+    '/timeline/local': {
       icon: 'fa-users fa-solid',
       detail: 'Local',
     },
-    {
-      to: '/timeline/federated',
+    '/timeline/federated': {
       icon: 'fa-globe-europe fa-solid',
       detail: 'Federated',
     },
-  ];
+  };
 </script>
 
 <style scoped lang="scss">
