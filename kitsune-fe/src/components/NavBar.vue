@@ -24,7 +24,7 @@
 
   const links = [
     {
-      to: '/home',
+      to: '/timeline/home',
       icon: 'fa-house fa-solid',
       detail: 'Home',
     },
@@ -39,12 +39,12 @@
       detail: 'Messages',
     },
     {
-      to: '/local',
+      to: '/timeline/local',
       icon: 'fa-users fa-solid',
       detail: 'Local',
     },
     {
-      to: '/federated',
+      to: '/timeline/federated',
       icon: 'fa-globe-europe fa-solid',
       detail: 'Federated',
     },

@@ -31,6 +31,7 @@
 
       <AuthForms />
     </div>
+
     <Footer />
   </div>
 </template>
