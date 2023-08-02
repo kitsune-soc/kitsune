@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.72"
 aws-sdk-s3 = "0.28.0"
-aws-smithy-http = "0.56.0"
+aws-smithy-http = "0.55.3"
 bytes = "1.4.0"
 enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
