@@ -18,11 +18,10 @@ const cache = new InMemoryCache();
 
 const authMiddleware = setContext(async (request, previousContext) => {
   const authStore = useAuthStore();
-
   if (authStore.isAuthenticated()) {
     previousContext = merge(previousContext, {
       headers: {
-        authorization: `Bearer ${await authStore.accessToken()}`,
+        Authorization: `Bearer ${await authStore.accessToken()}`,
       },
     });
   }

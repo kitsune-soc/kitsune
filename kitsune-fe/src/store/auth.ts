@@ -3,11 +3,11 @@ import { ref } from 'vue';
 
 import { refreshAccessToken } from '../lib/oauth2';
 
-export type TokenData = {
+export interface TokenData {
   token: string;
   refreshToken: string;
-  expiresAt: Date;
-};
+  expiresAt: string; // This has to be a string because for some reason the persisted state plugin struggles with dates a bit..
+}
 
 export const useAuthStore = defineStore(
   'auth',
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore(
         return null;
       }
 
-      if (data.value!.expiresAt > new Date()) {
+      if (new Date(data.value!.expiresAt) > new Date()) {
         return data.value!.token;
       }
 

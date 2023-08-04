@@ -3,6 +3,7 @@ import { useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
 import { provideApolloClient } from '../apollo';
+import { BACKEND_PREFIX } from '../consts';
 import { TokenData, useAuthStore } from '../store/auth';
 import {
   OAuthApplication,
@@ -50,12 +51,12 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
 
 function handleOAuthResponse(oauthResponse: OAuthResponse): TokenData {
   const expiresAt = new Date();
-  expiresAt.setSeconds(expiresAt.getSeconds() + oauthResponse.expires_in);
+  expiresAt.setUTCSeconds(expiresAt.getUTCSeconds() + oauthResponse.expires_in);
 
   const tokenData: TokenData = {
     token: oauthResponse.access_token,
     refreshToken: oauthResponse.refresh_token,
-    expiresAt,
+    expiresAt: expiresAt.toString(),
   };
 
   const authStore = useAuthStore();
@@ -66,7 +67,7 @@ function handleOAuthResponse(oauthResponse: OAuthResponse): TokenData {
 
 export async function authorizationUrl(): Promise<string> {
   const applicationCredentials = await getApplicationCredentials();
-  return `${window.location.origin}/oauth/authorize?response_type=code&client_id=${applicationCredentials.id}&redirect_uri=${applicationCredentials.redirectUri}&scope=read+write`;
+  return `${BACKEND_PREFIX}/oauth/authorize?response_type=code&client_id=${applicationCredentials.id}&redirect_uri=${applicationCredentials.redirectUri}&scope=read+write`;
 }
 
 export async function obtainAccessToken(
@@ -77,7 +78,7 @@ export async function obtainAccessToken(
     `${applicationCredentials.id}:${applicationCredentials.secret}`,
   );
 
-  const response = await fetch('/oauth/token', {
+  const response = await fetch(`${BACKEND_PREFIX}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -111,7 +112,7 @@ export async function refreshAccessToken(): Promise<TokenData> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch('/oauth/token', {
+  const response = await fetch(`${BACKEND_PREFIX}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
