@@ -45,13 +45,15 @@
       />
     </FormKit>
 
-    <Modal :closed="!modalData.show" :title="modalData.title">
+    <BaseModal :closed="!modalData.show" :title="modalData.title">
+      <!-- This is returned from the backend and created from an error type, and only "enhanced" with HTML newlines by us -->
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="modalData.content" />
 
       <p>
         <button @click="modalData.show = false">Close</button>
       </p>
-    </Modal>
+    </BaseModal>
   </div>
 </template>
 
@@ -63,7 +65,7 @@
 
   import { useInstanceInfo } from '../graphql/instance-info';
   import { authorizationUrl } from '../lib/oauth2';
-  import Modal from './Modal.vue';
+  import BaseModal from './BaseModal.vue';
 
   const modalData = reactive({
     show: false,

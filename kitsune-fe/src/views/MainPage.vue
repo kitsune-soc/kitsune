@@ -32,13 +32,13 @@
       <AuthForms />
     </div>
 
-    <Footer />
+    <GenericFooter />
   </div>
 </template>
 
 <script setup lang="ts">
   import AuthForms from '../components/AuthForms.vue';
-  import Footer from '../components/Footer.vue';
+  import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceInfo = useInstanceInfo();

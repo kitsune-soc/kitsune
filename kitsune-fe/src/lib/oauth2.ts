@@ -43,7 +43,13 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
     redirect_uri: redirectUri,
   });
 
-  const { registerOauthApplication: applicationData } = response?.data;
+  if (response == null) {
+    throw new Error(
+      'Empty response from server on application registration request',
+    );
+  }
+
+  const { registerOauthApplication: applicationData } = response.data;
   oauthApplicationStore.application = applicationData;
 
   return oauthApplicationStore.application!;

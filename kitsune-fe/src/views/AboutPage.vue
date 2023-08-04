@@ -10,14 +10,16 @@
     <fieldset>
       <legend>Instance description</legend>
 
+      <!-- This is chosen by the administrator. It's fine. -->
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="instanceData?.description" />
     </fieldset>
-    <Footer />
+    <GenericFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-  import Footer from '../components/Footer.vue';
+  import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceData = useInstanceInfo();
