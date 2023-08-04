@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+import { refreshAccessToken } from '../lib/oauth2';
+
 export type TokenData = {
   token: string;
   refreshToken: string;
@@ -16,7 +18,19 @@ export const useAuthStore = defineStore(
       return data.value !== undefined;
     }
 
-    return { data, isAuthenticated };
+    async function accessToken(): Promise<string | null> {
+      if (!isAuthenticated()) {
+        return null;
+      }
+
+      if (data.value!.expiresAt > new Date()) {
+        return data.value!.token;
+      }
+
+      return (await refreshAccessToken()).token;
+    }
+
+    return { accessToken, data, isAuthenticated };
   },
   { persist: true },
 );

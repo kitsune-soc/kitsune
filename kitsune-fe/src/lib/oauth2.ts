@@ -9,6 +9,12 @@ import {
   useOAuthApplicationStore,
 } from '../store/oauth_application';
 
+type OAuthResponse = {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+};
+
 async function getApplicationCredentials(): Promise<OAuthApplication> {
   const oauthApplicationStore = useOAuthApplicationStore();
   if (oauthApplicationStore.application) {
@@ -42,16 +48,26 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
   return oauthApplicationStore.application!;
 }
 
+function handleOAuthResponse(oauthResponse: OAuthResponse): TokenData {
+  const expiresAt = new Date();
+  expiresAt.setSeconds(expiresAt.getSeconds() + oauthResponse.expires_in);
+
+  const tokenData: TokenData = {
+    token: oauthResponse.access_token,
+    refreshToken: oauthResponse.refresh_token,
+    expiresAt,
+  };
+
+  const authStore = useAuthStore();
+  authStore.data = tokenData;
+
+  return authStore.data!;
+}
+
 export async function authorizationUrl(): Promise<string> {
   const applicationCredentials = await getApplicationCredentials();
   return `${window.location.origin}/oauth/authorize?response_type=code&client_id=${applicationCredentials.id}&redirect_uri=${applicationCredentials.redirectUri}&scope=read+write`;
 }
-
-type OAuthResponse = {
-  access_token: string;
-  expires_in: number;
-  refresh_token: string;
-};
 
 export async function obtainAccessToken(
   authorizationCode: string,
@@ -81,17 +97,39 @@ export async function obtainAccessToken(
   }
 
   const oauthResponse: OAuthResponse = await response.json();
-  const expiresAt = new Date();
-  expiresAt.setSeconds(expiresAt.getSeconds() + oauthResponse.expires_in);
+  return handleOAuthResponse(oauthResponse);
+}
 
-  const tokenData: TokenData = {
-    token: oauthResponse.access_token,
-    refreshToken: oauthResponse.refresh_token,
-    expiresAt,
-  };
+export async function refreshAccessToken(): Promise<TokenData> {
+  const applicationCredentials = await getApplicationCredentials();
+  const basicAuthCredentials = btoa(
+    `${applicationCredentials.id}:${applicationCredentials.secret}`,
+  );
 
   const authStore = useAuthStore();
-  authStore.data = tokenData;
+  if (!authStore.isAuthenticated()) {
+    throw new Error('Not authenticated');
+  }
 
-  return authStore.data!;
+  const response = await fetch('/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${basicAuthCredentials}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: authStore.data!.refreshToken,
+      redirect_uri: applicationCredentials.redirectUri,
+    }).toString(),
+  });
+
+  if (response.status !== 200) {
+    throw new Error('Authorization code flow unsuccessful', {
+      cause: await response.text(),
+    });
+  }
+
+  const oauthResponse: OAuthResponse = await response.json();
+  return handleOAuthResponse(oauthResponse);
 }

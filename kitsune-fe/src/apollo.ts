@@ -22,7 +22,7 @@ const authMiddleware = setContext(async (request, previousContext) => {
   if (authStore.isAuthenticated()) {
     previousContext = merge(previousContext, {
       headers: {
-        authorization: `Bearer ${authStore.data!.token}`,
+        authorization: `Bearer ${await authStore.accessToken()}`,
       },
     });
   }
