@@ -1,11 +1,19 @@
-FROM rust:1-alpine AS build
-RUN rustup default nightly
-RUN apk add --no-cache musl-dev
-COPY . /build
-WORKDIR /build
-RUN cargo -Z sparse-registry build --release
+FROM rust:1-alpine AS base
+RUN apk add --no-cache musl-dev make protobuf-dev
+RUN cargo install cargo-chef
+WORKDIR app
+
+FROM base AS planner 
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM base AS build
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+COPY . .
+RUN cargo build --release --bin kitsune-search-server
 
 FROM alpine:latest
-WORKDIR /app
-COPY --from=build /build/target/release/kitsune-search .
-CMD ["/app/kitsune-search"]
+WORKDIR app
+COPY --from=build /app/target/release/kitsune-search-server .
+ENTRYPOINT ["./kitsune-search-server"]

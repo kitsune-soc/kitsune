@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { refreshAccessToken } from '../lib/oauth2';
 
-export interface TokenData {
+export type TokenData = {
   token: string;
   refreshToken: string;
   expiresAt: string; // This has to be a string because for some reason the persisted state plugin struggles with dates a bit..
