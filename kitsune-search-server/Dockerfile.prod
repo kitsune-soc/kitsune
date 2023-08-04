@@ -1,5 +1,4 @@
 FROM rust:1-alpine AS base
-RUN rustup default nightly
 RUN apk add --no-cache musl-dev make protobuf-dev
 RUN cargo install cargo-chef
 WORKDIR app
