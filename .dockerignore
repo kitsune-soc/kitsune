@@ -1,5 +1,4 @@
 **/node_modules
 target/
-kitsune-fe/
 Dockerfile.dev
 Dockerfile.prod
