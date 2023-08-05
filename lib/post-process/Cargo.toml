@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 futures-util = "0.3.28"
-pest = "2.7.1"
-pest_derive = "2.7.1"
+pest = "2.7.2"
+pest_derive = "2.7.2"
 
 [dev-dependencies]
 insta = { version = "1.31.0", features = ["glob"] }

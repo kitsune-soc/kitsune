@@ -5,11 +5,11 @@ edition = "2021"
 
 [dependencies]
 iso8601-timestamp = "0.2.11"
-serde = { version = "1.0.171", features = ["derive"] }
-simd-json = "0.10.3"
+serde = { version = "1.0.180", features = ["derive"] }
+simd-json = "0.10.4"
 smol_str = { version = "0.2.0", features = ["serde"] }
 speedy-uuid = { path = "../lib/speedy-uuid", features = ["serde"] }
-utoipa = { version = "3.3.0", features = ["chrono", "uuid"] }
+utoipa = { version = "3.4.3", features = ["chrono", "uuid"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

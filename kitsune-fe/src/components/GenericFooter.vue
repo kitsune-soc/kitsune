@@ -1,7 +1,7 @@
 <template>
   <footer>
-    <div v-if="instanceData" class="footer">
-      <span>Kitsune v{{ instanceData.instance.version }}</span>
+    <div class="footer">
+      <span>Kitsune v{{ instanceData?.version }}</span>
       <a target="_blank" href="https://github.com/kitsune-soc/kitsune"
         >Source code</a
       >
@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
   import { useInstanceInfo } from '../graphql/instance-info';
+
   const instanceData = useInstanceInfo();
 </script>
 
@@ -23,6 +24,6 @@
     align-items: flex-end;
     padding: 10px 0;
     gap: 25px;
-    margin-bottom: 25px;
+    margin: 25px 0;
   }
 </style>

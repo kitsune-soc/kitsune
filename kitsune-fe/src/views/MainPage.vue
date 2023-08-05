@@ -8,32 +8,37 @@
             <use xlink:href="/header.svg#logo" />
           </svg>
         </h2>
-        <fieldset v-if="instanceInfo" class="main-intro-description">
-          <legend>About</legend>
-          <span v-html="instanceInfo.instance.description" />
-        </fieldset>
-        <p v-if="instanceInfo">
-          <span class="stat-highlight">{{ instanceInfo.instance.name }}</span>
+
+        <p>
+          <span class="stat-highlight">
+            {{ instanceInfo?.name }}
+          </span>
           is home to
-          <span class="stat-highlight">{{
-            instanceInfo.instance.userCount
-          }}</span>
+          <span class="stat-highlight">
+            {{ instanceInfo?.userCount }}
+          </span>
           users who authored
-          <span class="stat-highlight">{{
-            instanceInfo.instance.localPostCount
-          }}</span>
+          <span class="stat-highlight">
+            {{ instanceInfo?.localPostCount }}
+          </span>
           posts!
         </p>
+
+        <strong class="about-link">
+          <router-link to="/about">About this instance</router-link>
+        </strong>
       </div>
-      <Forms />
+
+      <AuthForms />
     </div>
-    <Footer />
+
+    <GenericFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-  import Footer from '../components/Footer.vue';
-  import Forms from '../components/Forms.vue';
+  import AuthForms from '../components/AuthForms.vue';
+  import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceInfo = useInstanceInfo();
@@ -46,7 +51,7 @@
     &-container {
       display: flex;
       align-items: center;
-      height: 88vh;
+      height: 80vh;
       width: 95vw;
       margin: 0 auto;
       padding: 0 4vw;

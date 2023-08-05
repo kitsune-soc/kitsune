@@ -1,33 +1,14 @@
 <template>
   <nav class="nav-bar">
     <div class="nav-bar-links">
-      <div>
-        <!-- LOGO -->
-      </div>
-      <router-link class="nav-bar-element" to="/home">
-        <font-awesome-icon class="icon" icon="fa-house fa-solid" />
-        Home
-      </router-link>
-      <router-link class="nav-bar-element" to="/notifications">
-        <font-awesome-icon class="icon" icon="fa-bell fa-solid" />
-        Notifications
-      </router-link>
-      <router-link class="nav-bar-element" to="/messages">
-        <font-awesome-icon class="icon" icon="fa-envelope fa-solid" />
-        Messages
-      </router-link>
-      <router-link class="nav-bar-element" to="/local">
-        <font-awesome-icon class="icon" icon="fa-users fa-solid" />
-        Local
-      </router-link>
-      <router-link class="nav-bar-element" to="/federated">
-        <font-awesome-icon class="icon" icon="fa-globe-europe fa-solid" />
-        Federated
-      </router-link>
+      <template v-for="(details, route) in links" :key="route">
+        <NavBarLink :to="route" :icon="details.icon" :detail="details.detail" />
+      </template>
     </div>
     <div class="nav-bar-profile">
       <div class="nav-bar-element profile-menu-button">
-        <img src="https://avatarfiles.alphacoders.com/267/thumb-267407.png" />
+        <!-- Without this weird double quote stuff Vite would have tried to do some fucked up shit -->
+        <img :src="'/public/assets/default-avatar.png'" />
       </div>
       <div class="nav-bar-element">
         <font-awesome-icon
@@ -39,10 +20,41 @@
   </nav>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import NavBarLink from './NavBarLink.vue';
+
+  type RouteInfo = {
+    icon: string;
+    detail: string;
+  };
+
+  const links: Record<string, RouteInfo> = {
+    '/timeline/home': {
+      icon: 'fa-house fa-solid',
+      detail: 'Home',
+    },
+    '/notifications': {
+      icon: 'fa-bell fa-solid',
+      detail: 'Notification',
+    },
+    '/messages': {
+      icon: 'fa-envelope fa-solid',
+      detail: 'Messages',
+    },
+    '/timeline/local': {
+      icon: 'fa-users fa-solid',
+      detail: 'Local',
+    },
+    '/timeline/federated': {
+      icon: 'fa-globe-europe fa-solid',
+      detail: 'Federated',
+    },
+  };
+</script>
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;
+  @use '../styles/mixins' as *;
 
   .nav-bar {
     position: fixed;
@@ -50,45 +62,23 @@
     left: 0;
     right: 0;
     background-color: $dark2;
-    padding: 0 50px;
+    padding: 0 25px;
     padding-top: 5px;
     margin-bottom: 100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.5px solid $shade1dark;
 
-    &-links {
-      @media only screen and (max-width: 850px) {
+    @include only-on-mobile {
+      padding: 0;
+      padding-top: 5px;
+
+      & .detail {
         display: none;
-        // HAMBURGER MENU
-      }
-    }
-
-    &-element {
-      display: inline-block;
-      padding: 15px;
-      color: $shade1dark;
-      cursor: pointer;
-      border-bottom: 4px solid transparent;
-
-      &:hover {
-        color: white;
       }
 
-      .icon {
-        margin-right: 7px;
-      }
-
-      &.router-link-active {
-        color: $shade2light;
-        border-bottom: 4px solid;
-        border-image-slice: 1;
-        border-image-source: linear-gradient(
-          to left,
-          $shade2light,
-          $shade2dark
-        );
+      & .icon {
+        margin-right: 0px;
       }
     }
 

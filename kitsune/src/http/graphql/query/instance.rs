@@ -19,6 +19,7 @@ impl InstanceQuery {
         let domain = url_service.domain().into();
         let local_post_count = instance_service.local_post_count().await?;
         let name = instance_service.name().into();
+        let registrations_open = instance_service.registrations_open();
         let user_count = instance_service.user_count().await?;
 
         Ok(Instance {
@@ -26,6 +27,7 @@ impl InstanceQuery {
             domain,
             local_post_count,
             name,
+            registrations_open,
             user_count,
             version: VERSION,
         })

@@ -16,6 +16,7 @@ pub struct InstanceService {
     #[builder(setter(into))]
     description: SmolStr,
     character_limit: usize,
+    registrations_open: bool,
 }
 
 impl InstanceService {
@@ -56,6 +57,11 @@ impl InstanceService {
             .await
             .map(|count| count as u64)
             .map_err(Error::from)
+    }
+
+    #[must_use]
+    pub fn registrations_open(&self) -> bool {
+        self.registrations_open
     }
 
     pub async fn user_count(&self) -> Result<u64> {
