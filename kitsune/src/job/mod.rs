@@ -24,7 +24,6 @@ use std::{sync::Arc, time::Duration};
 use tokio::task::JoinSet;
 use typed_builder::TypedBuilder;
 
-mod catch_panic;
 pub mod deliver;
 pub mod mailing;
 

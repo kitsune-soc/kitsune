@@ -1,6 +1,10 @@
 {
-  "singleQuote": true,
+  "endOfLine": "lf",
+  "importOrder": ["^\\w", "^[./|~/]"],
+  "importOrderSeparation": true,
+  "importOrderParserPlugins": ["typescript"],
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
   "semi": true,
-  "vueIndentScriptAndStyle": true,
-  "endOfLine": "lf"
+  "singleQuote": true,
+  "vueIndentScriptAndStyle": true
 }

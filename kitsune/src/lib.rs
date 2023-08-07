@@ -331,6 +331,7 @@ pub async fn initialise_state(
         .name(config.instance.name.as_str())
         .description(config.instance.description.as_str())
         .character_limit(config.instance.character_limit)
+        .registrations_open(config.instance.registrations_open)
         .build();
 
     let mail_sender = config.email.as_ref().map(prepare_mail_sender).transpose()?;

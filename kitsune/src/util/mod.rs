@@ -6,6 +6,8 @@ use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, pos
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
 use speedy_uuid::{uuid, Uuid};
 
+pub mod catch_panic;
+
 const TOKEN_LENGTH: usize = 32;
 
 #[inline]

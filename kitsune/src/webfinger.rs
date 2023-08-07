@@ -69,13 +69,13 @@ mod test {
     use std::sync::Arc;
 
     #[tokio::test]
-    async fn fetch_qarnax_ap_id() {
+    async fn fetch_0x0_ap_id() {
         let webfinger = Webfinger::new(Arc::new(NoopCache.into()));
         let ap_id = webfinger
-            .fetch_actor_url("qarnax", "corteximplant.com")
+            .fetch_actor_url("0x0", "corteximplant.com")
             .await
             .expect("Failed to fetch resource");
 
-        assert_eq!(ap_id, Some("https://corteximplant.com/users/qarnax".into()));
+        assert_eq!(ap_id, Some("https://corteximplant.com/users/0x0".into()));
     }
 }

@@ -1,7 +1,8 @@
+use crate::util::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use kitsune_db::PgPool;
-use std::env;
+use std::{env, panic};
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where
@@ -13,7 +14,7 @@ where
         .await
         .expect("Failed to connect to database");
 
-    let out = func(pool.clone()).await;
+    let out = CatchPanic::new(func(pool.clone())).await;
 
     let mut db_conn = pool
         .get()
@@ -30,7 +31,10 @@ where
         .await
         .expect("Failed to create schema");
 
-    out
+    match out {
+        Ok(out) => out,
+        Err(err) => panic::resume_unwind(err),
+    }
 }
 
 pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
@@ -44,10 +48,13 @@ where
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .unwrap();
 
-    let out = func(pool.clone()).await;
+    let out = CatchPanic::new(func(pool.clone())).await;
 
     let mut conn = pool.get().await.unwrap();
     let _: () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
 
-    out
+    match out {
+        Ok(out) => out,
+        Err(err) => panic::resume_unwind(err),
+    }
 }
