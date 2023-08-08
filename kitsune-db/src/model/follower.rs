@@ -1,10 +1,10 @@
 use crate::schema::accounts_follows;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-#[derive(Clone, Deserialize, Serialize, Identifiable, Queryable)]
+#[derive(Clone, Deserialize, Serialize, Identifiable, Selectable, Queryable)]
 #[diesel(table_name = accounts_follows)]
 pub struct Follow {
     pub id: Uuid,

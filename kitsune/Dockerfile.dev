@@ -22,5 +22,6 @@ RUN yarn install && yarn build
 FROM alpine:latest
 WORKDIR app
 COPY --from=build /app/target/debug/kitsune .
+COPY --from=build /app/public public
 COPY --from=frontend /app kitsune-fe
 ENTRYPOINT ["./kitsune"]

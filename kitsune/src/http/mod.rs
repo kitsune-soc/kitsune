@@ -66,8 +66,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     router = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
         .fallback_service(
-            ServeDir::new(frontend_dir.as_str())
-                .not_found_service(ServeFile::new(frontend_index_path)),
+            ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
 
     #[cfg(feature = "metrics")]
