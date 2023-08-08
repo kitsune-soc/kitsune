@@ -470,7 +470,9 @@ impl AccountService {
             .optional()?;
 
         if let Some(follow) = follow {
-            if !account.local {
+            if account.local {
+                diesel::delete(&follow).execute(&mut db_conn).await?;
+            } else {
                 self.job_service
                     .enqueue(
                         Enqueue::builder()
@@ -480,8 +482,6 @@ impl AccountService {
                             .build(),
                     )
                     .await?;
-            } else {
-                diesel::delete(&follow).execute(&mut db_conn).await?;
             }
         } else {
             return Ok(None);
