@@ -1,9 +1,15 @@
 use crate::{
     consts::API_DEFAULT_LIMIT,
     error::Result,
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::{
+        extractor::{AuthExtractor, MastodonAuthExtractor},
+        pagination::{Link, PaginatedJsonResponse},
+    },
     mapping::MastodonMapper,
-    service::timeline::{GetHome, TimelineService},
+    service::{
+        timeline::{GetHome, TimelineService},
+        url::UrlService,
+    },
 };
 use axum::{
     extract::{Query, State},
@@ -22,6 +28,7 @@ fn default_limit() -> usize {
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {
     max_id: Option<Uuid>,
+    since_id: Option<Uuid>,
     min_id: Option<Uuid>,
     #[serde(default = "default_limit")]
     limit: usize,
@@ -41,22 +48,57 @@ pub struct GetQuery {
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
+    State(url_service): State<UrlService>,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
-) -> Result<Json<Vec<Status>>> {
+) -> Result<PaginatedJsonResponse<Status>> {
     let get_home = GetHome::builder()
         .fetching_account_id(user_data.account.id)
         .max_id(query.max_id)
+        .since_id(query.since_id)
         .min_id(query.min_id)
         .limit(query.limit)
         .build();
 
-    let statuses: Vec<Status> = timeline
+    let mut statuses: Vec<Status> = timeline
         .get_home(get_home)
         .await?
         .and_then(|post| mastodon_mapper.map((&user_data.account, post)))
         .try_collect()
         .await?;
 
-    Ok(Json(statuses))
+    if query.min_id.is_some() {
+        statuses.reverse();
+    }
+
+    let base_url = url_service.base_url();
+    let link = if statuses.is_empty() {
+        None
+    } else {
+        let next = (
+            "next",
+            format!(
+                "{}/api/v1/timelines/home?limit={}&max_id={}",
+                base_url,
+                query.limit,
+                statuses.last().unwrap().id
+            ),
+        );
+        let prev = (
+            "prev",
+            format!(
+                "{}/api/v1/timelines/home?limit={}&min_id={}",
+                base_url,
+                query.limit,
+                statuses.first().unwrap().id
+            ),
+        );
+        if statuses.len() >= query.limit && query.limit > 0 {
+            Some(Link(vec![next, prev]))
+        } else {
+            Some(Link(vec![prev]))
+        }
+    };
+
+    Ok((link, Json(statuses)))
 }

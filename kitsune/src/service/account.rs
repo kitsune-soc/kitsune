@@ -76,11 +76,17 @@ pub struct GetPosts {
     #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
-    /// Smallest ID
+    /// Smallest ID, return results starting from this ID
     ///
     /// Used for pagination
     #[builder(default)]
     min_id: Option<Uuid>,
+
+    /// Smallest ID, return highest results
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    since_id: Option<Uuid>,
 
     /// Largest ID
     ///
@@ -287,7 +293,7 @@ impl AccountService {
             .build()
             .unwrap();
 
-        let mut posts_query = posts::table
+        let mut query = posts::table
             .filter(posts::account_id.eq(get_posts.account_id))
             .add_post_permission_check(permission_check)
             .select(Post::as_select())
@@ -295,18 +301,17 @@ impl AccountService {
             .limit(min(get_posts.limit, API_MAX_LIMIT) as i64)
             .into_boxed();
 
-        if let Some(min_id) = get_posts.min_id {
-            posts_query = posts_query.filter(posts::id.gt(min_id));
-        }
-
         if let Some(max_id) = get_posts.max_id {
-            posts_query = posts_query.filter(posts::id.lt(max_id));
+            query = query.filter(posts::id.lt(max_id));
+        }
+        if let Some(since_id) = get_posts.since_id {
+            query = query.filter(posts::id.gt(since_id));
+        }
+        if let Some(min_id) = get_posts.min_id {
+            query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        Ok(posts_query
-            .load_stream(&mut db_conn)
-            .await?
-            .map_err(Error::from))
+        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
     }
 
     /// Undo the follow of an account
@@ -374,8 +379,8 @@ impl AccountService {
             .limit(min(get_follow_requests.limit, API_MAX_LIMIT) as i64)
             .into_boxed();
 
-        if let Some(min_id) = get_follow_requests.since_id {
-            query = query.filter(accounts::id.gt(min_id));
+        if let Some(since_id) = get_follow_requests.since_id {
+            query = query.filter(accounts::id.gt(since_id));
         }
 
         if let Some(max_id) = get_follow_requests.max_id {

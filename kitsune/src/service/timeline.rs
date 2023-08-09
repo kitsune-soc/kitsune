@@ -26,6 +26,9 @@ pub struct GetHome {
     max_id: Option<Uuid>,
 
     #[builder(default)]
+    since_id: Option<Uuid>,
+
+    #[builder(default)]
     min_id: Option<Uuid>,
 }
 
@@ -36,6 +39,9 @@ pub struct GetPublic {
 
     #[builder(default)]
     max_id: Option<Uuid>,
+
+    #[builder(default)]
+    since_id: Option<Uuid>,
 
     #[builder(default)]
     min_id: Option<Uuid>,
@@ -97,8 +103,11 @@ impl TimelineService {
         if let Some(max_id) = get_home.max_id {
             query = query.filter(posts::id.lt(max_id));
         }
+        if let Some(since_id) = get_home.since_id {
+            query = query.filter(posts::id.gt(since_id));
+        }
         if let Some(min_id) = get_home.min_id {
-            query = query.filter(posts::id.gt(min_id));
+            query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
         Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
@@ -130,8 +139,11 @@ impl TimelineService {
         if let Some(max_id) = get_public.max_id {
             query = query.filter(posts::id.lt(max_id));
         }
+        if let Some(since_id) = get_public.since_id {
+            query = query.filter(posts::id.gt(since_id));
+        }
         if let Some(min_id) = get_public.min_id {
-            query = query.filter(posts::id.gt(min_id));
+            query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
         if get_public.only_local {

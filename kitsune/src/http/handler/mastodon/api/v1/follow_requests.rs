@@ -74,18 +74,20 @@ pub async fn get(
         None
     } else {
         let next = (
-            String::from("next"),
+            "next",
             format!(
-                "{}/api/v1/follow_requests?max_id={}",
+                "{}/api/v1/follow_requests?limit={}&max_id={}",
                 base_url,
+                query.limit,
                 accounts.last().unwrap().id
             ),
         );
         let prev = (
-            String::from("prev"),
+            "prev",
             format!(
-                "{}/api/v1/follow_requests?since_id={}",
+                "{}/api/v1/follow_requests?limit={}&since_id={}",
                 base_url,
+                query.limit,
                 accounts.first().unwrap().id
             ),
         );

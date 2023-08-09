@@ -6,14 +6,15 @@ use axum::{
 };
 use http::HeaderValue;
 
-pub type PaginatedJsonResponse<T> = (Option<Link<Vec<(String, String)>>>, Json<Vec<T>>);
+pub type PaginatedJsonResponse<T> = (Option<Link<Vec<(&'static str, String)>>>, Json<Vec<T>>);
 
 pub struct Link<T>(pub T);
 
-impl<T, S> IntoResponseParts for Link<T>
+impl<T, K, V> IntoResponseParts for Link<T>
 where
-    T: IntoIterator<Item = (S, S)>,
-    S: Display,
+    T: IntoIterator<Item = (K, V)>,
+    K: Display,
+    V: Display,
 {
     type Error = Infallible;
 
