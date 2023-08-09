@@ -22,6 +22,7 @@ mod handler;
 mod middleware;
 mod openapi;
 mod page;
+mod pagination;
 mod responder;
 mod util;
 

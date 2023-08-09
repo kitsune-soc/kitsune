@@ -1,9 +1,15 @@
 use crate::{
     consts::API_DEFAULT_LIMIT,
     error::{ApiError, Result},
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::{
+        extractor::{AuthExtractor, MastodonAuthExtractor},
+        pagination::{Link, PaginatedJsonResponse},
+    },
     mapping::MastodonMapper,
-    service::account::{AccountService, FollowRequest, GetFollowRequests},
+    service::{
+        account::{AccountService, FollowRequest, GetFollowRequests},
+        url::UrlService,
+    },
     state::Zustand,
 };
 use axum::{
@@ -45,9 +51,10 @@ pub struct GetQuery {
 pub async fn get(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
+    State(url_service): State<UrlService>,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
-) -> Result<Json<Vec<Account>>> {
+) -> Result<PaginatedJsonResponse<Account>> {
     let get_follow_requests = GetFollowRequests::builder()
         .account_id(user_data.account.id)
         .limit(query.limit)
@@ -62,7 +69,34 @@ pub async fn get(
         .try_collect()
         .await?;
 
-    Ok(Json(accounts))
+    let base_url = url_service.base_url();
+    let link = if accounts.len() > 0 {
+        let next = (
+            String::from("next"),
+            String::from(format!(
+                "{}/api/v1/follow_requests?max_id={}",
+                base_url,
+                accounts.last().unwrap().id
+            )),
+        );
+        let prev = (
+            String::from("prev"),
+            String::from(format!(
+                "{}/api/v1/follow_requests?since_id={}",
+                base_url,
+                accounts.first().unwrap().id
+            )),
+        );
+        if accounts.len() >= query.limit && query.limit > 0 {
+            Some(Link(vec![next, prev]))
+        } else {
+            Some(Link(vec![prev]))
+        }
+    } else {
+        None
+    };
+
+    Ok((link, Json(accounts)))
 }
 
 #[debug_handler(state = crate::state::Zustand)]
