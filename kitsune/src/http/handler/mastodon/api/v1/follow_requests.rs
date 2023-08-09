@@ -70,30 +70,30 @@ pub async fn get(
         .await?;
 
     let base_url = url_service.base_url();
-    let link = if accounts.len() > 0 {
+    let link = if accounts.is_empty() {
+        None
+    } else {
         let next = (
             String::from("next"),
-            String::from(format!(
+            format!(
                 "{}/api/v1/follow_requests?max_id={}",
                 base_url,
                 accounts.last().unwrap().id
-            )),
+            ),
         );
         let prev = (
             String::from("prev"),
-            String::from(format!(
+            format!(
                 "{}/api/v1/follow_requests?since_id={}",
                 base_url,
                 accounts.first().unwrap().id
-            )),
+            ),
         );
         if accounts.len() >= query.limit && query.limit > 0 {
             Some(Link(vec![next, prev]))
         } else {
             Some(Link(vec![prev]))
         }
-    } else {
-        None
     };
 
     Ok((link, Json(accounts)))
