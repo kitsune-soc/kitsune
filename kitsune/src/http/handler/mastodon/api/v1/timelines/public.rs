@@ -3,7 +3,7 @@ use crate::{
     error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
-        pagination::{Link, PaginatedJsonResponse},
+        pagination::{new_link_header, PaginatedJsonResponse},
     },
     mapping::MastodonMapper,
     service::{
@@ -81,34 +81,7 @@ pub async fn get(
         statuses.reverse();
     }
 
-    let base_url = url_service.base_url();
-    let link = if statuses.is_empty() {
-        None
-    } else {
-        let next = (
-            "next",
-            format!(
-                "{}/api/v1/timelines/public?limit={}&max_id={}",
-                base_url,
-                query.limit,
-                statuses.last().unwrap().id
-            ),
-        );
-        let prev = (
-            "prev",
-            format!(
-                "{}/api/v1/timelines/public?limit={}&min_id={}",
-                base_url,
-                query.limit,
-                statuses.first().unwrap().id
-            ),
-        );
-        if statuses.len() >= query.limit && query.limit > 0 {
-            Some(Link(vec![next, prev]))
-        } else {
-            Some(Link(vec![prev]))
-        }
-    };
+    let link_header = new_link_header(&statuses, query.limit, &url_service.base_url(), |s| s.id);
 
-    Ok((link, Json(statuses)))
+    Ok((link_header, Json(statuses)))
 }
