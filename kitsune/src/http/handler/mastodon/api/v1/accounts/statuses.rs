@@ -52,11 +52,10 @@ pub async fn get(
     State(url_service): State<UrlService>,
     Path(account_id): Path<Uuid>,
     OriginalUri(original_uri): OriginalUri,
-    auth_data: Option<MastodonAuthExtractor>,
     Query(query): Query<GetQuery>,
     user_data: Option<MastodonAuthExtractor>,
 ) -> Result<PaginatedJsonResponse<Status>> {
-    let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
+    let fetching_account_id = user_data.as_ref().map(|user_data| user_data.0.account.id);
 
     let get_posts = GetPosts::builder()
         .account_id(account_id)
