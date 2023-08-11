@@ -1,10 +1,12 @@
-use std::{convert::Infallible, fmt::Display};
+use std::fmt::Display;
 
 use axum::{
     response::{IntoResponseParts, ResponseParts},
     Json,
 };
-use http::HeaderValue;
+use http::{Error as HttpError, HeaderValue};
+
+use crate::error::Error;
 
 pub type PaginatedJsonResponse<T> = (Option<Link<Vec<(&'static str, String)>>>, Json<Vec<T>>);
 
@@ -16,7 +18,7 @@ where
     K: Display,
     V: Display,
 {
-    type Error = Infallible;
+    type Error = Error;
 
     fn into_response_parts(self, mut res: ResponseParts) -> Result<ResponseParts, Self::Error> {
         let value = self
@@ -26,19 +28,20 @@ where
             .collect::<Vec<String>>()
             .join(", ");
 
-        // TODO: log an error when HeaderValue conversion fails
-        if let Ok(header_value) = HeaderValue::from_str(&value) {
-            res.headers_mut().insert("Link", header_value);
-        }
+        res.headers_mut().insert(
+            "Link",
+            HeaderValue::from_str(&value).map_err(HttpError::from)?,
+        );
 
         Ok(res)
     }
 }
 
 pub fn new_link_header<I, D: Display, F: Fn(&I) -> D>(
-    collection: &Vec<I>,
+    collection: &[I],
     limit: usize,
     base_url: &str,
+    uri_path: &str,
     get_key: F,
 ) -> Option<Link<Vec<(&'static str, String)>>> {
     if collection.is_empty() {
@@ -47,8 +50,9 @@ pub fn new_link_header<I, D: Display, F: Fn(&I) -> D>(
         let next = (
             "next",
             format!(
-                "{}/api/v1/timelines/public?limit={}&max_id={}",
+                "{}{}?limit={}&max_id={}",
                 base_url,
+                uri_path,
                 limit,
                 get_key(collection.last().unwrap())
             ),
@@ -56,8 +60,9 @@ pub fn new_link_header<I, D: Display, F: Fn(&I) -> D>(
         let prev = (
             "prev",
             format!(
-                "{}/api/v1/timelines/public?limit={}&since_id={}",
+                "{}{}?limit={}&since_id={}",
                 base_url,
+                uri_path,
                 limit,
                 get_key(collection.first().unwrap())
             ),

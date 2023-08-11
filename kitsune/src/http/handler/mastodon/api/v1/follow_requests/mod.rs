@@ -12,7 +12,11 @@ use crate::{
     },
     state::Zustand,
 };
-use axum::{debug_handler, extract::State, routing, Json, Router};
+use axum::{
+    debug_handler,
+    extract::{OriginalUri, State},
+    routing, Json, Router,
+};
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
 use kitsune_type::mastodon::Account;
@@ -51,6 +55,7 @@ pub async fn get(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
     State(url_service): State<UrlService>,
+    OriginalUri(original_uri): OriginalUri,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
 ) -> Result<PaginatedJsonResponse<Account>> {
@@ -68,7 +73,13 @@ pub async fn get(
         .try_collect()
         .await?;
 
-    let link_header = new_link_header(&accounts, query.limit, &url_service.base_url(), |a| a.id);
+    let link_header = new_link_header(
+        &accounts,
+        query.limit,
+        &url_service.base_url(),
+        original_uri.path(),
+        |a| a.id,
+    );
 
     Ok((link_header, Json(accounts)))
 }

@@ -12,7 +12,7 @@ use crate::{
     },
 };
 use axum::{
-    extract::{Query, State},
+    extract::{OriginalUri, Query, State},
     Json,
 };
 use futures_util::TryStreamExt;
@@ -49,6 +49,7 @@ pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,
     State(url_service): State<UrlService>,
+    OriginalUri(original_uri): OriginalUri,
     Query(query): Query<GetQuery>,
     AuthExtractor(user_data): MastodonAuthExtractor,
 ) -> Result<PaginatedJsonResponse<Status>> {
@@ -71,7 +72,13 @@ pub async fn get(
         statuses.reverse();
     }
 
-    let link_header = new_link_header(&statuses, query.limit, &url_service.base_url(), |s| s.id);
+    let link_header = new_link_header(
+        &statuses,
+        query.limit,
+        &url_service.base_url(),
+        original_uri.path(),
+        |s| s.id,
+    );
 
     Ok((link_header, Json(statuses)))
 }
