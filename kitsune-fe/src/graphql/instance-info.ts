@@ -1,11 +1,10 @@
 import { useQuery } from '@urql/vue';
 
-import { ComputedRef, computed } from 'vue';
+import { computed } from 'vue';
 
 import { graphql } from '../graphql/types';
-import { Instance } from './types/graphql';
 
-function useInstanceInfo(): ComputedRef<Instance | undefined> {
+function useInstanceInfo() {
   const { data } = useQuery({
     query: graphql(`
       query getInstanceInfo {
