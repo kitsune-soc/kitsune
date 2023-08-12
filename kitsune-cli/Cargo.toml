@@ -5,16 +5,16 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
-clap = { version = "4.3.19", features = ["derive"] }
+clap = { version = "4.3.21", features = ["derive"] }
 diesel = "2.1.0"
 diesel-async = "0.3.2"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { path = "../kitsune-db" }
-serde = { version = "1.0.180", features = ["derive"] }
+serde = { version = "1.0.183", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
-time = "0.3.24"
-tokio = { version = "1.29.1", features = ["full"] }
+time = "0.3.25"
+tokio = { version = "1.31.0", features = ["full"] }
 tracing-subscriber = "0.3.17"
 
 [build-dependencies]

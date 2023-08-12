@@ -7,7 +7,7 @@ homepage = "https://joinkitsune.org"
 build = "build.rs"
 
 [dependencies]
-autometrics = { version = "0.5.0", default-features = false }
+autometrics = { version = "0.6.0", default-features = false }
 ammonia = "3.3.0"
 argon2 = { version = "0.5.1", features = ["std"] }
 askama = { version = "0.12.0", default-features = false, features = [
@@ -16,14 +16,14 @@ askama = { version = "0.12.0", default-features = false, features = [
 askama_axum = "0.3.0"
 async-recursion = "1.0.4"
 async-stream = "0.3.5"
-async-trait = "0.1.72"
+async-trait = "0.1.73"
 athena = { path = "../lib/athena" }
-aws-credential-types = { version = "0.55.3", features = [
+aws-credential-types = { version = "0.56.0", features = [
     "hardcoded-credentials",
 ] }
-aws-sdk-s3 = "0.28.0"
-axum = { version = "0.6.19", features = ["headers", "macros", "multipart"] }
-axum-extra = { version = "0.7.6", features = [
+aws-sdk-s3 = "0.29.0"
+axum = { version = "0.6.20", features = ["headers", "macros", "multipart"] }
+axum-extra = { version = "0.7.7", features = [
     "cookie",
     "cookie-signed",
     "query",
@@ -46,7 +46,7 @@ diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.12"
 eyre = "0.6.8"
 futures-util = "0.3.28"
-globset = { version = "0.4.12", features = ["simd-accel"] }
+globset = { version = "0.4.13", features = ["simd-accel"] }
 headers = "0.3.8"
 hex-simd = "0.8.0"
 http = "0.2.9"
@@ -74,26 +74,26 @@ oxide-auth = "0.5.3"
 oxide-auth-async = "0.1.0"
 oxide-auth-axum = "0.3.0"
 parking_lot = "0.12.1"
-pin-project-lite = "0.2.10"
+pin-project-lite = "0.2.12"
 post-process = { path = "../lib/post-process" }
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [
     "simd",
 ] }
 rand = "0.8.5"
 rayon = "1.7.0"
-redis = "0.23.1"
+redis = "0.23.2"
 rsa = "0.9.2"
-serde = { version = "1.0.180", features = ["derive"] }
+serde = { version = "1.0.183", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.7"
-simd-json = "0.10.4"
+simd-json = "0.10.5"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
-tempfile = "3.7.0"
+tempfile = "3.7.1"
 thiserror = "1.0.44"
-time = "0.3.24"
-tokio = { version = "1.29.1", features = ["full"] }
+time = "0.3.25"
+tokio = { version = "1.31.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
 toml = "0.7.6"
 tower-http = { version = "0.4.3", features = [
@@ -106,10 +106,10 @@ tower-http = { version = "0.4.3", features = [
 tracing = "0.1.37"
 tracing-error = "0.2.0"
 tracing-subscriber = "0.3.17"
-typed-builder = "0.15.1"
+typed-builder = "0.15.2"
 url = "2.4.0"
-utoipa = { version = "3.4.3", features = ["axum_extras", "time", "uuid"] }
-utoipa-swagger-ui = { version = "3.1.4", features = ["axum"] }
+utoipa = { version = "3.4.4", features = ["axum_extras", "time", "uuid"] }
+utoipa-swagger-ui = { version = "3.1.5", features = ["axum"] }
 zxcvbn = { version = "2.2.2", default-features = false }
 
 # --- Optional dependencies ---
