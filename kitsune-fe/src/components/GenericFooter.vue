@@ -2,9 +2,9 @@
   <footer>
     <div class="footer">
       <span>Kitsune v{{ instanceData?.version }}</span>
-      <a target="_blank" href="https://github.com/kitsune-soc/kitsune"
-        >Source code</a
-      >
+      <a target="_blank" href="https://github.com/kitsune-soc/kitsune">
+        Source code
+      </a>
     </div>
   </footer>
 </template>

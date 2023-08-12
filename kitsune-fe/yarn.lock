@@ -306,7 +306,7 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.1.1.tgz#1a5b1959a528e374e8037c4396c3e825d6cf4a83"
   integrity sha512-m0G6wlnhm/AX0H12IOWtK8gASEMffnX08RtKkCgTdHb9JpHKGloI7icFfLg9ZmQeavcvR0PKmzxClyuFPSjKWw==
 
-"@formkit/core@0.17.5":
+"@formkit/core@0.17.5", "@formkit/core@^0.17.5":
   version "0.17.5"
   resolved "https://registry.yarnpkg.com/@formkit/core/-/core-0.17.5.tgz#1ba3cadc13ab9e9efdc66c46b60c3a9fb22567fe"
   integrity sha512-BrtvKOfJ/W7Z2r25LiQC10hy+5TG+22Y57dpQrYdp3bMEziaXHwWxxreX9VgnADUXbwgxxhViEsexINWYsnKQw==
@@ -367,7 +367,7 @@
   resolved "https://registry.yarnpkg.com/@formkit/utils/-/utils-0.17.5.tgz#63637e61f806490956812f205ce59e94381a7e41"
   integrity sha512-VhGdmuyXQKB6ceQeQx1pJ/TP+vCUG5+ZiXeKySuFItAjfk7euTwtalDgv1tXrgCtPwANr6KPMC3rPGsoHS9cSQ==
 
-"@formkit/validation@0.17.5":
+"@formkit/validation@0.17.5", "@formkit/validation@^0.17.5":
   version "0.17.5"
   resolved "https://registry.yarnpkg.com/@formkit/validation/-/validation-0.17.5.tgz#3edd982084526e4c3461021a23f0338cae6af3e8"
   integrity sha512-InG5Yg/d8wu4R1og99rXEJ1dyLazVdSmFKgTLXB6bFgNK1OJnFcpU76jPLzJ6FiUOUH6sCVr/zWekF0iLbDl8g==
@@ -930,6 +930,23 @@
   dependencies:
     tslib "^2.3.0"
 
+"@zxcvbn-ts/core@^3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@zxcvbn-ts/core/-/core-3.0.3.tgz#2cc1aab6e8b204dee5be0de4ddc6d9202fab1201"
+  integrity sha512-GQo19iG/hQzs5uVxLCbNiaNTmTwGcfYZtge6L8CZiAULk0zieqZd0eThDQstljgjQWu4oO5olnPA3jnsV5sjaA==
+  dependencies:
+    fastest-levenshtein "1.0.16"
+
+"@zxcvbn-ts/language-common@^3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@zxcvbn-ts/language-common/-/language-common-3.0.3.tgz#9093def00f4bfe1569cccdc18e6dbc098c371662"
+  integrity sha512-eDu0X45t43/vXL3UBFxEG6TI5n/vWfKVmokepkLHzSF5qEtlJ4ON1/5VnSzAzPfK0llyx027dZz5Fce201qC5w==
+
+"@zxcvbn-ts/language-en@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@zxcvbn-ts/language-en/-/language-en-3.0.1.tgz#5d372aeebc74623b32ae3ed879a0db673cecb4c4"
+  integrity sha512-GyWxruQzJkIE3yTutCEU9zNnEIWC65gixMYunMTOc/8iInvzUL7h2l4GSylYZL8k7Whk/cyrKVyNVTYvK4Acog==
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
@@ -1413,6 +1430,11 @@ fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==
+
+fastest-levenshtein@1.0.16:
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz#210e61b6ff181de91ea9b3d1b84fdedd47e034e5"
+  integrity sha512-eRnCtTTtGZFpQCwhJiUOuxPQWRXVKYDn0b2PeHfXL6/Zi53SLAzAHfVhVWK2AryC/WH05kGfxhFIPvTF0SXQzg==
 
 fastq@^1.6.0:
   version "1.15.0"

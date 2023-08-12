@@ -14,13 +14,28 @@ import { apolloClient } from './apollo';
 import './icons';
 import { router } from './router';
 import './styles/root.scss';
+import { zxcvbnRule, zxcvbnValidationMessage } from './zxcvbn';
 
 const pinia = createPinia().use(piniaPluginPersistedState);
 
 createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)
   .provide(DefaultApolloClient, apolloClient)
-  .use(FormkitPlugin, defaultFormkitConfig)
+  .use(
+    FormkitPlugin,
+    defaultFormkitConfig({
+      messages: {
+        en: {
+          validation: {
+            zxcvbn: zxcvbnValidationMessage,
+          },
+        },
+      },
+      rules: {
+        zxcvbn: zxcvbnRule,
+      },
+    }),
+  )
   .use(pinia)
   .use(router)
   .mount('#app');
