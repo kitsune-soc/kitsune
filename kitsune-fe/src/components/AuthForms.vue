@@ -32,7 +32,8 @@
       <FormKit
         type="password"
         name="password"
-        validation="required"
+        validation="required|zxcvbn"
+        validation-visibility="dirty"
         label="Password"
       />
 
@@ -118,8 +119,6 @@
   }
 
   async function register(registerData: RegisterData): Promise<void> {
-    console.log(registerData);
-
     await registerUser({
       username: registerData.username,
       email: registerData.email,
@@ -131,7 +130,7 @@
 <style lang="scss">
   @use '../styles/colours' as *;
 
-  [name='login-form'] {
+  form[name='login-form'] {
     align-items: center;
   }
 
@@ -172,7 +171,8 @@
     background-color: $dark1;
     border-radius: 2px;
     font-size: 20px;
-    color: #fff;
+    color: white;
+    padding: 5px;
   }
 
   .forms {
