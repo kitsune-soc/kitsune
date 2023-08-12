@@ -1,7 +1,8 @@
 import { useQuery } from '@urql/vue';
 
-import gql from 'graphql-tag';
 import { ComputedRef, Ref, computed } from 'vue';
+
+import { graphql } from '../graphql/types';
 
 type InstanceInfo = {
   description: string;
@@ -16,7 +17,7 @@ type InstanceInfo = {
 function useInstanceInfo(): ComputedRef<InstanceInfo | undefined> {
   const { data }: { data: Ref<{ instance: InstanceInfo } | undefined> } =
     useQuery({
-      query: gql`
+      query: graphql(`
         query getInstanceInfo {
           instance {
             description
@@ -28,7 +29,7 @@ function useInstanceInfo(): ComputedRef<InstanceInfo | undefined> {
             version
           }
         }
-      `,
+      `),
     });
 
   return computed(() => data.value?.instance);

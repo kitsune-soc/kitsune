@@ -1,6 +1,5 @@
-import gql from 'graphql-tag';
-
 import { BACKEND_PREFIX } from '../consts';
+import { graphql } from '../graphql/types';
 import { TokenData, useAuthStore } from '../store/auth';
 import {
   OAuthApplication,
@@ -22,7 +21,7 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
 
   const redirectUri = `${window.location.origin}/oauth-callback`;
   const oauthApplicationMutation = urqlClient.mutation(
-    gql`
+    graphql(`
       mutation registerOauthApplication(
         $name: String!
         $redirect_uri: String!
@@ -33,7 +32,7 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
           redirectUri
         }
       }
-    `,
+    `),
     {
       name: 'Kitsune FE',
       redirect_uri: redirectUri,
@@ -41,7 +40,7 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
   );
 
   const response = await oauthApplicationMutation.toPromise();
-  if (response == null) {
+  if (!response.data) {
     throw new Error(
       'Empty response from server on application registration request',
     );

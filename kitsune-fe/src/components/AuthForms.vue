@@ -61,10 +61,10 @@
 <script setup lang="ts">
   import { useMutation } from '@urql/vue';
 
-  import gql from 'graphql-tag';
   import { reactive } from 'vue';
 
   import { useInstanceInfo } from '../graphql/instance-info';
+  import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
   import BaseModal from './BaseModal.vue';
 
@@ -80,17 +80,19 @@
     password: string;
   };
 
-  const registerUser = useMutation(gql`
-    mutation registerUser(
-      $username: String!
-      $email: String!
-      $password: String!
-    ) {
-      registerUser(username: $username, email: $email, password: $password) {
-        id
+  const registerUser = useMutation(
+    graphql(`
+      mutation registerUser(
+        $username: String!
+        $email: String!
+        $password: Password!
+      ) {
+        registerUser(username: $username, email: $email, password: $password) {
+          id
+        }
       }
-    }
-  `);
+    `),
+  );
 
   function registerDone() {
     modalData.title = 'Register';

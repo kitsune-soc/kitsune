@@ -11,6 +11,7 @@
     "@vue/typescript/recommended",
     "@vue/prettier"
   ],
+  "ignorePatterns": ["src/graphql/types/**"],
   "parserOptions": {
     "ecmaVersion": 2021
   },
