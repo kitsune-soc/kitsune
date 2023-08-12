@@ -1,4 +1,4 @@
-import { useQuery } from '@vue/apollo-composable';
+import { useQuery } from '@urql/vue';
 
 import gql from 'graphql-tag';
 import { ComputedRef, Ref, computed } from 'vue';
@@ -14,22 +14,24 @@ type InstanceInfo = {
 };
 
 function useInstanceInfo(): ComputedRef<InstanceInfo | undefined> {
-  const { result }: { result: Ref<{ instance: InstanceInfo } | undefined> } =
-    useQuery(gql`
-      query getInstanceInfo {
-        instance {
-          description
-          domain
-          localPostCount
-          registrationsOpen
-          name
-          userCount
-          version
+  const { data }: { data: Ref<{ instance: InstanceInfo } | undefined> } =
+    useQuery({
+      query: gql`
+        query getInstanceInfo {
+          instance {
+            description
+            domain
+            localPostCount
+            registrationsOpen
+            name
+            userCount
+            version
+          }
         }
-      }
-    `);
+      `,
+    });
 
-  return computed(() => result.value?.instance);
+  return computed(() => data.value?.instance);
 }
 
 export { useInstanceInfo };

@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-  import { useMutation } from '@vue/apollo-composable';
+  import { useMutation } from '@urql/vue';
 
   import gql from 'graphql-tag';
   import { reactive } from 'vue';
@@ -80,11 +80,7 @@
     password: string;
   };
 
-  const {
-    mutate: registerUser,
-    onDone: onRegisterDone,
-    onError: onRegisterError,
-  } = useMutation(gql`
+  const registerUser = useMutation(gql`
     mutation registerUser(
       $username: String!
       $email: String!
@@ -96,20 +92,20 @@
     }
   `);
 
-  onRegisterDone(() => {
+  function registerDone() {
     modalData.title = 'Register';
     modalData.content = 'Registered successful!';
     modalData.show = true;
-  });
+  }
 
-  onRegisterError((err) => {
+  function registerError(err: Error) {
     modalData.title = 'Register';
     modalData.content = `Registration failed: ${err.message}`.replaceAll(
       '\n',
       '<br />',
     );
     modalData.show = true;
-  });
+  }
 
   const instanceData = useInstanceInfo();
 
@@ -119,11 +115,21 @@
   }
 
   async function register(registerData: RegisterData): Promise<void> {
-    await registerUser({
-      username: registerData.username,
-      email: registerData.email,
-      password: registerData.password,
-    });
+    try {
+      const result = await registerUser.executeMutation({
+        username: registerData.username,
+        email: registerData.email,
+        password: registerData.password,
+      });
+
+      if (result.error) {
+        registerError(result.error);
+      } else {
+        registerDone();
+      }
+    } catch (error) {
+      registerError(error as Error);
+    }
   }
 </script>
 
