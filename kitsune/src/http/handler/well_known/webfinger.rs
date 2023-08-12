@@ -36,9 +36,14 @@ async fn get(
         return Ok(Either::E2(StatusCode::BAD_REQUEST));
     };
 
-    if instance != url_service.domain() {
+    let subject = if instance == url_service.webfinger_domain() {
+        query.resource.clone()
+    } else if instance == url_service.domain() {
+        // Canonicalize the domain
+        url_service.acct_uri(username)
+    } else {
         return Ok(Either::E2(StatusCode::NOT_FOUND));
-    }
+    };
 
     let account = accounts::table
         .filter(
@@ -52,7 +57,7 @@ async fn get(
     let account_url = url_service.user_url(account.id);
 
     Ok(Either::E1(Json(Resource {
-        subject: query.resource,
+        subject,
         aliases: vec![account_url.clone()],
         links: vec![Link {
             rel: "self".into(),
