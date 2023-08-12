@@ -15,4 +15,4 @@ once_cell = "1.18.0"
 scraper = { version = "0.17.1", default-features = false }
 smol_str = "0.2.0"
 thiserror = "1.0.44"
-typed-builder = "0.15.1"
+typed-builder = "0.15.2"

@@ -11,4 +11,4 @@ pest_derive = "2.7.2"
 [dev-dependencies]
 insta = { version = "1.31.0", features = ["glob"] }
 pretty_assertions = "1.4.0"
-tokio = { version = "1.29.1", features = ["macros", "rt"] }
+tokio = { version = "1.31.0", features = ["macros", "rt"] }
