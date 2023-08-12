@@ -14,12 +14,27 @@ import './icons';
 import { router } from './router';
 import './styles/root.scss';
 import { urqlClient } from './urql';
+import { zxcvbnRule, zxcvbnValidationMessage } from './zxcvbn';
 
 const pinia = createPinia().use(piniaPluginPersistedState);
 
 createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)
-  .use(FormkitPlugin, defaultFormkitConfig)
+  .use(
+    FormkitPlugin,
+    defaultFormkitConfig({
+      messages: {
+        en: {
+          validation: {
+            zxcvbn: zxcvbnValidationMessage,
+          },
+        },
+      },
+      rules: {
+        zxcvbn: zxcvbnRule,
+      },
+    }),
+  )
   .use(pinia)
   .use(router)
   .use(urql, urqlClient)

@@ -32,7 +32,8 @@
       <FormKit
         type="password"
         name="password"
-        validation="required"
+        validation="required|zxcvbn"
+        validation-visibility="dirty"
         label="Password"
       />
 
@@ -135,7 +136,7 @@
 <style lang="scss">
   @use '../styles/colours' as *;
 
-  [name='login-form'] {
+  form[name='login-form'] {
     align-items: center;
   }
 
@@ -176,7 +177,8 @@
     background-color: $dark1;
     border-radius: 2px;
     font-size: 20px;
-    color: #fff;
+    color: white;
+    padding: 5px;
   }
 
   .forms {

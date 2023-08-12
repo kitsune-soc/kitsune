@@ -11,12 +11,17 @@
     "format": "prettier . --write"
   },
   "dependencies": {
+    "@formkit/core": "^0.18.0",
+    "@formkit/validation": "^0.18.0",
     "@formkit/vue": "^0.18.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/vue-fontawesome": "^3.0.2",
     "@urql/vue": "^1.1.2",
     "@vueuse/core": "^10.3.0",
+    "@zxcvbn-ts/core": "^3.0.3",
+    "@zxcvbn-ts/language-common": "^3.0.3",
+    "@zxcvbn-ts/language-en": "^3.0.1",
     "floating-vue": "^2.0.0-beta.24",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
