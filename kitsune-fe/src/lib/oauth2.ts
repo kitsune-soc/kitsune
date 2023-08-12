@@ -1,14 +1,12 @@
-import { useMutation } from '@vue/apollo-composable';
-
 import gql from 'graphql-tag';
 
-import { provideApolloClient } from '../apollo';
 import { BACKEND_PREFIX } from '../consts';
 import { TokenData, useAuthStore } from '../store/auth';
 import {
   OAuthApplication,
   useOAuthApplicationStore,
 } from '../store/oauth_application';
+import { urqlClient } from '../urql';
 
 type OAuthResponse = {
   access_token: string;
@@ -22,8 +20,9 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
     return oauthApplicationStore.application;
   }
 
-  const { mutate: registerOAuthApplication } = provideApolloClient(() => {
-    return useMutation(gql`
+  const redirectUri = `${window.location.origin}/oauth-callback`;
+  const oauthApplicationMutation = urqlClient.mutation(
+    gql`
       mutation registerOauthApplication(
         $name: String!
         $redirect_uri: String!
@@ -34,15 +33,14 @@ async function getApplicationCredentials(): Promise<OAuthApplication> {
           redirectUri
         }
       }
-    `);
-  });
+    `,
+    {
+      name: 'Kitsune FE',
+      redirect_uri: redirectUri,
+    },
+  );
 
-  const redirectUri = `${window.location.origin}/oauth-callback`;
-  const response = await registerOAuthApplication({
-    name: 'Kitsune FE',
-    redirect_uri: redirectUri,
-  });
-
+  const response = await oauthApplicationMutation.toPromise();
   if (response == null) {
     throw new Error(
       'Empty response from server on application registration request',
