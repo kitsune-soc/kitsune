@@ -1,35 +1,26 @@
 import { useQuery } from '@urql/vue';
 
-import gql from 'graphql-tag';
-import { ComputedRef, Ref, computed } from 'vue';
+import { ComputedRef, computed } from 'vue';
 
-type InstanceInfo = {
-  description: string;
-  domain: string;
-  localPostCount: number;
-  name: string;
-  registrationsOpen: boolean;
-  userCount: number;
-  version: string;
-};
+import { graphql } from '../graphql/types';
+import { Instance } from './types/graphql';
 
-function useInstanceInfo(): ComputedRef<InstanceInfo | undefined> {
-  const { data }: { data: Ref<{ instance: InstanceInfo } | undefined> } =
-    useQuery({
-      query: gql`
-        query getInstanceInfo {
-          instance {
-            description
-            domain
-            localPostCount
-            registrationsOpen
-            name
-            userCount
-            version
-          }
+function useInstanceInfo(): ComputedRef<Instance | undefined> {
+  const { data } = useQuery({
+    query: graphql(`
+      query getInstanceInfo {
+        instance {
+          description
+          domain
+          localPostCount
+          registrationsOpen
+          name
+          userCount
+          version
         }
-      `,
-    });
+      }
+    `),
+  });
 
   return computed(() => data.value?.instance);
 }
