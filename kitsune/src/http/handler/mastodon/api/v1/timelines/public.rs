@@ -3,7 +3,7 @@ use crate::{
     error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
-        pagination::{new_link_header, PaginatedJsonResponse},
+        pagination::{LinkHeader, PaginatedJsonResponse},
     },
     mapping::MastodonMapper,
     service::{
@@ -82,7 +82,7 @@ pub async fn get(
         statuses.reverse();
     }
 
-    let link_header = new_link_header(
+    let link_header = LinkHeader::new(
         &statuses,
         query.limit,
         &url_service.base_url(),

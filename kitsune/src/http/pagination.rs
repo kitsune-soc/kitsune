@@ -8,11 +8,14 @@ use http::{Error as HttpError, HeaderValue};
 
 use crate::error::Error;
 
-pub type PaginatedJsonResponse<T> = (Option<Link<Vec<(&'static str, String)>>>, Json<Vec<T>>);
+pub type PaginatedJsonResponse<T> = (
+    Option<LinkHeader<Vec<(&'static str, String)>>>,
+    Json<Vec<T>>,
+);
 
-pub struct Link<T>(pub T);
+pub struct LinkHeader<T>(pub T);
 
-impl<T, K, V> IntoResponseParts for Link<T>
+impl<T, K, V> IntoResponseParts for LinkHeader<T>
 where
     T: IntoIterator<Item = (K, V)>,
     K: Display,
@@ -37,40 +40,42 @@ where
     }
 }
 
-pub fn new_link_header<I, D: Display, F: Fn(&I) -> D>(
-    collection: &[I],
-    limit: usize,
-    base_url: &str,
-    uri_path: &str,
-    get_key: F,
-) -> Option<Link<Vec<(&'static str, String)>>> {
-    if collection.is_empty() {
-        None
-    } else {
-        let next = (
-            "next",
-            format!(
-                "{}{}?limit={}&max_id={}",
-                base_url,
-                uri_path,
-                limit,
-                get_key(collection.last().unwrap())
-            ),
-        );
-        let prev = (
-            "prev",
-            format!(
-                "{}{}?limit={}&since_id={}",
-                base_url,
-                uri_path,
-                limit,
-                get_key(collection.first().unwrap())
-            ),
-        );
-        if collection.len() >= limit && limit > 0 {
-            Some(Link(vec![next, prev]))
+impl LinkHeader<Vec<(&'static str, String)>> {
+    pub fn new<I, D: Display, F: Fn(&I) -> D>(
+        collection: &[I],
+        limit: usize,
+        base_url: &str,
+        uri_path: &str,
+        get_key: F,
+    ) -> Option<LinkHeader<Vec<(&'static str, String)>>> {
+        if collection.is_empty() {
+            None
         } else {
-            Some(Link(vec![prev]))
+            let next = (
+                "next",
+                format!(
+                    "{}{}?limit={}&max_id={}",
+                    base_url,
+                    uri_path,
+                    limit,
+                    get_key(collection.last().unwrap())
+                ),
+            );
+            let prev = (
+                "prev",
+                format!(
+                    "{}{}?limit={}&since_id={}",
+                    base_url,
+                    uri_path,
+                    limit,
+                    get_key(collection.first().unwrap())
+                ),
+            );
+            if collection.len() >= limit && limit > 0 {
+                Some(LinkHeader(vec![next, prev]))
+            } else {
+                Some(LinkHeader(vec![prev]))
+            }
         }
     }
 }
