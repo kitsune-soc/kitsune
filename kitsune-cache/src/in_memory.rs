@@ -1,38 +1,31 @@
-use super::{CacheBackend, CacheResult};
+use crate::{CacheBackend, CacheResult};
 use async_trait::async_trait;
-use dashmap::DashMap;
-use std::{
-    fmt::Display,
-    marker::PhantomData,
-    time::{Duration, Instant},
-};
-
-struct CacheValue<V> {
-    created_at: Instant,
-    value: V,
-}
+use moka::sync::Cache;
+use std::{fmt::Display, marker::PhantomData, time::Duration};
 
 pub struct InMemory<K, V>
 where
     K: ?Sized,
 {
-    inner: DashMap<String, CacheValue<V>>,
-    size: usize,
-    ttl: Duration,
-    _key_ty: PhantomData<K>,
+    inner: Cache<String, V>,
+    _key_type: PhantomData<K>,
 }
 
 impl<K, V> InMemory<K, V>
 where
     K: Display + ?Sized,
+    V: Clone + Send + Sync + 'static,
 {
     #[must_use]
     pub fn new(size: usize, ttl: Duration) -> Self {
+        let inner = Cache::builder()
+            .time_to_live(ttl)
+            .max_capacity(size as u64)
+            .build();
+
         Self {
-            inner: DashMap::new(),
-            size,
-            ttl,
-            _key_ty: PhantomData,
+            inner,
+            _key_type: PhantomData,
         }
     }
 }
@@ -41,7 +34,7 @@ where
 impl<K, V> CacheBackend<K, V> for InMemory<K, V>
 where
     K: Display + Send + Sync + ?Sized,
-    V: Clone + Send + Sync,
+    V: Clone + Send + Sync + 'static,
 {
     async fn delete(&self, key: &K) -> CacheResult<()> {
         self.inner.remove(&key.to_string());
@@ -49,38 +42,11 @@ where
     }
 
     async fn get(&self, key: &K) -> CacheResult<Option<V>> {
-        let key = key.to_string();
-        if let Some(value) = self.inner.get(&key) {
-            if value.created_at.elapsed() > self.ttl {
-                drop(value); // Load bearing drop. Otherwise call will deadlock.
-                self.inner.remove(&key);
-                return Ok(None);
-            }
-
-            return Ok(Some(value.value.clone()));
-        }
-
-        Ok(None)
+        Ok(self.inner.get(&key.to_string()))
     }
 
     async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
-        if self.inner.len() == self.size {
-            let first_key = {
-                let first_entry = self.inner.iter().next().unwrap();
-                first_entry.key().clone()
-            };
-
-            self.inner.remove(&first_key);
-        }
-
-        self.inner.insert(
-            key.to_string(),
-            CacheValue {
-                created_at: Instant::now(),
-                value: value.clone(),
-            },
-        );
-
+        self.inner.insert(key.to_string(), value.clone());
         Ok(())
     }
 }
@@ -88,12 +54,14 @@ where
 #[cfg(test)]
 mod test {
     use crate::{CacheBackend, InMemoryCache};
+    use moka::sync::ConcurrentCacheExt;
     use std::time::Duration;
 
     #[tokio::test]
     async fn delete_expired_key() {
         let cache = InMemoryCache::new(10, Duration::from_millis(10));
         cache.set(&"hello", &"world").await.unwrap();
+        assert_eq!(cache.get(&"hello").await.unwrap(), Some("world"));
         tokio::time::sleep(Duration::from_millis(100)).await;
         assert_eq!(cache.get(&"hello").await.unwrap(), None);
     }
@@ -104,6 +72,8 @@ mod test {
         cache.set(&"hello", &"world").await.unwrap();
         cache.set(&"another", &"pair").await.unwrap();
 
-        assert_eq!(cache.inner.len(), 1);
+        cache.inner.sync();
+
+        assert_eq!(cache.inner.entry_count(), 1);
     }
 }
