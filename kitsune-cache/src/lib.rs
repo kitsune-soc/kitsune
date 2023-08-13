@@ -25,7 +25,7 @@ pub type ArcCache<K, V> = Arc<Cache<K, V>>;
 pub enum Cache<K, V>
 where
     K: Display + Send + Sync + ?Sized,
-    V: Clone + DeserializeOwned + Serialize + Send + Sync,
+    V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     InMemory(InMemoryCache<K, V>),
     Noop(NoopCache),
