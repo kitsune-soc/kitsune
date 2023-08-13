@@ -8,7 +8,9 @@ use crate::{
     consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
     error::{Error, Result},
     job::deliver::{
+        accept::DeliverAccept,
         follow::DeliverFollow,
+        reject::DeliverReject,
         unfollow::DeliverUnfollow,
         update::{DeliverUpdate, UpdateEntity},
     },
@@ -19,7 +21,8 @@ use crate::{
 use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper,
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl,
+    SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
@@ -73,11 +76,39 @@ pub struct GetPosts {
     #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
-    /// Smallest ID
+    /// Smallest ID, return results starting from this ID
     ///
     /// Used for pagination
     #[builder(default)]
     min_id: Option<Uuid>,
+
+    /// Smallest ID, return highest results
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    since_id: Option<Uuid>,
+
+    /// Largest ID
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    max_id: Option<Uuid>,
+}
+
+#[derive(Clone, TypedBuilder)]
+pub struct GetFollowRequests {
+    /// ID of the account whose follow requests are getting fetched
+    account_id: Uuid,
+
+    /// Limit of returned posts
+    #[builder(default = API_DEFAULT_LIMIT)]
+    limit: usize,
+
+    /// Smallest ID
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    since_id: Option<Uuid>,
 
     /// Largest ID
     ///
@@ -92,6 +123,15 @@ pub struct Unfollow {
     account_id: Uuid,
 
     /// Account that is following
+    follower_id: Uuid,
+}
+
+#[derive(Clone, TypedBuilder)]
+pub struct FollowRequest {
+    /// Account that is the target of the follow request
+    account_id: Uuid,
+
+    /// Account that is sending the follow request
     follower_id: Uuid,
 }
 
@@ -253,7 +293,7 @@ impl AccountService {
             .build()
             .unwrap();
 
-        let mut posts_query = posts::table
+        let mut query = posts::table
             .filter(posts::account_id.eq(get_posts.account_id))
             .add_post_permission_check(permission_check)
             .select(Post::as_select())
@@ -261,18 +301,17 @@ impl AccountService {
             .limit(min(get_posts.limit, API_MAX_LIMIT) as i64)
             .into_boxed();
 
-        if let Some(min_id) = get_posts.min_id {
-            posts_query = posts_query.filter(posts::id.gt(min_id));
-        }
-
         if let Some(max_id) = get_posts.max_id {
-            posts_query = posts_query.filter(posts::id.lt(max_id));
+            query = query.filter(posts::id.lt(max_id));
+        }
+        if let Some(since_id) = get_posts.since_id {
+            query = query.filter(posts::id.gt(since_id));
+        }
+        if let Some(min_id) = get_posts.min_id {
+            query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        Ok(posts_query
-            .load_stream(&mut db_conn)
-            .await?
-            .map_err(Error::from))
+        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
     }
 
     /// Undo the follow of an account
@@ -320,6 +359,140 @@ impl AccountService {
         }
 
         Ok((account, follower))
+    }
+
+    pub async fn get_follow_requests(
+        &self,
+        get_follow_requests: GetFollowRequests,
+    ) -> Result<impl Stream<Item = Result<Account>> + '_> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        let mut query = accounts_follows::table
+            .inner_join(accounts::table.on(accounts_follows::follower_id.eq(accounts::id)))
+            .filter(
+                accounts_follows::account_id
+                    .eq(get_follow_requests.account_id)
+                    .and(accounts_follows::approved_at.is_null()),
+            )
+            .select(Account::as_select())
+            .order(accounts::id.desc())
+            .limit(min(get_follow_requests.limit, API_MAX_LIMIT) as i64)
+            .into_boxed();
+
+        if let Some(since_id) = get_follow_requests.since_id {
+            query = query.filter(accounts::id.gt(since_id));
+        }
+
+        if let Some(max_id) = get_follow_requests.max_id {
+            query = query.filter(accounts::id.lt(max_id));
+        }
+
+        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+    }
+
+    pub async fn accept_follow_request(
+        &self,
+        follow_request: FollowRequest,
+    ) -> Result<Option<(Account, Account)>> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        let account_fut = accounts::table
+            .find(follow_request.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn);
+
+        let follower_fut = accounts::table
+            .find(follow_request.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn);
+
+        let (account, follower) = try_join!(account_fut, follower_fut)?;
+
+        let follow = accounts_follows::table
+            .filter(
+                accounts_follows::account_id
+                    .eq(account.id)
+                    .and(accounts_follows::follower_id.eq(follower.id)),
+            )
+            .get_result::<DbFollow>(&mut db_conn)
+            .await
+            .optional()?;
+
+        if let Some(follow) = follow {
+            let now = Timestamp::now_utc();
+            diesel::update(&follow)
+                .set((
+                    accounts_follows::approved_at.eq(now),
+                    accounts_follows::updated_at.eq(now),
+                ))
+                .execute(&mut db_conn)
+                .await?;
+
+            if !account.local {
+                self.job_service
+                    .enqueue(
+                        Enqueue::builder()
+                            .job(DeliverAccept {
+                                follow_id: follow.id,
+                            })
+                            .build(),
+                    )
+                    .await?;
+            }
+        } else {
+            return Ok(None);
+        }
+
+        Ok(Some((account, follower)))
+    }
+
+    pub async fn reject_follow_request(
+        &self,
+        follow_request: FollowRequest,
+    ) -> Result<Option<(Account, Account)>> {
+        let mut db_conn = self.db_conn.get().await?;
+
+        let account_fut = accounts::table
+            .find(follow_request.account_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn);
+
+        let follower_fut = accounts::table
+            .find(follow_request.follower_id)
+            .select(Account::as_select())
+            .get_result(&mut db_conn);
+
+        let (account, follower) = try_join!(account_fut, follower_fut)?;
+
+        let follow = accounts_follows::table
+            .filter(
+                accounts_follows::account_id
+                    .eq(account.id)
+                    .and(accounts_follows::follower_id.eq(follower.id)),
+            )
+            .get_result::<DbFollow>(&mut db_conn)
+            .await
+            .optional()?;
+
+        if let Some(follow) = follow {
+            if account.local {
+                diesel::delete(&follow).execute(&mut db_conn).await?;
+            } else {
+                self.job_service
+                    .enqueue(
+                        Enqueue::builder()
+                            .job(DeliverReject {
+                                follow_id: follow.id,
+                            })
+                            .build(),
+                    )
+                    .await?;
+            }
+        } else {
+            return Ok(None);
+        }
+
+        Ok(Some((account, follower)))
     }
 
     pub async fn update<A, H>(&self, mut update: Update<A, H>) -> Result<Account>

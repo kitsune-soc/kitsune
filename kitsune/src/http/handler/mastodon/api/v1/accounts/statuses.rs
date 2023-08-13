@@ -1,12 +1,18 @@
 use crate::{
     consts::API_DEFAULT_LIMIT,
     error::Result,
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::{
+        extractor::{AuthExtractor, MastodonAuthExtractor},
+        pagination::{LinkHeader, PaginatedJsonResponse},
+    },
     mapping::MastodonMapper,
-    service::account::{AccountService, GetPosts},
+    service::{
+        account::{AccountService, GetPosts},
+        url::UrlService,
+    },
 };
 use axum::{
-    extract::{Path, Query, State},
+    extract::{OriginalUri, Path, Query, State},
     Json,
 };
 use futures_util::{FutureExt, TryStreamExt};
@@ -22,6 +28,7 @@ fn default_limit() -> usize {
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {
     max_id: Option<Uuid>,
+    since_id: Option<Uuid>,
     min_id: Option<Uuid>,
     #[serde(default = "default_limit")]
     limit: usize,
@@ -42,22 +49,24 @@ pub struct GetQuery {
 pub async fn get(
     State(account): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
+    State(url_service): State<UrlService>,
     Path(account_id): Path<Uuid>,
-    auth_data: Option<MastodonAuthExtractor>,
+    OriginalUri(original_uri): OriginalUri,
     Query(query): Query<GetQuery>,
     user_data: Option<MastodonAuthExtractor>,
-) -> Result<Json<Vec<Status>>> {
-    let fetching_account_id = auth_data.map(|user_data| user_data.0.account.id);
+) -> Result<PaginatedJsonResponse<Status>> {
+    let fetching_account_id = user_data.as_ref().map(|user_data| user_data.0.account.id);
 
     let get_posts = GetPosts::builder()
         .account_id(account_id)
         .fetching_account_id(fetching_account_id)
         .max_id(query.max_id)
+        .since_id(query.since_id)
         .min_id(query.min_id)
         .limit(query.limit)
         .build();
 
-    let statuses: Vec<Status> = account
+    let mut statuses: Vec<Status> = account
         .get_posts(get_posts)
         .await?
         .and_then(|post| {
@@ -72,5 +81,17 @@ pub async fn get(
         .try_collect()
         .await?;
 
-    Ok(Json(statuses))
+    if query.min_id.is_some() {
+        statuses.reverse();
+    }
+
+    let link_header = LinkHeader::new(
+        &statuses,
+        query.limit,
+        &url_service.base_url(),
+        original_uri.path(),
+        |s| s.id,
+    );
+
+    Ok((link_header, Json(statuses)))
 }

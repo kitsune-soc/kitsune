@@ -1,8 +1,8 @@
 use self::{
     deliver::{
         accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
-        favourite::DeliverFavourite, follow::DeliverFollow, unfavourite::DeliverUnfavourite,
-        unfollow::DeliverUnfollow, update::DeliverUpdate,
+        favourite::DeliverFavourite, follow::DeliverFollow, reject::DeliverReject,
+        unfavourite::DeliverUnfavourite, unfollow::DeliverUnfollow, update::DeliverUpdate,
     },
     mailing::confirmation::SendConfirmationMail,
 };
@@ -71,6 +71,7 @@ impl_from! {
         DeliverDelete(DeliverDelete),
         DeliverFavourite(DeliverFavourite),
         DeliverFollow(DeliverFollow),
+        DeliverReject(DeliverReject),
         DeliverUnfavourite(DeliverUnfavourite),
         DeliverUnfollow(DeliverUnfollow),
         DeliverUpdate(DeliverUpdate),
@@ -90,6 +91,7 @@ impl Runnable for Job {
             Self::DeliverDelete(job) => job.run(ctx).await,
             Self::DeliverFavourite(job) => job.run(ctx).await,
             Self::DeliverFollow(job) => job.run(ctx).await,
+            Self::DeliverReject(job) => job.run(ctx).await,
             Self::DeliverUnfavourite(job) => job.run(ctx).await,
             Self::DeliverUnfollow(job) => job.run(ctx).await,
             Self::DeliverUpdate(job) => job.run(ctx).await,

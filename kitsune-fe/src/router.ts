@@ -17,6 +17,10 @@ const routes = [
     path: '/oauth-callback',
     component: () => import('./views/OAuthCallback.vue'),
   },
+  {
+      path: "/:catchAll(.*)",
+      component: () => import('./views/NotFound.vue')
+    }
 ];
 
 export const router = createRouter({
