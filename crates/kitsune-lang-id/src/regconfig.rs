@@ -25,7 +25,7 @@ where
     C: AsyncConnection<Backend = Pg>,
 {
     let supported_languages: Vec<PgCatalogResult> =
-        diesel::sql_query("SELECT cfgname from pg_catalog.pg_ts_config;")
+        diesel::sql_query("SELECT cfgname FROM pg_catalog.pg_ts_config;")
             .get_results(conn)
             .await?;
 
@@ -51,9 +51,8 @@ where
 
         let _ = writeln!(
             &mut function,
-            "WHEN '{}' THEN '{}'::regconfig",
-            lang.code(),
-            english_name
+            "WHEN '{}' THEN '{english_name}'::regconfig",
+            lang.code()
         );
     }
 
