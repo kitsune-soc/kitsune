@@ -64,7 +64,7 @@ where
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(&[1])?;
         simd_json::to_writer(out, self)
-            .map(|_| IsNull::No)
+            .map(|()| IsNull::No)
             .map_err(Into::into)
     }
 }

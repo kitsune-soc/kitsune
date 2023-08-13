@@ -3107,6 +3107,9 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+dependencies = [
+ "ahash 0.7.6",
+]
 
 [[package]]
 name = "hashbrown"
@@ -3780,6 +3783,7 @@ dependencies = [
  "diesel_full_text_search",
  "diesel_migrations_async",
  "iso8601-timestamp",
+ "kitsune-lang-id",
  "kitsune-type",
  "num-derive",
  "num-traits 0.2.16",
@@ -3854,6 +3858,15 @@ dependencies = [
  "thiserror",
  "time",
  "tokio",
+]
+
+[[package]]
+name = "kitsune-lang-id"
+version = "0.0.1-pre.2"
+dependencies = [
+ "diesel",
+ "diesel-async",
+ "whatlang",
 ]
 
 [[package]]
@@ -7563,6 +7576,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b03058f88386e5ff5310d9111d53f48b17d732b401aeb83a8d5190f2ac459338"
 dependencies = [
  "rustls-webpki 0.100.1",
+]
+
+[[package]]
+name = "whatlang"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c531a2dc4c462b833788be2c07eef4e621d0e9edbd55bf280cc164c1c1aa043"
+dependencies = [
+ "hashbrown 0.12.3",
+ "once_cell",
 ]
 
 [[package]]

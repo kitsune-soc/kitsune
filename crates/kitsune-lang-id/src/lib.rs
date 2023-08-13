@@ -1,14 +1,16 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use whatlang::Lang;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod regconfig;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub use self::regconfig::generate_regconfig_function;
+
+/// Generate a PostgreSQL enum definition of all supported ISO language codes
+pub fn generate_postgres_enum(enum_name: &str) -> String {
+    let lang_names = Lang::all()
+        .iter()
+        .map(|code| format!("'{code}'"))
+        .collect::<Vec<String>>()
+        .join(",");
+
+    format!("CREATE TYPE {enum_name} AS ENUM ({lang_names});")
 }
