@@ -29,16 +29,18 @@ where
             .get_results(conn)
             .await?;
 
-    let supported_languages = supported_languages
+    let supported_languages: HashSet<String> = supported_languages
         .into_iter()
         .map(|result| result.cfgname)
-        .collect::<HashSet<String>>();
+        .collect();
 
     let mut function = format!(
-        "CREATE OR REPLACE FUNCTION {function_name}(TEXT) \
-        RETURNS regconfig \
-    AS $$ \
-        SELECT CASE $1"
+        r#"
+        CREATE OR REPLACE FUNCTION {function_name} (TEXT)
+            RETURNS regconfig
+            AS $$
+                SELECT CASE $1
+        "#
     );
 
     for lang in Lang::all() {
