@@ -1,3 +1,6 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+
 use rand::Rng;
 use std::{fmt::Debug, future::Future, ops::RangeInclusive, time::Duration};
 
