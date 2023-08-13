@@ -12,13 +12,13 @@ enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
 kitsune-db = { path = "../kitsune-db" }
 serde = { version = "1.0.183", features = ["derive"] }
-speedy-uuid = { path = "../lib/speedy-uuid" }
+speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive"] }
 thiserror = "1.0.44"
 
 # "kitsune-search" feature
 bytes = { version = "1.4.0", optional = true }
-kitsune-search-proto = { path = "../kitsune-search-server/proto", optional = true }
+kitsune-search-proto = { path = "../../kitsune-search-server/proto", optional = true }
 tonic = { version = "0.9.2", optional = true }
 
 # "meilisearch" feature

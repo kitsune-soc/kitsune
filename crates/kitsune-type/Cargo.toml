@@ -8,7 +8,7 @@ iso8601-timestamp = "0.2.11"
 serde = { version = "1.0.183", features = ["derive"] }
 simd-json = "0.10.5"
 smol_str = { version = "0.2.0", features = ["serde"] }
-speedy-uuid = { path = "../lib/speedy-uuid", features = ["serde"] }
+speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 utoipa = { version = "3.4.4", features = ["chrono", "uuid"] }
 
 [dev-dependencies]
