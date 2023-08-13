@@ -48,6 +48,7 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
             is_sensitive: false,
             subject: None,
             content: "",
+            content_iso_lang: "eng",
             link_preview_url: None,
             visibility: reposted_post.visibility,
             is_local: false,

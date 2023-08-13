@@ -11,6 +11,7 @@ diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
 kitsune-db = { path = "../kitsune-db" }
+kitsune-lang-id = { path = "../kitsune-lang-id" }
 serde = { version = "1.0.183", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive"] }

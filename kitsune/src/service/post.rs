@@ -217,6 +217,7 @@ impl PostService {
             create_post.content
         };
         content.clean_html();
+        let content_iso_lang = kitsune_lang_id::get_iso_code(&content);
 
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {
@@ -255,6 +256,7 @@ impl PostService {
                             reposted_post_id: None,
                             subject: subject.as_deref(),
                             content: content.as_str(),
+                            content_iso_lang,
                             link_preview_url: link_preview_url.as_deref(),
                             is_sensitive: create_post.sensitive,
                             visibility: create_post.visibility,

@@ -9,6 +9,7 @@ DROP TABLE job_context;
 DROP TABLE posts_mentions;
 DROP TABLE posts_favourites;
 DROP TABLE posts;
+DROP FUNCTION iso_code_to_language;
 DROP TABLE users;
 DROP TABLE accounts_follows;
 DROP TABLE accounts;

@@ -157,6 +157,7 @@ diesel::table! {
         is_sensitive -> Bool,
         subject -> Nullable<Text>,
         content -> Text,
+        content_iso_lang -> Text,
         visibility -> Int4,
         is_local -> Bool,
         url -> Text,

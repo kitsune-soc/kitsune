@@ -2,9 +2,10 @@ use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use diesel_full_text_search::{websearch_to_tsquery, TsVectorExtensions};
+use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
 use futures_util::TryStreamExt;
 use kitsune_db::{
+    function::iso_code_to_language,
     model::post::Visibility,
     schema::{accounts, posts},
     PgPool,
@@ -49,15 +50,19 @@ impl SearchBackend for SearchService {
     ) -> Result<Vec<SearchResult>> {
         let mut db_conn = self.db_conn.get().await?;
 
+        let query_lang = kitsune_lang_id::get_iso_code(&query);
+        let query_fn_call =
+            websearch_to_tsquery_with_search_config(iso_code_to_language(query_lang), &query);
+
         match index {
             SearchIndex::Account => {
                 let mut query = accounts::table
                     .filter(
                         accounts::display_name_ts
-                            .matches(websearch_to_tsquery(&query))
+                            .matches(&query_fn_call)
                             .or(accounts::note_ts
-                                .matches(websearch_to_tsquery(&query))
-                                .or(accounts::username_ts.matches(websearch_to_tsquery(&query)))),
+                                .matches(&query_fn_call)
+                                .or(accounts::username_ts.matches(&query_fn_call))),
                     )
                     .into_boxed();
 
@@ -84,8 +89,8 @@ impl SearchBackend for SearchService {
                 let mut query = posts::table
                     .filter(
                         posts::content_ts
-                            .matches(websearch_to_tsquery(&query))
-                            .or(posts::subject_ts.matches(websearch_to_tsquery(&query))),
+                            .matches(&query_fn_call)
+                            .or(posts::subject_ts.matches(&query_fn_call)),
                     )
                     .into_boxed();
 

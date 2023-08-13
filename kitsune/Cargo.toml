@@ -63,6 +63,7 @@ kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
+kitsune-lang-id = { path = "../crates/kitsune-lang-id" }
 kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
