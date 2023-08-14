@@ -96,14 +96,18 @@ mod test {
         webfinger::Webfinger,
     };
     use athena::JobQueue;
+    use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
+    use tower::service_fn;
 
     #[tokio::test]
     #[serial_test::serial]
@@ -112,7 +116,23 @@ mod test {
             database_test(|db_conn| async move {
                 let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
+                let client = service_fn(|req: Request<_>| async move {
+                    match req.uri().path_and_query().unwrap().as_str() {
+                        "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"=> {
+                            let body = include_str!("../test-fixtures/0x0_jrd.json");
+                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                        }
+                        "/users/0x0" => {
+                            let body = include_str!("../test-fixtures/0x0_actor.json");
+                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                        }
+                        path => panic!("HTTP client hit unexpected route: {path}"),
+                    }
+                });
+                let client = Client::builder().service(client);
+
                 let fetcher = Fetcher::builder()
+                    .client(client)
                     .db_conn(db_conn.clone())
                     .embed_client(None)
                     .federation_filter(
