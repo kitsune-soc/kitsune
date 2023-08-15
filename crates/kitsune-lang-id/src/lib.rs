@@ -2,9 +2,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
-#[cfg(all(feature = "whatlang", feature = "whichlang"))]
-compile_error!("Only enable one of the language detector features");
-
 #[cfg(not(any(feature = "whatlang", feature = "whichlang")))]
 compile_error!("Enable one of the language detector features");
 
@@ -32,6 +29,6 @@ pub fn get_iso_code(text: &str) -> Language {
             .map_or(Language::Eng, self::map::whatlang_to_isolang)
     }
 
-    #[cfg(feature = "whichlang")]
+    #[cfg(all(feature = "whichlang", not(feature = "whatlang")))]
     self::map::whichlang_to_isolang(whichlang::detect_language(text))
 }
