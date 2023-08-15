@@ -1,3 +1,4 @@
+use crate::schema::sql_types::Languageisocode;
 use diesel::{
     sql_function,
     sql_types::{Nullable, Text},
@@ -12,7 +13,7 @@ sql_function! {
 
 sql_function! {
     /// Get the optimal regconfig for the ISO code with the current database configuration
-    fn iso_code_to_language(iso_code: Text) -> RegConfig;
+    fn iso_code_to_language(iso_code: Languageisocode) -> RegConfig;
 }
 
 sql_function! {

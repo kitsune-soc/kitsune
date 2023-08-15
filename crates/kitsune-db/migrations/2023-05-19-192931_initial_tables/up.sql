@@ -76,9 +76,13 @@ CREATE TABLE users (
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
+-- This enum is automatically updated when starting Kitsune
+-- It gets all the supported ISO codes pushed into it
+CREATE TYPE LanguageISOCode AS ENUM ();
+
 -- This is just a temporary function. This function is overwritten on each start-up of Kitsune using freshly read metadata
 -- We need this for the migrations to succeed
-CREATE FUNCTION iso_code_to_language (TEXT)
+CREATE FUNCTION iso_code_to_language (LanguageISOCode)
     RETURNS regconfig
     AS $$
         SELECT 'english'::regconfig
@@ -93,7 +97,7 @@ CREATE TABLE posts (
     is_sensitive BOOLEAN NOT NULL,
     subject TEXT,
     content TEXT NOT NULL,
-    content_iso_lang TEXT NOT NULL,
+    content_lang LanguageISOCode NOT NULL,
     visibility INTEGER NOT NULL,
     is_local BOOLEAN NOT NULL,
     url TEXT NOT NULL UNIQUE,
@@ -102,8 +106,8 @@ CREATE TABLE posts (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search columns
-    subject_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_iso_lang), COALESCE(subject, ''))) STORED NOT NULL,
-    content_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_iso_lang), content)) STORED NOT NULL,
+    subject_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, ''))) STORED NOT NULL,
+    content_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_lang), content)) STORED NOT NULL,
 
     -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,

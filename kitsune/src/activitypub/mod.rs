@@ -169,7 +169,7 @@ pub async fn process_new_object(
     }
     object.clean_html();
 
-    let content_iso_lang = kitsune_lang_id::get_iso_code(object.content.as_str());
+    let content_lang = kitsune_lang_id::get_iso_code(object.content.as_str());
 
     let post = db_conn
         .transaction(|tx| {
@@ -182,7 +182,7 @@ pub async fn process_new_object(
                         reposted_post_id: None,
                         subject: object.summary.as_deref(),
                         content: object.content.as_str(),
-                        content_iso_lang,
+                        content_lang: content_lang.into(),
                         link_preview_url: link_preview_url.as_deref(),
                         is_sensitive: object.sensitive,
                         visibility,

@@ -3,9 +3,9 @@
 
 [print_schema]
 file = "src/schema.rs"
-generate_missing_sql_type_definitions = false
+generate_missing_sql_type_definitions = true
 import_types = ["diesel::sql_types::*", "diesel_full_text_search::Tsvector"]
-#with_docs = true
+with_docs = true
 
 [migrations_directory]
 dir = "migrations"

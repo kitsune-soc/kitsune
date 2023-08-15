@@ -20,6 +20,7 @@ mod error;
 
 pub mod function;
 pub mod json;
+pub mod lang;
 pub mod model;
 pub mod post_permission_check;
 #[allow(clippy::wildcard_imports)]
@@ -43,6 +44,7 @@ pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
         .await
         .map_err(Error::Migration)?;
 
+    kitsune_lang_id::generate_postgres_enum(&mut conn, "LanguageISOCode").await?;
     kitsune_lang_id::generate_regconfig_function(&mut conn, "iso_code_to_language").await?;
 
     Ok(pool)

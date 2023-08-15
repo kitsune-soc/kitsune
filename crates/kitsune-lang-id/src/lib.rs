@@ -2,28 +2,35 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
-use whatlang::Lang;
+use diesel::{pg::Pg, QueryResult};
+use diesel_async::{AsyncConnection, RunQueryDsl};
 
 mod regconfig;
 
 pub use self::regconfig::generate_regconfig_function;
+pub use whatlang::Lang;
 
 /// Get the ISO code of the specified text
 ///
 /// If the language couldn't get detected, default to english
 #[must_use]
-pub fn get_iso_code(text: &str) -> &'static str {
-    whatlang::detect_lang(text).map_or_else(|| Lang::Eng.code(), |lang| lang.code())
+pub fn get_iso_code(text: &str) -> Lang {
+    whatlang::detect_lang(text).unwrap_or(Lang::Eng)
 }
 
 /// Generate a PostgreSQL enum definition of all supported ISO language codes
-#[must_use]
-pub fn generate_postgres_enum(enum_name: &str) -> String {
-    let lang_names = Lang::all()
-        .iter()
-        .map(|code| format!("'{code}'"))
-        .collect::<Vec<String>>()
-        .join(",");
+pub async fn generate_postgres_enum<C>(conn: &mut C, enum_name: &str) -> QueryResult<()>
+where
+    C: AsyncConnection<Backend = Pg>,
+{
+    for lang in Lang::all() {
+        diesel::sql_query(format!(
+            "ALTER TYPE {enum_name} ADD VALUE IF NOT EXISTS '{}';",
+            lang.code()
+        ))
+        .execute(conn)
+        .await?;
+    }
 
-    format!("CREATE TYPE {enum_name} AS ENUM ({lang_names});")
+    Ok(())
 }

@@ -1,5 +1,5 @@
 use super::account::Account;
-use crate::{error::EnumConversionError, schema::posts};
+use crate::{error::EnumConversionError, lang::LanguageIsoCode, schema::posts};
 use diesel::{
     backend::Backend,
     deserialize::{self, FromSql},
@@ -29,7 +29,7 @@ pub struct Post {
     pub is_sensitive: bool,
     pub subject: Option<String>,
     pub content: String,
-    pub content_iso_lang: String,
+    pub content_lang: LanguageIsoCode,
     pub link_preview_url: Option<String>,
     pub visibility: Visibility,
     pub is_local: bool,
@@ -55,7 +55,7 @@ pub struct NewPost<'a> {
     pub is_sensitive: bool,
     pub subject: Option<&'a str>,
     pub content: &'a str,
-    pub content_iso_lang: &'a str,
+    pub content_lang: LanguageIsoCode,
     pub link_preview_url: Option<&'a str>,
     pub visibility: Visibility,
     pub is_local: bool,
