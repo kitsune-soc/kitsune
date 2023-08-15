@@ -51,7 +51,7 @@ where
         }
 
         writeln!(
-            &mut function,
+            function,
             "WHEN '{}' THEN '{english_name}'::regconfig",
             lang.code()
         )
@@ -59,7 +59,7 @@ where
     }
 
     writeln!(
-        &mut function,
+        function,
         r#"
                 ELSE 'english'::regconfig
                 END
@@ -68,7 +68,7 @@ where
     )
     .unwrap();
 
-    diesel::sql_query(function).execute(conn).await?;
+    conn.batch_execute(&function).await?;
 
     Ok(())
 }

@@ -6,4 +6,9 @@ version.workspace = true
 [dependencies]
 diesel = "2.1.0"
 diesel-async = { version = "0.3.2", features = ["postgres"] }
+isolang = { version = "2.3.0", features = [
+    "english_names",
+    "list_languages",
+    "serde",
+] }
 whatlang = "0.16.2"
