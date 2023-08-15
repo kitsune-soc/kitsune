@@ -2,7 +2,11 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
-use self::map::whatlang_to_isolang;
+#[cfg(all(feature = "whatlang", feature = "whichlang"))]
+compile_error!("Only enable one of the language detector features");
+
+#[cfg(not(any(feature = "whatlang", feature = "whichlang")))]
+compile_error!("Enable one of the language detector features");
 
 mod map;
 mod pg_enum;
@@ -21,7 +25,13 @@ fn supported_languages() -> impl Iterator<Item = isolang::Language> {
 /// If the language couldn't get detected reliably, it defaults to english
 #[must_use]
 pub fn get_iso_code(text: &str) -> Language {
-    whatlang::detect(text)
-        .and_then(|info| info.is_reliable().then_some(info.lang()))
-        .map_or(Language::Eng, whatlang_to_isolang)
+    #[cfg(feature = "whatlang")]
+    {
+        whatlang::detect(text)
+            .and_then(|info| info.is_reliable().then_some(info.lang()))
+            .map_or(Language::Eng, self::map::whatlang_to_isolang)
+    }
+
+    #[cfg(feature = "whichlang")]
+    self::map::whichlang_to_isolang(whichlang::detect_language(text))
 }

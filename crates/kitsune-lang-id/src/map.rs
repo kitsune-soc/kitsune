@@ -1,5 +1,6 @@
 use isolang::Language;
 
+#[cfg(feature = "whatlang")]
 pub fn whatlang_to_isolang(lang: whatlang::Lang) -> Language {
     match lang {
         whatlang::Lang::Epo => Language::Epo,
@@ -71,5 +72,27 @@ pub fn whatlang_to_isolang(lang: whatlang::Lang) -> Language {
         whatlang::Lang::Cat => Language::Cat,
         whatlang::Lang::Tgl => Language::Tgl,
         whatlang::Lang::Hye => Language::Hye,
+    }
+}
+
+#[cfg(feature = "whichlang")]
+pub fn whichlang_to_isolang(lang: whichlang::Lang) -> Language {
+    match lang {
+        whichlang::Lang::Ara => Language::Ara,
+        whichlang::Lang::Cmn => Language::Cmn,
+        whichlang::Lang::Deu => Language::Deu,
+        whichlang::Lang::Eng => Language::Eng,
+        whichlang::Lang::Fra => Language::Fra,
+        whichlang::Lang::Hin => Language::Hin,
+        whichlang::Lang::Ita => Language::Ita,
+        whichlang::Lang::Jpn => Language::Jpn,
+        whichlang::Lang::Kor => Language::Kor,
+        whichlang::Lang::Nld => Language::Nld,
+        whichlang::Lang::Por => Language::Por,
+        whichlang::Lang::Rus => Language::Rus,
+        whichlang::Lang::Spa => Language::Spa,
+        whichlang::Lang::Swe => Language::Swe,
+        whichlang::Lang::Tur => Language::Tur,
+        whichlang::Lang::Vie => Language::Vie,
     }
 }

@@ -11,4 +11,8 @@ isolang = { version = "2.3.0", features = [
     "list_languages",
     "serde",
 ] }
-whatlang = "0.16.2"
+whatlang = { version = "0.16.2", optional = true }
+whichlang = { version = "0.1.0", optional = true }
+
+[features]
+default = ["whatlang"]
