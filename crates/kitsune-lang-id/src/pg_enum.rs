@@ -1,17 +1,9 @@
 use diesel::{pg::Pg, row::NamedRow, QueryResult, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
-use std::{fmt::Write, ops::Deref};
+use std::fmt::Write;
 
 struct CountResult {
     count: i64,
-}
-
-impl Deref for CountResult {
-    type Target = i64;
-
-    fn deref(&self) -> &Self::Target {
-        &self.count
-    }
 }
 
 impl QueryableByName<Pg> for CountResult {
@@ -20,6 +12,11 @@ impl QueryableByName<Pg> for CountResult {
             count: NamedRow::get(row, "count")?,
         })
     }
+}
+
+#[inline]
+fn supported_languages() -> impl Iterator<Item = isolang::Language> {
+    isolang::languages().filter(|lang| lang.to_639_1().is_some())
 }
 
 /// Generate a PostgreSQL enum definition of all supported ISO language codes
@@ -34,12 +31,12 @@ where
     .await?;
 
     // Good enough.
-    #[allow(clippy::cast_possible_wrap)] // There are only around 8k codes
-    if *language_count == isolang::languages().count() as i64 {
+    #[allow(clippy::cast_possible_wrap)] // There are only ~200 languages
+    if language_count.count == supported_languages().count() as i64 {
         return Ok(());
     }
 
-    let queries = isolang::languages().fold(String::new(), |mut out, lang| {
+    let queries = supported_languages().fold(String::new(), |mut out, lang| {
         write!(
             out,
             "ALTER TYPE {enum_name} ADD VALUE IF NOT EXISTS '{}';",
