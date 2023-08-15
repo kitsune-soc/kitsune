@@ -1,13 +1,21 @@
+use core::convert::Infallible;
+use hyper::Response;
 use hyper::{Body, Request};
 use kitsune_http_client::Client;
 use simd_json::{OwnedValue, ValueAccess};
+use tower::service_fn;
 
 #[tokio::test]
 async fn json_request() {
+    let client = service_fn(|req: Request<_>| async move {
+        assert_eq!(req.headers()["Accept"], "application/activity+json");
+        Ok::<_, Infallible>(Response::new(Body::from(r#"{"preferredUsername":"0x0"}"#)))
+    });
+
     let client = Client::builder()
         .default_header("Accept", "application/activity+json")
         .unwrap()
-        .build();
+        .service(client);
 
     let req = Request::builder()
         .uri("https://corteximplant.com/users/0x0")

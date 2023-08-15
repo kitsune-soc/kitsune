@@ -170,6 +170,20 @@ impl ClientBuilder {
         let client: HyperClient<HttpsConnector<HttpConnector>, Body> =
             HyperClient::builder().build(connector);
 
+        self.service(client)
+    }
+
+    /// Build the HTTP client by wrapping another HTTP client service
+    #[must_use]
+    pub fn service<S, B>(self, client: S) -> Client
+    where
+        S: Service<Request<Body>, Response = HyperResponse<B>> + Clone + Send + Sync + 'static,
+        S::Error: StdError + Send + Sync + 'static,
+        S::Future: Send,
+        B: HttpBody + Default + Send + Sync + 'static,
+        B::Data: Send + Sync,
+        B::Error: StdError + Send + Sync + 'static,
+    {
         let content_length_limit = self.content_length_limit.map_or_else(
             || Either::B(MapResponseBodyLayer::new(BoxBody::new)),
             |limit| {
