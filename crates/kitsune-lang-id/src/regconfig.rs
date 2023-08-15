@@ -20,6 +20,7 @@ impl QueryableByName<Pg> for PgCatalogResult {
 pub async fn generate_regconfig_function<C>(
     conn: &mut C,
     function_name: &str,
+    enum_name: &str,
 ) -> diesel::QueryResult<()>
 where
     C: AsyncConnection<Backend = Pg>,
@@ -36,7 +37,7 @@ where
 
     let mut function = format!(
         r#"
-        CREATE OR REPLACE FUNCTION {function_name} (TEXT)
+        CREATE OR REPLACE FUNCTION {function_name} ({enum_name})
             RETURNS regconfig
             AS $$
                 SELECT CASE $1

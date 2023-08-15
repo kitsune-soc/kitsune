@@ -24,9 +24,12 @@ CREATE TABLE accounts (
 
     -- Generated full-text search column
     account_ts TSVECTOR GENERATED ALWAYS AS (
-        to_tsvector('simple', COALESCE(display_name, ''))
-            || to_tsvector('simple', COALESCE(note, ''))
-            || to_tsvector('simple', username)
+        setweight(
+            to_tsvector('simple', COALESCE(display_name, ''))
+                || to_tsvector('simple', username),
+            'A'
+        )
+            || setweight(to_tsvector('simple', COALESCE(note, '')), 'B')
     ) STORED NOT NULL,
 
     -- UNIQUE constraints
@@ -113,8 +116,8 @@ CREATE TABLE posts (
 
     -- Generated full-text search column
     post_ts TSVECTOR GENERATED ALWAYS AS (
-        setweight(to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, '')), 'A')
-            || setweight(to_tsvector(iso_code_to_language(content_lang), content), 'B')
+        to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, ''))
+            || to_tsvector(iso_code_to_language(content_lang), content)
     ) STORED NOT NULL,
 
     -- Foreign key constraints
