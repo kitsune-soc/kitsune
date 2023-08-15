@@ -13,8 +13,10 @@ pub use isolang::Language;
 
 /// Get the ISO code of the specified text
 ///
-/// If the language couldn't get detected, default to english
+/// If the language couldn't get detected reliably, it defaults to english
 #[must_use]
 pub fn get_iso_code(text: &str) -> Language {
-    whatlang::detect_lang(text).map_or(Language::Eng, whatlang_to_isolang)
+    whatlang::detect(text)
+        .and_then(|info| info.is_reliable().then_some(info.lang()))
+        .map_or(Language::Eng, whatlang_to_isolang)
 }
