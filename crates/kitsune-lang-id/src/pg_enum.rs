@@ -1,3 +1,4 @@
+use crate::supported_languages;
 use diesel::{pg::Pg, row::NamedRow, QueryResult, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::fmt::Write;
@@ -12,11 +13,6 @@ impl QueryableByName<Pg> for CountResult {
             count: NamedRow::get(row, "count")?,
         })
     }
-}
-
-#[inline]
-fn supported_languages() -> impl Iterator<Item = isolang::Language> {
-    isolang::languages().filter(|lang| lang.to_639_1().is_some())
 }
 
 /// Generate a PostgreSQL enum definition of all supported ISO language codes

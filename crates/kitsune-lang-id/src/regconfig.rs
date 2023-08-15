@@ -1,8 +1,8 @@
+use crate::supported_languages;
 use diesel::{deserialize, pg::Pg, row::NamedRow, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::collections::HashSet;
 use std::fmt::Write;
-use whatlang::Lang;
 
 #[derive(Debug)]
 struct PgCatalogResult {
@@ -25,12 +25,12 @@ pub async fn generate_regconfig_function<C>(
 where
     C: AsyncConnection<Backend = Pg>,
 {
-    let supported_languages: Vec<PgCatalogResult> =
+    let pg_supported_languages: Vec<PgCatalogResult> =
         diesel::sql_query("SELECT cfgname FROM pg_catalog.pg_ts_config;")
             .get_results(conn)
             .await?;
 
-    let supported_languages: HashSet<String> = supported_languages
+    let pg_supported_languages: HashSet<String> = pg_supported_languages
         .into_iter()
         .map(|result| result.cfgname)
         .collect();
@@ -44,16 +44,16 @@ where
         "#
     );
 
-    for lang in Lang::all() {
-        let english_name = lang.eng_name().to_lowercase();
-        if !supported_languages.contains(&english_name) {
+    for lang in supported_languages() {
+        let english_name = lang.to_name().to_lowercase();
+        if !pg_supported_languages.contains(&english_name) {
             continue;
         }
 
         writeln!(
             function,
             "WHEN '{}' THEN '{english_name}'::regconfig",
-            lang.code()
+            lang.to_639_3()
         )
         .unwrap();
     }

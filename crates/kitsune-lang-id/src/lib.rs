@@ -11,6 +11,11 @@ mod regconfig;
 pub use self::{pg_enum::generate_postgres_enum, regconfig::generate_regconfig_function};
 pub use isolang::Language;
 
+#[inline]
+fn supported_languages() -> impl Iterator<Item = isolang::Language> {
+    isolang::languages().filter(|lang| lang.to_639_1().is_some())
+}
+
 /// Get the ISO code of the specified text
 ///
 /// If the language couldn't get detected reliably, it defaults to english
