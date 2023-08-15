@@ -1,3 +1,6 @@
+DROP INDEX "idx-posts-post_ts";
+DROP INDEX "idx-accounts-account_ts";
+
 DROP INDEX "idx-posts-visibility";
 DROP INDEX "idx-posts-reposted_post_id";
 DROP INDEX "idx-posts-in_reply_to_id";
@@ -11,7 +14,7 @@ DROP TABLE posts_favourites;
 
 DROP TABLE posts;
 DROP FUNCTION iso_code_to_language;
-DROP TYPE LanguageISOCode;
+DROP TYPE language_iso_code;
 
 DROP TABLE users;
 DROP TABLE accounts_follows;

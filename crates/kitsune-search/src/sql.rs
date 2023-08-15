@@ -1,6 +1,6 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
-use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
 use futures_util::TryStreamExt;
@@ -60,13 +60,7 @@ impl SearchBackend for SearchService {
         match index {
             SearchIndex::Account => {
                 let mut query = accounts::table
-                    .filter(
-                        accounts::display_name_ts
-                            .matches(&query_fn_call)
-                            .or(accounts::note_ts
-                                .matches(&query_fn_call)
-                                .or(accounts::username_ts.matches(&query_fn_call))),
-                    )
+                    .filter(accounts::account_ts.matches(&query_fn_call))
                     .into_boxed();
 
                 if let Some(min_id) = min_id {
@@ -90,11 +84,7 @@ impl SearchBackend for SearchService {
             }
             SearchIndex::Post => {
                 let mut query = posts::table
-                    .filter(
-                        posts::content_ts
-                            .matches(&query_fn_call)
-                            .or(posts::subject_ts.matches(&query_fn_call)),
-                    )
+                    .filter(posts::post_ts.matches(&query_fn_call))
                     .into_boxed();
 
                 if let Some(min_id) = min_id {

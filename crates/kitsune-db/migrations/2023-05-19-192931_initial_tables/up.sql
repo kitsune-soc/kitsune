@@ -22,10 +22,12 @@ CREATE TABLE accounts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    -- Generated full-text search columns
-    display_name_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', COALESCE(display_name, ''))) STORED NOT NULL,
-    note_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', COALESCE(note, ''))) STORED NOT NULL,
-    username_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', username)) STORED NOT NULL,
+    -- Generated full-text search column
+    account_ts TSVECTOR GENERATED ALWAYS AS (
+        to_tsvector('simple', COALESCE(display_name, ''))
+            || to_tsvector('simple', COALESCE(note, ''))
+            || to_tsvector('simple', username)
+    ) STORED NOT NULL,
 
     -- UNIQUE constraints
     UNIQUE (username, domain)
@@ -78,11 +80,11 @@ CREATE TABLE users (
 
 -- This enum is automatically updated when starting Kitsune
 -- It gets all the supported ISO codes pushed into it
-CREATE TYPE LanguageISOCode AS ENUM ();
+CREATE TYPE language_iso_code AS ENUM ();
 
 -- This is just a temporary function. This function is overwritten on each start-up of Kitsune using freshly read metadata
 -- We need this for the migrations to succeed
-CREATE FUNCTION iso_code_to_language (LanguageISOCode)
+CREATE FUNCTION iso_code_to_language (language_iso_code)
     RETURNS regconfig
     AS $$
         SELECT 'english'::regconfig
@@ -92,22 +94,28 @@ CREATE FUNCTION iso_code_to_language (LanguageISOCode)
 CREATE TABLE posts (
     id UUID PRIMARY KEY,
     account_id UUID NOT NULL,
+
     in_reply_to_id UUID,
     reposted_post_id UUID,
+
     is_sensitive BOOLEAN NOT NULL,
     subject TEXT,
+
     content TEXT NOT NULL,
-    content_lang LanguageISOCode NOT NULL,
+    content_lang language_iso_code NOT NULL,
+
     visibility INTEGER NOT NULL,
     is_local BOOLEAN NOT NULL,
     url TEXT NOT NULL UNIQUE,
-    
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    -- Generated full-text search columns
-    subject_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, ''))) STORED NOT NULL,
-    content_ts TSVECTOR GENERATED ALWAYS AS (to_tsvector(iso_code_to_language(content_lang), content)) STORED NOT NULL,
+    -- Generated full-text search column
+    post_ts TSVECTOR GENERATED ALWAYS AS (
+        setweight(to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, '')), 'A')
+            || setweight(to_tsvector(iso_code_to_language(content_lang), content), 'B')
+    ) STORED NOT NULL,
 
     -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -145,6 +153,10 @@ CREATE INDEX "idx-posts-account_id" ON posts (account_id);
 CREATE INDEX "idx-posts-in_reply_to_id" ON posts (in_reply_to_id);
 CREATE INDEX "idx-posts-reposted_post_id" ON posts (reposted_post_id);
 CREATE INDEX "idx-posts-visibility" ON posts (visibility);
+
+-- Full-text search GIN indices
+CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
+CREATE INDEX "idx-posts-post_ts" ON posts USING GIN (post_ts);
 
 CREATE TABLE job_context (
     id UUID PRIMARY KEY,

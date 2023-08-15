@@ -52,7 +52,7 @@ mod serde_impl {
 }
 
 #[derive(AsExpression, Clone, Copy, Debug, Deserialize, Eq, FromSqlRow, PartialEq, Serialize)]
-#[diesel(sql_type = sql_types::Languageisocode)]
+#[diesel(sql_type = sql_types::LanguageIsoCode)]
 #[repr(transparent)]
 #[serde(transparent)]
 pub struct LanguageIsoCode(#[serde(with = "serde_impl")] pub kitsune_lang_id::Lang);
@@ -77,7 +77,7 @@ impl From<kitsune_lang_id::Lang> for LanguageIsoCode {
     }
 }
 
-impl FromSql<sql_types::Languageisocode, Pg> for LanguageIsoCode {
+impl FromSql<sql_types::LanguageIsoCode, Pg> for LanguageIsoCode {
     fn from_sql(
         bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
@@ -89,7 +89,7 @@ impl FromSql<sql_types::Languageisocode, Pg> for LanguageIsoCode {
     }
 }
 
-impl ToSql<sql_types::Languageisocode, Pg> for LanguageIsoCode {
+impl ToSql<sql_types::LanguageIsoCode, Pg> for LanguageIsoCode {
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(self.0.code().as_bytes())?;
 
