@@ -50,16 +50,23 @@ where
             continue;
         }
 
-        let _ = writeln!(
+        writeln!(
             &mut function,
             "WHEN '{}' THEN '{english_name}'::regconfig",
             lang.code()
-        );
+        )
+        .unwrap();
     }
 
-    let _ = writeln!(&mut function, "ELSE 'english'::regconfig");
-    let _ = writeln!(&mut function, "END");
-    let _ = writeln!(&mut function, "$$ LANGUAGE SQL IMMUTABLE;");
+    writeln!(
+        &mut function,
+        r#"
+                ELSE 'english'::regconfig
+                END
+            $$ LANGUAGE SQL IMMUTABLE;
+        "#
+    )
+    .unwrap();
 
     diesel::sql_query(function).execute(conn).await?;
 
