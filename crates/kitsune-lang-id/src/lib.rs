@@ -2,9 +2,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
-use arc_swap::ArcSwap;
-use once_cell::sync::Lazy;
-
 mod map;
 mod pg_enum;
 mod regconfig;
@@ -12,27 +9,15 @@ mod regconfig;
 pub use self::{pg_enum::generate_postgres_enum, regconfig::generate_regconfig_function};
 pub use isolang::Language;
 
-#[allow(unreachable_code)]
-static DETECTION_BACKEND: Lazy<ArcSwap<DetectionBackend>> = Lazy::new(|| {
-    #[cfg(feature = "lingua")]
-    return ArcSwap::new(DetectionBackend::Lingua.into());
-
-    #[cfg(feature = "whatlang")]
-    return ArcSwap::new(DetectionBackend::Whatlang.into());
-
-    #[cfg(feature = "whichlang")]
-    return ArcSwap::new(DetectionBackend::Whichlang.into());
-
-    ArcSwap::new(DetectionBackend::Dummy.into())
-});
-
 #[cfg(feature = "lingua")]
-static LINGUA_DETECTOR: Lazy<lingua::LanguageDetector> = Lazy::new(|| {
-    lingua::LanguageDetectorBuilder::from_all_languages()
-        .with_preloaded_language_models()
-        .build()
-});
+static LINGUA_DETECTOR: once_cell::sync::Lazy<lingua::LanguageDetector> =
+    once_cell::sync::Lazy::new(|| {
+        lingua::LanguageDetectorBuilder::from_all_languages()
+            .with_preloaded_language_models()
+            .build()
+    });
 
+#[derive(Clone, Copy, Debug)]
 pub enum DetectionBackend {
     Dummy,
     #[cfg(feature = "lingua")]
@@ -43,8 +28,20 @@ pub enum DetectionBackend {
     Whichlang,
 }
 
-pub fn set_backend(backend: DetectionBackend) {
-    DETECTION_BACKEND.store(backend.into());
+impl Default for DetectionBackend {
+    fn default() -> Self {
+        #[cfg(feature = "lingua")]
+        return Self::Lingua;
+
+        #[cfg(feature = "whatlang")]
+        return Self::Whatlang;
+
+        #[cfg(feature = "whichlang")]
+        return Self::Whichlang;
+
+        #[allow(unreachable_code)]
+        Self::Dummy
+    }
 }
 
 #[inline]
@@ -80,8 +77,8 @@ pub fn supported_languages() -> impl Iterator<Item = Language> {
 /// If the language couldn't get detected reliably, it defaults to english
 #[must_use]
 #[allow(unused_variables)] // In case we don't have any detectors compiled
-pub fn detect_language(text: &str) -> Language {
-    match **DETECTION_BACKEND.load() {
+pub fn detect_language(backend: DetectionBackend, text: &str) -> Language {
+    match backend {
         DetectionBackend::Dummy => Language::Eng,
         #[cfg(feature = "lingua")]
         DetectionBackend::Lingua => LINGUA_DETECTOR

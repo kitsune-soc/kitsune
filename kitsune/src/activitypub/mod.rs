@@ -17,6 +17,7 @@ use kitsune_db::{
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_lang_id::DetectionBackend;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
@@ -169,7 +170,8 @@ pub async fn process_new_object(
     }
     object.clean_html();
 
-    let content_lang = kitsune_lang_id::detect_language(object.content.as_str());
+    let content_lang =
+        kitsune_lang_id::detect_language(DetectionBackend::default(), object.content.as_str());
 
     let post = db_conn
         .transaction(|tx| {

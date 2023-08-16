@@ -1,7 +1,9 @@
-fn main() {
-    #[cfg(feature = "whichlang")]
-    kitsune_lang_id::set_backend(kitsune_lang_id::DetectionBackend::Whichlang);
+use kitsune_lang_id::DetectionBackend;
 
-    let detected = kitsune_lang_id::detect_language("das ist schon eine coole library..");
+fn main() {
+    let detected = kitsune_lang_id::detect_language(
+        DetectionBackend::default(),
+        "das ist schon eine coole library..",
+    );
     println!("Detected language: {detected}");
 }
