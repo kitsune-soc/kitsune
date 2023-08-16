@@ -38,7 +38,25 @@ pub fn set_backend(backend: DetectionBackend) {
 #[inline]
 pub fn supported_languages() -> impl Iterator<Item = Language> {
     // Manual override for languages that are either explicitly requested to be supported, or are supported by the detection backend
-    let manually_added_languages = [Language::Cmn, Language::Pes];
+    let manually_added_languages = [
+        Language::Ast,
+        Language::Ckb,
+        Language::Cmn,
+        Language::Cnr,
+        Language::Jbo,
+        Language::Kab,
+        Language::Kmr,
+        Language::Ldn,
+        Language::Lfn,
+        Language::Pes,
+        Language::Sco,
+        Language::Sma,
+        Language::Smj,
+        Language::Szl,
+        Language::Tok,
+        Language::Zba,
+        Language::Zgh,
+    ];
 
     isolang::languages()
         .filter(|lang| lang.to_639_1().is_some())
@@ -66,13 +84,20 @@ pub fn detect_language(text: &str) -> Language {
 
 #[cfg(test)]
 mod test {
+    use crate::supported_languages;
+    use isolang::Language;
+    use std::collections::HashSet;
+
+    #[test]
+    fn no_duplicate_languages() {
+        let language_hashset = supported_languages().collect::<HashSet<Language>>();
+        assert_eq!(language_hashset.len(), supported_languages().count());
+    }
+
     #[cfg(all(feature = "whatlang", feature = "whichlang"))]
     #[test]
     fn supported_includes_detection_languages() {
-        use crate::{
-            map::{whatlang_to_isolang, whichlang_to_isolang},
-            supported_languages,
-        };
+        use crate::map::{whatlang_to_isolang, whichlang_to_isolang};
 
         for lang in whatlang::Lang::all() {
             assert!(
