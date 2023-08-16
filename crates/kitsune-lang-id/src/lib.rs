@@ -14,6 +14,9 @@ pub use isolang::Language;
 
 #[allow(unreachable_code)]
 static DETECTION_BACKEND: Lazy<ArcSwap<DetectionBackend>> = Lazy::new(|| {
+    #[cfg(feature = "lingua")]
+    return ArcSwap::new(DetectionBackend::Lingua.into());
+
     #[cfg(feature = "whatlang")]
     return ArcSwap::new(DetectionBackend::Whatlang.into());
 
@@ -23,8 +26,17 @@ static DETECTION_BACKEND: Lazy<ArcSwap<DetectionBackend>> = Lazy::new(|| {
     ArcSwap::new(DetectionBackend::Dummy.into())
 });
 
+#[cfg(feature = "lingua")]
+static LINGUA_DETECTOR: Lazy<lingua::LanguageDetector> = Lazy::new(|| {
+    lingua::LanguageDetectorBuilder::from_all_languages()
+        .with_preloaded_language_models()
+        .build()
+});
+
 pub enum DetectionBackend {
     Dummy,
+    #[cfg(feature = "lingua")]
+    Lingua,
     #[cfg(feature = "whatlang")]
     Whatlang,
     #[cfg(feature = "whichlang")]
@@ -71,6 +83,10 @@ pub fn supported_languages() -> impl Iterator<Item = Language> {
 pub fn detect_language(text: &str) -> Language {
     match **DETECTION_BACKEND.load() {
         DetectionBackend::Dummy => Language::Eng,
+        #[cfg(feature = "lingua")]
+        DetectionBackend::Lingua => LINGUA_DETECTOR
+            .detect_language_of(text)
+            .map_or(Language::Eng, self::map::lingua_to_isolang),
         #[cfg(feature = "whatlang")]
         DetectionBackend::Whatlang => whatlang::detect(text)
             .and_then(|info| info.is_reliable().then_some(info.lang()))
@@ -94,10 +110,18 @@ mod test {
         assert_eq!(language_hashset.len(), supported_languages().count());
     }
 
-    #[cfg(all(feature = "whatlang", feature = "whichlang"))]
+    #[cfg(all(feature = "lingua", feature = "whatlang", feature = "whichlang"))]
     #[test]
     fn supported_includes_detection_languages() {
-        use crate::map::{whatlang_to_isolang, whichlang_to_isolang};
+        use crate::map::{lingua_to_isolang, whatlang_to_isolang, whichlang_to_isolang};
+
+        for lang in lingua::Language::all() {
+            assert!(
+                supported_languages()
+                    .any(|supported_lang| supported_lang == lingua_to_isolang(lang)),
+                "Unsupported language {lang:?}"
+            );
+        }
 
         for lang in whatlang::Lang::all() {
             assert!(
