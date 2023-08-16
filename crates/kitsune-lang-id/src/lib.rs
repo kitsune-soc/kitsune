@@ -36,7 +36,7 @@ pub fn set_backend(backend: DetectionBackend) {
 }
 
 #[inline]
-fn supported_languages() -> impl Iterator<Item = isolang::Language> {
+pub fn supported_languages() -> impl Iterator<Item = Language> {
     // Manual override for languages that are either explicitly requested to be supported, or are supported by the detection backend
     let manually_added_languages = [Language::Cmn, Language::Pes];
 
