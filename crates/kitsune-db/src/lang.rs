@@ -16,10 +16,10 @@ use std::{
 #[diesel(sql_type = sql_types::LanguageIsoCode)]
 #[repr(transparent)]
 #[serde(transparent)]
-pub struct LanguageIsoCode(pub kitsune_lang_id::Language);
+pub struct LanguageIsoCode(pub kitsune_language::Language);
 
 impl Deref for LanguageIsoCode {
-    type Target = kitsune_lang_id::Language;
+    type Target = kitsune_language::Language;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -32,8 +32,8 @@ impl DerefMut for LanguageIsoCode {
     }
 }
 
-impl From<kitsune_lang_id::Language> for LanguageIsoCode {
-    fn from(value: kitsune_lang_id::Language) -> Self {
+impl From<kitsune_language::Language> for LanguageIsoCode {
+    fn from(value: kitsune_language::Language) -> Self {
         Self(value)
     }
 }
@@ -43,7 +43,7 @@ impl FromSql<sql_types::LanguageIsoCode, Pg> for LanguageIsoCode {
         bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
         let code_txt = unsafe { str::from_utf8_unchecked(bytes.as_bytes()) };
-        let lang = kitsune_lang_id::Language::from_639_3(code_txt)
+        let lang = kitsune_language::Language::from_639_3(code_txt)
             .ok_or_else(|| IsoCodeConversionError(code_txt.to_string()))?;
 
         Ok(Self(lang))

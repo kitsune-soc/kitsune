@@ -1,5 +1,5 @@
 [package]
-name = "kitsune-lang-id"
+name = "kitsune-language"
 edition = "2021"
 version.workspace = true
 

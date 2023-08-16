@@ -3771,7 +3771,7 @@ dependencies = [
  "kitsune-embed",
  "kitsune-http-client",
  "kitsune-http-signatures",
- "kitsune-lang-id",
+ "kitsune-language",
  "kitsune-messaging",
  "kitsune-search",
  "kitsune-storage",
@@ -3868,7 +3868,7 @@ dependencies = [
  "diesel_full_text_search",
  "diesel_migrations_async",
  "iso8601-timestamp",
- "kitsune-lang-id",
+ "kitsune-language",
  "kitsune-type",
  "num-derive",
  "num-traits 0.2.16",
@@ -3946,7 +3946,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kitsune-lang-id"
+name = "kitsune-language"
 version = "0.0.1-pre.2"
 dependencies = [
  "diesel",
@@ -3986,7 +3986,7 @@ dependencies = [
  "enum_dispatch",
  "futures-util",
  "kitsune-db",
- "kitsune-lang-id",
+ "kitsune-language",
  "kitsune-search-proto",
  "meilisearch-sdk",
  "serde",

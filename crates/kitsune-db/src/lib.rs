@@ -44,8 +44,8 @@ pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
         .await
         .map_err(Error::Migration)?;
 
-    kitsune_lang_id::generate_postgres_enum(&mut conn, "language_iso_code").await?;
-    kitsune_lang_id::generate_regconfig_function(
+    kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
+    kitsune_language::generate_regconfig_function(
         &mut conn,
         "iso_code_to_language",
         "language_iso_code",

@@ -1,4 +1,4 @@
-# kitsune-lang-id
+# kitsune-language
 
 Language identification for Kitsune
 

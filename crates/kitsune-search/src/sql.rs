@@ -11,7 +11,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     PgPool,
 };
-use kitsune_lang_id::DetectionBackend;
+use kitsune_language::DetectionBackend;
 use speedy_uuid::Uuid;
 
 #[derive(Clone)]
@@ -52,7 +52,7 @@ impl SearchBackend for SearchService {
     ) -> Result<Vec<SearchResult>> {
         let mut db_conn = self.db_conn.get().await?;
 
-        let query_lang = kitsune_lang_id::detect_language(DetectionBackend::default(), &query);
+        let query_lang = kitsune_language::detect_language(DetectionBackend::default(), &query);
         let query_fn_call = websearch_to_tsquery_with_search_config(
             iso_code_to_language(LanguageIsoCode::from(query_lang)),
             &query,

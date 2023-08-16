@@ -1,7 +1,7 @@
-use kitsune_lang_id::DetectionBackend;
+use kitsune_language::DetectionBackend;
 
 fn main() {
-    let detected = kitsune_lang_id::detect_language(
+    let detected = kitsune_language::detect_language(
         DetectionBackend::default(),
         "das ist schon eine coole library..",
     );
