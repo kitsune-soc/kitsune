@@ -217,7 +217,7 @@ impl PostService {
             create_post.content
         };
         content.clean_html();
-        let content_lang = kitsune_lang_id::get_iso_code(&content);
+        let content_lang = kitsune_lang_id::detect_language(&content);
 
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {

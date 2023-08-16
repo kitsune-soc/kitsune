@@ -3875,9 +3875,11 @@ dependencies = [
 name = "kitsune-lang-id"
 version = "0.0.1-pre.2"
 dependencies = [
+ "arc-swap",
  "diesel",
  "diesel-async",
  "isolang",
+ "once_cell",
  "whatlang",
  "whichlang",
 ]

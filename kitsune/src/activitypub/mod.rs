@@ -169,7 +169,7 @@ pub async fn process_new_object(
     }
     object.clean_html();
 
-    let content_lang = kitsune_lang_id::get_iso_code(object.content.as_str());
+    let content_lang = kitsune_lang_id::detect_language(object.content.as_str());
 
     let post = db_conn
         .transaction(|tx| {
