@@ -37,7 +37,12 @@ pub fn set_backend(backend: DetectionBackend) {
 
 #[inline]
 fn supported_languages() -> impl Iterator<Item = isolang::Language> {
-    isolang::languages().filter(|lang| lang.to_639_1().is_some())
+    // Manual override for languages that are either explicitly requested to be supported, or are supported by the detection backend
+    let manually_added_languages = [Language::Cmn, Language::Pes];
+
+    isolang::languages()
+        .filter(|lang| lang.to_639_1().is_some())
+        .chain(manually_added_languages)
 }
 
 /// Get the ISO code of the specified text
@@ -55,6 +60,34 @@ pub fn detect_language(text: &str) -> Language {
         #[cfg(feature = "whichlang")]
         DetectionBackend::Whichlang => {
             self::map::whichlang_to_isolang(whichlang::detect_language(text))
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[cfg(all(feature = "whatlang", feature = "whichlang"))]
+    #[test]
+    fn supported_includes_detection_languages() {
+        use crate::{
+            map::{whatlang_to_isolang, whichlang_to_isolang},
+            supported_languages,
+        };
+
+        for lang in whatlang::Lang::all() {
+            assert!(
+                supported_languages()
+                    .any(|supported_lang| supported_lang == whatlang_to_isolang(*lang)),
+                "Unsupported language {lang:?}"
+            );
+        }
+
+        for lang in whichlang::LANGUAGES {
+            assert!(
+                supported_languages()
+                    .any(|supported_lang| supported_lang == whichlang_to_isolang(lang)),
+                "Unsupported language {lang:?}"
+            );
         }
     }
 }
