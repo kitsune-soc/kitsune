@@ -70,3 +70,176 @@ async fn get(
 pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{get, WebfingerQuery};
+    use crate::{error::Error, service::url::UrlService, test::database_test};
+    use axum::{
+        extract::{Query, State},
+        Json,
+    };
+    use axum_extra::either::Either;
+    use diesel_async::{
+        scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
+    };
+    use http::StatusCode;
+    use kitsune_db::{
+        model::account::{ActorType, NewAccount},
+        schema::accounts,
+    };
+    use kitsune_type::webfinger::Link;
+    use speedy_uuid::Uuid;
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn basic() {
+        database_test(|db_conn| async move {
+            let account_id = prepare_db(&mut db_conn.get().await.unwrap()).await;
+            let account_url = format!("https://example.com/users/{account_id}");
+
+            let db_conn = State(db_conn);
+            let url_service = UrlService::builder()
+                .scheme("https")
+                .domain("example.com")
+                .build();
+            let url_service = State(url_service);
+
+            // Should resolve a local user
+            let query = WebfingerQuery {
+                resource: "acct:alice@example.com".into(),
+            };
+            let response = get(db_conn.clone(), url_service.clone(), Query(query))
+                .await
+                .unwrap();
+            let resource = match response {
+                Either::E1(Json(resource)) => resource,
+                Either::E2(status) => panic!("Unexpected status code: {}", status),
+            };
+            assert_eq!(resource.subject, "acct:alice@example.com");
+            assert_eq!(resource.aliases, [account_url.clone()]);
+            let [Link { rel, r#type, href }] = <[_; 1]>::try_from(resource.links).unwrap();
+            assert_eq!(rel, "self");
+            assert_eq!(r#type.unwrap(), "application/activity+json");
+            assert_eq!(href.unwrap(), account_url);
+
+            // Should respond with 404 for an unknown user
+            let query = WebfingerQuery {
+                resource: "acct:alice@example.net".into(),
+            };
+            let response = get(db_conn.clone(), url_service.clone(), Query(query))
+                .await
+                .unwrap();
+            assert!(matches!(response, Either::E2(StatusCode::NOT_FOUND)));
+
+            // Should not resolve a remote account
+            let query = WebfingerQuery {
+                resource: "acct:bob@example.net".into(),
+            };
+            let response = get(db_conn, url_service, Query(query)).await.unwrap();
+            assert!(matches!(response, Either::E2(StatusCode::NOT_FOUND)));
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn custom_domain() {
+        database_test(|db_conn| async move {
+            prepare_db(&mut db_conn.get().await.unwrap()).await;
+
+            let db_conn = State(db_conn);
+            let url_service = UrlService::builder()
+                .scheme("https")
+                .domain("example.com")
+                .webfinger_domain(Some("alice.example".into()))
+                .build();
+            let url_service = State(url_service);
+
+            // Should canonicalize the domain
+            let query = WebfingerQuery {
+                resource: "acct:alice@example.com".into(),
+            };
+            let response = get(db_conn.clone(), url_service.clone(), Query(query))
+                .await
+                .unwrap();
+            let resource = match response {
+                Either::E1(Json(resource)) => resource,
+                Either::E2(status) => panic!("Unexpected status code: {}", status),
+            };
+            assert_eq!(resource.subject, "acct:alice@alice.example");
+
+            // Should return the canonical domain as-is
+            let query = WebfingerQuery {
+                resource: "acct:alice@alice.example".into(),
+            };
+            let response = get(db_conn, url_service, Query(query)).await.unwrap();
+            let resource = match response {
+                Either::E1(Json(resource)) => resource,
+                Either::E2(status) => panic!("Unexpected status code: {}", status),
+            };
+            assert_eq!(resource.subject, "acct:alice@alice.example");
+        })
+        .await;
+    }
+
+    async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {
+        // Create a local user `@alice` and a remote account `@bob`
+        db_conn
+            .transaction(|tx| {
+                async move {
+                    let account_id = Uuid::now_v7();
+                    diesel::insert_into(accounts::table)
+                        .values(NewAccount {
+                            id: account_id,
+                            display_name: None,
+                            username: "alice",
+                            locked: false,
+                            note: None,
+                            local: true,
+                            domain: "example.com",
+                            actor_type: ActorType::Person,
+                            url: "https://example.com/users/alice",
+                            featured_collection_url: None,
+                            followers_url: None,
+                            following_url: None,
+                            inbox_url: None,
+                            outbox_url: None,
+                            shared_inbox_url: None,
+                            public_key_id: "https://example.com/users/alice#main-key",
+                            public_key: "",
+                            created_at: None,
+                        })
+                        .execute(tx)
+                        .await?;
+                    diesel::insert_into(accounts::table)
+                        .values(NewAccount {
+                            id: Uuid::now_v7(),
+                            display_name: None,
+                            username: "bob",
+                            locked: false,
+                            note: None,
+                            local: false,
+                            domain: "example.net",
+                            actor_type: ActorType::Person,
+                            url: "https://example.net/users/bob",
+                            featured_collection_url: None,
+                            followers_url: None,
+                            following_url: None,
+                            inbox_url: None,
+                            outbox_url: None,
+                            shared_inbox_url: None,
+                            public_key_id: "https://example.net/users/bob#main-key",
+                            public_key: "",
+                            created_at: None,
+                        })
+                        .execute(tx)
+                        .await?;
+                    Ok::<_, Error>(account_id)
+                }
+                .scope_boxed()
+            })
+            .await
+            .unwrap()
+    }
+}
