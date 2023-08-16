@@ -1,3 +1,4 @@
+#[allow(unused_imports)] // In case we don't have any backend activated
 use isolang::Language;
 
 #[cfg(feature = "whatlang")]

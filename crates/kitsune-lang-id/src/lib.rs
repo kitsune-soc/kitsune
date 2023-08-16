@@ -44,6 +44,7 @@ fn supported_languages() -> impl Iterator<Item = isolang::Language> {
 ///
 /// If the language couldn't get detected reliably, it defaults to english
 #[must_use]
+#[allow(unused_variables)] // In case we don't have any detectors compiled
 pub fn detect_language(text: &str) -> Language {
     match **DETECTION_BACKEND.load() {
         DetectionBackend::Dummy => Language::Eng,
