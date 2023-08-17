@@ -92,9 +92,9 @@ smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.7.1"
-thiserror = "1.0.44"
+thiserror = "1.0.47"
 time = "0.3.25"
-tokio = { version = "1.31.0", features = ["full"] }
+tokio = { version = "1.32.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
 toml = "0.7.6"
 tower-http = { version = "0.4.3", features = [
@@ -116,7 +116,7 @@ zxcvbn = { version = "2.2.2", default-features = false }
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "6.0.1", default-features = false, features = [
+async-graphql = { version = "6.0.3", default-features = false, features = [
     "email-validator",
     "playground",
     "tempfile",
@@ -125,7 +125,7 @@ async-graphql = { version = "6.0.1", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "6.0.1", optional = true }
+async-graphql-axum = { version = "6.0.3", optional = true }
 
 # "metrics" feature
 axum-prometheus = { version = "0.4.0", optional = true }
@@ -140,7 +140,7 @@ openidconnect = { version = "3.3.0", default-features = false, optional = true }
 [dev-dependencies]
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
-tower = "0.4.0"
+tower = "0.4.13"
 
 [features]
 default = ["graphql-api", "mastodon-api", "metrics"]

@@ -2,6 +2,9 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 
+use rustc_hash::FxHashSet;
+use std::sync::OnceLock;
+
 mod detect;
 mod map;
 mod pg_enum;
@@ -13,6 +16,15 @@ pub use self::{
     regconfig::generate_regconfig_function,
 };
 pub use isolang::Language;
+
+#[inline]
+pub fn is_supported(lang: Language) -> bool {
+    static LANGUAGE_LOOKUP: OnceLock<FxHashSet<Language>> = OnceLock::new();
+
+    LANGUAGE_LOOKUP
+        .get_or_init(|| supported_languages().collect())
+        .contains(&lang)
+}
 
 #[inline]
 pub fn supported_languages() -> impl Iterator<Item = Language> {
