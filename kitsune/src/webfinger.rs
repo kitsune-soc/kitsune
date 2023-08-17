@@ -27,15 +27,18 @@ impl Webfinger {
     #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
     #[must_use]
     pub fn new(cache: ArcCache<str, String>) -> Self {
-        Self {
-            cache,
-            client: Client::builder()
-                .default_header("Accept", HeaderValue::from_static("application/jrd+json"))
-                .unwrap()
-                .user_agent(USER_AGENT)
-                .unwrap()
-                .build(),
-        }
+        let client = Client::builder()
+            .default_header("Accept", HeaderValue::from_static("application/jrd+json"))
+            .unwrap()
+            .user_agent(USER_AGENT)
+            .unwrap()
+            .build();
+        Self::with_client(client, cache)
+    }
+
+    #[must_use]
+    pub fn with_client(client: Client, cache: ArcCache<str, String>) -> Self {
+        Self { cache, client }
     }
 
     #[instrument(skip(self))]
@@ -64,13 +67,27 @@ impl Webfinger {
 #[cfg(test)]
 mod test {
     use super::Webfinger;
+    use core::convert::Infallible;
+    use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
+    use kitsune_http_client::Client;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
+    use tower::service_fn;
 
     #[tokio::test]
     async fn fetch_0x0_ap_id() {
-        let webfinger = Webfinger::new(Arc::new(NoopCache.into()));
+        let client = service_fn(|req: Request<_>| async move {
+            assert_eq!(
+                req.uri().path_and_query().unwrap(),
+                "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"
+            );
+            let body = include_str!("test-fixtures/0x0_jrd.json");
+            Ok::<_, Infallible>(Response::new(Body::from(body)))
+        });
+        let client = Client::builder().service(client);
+
+        let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
         let ap_id = webfinger
             .fetch_actor_url("0x0", "corteximplant.com")
             .await

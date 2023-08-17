@@ -17,6 +17,7 @@ use kitsune_db::{
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_language::DetectionBackend;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
@@ -169,6 +170,9 @@ pub async fn process_new_object(
     }
     object.clean_html();
 
+    let content_lang =
+        kitsune_language::detect_language(DetectionBackend::default(), object.content.as_str());
+
     let post = db_conn
         .transaction(|tx| {
             async move {
@@ -180,6 +184,7 @@ pub async fn process_new_object(
                         reposted_post_id: None,
                         subject: object.summary.as_deref(),
                         content: object.content.as_str(),
+                        content_lang: content_lang.into(),
                         link_preview_url: link_preview_url.as_deref(),
                         is_sensitive: object.sensitive,
                         visibility,

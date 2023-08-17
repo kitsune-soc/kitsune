@@ -57,17 +57,18 @@ jemallocator = { version = "0.5.4", default-features = false, features = [
     "background_threads",
 ] }
 just-retry = { path = "../lib/just-retry" }
-kitsune-cache = { path = "../kitsune-cache" }
-kitsune-captcha = { path = "../kitsune-captcha" }
-kitsune-db = { path = "../kitsune-db" }
-kitsune-embed = { path = "../kitsune-embed" }
-kitsune-email = { path = "../kitsune-email" }
-kitsune-http-client = { path = "../kitsune-http-client" }
-kitsune-http-signatures = { path = "../kitsune-http-signatures" }
-kitsune-messaging = { path = "../kitsune-messaging" }
-kitsune-search = { path = "../kitsune-search" }
-kitsune-storage = { path = "../kitsune-storage" }
-kitsune-type = { path = "../kitsune-type" }
+kitsune-cache = { path = "../crates/kitsune-cache" }
+kitsune-captcha = { path = "../crates/kitsune-captcha" }
+kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-embed = { path = "../crates/kitsune-embed" }
+kitsune-email = { path = "../crates/kitsune-email" }
+kitsune-http-client = { path = "../crates/kitsune-http-client" }
+kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
+kitsune-language = { path = "../crates/kitsune-language" }
+kitsune-messaging = { path = "../crates/kitsune-messaging" }
+kitsune-search = { path = "../crates/kitsune-search" }
+kitsune-storage = { path = "../crates/kitsune-storage" }
+kitsune-type = { path = "../crates/kitsune-type" }
 mime = "0.3.17"
 mime_guess = "2.0.4"
 once_cell = "1.18.0"
@@ -92,9 +93,9 @@ smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.7.1"
-thiserror = "1.0.44"
+thiserror = "1.0.47"
 time = "0.3.25"
-tokio = { version = "1.31.0", features = ["full"] }
+tokio = { version = "1.32.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
 toml = "0.7.6"
 tower-http = { version = "0.4.3", features = [
@@ -116,7 +117,7 @@ zxcvbn = { version = "2.2.2", default-features = false }
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "6.0.1", default-features = false, features = [
+async-graphql = { version = "6.0.3", default-features = false, features = [
     "email-validator",
     "playground",
     "tempfile",
@@ -125,7 +126,7 @@ async-graphql = { version = "6.0.1", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "6.0.1", optional = true }
+async-graphql-axum = { version = "6.0.3", optional = true }
 
 # "metrics" feature
 axum-prometheus = { version = "0.4.0", optional = true }
@@ -140,6 +141,7 @@ openidconnect = { version = "3.3.0", default-features = false, optional = true }
 [dev-dependencies]
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
+tower = "0.4.13"
 
 [features]
 default = ["graphql-api", "mastodon-api", "metrics"]

@@ -271,19 +271,26 @@ mod test {
         service::federation_filter::FederationFilterService,
         test::database_test,
     };
+    use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use pretty_assertions::assert_eq;
     use std::sync::Arc;
+    use tower::service_fn;
 
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_actor() {
         database_test(|db_conn| async move {
+            let client = Client::builder().service(service_fn(handle));
+
             let fetcher = Fetcher::builder()
+                .client(client)
                 .db_conn(db_conn)
                 .embed_client(None)
                 .federation_filter(
@@ -317,7 +324,10 @@ mod test {
     #[serial_test::serial]
     async fn fetch_note() {
         database_test(|db_conn| async move {
+            let client = Client::builder().service(service_fn(handle));
+
             let fetcher = Fetcher::builder()
+                .client(client)
                 .db_conn(db_conn.clone())
                 .embed_client(None)
                 .federation_filter(
@@ -357,7 +367,7 @@ mod test {
     #[serial_test::serial]
     async fn federation_allow() {
         database_test(|db_conn| async move {
-            let fetcher = Fetcher::builder()
+            let builder = Fetcher::builder()
                 .db_conn(db_conn)
                 .embed_client(None)
                 .federation_filter(
@@ -368,8 +378,16 @@ mod test {
                 )
                 .search_service(NoopSearchService)
                 .post_cache(Arc::new(NoopCache.into()))
-                .user_cache(Arc::new(NoopCache.into()))
-                .build();
+                .user_cache(Arc::new(NoopCache.into()));
+
+            let client = service_fn(
+                #[allow(unreachable_code)] // https://github.com/rust-lang/rust/issues/67227
+                |_: Request<_>| async {
+                    panic!("Requested a denied domain") as Result<Response<Body>, Infallible>
+                },
+            );
+            let client = Client::builder().service(client);
+            let fetcher = builder.clone().client(client).build();
 
             assert!(matches!(
                 fetcher.fetch_object("https://example.com/fakeobject").await,
@@ -381,6 +399,10 @@ mod test {
                     .await,
                 Err(Error::Api(ApiError::Unauthorised))
             ));
+
+            let client = Client::builder().service(service_fn(handle));
+            let fetcher = builder.client(client).build();
+
             assert!(matches!(
                 fetcher
                     .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
@@ -395,7 +417,16 @@ mod test {
     #[serial_test::serial]
     async fn federation_deny() {
         database_test(|db_conn| async move {
+            let client = service_fn(
+                #[allow(unreachable_code)]
+                |_: Request<_>| async {
+                    panic!("Requested a denied domain") as Result<Response<Body>, Infallible>
+                },
+            );
+            let client = Client::builder().service(client);
+
             let fetcher = Fetcher::builder()
+                .client(client)
                 .db_conn(db_conn)
                 .embed_client(None)
                 .federation_filter(
@@ -421,5 +452,25 @@ mod test {
             ));
         })
         .await;
+    }
+
+    async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+        match req.uri().path_and_query().unwrap().as_str() {
+            "/users/0x0" => {
+                let body = include_str!("../test-fixtures/0x0_actor.json");
+                Ok::<_, Infallible>(Response::new(Body::from(body)))
+            }
+            "/@0x0/109501674056556919" => {
+                let body =
+                    include_str!("../test-fixtures/corteximplant.com_109501674056556919.json");
+                Ok::<_, Infallible>(Response::new(Body::from(body)))
+            }
+            "/users/0x0/statuses/109501659207519785" => {
+                let body =
+                    include_str!("../test-fixtures/corteximplant.com_109501659207519785.json");
+                Ok::<_, Infallible>(Response::new(Body::from(body)))
+            }
+            path => panic!("HTTP client hit unexpected route: {path}"),
+        }
     }
 }

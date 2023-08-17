@@ -39,6 +39,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_language::DetectionBackend;
 use kitsune_search::{SearchBackend, SearchService};
 use pulldown_cmark::{html, Options, Parser};
 use speedy_uuid::Uuid;
@@ -217,6 +218,7 @@ impl PostService {
             create_post.content
         };
         content.clean_html();
+        let content_lang = kitsune_language::detect_language(DetectionBackend::default(), &content);
 
         let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {
@@ -255,6 +257,7 @@ impl PostService {
                             reposted_post_id: None,
                             subject: subject.as_deref(),
                             content: content.as_str(),
+                            content_lang: content_lang.into(),
                             link_preview_url: link_preview_url.as_deref(),
                             is_sensitive: create_post.sensitive,
                             visibility: create_post.visibility,
