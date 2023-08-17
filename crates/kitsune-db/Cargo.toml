@@ -1,0 +1,24 @@
+[package]
+name = "kitsune-db"
+version.workspace = true
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+derive_builder = "0.12.0"
+diesel = { version = "2.1.0", features = ["uuid"] }
+diesel-async = { version = "0.3.2", features = ["deadpool", "postgres"] }
+diesel_full_text_search = { version = "2.1.0", default-features = false }
+diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "15a910802185a47fd2e76a100769ef150b0fe065", features = [
+    "postgres",
+] }
+iso8601-timestamp = { version = "0.2.11", features = ["diesel-pg"] }
+kitsune-language = { path = "../kitsune-language" }
+kitsune-type = { path = "../kitsune-type" }
+num-derive = "0.4.0"
+num-traits = "0.2.16"
+serde = { version = "1.0.183", features = ["derive"] }
+simd-json = "0.10.5"
+speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
+thiserror = "1.0.47"
+tracing-log = "0.1.3"

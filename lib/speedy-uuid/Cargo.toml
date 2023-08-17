@@ -4,13 +4,13 @@ edition = "2021"
 version = "0.1.0"
 
 [dependencies]
-async-graphql = { version = "6.0.1", default-features = false, optional = true }
+async-graphql = { version = "6.0.3", default-features = false, optional = true }
 diesel = { version = "2.1.0", features = [
     "postgres_backend",
     "uuid",
 ], optional = true }
 redis = { version = "0.23.2", default-features = false, optional = true }
 serde = { version = "1.0.183", optional = true }
-thiserror = "1.0.44"
+thiserror = "1.0.47"
 uuid = { version = "1.4.1", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }

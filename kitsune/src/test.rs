@@ -51,7 +51,7 @@ where
     let out = CatchPanic::new(func(pool.clone())).await;
 
     let mut conn = pool.get().await.unwrap();
-    let _: () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
+    let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
 
     match out {
         Ok(out) => out,
