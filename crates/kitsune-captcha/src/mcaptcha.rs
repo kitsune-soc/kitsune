@@ -9,7 +9,6 @@ use crate::{CaptchaBackend, ChallengeStatus};
 use kitsune_http_client::Client;
 
 #[derive(Clone, TypedBuilder)]
-/// File system storage
 pub struct Captcha {
     pub widget_link: String,
     pub verify_url: String,

@@ -12,8 +12,11 @@ pub enum CaptchaVerification {
     MissingInputToken,
     #[strum(serialize = "invalid-input-response")]
     InvalidInputToken,
+    #[strum(serialize = "bad-request")]
     BadRequest,
+    #[strum(serialize = "invalid-or-already-seen-response")]
     AlreadyCheckedToken,
+    #[strum(serialize = "sitekey-secret-mismatch")]
     InvalidConfiguration,
     #[strum(default)]
     Other(String),

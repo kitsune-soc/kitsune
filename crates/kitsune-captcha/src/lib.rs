@@ -15,7 +15,7 @@ pub mod mcaptcha;
 /// Result alias where the error defaults to [`BoxError`]
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-/// Status of the captcha challenge vcerification
+/// Status of the captcha challenge verification
 #[derive(PartialEq)]
 pub enum ChallengeStatus {
     /// Input successfully sent and verified
