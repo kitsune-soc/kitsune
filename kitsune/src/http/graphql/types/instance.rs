@@ -1,4 +1,32 @@
 use async_graphql::SimpleObject;
+use async_graphql::*;
+
+#[derive(Debug, SimpleObject)]
+pub struct CaptchaInfo {
+    backend: CaptchaBackend,
+    key: String,
+}
+
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
+pub enum CaptchaBackend {
+    HCaptcha,
+    MCaptcha,
+}
+
+impl From<kitsune_captcha::Captcha> for CaptchaInfo {
+    fn from(e: kitsune_captcha::Captcha) -> Self {
+        match e {
+            kitsune_captcha::Captcha::HCaptcha(config) => Self {
+                backend: CaptchaBackend::HCaptcha,
+                key: config.site_key,
+            },
+            kitsune_captcha::Captcha::MCaptcha(config) => Self {
+                backend: CaptchaBackend::MCaptcha,
+                key: config.widget_link,
+            },
+        }
+    }
+}
 
 #[derive(SimpleObject)]
 pub struct Instance {
@@ -9,4 +37,5 @@ pub struct Instance {
     pub registrations_open: bool,
     pub user_count: u64,
     pub version: &'static str,
+    pub captcha: Option<CaptchaInfo>,
 }

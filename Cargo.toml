@@ -13,6 +13,7 @@ strip = true
 members = [
     "kitsune",
     "kitsune-cache",
+    "kitsune-captcha",
     "kitsune-cli",
     "kitsune-db",
     "kitsune-email",

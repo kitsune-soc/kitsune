@@ -27,7 +27,7 @@
   import AuthForms from '../components/AuthForms.vue';
   import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
-
+    
   const instanceInfo = useInstanceInfo();
 </script>
 

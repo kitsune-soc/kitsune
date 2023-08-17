@@ -61,9 +61,11 @@ use self::{
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
-use config::EmailConfiguration;
+use config::{CaptchaConfiguration, EmailConfiguration};
 use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
+use kitsune_captcha::Captcha;
+use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
@@ -76,7 +78,7 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
-use service::mailing::MailingService;
+use service::{captcha::CaptchaService, mailing::MailingService};
 use state::SessionConfig;
 use std::{
     fmt::Display,
@@ -133,6 +135,24 @@ where
     };
 
     Arc::new(cache)
+}
+
+fn prepare_captcha(config: &CaptchaConfiguration) -> Captcha {
+    match config {
+        CaptchaConfiguration::HCaptcha(config) => HCaptcha::builder()
+            .verify_url(config.verify_url.to_string())
+            .site_key(config.site_key.to_string())
+            .secret_key(config.secret_key.to_string())
+            .build()
+            .into(),
+        CaptchaConfiguration::MCaptcha(config) => MCaptcha::builder()
+            .widget_link(config.widget_link.to_string())
+            .verify_url(config.verify_url.to_string())
+            .site_key(config.site_key.to_string())
+            .secret_key(config.secret_key.to_string())
+            .build()
+            .into(),
+    }
 }
 
 fn prepare_storage(config: &Configuration) -> Storage {
@@ -326,6 +346,9 @@ pub async fn initialise_state(
         .webfinger(webfinger.clone())
         .build();
 
+    let captcha_backend = config.captcha.as_ref().map(|c| prepare_captcha(&c));
+    let captcha_service = CaptchaService::builder().backend(captcha_backend).build();
+
     let instance_service = InstanceService::builder()
         .db_conn(conn.clone())
         .name(config.instance.name.as_str())
@@ -375,6 +398,7 @@ pub async fn initialise_state(
     let timeline_service = TimelineService::builder().db_conn(conn.clone()).build();
 
     let user_service = UserService::builder()
+        .captcha_service(captcha_service.clone())
         .db_conn(conn.clone())
         .job_service(job_service.clone())
         .registrations_open(config.instance.registrations_open)
@@ -409,6 +433,7 @@ pub async fn initialise_state(
         oauth_endpoint: OAuthEndpoint::from(conn),
         service: Service {
             account: account_service,
+            captcha: captcha_service,
             federation_filter: federation_filter_service,
             instance: instance_service,
             job: job_service,

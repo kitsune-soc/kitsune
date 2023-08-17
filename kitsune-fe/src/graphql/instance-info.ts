@@ -16,6 +16,10 @@ function useInstanceInfo() {
           name
           userCount
           version
+          captcha {
+            backend
+            key
+          }
         }
       }
     `),

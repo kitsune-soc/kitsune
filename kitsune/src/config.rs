@@ -19,6 +19,30 @@ pub enum CacheConfiguration {
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
+pub struct HCaptchaConfiguration {
+    pub verify_url: SmolStr,
+    pub site_key: SmolStr,
+    pub secret_key: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct MCaptchaConfiguration {
+    pub widget_link: SmolStr,
+    pub site_key: SmolStr,
+    pub secret_key: SmolStr,
+    pub verify_url: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum CaptchaConfiguration {
+    HCaptcha(HCaptchaConfiguration),
+    MCaptcha(MCaptchaConfiguration),
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct DatabaseConfiguration {
     pub url: SmolStr,
     pub max_connections: u32,
@@ -155,6 +179,7 @@ pub struct UrlConfiguration {
 #[serde(rename_all = "kebab-case")]
 pub struct Configuration {
     pub cache: CacheConfiguration,
+    pub captcha: Option<CaptchaConfiguration>,
     pub database: DatabaseConfiguration,
     pub email: Option<EmailConfiguration>,
     pub embed: Option<EmbedConfiguration>,

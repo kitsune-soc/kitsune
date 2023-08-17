@@ -25,6 +25,9 @@ pub enum ApiError {
     #[error("Internal server error")]
     InternalServerError,
 
+    #[error("Invalid captcha")]
+    InvalidCaptcha,
+
     #[error("Not found")]
     NotFound,
 
@@ -125,6 +128,9 @@ pub enum Error {
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
+
+    #[error(transparent)]
+    Captcha(#[from] kitsune_captcha::error::Error),
 
     #[error(transparent)]
     Database(#[from] diesel::result::Error),

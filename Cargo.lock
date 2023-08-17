@@ -3679,6 +3679,7 @@ dependencies = [
  "jemallocator",
  "just-retry",
  "kitsune-cache",
+ "kitsune-captcha",
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
@@ -3749,6 +3750,29 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "kitsune-captcha"
+version = "0.0.1-pre.2"
+dependencies = [
+ "async-trait",
+ "enum_dispatch",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-rustls",
+ "kitsune-http-client",
+ "serde",
+ "serde_qs",
+ "simd-json",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "typed-builder",
 ]
 
 [[package]]
@@ -6127,6 +6151,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6018081315db179d0ce57b1fe4b62a12a0028c9cf9bbef868c9cf477b3c34ae"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0431a35568651e363364210c91983c1da5eb29404d9f0928b67d4ebcfa7d330c"
+dependencies = [
+ "percent-encoding",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]

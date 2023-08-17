@@ -58,6 +58,7 @@ jemallocator = { version = "0.5.4", default-features = false, features = [
 ] }
 just-retry = { path = "../lib/just-retry" }
 kitsune-cache = { path = "../kitsune-cache" }
+kitsune-captcha = { path = "../kitsune-captcha" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
 kitsune-email = { path = "../kitsune-email" }

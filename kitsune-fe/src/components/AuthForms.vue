@@ -44,6 +44,8 @@
         label="Confirm password"
         validation-label="Password confirmation"
       />
+
+      <Captcha v-if="instanceData?.captcha" :backend="instanceData?.captcha?.backend" :sitekey="instanceData?.captcha?.key" />
     </FormKit>
 
     <BaseModal :closed="!modalData.show" :title="modalData.title">
@@ -67,6 +69,7 @@
   import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
   import BaseModal from './BaseModal.vue';
+  import Captcha from './Captcha.vue';
 
   const modalData = reactive({
     show: false,
@@ -78,6 +81,7 @@
     username: string;
     email: string;
     password: string;
+    captchaToken: string;
   };
 
   const registerUser = useMutation(
@@ -86,8 +90,9 @@
         $username: String!
         $email: String!
         $password: Password!
+        $captchaToken: String!
       ) {
-        registerUser(username: $username, email: $email, password: $password) {
+        registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {
           id
         }
       }
@@ -122,6 +127,7 @@
         username: registerData.username,
         email: registerData.email,
         password: registerData.password,
+        captchaToken: registerData.captchaToken,
       });
 
       if (result.error) {

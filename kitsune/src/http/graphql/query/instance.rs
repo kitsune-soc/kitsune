@@ -14,6 +14,7 @@ impl InstanceQuery {
         let state = ctx.state();
         let instance_service = &state.service.instance;
         let url_service = &state.service.url;
+        let captcha = state.service.captcha.backend.clone().map(|c| c.into());
 
         let description = instance_service.description().into();
         let domain = url_service.domain().into();
@@ -23,6 +24,7 @@ impl InstanceQuery {
         let user_count = instance_service.user_count().await?;
 
         Ok(Instance {
+            captcha,
             description,
             domain,
             local_post_count,

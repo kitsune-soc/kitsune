@@ -1,4 +1,5 @@
 use super::{
+    captcha::CaptchaService,
     job::{Enqueue, JobService},
     url::UrlService,
 };
@@ -13,6 +14,7 @@ use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures_util::future::OptionFuture;
 use iso8601_timestamp::Timestamp;
+use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     model::{
         account::{ActorType, NewAccount},
@@ -43,6 +45,9 @@ pub struct Register {
     /// Password of the new user
     #[builder(default, setter(strip_option))]
     password: Option<String>,
+
+    /// Token required for captcha verification
+    captcha_token: Option<String>,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -51,6 +56,7 @@ pub struct UserService {
     job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
+    captcha_service: CaptchaService,
 }
 
 impl UserService {
@@ -81,6 +87,17 @@ impl UserService {
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());
+        }
+
+        if self.captcha_service.enabled() {
+            if let Some(token) = register.captcha_token {
+                let result = self.captcha_service.verify_token(&token).await?;
+                if result != ChallengeStatus::Verified {
+                    return Err(ApiError::InvalidCaptcha.into());
+                }
+            } else {
+                return Err(ApiError::InvalidCaptcha.into());
+            }
         }
 
         let hashed_password_fut = OptionFuture::from(register.password.map(|password| {
