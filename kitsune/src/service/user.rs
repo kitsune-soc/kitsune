@@ -47,6 +47,7 @@ pub struct Register {
     password: Option<String>,
 
     /// Token required for captcha verification
+    #[builder(default = None)]
     captcha_token: Option<String>,
 }
 

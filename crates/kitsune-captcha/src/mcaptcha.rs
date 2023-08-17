@@ -41,14 +41,12 @@ impl CaptchaBackend for Captcha {
             .key(self.site_key.to_string())
             .build();
         let body = simd_json::to_string(&body)?;
-        let request = Request::post(self.verify_url.to_owned())
+        let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .body(body.into())?;
         let response = self.client.execute(request).await?;
-        println!("{:#?}", response);
         let mut response_bytes = response.text().await?.into_bytes();
-        println!("{:#?}", response_bytes);
         let verification_result =
             simd_json::serde::from_slice::<MCaptchaResponse>(&mut response_bytes)?;
         if !verification_result.valid {

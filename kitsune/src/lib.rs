@@ -346,7 +346,7 @@ pub async fn initialise_state(
         .webfinger(webfinger.clone())
         .build();
 
-    let captcha_backend = config.captcha.as_ref().map(|c| prepare_captcha(&c));
+    let captcha_backend = config.captcha.as_ref().map(prepare_captcha);
     let captcha_service = CaptchaService::builder().backend(captcha_backend).build();
 
     let instance_service = InstanceService::builder()

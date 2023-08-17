@@ -1,5 +1,5 @@
+use async_graphql::Enum;
 use async_graphql::SimpleObject;
-use async_graphql::*;
 
 #[derive(Debug, SimpleObject)]
 pub struct CaptchaInfo {

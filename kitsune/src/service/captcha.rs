@@ -9,6 +9,7 @@ pub struct CaptchaService {
 }
 
 impl CaptchaService {
+    #[must_use]
     pub fn enabled(&self) -> bool {
         self.backend.is_some()
     }

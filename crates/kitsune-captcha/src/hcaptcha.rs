@@ -1,4 +1,4 @@
-use crate::{error::CaptchaVerificationError, CaptchaBackend, ChallengeStatus, Result};
+use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
 use async_trait::async_trait;
 use http::Request;
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,7 @@ struct Body {
 #[serde(rename_all = "kebab-case")]
 struct HCaptchaResponse {
     success: bool, // is the passcode valid, and does it meet security criteria you specified, e.g. sitekey?
-    error_codes: Option<Vec<CaptchaVerificationError>>, // optional: any error codes
+    error_codes: Option<Vec<CaptchaVerification>>, // optional: any error codes
 }
 
 #[async_trait]
@@ -41,7 +41,7 @@ impl CaptchaBackend for Captcha {
             .response(token.to_string())
             .build();
         let body = serde_qs::to_string(&body)?;
-        let request = Request::post(self.verify_url.to_owned())
+        let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .body(body.into())?;

@@ -3,7 +3,7 @@ use strum_macros::{Display, EnumString};
 use thiserror::Error;
 
 #[derive(Debug, PartialEq, Display, Serialize, Deserialize, EnumString, Error)]
-pub enum CaptchaVerificationError {
+pub enum CaptchaVerification {
     #[strum(serialize = "missing-input-secret")]
     MissingInputSecret,
     #[strum(serialize = "invalid-input-secret")]
@@ -22,7 +22,7 @@ pub enum CaptchaVerificationError {
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
-    CaptchaVerificationError(#[from] CaptchaVerificationError),
+    CaptchaVerification(#[from] CaptchaVerification),
 
     #[error(transparent)]
     SimdJson(#[from] simd_json::Error),

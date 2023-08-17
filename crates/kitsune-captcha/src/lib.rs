@@ -6,7 +6,7 @@
 use crate::error::Error;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use error::CaptchaVerificationError;
+use error::CaptchaVerification;
 
 pub mod error;
 pub mod hcaptcha;
@@ -21,7 +21,7 @@ pub enum ChallengeStatus {
     /// Input successfully sent and verified
     Verified,
     /// Request was successfull but token verification failed
-    Failed(Vec<CaptchaVerificationError>),
+    Failed(Vec<CaptchaVerification>),
 }
 
 /// Trait abstraction over captcha backends
