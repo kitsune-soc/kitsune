@@ -91,9 +91,7 @@ impl UserService {
         }
 
         if self.captcha_service.enabled() {
-            let token = register
-                .captcha_token
-                .ok_or_else(|| ApiError::InvalidCaptcha)?;
+            let token = register.captcha_token.ok_or(ApiError::InvalidCaptcha)?;
             let result = self.captcha_service.verify_token(&token).await?;
             if result != ChallengeStatus::Verified {
                 return Err(ApiError::InvalidCaptcha.into());
