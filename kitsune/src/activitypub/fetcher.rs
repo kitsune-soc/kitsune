@@ -275,6 +275,7 @@ impl Fetcher {
 
 #[cfg(test)]
 mod test {
+    use super::MAX_FETCH_DEPTH;
     use crate::{
         activitypub::Fetcher,
         config::FederationFilterConfiguration,
@@ -285,13 +286,21 @@ mod test {
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use hyper::{Body, Request, Response};
+    use hyper::{Body, Request, Response, Uri};
+    use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
+    use kitsune_type::ap::{
+        actor::{Actor, ActorType, PublicKey},
+        ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+    };
     use pretty_assertions::assert_eq;
-    use std::sync::Arc;
+    use std::sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    };
     use tower::service_fn;
 
     #[tokio::test]
@@ -373,6 +382,99 @@ mod test {
 
             assert_eq!(author.username, "0x0");
             assert_eq!(author.url, "https://corteximplant.com/users/0x0");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn fetch_infinitely_long_reply_chain() {
+        database_test(|db_pool| async move {
+            let request_counter = Arc::new(AtomicU32::new(0));
+            let client = service_fn(move |req: Request<_>| {
+                let count = request_counter.fetch_add(1, Ordering::SeqCst);
+                if count > MAX_FETCH_DEPTH * 3 {
+                    panic!("Too many fetches");
+                }
+                async move {
+                    let author_id = "https://example.com/users/1".to_owned();
+                    let author = Actor {
+                        context: ap_context(),
+                        id: author_id.clone(),
+                        r#type: ActorType::Person,
+                        name: None,
+                        preferred_username: "Infinite notes".into(),
+                        subject: None,
+                        icon: None,
+                        image: None,
+                        manually_approves_followers: false,
+                        public_key: PublicKey {
+                            id: format!("{author_id}#main-key"),
+                            owner: author_id,
+                            // A 512-bit RSA public key generated as a placeholder
+                            public_key_pem: "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAK1v4oRbdBPi8oRL0M1GQqSWtkb9uE2L\nJCAgZK9KiVECNYvEASYor7DeMEu6BxR1E4XI2DlGkigClWXFhQDhos0CAwEAAQ==\n-----END PUBLIC KEY-----\n".into(),
+                        },
+                        endpoints: None,
+                        featured: None,
+                        inbox: "https://example.com/inbox".into(),
+                        outbox: None,
+                        followers: None,
+                        following: None,
+                        published: Timestamp::UNIX_EPOCH,
+                    };
+
+                    if let Some(note_id) = req.uri().path_and_query().unwrap().as_str().strip_prefix("/notes/") {
+                        let note_id = note_id.parse::<u32>().unwrap();
+                        let note = Object {
+                            context: ap_context(),
+                            id: format!("https://example.com/notes/{note_id}"),
+                            r#type: ObjectType::Note,
+                            attributed_to: AttributedToField::Url(author.id.clone()),
+                            in_reply_to: Some(format!("https://example.com/notes/{}", note_id + 1)),
+                            name: None,
+                            summary: None,
+                            content: "".into(),
+                            media_type: None,
+                            attachment: Vec::new(),
+                            tag: Vec::new(),
+                            sensitive: false,
+                            published: Timestamp::UNIX_EPOCH,
+                            to: vec![PUBLIC_IDENTIFIER.into()],
+                            cc: Vec::new(),
+                        };
+                        let body = simd_json::to_string(&note).unwrap();
+                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    } else {
+                        assert_eq!(
+                            req.uri().path_and_query().unwrap(),
+                            Uri::try_from(&author.id).unwrap().path_and_query().unwrap()
+                        );
+                        let body = simd_json::to_string(&author).unwrap();
+                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    }
+                }
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client)
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            assert!(fetcher
+                .fetch_object("https://example.com/notes/0")
+                .await
+                .is_ok());
         })
         .await;
     }
