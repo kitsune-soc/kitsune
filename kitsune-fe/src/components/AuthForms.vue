@@ -45,7 +45,11 @@
         validation-label="Password confirmation"
       />
 
-      <Captcha v-if="instanceData?.captcha" :backend="instanceData?.captcha?.backend" :sitekey="instanceData?.captcha?.key" />
+      <Captcha
+        v-if="instanceData?.captcha"
+        :backend="instanceData?.captcha?.backend"
+        :sitekey="instanceData?.captcha?.key"
+      />
     </FormKit>
 
     <BaseModal :closed="!modalData.show" :title="modalData.title">
@@ -90,7 +94,7 @@
         $username: String!
         $email: String!
         $password: Password!
-        $captchaToken: String!
+        $captchaToken: String
       ) {
         registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {
           id

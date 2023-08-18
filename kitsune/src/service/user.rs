@@ -47,7 +47,7 @@ pub struct Register {
     password: Option<String>,
 
     /// Token required for captcha verification
-    #[builder(default = None)]
+    #[builder(default)]
     captcha_token: Option<String>,
 }
 
@@ -91,12 +91,11 @@ impl UserService {
         }
 
         if self.captcha_service.enabled() {
-            if let Some(token) = register.captcha_token {
-                let result = self.captcha_service.verify_token(&token).await?;
-                if result != ChallengeStatus::Verified {
-                    return Err(ApiError::InvalidCaptcha.into());
-                }
-            } else {
+            let token = register
+                .captcha_token
+                .ok_or_else(|| ApiError::InvalidCaptcha)?;
+            let result = self.captcha_service.verify_token(&token).await?;
+            if result != ChallengeStatus::Verified {
                 return Err(ApiError::InvalidCaptcha.into());
             }
         }
