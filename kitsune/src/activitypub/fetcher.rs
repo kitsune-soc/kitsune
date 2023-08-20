@@ -28,7 +28,9 @@ use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
 
-const MAX_FETCH_DEPTH: u32 = 50; // Maximum call depth of fetching new posts. Prevents unbounded recursion
+// Maximum call depth of fetching new posts. Prevents unbounded recursion.
+// Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
+const MAX_FETCH_DEPTH: u32 = 30;
 
 #[derive(Clone, Debug, TypedBuilder)]
 /// Options passed to the fetcher
