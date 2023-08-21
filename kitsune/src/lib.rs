@@ -308,6 +308,7 @@ pub async fn initialise_state(
     let url_service = UrlService::builder()
         .scheme(config.url.scheme.as_str())
         .domain(config.url.domain.as_str())
+        .webfinger_domain(config.instance.webfinger_domain.clone())
         .build();
 
     let attachment_service = AttachmentService::builder()

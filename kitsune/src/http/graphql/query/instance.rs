@@ -16,7 +16,7 @@ impl InstanceQuery {
         let url_service = &state.service.url;
 
         let description = instance_service.description().into();
-        let domain = url_service.domain().into();
+        let domain = url_service.webfinger_domain().into();
         let local_post_count = instance_service.local_post_count().await?;
         let name = instance_service.name().into();
         let registrations_open = instance_service.registrations_open();
