@@ -12,6 +12,7 @@ strip = true
 [workspace]
 members = [
     "crates/kitsune-cache",
+    "crates/kitsune-captcha",
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",

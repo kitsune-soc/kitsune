@@ -1,0 +1,17 @@
+[package]
+name = "kitsune-captcha"
+version.workspace = true
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.73"
+enum_dispatch = "0.3.12"
+http = "0.2.9"
+kitsune-http-client = { path = "../kitsune-http-client" }
+serde = { version = "1.0.183", features = ["derive"] }
+serde_urlencoded = "0.7.1"
+simd-json = "0.10.5"
+strum = { version = "0.25.0", features = ["derive"] }
+strum_macros = "0.25.0"
+thiserror = "1.0.44"
+typed-builder = "0.15.2"

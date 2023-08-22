@@ -9,9 +9,7 @@
           </svg>
         </h2>
 
-        <p>
-          Whoops! It seems that you are lost
-        </p>
+        <p>Whoops! It seems that you are lost</p>
 
         <strong class="about-link">
           <router-link to="/">Back to the main page</router-link>
@@ -24,11 +22,7 @@
 </template>
 
 <script setup lang="ts">
-  import AuthForms from '../components/AuthForms.vue';
   import GenericFooter from '../components/GenericFooter.vue';
-  import { useInstanceInfo } from '../graphql/instance-info';
-
-  const instanceInfo = useInstanceInfo();
 </script>
 
 <style scoped lang="scss">

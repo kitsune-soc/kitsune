@@ -1,33 +1,19 @@
 /* eslint-disable */
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
-
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-export type MakeEmpty<
-  T extends { [key: string]: unknown },
-  K extends keyof T,
-> = { [_ in K]?: never };
-export type Incremental<T> =
-  | T
-  | {
-      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
-    };
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
   /**
    * A datetime with timezone offset.
    *
@@ -36,8 +22,8 @@ export type Scalars = {
    * format, but it is always normalized to the UTC (Z) offset, e.g.
    * "2022-01-12T04:00:19.12345Z".
    */
-  DateTime: { input: any; output: any };
-  Password: { input: any; output: any };
+  DateTime: { input: any; output: any; }
+  Password: { input: any; output: any; }
   /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
@@ -48,8 +34,8 @@ export type Scalars = {
    * * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
    * * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
    */
-  UUID: { input: any; output: any };
-  Upload: { input: any; output: any };
+  UUID: { input: any; output: any; }
+  Upload: { input: any; output: any; }
 };
 
 export type Account = {
@@ -67,6 +53,7 @@ export type Account = {
   username: Scalars['String']['output'];
 };
 
+
 export type AccountPostsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -74,8 +61,20 @@ export type AccountPostsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export enum CaptchaBackend {
+  HCaptcha = 'H_CAPTCHA',
+  MCaptcha = 'M_CAPTCHA'
+}
+
+export type CaptchaInfo = {
+  __typename?: 'CaptchaInfo';
+  backend: CaptchaBackend;
+  key: Scalars['String']['output'];
+};
+
 export type Instance = {
   __typename?: 'Instance';
+  captcha?: Maybe<CaptchaInfo>;
   description: Scalars['String']['output'];
   domain: Scalars['String']['output'];
   localPostCount: Scalars['Int']['output'];
@@ -161,26 +160,32 @@ export type RootMutation = {
   updateUser: Account;
 };
 
+
 export type RootMutationCreatePostArgs = {
   content: Scalars['String']['input'];
   isSensitive: Scalars['Boolean']['input'];
   visibility: Visibility;
 };
 
+
 export type RootMutationDeletePostArgs = {
   id: Scalars['UUID']['input'];
 };
+
 
 export type RootMutationRegisterOauthApplicationArgs = {
   name: Scalars['String']['input'];
   redirectUri: Scalars['String']['input'];
 };
 
+
 export type RootMutationRegisterUserArgs = {
+  captchaToken?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   password: Scalars['Password']['input'];
   username: Scalars['String']['input'];
 };
+
 
 export type RootMutationUpdateUserArgs = {
   avatar?: InputMaybe<Scalars['Upload']['input']>;
@@ -200,13 +205,16 @@ export type RootQuery = {
   publicTimeline: PostConnection;
 };
 
+
 export type RootQueryGetAccountByIdArgs = {
   id: Scalars['UUID']['input'];
 };
 
+
 export type RootQueryGetPostByIdArgs = {
   id: Scalars['UUID']['input'];
 };
+
 
 export type RootQueryHomeTimelineArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -214,6 +222,7 @@ export type RootQueryHomeTimelineArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
 };
+
 
 export type RootQueryPublicTimelineArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -237,261 +246,33 @@ export enum Visibility {
   FollowerOnly = 'FOLLOWER_ONLY',
   MentionOnly = 'MENTION_ONLY',
   Public = 'PUBLIC',
-  Unlisted = 'UNLISTED',
+  Unlisted = 'UNLISTED'
 }
 
 export type RegisterUserMutationVariables = Exact<{
   username: Scalars['String']['input'];
   email: Scalars['String']['input'];
   password: Scalars['Password']['input'];
+  captchaToken?: InputMaybe<Scalars['String']['input']>;
 }>;
 
-export type RegisterUserMutation = {
-  __typename?: 'RootMutation';
-  registerUser: { __typename?: 'User'; id: any };
-};
 
-export type GetInstanceInfoQueryVariables = Exact<{ [key: string]: never }>;
+export type RegisterUserMutation = { __typename?: 'RootMutation', registerUser: { __typename?: 'User', id: any } };
 
-export type GetInstanceInfoQuery = {
-  __typename?: 'RootQuery';
-  instance: {
-    __typename?: 'Instance';
-    description: string;
-    domain: string;
-    localPostCount: number;
-    registrationsOpen: boolean;
-    name: string;
-    userCount: number;
-    version: string;
-  };
-};
+export type GetInstanceInfoQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetInstanceInfoQuery = { __typename?: 'RootQuery', instance: { __typename?: 'Instance', description: string, domain: string, localPostCount: number, registrationsOpen: boolean, name: string, userCount: number, version: string, captcha?: { __typename?: 'CaptchaInfo', backend: CaptchaBackend, key: string } | null } };
 
 export type RegisterOauthApplicationMutationVariables = Exact<{
   name: Scalars['String']['input'];
   redirect_uri: Scalars['String']['input'];
 }>;
 
-export type RegisterOauthApplicationMutation = {
-  __typename?: 'RootMutation';
-  registerOauthApplication: {
-    __typename?: 'OAuth2Application';
-    id: any;
-    secret: string;
-    redirectUri: string;
-  };
-};
 
-export const RegisterUserDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'registerUser' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'username' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'email' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'password' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'Password' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'registerUser' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'username' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'username' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'email' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'email' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'password' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'password' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  RegisterUserMutation,
-  RegisterUserMutationVariables
->;
-export const GetInstanceInfoDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getInstanceInfo' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'instance' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'domain' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'localPostCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'registrationsOpen' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'userCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetInstanceInfoQuery,
-  GetInstanceInfoQueryVariables
->;
-export const RegisterOauthApplicationDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'registerOauthApplication' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'name' } },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'redirect_uri' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'registerOauthApplication' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'name' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'name' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'redirectUri' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'redirect_uri' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'secret' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'redirectUri' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  RegisterOauthApplicationMutation,
-  RegisterOauthApplicationMutationVariables
->;
+export type RegisterOauthApplicationMutation = { __typename?: 'RootMutation', registerOauthApplication: { __typename?: 'OAuth2Application', id: any, secret: string, redirectUri: string } };
+
+
+export const RegisterUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"registerUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"password"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Password"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"captchaToken"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"registerUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}},{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"password"},"value":{"kind":"Variable","name":{"kind":"Name","value":"password"}}},{"kind":"Argument","name":{"kind":"Name","value":"captchaToken"},"value":{"kind":"Variable","name":{"kind":"Name","value":"captchaToken"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<RegisterUserMutation, RegisterUserMutationVariables>;
+export const GetInstanceInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getInstanceInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"instance"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"domain"}},{"kind":"Field","name":{"kind":"Name","value":"localPostCount"}},{"kind":"Field","name":{"kind":"Name","value":"registrationsOpen"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"userCount"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"captcha"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"backend"}},{"kind":"Field","name":{"kind":"Name","value":"key"}}]}}]}}]}}]} as unknown as DocumentNode<GetInstanceInfoQuery, GetInstanceInfoQueryVariables>;
+export const RegisterOauthApplicationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"registerOauthApplication"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"redirect_uri"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"registerOauthApplication"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"redirectUri"},"value":{"kind":"Variable","name":{"kind":"Name","value":"redirect_uri"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"secret"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUri"}}]}}]}}]} as unknown as DocumentNode<RegisterOauthApplicationMutation, RegisterOauthApplicationMutationVariables>;

@@ -18,9 +18,9 @@ const routes = [
     component: () => import('./views/OAuthCallback.vue'),
   },
   {
-      path: "/:catchAll(.*)",
-      component: () => import('./views/NotFound.vue')
-    }
+    path: '/:catchAll(.*)',
+    component: () => import('./views/NotFound.vue'),
+  },
 ];
 
 export const router = createRouter({

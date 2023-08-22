@@ -4,6 +4,7 @@ use crate::{
     service::{
         account::AccountService,
         attachment::AttachmentService,
+        captcha::CaptchaService,
         federation_filter::FederationFilterService,
         instance::InstanceService,
         job::JobService,
@@ -121,6 +122,7 @@ impl_from_ref! {
 pub struct Service {
     pub account: AccountService,
     pub attachment: AttachmentService,
+    pub captcha: CaptchaService,
     pub federation_filter: FederationFilterService,
     pub job: JobService,
     pub mailing: MailingService,
