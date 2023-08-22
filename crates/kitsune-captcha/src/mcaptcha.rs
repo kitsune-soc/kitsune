@@ -14,6 +14,7 @@ pub struct Captcha {
     pub verify_url: String,
     pub secret_key: String,
     pub site_key: String,
+
     #[builder(default)]
     client: Client,
 }
@@ -39,11 +40,14 @@ impl CaptchaBackend for Captcha {
             .key(self.site_key.to_string())
             .build();
         let body = simd_json::to_string(&body)?;
+
         let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .body(body.into())?;
+
         let response = self.client.execute(request).await?;
+
         let verification_result = response.json::<MCaptchaResponse>().await?;
         if !verification_result.valid {
             return Ok(ChallengeStatus::Failed(Vec::new()));

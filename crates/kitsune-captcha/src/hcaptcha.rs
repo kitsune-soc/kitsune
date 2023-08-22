@@ -11,6 +11,7 @@ pub struct Captcha {
     pub verify_url: String,
     pub site_key: String,
     pub secret_key: String,
+
     #[builder(default)]
     client: Client,
 }
@@ -19,8 +20,10 @@ pub struct Captcha {
 struct Body {
     secret: String,
     response: String,
+
     #[builder(default)]
     remoteip: Option<String>,
+
     #[builder(default)]
     sitekey: Option<String>,
 }
@@ -40,11 +43,14 @@ impl CaptchaBackend for Captcha {
             .response(token.to_string())
             .build();
         let body = serde_urlencoded::to_string(&body)?;
+
         let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .body(body.into())?;
+
         let response = self.client.execute(request).await?;
+
         let verification_result = response.json::<HCaptchaResponse>().await?;
         if !verification_result.success {
             return Ok(ChallengeStatus::Failed(

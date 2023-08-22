@@ -20,6 +20,7 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub enum ChallengeStatus {
     /// Input successfully sent and verified
     Verified,
+
     /// Request was successfull but token verification failed
     Failed(Vec<CaptchaVerification>),
 }
