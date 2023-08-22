@@ -56,19 +56,17 @@
     captchaState.error = err;
   }
 
-  // this is the only way to capture mCaptcha token
   onMounted(async () => {
     if (props.backend == CaptchaBackend.MCaptcha) {
       const config = {
         widgetLink: new URL(props.sitekey),
       };
       const mCaptchaGlue = await import('@mcaptcha/vanilla-glue');
-      const widget = new mCaptchaGlue.default(config);
-      widget.setToken = (token) => {
-        captchaState.token = token;
+      // this is the only way to capture mCaptcha token
+      window.addEventListener('message', (e) => {
+        captchaState.token = e.data.token;
         captchaState.verified = true;
-        return token;
-      };
+      });
     }
   });
 </script>
