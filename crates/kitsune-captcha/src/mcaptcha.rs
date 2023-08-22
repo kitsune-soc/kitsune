@@ -14,7 +14,7 @@ pub struct Captcha {
     pub verify_url: String,
     pub secret_key: String,
     pub site_key: String,
-    #[builder(default = Client::builder().build())]
+    #[builder(default)]
     client: Client,
 }
 

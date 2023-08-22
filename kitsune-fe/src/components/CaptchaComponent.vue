@@ -63,11 +63,12 @@
         widgetLink: new URL(props.sitekey),
       };
       const mCaptchaGlue = await import('@mcaptcha/vanilla-glue');
-      new mCaptchaGlue.default(config);
-      window.addEventListener('message', (e) => {
-        captchaState.token = e.data.token;
+      const widget = new mCaptchaGlue.default(config);
+      widget.setToken = (token) => {
+        captchaState.token = token;
         captchaState.verified = true;
-      });
+        return token;
+      };
     }
   });
 </script>

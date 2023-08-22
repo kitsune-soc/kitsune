@@ -1,7 +1,6 @@
 /* eslint-disable */
-import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
-
 import * as types from './graphql';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 
 /**
  * Map of all GraphQL operations in the project.
@@ -14,12 +13,9 @@ import * as types from './graphql';
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-  '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {\n          id\n        }\n      }\n    ':
-    types.RegisterUserDocument,
-  '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ':
-    types.GetInstanceInfoDocument,
-  '\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    ':
-    types.RegisterOauthApplicationDocument,
+    "\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ": types.RegisterUserDocument,
+    "\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ": types.GetInstanceInfoDocument,
+    "\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    ": types.RegisterOauthApplicationDocument,
 };
 
 /**
@@ -39,25 +35,18 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(
-  source: '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {\n          id\n        }\n      }\n    ',
-): (typeof documents)['\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {\n          id\n        }\n      }\n    '];
+export function graphql(source: "\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    "): (typeof documents)["\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(
-  source: '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ',
-): (typeof documents)['\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    '];
+export function graphql(source: "\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    "): (typeof documents)["\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(
-  source: '\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    ',
-): (typeof documents)['\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    '];
+export function graphql(source: "\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    "): (typeof documents)["\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    "];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
 }
 
-export type DocumentType<TDocumentNode extends DocumentNode<any, any>> =
-  TDocumentNode extends DocumentNode<infer TType, any> ? TType : never;
+export type DocumentType<TDocumentNode extends DocumentNode<any, any>> = TDocumentNode extends DocumentNode<  infer TType,  any>  ? TType  : never;

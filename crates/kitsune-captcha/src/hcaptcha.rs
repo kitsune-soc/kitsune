@@ -11,7 +11,7 @@ pub struct Captcha {
     pub verify_url: String,
     pub site_key: String,
     pub secret_key: String,
-    #[builder(default = Client::builder().build())]
+    #[builder(default)]
     client: Client,
 }
 
@@ -19,9 +19,9 @@ pub struct Captcha {
 struct Body {
     secret: String,
     response: String,
-    #[builder(default = None)]
+    #[builder(default)]
     remoteip: Option<String>,
-    #[builder(default = None)]
+    #[builder(default)]
     sitekey: Option<String>,
 }
 

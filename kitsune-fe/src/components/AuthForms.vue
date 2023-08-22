@@ -96,7 +96,12 @@
         $password: Password!
         $captchaToken: String
       ) {
-        registerUser(username: $username, email: $email, password: $password, captchaToken: $captchaToken) {
+        registerUser(
+          username: $username
+          email: $email
+          password: $password
+          captchaToken: $captchaToken
+        ) {
           id
         }
       }
