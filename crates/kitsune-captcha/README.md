@@ -1,4 +1,4 @@
-# kitsune-storage
+# kitsune-captcha
 
 Captcha abstraction for Kitsune
 
