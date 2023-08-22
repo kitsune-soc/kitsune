@@ -7,14 +7,8 @@
 
 > Please **DO NOT** report security vulnerabilities via the public issue tracker
 
-Please report any suspected security issues to <security@joinkitsune.org>.
-We will try to respond as quickly as possible but please give us a grace period of up to 14 days for the initial contact.
-
-If you want to send the report in an encrypted form, please use the following [age] public key to encrypt your report:
-
-```
-age16ag3emjqv6jn7u55df9znxrwk63yy8a0w4dzhpzynrdvw8wqkg3qt2yzyp
-```
+To report a vulnerability, please navigate to the [Advisories page](https://github.com/kitsune-soc/kitsune/security/advisories) and click on "Report a vulnerability".  
+You will then be taken to a form where you can file the report in form of an advisory draft.
 
 Please include as much information as possible in your report:
 
