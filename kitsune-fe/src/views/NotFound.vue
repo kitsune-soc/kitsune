@@ -22,11 +22,7 @@
 </template>
 
 <script setup lang="ts">
-  import AuthForms from '../components/AuthForms.vue';
   import GenericFooter from '../components/GenericFooter.vue';
-  import { useInstanceInfo } from '../graphql/instance-info';
-
-  const instanceInfo = useInstanceInfo();
 </script>
 
 <style scoped lang="scss">

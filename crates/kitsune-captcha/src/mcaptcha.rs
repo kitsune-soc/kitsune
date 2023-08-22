@@ -19,7 +19,6 @@ pub struct Captcha {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
 struct MCaptchaResponse {
     valid: bool,
 }
@@ -45,9 +44,7 @@ impl CaptchaBackend for Captcha {
             .header("Accept", "application/json")
             .body(body.into())?;
         let response = self.client.execute(request).await?;
-        let mut response_bytes = response.text().await?.into_bytes();
-        let verification_result =
-            simd_json::serde::from_slice::<MCaptchaResponse>(&mut response_bytes)?;
+        let verification_result = response.json::<MCaptchaResponse>().await?;
         if !verification_result.valid {
             return Ok(ChallengeStatus::Failed(Vec::new()));
         }

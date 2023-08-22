@@ -37,5 +37,5 @@ pub enum Error {
     HttpClient(#[from] kitsune_http_client::Error),
 
     #[error(transparent)]
-    HttpForm(#[from] serde_qs::Error),
+    HttpForm(#[from] serde_urlencoded::ser::Error),
 }

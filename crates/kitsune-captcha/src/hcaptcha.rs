@@ -2,7 +2,6 @@ use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result}
 use async_trait::async_trait;
 use http::Request;
 use serde::{Deserialize, Serialize};
-use simd_json;
 use typed_builder::TypedBuilder;
 
 use kitsune_http_client::Client;
@@ -40,15 +39,13 @@ impl CaptchaBackend for Captcha {
             .secret(self.secret_key.to_string())
             .response(token.to_string())
             .build();
-        let body = serde_qs::to_string(&body)?;
+        let body = serde_urlencoded::to_string(&body)?;
         let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .body(body.into())?;
         let response = self.client.execute(request).await?;
-        let mut response_bytes = response.text().await?.into_bytes();
-        let verification_result =
-            simd_json::serde::from_slice::<HCaptchaResponse>(&mut response_bytes)?;
+        let verification_result = response.json::<HCaptchaResponse>().await?;
         if !verification_result.success {
             return Ok(ChallengeStatus::Failed(
                 verification_result.error_codes.unwrap_or(Vec::new()),

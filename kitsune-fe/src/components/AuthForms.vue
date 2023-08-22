@@ -45,7 +45,7 @@
         validation-label="Password confirmation"
       />
 
-      <Captcha
+      <CaptchaComponent
         v-if="instanceData?.captcha"
         :backend="instanceData?.captcha?.backend"
         :sitekey="instanceData?.captcha?.key"
@@ -73,7 +73,7 @@
   import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
   import BaseModal from './BaseModal.vue';
-  import Captcha from './Captcha.vue';
+  import CaptchaComponent from './CaptchaComponent.vue';
 
   const modalData = reactive({
     show: false,
