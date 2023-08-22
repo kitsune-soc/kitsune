@@ -12,9 +12,16 @@ pub struct UrlService {
     scheme: SmolStr,
     #[builder(setter(into))]
     domain: SmolStr,
+    #[builder(default)]
+    webfinger_domain: Option<SmolStr>,
 }
 
 impl UrlService {
+    #[must_use]
+    pub fn acct_uri(&self, username: &str) -> String {
+        format!("acct:{username}@{}", self.webfinger_domain())
+    }
+
     #[must_use]
     pub fn base_url(&self) -> String {
         format!("{}://{}", self.scheme, self.domain)
@@ -93,5 +100,10 @@ impl UrlService {
     #[must_use]
     pub fn user_url(&self, user_id: Uuid) -> String {
         format!("{}/users/{user_id}", self.base_url())
+    }
+
+    #[must_use]
+    pub fn webfinger_domain(&self) -> &str {
+        self.webfinger_domain.as_ref().unwrap_or(&self.domain)
     }
 }

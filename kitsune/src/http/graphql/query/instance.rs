@@ -18,7 +18,7 @@ impl InstanceQuery {
         let captcha = state.service.captcha.backend.clone().map(Into::into);
 
         let description = instance_service.description().into();
-        let domain = url_service.domain().into();
+        let domain = url_service.webfinger_domain().into();
         let local_post_count = instance_service.local_post_count().await?;
         let name = instance_service.name().into();
         let registrations_open = instance_service.registrations_open();

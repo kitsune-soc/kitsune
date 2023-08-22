@@ -76,6 +76,10 @@ We successfully federated with Mastodon on the following functionality:
 Contributions are very welcome. However, if you intend to change anything more than updating a dependency or fixing a small bug, please open an issue first.
 We would like to discuss any bigger changes before they are actually implemented.
 
+### Security
+
+If you found a suspected security vulnerability, please refer to our [security policy](./SECURITY.md) for more details.
+
 ### Note on required libraries
 
 We use [Nix](https://nixos.org) for handling our development dependencies.
