@@ -76,6 +76,7 @@ pub enum FederationFilterConfiguration {
 pub struct InstanceConfiguration {
     pub name: SmolStr,
     pub description: SmolStr,
+    pub webfinger_domain: Option<SmolStr>,
     pub character_limit: usize,
     pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
