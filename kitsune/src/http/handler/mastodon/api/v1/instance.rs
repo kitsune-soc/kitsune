@@ -26,7 +26,7 @@ async fn get(
     let domain_count = instance_service.known_instances().await?;
 
     Ok(Json(Instance {
-        uri: url_service.domain().into(),
+        uri: url_service.webfinger_domain().into(),
         title: instance_service.name().into(),
         short_description: instance_service.description().into(),
         description: String::new(),
