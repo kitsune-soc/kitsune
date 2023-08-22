@@ -8,7 +8,7 @@
 > Please **DO NOT** report security vulnerabilities via the public issue tracker
 
 To report a vulnerability, please navigate to the [Advisories page](https://github.com/kitsune-soc/kitsune/security/advisories) and click on "Report a vulnerability".  
-You will then be taken to a form where you can file the report in form of an advisory draft.
+You will then be taken to a form where you can file the report.
 
 Please include as much information as possible in your report:
 
@@ -16,5 +16,3 @@ Please include as much information as possible in your report:
 - The operating system Kitsune is running on
 - Any backtraces (if applicable)
 - Reproduction steps
-
-[age]: https://github.com/FiloSottile/age
