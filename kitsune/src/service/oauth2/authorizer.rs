@@ -1,5 +1,5 @@
 use super::{chrono_to_timestamp, timestamp_to_chrono};
-use crate::util::generate_secret;
+use crate::{error::Error, util::generate_secret};
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -24,29 +24,38 @@ impl Authorizer for OAuthAuthorizer {
         let scopes = grant.scope.to_string();
         let expires_at = chrono_to_timestamp(grant.until);
 
-        let mut db_conn = self.db_pool.get().await.map_err(|_| ())?;
-        diesel::insert_into(oauth2_authorization_codes::table)
-            .values(oauth2::NewAuthorizationCode {
-                code: generate_secret().as_str(),
-                application_id,
-                user_id,
-                scopes: scopes.as_str(),
-                expires_at,
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::insert_into(oauth2_authorization_codes::table)
+                    .values(oauth2::NewAuthorizationCode {
+                        code: generate_secret().as_str(),
+                        application_id,
+                        user_id,
+                        scopes: scopes.as_str(),
+                        expires_at,
+                    })
+                    .returning(oauth2_authorization_codes::code)
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
             })
-            .returning(oauth2_authorization_codes::code)
-            .get_result(&mut db_conn)
             .await
             .map_err(|_| ())
     }
 
     async fn extract(&mut self, authorization_code: &str) -> Result<Option<Grant>, ()> {
-        let mut conn = self.db_pool.get().await.map_err(|_| ())?;
-        let oauth_data = oauth2_authorization_codes::table
-            .find(authorization_code)
-            .inner_join(oauth2_applications::table)
-            .first::<(oauth2::AuthorizationCode, oauth2::Application)>(&mut conn)
+        let oauth_data = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                oauth2_authorization_codes::table
+                    .find(authorization_code)
+                    .inner_join(oauth2_applications::table)
+                    .first::<(oauth2::AuthorizationCode, oauth2::Application)>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
             .await
-            .optional()
             .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(code, app)| {

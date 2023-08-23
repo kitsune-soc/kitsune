@@ -268,17 +268,21 @@ impl AccountService {
                 .map(Some)
                 .map_err(Error::from)
         } else {
-            accounts::table
-                .filter(
-                    accounts::username
-                        .eq(get_user.username)
-                        .and(accounts::local.eq(true)),
-                )
-                .select(Account::as_select())
-                .first(&mut db_conn)
+            self.db_pool
+                .with_connection(|mut db_conn| async move {
+                    accounts::table
+                        .filter(
+                            accounts::username
+                                .eq(get_user.username)
+                                .and(accounts::local.eq(true)),
+                        )
+                        .select(Account::as_select())
+                        .first(&mut db_conn)
+                        .await
+                        .optional()
+                        .map_err(Error::from)
+                })
                 .await
-                .optional()
-                .map_err(Error::from)
         }
     }
 
@@ -306,7 +310,6 @@ impl AccountService {
         &self,
         get_posts: GetPosts,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
-        let mut db_conn = self.db_pool.get().await?;
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
             .build()
@@ -330,7 +333,11 @@ impl AccountService {
             query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            })
+            .await
     }
 
     /// Undo the follow of an account
@@ -339,29 +346,38 @@ impl AccountService {
     ///
     /// Tuple of two account models. First account is the account that was being followed, second account is the account that was following
     pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
-        let mut db_conn = self.db_pool.get().await?;
+        let (account, follower) = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account_fut = accounts::table
+                    .find(unfollow.account_id)
+                    .select(Account::as_select())
+                    .get_result(&mut db_conn);
 
-        let account_fut = accounts::table
-            .find(unfollow.account_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn);
+                let follower_fut = accounts::table
+                    .find(unfollow.follower_id)
+                    .select(Account::as_select())
+                    .get_result(&mut db_conn);
 
-        let follower_fut = accounts::table
-            .find(unfollow.follower_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn);
+                try_join!(account_fut, follower_fut).map_err(Error::from)
+            })
+            .await?;
 
-        let (account, follower) = try_join!(account_fut, follower_fut)?;
-
-        let follow = accounts_follows::table
-            .filter(
-                accounts_follows::account_id
-                    .eq(account.id)
-                    .and(accounts_follows::follower_id.eq(follower.id)),
-            )
-            .get_result::<DbFollow>(&mut db_conn)
-            .await
-            .optional()?;
+        let follow = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_follows::table
+                    .filter(
+                        accounts_follows::account_id
+                            .eq(account.id)
+                            .and(accounts_follows::follower_id.eq(follower.id)),
+                    )
+                    .get_result::<DbFollow>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
+            .await?;
 
         if let Some(follow) = follow {
             if !account.local {
@@ -384,8 +400,6 @@ impl AccountService {
         &self,
         get_follow_requests: GetFollowRequests,
     ) -> Result<impl Stream<Item = Result<Account>> + '_> {
-        let mut db_conn = self.db_pool.get().await?;
-
         let mut query = accounts_follows::table
             .inner_join(accounts::table.on(accounts_follows::follower_id.eq(accounts::id)))
             .filter(
@@ -406,45 +420,68 @@ impl AccountService {
             query = query.filter(accounts::id.lt(max_id));
         }
 
-        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            })
+            .await
     }
 
     pub async fn accept_follow_request(
         &self,
         follow_request: FollowRequest,
     ) -> Result<Option<(Account, Account)>> {
-        let mut db_conn = self.db_pool.get().await?;
+        let (account, follower) = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account_fut = accounts::table
+                    .find(follow_request.account_id)
+                    .select(Account::as_select())
+                    .get_result(&mut db_conn);
 
-        let account_fut = accounts::table
-            .find(follow_request.account_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn);
+                let follower_fut = accounts::table
+                    .find(follow_request.follower_id)
+                    .select(Account::as_select())
+                    .get_result(&mut db_conn);
 
-        let follower_fut = accounts::table
-            .find(follow_request.follower_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn);
+                try_join!(account_fut, follower_fut).map_err(Error::from)
+            })
+            .await?;
 
-        let (account, follower) = try_join!(account_fut, follower_fut)?;
-
-        let follow = accounts_follows::table
-            .filter(
-                accounts_follows::account_id
-                    .eq(account.id)
-                    .and(accounts_follows::follower_id.eq(follower.id)),
-            )
-            .get_result::<DbFollow>(&mut db_conn)
-            .await
-            .optional()?;
+        let follow = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_follows::table
+                    .filter(
+                        accounts_follows::account_id
+                            .eq(account.id)
+                            .and(accounts_follows::follower_id.eq(follower.id)),
+                    )
+                    .get_result::<DbFollow>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
+            .await?;
 
         if let Some(follow) = follow {
             let now = Timestamp::now_utc();
-            diesel::update(&follow)
-                .set((
-                    accounts_follows::approved_at.eq(now),
-                    accounts_follows::updated_at.eq(now),
-                ))
-                .execute(&mut db_conn)
+
+            self.db_pool
+                .with_connection(|mut db_conn| {
+                    let follow = &follow;
+
+                    async move {
+                        diesel::update(follow)
+                            .set((
+                                accounts_follows::approved_at.eq(now),
+                                accounts_follows::updated_at.eq(now),
+                            ))
+                            .execute(&mut db_conn)
+                            .await
+                            .map_err(Error::from)
+                    }
+                })
                 .await?;
 
             if !account.local {

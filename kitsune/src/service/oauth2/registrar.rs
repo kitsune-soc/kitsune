@@ -1,3 +1,4 @@
+use crate::error::Error;
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -46,18 +47,18 @@ impl Registrar for OAuthRegistrar {
             .parse()
             .map_err(|_| RegistrarError::PrimitiveError)?;
 
-        let mut db_conn = self
+        let client = self
             .db_pool
-            .get()
+            .with_connection(|mut db_conn| async move {
+                oauth2_applications::table
+                    .find(client_id)
+                    .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
+                    .get_result::<oauth2::Application>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
             .await
-            .map_err(|_| RegistrarError::PrimitiveError)?;
-
-        let client = oauth2_applications::table
-            .find(client_id)
-            .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
-            .get_result::<oauth2::Application>(&mut db_conn)
-            .await
-            .optional()
             .map_err(|_| RegistrarError::PrimitiveError)?
             .ok_or(RegistrarError::Unspecified)?;
 
@@ -104,17 +105,16 @@ impl Registrar for OAuthRegistrar {
             client_query = client_query.filter(oauth2_applications::secret.eq(passphrase));
         }
 
-        let mut db_conn = self
-            .db_pool
-            .get()
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                client_query
+                    .select(oauth2_applications::id)
+                    .execute(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
             .await
-            .map_err(|_| RegistrarError::PrimitiveError)?;
-
-        client_query
-            .select(oauth2_applications::id)
-            .execute(&mut db_conn)
-            .await
-            .optional()
             .map_err(|_| RegistrarError::PrimitiveError)?
             .map(|_| ())
             .ok_or(RegistrarError::Unspecified)

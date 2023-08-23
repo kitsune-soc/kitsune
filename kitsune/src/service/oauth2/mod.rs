@@ -96,20 +96,22 @@ pub struct OAuth2Service {
 
 impl OAuth2Service {
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
-        let mut db_conn = self.db_pool.get().await?;
-
-        diesel::insert_into(oauth2_applications::table)
-            .values(oauth2::NewApplication {
-                id: Uuid::now_v7(),
-                secret: generate_secret().as_str(),
-                name: create_app.name.as_str(),
-                redirect_uri: create_app.redirect_uris.as_str(),
-                scopes: "",
-                website: None,
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::insert_into(oauth2_applications::table)
+                    .values(oauth2::NewApplication {
+                        id: Uuid::now_v7(),
+                        secret: generate_secret().as_str(),
+                        name: create_app.name.as_str(),
+                        redirect_uri: create_app.redirect_uris.as_str(),
+                        scopes: "",
+                        website: None,
+                    })
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
             })
-            .get_result(&mut db_conn)
             .await
-            .map_err(Error::from)
     }
 
     pub async fn create_authorisation_code_response(
@@ -121,18 +123,22 @@ impl OAuth2Service {
             user_id,
         }: AuthorisationCode,
     ) -> Result<Response> {
-        let mut db_conn = self.db_pool.get().await?;
-        let authorization_code: oauth2::AuthorizationCode =
-            diesel::insert_into(oauth2_authorization_codes::table)
-                .values(oauth2::NewAuthorizationCode {
-                    code: generate_secret().as_str(),
-                    application_id: application.id,
-                    user_id,
-                    scopes: scopes.to_string().as_str(),
-                    expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
-                })
-                .get_result(&mut db_conn)
-                .await?;
+        let authorization_code: oauth2::AuthorizationCode = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::insert_into(oauth2_authorization_codes::table)
+                    .values(oauth2::NewAuthorizationCode {
+                        code: generate_secret().as_str(),
+                        application_id: application.id,
+                        user_id,
+                        scopes: scopes.to_string().as_str(),
+                        expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
+                    })
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
+            .await?;
 
         if application.redirect_uri == SHOW_TOKEN_URI {
             Ok(ShowTokenPage {

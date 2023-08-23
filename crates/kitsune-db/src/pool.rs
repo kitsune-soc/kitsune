@@ -14,6 +14,8 @@ impl PgPool {
     /// Run the code inside a context with a database connection
     pub async fn with_connection<F, Fut, T, E>(&self, func: F) -> Result<T, E>
     where
+        // Yes, this is *technically* leaky since a user could just move the object out of the closure
+        // Just don't. kthx.
         F: FnOnce(Object<AsyncPgConnection>) -> Fut,
         Fut: Future<Output = Result<T, E>>,
         E: From<PoolError>,

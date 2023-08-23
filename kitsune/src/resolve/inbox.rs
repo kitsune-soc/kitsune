@@ -17,13 +17,13 @@ use kitsune_db::{
 };
 
 pub struct InboxResolver {
-    db_conn: PgPool,
+    db_pool: PgPool,
 }
 
 impl InboxResolver {
     #[must_use]
     pub fn new(db_conn: PgPool) -> Self {
-        Self { db_conn }
+        Self { db_pool: db_conn }
     }
 
     #[instrument(skip_all, fields(account_id = %account.id))]
@@ -31,25 +31,27 @@ impl InboxResolver {
         &self,
         account: &Account,
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
-        let mut db_conn = self.db_conn.get().await?;
-
-        accounts_follows::table
-            .filter(accounts_follows::account_id.eq(account.id))
-            .inner_join(
-                accounts::table.on(accounts::id.eq(accounts_follows::follower_id).and(
-                    accounts::inbox_url
-                        .is_not_null()
-                        .or(accounts::shared_inbox_url.is_not_null()),
-                )),
-            )
-            .distinct()
-            .select(coalesce_nullable(
-                accounts::shared_inbox_url,
-                accounts::inbox_url,
-            ))
-            .load_stream(&mut db_conn)
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_follows::table
+                    .filter(accounts_follows::account_id.eq(account.id))
+                    .inner_join(
+                        accounts::table.on(accounts::id.eq(accounts_follows::follower_id).and(
+                            accounts::inbox_url
+                                .is_not_null()
+                                .or(accounts::shared_inbox_url.is_not_null()),
+                        )),
+                    )
+                    .distinct()
+                    .select(coalesce_nullable(
+                        accounts::shared_inbox_url,
+                        accounts::inbox_url,
+                    ))
+                    .load_stream(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await
-            .map_err(Error::from)
     }
 
     #[instrument(skip_all, fields(post_id = %post.id))]
@@ -57,25 +59,31 @@ impl InboxResolver {
         &self,
         post: &Post,
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
-        let mut db_conn = self.db_conn.get().await?;
-        let account = accounts::table
-            .find(post.account_id)
-            .select(Account::as_select())
-            .first(&mut db_conn)
-            .await?;
+        let (account, mentioned_inbox_stream) = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account = accounts::table
+                    .find(post.account_id)
+                    .select(Account::as_select())
+                    .first(&mut db_conn)
+                    .await?;
 
-        let mentioned_inbox_stream = Mention::belonging_to(post)
-            .inner_join(accounts::table)
-            .filter(
-                accounts::shared_inbox_url
-                    .is_not_null()
-                    .or(accounts::inbox_url.is_not_null()),
-            )
-            .select(coalesce_nullable(
-                accounts::shared_inbox_url,
-                accounts::inbox_url,
-            ))
-            .load_stream(&mut db_conn)
+                let mentioned_inbox_stream = Mention::belonging_to(post)
+                    .inner_join(accounts::table)
+                    .filter(
+                        accounts::shared_inbox_url
+                            .is_not_null()
+                            .or(accounts::inbox_url.is_not_null()),
+                    )
+                    .select(coalesce_nullable(
+                        accounts::shared_inbox_url,
+                        accounts::inbox_url,
+                    ))
+                    .load_stream(&mut db_conn)
+                    .await?;
+
+                Ok::<_, Error>((account, mentioned_inbox_stream))
+            })
             .await?;
 
         let stream = if post.visibility == Visibility::MentionOnly {

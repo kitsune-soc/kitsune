@@ -25,11 +25,17 @@ impl Runnable for SendConfirmationMail {
             user_service.mark_as_confirmed(self.user_id).await?;
         }
 
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let user = users::table
-            .find(self.user_id)
-            .select(User::as_select())
-            .get_result(&mut db_conn)
+        let user = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                users::table
+                    .find(self.user_id)
+                    .select(User::as_select())
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Self::Error::from)
+            })
             .await?;
 
         mailing_service.send_confirmation_email(&user).await?;

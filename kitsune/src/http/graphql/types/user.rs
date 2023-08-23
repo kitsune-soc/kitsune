@@ -25,16 +25,19 @@ pub struct User {
 #[ComplexObject]
 impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
-        let mut db_conn = ctx.state().db_pool.get().await?;
-
-        users::table
-            .find(self.id)
-            .inner_join(accounts::table)
-            .select(DbAccount::as_select())
-            .get_result::<DbAccount>(&mut db_conn)
+        let db_pool = &ctx.state().db_pool;
+        db_pool
+            .with_connection(|mut db_conn| async move {
+                users::table
+                    .find(self.id)
+                    .inner_join(accounts::table)
+                    .select(DbAccount::as_select())
+                    .get_result::<DbAccount>(&mut db_conn)
+                    .await
+                    .map(Into::into)
+                    .map_err(Error::from)
+            })
             .await
-            .map(Into::into)
-            .map_err(Error::from)
     }
 }
 
