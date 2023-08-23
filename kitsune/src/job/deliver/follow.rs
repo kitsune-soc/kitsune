@@ -22,29 +22,41 @@ impl Runnable for DeliverFollow {
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let Some(follow) = accounts_follows::table
-            .find(self.follow_id)
-            .get_result::<Follow>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let follow = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_follows::table
+                    .find(self.follow_id)
+                    .get_result::<Follow>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some(follow) = follow else {
             return Ok(());
         };
 
-        let follower_info_fut = accounts::table
-            .find(follow.follower_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result::<(Account, User)>(&mut db_conn);
+        let ((follower, follower_user), followed_inbox) = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let follower_info_fut = accounts::table
+                    .find(follow.follower_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(&mut db_conn);
 
-        let followed_inbox_fut = accounts::table
-            .find(follow.account_id)
-            .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
+                let followed_inbox_fut = accounts::table
+                    .find(follow.account_id)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(&mut db_conn);
 
-        let ((follower, follower_user), followed_inbox) =
-            try_join!(follower_info_fut, followed_inbox_fut)?;
+                try_join!(follower_info_fut, followed_inbox_fut).map_err(Self::Error::from)
+            })
+            .await?;
 
         if let Some(followed_inbox) = followed_inbox {
             let follow_activity = follow.into_activity(&ctx.state).await?;

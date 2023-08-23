@@ -21,34 +21,48 @@ impl Runnable for DeliverUnfollow {
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let Some(follow) = accounts_follows::table
-            .find(self.follow_id)
-            .get_result::<Follow>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let follow = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_follows::table
+                    .find(self.follow_id)
+                    .get_result::<Follow>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some(follow) = follow else {
             return Ok(());
         };
 
-        let follower_info_fut = accounts::table
-            .find(follow.follower_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result::<(Account, User)>(&mut db_conn);
+        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let follower_info_fut = accounts::table
+                    .find(follow.follower_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(&mut db_conn);
 
-        let followed_account_inbox_url_fut = accounts::table
-            .find(follow.account_id)
-            .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
+                let followed_account_inbox_url_fut = accounts::table
+                    .find(follow.account_id)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(&mut db_conn);
 
-        let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+                let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
 
-        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = try_join!(
-            follower_info_fut,
-            followed_account_inbox_url_fut,
-            delete_fut
-        )?;
+                try_join!(
+                    follower_info_fut,
+                    followed_account_inbox_url_fut,
+                    delete_fut
+                )
+                .map_err(Self::Error::from)
+            })
+            .await?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
             let follow_activity = follow.into_negate_activity(&ctx.state).await?;

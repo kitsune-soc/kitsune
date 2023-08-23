@@ -22,29 +22,42 @@ impl Runnable for DeliverUnfavourite {
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let Some(favourite) = posts_favourites::table
-            .find(self.favourite_id)
-            .get_result::<Favourite>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let favourite = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts_favourites::table
+                    .find(self.favourite_id)
+                    .get_result::<Favourite>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some(favourite) = favourite else {
             return Ok(());
         };
 
-        let account_user_fut = accounts::table
-            .find(favourite.account_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result(&mut db_conn);
+        let ((account, user), inbox_url) = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account_user_fut = accounts::table
+                    .find(favourite.account_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result(&mut db_conn);
 
-        let inbox_url_fut = posts::table
-            .find(favourite.post_id)
-            .inner_join(accounts::table)
-            .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
+                let inbox_url_fut = posts::table
+                    .find(favourite.post_id)
+                    .inner_join(accounts::table)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(&mut db_conn);
 
-        let ((account, user), inbox_url) = try_join!(account_user_fut, inbox_url_fut)?;
+                try_join!(account_user_fut, inbox_url_fut).map_err(Self::Error::from)
+            })
+            .await?;
 
         let favourite_id = favourite.id;
         if let Some(ref inbox_url) = inbox_url {
@@ -54,8 +67,14 @@ impl Runnable for DeliverUnfavourite {
                 .await?;
         }
 
-        diesel::delete(posts_favourites::table.find(favourite_id))
-            .execute(&mut db_conn)
+        ctx.state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::delete(posts_favourites::table.find(favourite_id))
+                    .execute(&mut db_conn)
+                    .await
+                    .map_err(Self::Error::from)
+            })
             .await?;
 
         Ok(())

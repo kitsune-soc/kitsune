@@ -70,36 +70,42 @@ impl IntoObject for Post {
             return Err(ApiError::NotFound.into());
         }
 
-        let mut db_conn = state.db_pool.get().await?;
-        let account_fut = accounts::table
-            .find(self.account_id)
-            .select(Account::as_select())
-            .get_result(&mut db_conn);
+        let (account, in_reply_to, mentions, attachment_stream) = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account_fut = accounts::table
+                    .find(self.account_id)
+                    .select(Account::as_select())
+                    .get_result(&mut db_conn);
 
-        let in_reply_to_fut = OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
-            posts::table
-                .find(in_reply_to_id)
-                .select(posts::url)
-                .get_result(&mut db_conn)
-        }))
-        .map(Option::transpose);
+                let in_reply_to_fut =
+                    OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
+                        posts::table
+                            .find(in_reply_to_id)
+                            .select(posts::url)
+                            .get_result(&mut db_conn)
+                    }))
+                    .map(Option::transpose);
 
-        let mentions_fut = Mention::belonging_to(&self)
-            .inner_join(accounts::table)
-            .select((Mention::as_select(), Account::as_select()))
-            .load::<(Mention, Account)>(&mut db_conn);
+                let mentions_fut = Mention::belonging_to(&self)
+                    .inner_join(accounts::table)
+                    .select((Mention::as_select(), Account::as_select()))
+                    .load::<(Mention, Account)>(&mut db_conn);
 
-        let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
-            .inner_join(media_attachments::table)
-            .select(DbMediaAttachment::as_select())
-            .load_stream::<DbMediaAttachment>(&mut db_conn);
+                let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
+                    .inner_join(media_attachments::table)
+                    .select(DbMediaAttachment::as_select())
+                    .load_stream::<DbMediaAttachment>(&mut db_conn);
 
-        let (account, in_reply_to, mentions, attachment_stream) = try_join!(
-            account_fut,
-            in_reply_to_fut,
-            mentions_fut,
-            attachment_stream_fut
-        )?;
+                try_join!(
+                    account_fut,
+                    in_reply_to_fut,
+                    mentions_fut,
+                    attachment_stream_fut
+                )
+                .map_err(Error::from)
+            })
+            .await?;
 
         let attachment = attachment_stream
             .map_err(Error::from)
@@ -155,27 +161,31 @@ impl IntoObject for Account {
     type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_pool.get().await?;
+        let (icon, image) = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                // These calls also probably allocate two cocnnections. ugh.
+                let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
+                    media_attachments::table
+                        .find(avatar_id)
+                        .get_result::<DbMediaAttachment>(&mut db_conn)
+                        .map_err(Error::from)
+                        .and_then(|media_attachment| media_attachment.into_object(state))
+                }))
+                .map(Option::transpose);
 
-        let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
-            media_attachments::table
-                .find(avatar_id)
-                .get_result::<DbMediaAttachment>(&mut db_conn)
-                .map_err(Error::from)
-                .and_then(|media_attachment| media_attachment.into_object(state))
-        }))
-        .map(Option::transpose);
+                let image_fut = OptionFuture::from(self.header_id.map(|header_id| {
+                    media_attachments::table
+                        .find(header_id)
+                        .get_result::<DbMediaAttachment>(&mut db_conn)
+                        .map_err(Error::from)
+                        .and_then(|media_attachment| media_attachment.into_object(state))
+                }))
+                .map(Option::transpose);
 
-        let image_fut = OptionFuture::from(self.header_id.map(|header_id| {
-            media_attachments::table
-                .find(header_id)
-                .get_result::<DbMediaAttachment>(&mut db_conn)
-                .map_err(Error::from)
-                .and_then(|media_attachment| media_attachment.into_object(state))
-        }))
-        .map(Option::transpose);
-
-        let (icon, image) = try_join!(icon_fut, image_fut)?;
+                try_join!(icon_fut, image_fut).map_err(Error::from)
+            })
+            .await?;
 
         let user_url = state.service.url.user_url(self.id);
         let inbox = state.service.url.inbox_url(self.id);

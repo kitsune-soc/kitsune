@@ -35,17 +35,24 @@ impl Runnable for DeliverUpdate {
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let inbox_resolver = InboxResolver::new(ctx.state.db_pool.clone());
-        let mut db_conn = ctx.state.db_pool.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {
-                let Some((account, user)) = accounts::table
-                    .find(self.id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result(&mut db_conn)
-                    .await
-                    .optional()?
-                else {
+                let account_user_data = ctx
+                    .state
+                    .db_pool
+                    .with_connection(|mut db_conn| async move {
+                        accounts::table
+                            .find(self.id)
+                            .inner_join(users::table)
+                            .select(<(Account, User)>::as_select())
+                            .get_result(&mut db_conn)
+                            .await
+                            .optional()
+                            .map_err(Self::Error::from)
+                    })
+                    .await?;
+
+                let Some((account, user)) = account_user_data else {
                     return Ok(());
                 };
                 let inbox_stream = inbox_resolver.resolve_followers(&account).await?;
@@ -58,15 +65,23 @@ impl Runnable for DeliverUpdate {
                 )
             }
             UpdateEntity::Status => {
-                let Some((post, account, user)) = posts::table
-                    .find(self.id)
-                    .inner_join(accounts::table)
-                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                    .select(<(Post, Account, User)>::as_select())
-                    .get_result(&mut db_conn)
-                    .await
-                    .optional()?
-                else {
+                let post_account_user_data = ctx
+                    .state
+                    .db_pool
+                    .with_connection(|mut db_conn| async move {
+                        posts::table
+                            .find(self.id)
+                            .inner_join(accounts::table)
+                            .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                            .select(<(Post, Account, User)>::as_select())
+                            .get_result(&mut db_conn)
+                            .await
+                            .optional()
+                            .map_err(Self::Error::from)
+                    })
+                    .await?;
+
+                let Some((post, account, user)) = post_account_user_data else {
                     return Ok(());
                 };
 

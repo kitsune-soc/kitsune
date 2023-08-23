@@ -27,25 +27,40 @@ impl Runnable for DeliverDelete {
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let Some(post) = posts::table
-            .find(self.post_id)
-            .select(Post::as_select())
-            .get_result::<Post>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let post = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .find(self.post_id)
+                    .select(Post::as_select())
+                    .get_result::<Post>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some(post) = post else {
             return Ok(());
         };
 
-        let Some((account, user)) = accounts::table
-            .find(post.account_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result::<(Account, User)>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let account_user_data = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts::table
+                    .find(post.account_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some((account, user)) = account_user_data else {
             return Ok(());
         };
 
@@ -64,8 +79,14 @@ impl Runnable for DeliverDelete {
             .deliver_many(&account, &user, &delete_activity, inbox_stream)
             .await?;
 
-        diesel::delete(posts::table.find(post_id))
-            .execute(&mut db_conn)
+        ctx.state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::delete(posts::table.find(post_id))
+                    .execute(&mut db_conn)
+                    .await
+                    .map_err(Self::Error::from)
+            })
             .await?;
 
         Ok(())

@@ -27,22 +27,36 @@ impl Runnable for DeliverCreate {
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_pool.get().await?;
-        let Some(post) = posts::table
-            .find(self.post_id)
-            .select(Post::as_select())
-            .get_result::<Post>(&mut db_conn)
-            .await
-            .optional()?
-        else {
+        let post = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .find(self.post_id)
+                    .select(Post::as_select())
+                    .get_result::<Post>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Self::Error::from)
+            })
+            .await?;
+
+        let Some(post) = post else {
             return Ok(());
         };
 
-        let (account, user) = accounts::table
-            .find(post.account_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result::<(Account, User)>(&mut db_conn)
+        let (account, user) = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts::table
+                    .find(post.account_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(&mut db_conn)
+                    .await
+                    .map_err(Self::Error::from)
+            })
             .await?;
 
         let inbox_resolver = InboxResolver::new(ctx.state.db_pool.clone());
