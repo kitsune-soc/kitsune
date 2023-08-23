@@ -98,7 +98,7 @@ impl MastodonMapper {
     fn mapper_state(&self) -> MapperState<'_> {
         MapperState {
             attachment_service: &self.attachment_service,
-            db_conn: &self.db_pool,
+            db_pool: &self.db_pool,
             embed_client: self.embed_client.as_ref(),
             url_service: &self.url_service,
         }
