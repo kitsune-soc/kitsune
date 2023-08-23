@@ -15,7 +15,7 @@ lettre = { version = "0.10.4", default-features = false, features = [
     "tokio1-rustls-tls",
     "tracing",
 ] }
-mrml = { version = "2.0.0-rc3", default-features = false, features = [
+mrml = { version = "2.0.0-rc4", default-features = false, features = [
     "orderedmap",
     "parse",
     "render",

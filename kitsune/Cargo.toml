@@ -34,10 +34,8 @@ bytes = "1.4.0"
 chrono = { version = "0.4.26", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..
 color-eyre = "0.6.2"
 const_format = "0.2.31"
-const-oid = { git = "https://github.com/RustCrypto/formats.git", rev = "25910fe837092418458017353a9acab6081dc198", features = [
-    "db",
-] }
-dashmap = "5.5.0"
+const-oid = { version = "0.9.5", features = ["db"] }
+dashmap = "5.5.1"
 deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 diesel = "2.1.0"
@@ -84,16 +82,16 @@ rand = "0.8.5"
 rayon = "1.7.0"
 redis = "0.23.2"
 rsa = "0.9.2"
-serde = { version = "1.0.183", features = ["derive"] }
+serde = { version = "1.0.185", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.7"
-simd-json = "0.10.5"
+simd-json = "0.10.6"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
-tempfile = "3.7.1"
+tempfile = "3.8.0"
 thiserror = "1.0.47"
-time = "0.3.25"
+time = "0.3.27"
 tokio = { version = "1.32.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
 toml = "0.7.6"
@@ -109,14 +107,14 @@ tracing-error = "0.2.0"
 tracing-subscriber = "0.3.17"
 typed-builder = "0.15.2"
 url = "2.4.0"
-utoipa = { version = "3.4.4", features = ["axum_extras", "time", "uuid"] }
+utoipa = { version = "3.5.0", features = ["axum_extras", "time", "uuid"] }
 utoipa-swagger-ui = { version = "3.1.5", features = ["axum"] }
 zxcvbn = { version = "2.2.2", default-features = false }
 
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "6.0.3", default-features = false, features = [
+async-graphql = { version = "6.0.4", default-features = false, features = [
     "email-validator",
     "playground",
     "tempfile",
@@ -125,7 +123,7 @@ async-graphql = { version = "6.0.3", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "6.0.3", optional = true }
+async-graphql-axum = { version = "6.0.4", optional = true }
 
 # "metrics" feature
 axum-prometheus = { version = "0.4.0", optional = true }

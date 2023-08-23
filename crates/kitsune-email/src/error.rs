@@ -18,7 +18,7 @@ pub enum Error {
     Transport(BoxError),
 
     #[error(transparent)]
-    RenderParsing(#[from] mrml::prelude::parse::Error),
+    RenderParsing(#[from] mrml::prelude::parser::Error),
 
     #[error(transparent)]
     Rendering(#[from] mrml::prelude::render::Error),
