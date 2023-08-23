@@ -1,5 +1,9 @@
 use super::IntoObject;
-use crate::{error::Result, state::Zustand, try_join};
+use crate::{
+    error::{Error, Result},
+    state::Zustand,
+    try_join,
+};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
@@ -48,18 +52,22 @@ impl IntoActivity for Favourite {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_pool.get().await?;
-        let account_url_fut = accounts::table
-            .find(self.account_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn);
+        let (account_url, post_url) = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let account_url_fut = accounts::table
+                    .find(self.account_id)
+                    .select(accounts::url)
+                    .get_result::<String>(&mut db_conn);
 
-        let post_url_fut = posts::table
-            .find(self.post_id)
-            .select(posts::url)
-            .get_result(&mut db_conn);
+                let post_url_fut = posts::table
+                    .find(self.post_id)
+                    .select(posts::url)
+                    .get_result(&mut db_conn);
 
-        let (account_url, post_url) = try_join!(account_url_fut, post_url_fut)?;
+                try_join!(account_url_fut, post_url_fut).map_err(Error::from)
+            })
+            .await?;
 
         Ok(Activity {
             context: ap_context(),
@@ -72,11 +80,16 @@ impl IntoActivity for Favourite {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let mut db_conn = state.db_pool.get().await?;
-        let account_url = accounts::table
-            .find(self.account_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
+        let account_url = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts::table
+                    .find(self.account_id)
+                    .select(accounts::url)
+                    .get_result::<String>(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await?;
 
         Ok(Activity {
@@ -96,18 +109,22 @@ impl IntoActivity for Follow {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_pool.get().await?;
-        let attributed_to_fut = accounts::table
-            .find(self.follower_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn);
+        let (attributed_to, object) = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let attributed_to_fut = accounts::table
+                    .find(self.follower_id)
+                    .select(accounts::url)
+                    .get_result::<String>(&mut db_conn);
 
-        let object_fut = accounts::table
-            .find(self.account_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn);
+                let object_fut = accounts::table
+                    .find(self.account_id)
+                    .select(accounts::url)
+                    .get_result::<String>(&mut db_conn);
 
-        let (attributed_to, object) = try_join!(attributed_to_fut, object_fut)?;
+                try_join!(attributed_to_fut, object_fut).map_err(Error::from)
+            })
+            .await?;
 
         Ok(Activity {
             context: ap_context(),
@@ -120,11 +137,16 @@ impl IntoActivity for Follow {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let mut db_conn = state.db_pool.get().await?;
-        let attributed_to = accounts::table
-            .find(self.follower_id)
-            .select(accounts::url)
-            .get_result::<String>(&mut db_conn)
+        let attributed_to = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts::table
+                    .find(self.follower_id)
+                    .select(accounts::url)
+                    .get_result::<String>(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await?;
 
         Ok(Activity {
@@ -147,11 +169,16 @@ impl IntoActivity for Post {
         let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
-            let mut db_conn = state.db_pool.get().await?;
-            let reposted_post_url = posts::table
-                .find(reposted_post_id)
-                .select(posts::url)
-                .get_result(&mut db_conn)
+            let reposted_post_url = state
+                .db_pool
+                .with_connection(|mut db_conn| async move {
+                    posts::table
+                        .find(reposted_post_id)
+                        .select(posts::url)
+                        .get_result(&mut db_conn)
+                        .await
+                        .map_err(Error::from)
+                })
                 .await?;
 
             Ok(Activity {

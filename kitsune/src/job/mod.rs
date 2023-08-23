@@ -158,7 +158,7 @@ impl JobContextRepository for KitsuneContextRepo {
         context: Self::JobContext,
     ) -> Result<(), Self::Error> {
         self.db_pool
-            .with_connection(|conn| async move {
+            .with_connection(|mut conn| async move {
                 diesel::insert_into(job_context::table)
                     .values(NewJobContext {
                         id: job_id,

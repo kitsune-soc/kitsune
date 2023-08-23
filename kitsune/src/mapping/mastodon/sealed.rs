@@ -317,52 +317,57 @@ impl IntoMastodon for DbPost {
         Some(self.id)
     }
 
+    #[allow(clippy::too_many_lines)]
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let account_fut = accounts::table
-                    .find(self.account_id)
-                    .select(DbAccount::as_select())
-                    .get_result::<DbAccount>(&mut db_conn)
+            .with_connection(|mut db_conn| {
+                let self = &self;
+
+                async move {
+                    let account_fut = accounts::table
+                        .find(self.account_id)
+                        .select(DbAccount::as_select())
+                        .get_result::<DbAccount>(&mut db_conn)
+                        .map_err(Error::from)
+                        .and_then(|db_account| db_account.into_mastodon(state));
+
+                    let reblog_count_fut = posts::table
+                        .filter(posts::reposted_post_id.eq(self.id))
+                        .count()
+                        .get_result::<i64>(&mut db_conn)
+                        .map_err(Error::from);
+
+                    let favourites_count_fut = DbFavourite::belonging_to(&self)
+                        .count()
+                        .get_result::<i64>(&mut db_conn)
+                        .map_err(Error::from);
+
+                    let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
+                        .inner_join(media_attachments::table)
+                        .select(DbMediaAttachment::as_select())
+                        .load_stream::<DbMediaAttachment>(&mut db_conn)
+                        .map_err(Error::from)
+                        .and_then(|attachment_stream| {
+                            attachment_stream
+                                .map_err(Error::from)
+                                .and_then(|attachment| attachment.into_mastodon(state))
+                                .try_collect()
+                        });
+
+                    let mentions_stream_fut = DbMention::belonging_to(&self)
+                        .load_stream::<DbMention>(&mut db_conn)
+                        .map_err(Error::from);
+
+                    try_join!(
+                        account_fut,
+                        reblog_count_fut,
+                        favourites_count_fut,
+                        media_attachments_fut,
+                        mentions_stream_fut,
+                    )
                     .map_err(Error::from)
-                    .and_then(|db_account| db_account.into_mastodon(state));
-
-                let reblog_count_fut = posts::table
-                    .filter(posts::reposted_post_id.eq(self.id))
-                    .count()
-                    .get_result::<i64>(&mut db_conn)
-                    .map_err(Error::from);
-
-                let favourites_count_fut = DbFavourite::belonging_to(&self)
-                    .count()
-                    .get_result::<i64>(&mut db_conn)
-                    .map_err(Error::from);
-
-                let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-                    .inner_join(media_attachments::table)
-                    .select(DbMediaAttachment::as_select())
-                    .load_stream::<DbMediaAttachment>(&mut db_conn)
-                    .map_err(Error::from)
-                    .and_then(|attachment_stream| {
-                        attachment_stream
-                            .map_err(Error::from)
-                            .and_then(|attachment| attachment.into_mastodon(state))
-                            .try_collect()
-                    });
-
-                let mentions_stream_fut = DbMention::belonging_to(&self)
-                    .load_stream::<DbMention>(&mut db_conn)
-                    .map_err(Error::from);
-
-                try_join!(
-                    account_fut,
-                    reblog_count_fut,
-                    favourites_count_fut,
-                    media_attachments_fut,
-                    mentions_stream_fut,
-                )
-                .map_err(Error::from)
+                }
             })
             .await?;
 
@@ -387,22 +392,26 @@ impl IntoMastodon for DbPost {
 
         let reblog = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                OptionFuture::from(
-                    OptionFuture::from(self.reposted_post_id.map(|id| {
-                        posts::table
-                            .find(id)
-                            .select(DbPost::as_select())
-                            .get_result::<DbPost>(&mut db_conn)
-                            .map(OptionalExtension::optional)
-                    }))
+            .with_connection(|mut db_conn| {
+                let self = &self;
+
+                async move {
+                    OptionFuture::from(
+                        OptionFuture::from(self.reposted_post_id.map(|id| {
+                            posts::table
+                                .find(id)
+                                .select(DbPost::as_select())
+                                .get_result::<DbPost>(&mut db_conn)
+                                .map(OptionalExtension::optional)
+                        }))
+                        .await
+                        .transpose()?
+                        .flatten()
+                        .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
+                    )
                     .await
-                    .transpose()?
-                    .flatten()
-                    .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
-                )
-                .await
-                .transpose()
+                    .transpose()
+                }
             })
             .await?
             .map(Box::new);

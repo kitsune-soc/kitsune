@@ -72,38 +72,42 @@ impl IntoObject for Post {
 
         let (account, in_reply_to, mentions, attachment_stream) = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let account_fut = accounts::table
-                    .find(self.account_id)
-                    .select(Account::as_select())
-                    .get_result(&mut db_conn);
+            .with_connection(|mut db_conn| {
+                let self = &self;
 
-                let in_reply_to_fut =
-                    OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
-                        posts::table
-                            .find(in_reply_to_id)
-                            .select(posts::url)
-                            .get_result(&mut db_conn)
-                    }))
-                    .map(Option::transpose);
+                async move {
+                    let account_fut = accounts::table
+                        .find(self.account_id)
+                        .select(Account::as_select())
+                        .get_result(&mut db_conn);
 
-                let mentions_fut = Mention::belonging_to(&self)
-                    .inner_join(accounts::table)
-                    .select((Mention::as_select(), Account::as_select()))
-                    .load::<(Mention, Account)>(&mut db_conn);
+                    let in_reply_to_fut =
+                        OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
+                            posts::table
+                                .find(in_reply_to_id)
+                                .select(posts::url)
+                                .get_result(&mut db_conn)
+                        }))
+                        .map(Option::transpose);
 
-                let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
-                    .inner_join(media_attachments::table)
-                    .select(DbMediaAttachment::as_select())
-                    .load_stream::<DbMediaAttachment>(&mut db_conn);
+                    let mentions_fut = Mention::belonging_to(&self)
+                        .inner_join(accounts::table)
+                        .select((Mention::as_select(), Account::as_select()))
+                        .load::<(Mention, Account)>(&mut db_conn);
 
-                try_join!(
-                    account_fut,
-                    in_reply_to_fut,
-                    mentions_fut,
-                    attachment_stream_fut
-                )
-                .map_err(Error::from)
+                    let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
+                        .inner_join(media_attachments::table)
+                        .select(DbMediaAttachment::as_select())
+                        .load_stream::<DbMediaAttachment>(&mut db_conn);
+
+                    try_join!(
+                        account_fut,
+                        in_reply_to_fut,
+                        mentions_fut,
+                        attachment_stream_fut
+                    )
+                    .map_err(Error::from)
+                }
             })
             .await?;
 

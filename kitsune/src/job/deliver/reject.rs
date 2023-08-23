@@ -50,22 +50,26 @@ impl Runnable for DeliverReject {
         let (follower_inbox_url, (followed_account, followed_user), _delete_result) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let follower_inbox_url_fut = accounts::table
-                    .find(follow.follower_id)
-                    .select(accounts::inbox_url.assume_not_null())
-                    .get_result::<String>(&mut db_conn);
+            .with_connection(|mut db_conn| {
+                let follow = &follow;
 
-                let followed_info_fut = accounts::table
-                    .find(follow.account_id)
-                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                    .select(<(Account, User)>::as_select())
-                    .get_result::<(Account, User)>(&mut db_conn);
+                async move {
+                    let follower_inbox_url_fut = accounts::table
+                        .find(follow.follower_id)
+                        .select(accounts::inbox_url.assume_not_null())
+                        .get_result::<String>(&mut db_conn);
 
-                let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+                    let followed_info_fut = accounts::table
+                        .find(follow.account_id)
+                        .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                        .select(<(Account, User)>::as_select())
+                        .get_result::<(Account, User)>(&mut db_conn);
 
-                try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
-                    .map_err(Self::Error::from)
+                    let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+
+                    try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
+                        .map_err(Self::Error::from)
+                }
             })
             .await?;
 

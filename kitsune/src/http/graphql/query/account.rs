@@ -17,6 +17,7 @@ impl AccountQuery {
             .map(Into::into))
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn my_account(&self, ctx: &Context<'_>) -> Result<Account> {
         let account = &ctx.user_data()?.account;
         Ok(account.clone().into())

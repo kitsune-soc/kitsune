@@ -231,7 +231,7 @@ impl Fetcher {
 
         let post = self
             .db_pool
-            .with_connection(|db_conn| async move {
+            .with_connection(|mut db_conn| async move {
                 posts::table
                     .filter(posts::url.eq(url))
                     .select(Post::as_select())

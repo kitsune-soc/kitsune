@@ -41,26 +41,30 @@ impl Runnable for DeliverUnfollow {
         let ((follower, follower_user), followed_account_inbox_url, _delete_result) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let follower_info_fut = accounts::table
-                    .find(follow.follower_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result::<(Account, User)>(&mut db_conn);
+            .with_connection(|mut db_conn| {
+                let follow = &follow;
 
-                let followed_account_inbox_url_fut = accounts::table
-                    .find(follow.account_id)
-                    .select(accounts::inbox_url)
-                    .get_result::<Option<String>>(&mut db_conn);
+                async move {
+                    let follower_info_fut = accounts::table
+                        .find(follow.follower_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result::<(Account, User)>(&mut db_conn);
 
-                let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+                    let followed_account_inbox_url_fut = accounts::table
+                        .find(follow.account_id)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(&mut db_conn);
 
-                try_join!(
-                    follower_info_fut,
-                    followed_account_inbox_url_fut,
-                    delete_fut
-                )
-                .map_err(Self::Error::from)
+                    let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+
+                    try_join!(
+                        follower_info_fut,
+                        followed_account_inbox_url_fut,
+                        delete_fut
+                    )
+                    .map_err(Self::Error::from)
+                }
             })
             .await?;
 
