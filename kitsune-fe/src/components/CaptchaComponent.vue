@@ -5,6 +5,7 @@
     name="captchaToken"
     validation="required"
   />
+
   <vue-hcaptcha
     v-if="backend == CaptchaBackend.HCaptcha"
     :sitekey="sitekey"
@@ -12,10 +13,10 @@
     @expired="onExpire"
     @error="onError"
     @challenge-expired="onExpire"
-  >
-  </vue-hcaptcha>
+  />
+
   <div v-if="backend === CaptchaBackend.MCaptcha">
-    <div id="mcaptcha__widget-container"></div>
+    <div id="mcaptcha__widget-container" />
   </div>
 </template>
 
@@ -62,6 +63,7 @@
         widgetLink: new URL(props.sitekey),
       };
       const mCaptchaGlue = await import('@mcaptcha/vanilla-glue');
+      new mCaptchaGlue.default(config);
       // this is the only way to capture mCaptcha token
       window.addEventListener('message', (e) => {
         captchaState.token = e.data.token;

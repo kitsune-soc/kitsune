@@ -38,30 +38,31 @@ pub mod webfinger;
 use self::{
     activitypub::Fetcher,
     config::{
-        CacheConfiguration, Configuration, JobQueueConfiguration, MessagingConfiguration,
-        SearchConfiguration, StorageConfiguration,
+        CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
+        JobQueueConfiguration, MessagingConfiguration, SearchConfiguration, StorageConfiguration,
     },
     job::KitsuneContextRepo,
     resolve::PostResolver,
     service::{
         account::AccountService,
         attachment::AttachmentService,
+        captcha::CaptchaService,
         federation_filter::FederationFilterService,
         instance::InstanceService,
         job::JobService,
+        mailing::MailingService,
         oauth2::{OAuth2Service, OAuthEndpoint},
         post::PostService,
         timeline::TimelineService,
         url::UrlService,
         user::UserService,
     },
-    state::{EventEmitter, Service, Zustand},
+    state::{EventEmitter, Service, SessionConfig, Zustand},
     webfinger::Webfinger,
 };
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
-use config::{CaptchaConfiguration, EmailConfiguration};
 use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::Captcha;
@@ -78,8 +79,6 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
-use service::{captcha::CaptchaService, mailing::MailingService};
-use state::SessionConfig;
 use std::{
     fmt::Display,
     str::FromStr,

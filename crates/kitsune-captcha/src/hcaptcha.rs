@@ -1,10 +1,9 @@
 use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
 use async_trait::async_trait;
 use http::Request;
+use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
-
-use kitsune_http_client::Client;
 
 #[derive(Clone, TypedBuilder)]
 pub struct Captcha {
@@ -54,9 +53,10 @@ impl CaptchaBackend for Captcha {
         let verification_result = response.json::<HCaptchaResponse>().await?;
         if !verification_result.success {
             return Ok(ChallengeStatus::Failed(
-                verification_result.error_codes.unwrap_or(Vec::new()),
+                verification_result.error_codes.unwrap_or_default(),
             ));
         }
+
         Ok(ChallengeStatus::Verified)
     }
 }
