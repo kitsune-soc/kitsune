@@ -3,10 +3,9 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(forbidden_lint_groups)]
 
-use crate::error::Error;
+use self::error::{CaptchaVerification, Error};
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use error::CaptchaVerification;
 
 pub mod error;
 pub mod hcaptcha;

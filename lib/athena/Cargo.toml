@@ -22,8 +22,8 @@ redis = { version = "0.23.2", default-features = false, features = [
     "streams",
     "tokio-rustls-comp",
 ] }
-serde = { version = "1.0.183", features = ["derive"] }
-simd-json = "0.10.5"
+serde = { version = "1.0.185", features = ["derive"] }
+simd-json = "0.10.6"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
 thiserror = "1.0.47"

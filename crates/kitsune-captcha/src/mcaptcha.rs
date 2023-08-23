@@ -1,12 +1,9 @@
+use crate::{CaptchaBackend, ChallengeStatus, Result};
 use async_trait::async_trait;
 use http::Request;
+use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
-
-use crate::Result;
-use crate::{CaptchaBackend, ChallengeStatus};
-
-use kitsune_http_client::Client;
 
 #[derive(Clone, TypedBuilder)]
 pub struct Captcha {
@@ -52,6 +49,7 @@ impl CaptchaBackend for Captcha {
         if !verification_result.valid {
             return Ok(ChallengeStatus::Failed(Vec::new()));
         }
+
         Ok(ChallengeStatus::Verified)
     }
 }

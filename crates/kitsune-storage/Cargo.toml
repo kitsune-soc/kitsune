@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.73"
 aws-sdk-s3 = "0.29.0"
-aws-smithy-http = "0.56.0"
+aws-smithy-http = "0.56.1"
 bytes = "1.4.0"
 enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
@@ -21,5 +21,5 @@ tokio-util = { version = "0.7.8", features = ["io"] }
 aws-credential-types = { version = "0.56.0", features = [
     "hardcoded-credentials",
 ] }
-tempfile = "3.7.1"
+tempfile = "3.8.0"
 tokio = { version = "1.32.0", features = ["macros", "rt"] }
