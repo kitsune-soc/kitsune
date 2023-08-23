@@ -65,11 +65,15 @@ pub async fn get(
 ) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
-        let mut db_conn = db_pool.get().await?;
-        let application = oauth2_applications::table
-            .find(query.client_id)
-            .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-            .get_result::<oauth2::Application>(&mut db_conn)
+        let application = db_pool
+            .with_connection(|mut db_conn| async move {
+                oauth2_applications::table
+                    .find(query.client_id)
+                    .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+                    .get_result::<oauth2::Application>(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await?;
 
         let auth_url = oidc_service
@@ -80,9 +84,17 @@ pub async fn get(
     }
 
     let authenticated_user = if let Some(user_id) = cookies.get("user_id") {
-        let mut db_conn = db_pool.get().await?;
         let id = user_id.value().parse::<Uuid>()?;
-        users::table.find(id).get_result(&mut db_conn).await?
+
+        db_pool
+            .with_connection(|mut db_conn| async move {
+                users::table
+                    .find(id)
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
+            .await?
     } else {
         return Ok(Either3::E2(LoginPage { flash_messages }));
     };
@@ -101,7 +113,7 @@ pub async fn get(
 
 #[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
-    State(db_conn): State<PgPool>,
+    State(db_pool): State<PgPool>,
     OriginalUri(original_url): OriginalUri,
     cookies: SignedCookieJar,
     flash: Flash,
@@ -113,13 +125,18 @@ pub async fn post(
         original_url.path()
     };
 
-    let mut db_conn = db_conn.get().await?;
-    let Some(user) = users::table
-        .filter(users::username.eq(form.username))
-        .first::<User>(&mut db_conn)
-        .await
-        .optional()?
-    else {
+    let user = db_pool
+        .with_connection(|mut db_conn| async move {
+            users::table
+                .filter(users::username.eq(form.username))
+                .first::<User>(&mut db_conn)
+                .await
+                .optional()
+                .map_err(Error::from)
+        })
+        .await?;
+
+    let Some(user) = user else {
         return Ok(Either::E2((
             flash.error(Error::PasswordMismatch.to_string()),
             Redirect::to(redirect_to),

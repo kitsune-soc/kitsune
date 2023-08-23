@@ -1,11 +1,13 @@
-use crate::{error::Result, mapping::MastodonMapper, state::Zustand};
+use crate::{
+    error::{ApiError, Result},
+    mapping::MastodonMapper,
+    service::account::AccountService,
+    state::Zustand,
+};
 use axum::{
     extract::{Path, State},
     routing, Json, Router,
 };
-use diesel::{QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
-use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::mastodon;
 use speedy_uuid::Uuid;
 
@@ -26,16 +28,14 @@ pub mod verify_credentials;
     )
 )]
 async fn get(
-    State(db_conn): State<PgPool>,
+    State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<mastodon::Account>> {
-    let mut db_conn = db_conn.get().await?;
-    let account = accounts::table
-        .find(id)
-        .select(Account::as_select())
-        .get_result::<Account>(&mut db_conn)
-        .await?;
+    let account = account_service
+        .get_by_id(id)
+        .await?
+        .ok_or(ApiError::NotFound)?;
 
     Ok(Json(mastodon_mapper.map(account).await?))
 }

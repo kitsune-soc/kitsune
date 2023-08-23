@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
 };
@@ -34,15 +34,23 @@ pub struct RelationshipQuery {
 )]
 pub async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
-    State(db_conn): State<PgPool>,
+    State(db_pool): State<PgPool>,
     State(mastodon_mapper): State<MastodonMapper>,
     Query(query): Query<RelationshipQuery>,
 ) -> Result<Json<Vec<Relationship>>> {
-    let mut db_conn = db_conn.get().await?;
-    let mut account_stream = accounts::table
-        .filter(accounts::id.eq_any(&query.id))
-        .select(Account::as_select())
-        .load_stream::<Account>(&mut db_conn)
+    let mut account_stream = db_pool
+        .with_connection(|mut db_conn| {
+            let query = &query;
+
+            async move {
+                accounts::table
+                    .filter(accounts::id.eq_any(&query.id))
+                    .select(Account::as_select())
+                    .load_stream::<Account>(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            }
+        })
         .await?;
 
     let mut relationships = Vec::with_capacity(query.id.len());
