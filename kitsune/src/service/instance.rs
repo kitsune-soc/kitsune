@@ -36,27 +36,33 @@ impl InstanceService {
     }
 
     pub async fn known_instances(&self) -> Result<u64> {
-        let mut db_conn = self.db_conn.get().await?;
-        accounts::table
-            .filter(accounts::local.eq(false))
-            .select(accounts::domain)
-            .distinct()
-            .count()
-            .get_result::<i64>(&mut db_conn)
+        self.db_conn
+            .with_connection(|mut db_conn| async move {
+                accounts::table
+                    .filter(accounts::local.eq(false))
+                    .select(accounts::domain)
+                    .distinct()
+                    .count()
+                    .get_result::<i64>(&mut db_conn)
+                    .await
+                    .map(|count| count as u64)
+                    .map_err(Error::from)
+            })
             .await
-            .map(|count| count as u64)
-            .map_err(Error::from)
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
-        let mut db_conn = self.db_conn.get().await?;
-        posts::table
-            .filter(posts::is_local.eq(true))
-            .count()
-            .get_result::<i64>(&mut db_conn)
+        self.db_conn
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .filter(posts::is_local.eq(true))
+                    .count()
+                    .get_result::<i64>(&mut db_conn)
+                    .await
+                    .map(|count| count as u64)
+                    .map_err(Error::from)
+            })
             .await
-            .map(|count| count as u64)
-            .map_err(Error::from)
     }
 
     #[must_use]
@@ -65,12 +71,15 @@ impl InstanceService {
     }
 
     pub async fn user_count(&self) -> Result<u64> {
-        let mut db_conn = self.db_conn.get().await?;
-        users::table
-            .count()
-            .get_result::<i64>(&mut db_conn)
+        self.db_conn
+            .with_connection(|mut db_conn| async move {
+                users::table
+                    .count()
+                    .get_result::<i64>(&mut db_conn)
+                    .await
+                    .map(|count| count as u64)
+                    .map_err(Error::from)
+            })
             .await
-            .map(|count| count as u64)
-            .map_err(Error::from)
     }
 }

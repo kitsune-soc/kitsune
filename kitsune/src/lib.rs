@@ -312,7 +312,7 @@ pub async fn initialise_state(
             .context("Couldn't build the federation filter (check your glob syntax)")?;
 
     let fetcher = Fetcher::builder()
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .embed_client(embed_client.clone())
         .federation_filter(federation_filter_service.clone())
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
@@ -385,7 +385,7 @@ pub async fn initialise_state(
         .build();
 
     let post_service = PostService::builder()
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .embed_client(embed_client.clone())
         .instance_service(instance_service.clone())
         .job_service(job_service.clone())
@@ -395,7 +395,7 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build();
 
-    let timeline_service = TimelineService::builder().db_conn(conn.clone()).build();
+    let timeline_service = TimelineService::builder().db_pool(conn.clone()).build();
 
     let user_service = UserService::builder()
         .captcha_service(captcha_service.clone())

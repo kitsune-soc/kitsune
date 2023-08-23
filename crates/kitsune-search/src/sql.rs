@@ -1,4 +1,4 @@
-use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
+use super::{Error, Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -16,13 +16,13 @@ use speedy_uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SearchService {
-    db_conn: PgPool,
+    db_pool: PgPool,
 }
 
 impl SearchService {
     #[must_use]
     pub fn new(db_conn: PgPool) -> Self {
-        Self { db_conn }
+        Self { db_pool: db_conn }
     }
 }
 
@@ -50,8 +50,6 @@ impl SearchBackend for SearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
-        let mut db_conn = self.db_conn.get().await?;
-
         let query_lang = kitsune_language::detect_language(DetectionBackend::default(), &query);
         let query_fn_call = websearch_to_tsquery_with_search_config(
             iso_code_to_language(LanguageIsoCode::from(query_lang)),
@@ -71,14 +69,20 @@ impl SearchBackend for SearchService {
                     query = query.filter(accounts::id.lt(max_id));
                 }
 
-                let results = query
-                    .limit(max_results as i64)
-                    .offset(offset as i64)
-                    .select(accounts::id)
-                    .load_stream(&mut db_conn)
-                    .await?
-                    .map_ok(|id| SearchResult { id })
-                    .try_collect()
+                let results = self
+                    .db_pool
+                    .with_connection(|mut db_conn| async move {
+                        query
+                            .limit(max_results as i64)
+                            .offset(offset as i64)
+                            .select(accounts::id)
+                            .load_stream(&mut db_conn)
+                            .await?
+                            .map_ok(|id| SearchResult { id })
+                            .try_collect()
+                            .await
+                            .map_err(Error::from)
+                    })
                     .await?;
 
                 Ok(results)
@@ -95,15 +99,24 @@ impl SearchBackend for SearchService {
                     query = query.filter(posts::id.lt(max_id));
                 }
 
-                let results = query
-                    .filter(posts::visibility.eq_any([Visibility::Public, Visibility::Unlisted]))
-                    .limit(max_results as i64)
-                    .offset(offset as i64)
-                    .select(posts::id)
-                    .load_stream(&mut db_conn)
-                    .await?
-                    .map_ok(|id| SearchResult { id })
-                    .try_collect()
+                let results = self
+                    .db_pool
+                    .with_connection(|mut db_conn| async move {
+                        query
+                            .filter(
+                                posts::visibility
+                                    .eq_any([Visibility::Public, Visibility::Unlisted]),
+                            )
+                            .limit(max_results as i64)
+                            .offset(offset as i64)
+                            .select(posts::id)
+                            .load_stream(&mut db_conn)
+                            .await?
+                            .map_ok(|id| SearchResult { id })
+                            .try_collect()
+                            .await
+                            .map_err(Error::from)
+                    })
                     .await?;
 
                 Ok(results)

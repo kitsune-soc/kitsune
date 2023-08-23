@@ -5,6 +5,7 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
+use futures_util::TryFutureExt;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -73,17 +74,21 @@ impl Client {
     }
 
     pub async fn fetch_embed(&self, url: &str) -> Result<LinkPreview<Embed>> {
-        {
-            let mut db_conn = self.db_pool.get().await?;
-            if let Some(data) = link_previews::table
-                .find(url)
-                .get_result::<LinkPreview<Embed>>(&mut db_conn)
-                .await
-                .optional()?
-            {
-                if data.expires_at > Timestamp::now_utc() {
-                    return Ok(data);
-                }
+        let embed_data = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                link_previews::table
+                    .find(url)
+                    .get_result::<LinkPreview<Embed>>(&mut db_conn)
+                    .await
+                    .optional()
+                    .map_err(Error::from)
+            })
+            .await?;
+
+        if let Some(data) = embed_data {
+            if data.expires_at > Timestamp::now_utc() {
+                return Ok(data);
             }
         }
 
@@ -96,20 +101,24 @@ impl Client {
         let response = HttpClient::execute(&self.http_client, request).await?;
         let (expires_at, embed_data): EmbedWithExpire = response.json().await?;
 
-        let mut db_conn = self.db_pool.get().await?;
-        let embed_data = diesel::insert_into(link_previews::table)
-            .values(NewLinkPreview {
-                url,
-                embed_data: Json(&embed_data),
-                expires_at,
+        let embed_data = self
+            .db_pool
+            .with_connection(|mut db_conn| {
+                diesel::insert_into(link_previews::table)
+                    .values(NewLinkPreview {
+                        url,
+                        embed_data: Json(&embed_data),
+                        expires_at,
+                    })
+                    .on_conflict(link_previews::url)
+                    .do_update()
+                    .set(ConflictLinkPreviewChangeset {
+                        embed_data: Json(&embed_data),
+                        expires_at,
+                    })
+                    .get_result(&mut db_conn)
+                    .map_err(Error::from)
             })
-            .on_conflict(link_previews::url)
-            .do_update()
-            .set(ConflictLinkPreviewChangeset {
-                embed_data: Json(&embed_data),
-                expires_at,
-            })
-            .get_result(&mut db_conn)
             .await?;
 
         Ok(embed_data)

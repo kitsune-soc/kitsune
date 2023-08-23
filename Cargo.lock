@@ -3838,6 +3838,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "embed-sdk",
+ "futures-util",
  "http",
  "iso8601-timestamp",
  "kitsune-db",

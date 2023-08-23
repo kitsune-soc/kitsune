@@ -33,12 +33,15 @@ async fn main() -> Result<()> {
 
     let config: Configuration = envy::from_env()?;
     let db_conn = kitsune_db::connect(&config.database_url, 1).await?;
-    let mut db_conn = db_conn.get().await?;
     let cmd = App::parse();
 
-    match cmd.subcommand {
-        AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
-    }
+    db_conn
+        .with_connection(|mut db_conn| async move {
+            match cmd.subcommand {
+                AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
+            }
 
-    Ok(())
+            Ok(())
+        })
+        .await
 }

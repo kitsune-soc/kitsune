@@ -37,19 +37,26 @@ pub struct PostComponent {
 
 impl PostComponent {
     pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
-        let mut db_conn = state.db_conn.get().await?;
+        let (author, attachments_stream) = state
+            .db_conn
+            .with_connection(|mut db_conn| {
+                let post = &post;
 
-        let author_fut = accounts::table
-            .find(post.account_id)
-            .select(Account::as_select())
-            .get_result::<Account>(&mut db_conn);
+                async move {
+                    let author_fut = accounts::table
+                        .find(post.account_id)
+                        .select(Account::as_select())
+                        .get_result::<Account>(&mut db_conn);
 
-        let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
-            .inner_join(media_attachments::table)
-            .select(DbMediaAttachment::as_select())
-            .load_stream::<DbMediaAttachment>(&mut db_conn);
+                    let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
+                        .inner_join(media_attachments::table)
+                        .select(DbMediaAttachment::as_select())
+                        .load_stream::<DbMediaAttachment>(&mut db_conn);
 
-        let (author, attachments_stream) = try_join!(author_fut, attachments_stream_fut)?;
+                    try_join!(author_fut, attachments_stream_fut).map_err(Error::from)
+                }
+            })
+            .await?;
 
         let attachments = attachments_stream
             .map_err(Error::from)
