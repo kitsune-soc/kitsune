@@ -68,25 +68,28 @@ impl IntoMastodon for DbAccount {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let mut db_conn = state.db_conn.get().await?;
+        let (statuses_count, followers_count, following_count) = state
+            .db_conn
+            .with_connection(|mut db_conn| async move {
+                let statuses_count_fut = posts::table
+                    .filter(posts::account_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(&mut db_conn);
 
-        let statuses_count_fut = posts::table
-            .filter(posts::account_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn);
+                let followers_count_fut = accounts_follows::table
+                    .filter(accounts_follows::account_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(&mut db_conn);
 
-        let followers_count_fut = accounts_follows::table
-            .filter(accounts_follows::account_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn);
+                let following_count_fut = accounts_follows::table
+                    .filter(accounts_follows::follower_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(&mut db_conn);
 
-        let following_count_fut = accounts_follows::table
-            .filter(accounts_follows::follower_id.eq(self.id))
-            .count()
-            .get_result::<i64>(&mut db_conn);
-
-        let (statuses_count, followers_count, following_count) =
-            try_join!(statuses_count_fut, followers_count_fut, following_count_fut)?;
+                try_join!(statuses_count_fut, followers_count_fut, following_count_fut)
+                    .map_err(Error::from)
+            })
+            .await?;
 
         let mut acct = self.username.clone();
         if !self.local {
