@@ -61,7 +61,7 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
         }
 
         let (user, account) = state
-            .db_conn
+            .db_pool
             .with_connection(|mut db_conn| async move {
                 user_account_query
                     .select(<(User, Account)>::as_select())

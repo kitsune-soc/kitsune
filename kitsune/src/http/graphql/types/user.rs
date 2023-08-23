@@ -25,7 +25,7 @@ pub struct User {
 #[ComplexObject]
 impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let mut db_conn = ctx.state().db_pool.get().await?;
 
         users::table
             .find(self.id)

@@ -30,7 +30,7 @@ impl Runnable for DeliverAccept {
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_conn.get().await?;
+        let mut db_conn = ctx.state.db_pool.get().await?;
         let Some(follow) = accounts_follows::table
             .find(self.follow_id)
             .get_result::<Follow>(&mut db_conn)

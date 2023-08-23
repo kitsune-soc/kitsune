@@ -90,13 +90,13 @@ struct ShowTokenPage {
 
 #[derive(Clone, TypedBuilder)]
 pub struct OAuth2Service {
-    db_conn: PgPool,
+    db_pool: PgPool,
     url_service: UrlService,
 }
 
 impl OAuth2Service {
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
-        let mut db_conn = self.db_conn.get().await?;
+        let mut db_conn = self.db_pool.get().await?;
 
         diesel::insert_into(oauth2_applications::table)
             .values(oauth2::NewApplication {
@@ -121,7 +121,7 @@ impl OAuth2Service {
             user_id,
         }: AuthorisationCode,
     ) -> Result<Response> {
-        let mut db_conn = self.db_conn.get().await?;
+        let mut db_conn = self.db_pool.get().await?;
         let authorization_code: oauth2::AuthorizationCode =
             diesel::insert_into(oauth2_authorization_codes::table)
                 .values(oauth2::NewAuthorizationCode {

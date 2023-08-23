@@ -48,7 +48,7 @@ impl IntoActivity for Favourite {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let account_url_fut = accounts::table
             .find(self.account_id)
             .select(accounts::url)
@@ -72,7 +72,7 @@ impl IntoActivity for Favourite {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let account_url = accounts::table
             .find(self.account_id)
             .select(accounts::url)
@@ -96,7 +96,7 @@ impl IntoActivity for Follow {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let attributed_to_fut = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
@@ -120,7 +120,7 @@ impl IntoActivity for Follow {
     }
 
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let attributed_to = accounts::table
             .find(self.follower_id)
             .select(accounts::url)
@@ -147,7 +147,7 @@ impl IntoActivity for Post {
         let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
-            let mut db_conn = state.db_conn.get().await?;
+            let mut db_conn = state.db_pool.get().await?;
             let reposted_post_url = posts::table
                 .find(reposted_post_id)
                 .select(posts::url)

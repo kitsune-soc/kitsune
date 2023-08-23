@@ -237,7 +237,7 @@ async fn prepare_oidc_client(
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 async fn prepare_search(
     search_config: &SearchConfiguration,
-    db_conn: &PgPool,
+    db_pool: &PgPool,
 ) -> eyre::Result<SearchService> {
     let service = match search_config {
         SearchConfiguration::Kitsune(_config) => {
@@ -265,7 +265,7 @@ async fn prepare_search(
                 .context("Failed to connect to Meilisearch")?
                 .into()
         }
-        SearchConfiguration::Sql => SqlSearchService::new(db_conn.clone()).into(),
+        SearchConfiguration::Sql => SqlSearchService::new(db_pool.clone()).into(),
         SearchConfiguration::None => NoopSearchService.into(),
     };
 
@@ -331,7 +331,7 @@ pub async fn initialise_state(
         .build();
 
     let attachment_service = AttachmentService::builder()
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .media_proxy_enabled(config.server.media_proxy_enabled)
         .storage_backend(prepare_storage(config))
         .url_service(url_service.clone())
@@ -339,7 +339,7 @@ pub async fn initialise_state(
 
     let account_service = AccountService::builder()
         .attachment_service(attachment_service.clone())
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .fetcher(fetcher.clone())
         .job_service(job_service.clone())
         .url_service(url_service.clone())
@@ -350,7 +350,7 @@ pub async fn initialise_state(
     let captcha_service = CaptchaService::builder().backend(captcha_backend).build();
 
     let instance_service = InstanceService::builder()
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .name(config.instance.name.as_str())
         .description(config.instance.description.as_str())
         .character_limit(config.instance.character_limit)
@@ -376,7 +376,7 @@ pub async fn initialise_state(
     .transpose()?;
 
     let oauth2_service = OAuth2Service::builder()
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .url_service(url_service.clone())
         .build();
 
@@ -399,7 +399,7 @@ pub async fn initialise_state(
 
     let user_service = UserService::builder()
         .captcha_service(captcha_service.clone())
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .job_service(job_service.clone())
         .registrations_open(config.instance.registrations_open)
         .url_service(url_service.clone())
@@ -414,7 +414,7 @@ pub async fn initialise_state(
                 .await
                 .expect("Failed to register status event consumer"),
         )
-        .db_conn(conn.clone())
+        .db_pool(conn.clone())
         .embed_client(embed_client.clone())
         .mastodon_cache(prepare_cache(config, "MASTODON-ENTITY"))
         .url_service(url_service.clone())
@@ -422,7 +422,7 @@ pub async fn initialise_state(
         .expect("[Bug] Failed to initialise Mastodon mapper");
 
     Ok(Zustand {
-        db_conn: conn.clone(),
+        db_pool: conn.clone(),
         embed_client,
         event_emitter: EventEmitter {
             post: status_event_emitter.clone(),

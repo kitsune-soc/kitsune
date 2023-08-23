@@ -34,7 +34,7 @@ pub struct Post {
 #[ComplexObject]
 impl Post {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let mut db_conn = ctx.state().db_pool.get().await?;
 
         Ok(accounts::table
             .find(self.account_id)
@@ -45,7 +45,7 @@ impl Post {
     }
 
     pub async fn attachments(&self, ctx: &Context<'_>) -> Result<Vec<MediaAttachment>> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let mut db_conn = ctx.state().db_pool.get().await?;
 
         let attachments = media_attachments::table
             .inner_join(posts_media_attachments::table)

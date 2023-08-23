@@ -40,7 +40,7 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
 
     let account = accounts::table
         .find(account_id)

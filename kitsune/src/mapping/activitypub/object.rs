@@ -70,7 +70,7 @@ impl IntoObject for Post {
             return Err(ApiError::NotFound.into());
         }
 
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let account_fut = accounts::table
             .find(self.account_id)
             .select(Account::as_select())
@@ -155,7 +155,7 @@ impl IntoObject for Account {
     type Output = Actor;
 
     async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
 
         let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
             media_attachments::table

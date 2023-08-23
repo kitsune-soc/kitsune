@@ -57,7 +57,7 @@ pub struct AttachmentService {
             .build()
     )]
     client: Client,
-    db_conn: PgPool,
+    db_pool: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
     storage_backend: Storage,
@@ -66,12 +66,15 @@ pub struct AttachmentService {
 
 impl AttachmentService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
-        let mut db_conn = self.db_conn.get().await?;
-        media_attachments::table
-            .find(id)
-            .get_result(&mut db_conn)
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                media_attachments::table
+                    .find(id)
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await
-            .map_err(Error::from)
     }
 
     /// Get the URL to an attachment
@@ -128,18 +131,21 @@ impl AttachmentService {
             };
         }
 
-        let mut db_conn = self.db_conn.get().await?;
-        diesel::update(
-            media_attachments::table.filter(
-                media_attachments::id
-                    .eq(update.attachment_id)
-                    .and(media_attachments::account_id.eq(update.account_id)),
-            ),
-        )
-        .set(changeset)
-        .get_result(&mut db_conn)
-        .await
-        .map_err(Error::from)
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::update(
+                    media_attachments::table.filter(
+                        media_attachments::id
+                            .eq(update.attachment_id)
+                            .and(media_attachments::account_id.eq(update.account_id)),
+                    ),
+                )
+                .set(changeset)
+                .get_result(&mut db_conn)
+                .await
+                .map_err(Error::from)
+            })
+            .await
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
@@ -156,18 +162,23 @@ impl AttachmentService {
             .await
             .map_err(Error::Storage)?;
 
-        let mut db_conn = self.db_conn.get().await?;
-        let media_attachment = diesel::insert_into(media_attachments::table)
-            .values(NewMediaAttachment {
-                id: Uuid::now_v7(),
-                account_id: upload.account_id,
-                content_type: upload.content_type.as_str(),
-                description: upload.description.as_deref(),
-                blurhash: None,
-                file_path: Some(upload.path.as_str()),
-                remote_url: None,
+        let media_attachment = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                diesel::insert_into(media_attachments::table)
+                    .values(NewMediaAttachment {
+                        id: Uuid::now_v7(),
+                        account_id: upload.account_id,
+                        content_type: upload.content_type.as_str(),
+                        description: upload.description.as_deref(),
+                        blurhash: None,
+                        file_path: Some(upload.path.as_str()),
+                        remote_url: None,
+                    })
+                    .get_result(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
             })
-            .get_result(&mut db_conn)
             .await?;
 
         Ok(media_attachment)

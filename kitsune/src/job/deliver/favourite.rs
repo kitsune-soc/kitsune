@@ -22,7 +22,7 @@ impl Runnable for DeliverFavourite {
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_conn.get().await?;
+        let mut db_conn = ctx.state.db_pool.get().await?;
         let favourite = posts_favourites::table
             .find(self.favourite_id)
             .get_result::<Favourite>(&mut db_conn)

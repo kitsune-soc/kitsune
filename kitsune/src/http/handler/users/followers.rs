@@ -17,7 +17,7 @@ pub async fn get(
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Collection>> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     let follower_count = accounts_follows::table
         .inner_join(
             accounts::table.on(accounts_follows::account_id

@@ -53,7 +53,7 @@ pub struct Register {
 
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
-    db_conn: PgPool,
+    db_pool: PgPool,
     job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
@@ -62,7 +62,7 @@ pub struct UserService {
 
 impl UserService {
     pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
-        self.db_conn
+        self.db_pool
             .with_connection(|mut db_conn| async move {
                 diesel::update(
                     users::table
@@ -80,7 +80,7 @@ impl UserService {
     }
 
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
-        self.db_conn
+        self.db_pool
             .with_connection(|mut db_conn| async move {
                 diesel::update(users::table.find(user_id))
                     .set(users::confirmed_at.eq(Timestamp::now_utc()))
@@ -132,7 +132,7 @@ impl UserService {
         let public_key_id = self.url_service.public_key_id(account_id);
 
         let new_user = self
-            .db_conn
+            .db_pool
             .with_transaction(|tx| {
                 async move {
                     let account_fut = diesel::insert_into(accounts::table)

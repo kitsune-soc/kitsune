@@ -34,8 +34,8 @@ impl Runnable for DeliverUpdate {
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
-        let mut db_conn = ctx.state.db_conn.get().await?;
+        let inbox_resolver = InboxResolver::new(ctx.state.db_pool.clone());
+        let mut db_conn = ctx.state.db_pool.get().await?;
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {
                 let Some((account, user)) = accounts::table

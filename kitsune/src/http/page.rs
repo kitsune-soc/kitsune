@@ -38,7 +38,7 @@ pub struct PostComponent {
 impl PostComponent {
     pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
         let (author, attachments_stream) = state
-            .db_conn
+            .db_pool
             .with_connection(|mut db_conn| {
                 let post = &post;
 

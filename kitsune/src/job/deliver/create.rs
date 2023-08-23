@@ -27,7 +27,7 @@ impl Runnable for DeliverCreate {
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_conn.get().await?;
+        let mut db_conn = ctx.state.db_pool.get().await?;
         let Some(post) = posts::table
             .find(self.post_id)
             .select(Post::as_select())
@@ -45,7 +45,7 @@ impl Runnable for DeliverCreate {
             .get_result::<(Account, User)>(&mut db_conn)
             .await?;
 
-        let inbox_resolver = InboxResolver::new(ctx.state.db_conn.clone());
+        let inbox_resolver = InboxResolver::new(ctx.state.db_pool.clone());
         let inbox_stream = inbox_resolver
             .resolve(&post)
             .await?

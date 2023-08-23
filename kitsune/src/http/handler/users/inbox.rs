@@ -26,7 +26,7 @@ use speedy_uuid::Uuid;
 use std::ops::Not;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     diesel::update(accounts_follows::table.filter(accounts_follows::url.eq(activity.object())))
         .set(accounts_follows::approved_at.eq(Timestamp::now_utc()))
         .execute(&mut db_conn)
@@ -38,7 +38,7 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
 async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let reposted_post = state.fetcher.fetch_object(activity.object()).await?;
 
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     diesel::insert_into(posts::table)
         .values(NewPost {
             id: Uuid::now_v7(),
@@ -63,7 +63,7 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
 
 async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
-        let mut db_conn = state.db_conn.get().await?;
+        let mut db_conn = state.db_pool.get().await?;
         let process_data = ProcessNewObject::builder()
             .author(author)
             .db_conn(&mut db_conn)
@@ -89,7 +89,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
 }
 
 async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     let post_id = posts::table
         .filter(posts::account_id.eq(author.id))
         .filter(posts::url.eq(activity.object()))
@@ -118,7 +118,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
 
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     let follow_id = diesel::insert_into(accounts_follows::table)
         .values(NewFollow {
             id: Uuid::now_v7(),
@@ -144,7 +144,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
 }
 
 async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     let permission_check = PermissionCheck::builder()
         .fetching_account_id(Some(author.id))
         .build()
@@ -172,7 +172,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
 }
 
 async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     diesel::delete(
         accounts_follows::table.filter(
             accounts_follows::account_id
@@ -187,7 +187,7 @@ async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -
 }
 
 async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
     // An undo activity can apply for likes and follows and announces
     diesel::delete(
         posts_favourites::table.filter(

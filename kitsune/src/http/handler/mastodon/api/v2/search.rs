@@ -67,7 +67,7 @@ async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Either<Json<SearchResult>, StatusCode>> {
-    let mut db_conn = state.db_conn.get().await?;
+    let mut db_conn = state.db_pool.get().await?;
 
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {

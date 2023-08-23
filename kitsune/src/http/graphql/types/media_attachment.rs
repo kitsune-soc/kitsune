@@ -27,7 +27,7 @@ pub struct MediaAttachment {
 #[ComplexObject]
 impl MediaAttachment {
     pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Account> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let mut db_conn = ctx.state().db_pool.get().await?;
 
         accounts::table
             .find(self.account_id)
