@@ -6,6 +6,7 @@ use crate::{
     job::deliver::accept::DeliverAccept,
     service::{federation_filter::FederationFilterService, job::Enqueue},
     state::Zustand,
+    try_join,
 };
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
@@ -26,10 +27,17 @@ use speedy_uuid::Uuid;
 use std::ops::Not;
 
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_pool.get().await?;
-    diesel::update(accounts_follows::table.filter(accounts_follows::url.eq(activity.object())))
-        .set(accounts_follows::approved_at.eq(Timestamp::now_utc()))
-        .execute(&mut db_conn)
+    state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            diesel::update(
+                accounts_follows::table.filter(accounts_follows::url.eq(activity.object())),
+            )
+            .set(accounts_follows::approved_at.eq(Timestamp::now_utc()))
+            .execute(&mut db_conn)
+            .await
+            .map_err(Error::from)
+        })
         .await?;
 
     Ok(())
@@ -38,24 +46,29 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
 async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let reposted_post = state.fetcher.fetch_object(activity.object()).await?;
 
-    let mut db_conn = state.db_pool.get().await?;
-    diesel::insert_into(posts::table)
-        .values(NewPost {
-            id: Uuid::now_v7(),
-            account_id: author.id,
-            in_reply_to_id: None,
-            reposted_post_id: Some(reposted_post.id),
-            is_sensitive: false,
-            subject: None,
-            content: "",
-            content_lang: kitsune_language::Language::Eng.into(),
-            link_preview_url: None,
-            visibility: reposted_post.visibility,
-            is_local: false,
-            url: activity.id.as_str(),
-            created_at: None,
+    state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            diesel::insert_into(posts::table)
+                .values(NewPost {
+                    id: Uuid::now_v7(),
+                    account_id: author.id,
+                    in_reply_to_id: None,
+                    reposted_post_id: Some(reposted_post.id),
+                    is_sensitive: false,
+                    subject: None,
+                    content: "",
+                    content_lang: kitsune_language::Language::Eng.into(),
+                    link_preview_url: None,
+                    visibility: reposted_post.visibility,
+                    is_local: false,
+                    url: activity.id.as_str(),
+                    created_at: None,
+                })
+                .execute(&mut db_conn)
+                .await
+                .map_err(Error::from)
         })
-        .execute(&mut db_conn)
         .await?;
 
     Ok(())
@@ -63,10 +76,9 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
 
 async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
-        let mut db_conn = state.db_pool.get().await?;
         let process_data = ProcessNewObject::builder()
             .author(author)
-            .db_conn(&mut db_conn)
+            .db_pool(&state.db_pool)
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
             .object(object)
@@ -89,16 +101,22 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
 }
 
 async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_pool.get().await?;
-    let post_id = posts::table
-        .filter(posts::account_id.eq(author.id))
-        .filter(posts::url.eq(activity.object()))
-        .select(posts::id)
-        .get_result(&mut db_conn)
-        .await?;
+    let post_id = state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            let post_id = posts::table
+                .filter(posts::account_id.eq(author.id))
+                .filter(posts::url.eq(activity.object()))
+                .select(posts::id)
+                .get_result(&mut db_conn)
+                .await?;
 
-    diesel::delete(posts::table.find(post_id))
-        .execute(&mut db_conn)
+            diesel::delete(posts::table.find(post_id))
+                .execute(&mut db_conn)
+                .await?;
+
+            Ok::<_, Error>(post_id)
+        })
         .await?;
 
     state
@@ -118,18 +136,23 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
 
-    let mut db_conn = state.db_pool.get().await?;
-    let follow_id = diesel::insert_into(accounts_follows::table)
-        .values(NewFollow {
-            id: Uuid::now_v7(),
-            account_id: followed_user.id,
-            follower_id: author.id,
-            approved_at,
-            url: activity.id.as_str(),
-            created_at: Some(activity.published),
+    let follow_id = state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            diesel::insert_into(accounts_follows::table)
+                .values(NewFollow {
+                    id: Uuid::now_v7(),
+                    account_id: followed_user.id,
+                    follower_id: author.id,
+                    approved_at,
+                    url: activity.id.as_str(),
+                    created_at: Some(activity.published),
+                })
+                .returning(accounts_follows::id)
+                .get_result(&mut db_conn)
+                .await
+                .map_err(Error::from)
         })
-        .returning(accounts_follows::id)
-        .get_result(&mut db_conn)
         .await?;
 
     if followed_user.local {
@@ -144,80 +167,96 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
 }
 
 async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_pool.get().await?;
     let permission_check = PermissionCheck::builder()
         .fetching_account_id(Some(author.id))
         .build()
         .unwrap();
 
-    let post = posts::table
-        .filter(posts::url.eq(activity.object()))
-        .add_post_permission_check(permission_check)
-        .select(Post::as_select())
-        .get_result::<Post>(&mut db_conn)
-        .await?;
+    state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            let post = posts::table
+                .filter(posts::url.eq(activity.object()))
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .get_result::<Post>(&mut db_conn)
+                .await?;
 
-    diesel::insert_into(posts_favourites::table)
-        .values(NewFavourite {
-            id: Uuid::now_v7(),
-            account_id: author.id,
-            post_id: post.id,
-            url: activity.id,
-            created_at: Some(Timestamp::now_utc()),
+            diesel::insert_into(posts_favourites::table)
+                .values(NewFavourite {
+                    id: Uuid::now_v7(),
+                    account_id: author.id,
+                    post_id: post.id,
+                    url: activity.id,
+                    created_at: Some(Timestamp::now_utc()),
+                })
+                .execute(&mut db_conn)
+                .await?;
+
+            Ok::<_, Error>(())
         })
-        .execute(&mut db_conn)
         .await?;
 
     Ok(())
 }
 
 async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_pool.get().await?;
-    diesel::delete(
-        accounts_follows::table.filter(
-            accounts_follows::account_id
-                .eq(author.id)
-                .and(accounts_follows::url.eq(activity.object())),
-        ),
-    )
-    .execute(&mut db_conn)
-    .await?;
+    state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            diesel::delete(
+                accounts_follows::table.filter(
+                    accounts_follows::account_id
+                        .eq(author.id)
+                        .and(accounts_follows::url.eq(activity.object())),
+                ),
+            )
+            .execute(&mut db_conn)
+            .await
+            .map_err(Error::from)
+        })
+        .await?;
 
     Ok(())
 }
 
 async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let mut db_conn = state.db_pool.get().await?;
-    // An undo activity can apply for likes and follows and announces
-    diesel::delete(
-        posts_favourites::table.filter(
-            posts_favourites::account_id
-                .eq(author.id)
-                .and(posts_favourites::url.eq(activity.object())),
-        ),
-    )
-    .execute(&mut db_conn)
-    .await?;
+    state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            // An undo activity can apply for likes and follows and announces
+            let favourite_delete_fut = diesel::delete(
+                posts_favourites::table.filter(
+                    posts_favourites::account_id
+                        .eq(author.id)
+                        .and(posts_favourites::url.eq(activity.object())),
+                ),
+            )
+            .execute(&mut db_conn);
 
-    diesel::delete(
-        accounts_follows::table.filter(
-            accounts_follows::follower_id
-                .eq(author.id)
-                .and(accounts_follows::url.eq(activity.object())),
-        ),
-    )
-    .execute(&mut db_conn)
-    .await?;
+            let follow_delete_fut = diesel::delete(
+                accounts_follows::table.filter(
+                    accounts_follows::follower_id
+                        .eq(author.id)
+                        .and(accounts_follows::url.eq(activity.object())),
+                ),
+            )
+            .execute(&mut db_conn);
 
-    diesel::delete(
-        posts::table.filter(
-            posts::url
-                .eq(activity.object())
-                .and(posts::account_id.eq(author.id)),
-        ),
-    )
-    .execute(&mut db_conn)
-    .await?;
+            let repost_delete_fut = diesel::delete(
+                posts::table.filter(
+                    posts::url
+                        .eq(activity.object())
+                        .and(posts::account_id.eq(author.id)),
+                ),
+            )
+            .execute(&mut db_conn);
+
+            try_join!(favourite_delete_fut, follow_delete_fut, repost_delete_fut)?;
+
+            Ok::<_, Error>(())
+        })
+        .await?;
 
     Ok(())
 }

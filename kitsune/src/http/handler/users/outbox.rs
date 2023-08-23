@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::{Error, Result},
     http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
@@ -40,13 +40,17 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
-    let mut db_conn = state.db_pool.get().await?;
-
-    let account = accounts::table
-        .find(account_id)
-        .filter(accounts::local.eq(true))
-        .select(Account::as_select())
-        .get_result::<Account>(&mut db_conn)
+    let account = state
+        .db_pool
+        .with_connection(|mut db_conn| async move {
+            accounts::table
+                .find(account_id)
+                .filter(accounts::local.eq(true))
+                .select(Account::as_select())
+                .get_result::<Account>(&mut db_conn)
+                .await
+                .map_err(Error::from)
+        })
         .await?;
 
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
@@ -91,10 +95,16 @@ pub async fn get(
             ordered_items,
         })))
     } else {
-        let public_post_count = Post::belonging_to(&account)
-            .add_post_permission_check(PermissionCheck::default())
-            .count()
-            .get_result::<i64>(&mut db_conn)
+        let public_post_count = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                Post::belonging_to(&account)
+                    .add_post_permission_check(PermissionCheck::default())
+                    .count()
+                    .get_result::<i64>(&mut db_conn)
+                    .await
+                    .map_err(Error::from)
+            })
             .await?;
 
         let first = format!("{base_url}?page=true");
