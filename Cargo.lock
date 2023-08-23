@@ -3688,6 +3688,7 @@ dependencies = [
  "jemallocator",
  "just-retry",
  "kitsune-cache",
+ "kitsune-captcha",
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
@@ -3760,6 +3761,23 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "kitsune-captcha"
+version = "0.0.1-pre.2"
+dependencies = [
+ "async-trait",
+ "enum_dispatch",
+ "http",
+ "kitsune-http-client",
+ "serde",
+ "serde_urlencoded",
+ "simd-json",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "typed-builder",
 ]
 
 [[package]]

@@ -3,6 +3,7 @@ use crate::{
     http::graphql::{types::Instance, ContextExt},
 };
 use async_graphql::{Context, Object, Result};
+use std::convert::Into;
 
 #[derive(Default)]
 pub struct InstanceQuery;
@@ -14,15 +15,17 @@ impl InstanceQuery {
         let state = ctx.state();
         let instance_service = &state.service.instance;
         let url_service = &state.service.url;
+        let captcha = state.service.captcha.backend.clone().map(Into::into);
 
         let description = instance_service.description().into();
-        let domain = url_service.domain().into();
+        let domain = url_service.webfinger_domain().into();
         let local_post_count = instance_service.local_post_count().await?;
         let name = instance_service.name().into();
         let registrations_open = instance_service.registrations_open();
         let user_count = instance_service.user_count().await?;
 
         Ok(Instance {
+            captcha,
             description,
             domain,
             local_post_count,

@@ -110,6 +110,7 @@ impl AuthMutation {
         #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
         #[graphql(validator(email))] email: String,
         #[graphql(secret, validator(custom = "PasswordValidator"))] password: Password,
+        captcha_token: Option<String>,
     ) -> Result<User> {
         let state = ctx.state();
 
@@ -117,6 +118,7 @@ impl AuthMutation {
             .username(username)
             .email(email)
             .password(password.into())
+            .captcha_token(captcha_token)
             .build();
         let new_user = state.service.user.register(register).await?;
 

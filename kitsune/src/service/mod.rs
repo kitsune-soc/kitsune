@@ -1,5 +1,6 @@
 pub mod account;
 pub mod attachment;
+pub mod captcha;
 pub mod federation_filter;
 pub mod instance;
 pub mod job;

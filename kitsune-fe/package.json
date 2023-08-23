@@ -17,6 +17,8 @@
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/vue-fontawesome": "^3.0.2",
+    "@hcaptcha/vue3-hcaptcha": "^1.3.0",
+    "@mcaptcha/vanilla-glue": "^0.1.0-alpha-3",
     "@urql/vue": "^1.1.2",
     "@vueuse/core": "^10.3.0",
     "@zxcvbn-ts/core": "^3.0.3",
