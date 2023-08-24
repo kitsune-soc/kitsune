@@ -2,7 +2,7 @@ use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     mapping::MastodonMapper,
-    service::post::{CreatePost, DeletePost, PostService},
+    service::post::{CreatePost, DeletePost, PostService, UpdatePost},
     state::Zustand,
 };
 use axum::{
@@ -18,7 +18,9 @@ use utoipa::ToSchema;
 
 pub mod context;
 pub mod favourite;
+pub mod reblog;
 pub mod unfavourite;
+pub mod unreblog;
 
 #[derive(Deserialize, ToSchema)]
 pub struct CreateForm {
@@ -31,6 +33,18 @@ pub struct CreateForm {
     spoiler_text: Option<String>,
     #[serde(default)]
     visibility: Visibility,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct UpdateForm {
+    #[serde(default)]
+    media_ids: Vec<Uuid>,
+    #[serde(default)]
+    status: Option<String>,
+    #[serde(default)]
+    sensitive: Option<bool>,
+    #[serde(default)]
+    spoiler_text: Option<String>,
 }
 
 #[debug_handler(state = Zustand)]
@@ -132,11 +146,46 @@ async fn post(
     Ok(Json(status))
 }
 
+#[debug_handler(state = Zustand)]
+#[utoipa::path(
+    put,
+    path = "/api/v1/statuses/{id}",
+    security(
+        ("oauth_token" = [])
+    ),
+    request_body = UpdateForm,
+    responses(
+        (status = StatusCode::OK, description = "Status has been successfully edited", body = Status),
+        (status = StatusCode::NOT_FOUND, description = "Requested status doesn't exist"),
+    )
+)]
+async fn put(
+    State(mastodon_mapper): State<MastodonMapper>,
+    State(post): State<PostService>,
+    Path(id): Path<Uuid>,
+    FormOrJson(form): FormOrJson<UpdateForm>,
+) -> Result<Json<Status>> {
+    let update_post = UpdatePost::builder()
+        .post_id(id)
+        .content(form.status)
+        .media_ids(form.media_ids)
+        .sensitive(form.sensitive)
+        .subject(form.spoiler_text)
+        .build()
+        .unwrap();
+
+    let status = mastodon_mapper.map(post.update(update_post).await?).await?;
+
+    Ok(Json(status))
+}
+
 pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
-        .route("/:id", routing::get(get).delete(delete))
+        .route("/:id", routing::get(get).delete(delete).put(put))
         .route("/:id/context", routing::get(context::get))
         .route("/:id/favourite", routing::post(favourite::post))
+        .route("/:id/reblog", routing::post(reblog::post))
         .route("/:id/unfavourite", routing::post(unfavourite::post))
+        .route("/:id/unreblog", routing::post(unreblog::post))
 }

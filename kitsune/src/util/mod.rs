@@ -4,6 +4,7 @@ use hex_simd::AsciiCase;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
+use pulldown_cmark::{html, Options, Parser};
 use speedy_uuid::{uuid, Uuid};
 
 pub mod catch_panic;
@@ -29,6 +30,15 @@ pub fn timestamp_to_uuid(timestamp: Timestamp) -> Uuid {
         uuid::Timestamp::from_unix(uuid::NoContext, seconds as u64, timestamp.nanosecond());
 
     Uuid::new_v7(uuid_timestamp)
+}
+
+#[inline]
+#[must_use]
+pub fn process_markdown(markdown: &str) -> String {
+    let parser = Parser::new_ext(markdown, Options::all());
+    let mut buf = String::new();
+    html::push_html(&mut buf, parser);
+    buf
 }
 
 pub trait AccessTokenTtl {

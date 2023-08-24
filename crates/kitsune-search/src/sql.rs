@@ -32,7 +32,7 @@ impl SearchBackend for SearchService {
         Ok(())
     }
 
-    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
+    async fn remove_from_index(&self, _item: &SearchItem) -> Result<()> {
         Ok(())
     }
 
@@ -120,5 +120,9 @@ impl SearchBackend for SearchService {
                 Ok(results)
             }
         }
+    }
+
+    async fn update_in_index(&self, _item: SearchItem) -> Result<()> {
+        Ok(())
     }
 }

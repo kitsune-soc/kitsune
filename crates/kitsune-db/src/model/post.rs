@@ -63,6 +63,18 @@ pub struct NewPost<'a> {
     pub created_at: Option<Timestamp>,
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = posts)]
+pub struct PostChangeset<'a> {
+    pub id: Uuid,
+    pub is_sensitive: Option<bool>,
+    pub subject: Option<&'a str>,
+    pub content: Option<&'a str>,
+    pub content_lang: Option<LanguageIsoCode>,
+    pub link_preview_url: Option<&'a str>,
+    pub updated_at: Timestamp,
+}
+
 #[derive(
     AsExpression,
     Clone,
