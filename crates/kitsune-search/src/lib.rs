@@ -39,7 +39,7 @@ pub enum SearchService {
     Sql(SqlSearchService),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Account {
     pub id: Uuid,
     pub display_name: Option<String>,
@@ -62,7 +62,7 @@ impl From<DbAccount> for Account {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Post {
     pub id: Uuid,
     pub subject: Option<String>,
@@ -83,7 +83,7 @@ impl From<DbPost> for Post {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum SearchItem {
     Account(Account),

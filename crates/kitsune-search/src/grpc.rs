@@ -144,6 +144,14 @@ impl SearchBackend for SearchService {
 
         Ok(results)
     }
+
+    #[instrument(skip_all)]
+    async fn update_in_index(&self, item: SearchItem) -> Result<()> {
+        self.remove_from_index(item.clone()).await?;
+        self.add_to_index(item).await?;
+
+        Ok(())
+    }
 }
 
 impl From<SearchIndex> for GrpcSearchIndex {
