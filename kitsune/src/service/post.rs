@@ -517,10 +517,9 @@ impl PostService {
             None
         };
 
-        let mut db_conn = self.db_conn.get().await?;
-
-        let post = db_conn
-            .transaction(move |tx| {
+        let post = self
+            .db_pool
+            .with_transaction(move |tx| {
                 async move {
                     let post: Post = diesel::update(posts::table)
                         .set(PostChangeset {
@@ -584,36 +583,44 @@ impl PostService {
             .build()
             .unwrap();
 
-        let mut db_conn = self.db_conn.get().await?;
-
-        let existing_boost: Option<Post> = posts::table
-            .filter(
-                posts::reposted_post_id
-                    .eq(boost_post.post_id)
-                    .and(posts::account_id.eq(boost_post.account_id)),
-            )
-            .add_post_permission_check(permission_check)
-            .select(Post::as_select())
-            .first(&mut db_conn)
-            .await
-            .optional()?;
+        let existing_boost: Option<Post> = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .filter(
+                        posts::reposted_post_id
+                            .eq(boost_post.post_id)
+                            .and(posts::account_id.eq(boost_post.account_id)),
+                    )
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .first(&mut db_conn)
+                    .await
+                    .optional()
+            })
+            .await?;
 
         if let Some(boost) = existing_boost {
             return Ok(boost);
         }
 
-        let post: Post = posts::table
-            .find(boost_post.post_id)
-            .add_post_permission_check(permission_check)
-            .select(Post::as_select())
-            .get_result(&mut db_conn)
+        let post: Post = self
+            .db_pool
+            .with_connection(|mut db_conn| {
+                posts::table
+                    .find(boost_post.post_id)
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .get_result(&mut db_conn)
+            })
             .await?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let boost = db_conn
-            .transaction(move |tx| {
+        let boost = self
+            .db_pool
+            .with_transaction(move |tx| {
                 async move {
                     let boost: Post = diesel::insert_into(posts::table)
                         .values(NewPost {
@@ -671,17 +678,19 @@ impl PostService {
             .build()
             .unwrap();
 
-        let mut db_conn = self.db_conn.get().await?;
-
-        let post: Post = posts::table
-            .filter(
-                posts::account_id
-                    .eq(unboost_post.account_id)
-                    .and(posts::reposted_post_id.eq(unboost_post.post_id)),
-            )
-            .add_post_permission_check(permission_check)
-            .select(Post::as_select())
-            .first(&mut db_conn)
+        let post: Post = self
+            .db_pool
+            .with_connection(|mut db_conn| {
+                posts::table
+                    .filter(
+                        posts::account_id
+                            .eq(unboost_post.account_id)
+                            .and(posts::reposted_post_id.eq(unboost_post.post_id)),
+                    )
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .first(&mut db_conn)
+            })
             .await?;
 
         self.job_service
