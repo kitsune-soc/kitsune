@@ -110,4 +110,8 @@ impl SearchBackend for SearchService {
             }
         }
     }
+
+    async fn update_in_index(&self, _item: SearchItem) -> Result<()> {
+        Ok(())
+    }
 }

@@ -147,6 +147,8 @@ pub trait SearchBackend: Send + Sync {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>>;
+
+    async fn update_in_index(&self, item: SearchItem) -> Result<()>;
 }
 
 /// Dummy search service
@@ -179,5 +181,9 @@ impl SearchBackend for NoopSearchService {
         _max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
         Ok(Vec::new())
+    }
+
+    async fn update_in_index(&self, _item: SearchItem) -> Result<()> {
+        Ok(())
     }
 }

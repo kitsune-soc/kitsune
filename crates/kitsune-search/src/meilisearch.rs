@@ -122,4 +122,15 @@ impl SearchBackend for MeiliSearchService {
 
         Ok(results.hits.into_iter().map(|item| item.result).collect())
     }
+
+    #[instrument(skip_all)]
+    async fn update_in_index(&self, item: SearchItem) -> Result<()> {
+        self.get_index(item.index())
+            .add_or_update(&[item], Some("id"))
+            .await?
+            .wait_for_completion(&self.client, None, None)
+            .await?;
+
+        Ok(())
+    }
 }

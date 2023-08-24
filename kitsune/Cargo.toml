@@ -51,6 +51,11 @@ http = "0.2.9"
 human-panic = "1.1.5"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
+isolang = { version = "2.3.0", features = [
+    "english_names",
+    "list_languages",
+    "serde",
+] }
 jemallocator = { version = "0.5.4", default-features = false, features = [
     "background_threads",
 ] }
