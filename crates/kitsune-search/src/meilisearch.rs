@@ -58,7 +58,7 @@ impl SearchBackend for MeiliSearchService {
     }
 
     #[instrument(skip_all)]
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
+    async fn remove_from_index(&self, item: &SearchItem) -> Result<()> {
         match item {
             SearchItem::Account(account) => {
                 self.get_index(SearchIndex::Account)

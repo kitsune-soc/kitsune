@@ -457,7 +457,7 @@ impl PostService {
             .await
             .map_err(Error::Event)?;
 
-        self.search_service.remove_from_index(post.into()).await?;
+        self.search_service.remove_from_index(&post.into()).await?;
 
         Ok(())
     }

@@ -130,7 +130,7 @@ pub trait SearchBackend: Send + Sync {
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
     /// Remove an item from the index
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()>;
+    async fn remove_from_index(&self, item: &SearchItem) -> Result<()>;
 
     /// Reset a search index
     ///
@@ -163,7 +163,7 @@ impl SearchBackend for NoopSearchService {
         Ok(())
     }
 
-    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
+    async fn remove_from_index(&self, _item: &SearchItem) -> Result<()> {
         Ok(())
     }
 
