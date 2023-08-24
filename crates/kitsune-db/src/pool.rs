@@ -15,6 +15,14 @@ pub enum PoolError<E> {
     User(E),
 }
 
+/// Small wrapper around [`Pool<AsyncPgConnection>`]
+///
+/// The intent of this API is to encourage and make short-livel ownership of connections easier.
+/// With the traditional RAII guard based approach, it is rather hard (and/or ugly) to define clear scopes for connections
+/// (especially when they are used *a lot* throughout the code).
+///
+/// The API of this wrapper is based on closures, meaning you have no choice but to be aware of the scope.
+/// And the extra level of indentation this forces is supposed to coerce users to keep the scope as small as possible.
 #[derive(Clone)]
 pub struct PgPool {
     inner: Pool<AsyncPgConnection>,
