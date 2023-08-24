@@ -10,7 +10,7 @@ use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
-    service::post::{PostService, UnboostPost},
+    service::post::{PostService, UnrepostPost},
     state::Zustand,
 };
 
@@ -32,14 +32,14 @@ pub async fn post(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Status>> {
-    let unboost_post = UnboostPost::builder()
+    let unrepost_post = UnrepostPost::builder()
         .account_id(user_data.account.id)
         .post_id(id)
         .build()
         .unwrap();
 
     let status = mastodon_mapper
-        .map(post.unboost(unboost_post).await?)
+        .map((&user_data.account, post.unrepost(unrepost_post).await?))
         .await?;
 
     Ok(Json(status))

@@ -171,11 +171,10 @@ async fn put(
         .media_ids(form.media_ids)
         .sensitive(form.sensitive)
         .subject(form.spoiler_text)
-        .clone();
+        .build()
+        .unwrap();
 
-    let status = mastodon_mapper
-        .map(post.update(update_post.build().unwrap()).await?)
-        .await?;
+    let status = mastodon_mapper.map(post.update(update_post).await?).await?;
 
     Ok(Json(status))
 }

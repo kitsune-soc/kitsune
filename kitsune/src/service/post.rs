@@ -177,40 +177,40 @@ impl UpdatePost {
 }
 
 #[derive(Clone, Builder)]
-pub struct BoostPost {
-    /// ID of the account that boosts the post
+pub struct RepostPost {
+    /// ID of the account that reposts the post
     account_id: Uuid,
 
-    /// ID of the post that is supposed to be boosted
+    /// ID of the post that is supposed to be reposted
     post_id: Uuid,
 
-    /// Visibility of the boost
+    /// Visibility of the repost
     ///
     /// Defaults to Public
     #[builder(default = "Visibility::Public")]
     visibility: Visibility,
 }
 
-impl BoostPost {
+impl RepostPost {
     #[must_use]
-    pub fn builder() -> BoostPostBuilder {
-        BoostPostBuilder::default()
+    pub fn builder() -> RepostPostBuilder {
+        RepostPostBuilder::default()
     }
 }
 
 #[derive(Clone, Builder)]
-pub struct UnboostPost {
+pub struct UnrepostPost {
     /// ID of the account that is associated with the user
     account_id: Uuid,
 
-    /// ID of the post that is supposed to be unboosted
+    /// ID of the post that is supposed to be unreposted
     post_id: Uuid,
 }
 
-impl UnboostPost {
+impl UnrepostPost {
     #[must_use]
-    pub fn builder() -> UnboostPostBuilder {
-        UnboostPostBuilder::default()
+    pub fn builder() -> UnrepostPostBuilder {
+        UnrepostPostBuilder::default()
     }
 }
 
@@ -469,6 +469,7 @@ impl PostService {
     /// This should never ever panic. If it does, create a bug report.
     pub async fn update(&self, update_post: UpdatePost) -> Result<Post> {
         if let Some(content) = update_post.content.as_ref() {
+            // TODO(aumetra) migration to garde for character limit enforcing
             if content.chars().count() > self.instance_service.character_limit() {
                 return Err(ApiError::BadRequest.into());
             }
@@ -488,14 +489,14 @@ impl PostService {
             content.clean_html();
         };
 
-        let detect_language =
-            |s: &str| kitsune_language::detect_language(DetectionBackend::default(), s);
         // If a new language code was submitted, we should update the post language accordingly
         // If the language code is not provided, only the updated body, perform language detection normally
         // Otherwise, don't update anything
         let content_lang = match update_post.language {
             Some(lang) => Language::from_639_1(&lang),
-            None => content.as_ref().map(|c| detect_language(c)),
+            None => content
+                .as_ref()
+                .map(|c| kitsune_language::detect_language(DetectionBackend::default(), c)),
         };
 
         let (mentioned_account_ids, content) = match content.as_ref() {
@@ -572,25 +573,25 @@ impl PostService {
         Ok(post)
     }
 
-    /// Boost a post
+    /// Repost a post
     ///
     /// # Panics
     ///
     /// This should never panic. If it does, create a bug report.
-    pub async fn boost(&self, boost_post: BoostPost) -> Result<Post> {
+    pub async fn repost(&self, repost_post: RepostPost) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
-            .fetching_account_id(Some(boost_post.account_id))
+            .fetching_account_id(Some(repost_post.account_id))
             .build()
             .unwrap();
 
-        let existing_boost: Option<Post> = self
+        let existing_repost: Option<Post> = self
             .db_pool
             .with_connection(|mut db_conn| async move {
                 posts::table
                     .filter(
                         posts::reposted_post_id
-                            .eq(boost_post.post_id)
-                            .and(posts::account_id.eq(boost_post.account_id)),
+                            .eq(repost_post.post_id)
+                            .and(posts::account_id.eq(repost_post.account_id)),
                     )
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
@@ -600,15 +601,15 @@ impl PostService {
             })
             .await?;
 
-        if let Some(boost) = existing_boost {
-            return Ok(boost);
+        if let Some(repost) = existing_repost {
+            return Ok(repost);
         }
 
         let post: Post = self
             .db_pool
             .with_connection(|mut db_conn| {
                 posts::table
-                    .find(boost_post.post_id)
+                    .find(repost_post.post_id)
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
                     .get_result(&mut db_conn)
@@ -618,40 +619,34 @@ impl PostService {
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let boost = self
+        let repost = self
             .db_pool
-            .with_transaction(move |tx| {
-                async move {
-                    let boost: Post = diesel::insert_into(posts::table)
-                        .values(NewPost {
-                            id,
-                            account_id: boost_post.account_id,
-                            in_reply_to_id: None,
-                            reposted_post_id: Some(post.id),
-                            subject: Some(""),
-                            content: "",
-                            content_lang: post.content_lang,
-                            link_preview_url: None,
-                            is_sensitive: post.is_sensitive,
-                            visibility: boost_post.visibility,
-                            is_local: true,
-                            url: url.as_str(),
-                            created_at: Some(Timestamp::now_utc()),
-                        })
-                        .returning(Post::as_returning())
-                        .get_result(tx)
-                        .await?;
-
-                    Ok::<_, Error>(boost)
-                }
-                .scope_boxed()
+            .with_connection(|mut db_conn| {
+                diesel::insert_into(posts::table)
+                    .values(NewPost {
+                        id,
+                        account_id: repost_post.account_id,
+                        in_reply_to_id: None,
+                        reposted_post_id: Some(post.id),
+                        subject: Some(""),
+                        content: "",
+                        content_lang: post.content_lang,
+                        link_preview_url: None,
+                        is_sensitive: post.is_sensitive,
+                        visibility: repost_post.visibility,
+                        is_local: true,
+                        url: url.as_str(),
+                        created_at: Some(Timestamp::now_utc()),
+                    })
+                    .returning(Post::as_returning())
+                    .get_result(&mut db_conn)
             })
             .await?;
 
         self.job_service
             .enqueue(
                 Enqueue::builder()
-                    .job(DeliverCreate { post_id: boost.id })
+                    .job(DeliverCreate { post_id: repost.id })
                     .build(),
             )
             .await?;
@@ -659,22 +654,22 @@ impl PostService {
         self.status_event_emitter
             .emit(PostEvent {
                 r#type: EventType::Create,
-                post_id: boost.id,
+                post_id: repost.id,
             })
             .await
             .map_err(Error::Event)?;
 
-        Ok(boost)
+        Ok(repost)
     }
 
-    /// Unboost a post
+    /// Unrepost a post
     ///
     /// # Panics
     ///
     /// This should never ever panic. If it does, open a bug report.
-    pub async fn unboost(&self, unboost_post: UnboostPost) -> Result<Post> {
+    pub async fn unrepost(&self, unrepost_post: UnrepostPost) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
-            .fetching_account_id(Some(unboost_post.account_id))
+            .fetching_account_id(Some(unrepost_post.account_id))
             .build()
             .unwrap();
 
@@ -684,8 +679,8 @@ impl PostService {
                 posts::table
                     .filter(
                         posts::account_id
-                            .eq(unboost_post.account_id)
-                            .and(posts::reposted_post_id.eq(unboost_post.post_id)),
+                            .eq(unrepost_post.account_id)
+                            .and(posts::reposted_post_id.eq(unrepost_post.post_id)),
                     )
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
