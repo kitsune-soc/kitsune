@@ -37,7 +37,6 @@ impl Runnable for DeliverCreate {
                     .get_result::<Post>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -48,14 +47,12 @@ impl Runnable for DeliverCreate {
         let (account, user) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 accounts::table
                     .find(post.account_id)
                     .inner_join(users::table)
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(&mut db_conn)
-                    .await
-                    .map_err(Self::Error::from)
             })
             .await?;
 

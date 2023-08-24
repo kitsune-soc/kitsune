@@ -72,14 +72,12 @@ impl Issuer for OAuthIssuer {
     async fn refresh(&mut self, refresh_token: &str, grant: Grant) -> Result<RefreshedToken, ()> {
         let (refresh_token, access_token) = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 oauth2_refresh_tokens::table
                     .find(refresh_token)
                     .inner_join(oauth2_access_tokens::table)
                     .select(<(oauth2::RefreshToken, oauth2::AccessToken)>::as_select())
                     .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| ())?;
@@ -134,7 +132,6 @@ impl Issuer for OAuthIssuer {
                     .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| ())?;
@@ -173,7 +170,6 @@ impl Issuer for OAuthIssuer {
                     .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| ())?;

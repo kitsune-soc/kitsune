@@ -37,7 +37,6 @@ impl Runnable for DeliverDelete {
                     .get_result::<Post>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -56,7 +55,6 @@ impl Runnable for DeliverDelete {
                     .get_result::<(Account, User)>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -81,11 +79,8 @@ impl Runnable for DeliverDelete {
 
         ctx.state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                diesel::delete(posts::table.find(post_id))
-                    .execute(&mut db_conn)
-                    .await
-                    .map_err(Self::Error::from)
+            .with_connection(|mut db_conn| {
+                diesel::delete(posts::table.find(post_id)).execute(&mut db_conn)
             })
             .await?;
 

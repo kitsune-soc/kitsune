@@ -124,12 +124,10 @@ impl JobContextRepository for KitsuneContextRepo {
     {
         let stream = self
             .db_pool
-            .with_connection(|mut conn| async move {
+            .with_connection(|mut conn| {
                 job_context::table
                     .filter(job_context::id.eq_any(job_ids))
                     .load_stream::<JobContext<Job>>(&mut conn)
-                    .await
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -141,11 +139,8 @@ impl JobContextRepository for KitsuneContextRepo {
 
     async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error> {
         self.db_pool
-            .with_connection(|mut conn| async move {
-                diesel::delete(job_context::table.find(job_id))
-                    .execute(&mut conn)
-                    .await
-                    .map_err(Self::Error::from)
+            .with_connection(|mut conn| {
+                diesel::delete(job_context::table.find(job_id)).execute(&mut conn)
             })
             .await?;
 
@@ -158,15 +153,13 @@ impl JobContextRepository for KitsuneContextRepo {
         context: Self::JobContext,
     ) -> Result<(), Self::Error> {
         self.db_pool
-            .with_connection(|mut conn| async move {
+            .with_connection(|mut conn| {
                 diesel::insert_into(job_context::table)
                     .values(NewJobContext {
                         id: job_id,
                         context: Json(context),
                     })
                     .execute(&mut conn)
-                    .await
-                    .map_err(Self::Error::from)
             })
             .await?;
 

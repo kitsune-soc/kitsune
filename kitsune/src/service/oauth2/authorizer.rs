@@ -1,5 +1,5 @@
 use super::{chrono_to_timestamp, timestamp_to_chrono};
-use crate::{error::Error, util::generate_secret};
+use crate::util::generate_secret;
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -22,13 +22,14 @@ impl Authorizer for OAuthAuthorizer {
         let application_id = grant.client_id.parse().map_err(|_| ())?;
         let user_id = grant.owner_id.parse().map_err(|_| ())?;
         let scopes = grant.scope.to_string();
+        let secret = generate_secret();
         let expires_at = chrono_to_timestamp(grant.until);
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::insert_into(oauth2_authorization_codes::table)
                     .values(oauth2::NewAuthorizationCode {
-                        code: generate_secret().as_str(),
+                        code: secret.as_str(),
                         application_id,
                         user_id,
                         scopes: scopes.as_str(),
@@ -36,8 +37,6 @@ impl Authorizer for OAuthAuthorizer {
                     })
                     .returning(oauth2_authorization_codes::code)
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| ())
@@ -53,7 +52,6 @@ impl Authorizer for OAuthAuthorizer {
                     .first::<(oauth2::AuthorizationCode, oauth2::Application)>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| ())?;

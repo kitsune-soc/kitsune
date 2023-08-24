@@ -16,7 +16,7 @@ use tracing_log::LogTracer;
 
 pub use crate::{
     error::{Error, Result},
-    pool::PgPool,
+    pool::{PgPool, PoolError},
 };
 
 mod error;

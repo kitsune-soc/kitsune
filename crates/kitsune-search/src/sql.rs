@@ -1,4 +1,4 @@
-use super::{Error, Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -21,8 +21,8 @@ pub struct SearchService {
 
 impl SearchService {
     #[must_use]
-    pub fn new(db_conn: PgPool) -> Self {
-        Self { db_pool: db_conn }
+    pub fn new(db_pool: PgPool) -> Self {
+        Self { db_pool }
     }
 }
 
@@ -81,7 +81,6 @@ impl SearchBackend for SearchService {
                             .map_ok(|id| SearchResult { id })
                             .try_collect()
                             .await
-                            .map_err(Error::from)
                     })
                     .await?;
 
@@ -115,7 +114,6 @@ impl SearchBackend for SearchService {
                             .map_ok(|id| SearchResult { id })
                             .try_collect()
                             .await
-                            .map_err(Error::from)
                     })
                     .await?;
 

@@ -39,7 +39,6 @@ impl Runnable for DeliverReject {
                     .get_result::<Follow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -68,7 +67,6 @@ impl Runnable for DeliverReject {
                     let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
 
                     try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
-                        .map_err(Self::Error::from)
                 }
             })
             .await?;

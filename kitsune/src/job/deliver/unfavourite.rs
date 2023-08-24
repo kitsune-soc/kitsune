@@ -31,7 +31,6 @@ impl Runnable for DeliverUnfavourite {
                     .get_result::<Favourite>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -55,7 +54,7 @@ impl Runnable for DeliverUnfavourite {
                     .select(accounts::inbox_url)
                     .get_result::<Option<String>>(&mut db_conn);
 
-                try_join!(account_user_fut, inbox_url_fut).map_err(Self::Error::from)
+                try_join!(account_user_fut, inbox_url_fut)
             })
             .await?;
 
@@ -69,11 +68,8 @@ impl Runnable for DeliverUnfavourite {
 
         ctx.state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                diesel::delete(posts_favourites::table.find(favourite_id))
-                    .execute(&mut db_conn)
-                    .await
-                    .map_err(Self::Error::from)
+            .with_connection(|mut db_conn| {
+                diesel::delete(posts_favourites::table.find(favourite_id)).execute(&mut db_conn)
             })
             .await?;
 

@@ -54,7 +54,6 @@ impl Post {
                     .map_ok(Into::into)
                     .try_collect()
                     .await
-                    .map_err(async_graphql::Error::from)
             })
             .await?;
 

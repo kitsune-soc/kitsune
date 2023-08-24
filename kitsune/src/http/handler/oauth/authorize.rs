@@ -66,13 +66,11 @@ pub async fn get(
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 oauth2_applications::table
                     .find(query.client_id)
                     .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
                     .get_result::<oauth2::Application>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -87,13 +85,7 @@ pub async fn get(
         let id = user_id.value().parse::<Uuid>()?;
 
         db_pool
-            .with_connection(|mut db_conn| async move {
-                users::table
-                    .find(id)
-                    .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
-            })
+            .with_connection(|mut db_conn| users::table.find(id).get_result(&mut db_conn))
             .await?
     } else {
         return Ok(Either3::E2(LoginPage { flash_messages }));
@@ -132,7 +124,6 @@ pub async fn post(
                 .first::<User>(&mut db_conn)
                 .await
                 .optional()
-                .map_err(Error::from)
         })
         .await?;
 

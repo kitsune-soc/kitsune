@@ -102,7 +102,6 @@ impl Fetcher {
                         .first(&mut db_conn)
                         .await
                         .optional()
-                        .map_err(Error::from)
                 })
                 .await?;
 
@@ -238,7 +237,6 @@ impl Fetcher {
                     .first(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -287,7 +285,6 @@ mod test {
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use futures_util::future::TryFutureExt;
     use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
@@ -370,7 +367,6 @@ mod test {
                         .find(note.account_id)
                         .select(Account::as_select())
                         .get_result::<Account>(&mut db_conn)
-                        .map_err(Error::from)
                 })
                 .await
                 .expect("Get author");

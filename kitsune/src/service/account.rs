@@ -188,7 +188,7 @@ impl AccountService {
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
-                try_join!(account_fut, follower_fut).map_err(Error::from)
+                try_join!(account_fut, follower_fut)
             })
             .await?;
 
@@ -209,13 +209,11 @@ impl AccountService {
 
         let follow_id = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::insert_into(accounts_follows::table)
                     .values(follow_model)
                     .returning(accounts_follows::id)
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -244,7 +242,6 @@ impl AccountService {
                         .get_result(&mut db_conn)
                         .await
                         .optional()
-                        .map_err(Error::from)
                 })
                 .await?;
 
@@ -280,9 +277,9 @@ impl AccountService {
                         .first(&mut db_conn)
                         .await
                         .optional()
-                        .map_err(Error::from)
                 })
                 .await
+                .map_err(Error::from)
         }
     }
 
@@ -296,9 +293,9 @@ impl AccountService {
                     .get_result(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     /// Get a stream of posts owned by the user
@@ -335,9 +332,10 @@ impl AccountService {
 
         self.db_pool
             .with_connection(|mut db_conn| async move {
-                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
             })
             .await
+            .map_err(Error::from)
     }
 
     /// Undo the follow of an account
@@ -359,7 +357,7 @@ impl AccountService {
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
-                try_join!(account_fut, follower_fut).map_err(Error::from)
+                try_join!(account_fut, follower_fut)
             })
             .await?;
 
@@ -375,7 +373,6 @@ impl AccountService {
                     .get_result::<DbFollow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -422,9 +419,10 @@ impl AccountService {
 
         self.db_pool
             .with_connection(|mut db_conn| async move {
-                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
             })
             .await
+            .map_err(Error::from)
     }
 
     pub async fn accept_follow_request(
@@ -444,7 +442,7 @@ impl AccountService {
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
-                try_join!(account_fut, follower_fut).map_err(Error::from)
+                try_join!(account_fut, follower_fut)
             })
             .await?;
 
@@ -460,7 +458,6 @@ impl AccountService {
                     .get_result::<DbFollow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -469,18 +466,12 @@ impl AccountService {
 
             self.db_pool
                 .with_connection(|mut db_conn| {
-                    let follow = &follow;
-
-                    async move {
-                        diesel::update(follow)
-                            .set((
-                                accounts_follows::approved_at.eq(now),
-                                accounts_follows::updated_at.eq(now),
-                            ))
-                            .execute(&mut db_conn)
-                            .await
-                            .map_err(Error::from)
-                    }
+                    diesel::update(&follow)
+                        .set((
+                            accounts_follows::approved_at.eq(now),
+                            accounts_follows::updated_at.eq(now),
+                        ))
+                        .execute(&mut db_conn)
                 })
                 .await?;
 
@@ -519,7 +510,7 @@ impl AccountService {
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
-                try_join!(account_fut, follower_fut).map_err(Error::from)
+                try_join!(account_fut, follower_fut)
             })
             .await?;
 
@@ -535,19 +526,13 @@ impl AccountService {
                     .get_result::<DbFollow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await?;
 
         if let Some(follow) = follow {
             if account.local {
                 self.db_pool
-                    .with_connection(|mut db_conn| async move {
-                        diesel::delete(&follow)
-                            .execute(&mut db_conn)
-                            .await
-                            .map_err(Error::from)
-                    })
+                    .with_connection(|mut db_conn| diesel::delete(&follow).execute(&mut db_conn))
                     .await?;
             } else {
                 self.job_service
@@ -611,13 +596,11 @@ impl AccountService {
 
         let updated_account: Account = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::update(accounts::table.find(update.account_id))
                     .set(changeset)
                     .returning(Account::as_returning())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 

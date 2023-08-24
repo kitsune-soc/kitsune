@@ -111,9 +111,10 @@ impl TimelineService {
 
         self.db_pool
             .with_connection(|mut db_conn| async move {
-                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
             })
             .await
+            .map_err(Error::from)
     }
 
     /// Get a stream of public posts
@@ -156,8 +157,9 @@ impl TimelineService {
 
         self.db_pool
             .with_connection(|mut db_conn| async move {
-                Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
             })
             .await
+            .map_err(Error::from)
     }
 }

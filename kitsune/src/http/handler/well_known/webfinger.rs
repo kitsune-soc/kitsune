@@ -1,8 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    service::url::UrlService,
-    state::Zustand,
-};
+use crate::{error::Result, service::url::UrlService, state::Zustand};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
@@ -50,7 +46,7 @@ async fn get(
     };
 
     let account = db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             accounts::table
                 .filter(
                     accounts::username
@@ -59,8 +55,6 @@ async fn get(
                 )
                 .select(Account::as_select())
                 .first::<Account>(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
     let account_url = url_service.user_url(account.id);

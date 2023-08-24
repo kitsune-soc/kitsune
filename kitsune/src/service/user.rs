@@ -63,7 +63,7 @@ pub struct UserService {
 impl UserService {
     pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::update(
                     users::table
                         .filter(users::confirmation_token.eq(confirmation_token))
@@ -71,8 +71,6 @@ impl UserService {
                 )
                 .set(users::confirmed_at.eq(Timestamp::now_utc()))
                 .execute(&mut db_conn)
-                .await
-                .map_err(Error::from)
             })
             .await?;
 
@@ -81,12 +79,10 @@ impl UserService {
 
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::update(users::table.find(user_id))
                     .set(users::confirmed_at.eq(Timestamp::now_utc()))
                     .execute(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 

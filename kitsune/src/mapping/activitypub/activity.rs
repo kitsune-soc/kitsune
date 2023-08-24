@@ -1,9 +1,5 @@
 use super::IntoObject;
-use crate::{
-    error::{Error, Result},
-    state::Zustand,
-    try_join,
-};
+use crate::{error::Result, state::Zustand, try_join};
 use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
@@ -65,7 +61,7 @@ impl IntoActivity for Favourite {
                     .select(posts::url)
                     .get_result(&mut db_conn);
 
-                try_join!(account_url_fut, post_url_fut).map_err(Error::from)
+                try_join!(account_url_fut, post_url_fut)
             })
             .await?;
 
@@ -82,13 +78,11 @@ impl IntoActivity for Favourite {
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let account_url = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 accounts::table
                     .find(self.account_id)
                     .select(accounts::url)
                     .get_result::<String>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -122,7 +116,7 @@ impl IntoActivity for Follow {
                     .select(accounts::url)
                     .get_result::<String>(&mut db_conn);
 
-                try_join!(attributed_to_fut, object_fut).map_err(Error::from)
+                try_join!(attributed_to_fut, object_fut)
             })
             .await?;
 
@@ -139,13 +133,11 @@ impl IntoActivity for Follow {
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let attributed_to = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 accounts::table
                     .find(self.follower_id)
                     .select(accounts::url)
                     .get_result::<String>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -171,13 +163,11 @@ impl IntoActivity for Post {
         if let Some(reposted_post_id) = self.reposted_post_id {
             let reposted_post_url = state
                 .db_pool
-                .with_connection(|mut db_conn| async move {
+                .with_connection(|mut db_conn| {
                     posts::table
                         .find(reposted_post_id)
                         .select(posts::url)
                         .get_result(&mut db_conn)
-                        .await
-                        .map_err(Error::from)
                 })
                 .await?;
 

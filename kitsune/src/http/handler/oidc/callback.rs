@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{ApiError, Result},
     service::{
         oauth2::{AuthorisationCode, OAuth2Service},
         oidc::OidcService,
@@ -43,7 +43,6 @@ pub async fn get(
                 .get_result(&mut db_conn)
                 .await
                 .optional()
-                .map_err(Error::from)
         })
         .await?;
 
@@ -60,12 +59,10 @@ pub async fn get(
     };
 
     let application = db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             oauth2_applications::table
                 .find(user_info.oauth2.application_id)
                 .get_result(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
 

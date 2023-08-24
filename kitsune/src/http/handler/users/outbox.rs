@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::Result,
     http::responder::ActivityPubJson,
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
@@ -42,14 +42,12 @@ pub async fn get(
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
     let account = state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             accounts::table
                 .find(account_id)
                 .filter(accounts::local.eq(true))
                 .select(Account::as_select())
                 .get_result::<Account>(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
 
@@ -97,13 +95,11 @@ pub async fn get(
     } else {
         let public_post_count = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 Post::belonging_to(&account)
                     .add_post_permission_check(PermissionCheck::default())
                     .count()
                     .get_result::<i64>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 

@@ -53,7 +53,7 @@ impl PostComponent {
                         .select(DbMediaAttachment::as_select())
                         .load_stream::<DbMediaAttachment>(&mut db_conn);
 
-                    try_join!(author_fut, attachments_stream_fut).map_err(Error::from)
+                    try_join!(author_fut, attachments_stream_fut)
                 }
             })
             .await?;

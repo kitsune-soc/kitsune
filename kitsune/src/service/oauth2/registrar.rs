@@ -1,4 +1,3 @@
-use crate::error::Error;
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -56,7 +55,6 @@ impl Registrar for OAuthRegistrar {
                     .get_result::<oauth2::Application>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| RegistrarError::PrimitiveError)?
@@ -112,7 +110,6 @@ impl Registrar for OAuthRegistrar {
                     .execute(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await
             .map_err(|_| RegistrarError::PrimitiveError)?

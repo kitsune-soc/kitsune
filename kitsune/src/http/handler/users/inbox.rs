@@ -29,14 +29,12 @@ use std::ops::Not;
 async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             diesel::update(
                 accounts_follows::table.filter(accounts_follows::url.eq(activity.object())),
             )
             .set(accounts_follows::approved_at.eq(Timestamp::now_utc()))
             .execute(&mut db_conn)
-            .await
-            .map_err(Error::from)
         })
         .await?;
 
@@ -48,7 +46,7 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
 
     state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             diesel::insert_into(posts::table)
                 .values(NewPost {
                     id: Uuid::now_v7(),
@@ -66,8 +64,6 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
                     created_at: None,
                 })
                 .execute(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
 
@@ -138,7 +134,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
 
     let follow_id = state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             diesel::insert_into(accounts_follows::table)
                 .values(NewFollow {
                     id: Uuid::now_v7(),
@@ -150,8 +146,6 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
                 })
                 .returning(accounts_follows::id)
                 .get_result(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
 
@@ -203,7 +197,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
 async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             diesel::delete(
                 accounts_follows::table.filter(
                     accounts_follows::account_id
@@ -212,8 +206,6 @@ async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -
                 ),
             )
             .execute(&mut db_conn)
-            .await
-            .map_err(Error::from)
         })
         .await?;
 
@@ -252,9 +244,7 @@ async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> 
             )
             .execute(&mut db_conn);
 
-            try_join!(favourite_delete_fut, follow_delete_fut, repost_delete_fut)?;
-
-            Ok::<_, Error>(())
+            try_join!(favourite_delete_fut, follow_delete_fut, repost_delete_fut)
         })
         .await?;
 

@@ -31,7 +31,6 @@ impl Runnable for DeliverFollow {
                     .get_result::<Follow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -54,7 +53,7 @@ impl Runnable for DeliverFollow {
                     .select(accounts::inbox_url)
                     .get_result::<Option<String>>(&mut db_conn);
 
-                try_join!(follower_info_fut, followed_inbox_fut).map_err(Self::Error::from)
+                try_join!(follower_info_fut, followed_inbox_fut)
             })
             .await?;
 

@@ -106,7 +106,6 @@ impl IntoObject for Post {
                         mentions_fut,
                         attachment_stream_fut
                     )
-                    .map_err(Error::from)
                 }
             })
             .await?;
@@ -187,7 +186,7 @@ impl IntoObject for Account {
                 }))
                 .map(Option::transpose);
 
-                try_join!(icon_fut, image_fut).map_err(Error::from)
+                try_join!(icon_fut, image_fut)
             })
             .await?;
 

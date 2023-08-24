@@ -47,9 +47,9 @@ impl Account {
                         .await
                         .optional()
                         .map(|attachment| attachment.map(Into::into))
-                        .map_err(Into::into)
                 })
                 .await
+                .map_err(Into::into)
         } else {
             Ok(None)
         }
@@ -67,9 +67,9 @@ impl Account {
                         .await
                         .optional()
                         .map(|attachment| attachment.map(Into::into))
-                        .map_err(Into::into)
                 })
                 .await
+                .map_err(Into::into)
         } else {
             Ok(None)
         }

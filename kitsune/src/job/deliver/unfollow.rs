@@ -30,7 +30,6 @@ impl Runnable for DeliverUnfollow {
                     .get_result::<Follow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -63,7 +62,6 @@ impl Runnable for DeliverUnfollow {
                         followed_account_inbox_url_fut,
                         delete_fut
                     )
-                    .map_err(Self::Error::from)
                 }
             })
             .await?;

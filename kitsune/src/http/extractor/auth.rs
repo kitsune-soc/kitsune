@@ -62,12 +62,10 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let (user, account) = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 user_account_query
                     .select(<(User, Account)>::as_select())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await
             .map_err(Error::from)?;

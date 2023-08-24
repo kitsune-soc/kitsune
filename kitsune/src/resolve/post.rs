@@ -87,7 +87,6 @@ mod test {
     use crate::{
         activitypub::Fetcher,
         config::FederationFilterConfiguration,
-        error::Error,
         job::KitsuneContextRepo,
         service::{
             account::AccountService, attachment::AttachmentService,
@@ -191,14 +190,13 @@ mod test {
 
                 let (account_id, _mention_text) = &mentioned_account_ids[0];
                 let mentioned_account = db_pool
-                    .with_connection(|mut db_conn| async move {
+                    .with_connection(|mut db_conn| {
                         accounts::table
                             .find(account_id)
                             .select(Account::as_select())
                             .get_result::<Account>(&mut db_conn)
-                            .await
-                            .map_err(Error::from)
-                    }).await
+                    })
+                    .await
                     .expect("Failed to fetch account");
 
                 assert_eq!(mentioned_account.username, "0x0");

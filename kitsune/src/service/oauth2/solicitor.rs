@@ -1,5 +1,4 @@
 use super::OAuthScope;
-use crate::error::Error;
 use askama::Template;
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
@@ -74,7 +73,6 @@ impl OAuthOwnerSolicitor {
                             .get_result::<String>(&mut db_conn)
                             .await
                             .optional()
-                            .map_err(Error::from)
                     })
                     .await
                     .map_err(|_| WebError::InternalError(None))?

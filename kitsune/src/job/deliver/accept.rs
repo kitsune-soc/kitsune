@@ -39,7 +39,6 @@ impl Runnable for DeliverAccept {
                     .get_result::<Follow>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Self::Error::from)
             })
             .await?;
 
@@ -62,7 +61,7 @@ impl Runnable for DeliverAccept {
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(&mut db_conn);
 
-                try_join!(follower_inbox_url_fut, followed_info_fut).map_err(Self::Error::from)
+                try_join!(follower_inbox_url_fut, followed_info_fut)
             })
             .await?;
 

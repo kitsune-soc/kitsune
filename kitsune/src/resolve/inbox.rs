@@ -22,8 +22,8 @@ pub struct InboxResolver {
 
 impl InboxResolver {
     #[must_use]
-    pub fn new(db_conn: PgPool) -> Self {
-        Self { db_pool: db_conn }
+    pub fn new(db_pool: PgPool) -> Self {
+        Self { db_pool }
     }
 
     #[instrument(skip_all, fields(account_id = %account.id))]
@@ -32,7 +32,7 @@ impl InboxResolver {
         account: &Account,
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 accounts_follows::table
                     .filter(accounts_follows::account_id.eq(account.id))
                     .inner_join(
@@ -48,10 +48,9 @@ impl InboxResolver {
                         accounts::inbox_url,
                     ))
                     .load_stream(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     #[instrument(skip_all, fields(post_id = %post.id))]

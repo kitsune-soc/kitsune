@@ -4,9 +4,7 @@
 
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
-use std::error::Error;
-
-type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
+use color_eyre::eyre::{self, Result};
 
 mod config;
 mod role;
@@ -28,6 +26,7 @@ struct App {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    color_eyre::install()?;
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
@@ -41,7 +40,9 @@ async fn main() -> Result<()> {
                 AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
             }
 
-            Ok(())
+            Ok::<_, eyre::Report>(())
         })
-        .await
+        .await?;
+
+    Ok(())
 }

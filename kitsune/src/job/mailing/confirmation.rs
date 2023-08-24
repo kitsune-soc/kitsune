@@ -28,13 +28,11 @@ impl Runnable for SendConfirmationMail {
         let user = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 users::table
                     .find(self.user_id)
                     .select(User::as_select())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Self::Error::from)
             })
             .await?;
 

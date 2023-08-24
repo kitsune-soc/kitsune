@@ -84,13 +84,11 @@ async fn verify_signature(
     let is_valid = HttpVerifier::default()
         .verify(parts, |key_id| async move {
             let remote_user: Account = db_conn
-                .with_connection(|mut db_conn| async move {
+                .with_connection(|mut db_conn| {
                     accounts::table
                         .filter(accounts::public_key_id.eq(key_id))
                         .select(Account::as_select())
                         .first(&mut db_conn)
-                        .await
-                        .map_err(Error::from)
                 })
                 .await?;
 

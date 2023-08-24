@@ -46,9 +46,9 @@ impl InstanceService {
                     .get_result::<i64>(&mut db_conn)
                     .await
                     .map(|count| count as u64)
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
@@ -60,9 +60,9 @@ impl InstanceService {
                     .get_result::<i64>(&mut db_conn)
                     .await
                     .map(|count| count as u64)
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     #[must_use]
@@ -78,8 +78,8 @@ impl InstanceService {
                     .get_result::<i64>(&mut db_conn)
                     .await
                     .map(|count| count as u64)
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 }

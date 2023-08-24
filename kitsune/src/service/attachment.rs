@@ -67,14 +67,11 @@ pub struct AttachmentService {
 impl AttachmentService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                media_attachments::table
-                    .find(id)
-                    .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
+            .with_connection(|mut db_conn| {
+                media_attachments::table.find(id).get_result(&mut db_conn)
             })
             .await
+            .map_err(Error::from)
     }
 
     /// Get the URL to an attachment
@@ -132,7 +129,7 @@ impl AttachmentService {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::update(
                     media_attachments::table.filter(
                         media_attachments::id
@@ -142,10 +139,9 @@ impl AttachmentService {
                 )
                 .set(changeset)
                 .get_result(&mut db_conn)
-                .await
-                .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
@@ -164,7 +160,7 @@ impl AttachmentService {
 
         let media_attachment = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::insert_into(media_attachments::table)
                     .values(NewMediaAttachment {
                         id: Uuid::now_v7(),
@@ -176,8 +172,6 @@ impl AttachmentService {
                         remote_url: None,
                     })
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 

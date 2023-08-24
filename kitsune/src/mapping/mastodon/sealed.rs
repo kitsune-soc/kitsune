@@ -87,7 +87,6 @@ impl IntoMastodon for DbAccount {
                     .get_result::<i64>(&mut db_conn);
 
                 try_join!(statuses_count_fut, followers_count_fut, following_count_fut)
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -180,7 +179,7 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
                     .get_result::<i64>(&mut db_conn)
                     .map_ok(|count| count != 0);
 
-                try_join!(following_requested_fut, followed_by_fut).map_err(Error::from)
+                try_join!(following_requested_fut, followed_by_fut)
             })
             .await?;
 
@@ -213,13 +212,11 @@ impl IntoMastodon for DbMention {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let account: DbAccount = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 accounts::table
                     .find(self.account_id)
                     .select(DbAccount::as_select())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -297,7 +294,7 @@ impl IntoMastodon for (&DbAccount, DbPost) {
                     .get_result::<i64>(&mut db_conn)
                     .map_ok(|count| count != 0);
 
-                try_join!(favourited_fut, reblogged_fut).map_err(Error::from)
+                try_join!(favourited_fut, reblogged_fut)
             })
             .await?;
 
@@ -366,7 +363,6 @@ impl IntoMastodon for DbPost {
                         media_attachments_fut,
                         mentions_stream_fut,
                     )
-                    .map_err(Error::from)
                 }
             })
             .await?;

@@ -48,7 +48,6 @@ impl Runnable for DeliverUpdate {
                             .get_result(&mut db_conn)
                             .await
                             .optional()
-                            .map_err(Self::Error::from)
                     })
                     .await?;
 
@@ -77,7 +76,6 @@ impl Runnable for DeliverUpdate {
                             .get_result(&mut db_conn)
                             .await
                             .optional()
-                            .map_err(Self::Error::from)
                     })
                     .await?;
 

@@ -1,6 +1,6 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
-use async_graphql::{ComplexObject, Context, Error, Result, SimpleObject};
+use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -35,9 +35,9 @@ impl User {
                     .get_result::<DbAccount>(&mut db_conn)
                     .await
                     .map(Into::into)
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Into::into)
     }
 }
 

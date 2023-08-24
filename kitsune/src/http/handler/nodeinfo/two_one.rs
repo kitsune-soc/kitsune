@@ -1,10 +1,4 @@
-use crate::{
-    consts::VERSION,
-    error::{Error, Result},
-    service::user::UserService,
-    state::Zustand,
-    try_join,
-};
+use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand, try_join};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -37,7 +31,7 @@ async fn get(
                 .count()
                 .get_result::<i64>(&mut db_conn);
 
-            try_join!(total_fut, local_posts_fut).map_err(Error::from)
+            try_join!(total_fut, local_posts_fut)
         })
         .await?;
 

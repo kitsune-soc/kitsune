@@ -5,7 +5,6 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
-use futures_util::TryFutureExt;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -50,6 +49,18 @@ pub enum Error {
     Pool(#[from] deadpool::PoolError),
 }
 
+impl<E> From<kitsune_db::PoolError<E>> for Error
+where
+    E: Into<Error>,
+{
+    fn from(value: kitsune_db::PoolError<E>) -> Self {
+        match value {
+            kitsune_db::PoolError::Pool(err) => err.into(),
+            kitsune_db::PoolError::User(err) => err.into(),
+        }
+    }
+}
+
 #[derive(Clone, TypedBuilder)]
 pub struct Client {
     db_pool: PgPool,
@@ -70,6 +81,7 @@ impl Client {
         let Some(url) = first_link_from_fragment(fragment) else {
             return Ok(None);
         };
+
         self.fetch_embed(&url).await.map(Some)
     }
 
@@ -82,7 +94,6 @@ impl Client {
                     .get_result::<LinkPreview<Embed>>(&mut db_conn)
                     .await
                     .optional()
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -117,7 +128,6 @@ impl Client {
                         expires_at,
                     })
                     .get_result(&mut db_conn)
-                    .map_err(Error::from)
             })
             .await?;
 

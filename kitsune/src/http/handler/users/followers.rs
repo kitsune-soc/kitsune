@@ -1,8 +1,5 @@
 use crate::{
-    error::{Error, Result},
-    http::responder::ActivityPubJson,
-    service::url::UrlService,
-    state::Zustand,
+    error::Result, http::responder::ActivityPubJson, service::url::UrlService, state::Zustand,
 };
 use axum::extract::{OriginalUri, Path, State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
@@ -22,7 +19,7 @@ pub async fn get(
 ) -> Result<ActivityPubJson<Collection>> {
     let follower_count = state
         .db_pool
-        .with_connection(|mut db_conn| async move {
+        .with_connection(|mut db_conn| {
             accounts_follows::table
                 .inner_join(
                     accounts::table.on(accounts_follows::account_id
@@ -33,8 +30,6 @@ pub async fn get(
                 )
                 .count()
                 .get_result::<i64>(&mut db_conn)
-                .await
-                .map_err(Error::from)
         })
         .await?;
 

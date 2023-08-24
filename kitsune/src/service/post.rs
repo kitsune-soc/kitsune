@@ -309,13 +309,11 @@ impl PostService {
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
         let post: Post = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 posts::table
                     .find(delete_post.post_id)
                     .select(Post::as_select())
                     .first(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -323,7 +321,7 @@ impl PostService {
             if let Some(user_id) = delete_post.user_id {
                 let admin_role_count = self
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
+                    .with_connection(|mut db_conn| {
                         users_roles::table
                             .filter(
                                 users_roles::user_id
@@ -332,8 +330,6 @@ impl PostService {
                             )
                             .count()
                             .get_result::<i64>(&mut db_conn)
-                            .await
-                            .map_err(Error::from)
                     })
                     .await?;
 
@@ -379,14 +375,12 @@ impl PostService {
 
         let post: Post = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 posts::table
                     .find(post_id)
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -394,7 +388,7 @@ impl PostService {
         let url = self.url_service.favourite_url(id);
         let favourite_id = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 diesel::insert_into(posts_favourites::table)
                     .values(NewFavourite {
                         id,
@@ -405,8 +399,6 @@ impl PostService {
                     })
                     .returning(posts_favourites::id)
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await?;
 
@@ -442,7 +434,6 @@ impl PostService {
                         .get_result::<Favourite>(&mut db_conn)
                         .await
                         .optional()
-                        .map_err(Error::from)
                 }
             })
             .await?;
@@ -476,16 +467,15 @@ impl PostService {
             .unwrap();
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
+            .with_connection(|mut db_conn| {
                 posts::table
                     .find(id)
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
                     .get_result(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
             })
             .await
+            .map_err(Error::from)
     }
 
     /// Get the ancestors of the post
@@ -507,14 +497,12 @@ impl PostService {
 
             while let Some(in_reply_to_id) = last_post.in_reply_to_id {
                 let post = self.db_pool
-                    .with_connection(|mut db_conn| async move {
+                    .with_connection(|mut db_conn| {
                         posts::table
                             .find(in_reply_to_id)
                             .add_post_permission_check(permission_check)
                             .select(Post::as_select())
                             .get_result::<Post>(&mut db_conn)
-                            .await
-                            .map_err(Error::from)
                     })
                     .await?;
 
@@ -543,14 +531,12 @@ impl PostService {
                 .unwrap();
 
             let descendant_stream = self.db_pool
-                .with_connection(|mut db_conn| async move {
+                .with_connection(|mut db_conn| {
                     posts::table
                         .filter(posts::in_reply_to_id.eq(id))
                         .add_post_permission_check(permission_check)
                         .select(Post::as_select())
                         .load_stream::<Post>(&mut db_conn)
-                        .await
-                        .map_err(Error::from)
                 })
                 .await?;
 

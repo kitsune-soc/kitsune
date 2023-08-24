@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     mapping::MastodonMapper,
 };
@@ -40,16 +40,10 @@ pub async fn get(
 ) -> Result<Json<Vec<Relationship>>> {
     let mut account_stream = db_pool
         .with_connection(|mut db_conn| {
-            let query = &query;
-
-            async move {
-                accounts::table
-                    .filter(accounts::id.eq_any(&query.id))
-                    .select(Account::as_select())
-                    .load_stream::<Account>(&mut db_conn)
-                    .await
-                    .map_err(Error::from)
-            }
+            accounts::table
+                .filter(accounts::id.eq_any(&query.id))
+                .select(Account::as_select())
+                .load_stream::<Account>(&mut db_conn)
         })
         .await?;
 
