@@ -6,6 +6,7 @@ build = "build.rs"
 
 [dependencies]
 clap = { version = "4.3.23", features = ["derive"] }
+color-eyre = "0.6.2"
 diesel = "2.1.0"
 diesel-async = "0.3.2"
 dotenvy = "0.15.7"

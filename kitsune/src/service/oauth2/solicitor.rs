@@ -64,18 +64,17 @@ impl OAuthOwnerSolicitor {
                     .parse()
                     .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
 
-                let mut db_conn = self
+                let app_name = self
                     .db_pool
-                    .get()
+                    .with_connection(|mut db_conn| async move {
+                        oauth2_applications::table
+                            .find(client_id)
+                            .select(oauth2_applications::name)
+                            .get_result::<String>(&mut db_conn)
+                            .await
+                            .optional()
+                    })
                     .await
-                    .map_err(|_| WebError::InternalError(None))?;
-
-                let app_name = oauth2_applications::table
-                    .find(client_id)
-                    .select(oauth2_applications::name)
-                    .get_result::<String>(&mut db_conn)
-                    .await
-                    .optional()
                     .map_err(|_| WebError::InternalError(None))?
                     .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
 

@@ -17,17 +17,20 @@ pub async fn get(
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Collection>> {
-    let mut db_conn = state.db_conn.get().await?;
-    let following_count = accounts_follows::table
-        .inner_join(
-            accounts::table.on(accounts_follows::follower_id
-                .eq(accounts::id)
-                .and(accounts_follows::approved_at.is_not_null())
-                .and(accounts::id.eq(account_id))
-                .and(accounts::local.eq(true))),
-        )
-        .count()
-        .get_result::<i64>(&mut db_conn)
+    let following_count = state
+        .db_pool
+        .with_connection(|mut db_conn| {
+            accounts_follows::table
+                .inner_join(
+                    accounts::table.on(accounts_follows::follower_id
+                        .eq(accounts::id)
+                        .and(accounts_follows::approved_at.is_not_null())
+                        .and(accounts::id.eq(account_id))
+                        .and(accounts::local.eq(true))),
+                )
+                .count()
+                .get_result::<i64>(&mut db_conn)
+        })
         .await?;
 
     let id = format!("{}{}", url_service.base_url(), original_uri.path());

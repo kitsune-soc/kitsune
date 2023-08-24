@@ -80,7 +80,7 @@ pub struct MastodonMapper {
     )]
     _cache_invalidator: (),
     attachment_service: AttachmentService,
-    db_conn: PgPool,
+    db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     mastodon_cache: ArcCache<Uuid, OwnedValue>,
     url_service: UrlService,
@@ -98,7 +98,7 @@ impl MastodonMapper {
     fn mapper_state(&self) -> MapperState<'_> {
         MapperState {
             attachment_service: &self.attachment_service,
-            db_conn: &self.db_conn,
+            db_pool: &self.db_pool,
             embed_client: self.embed_client.as_ref(),
             url_service: &self.url_service,
         }

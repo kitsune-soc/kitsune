@@ -22,25 +22,30 @@ impl Runnable for DeliverFavourite {
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let mut db_conn = ctx.state.db_conn.get().await?;
-        let favourite = posts_favourites::table
-            .find(self.favourite_id)
-            .get_result::<Favourite>(&mut db_conn)
+        let (favourite, ((account, user), inbox_url)) = ctx
+            .state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                let favourite = posts_favourites::table
+                    .find(self.favourite_id)
+                    .get_result::<Favourite>(&mut db_conn)
+                    .await?;
+
+                let account_user_fut = accounts::table
+                    .find(favourite.account_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result(&mut db_conn);
+
+                let inbox_url_fut = posts::table
+                    .find(favourite.post_id)
+                    .inner_join(accounts::table)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(&mut db_conn);
+
+                Ok::<_, Self::Error>((favourite, try_join!(account_user_fut, inbox_url_fut)?))
+            })
             .await?;
-
-        let account_user_fut = accounts::table
-            .find(favourite.account_id)
-            .inner_join(users::table)
-            .select(<(Account, User)>::as_select())
-            .get_result(&mut db_conn);
-
-        let inbox_url_fut = posts::table
-            .find(favourite.post_id)
-            .inner_join(accounts::table)
-            .select(accounts::inbox_url)
-            .get_result::<Option<String>>(&mut db_conn);
-
-        let ((account, user), inbox_url) = try_join!(account_user_fut, inbox_url_fut)?;
 
         if let Some(ref inbox_url) = inbox_url {
             let activity = favourite.into_activity(&ctx.state).await?;

@@ -10,7 +10,7 @@ use crate::{
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use http::HeaderValue;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
@@ -67,7 +67,7 @@ pub struct Fetcher {
             .build()
     )]
     client: Client,
-    db_conn: PgPool,
+    db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
@@ -87,20 +87,25 @@ impl Fetcher {
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
     pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<Account> {
-        let mut db_conn = self.db_conn.get().await?;
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
             if let Some(user) = self.user_cache.get(opts.url).await? {
                 return Ok(user);
             }
 
-            if let Some(user) = accounts::table
-                .filter(accounts::url.eq(opts.url))
-                .select(Account::as_select())
-                .first(&mut db_conn)
-                .await
-                .optional()?
-            {
+            let user_data = self
+                .db_pool
+                .with_connection(|mut db_conn| async move {
+                    accounts::table
+                        .filter(accounts::url.eq(opts.url))
+                        .select(Account::as_select())
+                        .first(&mut db_conn)
+                        .await
+                        .optional()
+                })
+                .await?;
+
+            if let Some(user) = user_data {
                 return Ok(user);
             }
         }
@@ -113,8 +118,9 @@ impl Fetcher {
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        let account: Account = db_conn
-            .transaction(|tx| {
+        let account: Account = self
+            .db_pool
+            .with_transaction(|tx| {
                 async move {
                     let account = diesel::insert_into(accounts::table)
                         .values(NewAccount {
@@ -222,14 +228,19 @@ impl Fetcher {
             return Ok(Some(post));
         }
 
-        let mut db_conn = self.db_conn.get().await?;
-        if let Some(post) = posts::table
-            .filter(posts::url.eq(url))
-            .select(Post::as_select())
-            .first(&mut db_conn)
-            .await
-            .optional()?
-        {
+        let post = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .filter(posts::url.eq(url))
+                    .select(Post::as_select())
+                    .first(&mut db_conn)
+                    .await
+                    .optional()
+            })
+            .await?;
+
+        if let Some(post) = post {
             self.post_cache.set(url, &post).await?;
             return Ok(Some(post));
         }
@@ -239,7 +250,7 @@ impl Fetcher {
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
-            .db_conn(&mut db_conn)
+            .db_pool(&self.db_pool)
             .embed_client(self.embed_client.as_ref())
             .fetcher(self)
             .object(object)
@@ -286,12 +297,12 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_actor() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
@@ -323,12 +334,12 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_note() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn.clone())
+                .db_pool(db_pool.clone())
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
@@ -350,10 +361,13 @@ mod test {
                 "https://corteximplant.com/users/0x0/statuses/109501674056556919"
             );
 
-            let author = accounts::table
-                .find(note.account_id)
-                .select(Account::as_select())
-                .get_result::<Account>(&mut db_conn.get().await.unwrap())
+            let author = db_pool
+                .with_connection(|mut db_conn| {
+                    accounts::table
+                        .find(note.account_id)
+                        .select(Account::as_select())
+                        .get_result::<Account>(&mut db_conn)
+                })
                 .await
                 .expect("Get author");
 
@@ -366,9 +380,9 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn federation_allow() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let builder = Fetcher::builder()
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Allow {
@@ -416,7 +430,7 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn federation_deny() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = service_fn(
                 #[allow(unreachable_code)]
                 |_: Request<_>| async {
@@ -427,7 +441,7 @@ mod test {
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {

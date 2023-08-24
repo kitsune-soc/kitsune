@@ -14,9 +14,13 @@ use diesel_async::{
 use diesel_migrations_async::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use tracing_log::LogTracer;
 
-pub use crate::error::{Error, Result};
+pub use crate::{
+    error::{Error, Result},
+    pool::{PgPool, PoolError},
+};
 
 mod error;
+mod pool;
 
 pub mod function;
 pub mod json;
@@ -27,7 +31,6 @@ pub mod post_permission_check;
 pub mod schema;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
-pub type PgPool = Pool<AsyncPgConnection>;
 
 /// Connect to the database and run any pending migrations
 pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
@@ -52,5 +55,5 @@ pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
     )
     .await?;
 
-    Ok(pool)
+    Ok(pool.into())
 }

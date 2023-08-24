@@ -1,14 +1,7 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use diesel::{QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
-use kitsune_db::{
-    model::{
-        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
-    },
-    schema::accounts,
-};
+use kitsune_db::model::media_attachment::MediaAttachment as DbMediaAttachment;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -27,13 +20,12 @@ pub struct MediaAttachment {
 #[ComplexObject]
 impl MediaAttachment {
     pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Account> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
-
-        accounts::table
-            .find(self.account_id)
-            .select(DbAccount::as_select())
-            .get_result::<DbAccount>(&mut db_conn)
+        ctx.state()
+            .service
+            .account
+            .get_by_id(self.account_id)
             .await
+            .map(Option::unwrap)
             .map(Into::into)
             .map_err(Into::into)
     }

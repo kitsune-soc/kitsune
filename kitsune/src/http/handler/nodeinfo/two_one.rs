@@ -1,4 +1,4 @@
-use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand};
+use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand, try_join};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -20,16 +20,19 @@ use simd_json::{Builder, OwnedValue};
     ),
 )]
 async fn get(
-    State(db_conn): State<PgPool>,
+    State(db_pool): State<PgPool>,
     State(user_service): State<UserService>,
 ) -> Result<Json<TwoOne>> {
-    let mut db_conn = db_conn.get().await?;
+    let (total, local_posts) = db_pool
+        .with_connection(|mut db_conn| async move {
+            let total_fut = users::table.count().get_result::<i64>(&mut db_conn);
+            let local_posts_fut = posts::table
+                .filter(posts::is_local.eq(true))
+                .count()
+                .get_result::<i64>(&mut db_conn);
 
-    let total = users::table.count().get_result::<i64>(&mut db_conn).await?;
-    let local_posts = posts::table
-        .filter(posts::is_local.eq(true))
-        .count()
-        .get_result::<i64>(&mut db_conn)
+            try_join!(total_fut, local_posts_fut)
+        })
         .await?;
 
     Ok(Json(TwoOne {
