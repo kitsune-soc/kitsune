@@ -46,7 +46,7 @@ pub async fn post(
         .build()
         .unwrap();
 
-    let post = post.boost(boost_post).await?;
+    let status = mastodon_mapper.map(post.boost(boost_post).await?).await?;
 
-    Ok(Json(mastodon_mapper.map((&user_data.account, post)).await?))
+    Ok(Json(status))
 }
