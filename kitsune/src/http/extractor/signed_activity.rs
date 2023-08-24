@@ -13,9 +13,9 @@ use axum::{
 use bytes::Buf;
 use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
-use kitsune_db::{model::account::Account, schema::accounts};
+use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
     ring::signature::{
         UnparsedPublicKey, VerificationAlgorithm, ED25519, RSA_PKCS1_2048_8192_SHA256,
@@ -62,13 +62,12 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         let ap_id = activity.actor();
         let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
-        let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
-        if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
+        if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
             let remote_user = state.fetcher.fetch_actor(opts).await?;
 
-            if !verify_signature(&parts, &mut db_conn, Some(&remote_user)).await? {
+            if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }
@@ -79,15 +78,18 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
 async fn verify_signature(
     parts: &Parts,
-    db_conn: &mut AsyncPgConnection,
+    db_conn: &PgPool,
     expected_account: Option<&Account>,
 ) -> Result<bool> {
     let is_valid = HttpVerifier::default()
         .verify(parts, |key_id| async move {
-            let remote_user: Account = accounts::table
-                .filter(accounts::public_key_id.eq(key_id))
-                .select(Account::as_select())
-                .first(db_conn)
+            let remote_user: Account = db_conn
+                .with_connection(|mut db_conn| {
+                    accounts::table
+                        .filter(accounts::public_key_id.eq(key_id))
+                        .select(Account::as_select())
+                        .first(&mut db_conn)
+                })
                 .await?;
 
             // If we have an expected account, which we have in the case of an incoming new activity,

@@ -4,9 +4,7 @@
 
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
-use std::error::Error;
-
-type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
+use color_eyre::eyre::{self, Result};
 
 mod config;
 mod role;
@@ -28,17 +26,23 @@ struct App {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    color_eyre::install()?;
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
     let config: Configuration = envy::from_env()?;
     let db_conn = kitsune_db::connect(&config.database_url, 1).await?;
-    let mut db_conn = db_conn.get().await?;
     let cmd = App::parse();
 
-    match cmd.subcommand {
-        AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
-    }
+    db_conn
+        .with_connection(|mut db_conn| async move {
+            match cmd.subcommand {
+                AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
+            }
+
+            Ok::<_, eyre::Report>(())
+        })
+        .await?;
 
     Ok(())
 }

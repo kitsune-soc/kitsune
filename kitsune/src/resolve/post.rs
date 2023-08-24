@@ -113,7 +113,7 @@ mod test {
     #[serial_test::serial]
     async fn parse_mentions() {
         redis_test(|redis_pool| async move {
-            database_test(|db_conn| async move {
+            database_test(|db_pool| async move {
                 let post = "Hello @0x0@corteximplant.com! How are you doing?";
 
                 let client = service_fn(|req: Request<_>| async move {
@@ -133,7 +133,7 @@ mod test {
 
                 let fetcher = Fetcher::builder()
                     .client(client)
-                    .db_conn(db_conn.clone())
+                    .db_pool(db_pool.clone())
                     .embed_client(None)
                     .federation_filter(
                         FederationFilterService::new(&FederationFilterConfiguration::Deny {
@@ -146,7 +146,7 @@ mod test {
                     .user_cache(Arc::new(NoopCache.into()))
                     .build();
 
-                let context_repo = KitsuneContextRepo::builder().db_pool(db_conn.clone()).build();
+                let context_repo = KitsuneContextRepo::builder().db_pool(db_pool.clone()).build();
                 let job_queue = JobQueue::builder()
                     .context_repository(context_repo)
                     .queue_name("parse_mentions_test")
@@ -161,7 +161,7 @@ mod test {
                     .build();
 
                 let attachment_service = AttachmentService::builder()
-                    .db_conn(db_conn.clone())
+                    .db_pool(db_pool.clone())
                     .media_proxy_enabled(false)
                     .storage_backend(FsStorage::new("uploads".into()))
                     .url_service(url_service.clone())
@@ -169,7 +169,7 @@ mod test {
 
                 let account_service = AccountService::builder()
                     .attachment_service(attachment_service)
-                    .db_conn(db_conn.clone())
+                    .db_pool(db_pool.clone())
                     .fetcher(fetcher)
                     .job_service(job_service)
                     .url_service(url_service.clone())
@@ -189,10 +189,13 @@ mod test {
                 assert_eq!(mentioned_account_ids.len(), 1);
 
                 let (account_id, _mention_text) = &mentioned_account_ids[0];
-                let mentioned_account = accounts::table
-                    .find(account_id)
-                    .select(Account::as_select())
-                    .get_result::<Account>(&mut db_conn.get().await.unwrap())
+                let mentioned_account = db_pool
+                    .with_connection(|mut db_conn| {
+                        accounts::table
+                            .find(account_id)
+                            .select(Account::as_select())
+                            .get_result::<Account>(&mut db_conn)
+                    })
                     .await
                     .expect("Failed to fetch account");
 

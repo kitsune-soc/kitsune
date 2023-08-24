@@ -1,4 +1,4 @@
-use crate::util::catch_panic::CatchPanic;
+use crate::{error::Error, util::catch_panic::CatchPanic};
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use kitsune_db::PgPool;
@@ -16,20 +16,21 @@ where
 
     let out = CatchPanic::new(func(pool.clone())).await;
 
-    let mut db_conn = pool
-        .get()
-        .await
-        .expect("Failed to get connection from pool");
+    pool.with_connection(|mut db_conn| async move {
+        diesel::sql_query("DROP SCHEMA public CASCADE")
+            .execute(&mut db_conn)
+            .await
+            .expect("Failed to delete schema");
 
-    diesel::sql_query("DROP SCHEMA public CASCADE")
-        .execute(&mut db_conn)
-        .await
-        .expect("Failed to delete schema");
+        diesel::sql_query("CREATE SCHEMA public")
+            .execute(&mut db_conn)
+            .await
+            .expect("Failed to create schema");
 
-    diesel::sql_query("CREATE SCHEMA public")
-        .execute(&mut db_conn)
-        .await
-        .expect("Failed to create schema");
+        Ok::<_, Error>(())
+    })
+    .await
+    .expect("Failed to get connection");
 
     match out {
         Ok(out) => out,

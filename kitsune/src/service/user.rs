@@ -11,7 +11,7 @@ use crate::{
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use futures_util::future::OptionFuture;
 use iso8601_timestamp::Timestamp;
 use kitsune_captcha::ChallengeStatus;
@@ -53,7 +53,7 @@ pub struct Register {
 
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
-    db_conn: PgPool,
+    db_pool: PgPool,
     job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
@@ -62,24 +62,28 @@ pub struct UserService {
 
 impl UserService {
     pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
-        let mut db_conn = self.db_conn.get().await?;
-        diesel::update(
-            users::table
-                .filter(users::confirmation_token.eq(confirmation_token))
-                .filter(users::confirmed_at.is_null()),
-        )
-        .set(users::confirmed_at.eq(Timestamp::now_utc()))
-        .execute(&mut db_conn)
-        .await?;
+        self.db_pool
+            .with_connection(|mut db_conn| {
+                diesel::update(
+                    users::table
+                        .filter(users::confirmation_token.eq(confirmation_token))
+                        .filter(users::confirmed_at.is_null()),
+                )
+                .set(users::confirmed_at.eq(Timestamp::now_utc()))
+                .execute(&mut db_conn)
+            })
+            .await?;
 
         Ok(())
     }
 
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
-        let mut db_conn = self.db_conn.get().await?;
-        diesel::update(users::table.find(user_id))
-            .set(users::confirmed_at.eq(Timestamp::now_utc()))
-            .execute(&mut db_conn)
+        self.db_pool
+            .with_connection(|mut db_conn| {
+                diesel::update(users::table.find(user_id))
+                    .set(users::confirmed_at.eq(Timestamp::now_utc()))
+                    .execute(&mut db_conn)
+            })
             .await?;
 
         Ok(())
@@ -123,9 +127,9 @@ impl UserService {
         let url = self.url_service.user_url(account_id);
         let public_key_id = self.url_service.public_key_id(account_id);
 
-        let mut db_conn = self.db_conn.get().await?;
-        let new_user = db_conn
-            .transaction(|tx| {
+        let new_user = self
+            .db_pool
+            .with_transaction(|tx| {
                 async move {
                     let account_fut = diesel::insert_into(accounts::table)
                         .values(NewAccount {

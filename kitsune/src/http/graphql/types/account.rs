@@ -36,15 +36,19 @@ pub struct Account {
 #[ComplexObject]
 impl Account {
     pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let db_pool = &ctx.state().db_pool;
 
         if let Some(avatar_id) = self.avatar_id {
-            media_attachments::table
-                .find(avatar_id)
-                .get_result::<DbMediaAttachment>(&mut db_conn)
+            db_pool
+                .with_connection(|mut db_conn| async move {
+                    media_attachments::table
+                        .find(avatar_id)
+                        .get_result::<DbMediaAttachment>(&mut db_conn)
+                        .await
+                        .optional()
+                        .map(|attachment| attachment.map(Into::into))
+                })
                 .await
-                .optional()
-                .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
         } else {
             Ok(None)
@@ -52,15 +56,19 @@ impl Account {
     }
 
     pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let mut db_conn = ctx.state().db_conn.get().await?;
+        let db_pool = &ctx.state().db_pool;
 
         if let Some(header_id) = self.header_id {
-            media_attachments::table
-                .find(header_id)
-                .get_result::<DbMediaAttachment>(&mut db_conn)
+            db_pool
+                .with_connection(|mut db_conn| async move {
+                    media_attachments::table
+                        .find(header_id)
+                        .get_result::<DbMediaAttachment>(&mut db_conn)
+                        .await
+                        .optional()
+                        .map(|attachment| attachment.map(Into::into))
+                })
                 .await
-                .optional()
-                .map(|attachment| attachment.map(Into::into))
                 .map_err(Into::into)
         } else {
             Ok(None)

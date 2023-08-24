@@ -27,7 +27,7 @@ struct WebfingerQuery {
     )
 )]
 async fn get(
-    State(db_conn): State<PgPool>,
+    State(db_pool): State<PgPool>,
     State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
 ) -> Result<Either<Json<Resource>, StatusCode>> {
@@ -45,14 +45,17 @@ async fn get(
         return Ok(Either::E2(StatusCode::NOT_FOUND));
     };
 
-    let account = accounts::table
-        .filter(
-            accounts::username
-                .eq(username)
-                .and(accounts::local.eq(true)),
-        )
-        .select(Account::as_select())
-        .first::<Account>(&mut db_conn.get().await?)
+    let account = db_pool
+        .with_connection(|mut db_conn| {
+            accounts::table
+                .filter(
+                    accounts::username
+                        .eq(username)
+                        .and(accounts::local.eq(true)),
+                )
+                .select(Account::as_select())
+                .first::<Account>(&mut db_conn)
+        })
         .await?;
     let account_url = url_service.user_url(account.id);
 
@@ -94,11 +97,16 @@ mod tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn basic() {
-        database_test(|db_conn| async move {
-            let account_id = prepare_db(&mut db_conn.get().await.unwrap()).await;
+        database_test(|db_pool| async move {
+            let account_id = db_pool
+                .with_connection(|mut db_conn| async move {
+                    Ok::<_, eyre::Report>(prepare_db(&mut db_conn).await)
+                })
+                .await
+                .unwrap();
             let account_url = format!("https://example.com/users/{account_id}");
 
-            let db_conn = State(db_conn);
+            let db_conn = State(db_pool);
             let url_service = UrlService::builder()
                 .scheme("https")
                 .domain("example.com")
@@ -116,9 +124,12 @@ mod tests {
                 Either::E1(Json(resource)) => resource,
                 Either::E2(status) => panic!("Unexpected status code: {}", status),
             };
+
             assert_eq!(resource.subject, "acct:alice@example.com");
             assert_eq!(resource.aliases, [account_url.clone()]);
+
             let [Link { rel, r#type, href }] = <[_; 1]>::try_from(resource.links).unwrap();
+
             assert_eq!(rel, "self");
             assert_eq!(r#type.unwrap(), "application/activity+json");
             assert_eq!(href.unwrap(), account_url);
@@ -130,6 +141,7 @@ mod tests {
             let response = get(db_conn.clone(), url_service.clone(), Query(query))
                 .await
                 .unwrap();
+
             assert!(matches!(response, Either::E2(StatusCode::NOT_FOUND)));
 
             // Should not resolve a remote account
@@ -137,6 +149,7 @@ mod tests {
                 resource: "acct:bob@example.net".into(),
             };
             let response = get(db_conn, url_service, Query(query)).await.unwrap();
+
             assert!(matches!(response, Either::E2(StatusCode::NOT_FOUND)));
         })
         .await;
@@ -145,10 +158,16 @@ mod tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn custom_domain() {
-        database_test(|db_conn| async move {
-            prepare_db(&mut db_conn.get().await.unwrap()).await;
+        database_test(|db_pool| async move {
+            db_pool
+                .with_connection(|mut db_conn| async move {
+                    prepare_db(&mut db_conn).await;
+                    Ok::<_, eyre::Report>(())
+                })
+                .await
+                .unwrap();
 
-            let db_conn = State(db_conn);
+            let db_pool = State(db_pool);
             let url_service = UrlService::builder()
                 .scheme("https")
                 .domain("example.com")
@@ -160,24 +179,26 @@ mod tests {
             let query = WebfingerQuery {
                 resource: "acct:alice@example.com".into(),
             };
-            let response = get(db_conn.clone(), url_service.clone(), Query(query))
+            let response = get(db_pool.clone(), url_service.clone(), Query(query))
                 .await
                 .unwrap();
             let resource = match response {
                 Either::E1(Json(resource)) => resource,
                 Either::E2(status) => panic!("Unexpected status code: {}", status),
             };
+
             assert_eq!(resource.subject, "acct:alice@alice.example");
 
             // Should return the canonical domain as-is
             let query = WebfingerQuery {
                 resource: "acct:alice@alice.example".into(),
             };
-            let response = get(db_conn, url_service, Query(query)).await.unwrap();
+            let response = get(db_pool, url_service, Query(query)).await.unwrap();
             let resource = match response {
                 Either::E1(Json(resource)) => resource,
                 Either::E2(status) => panic!("Unexpected status code: {}", status),
             };
+
             assert_eq!(resource.subject, "acct:alice@alice.example");
         })
         .await;
@@ -212,6 +233,7 @@ mod tests {
                         })
                         .execute(tx)
                         .await?;
+
                     diesel::insert_into(accounts::table)
                         .values(NewAccount {
                             id: Uuid::now_v7(),

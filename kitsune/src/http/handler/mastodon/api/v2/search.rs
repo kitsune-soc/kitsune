@@ -1,8 +1,6 @@
-use std::cmp::min;
-
 use crate::{
     consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
-    error::Result,
+    error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
@@ -19,6 +17,7 @@ use kitsune_search::{SearchBackend, SearchIndex, SearchService};
 use kitsune_type::mastodon::SearchResult;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
+use std::cmp::min;
 use url::Url;
 use utoipa::{IntoParams, ToSchema};
 
@@ -67,8 +66,6 @@ async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Either<Json<SearchResult>, StatusCode>> {
-    let mut db_conn = state.db_conn.get().await?;
-
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {
             SearchType::Accounts => SearchIndex::Account,
@@ -96,30 +93,41 @@ async fn get(
             .await?;
 
         for result in results {
-            match index {
-                SearchIndex::Account => {
-                    let account = accounts::table
-                        .find(result.id)
-                        .select(Account::as_select())
-                        .get_result::<Account>(&mut db_conn)
-                        .await?;
+            search_result = state
+                .db_pool
+                .with_connection(|mut db_conn| {
+                    let state = &state;
 
-                    search_result
-                        .accounts
-                        .push(state.mastodon_mapper.map(account).await?);
-                }
-                SearchIndex::Post => {
-                    let post = posts::table
-                        .find(result.id)
-                        .select(Post::as_select())
-                        .get_result::<Post>(&mut db_conn)
-                        .await?;
+                    async move {
+                        match index {
+                            SearchIndex::Account => {
+                                let account = accounts::table
+                                    .find(result.id)
+                                    .select(Account::as_select())
+                                    .get_result::<Account>(&mut db_conn)
+                                    .await?;
 
-                    search_result
-                        .statuses
-                        .push(state.mastodon_mapper.map(post).await?);
-                }
-            }
+                                search_result
+                                    .accounts
+                                    .push(state.mastodon_mapper.map(account).await?);
+                            }
+                            SearchIndex::Post => {
+                                let post = posts::table
+                                    .find(result.id)
+                                    .select(Post::as_select())
+                                    .get_result::<Post>(&mut db_conn)
+                                    .await?;
+
+                                search_result
+                                    .statuses
+                                    .push(state.mastodon_mapper.map(post).await?);
+                            }
+                        }
+
+                        Ok::<_, Error>(search_result)
+                    }
+                })
+                .await?;
         }
     }
 

@@ -143,7 +143,7 @@ pub struct Service {
 /// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub db_conn: PgPool,
+    pub db_pool: PgPool,
     pub embed_client: Option<EmbedClient>,
     pub event_emitter: EventEmitter,
     pub fetcher: Fetcher,

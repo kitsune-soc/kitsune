@@ -10,7 +10,7 @@ use crate::{
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use http::HeaderValue;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
@@ -28,7 +28,9 @@ use kitsune_type::ap::{actor::Actor, Object};
 use typed_builder::TypedBuilder;
 use url::Url;
 
-const MAX_FETCH_DEPTH: u32 = 50; // Maximum call depth of fetching new posts. Prevents unbounded recursion
+// Maximum call depth of fetching new posts. Prevents unbounded recursion.
+// Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
+const MAX_FETCH_DEPTH: u32 = 30;
 
 #[derive(Clone, Debug, TypedBuilder)]
 /// Options passed to the fetcher
@@ -67,7 +69,7 @@ pub struct Fetcher {
             .build()
     )]
     client: Client,
-    db_conn: PgPool,
+    db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
@@ -87,20 +89,25 @@ impl Fetcher {
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
     pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<Account> {
-        let mut db_conn = self.db_conn.get().await?;
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
             if let Some(user) = self.user_cache.get(opts.url).await? {
                 return Ok(user);
             }
 
-            if let Some(user) = accounts::table
-                .filter(accounts::url.eq(opts.url))
-                .select(Account::as_select())
-                .first(&mut db_conn)
-                .await
-                .optional()?
-            {
+            let user_data = self
+                .db_pool
+                .with_connection(|mut db_conn| async move {
+                    accounts::table
+                        .filter(accounts::url.eq(opts.url))
+                        .select(Account::as_select())
+                        .first(&mut db_conn)
+                        .await
+                        .optional()
+                })
+                .await?;
+
+            if let Some(user) = user_data {
                 return Ok(user);
             }
         }
@@ -113,8 +120,9 @@ impl Fetcher {
         let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
         actor.clean_html();
 
-        let account: Account = db_conn
-            .transaction(|tx| {
+        let account: Account = self
+            .db_pool
+            .with_transaction(|tx| {
                 async move {
                     let account = diesel::insert_into(accounts::table)
                         .values(NewAccount {
@@ -222,14 +230,19 @@ impl Fetcher {
             return Ok(Some(post));
         }
 
-        let mut db_conn = self.db_conn.get().await?;
-        if let Some(post) = posts::table
-            .filter(posts::url.eq(url))
-            .select(Post::as_select())
-            .first(&mut db_conn)
-            .await
-            .optional()?
-        {
+        let post = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                posts::table
+                    .filter(posts::url.eq(url))
+                    .select(Post::as_select())
+                    .first(&mut db_conn)
+                    .await
+                    .optional()
+            })
+            .await?;
+
+        if let Some(post) = post {
             self.post_cache.set(url, &post).await?;
             return Ok(Some(post));
         }
@@ -239,7 +252,7 @@ impl Fetcher {
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
-            .db_conn(&mut db_conn)
+            .db_pool(&self.db_pool)
             .embed_client(self.embed_client.as_ref())
             .fetcher(self)
             .object(object)
@@ -264,6 +277,7 @@ impl Fetcher {
 
 #[cfg(test)]
 mod test {
+    use super::MAX_FETCH_DEPTH;
     use crate::{
         activitypub::Fetcher,
         config::FederationFilterConfiguration,
@@ -274,24 +288,32 @@ mod test {
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use hyper::{Body, Request, Response};
+    use hyper::{Body, Request, Response, Uri};
+    use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
+    use kitsune_type::ap::{
+        actor::{Actor, ActorType, PublicKey},
+        ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+    };
     use pretty_assertions::assert_eq;
-    use std::sync::Arc;
+    use std::sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    };
     use tower::service_fn;
 
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_actor() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
@@ -323,12 +345,12 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn fetch_note() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn.clone())
+                .db_pool(db_pool.clone())
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {
@@ -350,10 +372,13 @@ mod test {
                 "https://corteximplant.com/users/0x0/statuses/109501674056556919"
             );
 
-            let author = accounts::table
-                .find(note.account_id)
-                .select(Account::as_select())
-                .get_result::<Account>(&mut db_conn.get().await.unwrap())
+            let author = db_pool
+                .with_connection(|mut db_conn| {
+                    accounts::table
+                        .find(note.account_id)
+                        .select(Account::as_select())
+                        .get_result::<Account>(&mut db_conn)
+                })
                 .await
                 .expect("Get author");
 
@@ -365,10 +390,103 @@ mod test {
 
     #[tokio::test]
     #[serial_test::serial]
+    async fn fetch_infinitely_long_reply_chain() {
+        database_test(|db_pool| async move {
+            let request_counter = Arc::new(AtomicU32::new(0));
+            let client = service_fn(move |req: Request<_>| {
+                let count = request_counter.fetch_add(1, Ordering::SeqCst);
+                if count > MAX_FETCH_DEPTH * 3 {
+                    panic!("Too many fetches");
+                }
+                async move {
+                    let author_id = "https://example.com/users/1".to_owned();
+                    let author = Actor {
+                        context: ap_context(),
+                        id: author_id.clone(),
+                        r#type: ActorType::Person,
+                        name: None,
+                        preferred_username: "Infinite notes".into(),
+                        subject: None,
+                        icon: None,
+                        image: None,
+                        manually_approves_followers: false,
+                        public_key: PublicKey {
+                            id: format!("{author_id}#main-key"),
+                            owner: author_id,
+                            // A 512-bit RSA public key generated as a placeholder
+                            public_key_pem: "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAK1v4oRbdBPi8oRL0M1GQqSWtkb9uE2L\nJCAgZK9KiVECNYvEASYor7DeMEu6BxR1E4XI2DlGkigClWXFhQDhos0CAwEAAQ==\n-----END PUBLIC KEY-----\n".into(),
+                        },
+                        endpoints: None,
+                        featured: None,
+                        inbox: "https://example.com/inbox".into(),
+                        outbox: None,
+                        followers: None,
+                        following: None,
+                        published: Timestamp::UNIX_EPOCH,
+                    };
+
+                    if let Some(note_id) = req.uri().path_and_query().unwrap().as_str().strip_prefix("/notes/") {
+                        let note_id = note_id.parse::<u32>().unwrap();
+                        let note = Object {
+                            context: ap_context(),
+                            id: format!("https://example.com/notes/{note_id}"),
+                            r#type: ObjectType::Note,
+                            attributed_to: AttributedToField::Url(author.id.clone()),
+                            in_reply_to: Some(format!("https://example.com/notes/{}", note_id + 1)),
+                            name: None,
+                            summary: None,
+                            content: "".into(),
+                            media_type: None,
+                            attachment: Vec::new(),
+                            tag: Vec::new(),
+                            sensitive: false,
+                            published: Timestamp::UNIX_EPOCH,
+                            to: vec![PUBLIC_IDENTIFIER.into()],
+                            cc: Vec::new(),
+                        };
+                        let body = simd_json::to_string(&note).unwrap();
+                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    } else {
+                        assert_eq!(
+                            req.uri().path_and_query().unwrap(),
+                            Uri::try_from(&author.id).unwrap().path_and_query().unwrap()
+                        );
+                        let body = simd_json::to_string(&author).unwrap();
+                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    }
+                }
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client)
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            assert!(fetcher
+                .fetch_object("https://example.com/notes/0")
+                .await
+                .is_ok());
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
     async fn federation_allow() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let builder = Fetcher::builder()
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Allow {
@@ -416,7 +534,7 @@ mod test {
     #[tokio::test]
     #[serial_test::serial]
     async fn federation_deny() {
-        database_test(|db_conn| async move {
+        database_test(|db_pool| async move {
             let client = service_fn(
                 #[allow(unreachable_code)]
                 |_: Request<_>| async {
@@ -427,7 +545,7 @@ mod test {
 
             let fetcher = Fetcher::builder()
                 .client(client)
-                .db_conn(db_conn)
+                .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
                     FederationFilterService::new(&FederationFilterConfiguration::Deny {

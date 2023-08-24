@@ -122,10 +122,13 @@ impl JobContextRepository for KitsuneContextRepo {
     where
         I: Iterator<Item = Uuid> + Send + 'static,
     {
-        let mut conn = self.db_pool.get().await?;
-        let stream = job_context::table
-            .filter(job_context::id.eq_any(job_ids))
-            .load_stream::<JobContext<Job>>(&mut conn)
+        let stream = self
+            .db_pool
+            .with_connection(|mut conn| {
+                job_context::table
+                    .filter(job_context::id.eq_any(job_ids))
+                    .load_stream::<JobContext<Job>>(&mut conn)
+            })
             .await?;
 
         Ok(stream
@@ -135,9 +138,10 @@ impl JobContextRepository for KitsuneContextRepo {
     }
 
     async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error> {
-        let mut conn = self.db_pool.get().await?;
-        diesel::delete(job_context::table.find(job_id))
-            .execute(&mut conn)
+        self.db_pool
+            .with_connection(|mut conn| {
+                diesel::delete(job_context::table.find(job_id)).execute(&mut conn)
+            })
             .await?;
 
         Ok(())
@@ -148,13 +152,15 @@ impl JobContextRepository for KitsuneContextRepo {
         job_id: Uuid,
         context: Self::JobContext,
     ) -> Result<(), Self::Error> {
-        let mut conn = self.db_pool.get().await?;
-        diesel::insert_into(job_context::table)
-            .values(NewJobContext {
-                id: job_id,
-                context: Json(context),
+        self.db_pool
+            .with_connection(|mut conn| {
+                diesel::insert_into(job_context::table)
+                    .values(NewJobContext {
+                        id: job_id,
+                        context: Json(context),
+                    })
+                    .execute(&mut conn)
             })
-            .execute(&mut conn)
             .await?;
 
         Ok(())

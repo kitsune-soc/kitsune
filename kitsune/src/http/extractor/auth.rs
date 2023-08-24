@@ -60,10 +60,13 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
                 .filter(oauth2_access_tokens::expires_at.gt(OffsetDateTime::now_utc()));
         }
 
-        let mut db_conn = state.db_conn.get().await.map_err(Error::from)?;
-        let (user, account) = user_account_query
-            .select(<(User, Account)>::as_select())
-            .get_result(&mut db_conn)
+        let (user, account) = state
+            .db_pool
+            .with_connection(|mut db_conn| {
+                user_account_query
+                    .select(<(User, Account)>::as_select())
+                    .get_result(&mut db_conn)
+            })
             .await
             .map_err(Error::from)?;
 

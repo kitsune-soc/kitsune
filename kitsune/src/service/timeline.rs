@@ -55,7 +55,7 @@ pub struct GetPublic {
 
 #[derive(Clone, TypedBuilder)]
 pub struct TimelineService {
-    db_conn: PgPool,
+    db_pool: PgPool,
 }
 
 impl TimelineService {
@@ -64,7 +64,6 @@ impl TimelineService {
         &self,
         get_home: GetHome,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
-        let mut db_conn = self.db_conn.get().await?;
         let mut query = posts::table
             .filter(
                 // Post is owned by the user
@@ -110,7 +109,12 @@ impl TimelineService {
             query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            })
+            .await
+            .map_err(Error::from)
     }
 
     /// Get a stream of public posts
@@ -123,7 +127,6 @@ impl TimelineService {
         &self,
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
-        let mut db_conn = self.db_conn.get().await?;
         let permission_check = PermissionCheck::builder()
             .include_unlisted(false)
             .build()
@@ -152,6 +155,11 @@ impl TimelineService {
             query = query.filter(posts::is_local.eq(false));
         }
 
-        Ok(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+        self.db_pool
+            .with_connection(|mut db_conn| async move {
+                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            })
+            .await
+            .map_err(Error::from)
     }
 }

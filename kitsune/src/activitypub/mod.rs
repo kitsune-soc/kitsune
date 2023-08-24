@@ -4,9 +4,7 @@ use crate::{
     util::timestamp_to_uuid,
 };
 use diesel::SelectableHelper;
-use diesel_async::{
-    scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
-};
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncPgConnection, RunQueryDsl};
 use kitsune_db::{
     model::{
         account::Account,
@@ -15,6 +13,7 @@ use kitsune_db::{
         post::{NewPost, Post, PostConflictChangeset, Visibility},
     },
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
+    PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::DetectionBackend;
@@ -110,7 +109,7 @@ pub struct ProcessNewObject<'a> {
     author: Option<Account>,
     #[builder(default = 0)]
     call_depth: u32,
-    db_conn: &'a mut AsyncPgConnection,
+    db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
     object: Object,
     fetcher: &'a Fetcher,
@@ -122,7 +121,7 @@ pub async fn process_new_object(
     ProcessNewObject {
         author,
         call_depth,
-        db_conn,
+        db_pool,
         embed_client,
         mut object,
         fetcher,
@@ -173,8 +172,8 @@ pub async fn process_new_object(
     let content_lang =
         kitsune_language::detect_language(DetectionBackend::default(), object.content.as_str());
 
-    let post = db_conn
-        .transaction(|tx| {
+    let post = db_pool
+        .with_transaction(|tx| {
             async move {
                 let new_post = diesel::insert_into(posts::table)
                     .values(NewPost {

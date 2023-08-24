@@ -49,6 +49,18 @@ pub enum Error {
     Pool(#[from] deadpool::PoolError),
 }
 
+impl<E> From<kitsune_db::PoolError<E>> for Error
+where
+    E: Into<Error>,
+{
+    fn from(value: kitsune_db::PoolError<E>) -> Self {
+        match value {
+            kitsune_db::PoolError::Pool(err) => err.into(),
+            kitsune_db::PoolError::User(err) => err.into(),
+        }
+    }
+}
+
 #[derive(Clone, TypedBuilder)]
 pub struct Client {
     db_pool: PgPool,
@@ -69,21 +81,25 @@ impl Client {
         let Some(url) = first_link_from_fragment(fragment) else {
             return Ok(None);
         };
+
         self.fetch_embed(&url).await.map(Some)
     }
 
     pub async fn fetch_embed(&self, url: &str) -> Result<LinkPreview<Embed>> {
-        {
-            let mut db_conn = self.db_pool.get().await?;
-            if let Some(data) = link_previews::table
-                .find(url)
-                .get_result::<LinkPreview<Embed>>(&mut db_conn)
-                .await
-                .optional()?
-            {
-                if data.expires_at > Timestamp::now_utc() {
-                    return Ok(data);
-                }
+        let embed_data = self
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                link_previews::table
+                    .find(url)
+                    .get_result::<LinkPreview<Embed>>(&mut db_conn)
+                    .await
+                    .optional()
+            })
+            .await?;
+
+        if let Some(data) = embed_data {
+            if data.expires_at > Timestamp::now_utc() {
+                return Ok(data);
             }
         }
 
@@ -96,20 +112,23 @@ impl Client {
         let response = HttpClient::execute(&self.http_client, request).await?;
         let (expires_at, embed_data): EmbedWithExpire = response.json().await?;
 
-        let mut db_conn = self.db_pool.get().await?;
-        let embed_data = diesel::insert_into(link_previews::table)
-            .values(NewLinkPreview {
-                url,
-                embed_data: Json(&embed_data),
-                expires_at,
+        let embed_data = self
+            .db_pool
+            .with_connection(|mut db_conn| {
+                diesel::insert_into(link_previews::table)
+                    .values(NewLinkPreview {
+                        url,
+                        embed_data: Json(&embed_data),
+                        expires_at,
+                    })
+                    .on_conflict(link_previews::url)
+                    .do_update()
+                    .set(ConflictLinkPreviewChangeset {
+                        embed_data: Json(&embed_data),
+                        expires_at,
+                    })
+                    .get_result(&mut db_conn)
             })
-            .on_conflict(link_previews::url)
-            .do_update()
-            .set(ConflictLinkPreviewChangeset {
-                embed_data: Json(&embed_data),
-                expires_at,
-            })
-            .get_result(&mut db_conn)
             .await?;
 
         Ok(embed_data)
