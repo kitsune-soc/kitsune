@@ -385,7 +385,7 @@ impl IntoMastodon for DbPost {
         .transpose()?
         .map(Box::new);
 
-        let language = self.content_lang.to_639_1().map(|code| code.to_string());
+        let language = self.content_lang.to_639_1().map(str::to_string);
 
         Ok(Status {
             id: self.id,

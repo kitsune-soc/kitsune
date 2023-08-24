@@ -490,15 +490,12 @@ impl PostService {
         // Otherwise, don't update anything
         let content_lang = match update_post.language {
             Some(lang) => Language::from_639_1(&lang),
-            None => match content.as_ref() {
-                Some(c) => Some(detect_language(&c)),
-                None => None,
-            },
+            None => content.as_ref().map(|c| detect_language(c)),
         };
 
         let (mentioned_account_ids, content) = match content.as_ref() {
             Some(content) => {
-                let resolved = self.post_resolver.resolve(&content).await?;
+                let resolved = self.post_resolver.resolve(content).await?;
                 (resolved.0, Some(resolved.1))
             }
             None => (Vec::new(), None),
@@ -508,7 +505,7 @@ impl PostService {
             (self.embed_client.as_ref(), content.as_ref())
         {
             embed_client
-                .fetch_embed_for_fragment(&content)
+                .fetch_embed_for_fragment(content)
                 .await?
                 .map(|fragment_embed| fragment_embed.url)
         } else {
