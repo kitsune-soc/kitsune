@@ -37,12 +37,16 @@ pub async fn get(
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
     let user = db_pool
-        .with_connection(|mut db_conn| async move {
-            users::table
-                .filter(users::oidc_id.eq(&user_info.subject))
-                .get_result(&mut db_conn)
-                .await
-                .optional()
+        .with_connection(|mut db_conn| {
+            let user_info = &user_info;
+
+            async move {
+                users::table
+                    .filter(users::oidc_id.eq(&user_info.subject))
+                    .get_result(&mut db_conn)
+                    .await
+                    .optional()
+            }
         })
         .await?;
 
