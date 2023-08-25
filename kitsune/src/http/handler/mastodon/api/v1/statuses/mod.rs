@@ -19,6 +19,7 @@ use utoipa::ToSchema;
 pub mod context;
 pub mod favourite;
 pub mod reblog;
+pub mod source;
 pub mod unfavourite;
 pub mod unreblog;
 
@@ -186,6 +187,7 @@ pub fn routes() -> Router<Zustand> {
         .route("/:id/context", routing::get(context::get))
         .route("/:id/favourite", routing::post(favourite::post))
         .route("/:id/reblog", routing::post(reblog::post))
+        .route("/:id/source", routing::get(source::get))
         .route("/:id/unfavourite", routing::post(unfavourite::post))
         .route("/:id/unreblog", routing::post(unreblog::post))
 }

@@ -53,3 +53,10 @@ pub struct Status {
     pub reblogged: bool,
     pub card: Option<PreviewCard>,
 }
+
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+pub struct StatusSource {
+    pub id: Uuid,
+    pub text: String,
+    pub spoiler_text: String,
+}

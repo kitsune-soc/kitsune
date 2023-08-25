@@ -105,6 +105,7 @@ CREATE TABLE posts (
     subject TEXT,
 
     content TEXT NOT NULL,
+    content_source TEXT NOT NULL,
     content_lang language_iso_code NOT NULL,
 
     visibility INTEGER NOT NULL,
