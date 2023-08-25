@@ -355,6 +355,7 @@ impl PostService {
             subject
         });
 
+        let content_source = create_post.content.clone();
         let mut content = if create_post.process_markdown {
             process_markdown(&create_post.content)
         } else {
@@ -406,6 +407,7 @@ impl PostService {
                             reposted_post_id: None,
                             subject: subject.as_deref(),
                             content: content.as_str(),
+                            content_source: content_source.as_str(),
                             content_lang: content_lang.into(),
                             link_preview_url: link_preview_url.as_deref(),
                             is_sensitive: create_post.sensitive,
@@ -531,7 +533,7 @@ impl PostService {
         let mut content = if update_post.process_markdown {
             update_post.content.as_ref().map(|s| process_markdown(s))
         } else {
-            update_post.content
+            update_post.content.clone()
         };
         if let Some(content) = &mut content {
             content.clean_html();
@@ -575,6 +577,7 @@ impl PostService {
                             id: update_post.post_id,
                             subject: subject.as_deref(),
                             content: content.as_deref(),
+                            content_source: update_post.content.as_deref(),
                             content_lang: content_lang.map(Into::into),
                             link_preview_url: link_preview_url.as_deref(),
                             is_sensitive: update_post.sensitive,
@@ -678,6 +681,7 @@ impl PostService {
                         reposted_post_id: Some(post.id),
                         subject: Some(""),
                         content: "",
+                        content_source: "",
                         content_lang: post.content_lang,
                         link_preview_url: None,
                         is_sensitive: post.is_sensitive,

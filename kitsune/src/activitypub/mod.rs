@@ -183,6 +183,7 @@ pub async fn process_new_object(
                         reposted_post_id: None,
                         subject: object.summary.as_deref(),
                         content: object.content.as_str(),
+                        content_source: "",
                         content_lang: content_lang.into(),
                         link_preview_url: link_preview_url.as_deref(),
                         is_sensitive: object.sensitive,

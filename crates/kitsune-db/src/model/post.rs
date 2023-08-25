@@ -29,6 +29,7 @@ pub struct Post {
     pub is_sensitive: bool,
     pub subject: Option<String>,
     pub content: String,
+    pub content_source: String,
     pub content_lang: LanguageIsoCode,
     pub link_preview_url: Option<String>,
     pub visibility: Visibility,
@@ -55,6 +56,7 @@ pub struct NewPost<'a> {
     pub is_sensitive: bool,
     pub subject: Option<&'a str>,
     pub content: &'a str,
+    pub content_source: &'a str,
     pub content_lang: LanguageIsoCode,
     pub link_preview_url: Option<&'a str>,
     pub visibility: Visibility,
@@ -70,6 +72,7 @@ pub struct PostChangeset<'a> {
     pub is_sensitive: Option<bool>,
     pub subject: Option<&'a str>,
     pub content: Option<&'a str>,
+    pub content_source: Option<&'a str>,
     pub content_lang: Option<LanguageIsoCode>,
     pub link_preview_url: Option<&'a str>,
     pub updated_at: Timestamp,
@@ -92,7 +95,7 @@ pub struct PostChangeset<'a> {
 )]
 #[serde(rename_all = "camelCase")]
 #[diesel(sql_type = diesel::sql_types::Integer)]
-/// Post visiblity
+/// Post visibility
 pub enum Visibility {
     /// Post is public and can be seen and interacted with by anyone
     ///
