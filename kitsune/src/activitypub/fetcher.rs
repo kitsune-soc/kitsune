@@ -395,9 +395,7 @@ mod test {
             let request_counter = Arc::new(AtomicU32::new(0));
             let client = service_fn(move |req: Request<_>| {
                 let count = request_counter.fetch_add(1, Ordering::SeqCst);
-                if count > MAX_FETCH_DEPTH * 3 {
-                    panic!("Too many fetches");
-                }
+                assert!(MAX_FETCH_DEPTH * 3 >= count);
                 async move {
                     let author_id = "https://example.com/users/1".to_owned();
                     let author = Actor {
@@ -435,7 +433,7 @@ mod test {
                             in_reply_to: Some(format!("https://example.com/notes/{}", note_id + 1)),
                             name: None,
                             summary: None,
-                            content: "".into(),
+                            content: String::new(),
                             media_type: None,
                             attachment: Vec::new(),
                             tag: Vec::new(),

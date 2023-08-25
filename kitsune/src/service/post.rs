@@ -25,6 +25,7 @@ use diesel::{
 };
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt};
+use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
@@ -47,56 +48,80 @@ use kitsune_search::{SearchBackend, SearchService};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
-#[derive(Clone, Builder)]
+pub struct PostValidationContext {
+    character_limit: usize,
+}
+
+#[derive(Builder, Clone, Validate)]
+#[garde(context(PostValidationContext as ctx))]
 pub struct CreatePost {
     /// ID of the author
     ///
     /// This is not validated. Make sure this is a valid and verified value.
+    #[garde(skip)]
     author_id: Uuid,
 
     /// ID of the post this post is replying to
     ///
     /// This is validated. If you pass in an non-existent ID, it will be ignored.
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     in_reply_to_id: Option<Uuid>,
 
     /// IDs of the media attachments attached to this post
     ///
     /// These IDs are validated. If one of them doesn't exist, the post is rejected.
     #[builder(default)]
+    #[garde(skip)]
     media_ids: Vec<Uuid>,
 
     /// Mark this post as sensitive
     ///
     /// Defaults to false
     #[builder(default)]
+    #[garde(skip)]
     sensitive: bool,
 
     /// Subject of the post
     ///
     /// This is optional
     #[builder(default, setter(strip_option))]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - content.chars().count()
+        )
+    )]
     subject: Option<String>,
 
     /// Content of the post
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
+        )
+    )]
     content: String,
 
     /// Process the content as a markdown document
     ///
     /// Defaults to true
     #[builder(default = "true")]
+    #[garde(skip)]
     process_markdown: bool,
 
     /// Visibility of the post
     ///
     /// Defaults to public
     #[builder(default = "Visibility::Public")]
+    #[garde(skip)]
     visibility: Visibility,
 
     /// ISO 639 language code of the post
     ///
     /// This is optional
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     language: Option<String>,
 }
 
@@ -129,43 +154,61 @@ impl DeletePost {
     }
 }
 
-#[derive(Clone, Builder)]
+#[derive(Builder, Clone, Validate)]
+#[garde(context(PostValidationContext as ctx))]
 pub struct UpdatePost {
     /// ID of the post that is supposed to be updated
+    #[garde(skip)]
     post_id: Uuid,
 
     /// IDs of the media attachments attached to this post
     ///
     /// These IDs are validated. If one of them doesn't exist, the post is rejected.
     #[builder(default)]
+    #[garde(skip)]
     media_ids: Vec<Uuid>,
 
     /// Mark this post as sensitive
     ///
     /// Defaults to false
     #[builder(default)]
+    #[garde(skip)]
     sensitive: Option<bool>,
 
     /// Subject of the post
     ///
     /// This is optional
     #[builder(default)]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - content.as_ref().map_or(0, |content| content.chars().count())
+        )
+    )]
     subject: Option<String>,
 
     /// Content of the post
     #[builder(default)]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
+        )
+    )]
     content: Option<String>,
 
     /// Process the content as a markdown document
     ///
     /// Defaults to true
     #[builder(default = "true")]
+    #[garde(skip)]
     process_markdown: bool,
 
     /// ISO 639 language code of the post
     ///
     /// This is optional
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     language: Option<String>,
 }
 
@@ -295,9 +338,9 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
-        if create_post.content.chars().count() > self.instance_service.character_limit() {
-            return Err(ApiError::BadRequest.into());
-        }
+        create_post.validate(&PostValidationContext {
+            character_limit: self.instance_service.character_limit(),
+        })?;
 
         let subject = create_post.subject.map(|mut subject| {
             subject.clean_html();
@@ -468,12 +511,9 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn update(&self, update_post: UpdatePost) -> Result<Post> {
-        if let Some(content) = update_post.content.as_ref() {
-            // TODO(aumetra) migration to garde for character limit enforcing
-            if content.chars().count() > self.instance_service.character_limit() {
-                return Err(ApiError::BadRequest.into());
-            }
-        }
+        update_post.validate(&PostValidationContext {
+            character_limit: self.instance_service.character_limit(),
+        })?;
 
         let subject = update_post.subject.map(|mut subject| {
             subject.clean_html();

@@ -26,6 +26,7 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
+use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
@@ -135,19 +136,30 @@ pub struct FollowRequest {
     follower_id: Uuid,
 }
 
-#[derive(Builder)]
+#[derive(Builder, Validate)]
 #[builder(pattern = "owned")]
 pub struct Update<A, H> {
+    #[garde(skip)]
     account_id: Uuid,
+
     #[builder(default, setter(strip_option))]
+    #[garde(length(max = 50))]
     display_name: Option<String>,
+
     #[builder(default, setter(strip_option))]
+    #[garde(length(max = 150))]
     note: Option<String>,
+
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     avatar: Option<Upload<A>>,
+
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     header: Option<Upload<H>>,
+
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     locked: Option<bool>,
 }
 
@@ -557,6 +569,8 @@ impl AccountService {
         A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
         H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
     {
+        update.validate(&())?;
+
         let mut changeset = UpdateAccount::default();
 
         if let Some(ref mut display_name) = update.display_name {
