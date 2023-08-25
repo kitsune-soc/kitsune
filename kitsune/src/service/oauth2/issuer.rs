@@ -2,7 +2,7 @@ use super::{chrono_to_timestamp, timestamp_to_chrono};
 use crate::{error::Error, util::generate_secret};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_access_tokens, oauth2_applications, oauth2_refresh_tokens},
@@ -14,6 +14,7 @@ use oxide_auth::primitives::{
     prelude::IssuedToken,
 };
 use oxide_auth_async::primitives::Issuer;
+use scoped_futures::ScopedFutureExt;
 
 #[derive(Clone)]
 pub struct OAuthIssuer {
@@ -72,12 +73,13 @@ impl Issuer for OAuthIssuer {
     async fn refresh(&mut self, refresh_token: &str, grant: Grant) -> Result<RefreshedToken, ()> {
         let (refresh_token, access_token) = self
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 oauth2_refresh_tokens::table
                     .find(refresh_token)
                     .inner_join(oauth2_access_tokens::table)
                     .select(<(oauth2::RefreshToken, oauth2::AccessToken)>::as_select())
-                    .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(&mut db_conn)
+                    .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(db_conn)
+                    .scoped()
             })
             .await
             .map_err(|_| ())?;
@@ -124,14 +126,17 @@ impl Issuer for OAuthIssuer {
     async fn recover_token(&mut self, access_token: &str) -> Result<Option<Grant>, ()> {
         let oauth_data = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                oauth2_access_tokens::table
-                    .find(access_token)
-                    .inner_join(oauth2_applications::table)
-                    .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
-                    .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    oauth2_access_tokens::table
+                        .find(access_token)
+                        .inner_join(oauth2_applications::table)
+                        .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
+                        .get_result::<(oauth2::AccessToken, oauth2::Application)>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await
             .map_err(|_| ())?;
@@ -161,15 +166,18 @@ impl Issuer for OAuthIssuer {
     async fn recover_refresh(&mut self, refresh_token: &str) -> Result<Option<Grant>, ()> {
         let oauth_data = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                oauth2_refresh_tokens::table
-                    .find(refresh_token)
-                    .inner_join(oauth2_access_tokens::table)
-                    .inner_join(oauth2_applications::table)
-                    .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
-                    .get_result::<(oauth2::AccessToken, oauth2::Application)>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    oauth2_refresh_tokens::table
+                        .find(refresh_token)
+                        .inner_join(oauth2_access_tokens::table)
+                        .inner_join(oauth2_applications::table)
+                        .select(<(oauth2::AccessToken, oauth2::Application)>::as_select())
+                        .get_result::<(oauth2::AccessToken, oauth2::Application)>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await
             .map_err(|_| ())?;

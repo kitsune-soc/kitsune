@@ -23,6 +23,7 @@ use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::users, PgPool};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
+use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 
@@ -66,11 +67,12 @@ pub async fn get(
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 oauth2_applications::table
                     .find(query.client_id)
                     .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-                    .get_result::<oauth2::Application>(&mut db_conn)
+                    .get_result::<oauth2::Application>(db_conn)
+                    .scoped()
             })
             .await?;
 
@@ -85,7 +87,7 @@ pub async fn get(
         let id = user_id.value().parse::<Uuid>()?;
 
         db_pool
-            .with_connection(|mut db_conn| users::table.find(id).get_result(&mut db_conn))
+            .with_connection(|db_conn| users::table.find(id).get_result(db_conn).scoped())
             .await?
     } else {
         return Ok(Either3::E2(LoginPage { flash_messages }));
@@ -118,12 +120,15 @@ pub async fn post(
     };
 
     let user = db_pool
-        .with_connection(|mut db_conn| async move {
-            users::table
-                .filter(users::username.eq(form.username))
-                .first::<User>(&mut db_conn)
-                .await
-                .optional()
+        .with_connection(|db_conn| {
+            async move {
+                users::table
+                    .filter(users::username.eq(form.username))
+                    .first::<User>(db_conn)
+                    .await
+                    .optional()
+            }
+            .scoped()
         })
         .await?;
 

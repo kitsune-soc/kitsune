@@ -15,6 +15,7 @@ use kitsune_db::{
 };
 use kitsune_search::{SearchBackend, SearchIndex, SearchService};
 use kitsune_type::mastodon::SearchResult;
+use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use std::cmp::min;
@@ -95,16 +96,14 @@ async fn get(
         for result in results {
             search_result = state
                 .db_pool
-                .with_connection(|mut db_conn| {
-                    let state = &state;
-
-                    async move {
+                .with_connection(|db_conn| {
+                    async {
                         match index {
                             SearchIndex::Account => {
                                 let account = accounts::table
                                     .find(result.id)
                                     .select(Account::as_select())
-                                    .get_result::<Account>(&mut db_conn)
+                                    .get_result::<Account>(db_conn)
                                     .await?;
 
                                 search_result
@@ -115,7 +114,7 @@ async fn get(
                                 let post = posts::table
                                     .find(result.id)
                                     .select(Post::as_select())
-                                    .get_result::<Post>(&mut db_conn)
+                                    .get_result::<Post>(db_conn)
                                     .await?;
 
                                 search_result
@@ -126,6 +125,7 @@ async fn get(
 
                         Ok::<_, Error>(search_result)
                     }
+                    .scoped()
                 })
                 .await?;
         }

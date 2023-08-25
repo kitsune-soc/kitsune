@@ -7,6 +7,7 @@ use kitsune_db::{
     model::{account::Account as DbAccount, user::User as DbUser},
     schema::{accounts, users},
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -27,14 +28,17 @@ impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
         let db_pool = &ctx.state().db_pool;
         db_pool
-            .with_connection(|mut db_conn| async move {
-                users::table
-                    .find(self.id)
-                    .inner_join(accounts::table)
-                    .select(DbAccount::as_select())
-                    .get_result::<DbAccount>(&mut db_conn)
-                    .await
-                    .map(Into::into)
+            .with_connection(|db_conn| {
+                async move {
+                    users::table
+                        .find(self.id)
+                        .inner_join(accounts::table)
+                        .select(DbAccount::as_select())
+                        .get_result::<DbAccount>(db_conn)
+                        .await
+                        .map(Into::into)
+                }
+                .scoped()
             })
             .await
             .map_err(Into::into)

@@ -2,6 +2,7 @@ use crate::{error::Error, util::catch_panic::CatchPanic};
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use kitsune_db::PgPool;
+use scoped_futures::ScopedFutureExt;
 use std::{env, panic};
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
@@ -16,18 +17,21 @@ where
 
     let out = CatchPanic::new(func(pool.clone())).await;
 
-    pool.with_connection(|mut db_conn| async move {
-        diesel::sql_query("DROP SCHEMA public CASCADE")
-            .execute(&mut db_conn)
-            .await
-            .expect("Failed to delete schema");
+    pool.with_connection(|db_conn| {
+        async move {
+            diesel::sql_query("DROP SCHEMA public CASCADE")
+                .execute(db_conn)
+                .await
+                .expect("Failed to delete schema");
 
-        diesel::sql_query("CREATE SCHEMA public")
-            .execute(&mut db_conn)
-            .await
-            .expect("Failed to create schema");
+            diesel::sql_query("CREATE SCHEMA public")
+                .execute(db_conn)
+                .await
+                .expect("Failed to create schema");
 
-        Ok::<_, Error>(())
+            Ok::<_, Error>(())
+        }
+        .scoped()
     })
     .await
     .expect("Failed to get connection");

@@ -3,7 +3,7 @@
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use diesel::{OptionalExtension, QueryDsl};
-use diesel_async::{pooled_connection::deadpool, RunQueryDsl};
+use diesel_async::{pooled_connection::deadpool, scoped_futures::ScopedFutureExt, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
@@ -88,12 +88,15 @@ impl Client {
     pub async fn fetch_embed(&self, url: &str) -> Result<LinkPreview<Embed>> {
         let embed_data = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                link_previews::table
-                    .find(url)
-                    .get_result::<LinkPreview<Embed>>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    link_previews::table
+                        .find(url)
+                        .get_result::<LinkPreview<Embed>>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -114,7 +117,7 @@ impl Client {
 
         let embed_data = self
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::insert_into(link_previews::table)
                     .values(NewLinkPreview {
                         url,
@@ -127,7 +130,8 @@ impl Client {
                         embed_data: Json(&embed_data),
                         expires_at,
                     })
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await?;
 

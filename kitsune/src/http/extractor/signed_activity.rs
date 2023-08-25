@@ -24,6 +24,7 @@ use kitsune_http_signatures::{
 };
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::{Document, SubjectPublicKeyInfoRef};
+use scoped_futures::ScopedFutureExt;
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature
 ///
@@ -84,11 +85,12 @@ async fn verify_signature(
     let is_valid = HttpVerifier::default()
         .verify(parts, |key_id| async move {
             let remote_user: Account = db_conn
-                .with_connection(|mut db_conn| {
+                .with_connection(|db_conn| {
                     accounts::table
                         .filter(accounts::public_key_id.eq(key_id))
                         .select(Account::as_select())
-                        .first(&mut db_conn)
+                        .first(db_conn)
+                        .scoped()
                 })
                 .await?;
 

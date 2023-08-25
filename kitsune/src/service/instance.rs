@@ -5,6 +5,7 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     PgPool,
 };
+use scoped_futures::ScopedFutureExt;
 use smol_str::SmolStr;
 use typed_builder::TypedBuilder;
 
@@ -37,15 +38,18 @@ impl InstanceService {
 
     pub async fn known_instances(&self) -> Result<u64> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                accounts::table
-                    .filter(accounts::local.eq(false))
-                    .select(accounts::domain)
-                    .distinct()
-                    .count()
-                    .get_result::<i64>(&mut db_conn)
-                    .await
-                    .map(|count| count as u64)
+            .with_connection(|db_conn| {
+                async move {
+                    accounts::table
+                        .filter(accounts::local.eq(false))
+                        .select(accounts::domain)
+                        .distinct()
+                        .count()
+                        .get_result::<i64>(db_conn)
+                        .await
+                        .map(|count| count as u64)
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -53,13 +57,16 @@ impl InstanceService {
 
     pub async fn local_post_count(&self) -> Result<u64> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                posts::table
-                    .filter(posts::is_local.eq(true))
-                    .count()
-                    .get_result::<i64>(&mut db_conn)
-                    .await
-                    .map(|count| count as u64)
+            .with_connection(|db_conn| {
+                async move {
+                    posts::table
+                        .filter(posts::is_local.eq(true))
+                        .count()
+                        .get_result::<i64>(db_conn)
+                        .await
+                        .map(|count| count as u64)
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -72,12 +79,15 @@ impl InstanceService {
 
     pub async fn user_count(&self) -> Result<u64> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                users::table
-                    .count()
-                    .get_result::<i64>(&mut db_conn)
-                    .await
-                    .map(|count| count as u64)
+            .with_connection(|db_conn| {
+                async move {
+                    users::table
+                        .count()
+                        .get_result::<i64>(db_conn)
+                        .await
+                        .map(|count| count as u64)
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)

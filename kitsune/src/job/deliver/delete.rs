@@ -12,6 +12,7 @@ use kitsune_db::{
     model::{account::Account, post::Post, user::User},
     schema::{accounts, posts, users},
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -30,13 +31,16 @@ impl Runnable for DeliverDelete {
         let post = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                posts::table
-                    .find(self.post_id)
-                    .select(Post::as_select())
-                    .get_result::<Post>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    posts::table
+                        .find(self.post_id)
+                        .select(Post::as_select())
+                        .get_result::<Post>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -47,14 +51,17 @@ impl Runnable for DeliverDelete {
         let account_user_data = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                accounts::table
-                    .find(post.account_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result::<(Account, User)>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    accounts::table
+                        .find(post.account_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result::<(Account, User)>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -79,8 +86,10 @@ impl Runnable for DeliverDelete {
 
         ctx.state
             .db_pool
-            .with_connection(|mut db_conn| {
-                diesel::delete(posts::table.find(post_id)).execute(&mut db_conn)
+            .with_connection(|db_conn| {
+                diesel::delete(posts::table.find(post_id))
+                    .execute(db_conn)
+                    .scoped()
             })
             .await?;
 

@@ -15,6 +15,7 @@ use kitsune_db::{
 };
 use kitsune_http_client::Client;
 use kitsune_storage::{BoxError, Storage, StorageBackend};
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -67,8 +68,11 @@ pub struct AttachmentService {
 impl AttachmentService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
         self.db_pool
-            .with_connection(|mut db_conn| {
-                media_attachments::table.find(id).get_result(&mut db_conn)
+            .with_connection(|db_conn| {
+                media_attachments::table
+                    .find(id)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await
             .map_err(Error::from)
@@ -129,7 +133,7 @@ impl AttachmentService {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::update(
                     media_attachments::table.filter(
                         media_attachments::id
@@ -138,7 +142,8 @@ impl AttachmentService {
                     ),
                 )
                 .set(changeset)
-                .get_result(&mut db_conn)
+                .get_result(db_conn)
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -160,7 +165,7 @@ impl AttachmentService {
 
         let media_attachment = self
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::insert_into(media_attachments::table)
                     .values(NewMediaAttachment {
                         id: Uuid::now_v7(),
@@ -171,7 +176,8 @@ impl AttachmentService {
                         file_path: Some(upload.path.as_str()),
                         remote_url: None,
                     })
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await?;
 

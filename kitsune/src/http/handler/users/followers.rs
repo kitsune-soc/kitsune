@@ -9,6 +9,7 @@ use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 
 pub async fn get(
@@ -19,7 +20,7 @@ pub async fn get(
 ) -> Result<ActivityPubJson<Collection>> {
     let follower_count = state
         .db_pool
-        .with_connection(|mut db_conn| {
+        .with_connection(|db_conn| {
             accounts_follows::table
                 .inner_join(
                     accounts::table.on(accounts_follows::account_id
@@ -29,7 +30,8 @@ pub async fn get(
                         .and(accounts::local.eq(true))),
                 )
                 .count()
-                .get_result::<i64>(&mut db_conn)
+                .get_result::<i64>(db_conn)
+                .scoped()
         })
         .await?;
 

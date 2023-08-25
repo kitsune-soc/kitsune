@@ -4,6 +4,7 @@ use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::users};
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -28,11 +29,12 @@ impl Runnable for SendConfirmationMail {
         let user = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 users::table
                     .find(self.user_id)
                     .select(User::as_select())
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await?;
 

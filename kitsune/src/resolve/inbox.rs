@@ -15,6 +15,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows},
     PgPool,
 };
+use scoped_futures::ScopedFutureExt;
 
 pub struct InboxResolver {
     db_pool: PgPool,
@@ -32,7 +33,7 @@ impl InboxResolver {
         account: &Account,
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
         self.db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 accounts_follows::table
                     .filter(accounts_follows::account_id.eq(account.id))
                     .inner_join(
@@ -47,7 +48,8 @@ impl InboxResolver {
                         accounts::shared_inbox_url,
                         accounts::inbox_url,
                     ))
-                    .load_stream(&mut db_conn)
+                    .load_stream(db_conn)
+                    .scoped()
             })
             .await
             .map_err(Error::from)
@@ -60,28 +62,31 @@ impl InboxResolver {
     ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
         let (account, mentioned_inbox_stream) = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let account = accounts::table
-                    .find(post.account_id)
-                    .select(Account::as_select())
-                    .first(&mut db_conn)
-                    .await?;
+            .with_connection(|db_conn| {
+                async move {
+                    let account = accounts::table
+                        .find(post.account_id)
+                        .select(Account::as_select())
+                        .first(db_conn)
+                        .await?;
 
-                let mentioned_inbox_stream = Mention::belonging_to(post)
-                    .inner_join(accounts::table)
-                    .filter(
-                        accounts::shared_inbox_url
-                            .is_not_null()
-                            .or(accounts::inbox_url.is_not_null()),
-                    )
-                    .select(coalesce_nullable(
-                        accounts::shared_inbox_url,
-                        accounts::inbox_url,
-                    ))
-                    .load_stream(&mut db_conn)
-                    .await?;
+                    let mentioned_inbox_stream = Mention::belonging_to(post)
+                        .inner_join(accounts::table)
+                        .filter(
+                            accounts::shared_inbox_url
+                                .is_not_null()
+                                .or(accounts::inbox_url.is_not_null()),
+                        )
+                        .select(coalesce_nullable(
+                            accounts::shared_inbox_url,
+                            accounts::inbox_url,
+                        ))
+                        .load_stream(db_conn)
+                        .await?;
 
-                Ok::<_, Error>((account, mentioned_inbox_stream))
+                    Ok::<_, Error>((account, mentioned_inbox_stream))
+                }
+                .scoped()
             })
             .await?;
 

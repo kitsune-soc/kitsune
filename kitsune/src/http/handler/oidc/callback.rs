@@ -16,6 +16,7 @@ use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
 };
+use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -37,16 +38,15 @@ pub async fn get(
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
     let user = db_pool
-        .with_connection(|mut db_conn| {
-            let user_info = &user_info;
-
-            async move {
+        .with_connection(|db_conn| {
+            async {
                 users::table
                     .filter(users::oidc_id.eq(&user_info.subject))
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
                     .await
                     .optional()
             }
+            .scoped()
         })
         .await?;
 
@@ -63,10 +63,11 @@ pub async fn get(
     };
 
     let application = db_pool
-        .with_connection(|mut db_conn| {
+        .with_connection(|db_conn| {
             oauth2_applications::table
                 .find(user_info.oauth2.application_id)
-                .get_result(&mut db_conn)
+                .get_result(db_conn)
+                .scoped()
         })
         .await?;
 

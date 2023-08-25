@@ -15,6 +15,7 @@ use kitsune_db::{
     PgPool,
 };
 use oxide_auth::endpoint::Scope;
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
@@ -98,7 +99,7 @@ impl OAuth2Service {
     pub async fn create_app(&self, create_app: CreateApp) -> Result<oauth2::Application> {
         let secret = generate_secret();
         self.db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::insert_into(oauth2_applications::table)
                     .values(oauth2::NewApplication {
                         id: Uuid::now_v7(),
@@ -108,7 +109,8 @@ impl OAuth2Service {
                         scopes: "",
                         website: None,
                     })
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await
             .map_err(Error::from)
@@ -128,7 +130,7 @@ impl OAuth2Service {
 
         let authorization_code: oauth2::AuthorizationCode = self
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::insert_into(oauth2_authorization_codes::table)
                     .values(oauth2::NewAuthorizationCode {
                         code: secret.as_str(),
@@ -137,7 +139,8 @@ impl OAuth2Service {
                         scopes: scopes.as_str(),
                         expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
                     })
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await?;
 
