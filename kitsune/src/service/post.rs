@@ -878,6 +878,7 @@ impl PostService {
     /// Get a post's source by its ID
     ///
     /// Does checks whether the user is allowed to fetch the post
+    #[allow(clippy::missing_panics_doc)]
     pub async fn get_source_by_id(
         &self,
         id: Uuid,
