@@ -81,7 +81,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     }
 
     router
-        .layer(CatchPanicLayer::new())
+        //.layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .layer(TimeoutLayer::new(Duration::from_secs(

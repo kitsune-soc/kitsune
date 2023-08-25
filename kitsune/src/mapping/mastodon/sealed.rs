@@ -20,7 +20,7 @@ use kitsune_db::{
             MediaAttachment as DbMediaAttachment, PostMediaAttachment as DbPostMediaAttachment,
         },
         mention::Mention as DbMention,
-        post::Post as DbPost,
+        post::{Post as DbPost, PostSource},
     },
     schema::{accounts, accounts_follows, media_attachments, posts, posts_favourites},
     PgPool,
@@ -28,8 +28,12 @@ use kitsune_db::{
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
 use kitsune_type::mastodon::{
-    account::Source, media_attachment::MediaType, preview_card::PreviewType,
-    relationship::Relationship, status::Mention, Account, MediaAttachment, PreviewCard, Status,
+    account::Source,
+    media_attachment::MediaType,
+    preview_card::PreviewType,
+    relationship::Relationship,
+    status::{Mention, StatusSource},
+    Account, MediaAttachment, PreviewCard, Status,
 };
 use mime::Mime;
 use serde::{de::DeserializeOwned, Serialize};
@@ -515,6 +519,23 @@ impl IntoMastodon for LinkPreview<Embed> {
             height,
             image,
             embed_url,
+        })
+    }
+}
+
+#[async_trait]
+impl IntoMastodon for PostSource {
+    type Output = StatusSource;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, _state: MapperState<'_>) -> Result<Self::Output> {
+        Ok(StatusSource {
+            id: self.id,
+            text: self.content,
+            spoiler_text: self.subject.unwrap_or_default(),
         })
     }
 }

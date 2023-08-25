@@ -32,7 +32,7 @@ use kitsune_db::{
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
-        post::{NewPost, Post, PostChangeset, Visibility},
+        post::{NewPost, Post, PostChangeset, PostSource, Visibility},
         user_role::Role,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
@@ -679,7 +679,7 @@ impl PostService {
                         account_id: repost_post.account_id,
                         in_reply_to_id: None,
                         reposted_post_id: Some(post.id),
-                        subject: Some(""),
+                        subject: None,
                         content: "",
                         content_source: "",
                         content_lang: post.content_lang,
@@ -869,6 +869,31 @@ impl PostService {
                     .find(id)
                     .add_post_permission_check(permission_check)
                     .select(Post::as_select())
+                    .get_result(&mut db_conn)
+            })
+            .await
+            .map_err(Error::from)
+    }
+
+    /// Get a post's source by its ID
+    ///
+    /// Does checks whether the user is allowed to fetch the post
+    pub async fn get_source_by_id(
+        &self,
+        id: Uuid,
+        fetching_account_id: Option<Uuid>,
+    ) -> Result<PostSource> {
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(fetching_account_id)
+            .build()
+            .unwrap();
+
+        self.db_pool
+            .with_connection(|mut db_conn| {
+                posts::table
+                    .find(id)
+                    .add_post_permission_check(permission_check)
+                    .select(PostSource::as_select())
                     .get_result(&mut db_conn)
             })
             .await

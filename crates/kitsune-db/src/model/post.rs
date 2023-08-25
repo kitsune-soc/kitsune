@@ -39,6 +39,15 @@ pub struct Post {
     pub updated_at: Timestamp,
 }
 
+#[derive(Clone, Deserialize, Queryable, Selectable, Serialize)]
+#[diesel(table_name = posts)]
+pub struct PostSource {
+    pub id: Uuid,
+    pub subject: Option<String>,
+    #[diesel(column_name = content_source)]
+    pub content: String,
+}
+
 #[derive(AsChangeset)]
 #[diesel(table_name = posts)]
 pub struct PostConflictChangeset<'a> {
