@@ -82,7 +82,7 @@ impl SearchBackend for SearchService {
     }
 
     #[instrument(skip_all)]
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()> {
+    async fn remove_from_index(&self, item: &SearchItem) -> Result<()> {
         let request = match item {
             SearchItem::Account(account) => RemoveIndexRequest {
                 index: GrpcSearchIndex::from(SearchIndex::Account).into(),
@@ -143,6 +143,14 @@ impl SearchBackend for SearchService {
             .collect();
 
         Ok(results)
+    }
+
+    #[instrument(skip_all)]
+    async fn update_in_index(&self, item: SearchItem) -> Result<()> {
+        self.remove_from_index(&item).await?;
+        self.add_to_index(item).await?;
+
+        Ok(())
     }
 }
 

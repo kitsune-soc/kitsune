@@ -39,7 +39,7 @@ pub enum SearchService {
     Sql(SqlSearchService),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Account {
     pub id: Uuid,
     pub display_name: Option<String>,
@@ -62,7 +62,7 @@ impl From<DbAccount> for Account {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Post {
     pub id: Uuid,
     pub subject: Option<String>,
@@ -83,7 +83,7 @@ impl From<DbPost> for Post {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum SearchItem {
     Account(Account),
@@ -130,7 +130,7 @@ pub trait SearchBackend: Send + Sync {
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
 
     /// Remove an item from the index
-    async fn remove_from_index(&self, item: SearchItem) -> Result<()>;
+    async fn remove_from_index(&self, item: &SearchItem) -> Result<()>;
 
     /// Reset a search index
     ///
@@ -147,6 +147,8 @@ pub trait SearchBackend: Send + Sync {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>>;
+
+    async fn update_in_index(&self, item: SearchItem) -> Result<()>;
 }
 
 /// Dummy search service
@@ -161,7 +163,7 @@ impl SearchBackend for NoopSearchService {
         Ok(())
     }
 
-    async fn remove_from_index(&self, _item: SearchItem) -> Result<()> {
+    async fn remove_from_index(&self, _item: &SearchItem) -> Result<()> {
         Ok(())
     }
 
@@ -179,5 +181,9 @@ impl SearchBackend for NoopSearchService {
         _max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResult>> {
         Ok(Vec::new())
+    }
+
+    async fn update_in_index(&self, _item: SearchItem) -> Result<()> {
+        Ok(())
     }
 }

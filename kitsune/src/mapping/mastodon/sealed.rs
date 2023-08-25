@@ -412,6 +412,8 @@ impl IntoMastodon for DbPost {
             .await?
             .map(Box::new);
 
+        let language = self.content_lang.to_639_1().map(str::to_string);
+
         Ok(Status {
             id: self.id,
             created_at: self.created_at,
@@ -420,11 +422,12 @@ impl IntoMastodon for DbPost {
             sensitive: self.is_sensitive,
             spoiler_text: self.subject,
             visibility: self.visibility.into(),
+            language,
             uri: self.url.clone(),
             url: self.url,
             replies_count: 0,
             favourites_count: favourites_count as u64,
-            reblog_count: reblog_count as u64,
+            reblogs_count: reblog_count as u64,
             content: self.content,
             account,
             media_attachments,
