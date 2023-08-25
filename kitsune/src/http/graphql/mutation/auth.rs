@@ -5,13 +5,7 @@ use crate::{
     },
     service::{oauth2::CreateApp, user::Register},
 };
-use async_graphql::{
-    Context, CustomValidator, InputValueError, Object, Result, Scalar, ScalarType,
-};
-use std::fmt::Write;
-use zxcvbn::zxcvbn;
-
-const MIN_PASSWORD_STRENGTH: u8 = 3;
+use async_graphql::{Context, InputValueError, Object, Result, Scalar, ScalarType};
 
 /// Custom scalar type to have nicer error messages with the custom validator
 pub struct Password(String);
@@ -52,38 +46,6 @@ impl ScalarType for Password {
     }
 }
 
-struct PasswordValidator;
-
-impl CustomValidator<Password> for PasswordValidator {
-    fn check(&self, value: &Password) -> Result<(), InputValueError<Password>> {
-        let Ok(entropy) = zxcvbn(value.as_str(), &[]) else {
-            return Err("Password strength validation failed".into());
-        };
-
-        if entropy.score() < MIN_PASSWORD_STRENGTH {
-            let feedback_str = entropy.feedback().as_ref().map_or_else(
-                || "Password too weak".into(),
-                |feedback| {
-                    let mut feedback_str = String::from('\n');
-                    for suggestion in feedback.suggestions() {
-                        let _ = writeln!(feedback_str, "- {suggestion}");
-                    }
-
-                    if let Some(warning) = feedback.warning() {
-                        let _ = write!(feedback_str, "\nWarning: {warning}");
-                    }
-
-                    feedback_str
-                },
-            );
-
-            return Err(feedback_str.into());
-        }
-
-        Ok(())
-    }
-}
-
 #[derive(Default)]
 pub struct AuthMutation;
 
@@ -107,9 +69,9 @@ impl AuthMutation {
     pub async fn register_user(
         &self,
         ctx: &Context<'_>,
-        #[graphql(validator(min_length = 1, max_length = 64, regex = r"[\w\.]+"))] username: String,
-        #[graphql(validator(email))] email: String,
-        #[graphql(secret, validator(custom = "PasswordValidator"))] password: Password,
+        username: String,
+        email: String,
+        #[graphql(secret)] password: Password,
         captcha_token: Option<String>,
     ) -> Result<User> {
         let state = ctx.state();

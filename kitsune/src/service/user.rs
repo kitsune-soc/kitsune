@@ -13,6 +13,7 @@ use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use futures_util::future::OptionFuture;
+use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
@@ -28,26 +29,68 @@ use rsa::{
     RsaPrivateKey,
 };
 use speedy_uuid::Uuid;
+use std::fmt::Write;
 use typed_builder::TypedBuilder;
+use zxcvbn::zxcvbn;
 
-#[derive(Clone, TypedBuilder)]
+const MIN_PASSWORD_STRENGTH: u8 = 3;
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_strong_password(value: &Option<String>, _context: &()) -> garde::Result {
+    let Some(ref value) = value else {
+        return Ok(());
+    };
+
+    let Ok(entropy) = zxcvbn(value, &[]) else {
+        return Err(garde::Error::new("Password strength validation failed"));
+    };
+
+    if entropy.score() < MIN_PASSWORD_STRENGTH {
+        let feedback_str = entropy.feedback().as_ref().map_or_else(
+            || "Password too weak".into(),
+            |feedback| {
+                let mut feedback_str = String::from('\n');
+                for suggestion in feedback.suggestions() {
+                    let _ = writeln!(feedback_str, "- {suggestion}");
+                }
+
+                if let Some(warning) = feedback.warning() {
+                    let _ = write!(feedback_str, "\nWarning: {warning}");
+                }
+
+                feedback_str
+            },
+        );
+
+        return Err(garde::Error::new(feedback_str));
+    }
+
+    Ok(())
+}
+
+#[derive(Clone, TypedBuilder, Validate)]
 pub struct Register {
     /// Username of the new user
+    #[garde(length(min = 1, max = 64), pattern(r"[\w\.]+"))]
     username: String,
 
     /// Email address of the new user
+    #[garde(email)]
     email: String,
 
     /// OIDC ID of the new user
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     oidc_id: Option<String>,
 
     /// Password of the new user
     #[builder(default, setter(strip_option))]
+    #[garde(custom(is_strong_password))]
     password: Option<String>,
 
     /// Token required for captcha verification
     #[builder(default)]
+    #[garde(skip)]
     captcha_token: Option<String>,
 }
 
@@ -93,6 +136,8 @@ impl UserService {
         if !self.registrations_open {
             return Err(ApiError::RegistrationsClosed.into());
         }
+
+        register.validate(&())?;
 
         if self.captcha_service.enabled() {
             let token = register.captcha_token.ok_or(ApiError::InvalidCaptcha)?;
