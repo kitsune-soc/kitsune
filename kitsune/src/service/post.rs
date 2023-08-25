@@ -154,43 +154,61 @@ impl DeletePost {
     }
 }
 
-#[derive(Clone, Builder)]
+#[derive(Builder, Clone, Validate)]
+#[garde(context(PostValidationContext as ctx))]
 pub struct UpdatePost {
     /// ID of the post that is supposed to be updated
+    #[garde(skip)]
     post_id: Uuid,
 
     /// IDs of the media attachments attached to this post
     ///
     /// These IDs are validated. If one of them doesn't exist, the post is rejected.
     #[builder(default)]
+    #[garde(skip)]
     media_ids: Vec<Uuid>,
 
     /// Mark this post as sensitive
     ///
     /// Defaults to false
     #[builder(default)]
+    #[garde(skip)]
     sensitive: Option<bool>,
 
     /// Subject of the post
     ///
     /// This is optional
     #[builder(default)]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - content.as_ref().map_or(0, |content| content.chars().count())
+        )
+    )]
     subject: Option<String>,
 
     /// Content of the post
     #[builder(default)]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
+        )
+    )]
     content: Option<String>,
 
     /// Process the content as a markdown document
     ///
     /// Defaults to true
     #[builder(default = "true")]
+    #[garde(skip)]
     process_markdown: bool,
 
     /// ISO 639 language code of the post
     ///
     /// This is optional
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     language: Option<String>,
 }
 
@@ -493,12 +511,9 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn update(&self, update_post: UpdatePost) -> Result<Post> {
-        if let Some(content) = update_post.content.as_ref() {
-            // TODO(aumetra) migration to garde for character limit enforcing
-            if content.chars().count() > self.instance_service.character_limit() {
-                return Err(ApiError::BadRequest.into());
-            }
-        }
+        update_post.validate(&PostValidationContext {
+            character_limit: self.instance_service.character_limit(),
+        })?;
 
         let subject = update_post.subject.map(|mut subject| {
             subject.clean_html();
