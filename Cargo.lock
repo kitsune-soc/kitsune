@@ -2368,6 +2368,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "garde"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b9d6ea59620728a8e9fb67bba68dbd88bff7744de0c7149027612334ed6a40b"
+dependencies = [
+ "garde_derive",
+ "idna 0.3.0",
+ "once_cell",
+ "regex",
+ "serde",
+]
+
+[[package]]
+name = "garde_derive"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d9df466e06c7de0744e5f14048ba5331d7a4d31e98542046d869e953fc3420f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "regex",
+ "syn 2.0.29",
+]
+
+[[package]]
 name = "generator"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3678,6 +3703,7 @@ dependencies = [
  "enum_dispatch",
  "eyre",
  "futures-util",
+ "garde",
  "globset",
  "headers",
  "hex-simd",

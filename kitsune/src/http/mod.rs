@@ -15,7 +15,6 @@ use tower_http::{
 use utoipa_swagger_ui::SwaggerUi;
 
 mod cond;
-mod extractor;
 #[cfg(feature = "graphql-api")]
 mod graphql;
 mod handler;
@@ -26,6 +25,8 @@ mod page;
 mod pagination;
 mod responder;
 mod util;
+
+pub mod extractor;
 
 pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
     let frontend_dir = &server_config.frontend_dir;

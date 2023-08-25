@@ -21,6 +21,7 @@ use diesel::{
 };
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt};
+use garde::Validate;
 use kitsune_db::{
     model::{
         favourite::{Favourite, NewFavourite},
@@ -43,50 +44,73 @@ use pulldown_cmark::{html, Options, Parser};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
-#[derive(Clone, Builder)]
+pub struct PostValidationContext {
+    character_limit: usize,
+}
+
+#[derive(Builder, Clone, Validate)]
+#[garde(context(PostValidationContext as ctx))]
 pub struct CreatePost {
     /// ID of the author
     ///
     /// This is not validated. Make sure this is a valid and verified value.
+    #[garde(skip)]
     author_id: Uuid,
 
     /// ID of the post this post is replying to
     ///
     /// This is validated. If you pass in an non-existent ID, it will be ignored.
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     in_reply_to_id: Option<Uuid>,
 
     /// IDs of the media attachments attached to this post
     ///
     /// These IDs are validated. If one of them doesn't exist, the post is rejected.
     #[builder(default)]
+    #[garde(skip)]
     media_ids: Vec<Uuid>,
 
     /// Mark this post as sensitive
     ///
     /// Defaults to false
     #[builder(default)]
+    #[garde(skip)]
     sensitive: bool,
 
-    #[builder(default, setter(strip_option))]
     /// Subject of the post
     ///
     /// This is optional
+    #[builder(default, setter(strip_option))]
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - content.chars().count()
+        )
+    )]
     subject: Option<String>,
 
     /// Content of the post
+    #[garde(
+        length(
+            min = 1,
+            max = ctx.character_limit - subject.map(|subject| subject.chars().count()).unwrap_or(0)
+        )
+    )]
     content: String,
 
     /// Process the content as a markdown document
     ///
     /// Defaults to true
     #[builder(default = "true")]
+    #[garde(skip)]
     process_markdown: bool,
 
-    #[builder(default = "Visibility::Public")]
     /// Visibility of the post
     ///
     /// Defaults to public
+    #[builder(default = "Visibility::Public")]
+    #[garde(skip)]
     visibility: Visibility,
 }
 
@@ -199,9 +223,9 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
-        if create_post.content.chars().count() > self.instance_service.character_limit() {
-            return Err(ApiError::BadRequest.into());
-        }
+        create_post.validate(&PostValidationContext {
+            character_limit: self.instance_service.character_limit(),
+        })?;
 
         let subject = create_post.subject.map(|mut subject| {
             subject.clean_html();

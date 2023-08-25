@@ -44,6 +44,12 @@ diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.12"
 eyre = "0.6.8"
 futures-util = "0.3.28"
+garde = { version = "0.14.0", default-features = false, features = [
+    "derive",
+    "email",
+    "email-idna",
+    "serde",
+] }
 globset = { version = "0.4.13", features = ["simd-accel"] }
 headers = "0.3.8"
 hex-simd = "0.8.0"
