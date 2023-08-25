@@ -89,7 +89,9 @@ pub struct CreatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit - content.chars().count()
+            max = ctx.character_limit.saturating_sub(
+                content.chars().count()
+            )
         )
     )]
     subject: Option<String>,
@@ -98,7 +100,9 @@ pub struct CreatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
+            max = ctx.character_limit.saturating_sub(
+                subject.as_ref().map_or(0, |subject| subject.chars().count())
+            )
         )
     )]
     content: String,
@@ -182,7 +186,9 @@ pub struct UpdatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit - content.as_ref().map_or(0, |content| content.chars().count())
+            max = ctx.character_limit.saturating_sub(
+                content.as_ref().map_or(0, |content| content.chars().count())
+            )
         )
     )]
     subject: Option<String>,
@@ -192,7 +198,9 @@ pub struct UpdatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
+            max = ctx.character_limit.saturating_sub(
+                subject.as_ref().map_or(0, |subject| subject.chars().count())
+            )
         )
     )]
     content: Option<String>,
@@ -938,5 +946,60 @@ impl PostService {
             }
         }
         .boxed()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::service::post::{CreatePost, PostValidationContext, UpdatePost};
+    use garde::Validate;
+    use speedy_uuid::Uuid;
+
+    #[test]
+    fn new_post_character_limit() {
+        let create_post = CreatePost::builder()
+            .author_id(Uuid::now_v7())
+            .subject("hello".into())
+            .content("world".into())
+            .build()
+            .unwrap();
+
+        assert!(create_post
+            .validate(&PostValidationContext {
+                character_limit: 20,
+            })
+            .is_ok());
+
+        assert!(create_post
+            .validate(&PostValidationContext { character_limit: 5 })
+            .is_err());
+
+        assert!(create_post
+            .validate(&PostValidationContext { character_limit: 2 })
+            .is_err());
+    }
+
+    #[test]
+    fn update_post_character_limit() {
+        let update_post = UpdatePost::builder()
+            .post_id(Uuid::now_v7())
+            .subject(Some("hello".into()))
+            .content(Some("world".into()))
+            .build()
+            .unwrap();
+
+        assert!(update_post
+            .validate(&PostValidationContext {
+                character_limit: 20,
+            })
+            .is_ok());
+
+        assert!(update_post
+            .validate(&PostValidationContext { character_limit: 5 })
+            .is_err());
+
+        assert!(update_post
+            .validate(&PostValidationContext { character_limit: 2 })
+            .is_err());
     }
 }
