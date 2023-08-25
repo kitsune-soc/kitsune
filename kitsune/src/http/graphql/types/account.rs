@@ -13,6 +13,7 @@ use kitsune_db::{
     },
     schema::media_attachments,
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -40,13 +41,16 @@ impl Account {
 
         if let Some(avatar_id) = self.avatar_id {
             db_pool
-                .with_connection(|mut db_conn| async move {
-                    media_attachments::table
-                        .find(avatar_id)
-                        .get_result::<DbMediaAttachment>(&mut db_conn)
-                        .await
-                        .optional()
-                        .map(|attachment| attachment.map(Into::into))
+                .with_connection(|db_conn| {
+                    async move {
+                        media_attachments::table
+                            .find(avatar_id)
+                            .get_result::<DbMediaAttachment>(db_conn)
+                            .await
+                            .optional()
+                            .map(|attachment| attachment.map(Into::into))
+                    }
+                    .scoped()
                 })
                 .await
                 .map_err(Into::into)
@@ -60,13 +64,16 @@ impl Account {
 
         if let Some(header_id) = self.header_id {
             db_pool
-                .with_connection(|mut db_conn| async move {
-                    media_attachments::table
-                        .find(header_id)
-                        .get_result::<DbMediaAttachment>(&mut db_conn)
-                        .await
-                        .optional()
-                        .map(|attachment| attachment.map(Into::into))
+                .with_connection(|db_conn| {
+                    async move {
+                        media_attachments::table
+                            .find(header_id)
+                            .get_result::<DbMediaAttachment>(db_conn)
+                            .await
+                            .optional()
+                            .map(|attachment| attachment.map(Into::into))
+                    }
+                    .scoped()
                 })
                 .await
                 .map_err(Into::into)

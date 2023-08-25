@@ -7,6 +7,7 @@ use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -25,12 +26,15 @@ impl Runnable for DeliverFollow {
         let follow = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                accounts_follows::table
-                    .find(self.follow_id)
-                    .get_result::<Follow>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    accounts_follows::table
+                        .find(self.follow_id)
+                        .get_result::<Follow>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -41,19 +45,22 @@ impl Runnable for DeliverFollow {
         let ((follower, follower_user), followed_inbox) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let follower_info_fut = accounts::table
-                    .find(follow.follower_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result::<(Account, User)>(&mut db_conn);
+            .with_connection(|db_conn| {
+                async move {
+                    let follower_info_fut = accounts::table
+                        .find(follow.follower_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result::<(Account, User)>(db_conn);
 
-                let followed_inbox_fut = accounts::table
-                    .find(follow.account_id)
-                    .select(accounts::inbox_url)
-                    .get_result::<Option<String>>(&mut db_conn);
+                    let followed_inbox_fut = accounts::table
+                        .find(follow.account_id)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(db_conn);
 
-                try_join!(follower_info_fut, followed_inbox_fut)
+                    try_join!(follower_info_fut, followed_inbox_fut)
+                }
+                .scoped()
             })
             .await?;
 

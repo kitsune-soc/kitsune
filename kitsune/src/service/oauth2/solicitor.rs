@@ -7,6 +7,7 @@ use kitsune_db::{model::user::User, schema::oauth2_applications, PgPool};
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, QueryParameter, Solicitation, WebRequest};
 use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use strum::EnumMessage;
@@ -66,13 +67,16 @@ impl OAuthOwnerSolicitor {
 
                 let app_name = self
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
-                        oauth2_applications::table
-                            .find(client_id)
-                            .select(oauth2_applications::name)
-                            .get_result::<String>(&mut db_conn)
-                            .await
-                            .optional()
+                    .with_connection(|db_conn| {
+                        async move {
+                            oauth2_applications::table
+                                .find(client_id)
+                                .select(oauth2_applications::name)
+                                .get_result::<String>(db_conn)
+                                .await
+                                .optional()
+                        }
+                        .scoped()
                     })
                     .await
                     .map_err(|_| WebError::InternalError(None))?

@@ -9,6 +9,7 @@ use kitsune_db::{
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
+use scoped_futures::ScopedFutureExt;
 use simd_json::{Builder, OwnedValue};
 
 #[debug_handler(state = crate::state::Zustand)]
@@ -24,14 +25,17 @@ async fn get(
     State(user_service): State<UserService>,
 ) -> Result<Json<TwoOne>> {
     let (total, local_posts) = db_pool
-        .with_connection(|mut db_conn| async move {
-            let total_fut = users::table.count().get_result::<i64>(&mut db_conn);
-            let local_posts_fut = posts::table
-                .filter(posts::is_local.eq(true))
-                .count()
-                .get_result::<i64>(&mut db_conn);
+        .with_connection(|db_conn| {
+            async move {
+                let total_fut = users::table.count().get_result::<i64>(db_conn);
+                let local_posts_fut = posts::table
+                    .filter(posts::is_local.eq(true))
+                    .count()
+                    .get_result::<i64>(db_conn);
 
-            try_join!(total_fut, local_posts_fut)
+                try_join!(total_fut, local_posts_fut)
+            }
+            .scoped()
         })
         .await?;
 

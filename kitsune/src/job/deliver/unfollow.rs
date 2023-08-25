@@ -7,6 +7,7 @@ use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -24,12 +25,15 @@ impl Runnable for DeliverUnfollow {
         let follow = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                accounts_follows::table
-                    .find(self.follow_id)
-                    .get_result::<Follow>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    accounts_follows::table
+                        .find(self.follow_id)
+                        .get_result::<Follow>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -40,22 +44,20 @@ impl Runnable for DeliverUnfollow {
         let ((follower, follower_user), followed_account_inbox_url, _delete_result) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| {
-                let follow = &follow;
-
-                async move {
+            .with_connection(|db_conn| {
+                async {
                     let follower_info_fut = accounts::table
                         .find(follow.follower_id)
                         .inner_join(users::table)
                         .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(&mut db_conn);
+                        .get_result::<(Account, User)>(db_conn);
 
                     let followed_account_inbox_url_fut = accounts::table
                         .find(follow.account_id)
                         .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(&mut db_conn);
+                        .get_result::<Option<String>>(db_conn);
 
-                    let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+                    let delete_fut = diesel::delete(&follow).execute(db_conn);
 
                     try_join!(
                         follower_info_fut,
@@ -63,6 +65,7 @@ impl Runnable for DeliverUnfollow {
                         delete_fut
                     )
                 }
+                .scoped()
             })
             .await?;
 

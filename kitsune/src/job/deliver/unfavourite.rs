@@ -7,6 +7,7 @@ use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -25,12 +26,15 @@ impl Runnable for DeliverUnfavourite {
         let favourite = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                posts_favourites::table
-                    .find(self.favourite_id)
-                    .get_result::<Favourite>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    posts_favourites::table
+                        .find(self.favourite_id)
+                        .get_result::<Favourite>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -41,20 +45,23 @@ impl Runnable for DeliverUnfavourite {
         let ((account, user), inbox_url) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let account_user_fut = accounts::table
-                    .find(favourite.account_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result(&mut db_conn);
+            .with_connection(|db_conn| {
+                async move {
+                    let account_user_fut = accounts::table
+                        .find(favourite.account_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result(db_conn);
 
-                let inbox_url_fut = posts::table
-                    .find(favourite.post_id)
-                    .inner_join(accounts::table)
-                    .select(accounts::inbox_url)
-                    .get_result::<Option<String>>(&mut db_conn);
+                    let inbox_url_fut = posts::table
+                        .find(favourite.post_id)
+                        .inner_join(accounts::table)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(db_conn);
 
-                try_join!(account_user_fut, inbox_url_fut)
+                    try_join!(account_user_fut, inbox_url_fut)
+                }
+                .scoped()
             })
             .await?;
 
@@ -68,8 +75,10 @@ impl Runnable for DeliverUnfavourite {
 
         ctx.state
             .db_pool
-            .with_connection(|mut db_conn| {
-                diesel::delete(posts_favourites::table.find(favourite_id)).execute(&mut db_conn)
+            .with_connection(|db_conn| {
+                diesel::delete(posts_favourites::table.find(favourite_id))
+                    .execute(db_conn)
+                    .scoped()
             })
             .await?;
 

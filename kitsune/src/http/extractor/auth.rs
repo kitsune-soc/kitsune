@@ -13,6 +13,7 @@ use kitsune_db::{
     model::{account::Account, user::User},
     schema::{accounts, oauth2_access_tokens, users},
 };
+use scoped_futures::ScopedFutureExt;
 use time::OffsetDateTime;
 
 /// Mastodon-specific auth extractor alias
@@ -62,10 +63,11 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let (user, account) = state
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 user_account_query
                     .select(<(User, Account)>::as_select())
-                    .get_result(&mut db_conn)
+                    .get_result(db_conn)
+                    .scoped()
             })
             .await
             .map_err(Error::from)?;

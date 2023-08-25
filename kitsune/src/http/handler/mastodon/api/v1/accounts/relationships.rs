@@ -10,6 +10,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::StreamExt;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::mastodon::relationship::Relationship;
+use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;
@@ -39,11 +40,12 @@ pub async fn get(
     Query(query): Query<RelationshipQuery>,
 ) -> Result<Json<Vec<Relationship>>> {
     let mut account_stream = db_pool
-        .with_connection(|mut db_conn| {
+        .with_connection(|db_conn| {
             accounts::table
                 .filter(accounts::id.eq_any(&query.id))
                 .select(Account::as_select())
-                .load_stream::<Account>(&mut db_conn)
+                .load_stream::<Account>(db_conn)
+                .scoped()
         })
         .await?;
 

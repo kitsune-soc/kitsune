@@ -1,7 +1,7 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::RunQueryDsl;
+use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
 use futures_util::TryStreamExt;
 use kitsune_db::{
@@ -71,16 +71,19 @@ impl SearchBackend for SearchService {
 
                 let results = self
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
-                        query
-                            .limit(max_results as i64)
-                            .offset(offset as i64)
-                            .select(accounts::id)
-                            .load_stream(&mut db_conn)
-                            .await?
-                            .map_ok(|id| SearchResult { id })
-                            .try_collect()
-                            .await
+                    .with_connection(move |db_conn| {
+                        async move {
+                            query
+                                .limit(max_results as i64)
+                                .offset(offset as i64)
+                                .select(accounts::id)
+                                .load_stream(db_conn)
+                                .await?
+                                .map_ok(|id| SearchResult { id })
+                                .try_collect()
+                                .await
+                        }
+                        .scoped()
                     })
                     .await?;
 
@@ -100,20 +103,23 @@ impl SearchBackend for SearchService {
 
                 let results = self
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
-                        query
-                            .filter(
-                                posts::visibility
-                                    .eq_any([Visibility::Public, Visibility::Unlisted]),
-                            )
-                            .limit(max_results as i64)
-                            .offset(offset as i64)
-                            .select(posts::id)
-                            .load_stream(&mut db_conn)
-                            .await?
-                            .map_ok(|id| SearchResult { id })
-                            .try_collect()
-                            .await
+                    .with_connection(|db_conn| {
+                        async move {
+                            query
+                                .filter(
+                                    posts::visibility
+                                        .eq_any([Visibility::Public, Visibility::Unlisted]),
+                                )
+                                .limit(max_results as i64)
+                                .offset(offset as i64)
+                                .select(posts::id)
+                                .load_stream(db_conn)
+                                .await?
+                                .map_ok(|id| SearchResult { id })
+                                .try_collect()
+                                .await
+                        }
+                        .scoped()
                     })
                     .await?;
 

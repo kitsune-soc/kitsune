@@ -7,6 +7,7 @@ use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -25,25 +26,28 @@ impl Runnable for DeliverFavourite {
         let (favourite, ((account, user), inbox_url)) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let favourite = posts_favourites::table
-                    .find(self.favourite_id)
-                    .get_result::<Favourite>(&mut db_conn)
-                    .await?;
+            .with_connection(|db_conn| {
+                async move {
+                    let favourite = posts_favourites::table
+                        .find(self.favourite_id)
+                        .get_result::<Favourite>(db_conn)
+                        .await?;
 
-                let account_user_fut = accounts::table
-                    .find(favourite.account_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result(&mut db_conn);
+                    let account_user_fut = accounts::table
+                        .find(favourite.account_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result(db_conn);
 
-                let inbox_url_fut = posts::table
-                    .find(favourite.post_id)
-                    .inner_join(accounts::table)
-                    .select(accounts::inbox_url)
-                    .get_result::<Option<String>>(&mut db_conn);
+                    let inbox_url_fut = posts::table
+                        .find(favourite.post_id)
+                        .inner_join(accounts::table)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(db_conn);
 
-                Ok::<_, Self::Error>((favourite, try_join!(account_user_fut, inbox_url_fut)?))
+                    Ok::<_, Self::Error>((favourite, try_join!(account_user_fut, inbox_url_fut)?))
+                }
+                .scoped()
             })
             .await?;
 

@@ -8,6 +8,7 @@ use kitsune_db::{
     model::{media_attachment::MediaAttachment as DbMediaAttachment, post::Post as DbPost},
     schema::{media_attachments, posts_media_attachments},
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -44,16 +45,19 @@ impl Post {
     pub async fn attachments(&self, ctx: &Context<'_>) -> Result<Vec<MediaAttachment>> {
         let db_pool = &ctx.state().db_pool;
         let attachments = db_pool
-            .with_connection(|mut db_conn| async move {
-                media_attachments::table
-                    .inner_join(posts_media_attachments::table)
-                    .filter(posts_media_attachments::post_id.eq(self.id))
-                    .select(DbMediaAttachment::as_select())
-                    .load_stream(&mut db_conn)
-                    .await?
-                    .map_ok(Into::into)
-                    .try_collect()
-                    .await
+            .with_connection(|db_conn| {
+                async move {
+                    media_attachments::table
+                        .inner_join(posts_media_attachments::table)
+                        .filter(posts_media_attachments::post_id.eq(self.id))
+                        .select(DbMediaAttachment::as_select())
+                        .load_stream(db_conn)
+                        .await?
+                        .map_ok(Into::into)
+                        .try_collect()
+                        .await
+                }
+                .scoped()
             })
             .await?;
 

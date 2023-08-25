@@ -20,6 +20,7 @@ use kitsune_type::ap::{
     collection::{Collection, CollectionPage, CollectionType, PageType},
     Activity,
 };
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -42,12 +43,13 @@ pub async fn get(
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
     let account = state
         .db_pool
-        .with_connection(|mut db_conn| {
+        .with_connection(|db_conn| {
             accounts::table
                 .find(account_id)
                 .filter(accounts::local.eq(true))
                 .select(Account::as_select())
-                .get_result::<Account>(&mut db_conn)
+                .get_result::<Account>(db_conn)
+                .scoped()
         })
         .await?;
 
@@ -95,11 +97,12 @@ pub async fn get(
     } else {
         let public_post_count = state
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 Post::belonging_to(&account)
                     .add_post_permission_check(PermissionCheck::default())
                     .count()
-                    .get_result::<i64>(&mut db_conn)
+                    .get_result::<i64>(db_conn)
+                    .scoped()
             })
             .await?;
 

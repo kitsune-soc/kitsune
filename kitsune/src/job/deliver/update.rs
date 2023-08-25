@@ -13,6 +13,7 @@ use kitsune_db::{
     schema::{accounts, posts, users},
 };
 use kitsune_type::ap::ActivityType;
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -40,14 +41,17 @@ impl Runnable for DeliverUpdate {
                 let account_user_data = ctx
                     .state
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
-                        accounts::table
-                            .find(self.id)
-                            .inner_join(users::table)
-                            .select(<(Account, User)>::as_select())
-                            .get_result(&mut db_conn)
-                            .await
-                            .optional()
+                    .with_connection(|db_conn| {
+                        async move {
+                            accounts::table
+                                .find(self.id)
+                                .inner_join(users::table)
+                                .select(<(Account, User)>::as_select())
+                                .get_result(db_conn)
+                                .await
+                                .optional()
+                        }
+                        .scoped()
                     })
                     .await?;
 
@@ -67,15 +71,18 @@ impl Runnable for DeliverUpdate {
                 let post_account_user_data = ctx
                     .state
                     .db_pool
-                    .with_connection(|mut db_conn| async move {
-                        posts::table
-                            .find(self.id)
-                            .inner_join(accounts::table)
-                            .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                            .select(<(Post, Account, User)>::as_select())
-                            .get_result(&mut db_conn)
-                            .await
-                            .optional()
+                    .with_connection(|db_conn| {
+                        async move {
+                            posts::table
+                                .find(self.id)
+                                .inner_join(accounts::table)
+                                .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                                .select(<(Post, Account, User)>::as_select())
+                                .get_result(db_conn)
+                                .await
+                                .optional()
+                        }
+                        .scoped()
                     })
                     .await?;
 

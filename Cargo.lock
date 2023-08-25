@@ -3716,6 +3716,7 @@ dependencies = [
  "rayon",
  "redis",
  "rsa",
+ "scoped-futures",
  "serde",
  "serde_urlencoded",
  "serial_test",

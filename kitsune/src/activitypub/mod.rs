@@ -4,7 +4,7 @@ use crate::{
     util::timestamp_to_uuid,
 };
 use diesel::SelectableHelper;
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use kitsune_db::{
     model::{
         account::Account,
@@ -20,6 +20,7 @@ use kitsune_language::DetectionBackend;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 

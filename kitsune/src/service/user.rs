@@ -11,7 +11,7 @@ use crate::{
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use futures_util::future::OptionFuture;
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
@@ -28,6 +28,7 @@ use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::fmt::Write;
 use typed_builder::TypedBuilder;
@@ -106,14 +107,15 @@ pub struct UserService {
 impl UserService {
     pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::update(
                     users::table
                         .filter(users::confirmation_token.eq(confirmation_token))
                         .filter(users::confirmed_at.is_null()),
                 )
                 .set(users::confirmed_at.eq(Timestamp::now_utc()))
-                .execute(&mut db_conn)
+                .execute(db_conn)
+                .scoped()
             })
             .await?;
 
@@ -122,10 +124,11 @@ impl UserService {
 
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 diesel::update(users::table.find(user_id))
                     .set(users::confirmed_at.eq(Timestamp::now_utc()))
-                    .execute(&mut db_conn)
+                    .execute(db_conn)
+                    .scoped()
             })
             .await?;
 
