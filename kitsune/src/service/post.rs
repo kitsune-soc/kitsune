@@ -98,7 +98,7 @@ pub struct CreatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit - subject.map(|subject| subject.chars().count()).unwrap_or(0)
+            max = ctx.character_limit - subject.as_ref().map_or(0, |subject| subject.chars().count())
         )
     )]
     content: String,
@@ -121,6 +121,7 @@ pub struct CreatePost {
     ///
     /// This is optional
     #[builder(default, setter(strip_option))]
+    #[garde(skip)]
     language: Option<String>,
 }
 

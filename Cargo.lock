@@ -548,9 +548,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-s3"
-version = "0.29.0"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e30370b61599168d38190ad272bb91842cd81870a6ca035c05dd5726d22832c"
+checksum = "a531d010f9f556bf65eb3bcd8d24f1937600ab6940fede4d454cd9b1f031fb34"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -2368,9 +2368,9 @@ dependencies = [
 
 [[package]]
 name = "garde"
-version = "0.14.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b9d6ea59620728a8e9fb67bba68dbd88bff7744de0c7149027612334ed6a40b"
+checksum = "efbc4e06c5b4a8fef3ad41939c6116ea06a0d93f647c6430154d924bf021c374"
 dependencies = [
  "garde_derive",
  "idna 0.3.0",
@@ -2381,9 +2381,9 @@ dependencies = [
 
 [[package]]
 name = "garde_derive"
-version = "0.14.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d9df466e06c7de0744e5f14048ba5331d7a4d31e98542046d869e953fc3420f"
+checksum = "6699dea5b266ce9ca75ab4cbc5a7e98d5abfdf3197cecef5374a623023939acd"
 dependencies = [
  "proc-macro2",
  "quote",
