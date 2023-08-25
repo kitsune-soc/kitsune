@@ -67,6 +67,7 @@ pub async fn get(
             oauth2_applications::table
                 .find(user_info.oauth2.application_id)
                 .get_result(db_conn)
+                .scoped()
         })
         .await?;
 
