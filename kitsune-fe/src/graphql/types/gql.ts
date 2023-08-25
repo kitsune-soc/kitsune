@@ -14,7 +14,7 @@ import * as types from './graphql';
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-  '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ':
+  '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: String!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ':
     types.RegisterUserDocument,
   '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ':
     types.GetInstanceInfoDocument,
@@ -40,8 +40,8 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ',
-): (typeof documents)['\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: Password!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    '];
+  source: '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: String!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ',
+): (typeof documents)['\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: String!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    '];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -37,7 +37,6 @@ export type Scalars = {
    * "2022-01-12T04:00:19.12345Z".
    */
   DateTime: { input: any; output: any };
-  Password: { input: any; output: any };
   /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
@@ -191,7 +190,7 @@ export type RootMutationRegisterOauthApplicationArgs = {
 export type RootMutationRegisterUserArgs = {
   captchaToken?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
-  password: Scalars['Password']['input'];
+  password: Scalars['String']['input'];
   username: Scalars['String']['input'];
 };
 
@@ -205,7 +204,7 @@ export type RootMutationUpdateUserArgs = {
 
 export type RootQuery = {
   __typename?: 'RootQuery';
-  getAccountById: Account;
+  getAccountById?: Maybe<Account>;
   getPostById: Post;
   homeTimeline: PostConnection;
   instance: Instance;
@@ -256,7 +255,7 @@ export enum Visibility {
 export type RegisterUserMutationVariables = Exact<{
   username: Scalars['String']['input'];
   email: Scalars['String']['input'];
-  password: Scalars['Password']['input'];
+  password: Scalars['String']['input'];
   captchaToken?: InputMaybe<Scalars['String']['input']>;
 }>;
 
@@ -347,7 +346,7 @@ export const RegisterUserDocument = {
             kind: 'NonNullType',
             type: {
               kind: 'NamedType',
-              name: { kind: 'Name', value: 'Password' },
+              name: { kind: 'Name', value: 'String' },
             },
           },
         },

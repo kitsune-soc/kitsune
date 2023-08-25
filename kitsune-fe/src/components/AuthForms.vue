@@ -93,7 +93,7 @@
       mutation registerUser(
         $username: String!
         $email: String!
-        $password: Password!
+        $password: String!
         $captchaToken: String
       ) {
         registerUser(
