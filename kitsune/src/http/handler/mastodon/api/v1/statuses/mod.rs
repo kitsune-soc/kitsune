@@ -133,7 +133,7 @@ async fn post(
         .visibility(form.visibility.into())
         .clone();
 
-    if let Some(subject) = form.spoiler_text {
+    if let Some(subject) = form.spoiler_text.filter(|subject| !subject.is_empty()) {
         create_post.subject(subject);
     }
     if let Some(in_reply_to_id) = form.in_reply_to_id {
@@ -171,7 +171,7 @@ async fn put(
         .content(form.status)
         .media_ids(form.media_ids)
         .sensitive(form.sensitive)
-        .subject(form.spoiler_text)
+        .subject(form.spoiler_text.filter(|subject| !subject.is_empty()))
         .build()
         .unwrap();
 
