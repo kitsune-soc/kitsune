@@ -1,7 +1,13 @@
 {
   inputs = {
+    devenv = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:cachix/devenv/6a30b674fb5a54eff8c422cc7840257227e0ead2";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
     rust-overlay = {
       inputs = {
         flake-utils.follows = "flake-utils";
@@ -10,7 +16,7 @@
       url = "github:oxalica/rust-overlay";
     };
   };
-  outputs = { self, flake-utils, nixpkgs, rust-overlay }:
+  outputs = { self, devenv, flake-utils, nixpkgs, rust-overlay, ... } @ inputs:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -29,6 +35,7 @@
             sqlite
             zlib
           ];
+
           cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml); # TODO: Set the target CPU conditionally
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
           src = pkgs.lib.cleanSourceWith {
@@ -38,6 +45,7 @@
               in !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
           };
           version = cargoToml.workspace.package.version;
+
           basePackage = {
             inherit version src;
 
@@ -75,19 +83,23 @@
         {
           packages = rec {
             default = main;
+
             cli = rustPlatform.buildRustPackage (basePackage // {
               pname = "kitsune-cli";
               cargoBuildFlags = "-p kitsune-cli";
             });
+
             main = rustPlatform.buildRustPackage (basePackage // {
               pname = "kitsune";
               buildFeatures = [ "meilisearch" ];
               cargoBuildFlags = "-p kitsune";
             });
+
             search = rustPlatform.buildRustPackage (basePackage // {
               pname = "kitsune-search";
               cargoBuildFlags = "-p kitsune-search";
             });
+
             frontend = pkgs.mkYarnPackage {
               inherit version;
 
@@ -105,65 +117,49 @@
               distPhase = "true";
             };
           };
+
           devShells = rec {
             default = backend;
-            backend = pkgs.mkShell {
-              buildInputs = with pkgs; [
-                cargo-insta
-                diesel-cli
-                redis
-                rust-bin.stable.latest.default
-              ]
-              ++
-              baseDependencies;
-              shellHook = ''
-                source ./.devshell_prompt.sh
-              '';
+
+            backend = devenv.lib.mkShell {
+              inherit pkgs inputs;
+
+              modules = [
+                ({ pkgs, ... }: {
+                  packages = with pkgs; [
+                    cargo-insta
+                    diesel-cli
+                    rust-bin.stable.latest.default
+                  ]
+                  ++
+                  baseDependencies;
+
+                  enterShell = ''
+                    source ./.devshell_prompt.sh
+
+                    export PG_HOST=127.0.0.1
+                    export PG_PORT=5432
+                    export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
+
+                    export REDIS_PORT=6379
+                    export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
+                  '';
+
+                  pre-commit.hooks = {
+                    nixpkgs-fmt.enable = true;
+                  };
+
+                  services = {
+                    postgres = {
+                      enable = true;
+                      listen_addresses = "127.0.0.1";
+                    };
+                    redis.enable = true;
+                  };
+                })
+              ];
             };
-            backend-full = pkgs.mkShell {
-              buildInputs = with pkgs; [
-                cargo-insta
-                diesel-cli
-                redis
-                postgresql
-                rust-bin.stable.latest.default
-              ]
-              ++
-              baseDependencies;
-              shellHook = ''
-                source ./.devshell_prompt.sh
 
-                export PG_HOST=127.0.0.3
-                export PG_PORT=45999
-                export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
-
-                #something more sophisticated to kill OUR postgres and not a system one?
-                #like using the lockfile it makes or a job we start?
-                export PG_DIR=data
-                POSTGRES_INVOCATION="postgres -D $PG_DIR -h $PG_HOST -p $PG_PORT -k ."
-
-                pkill -f "$POSTGRES_INVOCATION" 
-                pidwait -f "$POSTGRES_INVOCATION" 
-              
-                mkdir -p $PG_DIR
-                rm -rf $PG_DIR/*
-                initdb -D $PG_DIR --no-locale --encoding=UTF8 >/dev/null
-
-                # setsid is here so that ctrl+c in the shell does not kill the server. 
-                # For some reason only setsid works, no nohup or stdin redir
-                setsid $POSTGRES_INVOCATION 2>/dev/null >/dev/null &
-                sleep 3
-                createdb -h $PG_HOST -p $PG_PORT $USER
-              
-                export REDIS_PORT=6379
-                export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
-
-                pkill -f "redis-server 127.0.0.1:$REDIS_PORT"
-                pidwait -f "redis-server 127.0.0.1:$REDIS_PORT"
-                setsid  redis-server --bind 127.0.0.1 --port $REDIS_PORT >/dev/null &
-              
-              '';
-            };
             frontend = pkgs.mkShell {
               buildInputs = with pkgs; [
                 nodejs
