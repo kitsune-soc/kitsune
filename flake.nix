@@ -3,11 +3,11 @@
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     rust-overlay = {
-      url = "github:oxalica/rust-overlay";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
       };
+      url = "github:oxalica/rust-overlay";
     };
   };
   outputs = { self, flake-utils, nixpkgs, rust-overlay }:
