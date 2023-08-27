@@ -139,10 +139,10 @@
 
                     export PG_HOST=127.0.0.1
                     export PG_PORT=5432
-                    export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
+                    [ -z "$DATABASE_URL" ] && export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
 
                     export REDIS_PORT=6379
-                    export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
+                    [ -z "$REDIS_URL" ] && export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
                   '';
 
                   pre-commit.hooks = {
