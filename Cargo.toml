@@ -40,4 +40,3 @@ version = "0.0.1-pre.2"
 [patch.crates-io] # Patch to get client credential support for async
 oxide-auth = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431" }
 oxide-auth-async = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "89467ba1d7a6e18f1ce3f5c4b3b8e900917b8431" }
-typed-builder = { git = "https://github.com/idanarye/rust-typed-builder.git", rev = "628786a5959ef7747cbb9f5423df80ebc9b0365f" }
