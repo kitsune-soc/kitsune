@@ -6,7 +6,7 @@ version.workspace = true
 [dependencies]
 diesel = "2.1.1"
 diesel-async = "0.3.2"
-embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "a2b73a9b24163f20202c9b09857c29137d98708b" }
+embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "6f664877dc173153ca36810cc4f510df35c6b67d" }
 http = "0.2.9"
 iso8601-timestamp = "0.2.11"
 kitsune-db = { path = "../kitsune-db" }
@@ -15,4 +15,4 @@ once_cell = "1.18.0"
 scraper = { version = "0.17.1", default-features = false }
 smol_str = "0.2.0"
 thiserror = "1.0.47"
-typed-builder = "0.15.2"
+typed-builder = "0.16.0"
