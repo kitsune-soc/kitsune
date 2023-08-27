@@ -1,7 +1,8 @@
 self: final: prev:
 let
   packages = self.packages.${prev.stdenv.targetPlatform.system};
-in {
+in
+{
   kitsune = prev.stdenv.mkDerivation {
     inherit (packages.main) name version meta src;
 
