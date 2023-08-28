@@ -3640,7 +3640,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "ammonia",
  "argon2",
@@ -3746,7 +3746,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cache"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "async-trait",
  "deadpool-redis",
@@ -3763,7 +3763,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-captcha"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "async-trait",
  "enum_dispatch",
@@ -3780,7 +3780,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cli"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "clap",
  "color-eyre",
@@ -3799,7 +3799,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-db"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "derive_builder",
  "diesel",
@@ -3820,7 +3820,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-email"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "askama",
  "askama_axum",
@@ -3832,7 +3832,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-embed"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3850,7 +3850,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-client"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "bytes",
  "derive_builder",
@@ -3870,7 +3870,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-signatures"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "base64-simd",
  "derive_builder",
@@ -3886,7 +3886,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-language"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3898,7 +3898,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-messaging"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "ahash 0.8.3",
  "async-trait",
@@ -3914,7 +3914,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3937,7 +3937,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search-proto"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "prost",
  "protoc-bin-vendored",
@@ -3948,7 +3948,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search-server"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "autometrics",
  "dotenvy",
@@ -3977,7 +3977,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-storage"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "async-trait",
  "aws-credential-types",
@@ -3997,7 +3997,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-type"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "iso8601-timestamp",
  "pretty_assertions",
@@ -5252,7 +5252,7 @@ checksum = "31114a898e107c51bb1609ffaf55a0e011cf6a4d7f1170d0015a165082c0338b"
 
 [[package]]
 name = "post-process"
-version = "0.0.1-pre.2"
+version = "0.0.1-pre.3"
 dependencies = [
  "futures-util",
  "insta",
