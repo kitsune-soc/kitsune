@@ -14,6 +14,7 @@ use kitsune_db::{
     schema::notifications,
     PgPool,
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -94,8 +95,11 @@ impl NotificationService {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            .with_connection(|mut db_conn| {
+                async move {
+                    Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -107,17 +111,20 @@ impl NotificationService {
         account_id: Uuid,
     ) -> Result<Option<Notification>> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                notifications::table
-                    .filter(
-                        notifications::id
-                            .eq(id)
-                            .and(notifications::receiving_account_id.eq(account_id)),
-                    )
-                    .select(Notification::as_select())
-                    .get_result(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|mut db_conn| {
+                async move {
+                    notifications::table
+                        .filter(
+                            notifications::id
+                                .eq(id)
+                                .and(notifications::receiving_account_id.eq(account_id)),
+                        )
+                        .select(Notification::as_select())
+                        .get_result(&mut db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -125,16 +132,19 @@ impl NotificationService {
 
     pub async fn dismiss(&self, id: Uuid, account_id: Uuid) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                diesel::delete(
-                    notifications::table.filter(
-                        notifications::id
-                            .eq(id)
-                            .and(notifications::receiving_account_id.eq(account_id)),
-                    ),
-                )
-                .execute(&mut db_conn)
-                .await
+            .with_connection(|mut db_conn| {
+                async move {
+                    diesel::delete(
+                        notifications::table.filter(
+                            notifications::id
+                                .eq(id)
+                                .and(notifications::receiving_account_id.eq(account_id)),
+                        ),
+                    )
+                    .execute(&mut db_conn)
+                    .await
+                }
+                .scoped()
             })
             .await?;
 
@@ -143,12 +153,16 @@ impl NotificationService {
 
     pub async fn clear_all(&self, account_id: Uuid) -> Result<()> {
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                diesel::delete(
-                    notifications::table.filter(notifications::receiving_account_id.eq(account_id)),
-                )
-                .execute(&mut db_conn)
-                .await
+            .with_connection(|mut db_conn| {
+                async move {
+                    diesel::delete(
+                        notifications::table
+                            .filter(notifications::receiving_account_id.eq(account_id)),
+                    )
+                    .execute(&mut db_conn)
+                    .await
+                }
+                .scoped()
             })
             .await?;
 

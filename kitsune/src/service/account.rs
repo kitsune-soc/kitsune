@@ -202,12 +202,12 @@ impl AccountService {
                     let preferences = accounts_preferences::table
                         .find(follow.account_id)
                         .select(Preferences::as_select())
-                        .get_result(&mut db_conn);
+                        .get_result(db_conn);
 
                     let follower_fut = accounts::table
                         .find(follow.follower_id)
                         .select(Account::as_select())
-                        .get_result(&mut db_conn);
+                        .get_result(db_conn);
 
                     try_join!(account_fut, preferences, follower_fut)
                 }
@@ -254,12 +254,15 @@ impl AccountService {
                     .follow(follower.id),
             };
             self.db_pool
-                .with_connection(|mut db_conn| async move {
-                    diesel::insert_into(notifications::table)
-                        .values(notification)
-                        .on_conflict_do_nothing()
-                        .execute(&mut db_conn)
-                        .await
+                .with_connection(|mut db_conn| {
+                    async move {
+                        diesel::insert_into(notifications::table)
+                            .values(notification)
+                            .on_conflict_do_nothing()
+                            .execute(&mut db_conn)
+                            .await
+                    }
+                    .scoped()
                 })
                 .await?;
         }

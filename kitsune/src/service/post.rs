@@ -24,7 +24,7 @@ use diesel::{
     SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream::BoxStream, Stream, StreamExt};
+use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -38,8 +38,8 @@ use kitsune_db::{
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        media_attachments, notifications, posts, posts_favourites, posts_media_attachments,
-        posts_mentions, users_roles,
+        accounts, accounts_preferences, media_attachments, notifications, posts, posts_favourites,
+        posts_media_attachments, posts_mentions, users_roles,
     },
     PgPool,
 };
@@ -340,13 +340,30 @@ impl PostService {
             .execute(conn)
             .await?;
 
+        let accounts_to_notify: Vec<Uuid> = accounts::table
+            .inner_join(accounts_preferences::table)
+            .filter(
+                accounts_preferences::account_id
+                    .eq_any(
+                        mentioned_account_ids
+                            .iter()
+                            .map(|(account_id, _)| account_id),
+                    )
+                    .and(accounts_preferences::notify_on_mention.eq(true)),
+            )
+            .select(accounts::id)
+            .load_stream::<Uuid>(conn)
+            .await?
+            .try_collect()
+            .await?;
+
         diesel::insert_into(notifications::table)
             .values(
-                mentioned_account_ids
+                accounts_to_notify
                     .iter()
-                    .map(|(account_id, _)| {
+                    .map(|acc| {
                         NewNotification::builder()
-                            .receiving_account_id(*account_id)
+                            .receiving_account_id(*acc)
                             .mention(author_id, post_id)
                     })
                     .collect::<Vec<Notification>>(),

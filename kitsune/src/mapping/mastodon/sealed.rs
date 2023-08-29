@@ -561,20 +561,23 @@ impl IntoMastodon for DbNotification {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) = state
-            .db_pool
-            .with_connection(|mut db_conn| {
-                notifications::table
-                    .find(self.receiving_account_id)
-                    .inner_join(
-                        accounts::table
-                            .on(notifications::triggering_account_id.eq(accounts::id.nullable())),
-                    )
-                    .left_outer_join(posts::table)
-                    .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
-                    .get_result(&mut db_conn)
-            })
-            .await?;
+        let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) =
+            state
+                .db_pool
+                .with_connection(|mut db_conn| {
+                    {
+                        notifications::table
+                            .find(self.receiving_account_id)
+                            .inner_join(accounts::table.on(
+                                notifications::triggering_account_id.eq(accounts::id.nullable()),
+                            ))
+                            .left_outer_join(posts::table)
+                            .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
+                            .get_result(&mut db_conn)
+                    }
+                    .scoped()
+                })
+                .await?;
 
         let status = OptionFuture::from(status.map(|status| status.into_mastodon(state)))
             .await
