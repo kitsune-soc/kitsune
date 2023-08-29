@@ -33,10 +33,12 @@ use kitsune_db::{
         account::{Account, UpdateAccount},
         follower::Follow as DbFollow,
         follower::NewFollow,
+        notification::NewNotification,
         post::Post,
+        preference::Preferences,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
-    schema::{accounts, accounts_follows, posts},
+    schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     PgPool,
 };
 use speedy_uuid::Uuid;
@@ -187,7 +189,7 @@ impl AccountService {
     ///
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
     pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
-        let (account, follower) = self
+        let (account, preferences, follower) = self
             .db_pool
             .with_connection(|mut db_conn| async move {
                 let account_fut = accounts::table
@@ -195,12 +197,17 @@ impl AccountService {
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
+                let preferences = accounts_preferences::table
+                    .find(follow.account_id)
+                    .select(Preferences::as_select())
+                    .get_result(&mut db_conn);
+
                 let follower_fut = accounts::table
                     .find(follow.follower_id)
                     .select(Account::as_select())
                     .get_result(&mut db_conn);
 
-                try_join!(account_fut, follower_fut)
+                try_join!(account_fut, preferences, follower_fut)
             })
             .await?;
 
@@ -229,6 +236,28 @@ impl AccountService {
             })
             .await?;
 
+        if account.local
+            && ((preferences.notify_on_follow && !account.locked)
+                || (preferences.notify_on_follow_request && account.locked))
+        {
+            let notification = match account.locked {
+                true => NewNotification::builder()
+                    .receiving_account_id(account.id)
+                    .follow_request(follower.id),
+                false => NewNotification::builder()
+                    .receiving_account_id(account.id)
+                    .follow(follower.id),
+            };
+            self.db_pool
+                .with_connection(|mut db_conn| async move {
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(&mut db_conn)
+                        .await
+                })
+                .await?;
+        }
         if !account.local {
             self.job_service
                 .enqueue(Enqueue::builder().job(DeliverFollow { follow_id }).build())

@@ -17,10 +17,12 @@ use kitsune_db::{
         account::Account,
         favourite::NewFavourite,
         follower::NewFollow,
+        notification::NewNotification,
         post::{NewPost, Post},
+        preference::Preferences,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
-    schema::{accounts_follows, posts, posts_favourites},
+    schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
 };
 use kitsune_type::ap::{Activity, ActivityType};
 use speedy_uuid::Uuid;
@@ -151,6 +153,37 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         .await?;
 
     if followed_user.local {
+        let preferences = state
+            .db_pool
+            .with_connection(|mut db_conn| async move {
+                accounts_preferences::table
+                    .find(followed_user.id)
+                    .select(Preferences::as_select())
+                    .get_result(&mut db_conn)
+                    .await
+            })
+            .await?;
+        if (preferences.notify_on_follow && !followed_user.locked)
+            || (preferences.notify_on_follow_request && followed_user.locked)
+        {
+            let notification = match followed_user.locked {
+                true => NewNotification::builder()
+                    .receiving_account_id(followed_user.id)
+                    .follow_request(author.id),
+                false => NewNotification::builder()
+                    .receiving_account_id(followed_user.id)
+                    .follow(author.id),
+            };
+            state
+                .db_pool
+                .with_connection(|mut db_conn| {
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(&mut db_conn)
+                })
+                .await?;
+        }
         state
             .service
             .job

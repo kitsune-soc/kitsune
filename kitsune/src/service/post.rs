@@ -32,13 +32,14 @@ use kitsune_db::{
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
+        notification::{NewNotification, Notification},
         post::{NewPost, Post, PostChangeset, PostSource, Visibility},
         user_role::Role,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
-        users_roles,
+        media_attachments, notifications, posts, posts_favourites, posts_media_attachments,
+        posts_mentions, users_roles,
     },
     PgPool,
 };
@@ -315,6 +316,7 @@ impl PostService {
 
     async fn process_mentions(
         conn: &mut AsyncPgConnection,
+        author_id: Uuid,
         post_id: Uuid,
         mentioned_account_ids: Vec<(Uuid, String)>,
     ) -> Result<()> {
@@ -332,6 +334,21 @@ impl PostService {
                         mention_text,
                     })
                     .collect::<Vec<NewMention<'_>>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        diesel::insert_into(notifications::table)
+            .values(
+                mentioned_account_ids
+                    .iter()
+                    .map(|(account_id, _)| {
+                        NewNotification::builder()
+                            .receiving_account_id(*account_id)
+                            .mention(author_id, post_id)
+                    })
+                    .collect::<Vec<Notification>>(),
             )
             .on_conflict_do_nothing()
             .execute(conn)
@@ -420,7 +437,8 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
+                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
+                        .await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
 
                     Ok::<_, Error>(post)
@@ -587,7 +605,8 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
+                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
+                        .await?;
                     Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
 
                     Ok::<_, Error>(post)

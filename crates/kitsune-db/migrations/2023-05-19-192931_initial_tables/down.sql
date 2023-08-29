@@ -17,5 +17,6 @@ DROP FUNCTION iso_code_to_language;
 DROP TYPE language_iso_code;
 
 DROP TABLE users;
+DROP TABLE accounts_preferences;
 DROP TABLE accounts_follows;
 DROP TABLE accounts;
