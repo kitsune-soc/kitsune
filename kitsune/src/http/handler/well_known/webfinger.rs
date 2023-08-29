@@ -9,6 +9,7 @@ use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::webfinger::{Link, Resource};
+use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use utoipa::IntoParams;
 
@@ -46,7 +47,7 @@ async fn get(
     };
 
     let account = db_pool
-        .with_connection(|mut db_conn| {
+        .with_connection(|db_conn| {
             accounts::table
                 .filter(
                     accounts::username
@@ -54,7 +55,8 @@ async fn get(
                         .and(accounts::local.eq(true)),
                 )
                 .select(Account::as_select())
-                .first::<Account>(&mut db_conn)
+                .first::<Account>(db_conn)
+                .scoped()
         })
         .await?;
     let account_url = url_service.user_url(account.id);
@@ -83,15 +85,14 @@ mod tests {
         Json,
     };
     use axum_extra::either::Either;
-    use diesel_async::{
-        scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
-    };
+    use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::StatusCode;
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
     };
     use kitsune_type::webfinger::Link;
+    use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
 
     #[tokio::test]
@@ -99,8 +100,8 @@ mod tests {
     async fn basic() {
         database_test(|db_pool| async move {
             let account_id = db_pool
-                .with_connection(|mut db_conn| async move {
-                    Ok::<_, eyre::Report>(prepare_db(&mut db_conn).await)
+                .with_connection(|db_conn| {
+                    async move { Ok::<_, eyre::Report>(prepare_db(db_conn).await) }.scoped()
                 })
                 .await
                 .unwrap();
@@ -160,9 +161,12 @@ mod tests {
     async fn custom_domain() {
         database_test(|db_pool| async move {
             db_pool
-                .with_connection(|mut db_conn| async move {
-                    prepare_db(&mut db_conn).await;
-                    Ok::<_, eyre::Report>(())
+                .with_connection(|db_conn| {
+                    async move {
+                        prepare_db(db_conn).await;
+                        Ok::<_, eyre::Report>(())
+                    }
+                    .scoped()
                 })
                 .await
                 .unwrap();

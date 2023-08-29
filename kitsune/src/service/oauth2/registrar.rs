@@ -7,6 +7,7 @@ use oxide_auth::{
     primitives::registrar::{BoundClient, ClientUrl, ExactUrl, RegisteredUrl, RegistrarError},
 };
 use oxide_auth_async::primitives::Registrar;
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::{
     borrow::Cow,
@@ -48,13 +49,16 @@ impl Registrar for OAuthRegistrar {
 
         let client = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                oauth2_applications::table
-                    .find(client_id)
-                    .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
-                    .get_result::<oauth2::Application>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    oauth2_applications::table
+                        .find(client_id)
+                        .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
+                        .get_result::<oauth2::Application>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await
             .map_err(|_| RegistrarError::PrimitiveError)?
@@ -104,12 +108,15 @@ impl Registrar for OAuthRegistrar {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                client_query
-                    .select(oauth2_applications::id)
-                    .execute(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    client_query
+                        .select(oauth2_applications::id)
+                        .execute(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await
             .map_err(|_| RegistrarError::PrimitiveError)?

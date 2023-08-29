@@ -3,7 +3,7 @@ let
   inherit (lib) types mkEnableOption mkOption;
   inherit (builtins) toJSON;
   cfg = config.services.kitsune;
-  format = pkgs.formats.toml {};
+  format = pkgs.formats.toml { };
   configFile = format.generate "config.toml" cfg.config;
 
   # based on gist linked in <https://discourse.nixos.org/t/problems-with-types-oneof-and-submodules/15197>
@@ -24,7 +24,8 @@ let
   oneOfTagged = definitions:
     types.oneOf (lib.attrValues (lib.mapAttrs taggedSubmodule definitions));
 
-in {
+in
+{
   options = {
     services.kitsune = {
       enable = mkEnableOption ''
@@ -54,7 +55,7 @@ in {
           options = {
             cache = mkOption {
               type = oneOfTagged {
-                in-memory = {};
+                in-memory = { };
                 redis = {
                   url = mkOption {
                     type = types.nonEmptyStr;
@@ -80,7 +81,7 @@ in {
                   };
                 };
               };
-              default = {};
+              default = { };
             };
             instance = mkOption {
               type = types.submodule {
@@ -104,13 +105,13 @@ in {
                       deny = {
                         domains = mkOption {
                           type = types.listOf types.str;
-                          default = [];
+                          default = [ ];
                         };
                       };
                       allow = {
                         domains = mkOption {
                           type = types.listOf types.str;
-                          default = [];
+                          default = [ ];
                         };
                       };
                     };
@@ -135,11 +136,11 @@ in {
                   };
                 };
               };
-              default = {};
+              default = { };
             };
             messaging = mkOption {
               type = oneOfTagged {
-                in-process = {};
+                in-process = { };
                 redis = {
                   url = mkOption {
                     type = types.nonEmptyStr;
@@ -181,7 +182,7 @@ in {
                   };
                 };
               };
-              default = {};
+              default = { };
             };
             search = mkOption {
               type = oneOfTagged {
@@ -198,8 +199,8 @@ in {
                     type = types.nonEmptyStr;
                   };
                 };
-                sql = {};
-                none = {};
+                sql = { };
+                none = { };
               };
               default = { type = "sql"; };
             };
@@ -213,7 +214,7 @@ in {
                 };
                 s3 = {
                   todo = mkOption {
-                    type = types.enum [];
+                    type = types.enum [ ];
                   };
                 };
               };
@@ -233,7 +234,7 @@ in {
                   };
                 };
               };
-              default = {};
+              default = { };
             };
           };
         };

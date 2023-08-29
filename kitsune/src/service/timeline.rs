@@ -11,6 +11,7 @@ use kitsune_db::{
     schema::{accounts_follows, posts, posts_mentions},
     PgPool,
 };
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::cmp::min;
 use typed_builder::TypedBuilder;
@@ -110,8 +111,11 @@ impl TimelineService {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            .with_connection(|db_conn| {
+                async move {
+                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)
@@ -156,8 +160,11 @@ impl TimelineService {
         }
 
         self.db_pool
-            .with_connection(|mut db_conn| async move {
-                Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
+            .with_connection(|db_conn| {
+                async move {
+                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+                }
+                .scoped()
             })
             .await
             .map_err(Error::from)

@@ -5,6 +5,7 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
 use color_eyre::eyre::{self, Result};
+use diesel_async::scoped_futures::ScopedFutureExt;
 
 mod config;
 mod role;
@@ -35,12 +36,15 @@ async fn main() -> Result<()> {
     let cmd = App::parse();
 
     db_conn
-        .with_connection(|mut db_conn| async move {
-            match cmd.subcommand {
-                AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
-            }
+        .with_connection(|db_conn| {
+            async move {
+                match cmd.subcommand {
+                    AppSubcommand::Role(cmd) => self::role::handle(cmd, db_conn).await?,
+                }
 
-            Ok::<_, eyre::Report>(())
+                Ok::<_, eyre::Report>(())
+            }
+            .scoped()
         })
         .await?;
 

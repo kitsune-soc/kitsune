@@ -106,6 +106,7 @@ mod test {
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use pretty_assertions::assert_eq;
+    use scoped_futures::ScopedFutureExt;
     use std::sync::Arc;
     use tower::service_fn;
 
@@ -190,11 +191,12 @@ mod test {
 
                 let (account_id, _mention_text) = &mentioned_account_ids[0];
                 let mentioned_account = db_pool
-                    .with_connection(|mut db_conn| {
+                    .with_connection(|db_conn| {
                         accounts::table
                             .find(account_id)
                             .select(Account::as_select())
-                            .get_result::<Account>(&mut db_conn)
+                            .get_result::<Account>(db_conn)
+                            .scoped()
                     })
                     .await
                     .expect("Failed to fetch account");

@@ -9,6 +9,7 @@ use kitsune_db::{
     schema::{accounts, posts},
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use scoped_futures::ScopedFutureExt;
 
 #[async_trait]
 pub trait IntoActivity {
@@ -50,18 +51,21 @@ impl IntoActivity for Favourite {
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let (account_url, post_url) = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let account_url_fut = accounts::table
-                    .find(self.account_id)
-                    .select(accounts::url)
-                    .get_result::<String>(&mut db_conn);
+            .with_connection(|db_conn| {
+                async move {
+                    let account_url_fut = accounts::table
+                        .find(self.account_id)
+                        .select(accounts::url)
+                        .get_result::<String>(db_conn);
 
-                let post_url_fut = posts::table
-                    .find(self.post_id)
-                    .select(posts::url)
-                    .get_result(&mut db_conn);
+                    let post_url_fut = posts::table
+                        .find(self.post_id)
+                        .select(posts::url)
+                        .get_result(db_conn);
 
-                try_join!(account_url_fut, post_url_fut)
+                    try_join!(account_url_fut, post_url_fut)
+                }
+                .scoped()
             })
             .await?;
 
@@ -78,11 +82,12 @@ impl IntoActivity for Favourite {
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let account_url = state
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 accounts::table
                     .find(self.account_id)
                     .select(accounts::url)
-                    .get_result::<String>(&mut db_conn)
+                    .get_result::<String>(db_conn)
+                    .scoped()
             })
             .await?;
 
@@ -105,18 +110,21 @@ impl IntoActivity for Follow {
     async fn into_activity(self, state: &Zustand) -> Result<Self::Output> {
         let (attributed_to, object) = state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                let attributed_to_fut = accounts::table
-                    .find(self.follower_id)
-                    .select(accounts::url)
-                    .get_result::<String>(&mut db_conn);
+            .with_connection(|db_conn| {
+                async move {
+                    let attributed_to_fut = accounts::table
+                        .find(self.follower_id)
+                        .select(accounts::url)
+                        .get_result::<String>(db_conn);
 
-                let object_fut = accounts::table
-                    .find(self.account_id)
-                    .select(accounts::url)
-                    .get_result::<String>(&mut db_conn);
+                    let object_fut = accounts::table
+                        .find(self.account_id)
+                        .select(accounts::url)
+                        .get_result::<String>(db_conn);
 
-                try_join!(attributed_to_fut, object_fut)
+                    try_join!(attributed_to_fut, object_fut)
+                }
+                .scoped()
             })
             .await?;
 
@@ -133,11 +141,12 @@ impl IntoActivity for Follow {
     async fn into_negate_activity(self, state: &Zustand) -> Result<Self::NegateOutput> {
         let attributed_to = state
             .db_pool
-            .with_connection(|mut db_conn| {
+            .with_connection(|db_conn| {
                 accounts::table
                     .find(self.follower_id)
                     .select(accounts::url)
-                    .get_result::<String>(&mut db_conn)
+                    .get_result::<String>(db_conn)
+                    .scoped()
             })
             .await?;
 
@@ -163,11 +172,12 @@ impl IntoActivity for Post {
         if let Some(reposted_post_id) = self.reposted_post_id {
             let reposted_post_url = state
                 .db_pool
-                .with_connection(|mut db_conn| {
+                .with_connection(|db_conn| {
                     posts::table
                         .find(reposted_post_id)
                         .select(posts::url)
-                        .get_result(&mut db_conn)
+                        .get_result(db_conn)
+                        .scoped()
                 })
                 .await?;
 

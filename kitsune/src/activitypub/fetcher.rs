@@ -10,7 +10,7 @@ use crate::{
 use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use http::HeaderValue;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
@@ -25,6 +25,7 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{actor::Actor, Object};
+use scoped_futures::ScopedFutureExt;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -97,13 +98,16 @@ impl Fetcher {
 
             let user_data = self
                 .db_pool
-                .with_connection(|mut db_conn| async move {
-                    accounts::table
-                        .filter(accounts::url.eq(opts.url))
-                        .select(Account::as_select())
-                        .first(&mut db_conn)
-                        .await
-                        .optional()
+                .with_connection(|db_conn| {
+                    async move {
+                        accounts::table
+                            .filter(accounts::url.eq(opts.url))
+                            .select(Account::as_select())
+                            .first(db_conn)
+                            .await
+                            .optional()
+                    }
+                    .scoped()
                 })
                 .await?;
 
@@ -232,13 +236,16 @@ impl Fetcher {
 
         let post = self
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                posts::table
-                    .filter(posts::url.eq(url))
-                    .select(Post::as_select())
-                    .first(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    posts::table
+                        .filter(posts::url.eq(url))
+                        .select(Post::as_select())
+                        .first(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -299,6 +306,7 @@ mod test {
         ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
     };
     use pretty_assertions::assert_eq;
+    use scoped_futures::ScopedFutureExt;
     use std::sync::{
         atomic::{AtomicU32, Ordering},
         Arc,
@@ -373,11 +381,12 @@ mod test {
             );
 
             let author = db_pool
-                .with_connection(|mut db_conn| {
+                .with_connection(|db_conn| {
                     accounts::table
                         .find(note.account_id)
                         .select(Account::as_select())
-                        .get_result::<Account>(&mut db_conn)
+                        .get_result::<Account>(db_conn)
+                        .scoped()
                 })
                 .await
                 .expect("Get author");

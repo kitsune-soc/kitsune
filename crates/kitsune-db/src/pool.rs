@@ -1,6 +1,6 @@
 use diesel_async::{
     pooled_connection::deadpool::{Object, Pool, PoolError as DeadpoolError},
-    scoped_futures::ScopedBoxFuture,
+    scoped_futures::{ScopedBoxFuture, ScopedFutureWrapper},
     AsyncConnection, AsyncPgConnection,
 };
 use std::future::Future;
@@ -30,15 +30,14 @@ pub struct PgPool {
 
 impl PgPool {
     /// Run the code inside a context with a database connection
-    pub async fn with_connection<F, Fut, T, E>(&self, func: F) -> Result<T, PoolError<E>>
+    pub async fn with_connection<'a, F, Fut, T, E>(&self, func: F) -> Result<T, PoolError<E>>
     where
-        // Yes, this is *technically* leaky since a user could just move the object out of the closure
-        // Just don't. kthx.
-        F: FnOnce(Object<AsyncPgConnection>) -> Fut,
+        for<'conn> F:
+            FnOnce(&'conn mut Object<AsyncPgConnection>) -> ScopedFutureWrapper<'conn, 'a, Fut>,
         Fut: Future<Output = Result<T, E>>,
     {
-        let conn = self.inner.get().await?;
-        func(conn).await.map_err(PoolError::User)
+        let mut conn = self.inner.get().await?;
+        func(&mut conn).await.map_err(PoolError::User)
     }
 
     /// Run the code inside a context with a database transaction

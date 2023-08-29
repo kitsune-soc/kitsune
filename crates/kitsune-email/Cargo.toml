@@ -21,4 +21,4 @@ mrml = { version = "2.0.0-rc4", default-features = false, features = [
     "render",
 ] }
 thiserror = "1.0.47"
-typed-builder = "0.15.2"
+typed-builder = "0.16.0"

@@ -1,6 +1,15 @@
 /target
+
+# Redis dump
 /dump.rdb
+
+# Upload directory
 /uploads
-/config.dhall
+
+# Production configuration file
 /config.toml
-/test.db
+
+# Devenv stuff
+/result
+/.devenv
+/.pre-commit-config.yaml

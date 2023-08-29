@@ -12,7 +12,7 @@ enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
 http = "0.2.9"
 http-body = "0.4.5"
-pin-project-lite = "0.2.12"
+pin-project-lite = "0.2.13"
 sync_wrapper = "0.1.2"
 tokio = { version = "1.32.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.8", features = ["io"] }

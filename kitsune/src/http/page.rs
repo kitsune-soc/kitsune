@@ -15,6 +15,7 @@ use kitsune_db::{
     },
     schema::{accounts, media_attachments},
 };
+use scoped_futures::ScopedFutureExt;
 use std::collections::VecDeque;
 
 pub struct MediaAttachment {
@@ -39,22 +40,21 @@ impl PostComponent {
     pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
         let (author, attachments_stream) = state
             .db_pool
-            .with_connection(|mut db_conn| {
-                let post = &post;
-
-                async move {
+            .with_connection(|db_conn| {
+                async {
                     let author_fut = accounts::table
                         .find(post.account_id)
                         .select(Account::as_select())
-                        .get_result::<Account>(&mut db_conn);
+                        .get_result::<Account>(db_conn);
 
                     let attachments_stream_fut = PostMediaAttachment::belonging_to(&post)
                         .inner_join(media_attachments::table)
                         .select(DbMediaAttachment::as_select())
-                        .load_stream::<DbMediaAttachment>(&mut db_conn);
+                        .load_stream::<DbMediaAttachment>(db_conn);
 
                     try_join!(author_fut, attachments_stream_fut)
                 }
+                .scoped()
             })
             .await?;
 

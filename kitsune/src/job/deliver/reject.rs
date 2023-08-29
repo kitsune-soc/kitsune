@@ -15,6 +15,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, users},
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -33,12 +34,15 @@ impl Runnable for DeliverReject {
         let follow = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| async move {
-                accounts_follows::table
-                    .find(self.follow_id)
-                    .get_result::<Follow>(&mut db_conn)
-                    .await
-                    .optional()
+            .with_connection(|db_conn| {
+                async move {
+                    accounts_follows::table
+                        .find(self.follow_id)
+                        .get_result::<Follow>(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
             })
             .await?;
 
@@ -49,25 +53,24 @@ impl Runnable for DeliverReject {
         let (follower_inbox_url, (followed_account, followed_user), _delete_result) = ctx
             .state
             .db_pool
-            .with_connection(|mut db_conn| {
-                let follow = &follow;
-
-                async move {
+            .with_connection(|db_conn| {
+                async {
                     let follower_inbox_url_fut = accounts::table
                         .find(follow.follower_id)
                         .select(accounts::inbox_url.assume_not_null())
-                        .get_result::<String>(&mut db_conn);
+                        .get_result::<String>(db_conn);
 
                     let followed_info_fut = accounts::table
                         .find(follow.account_id)
                         .inner_join(users::table.on(accounts::id.eq(users::account_id)))
                         .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(&mut db_conn);
+                        .get_result::<(Account, User)>(db_conn);
 
-                    let delete_fut = diesel::delete(&follow).execute(&mut db_conn);
+                    let delete_fut = diesel::delete(&follow).execute(db_conn);
 
                     try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
                 }
+                .scoped()
             })
             .await?;
 
