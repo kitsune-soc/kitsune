@@ -230,8 +230,7 @@ impl UserService {
                         })
                         .execute(tx);
 
-                    let (_account, user, _preferences) =
-                        try_join!(account_fut, user_fut, preferences_fut)?;
+                    let (_, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
 
                     Ok::<_, Error>(user)
                 }

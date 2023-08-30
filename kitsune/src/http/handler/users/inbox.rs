@@ -177,13 +177,14 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         if (preferences.notify_on_follow && !followed_user.locked)
             || (preferences.notify_on_follow_request && followed_user.locked)
         {
-            let notification = match followed_user.locked {
-                true => NewNotification::builder()
+            let notification = if followed_user.locked {
+                NewNotification::builder()
                     .receiving_account_id(followed_user.id)
-                    .follow_request(author.id),
-                false => NewNotification::builder()
+                    .follow_request(author.id)
+            } else {
+                NewNotification::builder()
                     .receiving_account_id(followed_user.id)
-                    .follow(author.id),
+                    .follow(author.id)
             };
             state
                 .db_pool

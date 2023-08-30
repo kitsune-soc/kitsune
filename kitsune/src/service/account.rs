@@ -246,13 +246,14 @@ impl AccountService {
             && ((preferences.notify_on_follow && !account.locked)
                 || (preferences.notify_on_follow_request && account.locked))
         {
-            let notification = match account.locked {
-                true => NewNotification::builder()
+            let notification = if account.locked {
+                NewNotification::builder()
                     .receiving_account_id(account.id)
-                    .follow_request(follower.id),
-                false => NewNotification::builder()
+                    .follow_request(follower.id)
+            } else {
+                NewNotification::builder()
                     .receiving_account_id(account.id)
-                    .follow(follower.id),
+                    .follow(follower.id)
             };
             self.db_pool
                 .with_connection(|mut db_conn| {

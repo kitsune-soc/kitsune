@@ -5,13 +5,14 @@ use crate::{
     error::{Error, Result},
 };
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper,
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl,
+    SelectableHelper,
 };
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{Stream, TryStreamExt};
 use kitsune_db::{
-    model::notification::{Notification, NotificationType},
-    schema::notifications,
+    model::notification::{NewNotification, Notification, NotificationType},
+    schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     PgPool,
 };
 use scoped_futures::ScopedFutureExt;
@@ -167,6 +168,84 @@ impl NotificationService {
                 }
                 .scoped()
             })
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn notify_on_new_post(
+        tx: &mut AsyncPgConnection,
+        author_id: Uuid,
+        post_id: Uuid,
+    ) -> Result<()> {
+        let accounts_to_notify: Vec<Uuid> = accounts::table
+            .inner_join(accounts_follows::table.on(accounts::id.eq(accounts_follows::follower_id)))
+            .filter(
+                accounts_follows::account_id
+                    .eq(author_id)
+                    .and(accounts_follows::notify.eq(true))
+                    .and(accounts::local.eq(true)),
+            )
+            .select(accounts_follows::follower_id)
+            .load_stream::<Uuid>(tx)
+            .await?
+            .try_collect()
+            .await?;
+
+        diesel::insert_into(notifications::table)
+            .values(
+                accounts_to_notify
+                    .iter()
+                    .map(|acc| {
+                        NewNotification::builder()
+                            .receiving_account_id(*acc)
+                            .post(author_id, post_id)
+                    })
+                    .collect::<Vec<Notification>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(tx)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn notify_on_update_post(
+        tx: &mut AsyncPgConnection,
+        author_id: Uuid,
+        post_id: Uuid,
+    ) -> Result<()> {
+        let accounts_to_notify: Vec<Uuid> = posts::table
+            .inner_join(
+                accounts_preferences::table
+                    .on(posts::account_id.eq(accounts_preferences::account_id)),
+            )
+            .inner_join(accounts::table)
+            .filter(
+                posts::reposted_post_id
+                    .eq(post_id)
+                    .and(accounts_preferences::notify_on_repost_update)
+                    .and(accounts::local.eq(true)),
+            )
+            .select(accounts_preferences::account_id)
+            .load_stream::<Uuid>(tx)
+            .await?
+            .try_collect()
+            .await?;
+
+        diesel::insert_into(notifications::table)
+            .values(
+                accounts_to_notify
+                    .iter()
+                    .map(|acc| {
+                        NewNotification::builder()
+                            .receiving_account_id(*acc)
+                            .post_update(author_id, post_id)
+                    })
+                    .collect::<Vec<Notification>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(tx)
             .await?;
 
         Ok(())

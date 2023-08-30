@@ -36,7 +36,7 @@ pub struct NewNotification {
     pub created_at: Timestamp,
 }
 
-#[derive(TypedBuilder)]
+#[derive(TypedBuilder, Clone, Copy)]
 struct NewNotificationExtraFields {
     pub triggering_account_id: Option<Uuid>,
     pub post_id: Option<Uuid>,
@@ -48,7 +48,7 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     NewNotificationBuilder<(__id, (Uuid,), __created_at)>
 {
     pub fn follow(self, triggering_account_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: None,
             notification_type: NotificationType::Follow,
@@ -56,7 +56,7 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     }
 
     pub fn follow_request(self, triggering_account_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: None,
             notification_type: NotificationType::FollowRequest,
@@ -64,7 +64,7 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     }
 
     pub fn favourite(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: Some(post_id),
             notification_type: NotificationType::Favourite,
@@ -72,7 +72,7 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     }
 
     pub fn mention(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: Some(post_id),
             notification_type: NotificationType::Mention,
@@ -80,7 +80,7 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     }
 
     pub fn post(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: Some(post_id),
             notification_type: NotificationType::Post,
@@ -88,14 +88,14 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
     }
 
     pub fn post_update(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
-        self.build(NewNotificationExtraFields {
+        self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
             post_id: Some(post_id),
             notification_type: NotificationType::PostUpdate,
         })
     }
 
-    fn build(self, extra_fields: NewNotificationExtraFields) -> Notification {
+    fn build(self, extra_fields: &NewNotificationExtraFields) -> Notification {
         let built = self.__build();
         Notification {
             id: built.id,

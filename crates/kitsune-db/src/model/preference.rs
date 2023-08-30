@@ -4,6 +4,7 @@ use speedy_uuid::Uuid;
 
 use crate::schema::accounts_preferences;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Deserialize, Serialize, Identifiable, Insertable, Selectable, Queryable)]
 #[diesel(table_name = accounts_preferences)]
 #[diesel(primary_key(account_id))]
