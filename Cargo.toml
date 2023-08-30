@@ -10,6 +10,7 @@ lto = true
 strip = true
 
 [workspace]
+exclude = ["xtask"]
 members = [
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
@@ -31,7 +32,6 @@ members = [
     "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
-    "xtask",
 ]
 resolver = "2"
 
