@@ -1,5 +1,5 @@
 [alias]
-xtask = "run --package xtask --"
+xtask = "run --manifest-path ./xtask/Cargo.toml --"
 
 [build]
 rustdocflags = ["--document-private-items"]

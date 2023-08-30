@@ -5,8 +5,8 @@ edition.workspace = true
 
 [dependencies]
 futures-util = "0.3.28"
-pest = "2.7.2"
-pest_derive = "2.7.2"
+pest = "2.7.3"
+pest_derive = "2.7.3"
 
 [dev-dependencies]
 insta = { version = "1.31.0", features = ["glob"] }
