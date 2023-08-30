@@ -6,11 +6,19 @@ use crate::{
 };
 use axum::{
     debug_handler,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     Json,
 };
 use kitsune_type::mastodon::relationship::Relationship;
+use serde::Deserialize;
 use speedy_uuid::Uuid;
+use utoipa::IntoParams;
+
+#[derive(Deserialize, IntoParams)]
+pub struct GetQuery {
+    #[serde(default)]
+    notify: bool,
+}
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
@@ -27,6 +35,7 @@ pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
+    Query(query): Query<GetQuery>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
@@ -37,7 +46,7 @@ pub async fn post(
         .account_id(id)
         .follower_id(user_data.account.id)
         .build();
-    let follow_accounts = account_service.follow(follow).await?;
+    let follow_accounts = account_service.follow(follow, query.notify).await?;
 
     Ok(Json(
         mastodon_mapper

@@ -189,7 +189,7 @@ impl AccountService {
     /// # Returns
     ///
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
-    pub async fn follow(&self, follow: Follow) -> Result<(Account, Account)> {
+    pub async fn follow(&self, follow: Follow, notify: bool) -> Result<(Account, Account)> {
         let (account, preferences, follower) = self
             .db_pool
             .with_connection(|db_conn| {
@@ -223,6 +223,7 @@ impl AccountService {
             follower_id: follower.id,
             approved_at: None,
             url: url.as_str(),
+            notify,
             created_at: None,
         };
 

@@ -33,11 +33,17 @@ fn default_limit() -> usize {
 
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {
+    #[serde(default)]
     max_id: Option<Uuid>,
+    #[serde(default)]
     since_id: Option<Uuid>,
+    #[serde(default)]
     min_id: Option<Uuid>,
+    #[serde(default)]
     account_id: Option<Uuid>,
+    #[serde(default)]
     types: Vec<NotificationType>,
+    #[serde(default)]
     exclude_types: Vec<NotificationType>,
     #[serde(default = "default_limit")]
     limit: usize,
@@ -52,7 +58,7 @@ pub struct GetQuery {
     ),
     params(GetQuery),
     responses(
-        (status = 200, description = "List of notifications concerning the user", body = Vec<Notification>)
+        (status = StatusCode::OK, description = "List of notifications concerning the user", body = Vec<Notification>)
     ),
 )]
 pub async fn get(
@@ -64,7 +70,7 @@ pub async fn get(
     AuthExtractor(user_data): MastodonAuthExtractor,
 ) -> Result<PaginatedJsonResponse<Notification>> {
     let get_notifications = GetNotifications::builder()
-        .account_id(user_data.account.id)
+        .receiving_account_id(user_data.account.id)
         .limit(query.limit)
         .since_id(query.since_id)
         .min_id(query.min_id)
@@ -105,9 +111,8 @@ pub async fn get(
     security(
         ("oauth_token" = [])
     ),
-    params(GetQuery),
     responses(
-        (status = 200, description = "A single notification", body = Notification)
+        (status = StatusCode::OK, description = "A single notification", body = Notification)
     ),
 )]
 pub async fn get_by_id(

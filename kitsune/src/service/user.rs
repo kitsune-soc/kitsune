@@ -19,9 +19,10 @@ use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     model::{
         account::{ActorType, NewAccount},
+        preference::Preferences,
         user::{NewUser, User},
     },
-    schema::{accounts, users},
+    schema::{accounts, accounts_preferences, users},
     PgPool,
 };
 use rsa::{
@@ -217,7 +218,20 @@ impl UserService {
                         })
                         .get_result::<User>(tx);
 
-                    let (_account, user) = try_join!(account_fut, user_fut)?;
+                    let preferences_fut = diesel::insert_into(accounts_preferences::table)
+                        .values(Preferences {
+                            account_id,
+                            notify_on_follow: true,
+                            notify_on_follow_request: true,
+                            notify_on_repost: false,
+                            notify_on_favourite: false,
+                            notify_on_mention: true,
+                            notify_on_repost_update: true,
+                        })
+                        .execute(tx);
+
+                    let (_account, user, _preferences) =
+                        try_join!(account_fut, user_fut, preferences_fut)?;
 
                     Ok::<_, Error>(user)
                 }

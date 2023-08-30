@@ -63,6 +63,14 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
         })
     }
 
+    pub fn favourite(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
+        self.build(NewNotificationExtraFields {
+            triggering_account_id: Some(triggering_account_id),
+            post_id: Some(post_id),
+            notification_type: NotificationType::Favourite,
+        })
+    }
+
     pub fn mention(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
         self.build(NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
@@ -76,6 +84,14 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
             triggering_account_id: Some(triggering_account_id),
             post_id: Some(post_id),
             notification_type: NotificationType::Post,
+        })
+    }
+
+    pub fn post_update(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
+        self.build(NewNotificationExtraFields {
+            triggering_account_id: Some(triggering_account_id),
+            post_id: Some(post_id),
+            notification_type: NotificationType::PostUpdate,
         })
     }
 

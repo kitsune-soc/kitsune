@@ -1,10 +1,10 @@
-use diesel::{Identifiable, Queryable, Selectable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
 use crate::schema::accounts_preferences;
 
-#[derive(Clone, Deserialize, Serialize, Identifiable, Selectable, Queryable)]
+#[derive(Clone, Deserialize, Serialize, Identifiable, Insertable, Selectable, Queryable)]
 #[diesel(table_name = accounts_preferences)]
 #[diesel(primary_key(account_id))]
 pub struct Preferences {
@@ -14,4 +14,5 @@ pub struct Preferences {
     pub notify_on_repost: bool,
     pub notify_on_favourite: bool,
     pub notify_on_mention: bool,
+    pub notify_on_repost_update: bool,
 }

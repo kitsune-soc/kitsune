@@ -20,8 +20,8 @@ use crate::{
 use async_stream::try_stream;
 use derive_builder::Builder;
 use diesel::{
-    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
-    SelectableHelper,
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
+    QueryDsl, SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
@@ -38,8 +38,8 @@ use kitsune_db::{
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        accounts, accounts_preferences, media_attachments, notifications, posts, posts_favourites,
-        posts_media_attachments, posts_mentions, users_roles,
+        accounts, accounts_follows, accounts_preferences, media_attachments, notifications, posts,
+        posts_favourites, posts_media_attachments, posts_mentions, users_roles,
     },
     PgPool,
 };
@@ -349,7 +349,8 @@ impl PostService {
                             .iter()
                             .map(|(account_id, _)| account_id),
                     )
-                    .and(accounts_preferences::notify_on_mention.eq(true)),
+                    .and(accounts_preferences::notify_on_mention.eq(true))
+                    .and(accounts::local.eq(true)),
             )
             .select(accounts::id)
             .load_stream::<Uuid>(conn)
@@ -458,6 +459,38 @@ impl PostService {
                     Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
                         .await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
+
+                    let accounts_to_notify: Vec<Uuid> = accounts::table
+                        .inner_join(
+                            accounts_follows::table
+                                .on(accounts::id.eq(accounts_follows::follower_id)),
+                        )
+                        .filter(
+                            accounts_follows::account_id
+                                .eq(post.account_id)
+                                .and(accounts_follows::notify.eq(true))
+                                .and(accounts::local.eq(true)),
+                        )
+                        .select(accounts_follows::follower_id)
+                        .load_stream::<Uuid>(tx)
+                        .await?
+                        .try_collect()
+                        .await?;
+
+                    diesel::insert_into(notifications::table)
+                        .values(
+                            accounts_to_notify
+                                .iter()
+                                .map(|acc| {
+                                    NewNotification::builder()
+                                        .receiving_account_id(*acc)
+                                        .post(post.account_id, post.id)
+                                })
+                                .collect::<Vec<Notification>>(),
+                        )
+                        .on_conflict_do_nothing()
+                        .execute(tx)
+                        .await?;
 
                     Ok::<_, Error>(post)
                 }
@@ -629,6 +662,39 @@ impl PostService {
                         .await?;
                     Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
 
+                    let accounts_to_notify: Vec<Uuid> = posts::table
+                        .inner_join(
+                            accounts_preferences::table
+                                .on(posts::account_id.eq(accounts_preferences::account_id)),
+                        )
+                        .inner_join(accounts::table)
+                        .filter(
+                            posts::reposted_post_id
+                                .eq(post.id)
+                                .and(accounts_preferences::notify_on_repost_update)
+                                .and(accounts::local.eq(true)),
+                        )
+                        .select(accounts_preferences::account_id)
+                        .load_stream::<Uuid>(tx)
+                        .await?
+                        .try_collect()
+                        .await?;
+
+                    diesel::insert_into(notifications::table)
+                        .values(
+                            accounts_to_notify
+                                .iter()
+                                .map(|acc| {
+                                    NewNotification::builder()
+                                        .receiving_account_id(*acc)
+                                        .post_update(post.account_id, post.id)
+                                })
+                                .collect::<Vec<Notification>>(),
+                        )
+                        .on_conflict_do_nothing()
+                        .execute(tx)
+                        .await?;
+
                     Ok::<_, Error>(post)
                 }
                 .scope_boxed()
@@ -715,27 +781,32 @@ impl PostService {
 
         let repost = self
             .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(posts::table)
-                    .values(NewPost {
-                        id,
-                        account_id: repost_post.account_id,
-                        in_reply_to_id: None,
-                        reposted_post_id: Some(post.id),
-                        subject: None,
-                        content: "",
-                        content_source: "",
-                        content_lang: post.content_lang,
-                        link_preview_url: None,
-                        is_sensitive: post.is_sensitive,
-                        visibility: repost_post.visibility,
-                        is_local: true,
-                        url: url.as_str(),
-                        created_at: Some(Timestamp::now_utc()),
-                    })
-                    .returning(Post::as_returning())
-                    .get_result(db_conn)
-                    .scoped()
+            .with_transaction(|tx| {
+                async move {
+                    let post = diesel::insert_into(posts::table)
+                        .values(NewPost {
+                            id,
+                            account_id: repost_post.account_id,
+                            in_reply_to_id: None,
+                            reposted_post_id: Some(post.id),
+                            subject: None,
+                            content: "",
+                            content_source: "",
+                            content_lang: post.content_lang,
+                            link_preview_url: None,
+                            is_sensitive: post.is_sensitive,
+                            visibility: repost_post.visibility,
+                            is_local: true,
+                            url: url.as_str(),
+                            created_at: Some(Timestamp::now_utc()),
+                        })
+                        .returning(Post::as_returning())
+                        .get_result(tx)
+                        .await?;
+
+                    Ok::<_, Error>(post)
+                }
+                .scope_boxed()
             })
             .await?;
 
@@ -831,18 +902,47 @@ impl PostService {
         let url = self.url_service.favourite_url(id);
         let favourite_id = self
             .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(posts_favourites::table)
-                    .values(NewFavourite {
-                        id,
-                        account_id: favouriting_account_id,
-                        post_id: post.id,
-                        url,
-                        created_at: None,
-                    })
-                    .returning(posts_favourites::id)
-                    .get_result(db_conn)
-                    .scoped()
+            .with_transaction(|tx| {
+                async move {
+                    let favourite = diesel::insert_into(posts_favourites::table)
+                        .values(NewFavourite {
+                            id,
+                            account_id: favouriting_account_id,
+                            post_id: post.id,
+                            url,
+                            created_at: None,
+                        })
+                        .returning(posts_favourites::id)
+                        .get_result(tx)
+                        .await?;
+
+                    let account_id = accounts::table
+                        .inner_join(accounts_preferences::table)
+                        .filter(
+                            accounts::id
+                                .eq(post.account_id)
+                                .and(accounts_preferences::notify_on_favourite.eq(true)),
+                        )
+                        .select(accounts::id)
+                        .get_result::<Uuid>(tx)
+                        .await
+                        .optional()?;
+
+                    if let Some(account_id) = account_id {
+                        diesel::insert_into(notifications::table)
+                            .values(
+                                NewNotification::builder()
+                                    .receiving_account_id(account_id)
+                                    .favourite(favouriting_account_id, post.id),
+                            )
+                            .on_conflict_do_nothing()
+                            .execute(tx)
+                            .await?;
+                    }
+
+                    Ok::<_, Error>(favourite)
+                }
+                .scope_boxed()
             })
             .await?;
 

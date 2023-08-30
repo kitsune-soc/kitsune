@@ -25,5 +25,6 @@ pub struct NewFollow<'a> {
     pub follower_id: Uuid,
     pub approved_at: Option<Timestamp>,
     pub url: &'a str,
+    pub notify: bool,
     pub created_at: Option<Timestamp>,
 }

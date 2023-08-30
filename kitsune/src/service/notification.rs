@@ -26,7 +26,7 @@ pub struct NotificationService {
 #[derive(Clone, TypedBuilder)]
 pub struct GetNotifications {
     /// ID of the account whose notifications are getting fetched
-    account_id: Uuid,
+    receiving_account_id: Uuid,
 
     /// ID of the account which triggered the notifications
     #[builder(default)]
@@ -69,8 +69,7 @@ impl NotificationService {
         let mut query = notifications::table
             .filter(
                 notifications::receiving_account_id
-                    .eq(get_notifications.account_id)
-                    .and(notifications::notification_type.eq_any(get_notifications.included_types))
+                    .eq(get_notifications.receiving_account_id)
                     .and(notifications::notification_type.ne_all(get_notifications.excluded_types)),
             )
             .select(Notification::as_select())
@@ -81,7 +80,11 @@ impl NotificationService {
         if let Some(account_id) = get_notifications.triggering_account_id {
             query = query.filter(notifications::triggering_account_id.eq(account_id));
         }
-
+        println!("{:?}", get_notifications.included_types);
+        if !get_notifications.included_types.is_empty() {
+            query = query
+                .filter(notifications::notification_type.eq_any(get_notifications.included_types));
+        }
         if let Some(since_id) = get_notifications.since_id {
             query = query.filter(notifications::id.gt(since_id));
         }
@@ -120,7 +123,7 @@ impl NotificationService {
                                 .and(notifications::receiving_account_id.eq(account_id)),
                         )
                         .select(Notification::as_select())
-                        .get_result(&mut db_conn)
+                        .first(&mut db_conn)
                         .await
                         .optional()
                 }

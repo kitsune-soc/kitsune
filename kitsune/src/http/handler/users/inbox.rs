@@ -151,6 +151,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
                     follower_id: author.id,
                     approved_at,
                     url: activity.id.as_str(),
+                    notify: false,
                     created_at: Some(activity.published),
                 })
                 .returning(accounts_follows::id)
