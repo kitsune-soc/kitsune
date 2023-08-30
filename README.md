@@ -38,6 +38,7 @@ So, as long as this disclaimer is here, make sure to double check all the change
 - `lib/`: Libraries made for Kitsune but with no dependencies on Kitsune-specific code. Easily usable by other projects
 - `proto/`: Any Protobuf definitions for the Kitsune project
 - `public/`: Public web assets
+- `xtask/`: Task-runner polyfill
 
 ## State of federation
 

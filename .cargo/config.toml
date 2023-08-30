@@ -1,10 +1,13 @@
+[alias]
+xtask = "run --package xtask --"
+
 [build]
 rustdocflags = ["--document-private-items"]
 rustflags = [
     "--cfg",
     "uuid_unstable",
     "-C",
-    "target-cpu=native",   # This probably isn't good, could lead to some weird issues but better than end-users having to struggle with arcane `simd-json` errors
+    "target-cpu=native", # This probably isn't good, could lead to some weird issues but better than end-users having to struggle with arcane `simd-json` errors
 ]
 
 [registries.crates-io]

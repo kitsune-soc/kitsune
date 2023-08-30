@@ -31,10 +31,12 @@ members = [
     "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
+    "xtask",
 ]
 resolver = "2"
 
 [workspace.package]
+edition = "2021"
 version = "0.0.1-pre.3"
 
 [patch.crates-io] # Patch to get client credential support for async
