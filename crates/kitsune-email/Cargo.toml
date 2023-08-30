@@ -1,6 +1,6 @@
 [package]
 name = "kitsune-email"
-edition = "2021"
+edition.workspace = true
 version.workspace = true
 
 [dependencies]
