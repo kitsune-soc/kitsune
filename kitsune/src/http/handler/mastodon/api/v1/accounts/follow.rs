@@ -1,21 +1,21 @@
 use crate::{
     error::{ApiError, Result},
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
     mapping::MastodonMapper,
     service::account::{AccountService, Follow},
 };
 use axum::{
     debug_handler,
-    extract::{Path, Query, State},
+    extract::{Path, State},
     Json,
 };
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::IntoParams;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, IntoParams)]
-pub struct GetQuery {
+#[derive(Deserialize, ToSchema)]
+pub struct FollowBody {
     #[serde(default)]
     notify: bool,
 }
@@ -27,6 +27,7 @@ pub struct GetQuery {
     security(
         ("oauth_token" = [])
     ),
+    request_body = FollowBody,
     responses(
         (status = 200, description = "Followed user successfully", body = Relationship)
     ),
@@ -35,8 +36,8 @@ pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
-    Query(query): Query<GetQuery>,
     Path(id): Path<Uuid>,
+    FormOrJson(follow_body): FormOrJson<FollowBody>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
         return Err(ApiError::BadRequest.into());
@@ -46,7 +47,7 @@ pub async fn post(
         .account_id(id)
         .follower_id(user_data.account.id)
         .build();
-    let follow_accounts = account_service.follow(follow, query.notify).await?;
+    let follow_accounts = account_service.follow(follow, follow_body.notify).await?;
 
     Ok(Json(
         mastodon_mapper
