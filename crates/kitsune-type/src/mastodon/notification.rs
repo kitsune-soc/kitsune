@@ -20,8 +20,7 @@ pub enum NotificationType {
 #[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub struct Notification {
     pub id: Uuid,
-    #[serde(rename = "type")]
-    pub _type: NotificationType,
+    pub r#type: NotificationType,
     pub created_at: Timestamp,
     pub account: Account,
     pub status: Option<Status>,

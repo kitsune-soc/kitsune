@@ -583,7 +583,7 @@ impl IntoMastodon for DbNotification {
 
         Ok(Notification {
             id: notification.id,
-            _type: notification.notification_type.into(),
+            r#type: notification.notification_type.into(),
             created_at: notification.created_at,
             account: account.into_mastodon(state).await?,
             status,

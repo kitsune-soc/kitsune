@@ -22,4 +22,4 @@ simd-json = "0.10.6"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.47"
 tracing-log = "0.1.3"
-typed-builder = "0.15.2"
+typed-builder = "0.16.0"
