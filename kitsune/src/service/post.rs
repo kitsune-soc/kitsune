@@ -1135,6 +1135,7 @@ mod test {
     fn update_post_character_limit() {
         let update_post = UpdatePost::builder()
             .post_id(Uuid::now_v7())
+            .account_id(Uuid::now_v7())
             .subject(Some("hello".into()))
             .content(Some("world".into()))
             .build()
