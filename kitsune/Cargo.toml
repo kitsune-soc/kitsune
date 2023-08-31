@@ -31,11 +31,10 @@ axum-extra = { version = "0.7.7", features = [
 axum-flash = "0.7.0"
 base64-simd = "0.8.0"
 bytes = "1.4.0"
-chrono = { version = "0.4.27", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..
+chrono = { version = "0.4.28", default-features = false } # Needed because of oxide-auth. Thinking about forking and porting to time..
 color-eyre = "0.6.2"
 const_format = "0.2.31"
 const-oid = { version = "0.9.5", features = ["db"] }
-dashmap = "5.5.3"
 deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 diesel = "2.1.1"
@@ -50,14 +49,14 @@ garde = { version = "0.14.1", default-features = false, features = [
     "email-idna",
     "regex",
 ] }
-globset = { version = "0.4.13", features = ["simd-accel"] }
+globset = "0.4.13"
 headers = "0.3.8"
 hex-simd = "0.8.0"
 http = "0.2.9"
 human-panic = "1.2.0"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
-jemallocator = { version = "0.5.4", default-features = false, features = [
+tikv-jemallocator = { version = "0.5.4", default-features = false, features = [
     "background_threads",
 ] }
 just-retry = { path = "../lib/just-retry" }
@@ -168,4 +167,4 @@ metrics = [
 oidc = ["dep:openidconnect"]
 
 [build-dependencies]
-vergen = { version = "8.2.4", features = ["build", "git", "gitoxide"] }
+vergen = { version = "8.2.4", features = ["build", "git", "gitcl"] }
