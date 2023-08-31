@@ -164,14 +164,11 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         let preferences = state
             .db_pool
             .with_connection(|mut db_conn| {
-                async move {
-                    accounts_preferences::table
-                        .find(followed_user.id)
-                        .select(Preferences::as_select())
-                        .get_result(&mut db_conn)
-                        .await
-                }
-                .scoped()
+                accounts_preferences::table
+                    .find(followed_user.id)
+                    .select(Preferences::as_select())
+                    .get_result(&mut db_conn)
+                    .scoped()
             })
             .await?;
         if (preferences.notify_on_follow && !followed_user.locked)
@@ -189,13 +186,11 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
             state
                 .db_pool
                 .with_connection(|mut db_conn| {
-                    {
-                        diesel::insert_into(notifications::table)
-                            .values(notification)
-                            .on_conflict_do_nothing()
-                            .execute(&mut db_conn)
-                    }
-                    .scoped()
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(&mut db_conn)
+                        .scoped()
                 })
                 .await?;
         }

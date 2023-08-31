@@ -257,14 +257,11 @@ impl AccountService {
             };
             self.db_pool
                 .with_connection(|mut db_conn| {
-                    async move {
-                        diesel::insert_into(notifications::table)
-                            .values(notification)
-                            .on_conflict_do_nothing()
-                            .execute(&mut db_conn)
-                            .await
-                    }
-                    .scoped()
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(&mut db_conn)
+                        .scoped()
                 })
                 .await?;
         }

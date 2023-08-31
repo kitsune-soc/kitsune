@@ -564,19 +564,17 @@ impl IntoMastodon for DbNotification {
         let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) = state
             .db_pool
             .with_connection(|mut db_conn| {
-                {
-                    notifications::table
-                        .filter(notifications::receiving_account_id.eq(self.receiving_account_id))
-                        .inner_join(
-                            accounts::table
-                                .on(notifications::triggering_account_id
-                                    .eq(accounts::id.nullable())),
-                        )
-                        .left_outer_join(posts::table)
-                        .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
-                        .get_result(&mut db_conn)
-                }
-                .scoped()
+                notifications::table
+                    .filter(notifications::receiving_account_id.eq(self.receiving_account_id))
+                    .inner_join(
+                        accounts::table
+                            .on(notifications::triggering_account_id
+                                .eq(accounts::id.nullable())),
+                    )
+                    .left_outer_join(posts::table)
+                    .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
+                    .get_result(&mut db_conn)
+                    .scoped()
             })
             .await?;
 

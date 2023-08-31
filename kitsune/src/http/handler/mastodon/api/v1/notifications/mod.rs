@@ -75,12 +75,13 @@ pub async fn get(
         .since_id(query.since_id)
         .min_id(query.min_id)
         .max_id(query.max_id)
-        .included_types(query.types.iter().map(|t| t.clone().into()).collect())
+        .included_types(query.types.iter().copied().map(Into::into).collect())
         .excluded_types(
             query
                 .exclude_types
                 .iter()
-                .map(|t| t.clone().into())
+                .copied()
+                .map(Into::into)
                 .collect(),
         )
         .triggering_account_id(query.account_id)
