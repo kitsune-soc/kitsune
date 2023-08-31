@@ -568,8 +568,7 @@ impl IntoMastodon for DbNotification {
                     .filter(notifications::receiving_account_id.eq(self.receiving_account_id))
                     .inner_join(
                         accounts::table
-                            .on(notifications::triggering_account_id
-                                .eq(accounts::id.nullable())),
+                            .on(notifications::triggering_account_id.eq(accounts::id.nullable())),
                     )
                     .left_outer_join(posts::table)
                     .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
