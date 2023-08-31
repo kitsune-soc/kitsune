@@ -62,7 +62,7 @@ CREATE TABLE accounts_preferences (
     notify_on_follow BOOLEAN NOT NULL,
     notify_on_follow_request BOOLEAN NOT NULL,
     notify_on_repost BOOLEAN NOT NULL,
-    notify_on_repost_update BOOLEAN NOT NULL,
+    notify_on_post_update BOOLEAN NOT NULL,
     notify_on_favourite BOOLEAN NOT NULL,
     notify_on_mention BOOLEAN NOT NULL,
 

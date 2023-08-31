@@ -226,7 +226,7 @@ impl UserService {
                             notify_on_repost: false,
                             notify_on_favourite: false,
                             notify_on_mention: true,
-                            notify_on_repost_update: true,
+                            notify_on_post_update: true,
                         })
                         .execute(tx);
 

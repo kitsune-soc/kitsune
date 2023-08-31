@@ -722,7 +722,7 @@ impl PostService {
             .db_pool
             .with_transaction(|tx| {
                 async move {
-                    let post = diesel::insert_into(posts::table)
+                    let new_repost = diesel::insert_into(posts::table)
                         .values(NewPost {
                             id,
                             account_id: repost_post.account_id,
@@ -743,7 +743,15 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Ok::<_, Error>(post)
+                    NotificationService::notify_on_repost(
+                        tx,
+                        post.account_id,
+                        new_repost.account_id,
+                        post.id,
+                    )
+                    .await?;
+
+                    Ok::<_, Error>(new_repost)
                 }
                 .scope_boxed()
             })

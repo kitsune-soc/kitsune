@@ -224,7 +224,7 @@ impl NotificationService {
             .filter(
                 posts::reposted_post_id
                     .eq(post_id)
-                    .and(accounts_preferences::notify_on_repost_update)
+                    .and(accounts_preferences::notify_on_post_update)
                     .and(accounts::local.eq(true)),
             )
             .select(accounts_preferences::account_id)
@@ -247,6 +247,39 @@ impl NotificationService {
             .on_conflict_do_nothing()
             .execute(tx)
             .await?;
+
+        Ok(())
+    }
+
+    pub async fn notify_on_repost(
+        tx: &mut AsyncPgConnection,
+        notified_id: Uuid,
+        reposter: Uuid,
+        post_id: Uuid,
+    ) -> Result<()> {
+        let notified_account_id = accounts::table
+            .inner_join(accounts_preferences::table)
+            .filter(
+                accounts::id
+                    .eq(notified_id)
+                    .and(accounts_preferences::notify_on_repost.eq(true)),
+            )
+            .select(accounts::id)
+            .get_result::<Uuid>(tx)
+            .await
+            .optional()?;
+
+        if let Some(account_id) = notified_account_id {
+            diesel::insert_into(notifications::table)
+                .values(
+                    NewNotification::builder()
+                        .receiving_account_id(account_id)
+                        .repost(reposter, post_id),
+                )
+                .on_conflict_do_nothing()
+                .execute(tx)
+                .await?;
+        }
 
         Ok(())
     }

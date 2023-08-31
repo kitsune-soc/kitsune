@@ -15,5 +15,5 @@ pub struct Preferences {
     pub notify_on_repost: bool,
     pub notify_on_favourite: bool,
     pub notify_on_mention: bool,
-    pub notify_on_repost_update: bool,
+    pub notify_on_post_update: bool,
 }

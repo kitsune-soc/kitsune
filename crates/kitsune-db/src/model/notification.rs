@@ -87,6 +87,14 @@ impl<__id: ::typed_builder::Optional<Uuid>, __created_at: ::typed_builder::Optio
         })
     }
 
+    pub fn repost(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
+        self.build(&NewNotificationExtraFields {
+            triggering_account_id: Some(triggering_account_id),
+            post_id: Some(post_id),
+            notification_type: NotificationType::Repost,
+        })
+    }
+
     pub fn post_update(self, triggering_account_id: Uuid, post_id: Uuid) -> Notification {
         self.build(&NewNotificationExtraFields {
             triggering_account_id: Some(triggering_account_id),
