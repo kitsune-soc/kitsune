@@ -40,38 +40,6 @@ So, as long as this disclaimer is here, make sure to double check all the change
 - `public/`: Public web assets
 - `xtask/`: Task-runner polyfill
 
-## State of federation
-
-We successfully federated with Mastodon on the following functionality:
-
-- Webfinger
-- Actors
-- Posts
-  - Reposts
-    - Incoming
-  - Create
-    - Incoming and outgoing
-  - Delete
-    - Incoming and outgoing
-  - Replies
-    - Incoming and outgoing
-  - Content Warnings
-    - Outgoing
-  - Media attachments
-    - Outgoing
-- Likes
-  - Added
-    - Incoming and outgoing
-  - Removed
-    - Incoming and outgoing
-- Follows
-  - Added
-    - Incoming and outgoing
-  - Removed
-    - Incoming and outgoing
-
-(last updated: 26.05.2023)
-
 ## Contributing
 
 Contributions are very welcome. However, if you intend to change anything more than updating a dependency or fixing a small bug, please open an issue first.
