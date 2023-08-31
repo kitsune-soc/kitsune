@@ -81,7 +81,6 @@ impl NotificationService {
         if let Some(account_id) = get_notifications.triggering_account_id {
             query = query.filter(notifications::triggering_account_id.eq(account_id));
         }
-        println!("{:?}", get_notifications.included_types);
         if !get_notifications.included_types.is_empty() {
             query = query
                 .filter(notifications::notification_type.eq_any(get_notifications.included_types));
