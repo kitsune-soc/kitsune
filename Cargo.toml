@@ -10,6 +10,7 @@ lto = true
 strip = true
 
 [workspace]
+exclude = ["xtask"]
 members = [
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
@@ -35,6 +36,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
+edition = "2021"
 version = "0.0.1-pre.3"
 
 [patch.crates-io] # Patch to get client credential support for async

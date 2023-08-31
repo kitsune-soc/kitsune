@@ -1,11 +1,11 @@
 [package]
 name = "kitsune-cli"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-clap = { version = "4.4.0", features = ["derive"] }
+clap = { version = "4.4.1", features = ["derive"] }
 color-eyre = "0.6.2"
 diesel = "2.1.1"
 diesel-async = "0.3.2"

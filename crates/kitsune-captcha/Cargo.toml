@@ -1,7 +1,7 @@
 [package]
 name = "kitsune-captcha"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 
 [dependencies]
 async-trait = "0.1.73"
