@@ -168,6 +168,10 @@ pub struct UpdatePost {
     #[garde(skip)]
     post_id: Uuid,
 
+    /// ID of the account making the request
+    #[garde(skip)]
+    account_id: Uuid,
+
     /// IDs of the media attachments attached to this post
     ///
     /// These IDs are validated. If one of them doesn't exist, the post is rejected.
@@ -499,41 +503,13 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(delete_post.post_id)
-                    .select(Post::as_select())
-                    .first(db_conn)
-                    .scoped()
-            })
+        let post = self
+            .get_post_with_access_guard(
+                delete_post.post_id,
+                delete_post.account_id,
+                delete_post.user_id,
+            )
             .await?;
-
-        if post.account_id != delete_post.account_id {
-            if let Some(user_id) = delete_post.user_id {
-                let admin_role_count = self
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        users_roles::table
-                            .filter(
-                                users_roles::user_id
-                                    .eq(user_id)
-                                    .and(users_roles::role.eq(Role::Administrator)),
-                            )
-                            .count()
-                            .get_result::<i64>(db_conn)
-                            .scoped()
-                    })
-                    .await?;
-
-                if admin_role_count == 0 {
-                    return Err(ApiError::Unauthorised.into());
-                }
-            } else {
-                return Err(ApiError::Unauthorised.into());
-            }
-        }
 
         self.job_service
             .enqueue(
@@ -562,6 +538,10 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn update(&self, update_post: UpdatePost) -> Result<Post> {
+        let _post = self
+            .get_post_with_access_guard(update_post.post_id, update_post.account_id, None)
+            .await?;
+
         update_post.validate(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
         })?;
@@ -1073,6 +1053,51 @@ impl PostService {
             }
         }
         .boxed()
+    }
+
+    async fn get_post_with_access_guard(
+        &self,
+        post_id: Uuid,
+        account_id: Uuid,
+        user_id: Option<Uuid>,
+    ) -> Result<Post> {
+        let post: Post = self
+            .db_pool
+            .with_connection(|db_conn| {
+                posts::table
+                    .find(post_id)
+                    .select(Post::as_select())
+                    .first(db_conn)
+                    .scoped()
+            })
+            .await?;
+
+        if post.account_id != account_id {
+            if let Some(user_id) = user_id {
+                let admin_role_count = self
+                    .db_pool
+                    .with_connection(|db_conn| {
+                        users_roles::table
+                            .filter(
+                                users_roles::user_id
+                                    .eq(user_id)
+                                    .and(users_roles::role.eq(Role::Administrator)),
+                            )
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .scoped()
+                    })
+                    .await?;
+
+                if admin_role_count == 0 {
+                    return Err(ApiError::Unauthorised.into());
+                }
+            } else {
+                return Err(ApiError::Unauthorised.into());
+            }
+        }
+
+        Ok(post)
     }
 }
 
