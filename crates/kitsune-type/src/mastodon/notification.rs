@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 
 use super::{Account, Status};
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationType {
     Mention,
