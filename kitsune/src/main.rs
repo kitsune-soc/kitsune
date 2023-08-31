@@ -3,7 +3,11 @@
 
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
-use kitsune::{config::Configuration, consts::VERSION, http, job};
+use kitsune::{
+    config::Configuration,
+    consts::{STARTUP_FIGLET, VERSION},
+    http, job,
+};
 use std::{
     borrow::Cow,
     env, future,
@@ -17,21 +21,6 @@ use url::Url;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-
-const STARTUP_FIGLET: &str = r#"
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                           ┃
-┃  ██╗  ██╗██╗████████╗███████╗██╗   ██╗███╗   ██╗███████╗  ┃
-┃  ██║ ██╔╝██║╚══██╔══╝██╔════╝██║   ██║████╗  ██║██╔════╝  ┃
-┃  █████╔╝ ██║   ██║   ███████╗██║   ██║██╔██╗ ██║█████╗    ┃
-┃  ██╔═██╗ ██║   ██║   ╚════██║██║   ██║██║╚██╗██║██╔══╝    ┃
-┃  ██║  ██╗██║   ██║   ███████║╚██████╔╝██║ ╚████║███████╗  ┃
-┃  ╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝  ┃
-┃                                                           ┃
-┃            ActivityPub-federated microblogging            ┃
-┃                                                           ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-"#;
 
 fn install_handlers() -> eyre::Result<()> {
     let (eyre_panic_hook, eyre_hook) = HookBuilder::new().into_hooks();
