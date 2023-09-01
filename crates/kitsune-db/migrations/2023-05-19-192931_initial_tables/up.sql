@@ -42,6 +42,7 @@ CREATE TABLE accounts_follows (
     follower_id UUID NOT NULL,
     approved_at TIMESTAMPTZ,
     url TEXT NOT NULL UNIQUE,
+    notify BOOLEAN NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -55,6 +56,19 @@ CREATE TABLE accounts_follows (
 
 CREATE INDEX "idx-accounts_follows-account_id" ON accounts_follows (account_id);
 CREATE INDEX "idx-accounts_follows-follower_id" ON accounts_follows (follower_id);
+
+CREATE TABLE accounts_preferences (
+    account_id UUID PRIMARY KEY,
+    notify_on_follow BOOLEAN NOT NULL,
+    notify_on_follow_request BOOLEAN NOT NULL,
+    notify_on_repost BOOLEAN NOT NULL,
+    notify_on_post_update BOOLEAN NOT NULL,
+    notify_on_favourite BOOLEAN NOT NULL,
+    notify_on_mention BOOLEAN NOT NULL,
+
+    -- Foreign key constraints
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 CREATE TABLE users (
     id UUID PRIMARY KEY,

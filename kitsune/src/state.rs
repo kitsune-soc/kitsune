@@ -9,6 +9,7 @@ use crate::{
         instance::InstanceService,
         job::JobService,
         mailing::MailingService,
+        notification::NotificationService,
         oauth2::{OAuth2Service, OAuthEndpoint},
         post::PostService,
         timeline::TimelineService,
@@ -46,6 +47,7 @@ impl_from_ref! {
         AttachmentService => |input: &Zustand| input.service.attachment.clone(),
         FederationFilterService => |input: &Zustand| input.service.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
+        NotificationService => |input: &Zustand| input.service.notification.clone(),
         OAuth2Service => |input: &Zustand| input.service.oauth2.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         SearchService => |input: &Zustand| input.service.search.clone(),
@@ -126,6 +128,7 @@ pub struct Service {
     pub federation_filter: FederationFilterService,
     pub job: JobService,
     pub mailing: MailingService,
+    pub notification: NotificationService,
     pub oauth2: OAuth2Service,
     #[cfg(feature = "oidc")]
     pub oidc: Option<OidcService>,

@@ -1,6 +1,7 @@
 use super::{
     instance::InstanceService,
     job::{Enqueue, JobService},
+    notification::NotificationService,
     url::UrlService,
 };
 use crate::{
@@ -24,7 +25,7 @@ use diesel::{
     SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream::BoxStream, Stream, StreamExt};
+use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -32,13 +33,14 @@ use kitsune_db::{
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
+        notification::{NewNotification, Notification},
         post::{NewPost, Post, PostChangeset, PostSource, Visibility},
         user_role::Role,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        media_attachments, posts, posts_favourites, posts_media_attachments, posts_mentions,
-        users_roles,
+        accounts, accounts_preferences, media_attachments, notifications, posts, posts_favourites,
+        posts_media_attachments, posts_mentions, users_roles,
     },
     PgPool,
 };
@@ -165,6 +167,10 @@ pub struct UpdatePost {
     /// ID of the post that is supposed to be updated
     #[garde(skip)]
     post_id: Uuid,
+
+    /// ID of the account making the request
+    #[garde(skip)]
+    account_id: Uuid,
 
     /// IDs of the media attachments attached to this post
     ///
@@ -316,6 +322,7 @@ impl PostService {
 
     async fn process_mentions(
         conn: &mut AsyncPgConnection,
+        author_id: Uuid,
         post_id: Uuid,
         mentioned_account_ids: Vec<(Uuid, String)>,
     ) -> Result<()> {
@@ -333,6 +340,39 @@ impl PostService {
                         mention_text,
                     })
                     .collect::<Vec<NewMention<'_>>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        let accounts_to_notify: Vec<Uuid> = accounts::table
+            .inner_join(accounts_preferences::table)
+            .filter(
+                accounts_preferences::account_id
+                    .eq_any(
+                        mentioned_account_ids
+                            .iter()
+                            .map(|(account_id, _)| account_id),
+                    )
+                    .and(accounts_preferences::notify_on_mention.eq(true))
+                    .and(accounts::local.eq(true)),
+            )
+            .select(accounts::id)
+            .load_stream::<Uuid>(conn)
+            .await?
+            .try_collect()
+            .await?;
+
+        diesel::insert_into(notifications::table)
+            .values(
+                accounts_to_notify
+                    .iter()
+                    .map(|acc| {
+                        NewNotification::builder()
+                            .receiving_account_id(*acc)
+                            .mention(author_id, post_id)
+                    })
+                    .collect::<Vec<Notification>>(),
             )
             .on_conflict_do_nothing()
             .execute(conn)
@@ -421,8 +461,10 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
+                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
+                        .await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
+                    NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
                     Ok::<_, Error>(post)
                 }
@@ -461,41 +503,13 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, open a bug report.
     pub async fn delete(&self, delete_post: DeletePost) -> Result<()> {
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(delete_post.post_id)
-                    .select(Post::as_select())
-                    .first(db_conn)
-                    .scoped()
-            })
+        let post = self
+            .get_post_with_access_guard(
+                delete_post.post_id,
+                delete_post.account_id,
+                delete_post.user_id,
+            )
             .await?;
-
-        if post.account_id != delete_post.account_id {
-            if let Some(user_id) = delete_post.user_id {
-                let admin_role_count = self
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        users_roles::table
-                            .filter(
-                                users_roles::user_id
-                                    .eq(user_id)
-                                    .and(users_roles::role.eq(Role::Administrator)),
-                            )
-                            .count()
-                            .get_result::<i64>(db_conn)
-                            .scoped()
-                    })
-                    .await?;
-
-                if admin_role_count == 0 {
-                    return Err(ApiError::Unauthorised.into());
-                }
-            } else {
-                return Err(ApiError::Unauthorised.into());
-            }
-        }
 
         self.job_service
             .enqueue(
@@ -524,6 +538,10 @@ impl PostService {
     ///
     /// This should never ever panic. If it does, create a bug report.
     pub async fn update(&self, update_post: UpdatePost) -> Result<Post> {
+        let _post = self
+            .get_post_with_access_guard(update_post.post_id, update_post.account_id, None)
+            .await?;
+
         update_post.validate(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
         })?;
@@ -590,8 +608,11 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.id, mentioned_account_ids).await?;
+                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
+                        .await?;
                     Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
+                    NotificationService::notify_on_update_post(tx, post.account_id, post.id)
+                        .await?;
 
                     Ok::<_, Error>(post)
                 }
@@ -679,27 +700,40 @@ impl PostService {
 
         let repost = self
             .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(posts::table)
-                    .values(NewPost {
-                        id,
-                        account_id: repost_post.account_id,
-                        in_reply_to_id: None,
-                        reposted_post_id: Some(post.id),
-                        subject: None,
-                        content: "",
-                        content_source: "",
-                        content_lang: post.content_lang,
-                        link_preview_url: None,
-                        is_sensitive: post.is_sensitive,
-                        visibility: repost_post.visibility,
-                        is_local: true,
-                        url: url.as_str(),
-                        created_at: Some(Timestamp::now_utc()),
-                    })
-                    .returning(Post::as_returning())
-                    .get_result(db_conn)
-                    .scoped()
+            .with_transaction(|tx| {
+                async move {
+                    let new_repost = diesel::insert_into(posts::table)
+                        .values(NewPost {
+                            id,
+                            account_id: repost_post.account_id,
+                            in_reply_to_id: None,
+                            reposted_post_id: Some(post.id),
+                            subject: None,
+                            content: "",
+                            content_source: "",
+                            content_lang: post.content_lang,
+                            link_preview_url: None,
+                            is_sensitive: post.is_sensitive,
+                            visibility: repost_post.visibility,
+                            is_local: true,
+                            url: url.as_str(),
+                            created_at: Some(Timestamp::now_utc()),
+                        })
+                        .returning(Post::as_returning())
+                        .get_result(tx)
+                        .await?;
+
+                    NotificationService::notify_on_repost(
+                        tx,
+                        post.account_id,
+                        new_repost.account_id,
+                        post.id,
+                    )
+                    .await?;
+
+                    Ok::<_, Error>(new_repost)
+                }
+                .scope_boxed()
             })
             .await?;
 
@@ -795,18 +829,47 @@ impl PostService {
         let url = self.url_service.favourite_url(id);
         let favourite_id = self
             .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(posts_favourites::table)
-                    .values(NewFavourite {
-                        id,
-                        account_id: favouriting_account_id,
-                        post_id: post.id,
-                        url,
-                        created_at: None,
-                    })
-                    .returning(posts_favourites::id)
-                    .get_result(db_conn)
-                    .scoped()
+            .with_transaction(|tx| {
+                async move {
+                    let favourite = diesel::insert_into(posts_favourites::table)
+                        .values(NewFavourite {
+                            id,
+                            account_id: favouriting_account_id,
+                            post_id: post.id,
+                            url,
+                            created_at: None,
+                        })
+                        .returning(posts_favourites::id)
+                        .get_result(tx)
+                        .await?;
+
+                    let account_id = accounts::table
+                        .inner_join(accounts_preferences::table)
+                        .filter(
+                            accounts::id
+                                .eq(post.account_id)
+                                .and(accounts_preferences::notify_on_favourite.eq(true)),
+                        )
+                        .select(accounts::id)
+                        .get_result::<Uuid>(tx)
+                        .await
+                        .optional()?;
+
+                    if let Some(account_id) = account_id {
+                        diesel::insert_into(notifications::table)
+                            .values(
+                                NewNotification::builder()
+                                    .receiving_account_id(account_id)
+                                    .favourite(favouriting_account_id, post.id),
+                            )
+                            .on_conflict_do_nothing()
+                            .execute(tx)
+                            .await?;
+                    }
+
+                    Ok::<_, Error>(favourite)
+                }
+                .scope_boxed()
             })
             .await?;
 
@@ -991,6 +1054,51 @@ impl PostService {
         }
         .boxed()
     }
+
+    async fn get_post_with_access_guard(
+        &self,
+        post_id: Uuid,
+        account_id: Uuid,
+        user_id: Option<Uuid>,
+    ) -> Result<Post> {
+        let post: Post = self
+            .db_pool
+            .with_connection(|db_conn| {
+                posts::table
+                    .find(post_id)
+                    .select(Post::as_select())
+                    .first(db_conn)
+                    .scoped()
+            })
+            .await?;
+
+        if post.account_id != account_id {
+            if let Some(user_id) = user_id {
+                let admin_role_count = self
+                    .db_pool
+                    .with_connection(|db_conn| {
+                        users_roles::table
+                            .filter(
+                                users_roles::user_id
+                                    .eq(user_id)
+                                    .and(users_roles::role.eq(Role::Administrator)),
+                            )
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .scoped()
+                    })
+                    .await?;
+
+                if admin_role_count == 0 {
+                    return Err(ApiError::Unauthorised.into());
+                }
+            } else {
+                return Err(ApiError::Unauthorised.into());
+            }
+        }
+
+        Ok(post)
+    }
 }
 
 #[cfg(test)]
@@ -1027,6 +1135,7 @@ mod test {
     fn update_post_character_limit() {
         let update_post = UpdatePost::builder()
             .post_id(Uuid::now_v7())
+            .account_id(Uuid::now_v7())
             .subject(Some("hello".into()))
             .content(Some("world".into()))
             .build()

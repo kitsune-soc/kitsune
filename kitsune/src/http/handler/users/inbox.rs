@@ -17,10 +17,12 @@ use kitsune_db::{
         account::Account,
         favourite::NewFavourite,
         follower::NewFollow,
+        notification::NewNotification,
         post::{NewPost, Post},
+        preference::Preferences,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
-    schema::{accounts_follows, posts, posts_favourites},
+    schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
 };
 use kitsune_type::ap::{Activity, ActivityType};
 use scoped_futures::ScopedFutureExt;
@@ -149,6 +151,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
                     follower_id: author.id,
                     approved_at,
                     url: activity.id.as_str(),
+                    notify: false,
                     created_at: Some(activity.published),
                 })
                 .returning(accounts_follows::id)
@@ -158,6 +161,39 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         .await?;
 
     if followed_user.local {
+        let preferences = state
+            .db_pool
+            .with_connection(|mut db_conn| {
+                accounts_preferences::table
+                    .find(followed_user.id)
+                    .select(Preferences::as_select())
+                    .get_result(&mut db_conn)
+                    .scoped()
+            })
+            .await?;
+        if (preferences.notify_on_follow && !followed_user.locked)
+            || (preferences.notify_on_follow_request && followed_user.locked)
+        {
+            let notification = if followed_user.locked {
+                NewNotification::builder()
+                    .receiving_account_id(followed_user.id)
+                    .follow_request(author.id)
+            } else {
+                NewNotification::builder()
+                    .receiving_account_id(followed_user.id)
+                    .follow(author.id)
+            };
+            state
+                .db_pool
+                .with_connection(|mut db_conn| {
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(&mut db_conn)
+                        .scoped()
+                })
+                .await?;
+        }
         state
             .service
             .job

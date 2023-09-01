@@ -163,10 +163,12 @@ async fn post(
 async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
+    AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
     FormOrJson(form): FormOrJson<UpdateForm>,
 ) -> Result<Json<Status>> {
     let update_post = UpdatePost::builder()
+        .account_id(user_data.account.id)
         .post_id(id)
         .content(form.status)
         .media_ids(form.media_ids)

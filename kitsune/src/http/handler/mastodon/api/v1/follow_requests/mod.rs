@@ -48,7 +48,7 @@ pub struct GetQuery {
     ),
     params(GetQuery),
     responses(
-        (status = 200, description = "List of accounts requesting a follow", body = Relationship)
+        (status = 200, description = "List of accounts requesting a follow", body = Vec<Account>)
     ),
 )]
 pub async fn get(
