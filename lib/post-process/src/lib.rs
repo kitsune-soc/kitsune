@@ -56,7 +56,7 @@ pub enum LogosLexer<'a> {
     #[regex(r":[\w\d-]+:")]
     Emote,
 
-    #[regex(r"[\w]+://[\w\-_]+\.\w+[/[^\s]]+")]
+    #[regex(r"[\w]+://[^\s]+")]
     Link,
 }
 
