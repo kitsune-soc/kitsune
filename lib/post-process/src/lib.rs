@@ -8,7 +8,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use futures_util::{pin_mut, stream, StreamExt};
-use logos::{Lexer, Logos};
+use logos::{Lexer, Logos, Span};
 use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
 
 /// Boxed error
@@ -45,16 +45,22 @@ fn mention_split<'a>(lexer: &Lexer<'a, LogosLexer<'a>>) -> Option<(&'a str, Opti
 
 #[derive(Debug, Logos, PartialEq)]
 pub enum LogosLexer<'a> {
-    #[regex(r"#[\w_-]+", enforce_prefix)]
-    Hashtag,
+    #[regex(
+        r":[\w\d-]+:",
+        |lexer| lexer.slice().trim_matches(':'),
+    )]
+    Emote(&'a str),
+
+    #[regex(
+        r"#[\w_-]+",
+        |lexer| enforce_prefix(lexer).then(|| lexer.slice().trim_start_matches('#')),
+    )]
+    Hashtag(&'a str),
 
     #[regex(r"@[\w\-_]+(@[\w\-_]+\.\w+)?", mention_split)]
-    Username((&'a str, Option<&'a str>)),
+    Mention((&'a str, Option<&'a str>)),
 
-    #[regex(r":[\w\d-]+:")]
-    Emote,
-
-    #[regex(r"[\w]+://[^\s]+")]
+    #[regex(r"[\w]+://[^\s<]+")]
     Link,
 }
 
@@ -64,7 +70,7 @@ pub enum LogosLexer<'a> {
 #[derive(Clone)]
 pub struct Transformer<'a, F, T>
 where
-    F: Fn(Element<'a>) -> T,
+    F: FnMut(Element<'a>) -> T,
     T: Future<Output = Result<Element<'a>>>,
 {
     transformation: F,
@@ -95,16 +101,29 @@ where
     /// This should never panic. If it does, please submit an issue
     pub async fn transform(&self, text: &'a str) -> Result<String> {
         let transformed = {
-            let pairs = PostParser::parse(Rule::post, text).unwrap();
-            let elements: Vec<Element<'a>> = Element::from_pairs(pairs).collect();
-            stream::iter(elements).then(&self.transformation)
+            let pairs = Lexer::<'_, LogosLexer<'_>>::new(text)
+                .spanned()
+                .flat_map(|(token, span)| token.map(|token| (token, span)))
+                .map(|(token, span)| (token, span.clone(), &text[span]));
+
+            let elements = Element::from_pairs(pairs)
+                .collect::<Vec<(Span, Element<'a>)>>()
+                .into_iter()
+                .rev();
+
+            stream::iter(elements).then(|(span, element)| async move {
+                Ok::<_, BoxError>((span, (self.transformation)(element).await?))
+            })
         };
 
         pin_mut!(transformed);
 
-        let mut out = String::new();
-        while let Some(elem) = transformed.next().await.transpose()? {
-            elem.render(&mut out);
+        let mut buffer = String::new();
+        let mut out = text.to_string();
+        while let Some((range, element)) = transformed.next().await.transpose()? {
+            buffer.clear();
+            element.render(&mut buffer);
+            out.replace_range(range, &buffer);
         }
 
         Ok(out)
@@ -141,58 +160,31 @@ pub enum Element<'a> {
 
 impl<'a> Element<'a> {
     /// Generate a bunch of elements from their `Pairs` representation
-    ///
-    /// # Panics
-    ///
-    /// This should never panic. If it ever does, please submit an issue.
-    pub fn from_pairs(pairs: Pairs<'a, Rule>) -> impl Iterator<Item = Element<'a>> {
-        pairs.flat_map(|pair| match pair.as_rule() {
-            Rule::emote => {
-                let content = pair.into_inner().next().unwrap();
+    pub fn from_pairs(
+        pairs: impl Iterator<Item = (LogosLexer<'a>, Span, &'a str)>,
+    ) -> impl Iterator<Item = (Span, Element<'a>)> {
+        pairs.map(|(item, span, capture)| {
+            let element = match item {
+                LogosLexer::Emote(name) => Self::Emote(Emote {
+                    content: Cow::Borrowed(name),
+                }),
+                LogosLexer::Hashtag(content) => Self::Hashtag(Hashtag {
+                    content: Cow::Borrowed(content),
+                }),
+                LogosLexer::Mention((username, domain)) => {
+                    let domain = domain.map(Cow::Borrowed);
 
-                vec![Self::Emote(Emote {
-                    content: Cow::Borrowed(content.as_str()),
-                })]
-            }
-            Rule::hashtag => {
-                let mut hashtag = pair.into_inner();
-                let prefix = hashtag.next().unwrap();
-                let content = hashtag.next().unwrap();
-
-                vec![
-                    Self::Text(Text {
-                        content: Cow::Borrowed(prefix.as_str()),
-                    }),
-                    Self::Hashtag(Hashtag {
-                        content: Cow::Borrowed(content.as_str()),
-                    }),
-                ]
-            }
-            Rule::mention => {
-                let mut mention = pair.into_inner();
-                let prefix = mention.next().unwrap();
-                let username = mention.next().unwrap();
-                let domain = mention.next().map(|domain| Cow::Borrowed(domain.as_str()));
-
-                vec![
-                    Self::Text(Text {
-                        content: Cow::Borrowed(prefix.as_str()),
-                    }),
                     Self::Mention(Mention {
-                        username: Cow::Borrowed(username.as_str()),
+                        username: Cow::Borrowed(username),
                         domain,
-                    }),
-                ]
-            }
-            Rule::text => vec![Self::Text(Text {
-                content: Cow::Borrowed(pair.as_str()),
-            })],
-            Rule::link => {
-                vec![Self::Link(Link {
-                    content: Cow::Borrowed(pair.as_str()),
-                })]
-            }
-            _ => unreachable!(),
+                    })
+                }
+                LogosLexer::Link => Self::Link(Link {
+                    content: Cow::Borrowed(capture),
+                }),
+            };
+
+            (span, element)
         })
     }
 }
@@ -340,7 +332,7 @@ mod test {
     fn logos_emote() {
         let mut test = LogosLexer::lexer(":hello:");
 
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Emote)));
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Emote("hello"))));
         assert_eq!(test.slice(), ":hello:");
 
         assert_eq!(test.next(), None);
@@ -352,12 +344,12 @@ mod test {
 
         assert_eq!(test.next(), Some(Err(())));
 
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag)));
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag("test"))));
         assert_eq!(test.slice(), "#test");
 
         assert_eq!(test.next(), Some(Err(())));
 
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag)));
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag("龍が如く0"))));
         assert_eq!(test.slice(), "#龍が如く0");
 
         assert_eq!(test.next(), None);
@@ -367,13 +359,13 @@ mod test {
     fn logos_mention() {
         let mut test = LogosLexer::lexer("@test");
 
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Username(("test", None)))));
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Mention(("test", None)))));
         assert_eq!(test.next(), None);
 
         let mut test = LogosLexer::lexer("@test@example.org");
         assert_eq!(
             test.next(),
-            Some(Ok(LogosLexer::Username(("test", Some("example.org")))))
+            Some(Ok(LogosLexer::Mention(("test", Some("example.org")))))
         );
     }
 }

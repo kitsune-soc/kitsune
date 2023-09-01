@@ -1,53 +1,12 @@
 ---
-source: post-process/tests/mixed.rs
-expression: "PostParser::parse(Rule::post, &post).unwrap()"
-input_file: post-process/tests/input/mixed/mixed_content_2
+source: lib/post-process/tests/mixed.rs
+expression: parse_to_test_output(&post)
+input_file: lib/post-process/tests/input/mixed/mixed_content_2
 ---
 [
-    Pair {
-        rule: text,
-        span: Span {
-            str: "<p>hello world! check out my github: ",
-            start: 0,
-            end: 37,
-        },
-        inner: [],
-    },
-    Pair {
-        rule: link,
-        span: Span {
-            str: "https://github.com/aumetra",
-            start: 37,
-            end: 63,
-        },
-        inner: [
-            Pair {
-                rule: link_schema,
-                span: Span {
-                    str: "https",
-                    start: 37,
-                    end: 42,
-                },
-                inner: [],
-            },
-            Pair {
-                rule: link_content,
-                span: Span {
-                    str: "github.com/aumetra",
-                    start: 45,
-                    end: 63,
-                },
-                inner: [],
-            },
-        ],
-    },
-    Pair {
-        rule: text,
-        span: Span {
-            str: "</p>",
-            start: 63,
-            end: 67,
-        },
-        inner: [],
-    },
+    (
+        Link,
+        37..63,
+        "https://github.com/aumetra",
+    ),
 ]

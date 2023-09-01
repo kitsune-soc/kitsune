@@ -1,35 +1,12 @@
 ---
-source: post-process/tests/link.rs
-expression: "PostParser::parse(Rule::link, &link).unwrap()"
-input_file: post-process/tests/input/link/only_link_1
+source: lib/post-process/tests/link.rs
+expression: parse_to_test_output(&link)
+input_file: lib/post-process/tests/input/link/only_link_1
 ---
 [
-    Pair {
-        rule: link,
-        span: Span {
-            str: "https://upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
-            start: 0,
-            end: 65,
-        },
-        inner: [
-            Pair {
-                rule: link_schema,
-                span: Span {
-                    str: "https",
-                    start: 0,
-                    end: 5,
-                },
-                inner: [],
-            },
-            Pair {
-                rule: link_content,
-                span: Span {
-                    str: "upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
-                    start: 8,
-                    end: 65,
-                },
-                inner: [],
-            },
-        ],
-    },
+    (
+        Link,
+        0..65,
+        "https://upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
+    ),
 ]
