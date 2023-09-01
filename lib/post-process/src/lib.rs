@@ -9,8 +9,6 @@
 
 use futures_util::{pin_mut, stream, StreamExt};
 use logos::{Lexer, Logos};
-use pest::{iterators::Pairs, Parser};
-use pest_derive::Parser;
 use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
 
 /// Boxed error
@@ -59,11 +57,6 @@ pub enum LogosLexer<'a> {
     #[regex(r"[\w]+://[^\s]+")]
     Link,
 }
-
-/// Pest-based parser
-#[derive(Parser)]
-#[grammar = "../grammar/post.pest"]
-pub struct PostParser;
 
 /// Post transformer
 ///
