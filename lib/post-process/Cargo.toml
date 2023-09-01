@@ -15,7 +15,6 @@ criterion = { version = "0.5.1", default-features = false, features = [
     "cargo_bench_support",
     "async_futures",
     "rayon",
-    "real_blackbox",
 ] }
 futures = "0.3.28"
 insta = { version = "1.31.0", features = ["glob"] }
