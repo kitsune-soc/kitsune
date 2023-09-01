@@ -73,14 +73,16 @@ where
     F: Fn(Element<'a>) -> Fut,
     Fut: Future<Output = Result<Element<'a>>>,
 {
-    let pairs = Lexer::new(text)
-        .spanned()
-        .flat_map(|(token, span)| token.map(|token| (token, span)));
+    let element_iter = {
+        let pairs = Lexer::new(text)
+            .spanned()
+            .flat_map(|(token, span)| token.map(|token| (token, span)));
 
-    let element_iter = Element::from_pairs(pairs)
-        .collect::<Vec<(Element<'a>, Span)>>()
-        .into_iter()
-        .rev();
+        Element::from_pairs(pairs)
+            .collect::<Vec<(Element<'a>, Span)>>()
+            .into_iter()
+            .rev()
+    };
 
     let mut out = text.to_string();
     let mut buffer = String::new();
