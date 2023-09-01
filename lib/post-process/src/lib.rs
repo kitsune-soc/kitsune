@@ -61,7 +61,7 @@ pub enum PostElement<'a> {
     Mention((&'a str, Option<&'a str>)),
 
     #[regex(r"[\w]+://[^\s<]+")]
-    Link,
+    Link(&'a str),
 }
 
 /// Transform a post
@@ -78,14 +78,14 @@ where
         let pairs = Lexer::new(text)
             .spanned()
             .flat_map(|(token, span)| token.map(|token| (token, span)))
-            .map(|(token, span)| (token, span.clone(), &text[span]));
+            .map(|(token, span)| (token, span));
 
         let elements = Element::from_pairs(pairs)
-            .collect::<Vec<(Span, Element<'a>)>>()
+            .collect::<Vec<(Element<'a>, Span)>>()
             .into_iter()
             .rev();
 
-        stream::iter(elements).then(move |(span, element)| {
+        stream::iter(elements).then(move |(element, span)| {
             let transformation = (transformer)(element);
             async move { Ok::<_, BoxError>((span, transformation.await?)) }
         })
@@ -135,9 +135,9 @@ pub enum Element<'a> {
 impl<'a> Element<'a> {
     /// Generate a bunch of elements from their `Pairs` representation
     pub fn from_pairs(
-        pairs: impl Iterator<Item = (PostElement<'a>, Span, &'a str)>,
-    ) -> impl Iterator<Item = (Span, Element<'a>)> {
-        pairs.map(|(item, span, capture)| {
+        pairs: impl Iterator<Item = (PostElement<'a>, Span)>,
+    ) -> impl Iterator<Item = (Element<'a>, Span)> {
+        pairs.map(|(item, span)| {
             let element = match item {
                 PostElement::Emote(name) => Self::Emote(Emote {
                     content: Cow::Borrowed(name),
@@ -153,12 +153,12 @@ impl<'a> Element<'a> {
                         domain,
                     })
                 }
-                PostElement::Link => Self::Link(Link {
-                    content: Cow::Borrowed(capture),
+                PostElement::Link(content) => Self::Link(Link {
+                    content: Cow::Borrowed(content),
                 }),
             };
 
-            (span, element)
+            (element, span)
         })
     }
 }

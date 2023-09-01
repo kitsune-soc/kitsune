@@ -5,7 +5,9 @@ input_file: lib/post-process/tests/input/mixed/mixed_content_2
 ---
 [
     (
-        Link,
+        Link(
+            "https://github.com/aumetra",
+        ),
         37..63,
         "https://github.com/aumetra",
     ),

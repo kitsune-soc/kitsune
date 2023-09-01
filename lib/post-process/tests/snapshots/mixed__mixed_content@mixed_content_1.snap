@@ -22,7 +22,9 @@ input_file: lib/post-process/tests/input/mixed/mixed_content_1
         "#龍が如く7",
     ),
     (
-        Link,
+        Link(
+            "https://upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
+        ),
         43..108,
         "https://upload.wikimedia.org/wikipedia/en/3/3b/GoroMajimafive.jpg",
     ),
