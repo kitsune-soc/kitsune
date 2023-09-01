@@ -22,6 +22,7 @@ pub use crate::{
 mod error;
 mod pool;
 
+pub mod activity;
 pub mod function;
 pub mod json;
 pub mod lang;

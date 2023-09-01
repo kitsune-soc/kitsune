@@ -5,8 +5,8 @@ use crate::{
 };
 use async_trait::async_trait;
 use diesel::{
-    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
-    SelectableHelper,
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
+    OptionalExtension, QueryDsl, SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
@@ -20,9 +20,12 @@ use kitsune_db::{
             MediaAttachment as DbMediaAttachment, PostMediaAttachment as DbPostMediaAttachment,
         },
         mention::Mention as DbMention,
+        notification::Notification as DbNotification,
         post::{Post as DbPost, PostSource},
     },
-    schema::{accounts, accounts_follows, media_attachments, posts, posts_favourites},
+    schema::{
+        accounts, accounts_follows, media_attachments, notifications, posts, posts_favourites,
+    },
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -33,7 +36,7 @@ use kitsune_type::mastodon::{
     preview_card::PreviewType,
     relationship::Relationship,
     status::{Mention, StatusSource},
-    Account, MediaAttachment, PreviewCard, Status,
+    Account, MediaAttachment, Notification, PreviewCard, Status,
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
@@ -545,6 +548,45 @@ impl IntoMastodon for PostSource {
             id: self.id,
             text: self.content,
             spoiler_text: self.subject.unwrap_or_default(),
+        })
+    }
+}
+
+#[async_trait]
+impl IntoMastodon for DbNotification {
+    type Output = Notification;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) = state
+            .db_pool
+            .with_connection(|mut db_conn| {
+                notifications::table
+                    .filter(notifications::receiving_account_id.eq(self.receiving_account_id))
+                    .inner_join(
+                        accounts::table
+                            .on(notifications::triggering_account_id.eq(accounts::id.nullable())),
+                    )
+                    .left_outer_join(posts::table)
+                    .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
+                    .get_result(&mut db_conn)
+                    .scoped()
+            })
+            .await?;
+
+        let status = OptionFuture::from(status.map(|status| status.into_mastodon(state)))
+            .await
+            .transpose()?;
+
+        Ok(Notification {
+            id: notification.id,
+            r#type: notification.notification_type.into(),
+            created_at: notification.created_at,
+            account: account.into_mastodon(state).await?,
+            status,
         })
     }
 }

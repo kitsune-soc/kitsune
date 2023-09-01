@@ -79,6 +79,7 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
+use service::notification::NotificationService;
 use std::{
     fmt::Display,
     str::FromStr,
@@ -363,6 +364,8 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build();
 
+    let notification_service = NotificationService::builder().db_pool(conn.clone()).build();
+
     #[cfg(feature = "oidc")]
     let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
         let service = OidcService::builder()
@@ -438,6 +441,7 @@ pub async fn initialise_state(
             instance: instance_service,
             job: job_service,
             mailing: mailing_service,
+            notification: notification_service,
             oauth2: oauth2_service,
             #[cfg(feature = "oidc")]
             oidc: oidc_service,
