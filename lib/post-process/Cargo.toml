@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 futures-util = "0.3.28"
+logos = "0.13.0"
 pest = "2.7.3"
 pest_derive = "2.7.3"
 

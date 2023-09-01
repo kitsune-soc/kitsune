@@ -8,6 +8,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use futures_util::{pin_mut, stream, StreamExt};
+use logos::{Lexer, Logos};
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
 use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
@@ -17,6 +18,47 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 
 /// Result type with the error branch defaulting to [`BoxError`]
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
+
+fn enforce_prefix<'a>(lexer: &Lexer<'a, LogosLexer<'a>>) -> bool {
+    let start = lexer.span().start;
+    if start == 0 {
+        true
+    } else {
+        lexer.source().as_bytes()[start - 1].is_ascii_whitespace()
+    }
+}
+
+fn mention_split<'a>(lexer: &Lexer<'a, LogosLexer<'a>>) -> Option<(&'a str, Option<&'a str>)> {
+    if !enforce_prefix(lexer) {
+        return None;
+    }
+
+    let slice = lexer.slice();
+    let slice = slice.trim_start_matches('@');
+
+    let mention_data = if let Some((username, domain)) = slice.split_once('@') {
+        (username, Some(domain))
+    } else {
+        (slice, None)
+    };
+
+    Some(mention_data)
+}
+
+#[derive(Debug, Logos, PartialEq)]
+pub enum LogosLexer<'a> {
+    #[regex(r"#[\w_-]+", enforce_prefix)]
+    Hashtag,
+
+    #[regex(r"@[\w\-_]+(@[\w\-_]+\.\w+)?", mention_split)]
+    Username((&'a str, Option<&'a str>)),
+
+    #[regex(r":[\w\d-]+:")]
+    Emote,
+
+    #[regex(r"[\w]+://[\w\-_]+\.\w+[/[^\s]]+")]
+    Link,
+}
 
 /// Pest-based parser
 #[derive(Parser)]
@@ -285,5 +327,60 @@ pub struct Text<'a> {
 impl Render for Text<'_> {
     fn render(&self, out: &mut String) {
         out.push_str(&self.content);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::LogosLexer;
+    use logos::Logos;
+
+    #[test]
+    fn logos_link() {
+        let mut test = LogosLexer::lexer("https://github.com/kitsune-soc/kitsune    ");
+
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Link)));
+        assert_eq!(test.slice(), "https://github.com/kitsune-soc/kitsune");
+    }
+
+    #[test]
+    fn logos_emote() {
+        let mut test = LogosLexer::lexer(":hello:");
+
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Emote)));
+        assert_eq!(test.slice(), ":hello:");
+
+        assert_eq!(test.next(), None);
+    }
+
+    #[test]
+    fn logos_hashtag() {
+        let mut test = LogosLexer::lexer("\n#test #龍が如く0");
+
+        assert_eq!(test.next(), Some(Err(())));
+
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag)));
+        assert_eq!(test.slice(), "#test");
+
+        assert_eq!(test.next(), Some(Err(())));
+
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag)));
+        assert_eq!(test.slice(), "#龍が如く0");
+
+        assert_eq!(test.next(), None);
+    }
+
+    #[test]
+    fn logos_mention() {
+        let mut test = LogosLexer::lexer("@test");
+
+        assert_eq!(test.next(), Some(Ok(LogosLexer::Username(("test", None)))));
+        assert_eq!(test.next(), None);
+
+        let mut test = LogosLexer::lexer("@test@example.org");
+        assert_eq!(
+            test.next(),
+            Some(Ok(LogosLexer::Username(("test", Some("example.org")))))
+        );
     }
 }
