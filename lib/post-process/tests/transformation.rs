@@ -1,12 +1,12 @@
 use futures_util::future;
-use post_process::{Element, Html, Transformer};
+use post_process::{Element, Html};
 use pretty_assertions::assert_eq;
 use std::borrow::Cow;
 
 #[tokio::test]
 async fn link_transformation() {
     let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
-    let transformer = Transformer::new(|elem| async move {
+    let transformed = post_process::transform(text, |elem| async move {
         let transformed = match elem {
             Element::Emote(emote) => Element::Html(Html {
                 tag: Cow::Borrowed("a"),
@@ -40,16 +40,17 @@ async fn link_transformation() {
         };
 
         Ok(transformed)
-    });
+    })
+    .await
+    .unwrap();
 
-    insta::assert_snapshot!(transformer.transform(text).await.unwrap());
+    insta::assert_snapshot!(transformed);
 }
 
 #[tokio::test]
 async fn noop_transformation() {
     let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
-    let transformer = Transformer::new(future::ok);
-    let transformed = transformer.transform(text).await.unwrap();
+    let transformed = post_process::transform(text, future::ok).await.unwrap();
 
     assert_eq!(text, transformed);
 }

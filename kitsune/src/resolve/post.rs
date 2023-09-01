@@ -2,7 +2,7 @@ use crate::{
     error::{Error, Result},
     service::account::{AccountService, GetUser},
 };
-use post_process::{BoxError, Element, Html, Render, Transformer};
+use post_process::{BoxError, Element, Html, Render};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, collections::HashMap};
 use typed_builder::TypedBuilder;
@@ -28,7 +28,7 @@ impl PostResolver {
                 if let Some(account) = self.account.get(get_user).await? {
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
-                    mentioned_accounts.lock().insert(account.id, mention_text);
+                    mentioned_accounts.insert(account.id, mention_text);
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
@@ -66,12 +66,12 @@ impl PostResolver {
     #[instrument(skip_all)]
     pub async fn resolve(&self, content: &str) -> Result<(Vec<(Uuid, String)>, String)> {
         let mut mentioned_account_ids = HashMap::new();
-        let transformer = Transformer::new(|elem| self.transform(elem, &mut mentioned_account_ids));
 
-        let content = transformer
-            .transform(content)
-            .await
-            .map_err(Error::PostProcessing)?;
+        let content = post_process::transform(content, |elem| {
+            self.transform(elem, &mut mentioned_account_ids)
+        })
+        .await
+        .map_err(Error::PostProcessing)?;
 
         Ok((mentioned_account_ids.into_iter().collect(), content))
     }
