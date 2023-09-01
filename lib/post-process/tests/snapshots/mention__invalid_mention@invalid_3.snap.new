@@ -1,0 +1,20 @@
+---
+source: lib/post-process/tests/mention.rs
+assertion_line: 10
+expression: parse_to_test_output(&mention)
+input_file: lib/post-process/tests/input/mention/invalid_3
+---
+[
+    (
+        Mention(
+            (
+                "test",
+                Some(
+                    "hello.world",
+                ),
+            ),
+        ),
+        0..17,
+        "@test@hello.world",
+    ),
+]

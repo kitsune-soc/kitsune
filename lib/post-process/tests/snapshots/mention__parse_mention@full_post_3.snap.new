@@ -1,0 +1,7 @@
+---
+source: lib/post-process/tests/mention.rs
+assertion_line: 26
+expression: parse_to_test_output(&post)
+input_file: lib/post-process/tests/input/mention/full_post_3
+---
+[]

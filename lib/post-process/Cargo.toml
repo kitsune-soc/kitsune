@@ -3,11 +3,16 @@ name = "post-process"
 version.workspace = true
 edition.workspace = true
 
+[[bench]]
+name = "simple"
+harness = false
+
 [dependencies]
 futures-util = "0.3.28"
 logos = "0.13.0"
 
 [dev-dependencies]
+criterion = { version = "0.5.1", features = ["async_futures", "real_blackbox"] }
+futures = "0.3.28"
 insta = { version = "1.31.0", features = ["glob"] }
 pretty_assertions = "1.4.0"
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
