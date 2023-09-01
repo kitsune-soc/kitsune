@@ -1,5 +1,4 @@
-use futures::executor::block_on;
-use futures_util::future;
+use futures::{executor::block_on, future};
 use post_process::{Element, Html};
 use pretty_assertions::assert_eq;
 use std::borrow::Cow;

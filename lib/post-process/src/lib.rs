@@ -7,9 +7,8 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use futures_util::{pin_mut, stream, StreamExt};
 use logos::{Lexer, Logos, Span};
-use std::{borrow::Cow, error::Error, fmt::Write, future::Future};
+use std::{borrow::Cow, error::Error, fmt, future::Future};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -69,35 +68,28 @@ pub enum PostElement<'a> {
 /// # Errors
 ///
 /// - Transformation of an element fails
-pub async fn transform<'a, F, Fut>(text: &'a str, mut transformer: F) -> Result<String>
+pub async fn transform<'a, F, Fut>(text: &'a str, transformer: F) -> Result<String>
 where
-    F: FnMut(Element<'a>) -> Fut + 'a,
+    F: Fn(Element<'a>) -> Fut,
     Fut: Future<Output = Result<Element<'a>>>,
 {
-    let transformed_stream = {
-        let pairs = Lexer::new(text)
-            .spanned()
-            .flat_map(|(token, span)| token.map(|token| (token, span)));
+    let pairs = Lexer::new(text)
+        .spanned()
+        .flat_map(|(token, span)| token.map(|token| (token, span)));
 
-        let elements = Element::from_pairs(pairs)
-            .collect::<Vec<(Element<'a>, Span)>>()
-            .into_iter()
-            .rev();
+    let element_iter = Element::from_pairs(pairs)
+        .collect::<Vec<(Element<'a>, Span)>>()
+        .into_iter()
+        .rev();
 
-        stream::iter(elements).then(move |(element, span)| {
-            let transformation = (transformer)(element);
-            async move { Ok::<_, BoxError>((span, transformation.await?)) }
-        })
-    };
-
-    pin_mut!(transformed_stream);
-
-    let mut buffer = String::new();
     let mut out = text.to_string();
-    while let Some((span, element)) = transformed_stream.next().await.transpose()? {
-        buffer.clear();
+    let mut buffer = String::new();
+
+    for (element, span) in element_iter {
+        let element = transformer(element).await?;
         element.render(&mut buffer);
         out.replace_range(span, &buffer);
+        buffer.clear();
     }
 
     Ok(out)
@@ -106,7 +98,7 @@ where
 /// Render something into a string
 pub trait Render {
     /// Render the element into its string representation
-    fn render(&self, out: &mut String);
+    fn render(&self, out: &mut impl fmt::Write);
 }
 
 /// Elements of a post
@@ -159,7 +151,7 @@ impl<'a> Element<'a> {
 }
 
 impl Render for Element<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         match self {
             Self::Emote(emote) => emote.render(out),
             Self::Hashtag(hashtag) => hashtag.render(out),
@@ -179,7 +171,7 @@ pub struct Emote<'a> {
 }
 
 impl Render for Emote<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         let _ = write!(out, ":{}:", self.content);
     }
 }
@@ -192,7 +184,7 @@ pub struct Hashtag<'a> {
 }
 
 impl Render for Hashtag<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         let _ = write!(out, "#{}", self.content);
     }
 }
@@ -211,12 +203,12 @@ pub struct Html<'a> {
 }
 
 impl Render for Html<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         let _ = write!(out, "<{}", self.tag);
         for (name, value) in &self.attributes {
             let _ = write!(out, " {name}=\"{value}\"");
         }
-        out.push('>');
+        let _ = out.write_char('>');
 
         self.content.render(out);
 
@@ -232,8 +224,8 @@ pub struct Link<'a> {
 }
 
 impl Render for Link<'_> {
-    fn render(&self, out: &mut String) {
-        out.push_str(&self.content);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = out.write_str(&self.content);
     }
 }
 
@@ -248,7 +240,7 @@ pub struct Mention<'a> {
 }
 
 impl Render for Mention<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         let _ = write!(out, "@{}", self.username);
 
         if let Some(ref domain) = self.domain {
@@ -265,7 +257,7 @@ pub struct Text<'a> {
 }
 
 impl Render for Text<'_> {
-    fn render(&self, out: &mut String) {
-        out.push_str(&self.content);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = out.write_str(&self.content);
     }
 }

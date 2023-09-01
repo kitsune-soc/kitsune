@@ -4627,7 +4627,6 @@ version = "0.0.1-pre.3"
 dependencies = [
  "criterion",
  "futures",
- "futures-util",
  "insta",
  "logos",
  "pretty_assertions",

@@ -1,7 +1,7 @@
 use criterion::{
     async_executor::FuturesExecutor, black_box, criterion_group, criterion_main, Criterion,
 };
-use futures_util::future;
+use futures::future;
 
 const SIMPLE_POST: &str = "Hello, #World! This is a benchmark for the post transformer of @kitsune";
 
