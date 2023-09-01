@@ -2,7 +2,6 @@ use crate::{
     error::{Error, Result},
     service::account::{AccountService, GetUser},
 };
-use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render, Transformer};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, collections::HashMap};
@@ -17,7 +16,7 @@ impl PostResolver {
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
-        mentioned_accounts: &Mutex<HashMap<Uuid, String>>,
+        mentioned_accounts: &mut HashMap<Uuid, String>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -66,18 +65,15 @@ impl PostResolver {
     /// This should never panic
     #[instrument(skip_all)]
     pub async fn resolve(&self, content: &str) -> Result<(Vec<(Uuid, String)>, String)> {
-        let mentioned_account_ids = Mutex::new(HashMap::new());
-        let transformer = Transformer::new(|elem| self.transform(elem, &mentioned_account_ids));
+        let mut mentioned_account_ids = HashMap::new();
+        let transformer = Transformer::new(|elem| self.transform(elem, &mut mentioned_account_ids));
 
         let content = transformer
             .transform(content)
             .await
             .map_err(Error::PostProcessing)?;
 
-        Ok((
-            mentioned_account_ids.into_inner().into_iter().collect(),
-            content,
-        ))
+        Ok((mentioned_account_ids.into_iter().collect(), content))
     }
 }
 

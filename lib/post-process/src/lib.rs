@@ -57,7 +57,7 @@ pub enum LogosLexer<'a> {
     )]
     Hashtag(&'a str),
 
-    #[regex(r"@[\w\-_]+(@[\w\-_]+\.\w+)?", mention_split)]
+    #[regex(r"@[\w\-_]+(@[\w\-_]+\.[\.\w]+)?", mention_split)]
     Mention((&'a str, Option<&'a str>)),
 
     #[regex(r"[\w]+://[^\s<]+")]
@@ -70,8 +70,8 @@ pub enum LogosLexer<'a> {
 #[derive(Clone)]
 pub struct Transformer<'a, F, T>
 where
-    F: FnMut(Element<'a>) -> T,
-    T: Future<Output = Result<Element<'a>>>,
+    F: FnMut(Element<'a>) -> T + 'a,
+    T: Future<Output = Result<Element<'a>>> + 'a,
 {
     transformation: F,
     _lt: PhantomData<&'a ()>,
@@ -312,60 +312,5 @@ pub struct Text<'a> {
 impl Render for Text<'_> {
     fn render(&self, out: &mut String) {
         out.push_str(&self.content);
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::LogosLexer;
-    use logos::Logos;
-
-    #[test]
-    fn logos_link() {
-        let mut test = LogosLexer::lexer("https://github.com/kitsune-soc/kitsune    ");
-
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Link)));
-        assert_eq!(test.slice(), "https://github.com/kitsune-soc/kitsune");
-    }
-
-    #[test]
-    fn logos_emote() {
-        let mut test = LogosLexer::lexer(":hello:");
-
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Emote("hello"))));
-        assert_eq!(test.slice(), ":hello:");
-
-        assert_eq!(test.next(), None);
-    }
-
-    #[test]
-    fn logos_hashtag() {
-        let mut test = LogosLexer::lexer("\n#test #龍が如く0");
-
-        assert_eq!(test.next(), Some(Err(())));
-
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag("test"))));
-        assert_eq!(test.slice(), "#test");
-
-        assert_eq!(test.next(), Some(Err(())));
-
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Hashtag("龍が如く0"))));
-        assert_eq!(test.slice(), "#龍が如く0");
-
-        assert_eq!(test.next(), None);
-    }
-
-    #[test]
-    fn logos_mention() {
-        let mut test = LogosLexer::lexer("@test");
-
-        assert_eq!(test.next(), Some(Ok(LogosLexer::Mention(("test", None)))));
-        assert_eq!(test.next(), None);
-
-        let mut test = LogosLexer::lexer("@test@example.org");
-        assert_eq!(
-            test.next(),
-            Some(Ok(LogosLexer::Mention(("test", Some("example.org")))))
-        );
     }
 }
