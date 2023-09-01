@@ -9,7 +9,7 @@
 
 use futures_util::{pin_mut, stream, StreamExt};
 use logos::{Lexer, Logos, Span};
-use std::{borrow::Cow, error::Error, future::Future};
+use std::{borrow::Cow, error::Error, fmt::Write, future::Future};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -77,8 +77,7 @@ where
     let transformed_stream = {
         let pairs = Lexer::new(text)
             .spanned()
-            .flat_map(|(token, span)| token.map(|token| (token, span)))
-            .map(|(token, span)| (token, span));
+            .flat_map(|(token, span)| token.map(|token| (token, span)));
 
         let elements = Element::from_pairs(pairs)
             .collect::<Vec<(Element<'a>, Span)>>()
@@ -95,10 +94,10 @@ where
 
     let mut buffer = String::new();
     let mut out = text.to_string();
-    while let Some((range, element)) = transformed_stream.next().await.transpose()? {
+    while let Some((span, element)) = transformed_stream.next().await.transpose()? {
         buffer.clear();
         element.render(&mut buffer);
-        out.replace_range(range, &buffer);
+        out.replace_range(span, &buffer);
     }
 
     Ok(out)
@@ -145,14 +144,10 @@ impl<'a> Element<'a> {
                 PostElement::Hashtag(content) => Self::Hashtag(Hashtag {
                     content: Cow::Borrowed(content),
                 }),
-                PostElement::Mention((username, domain)) => {
-                    let domain = domain.map(Cow::Borrowed);
-
-                    Self::Mention(Mention {
-                        username: Cow::Borrowed(username),
-                        domain,
-                    })
-                }
+                PostElement::Mention((username, domain)) => Self::Mention(Mention {
+                    username: Cow::Borrowed(username),
+                    domain: domain.map(Cow::Borrowed),
+                }),
                 PostElement::Link(content) => Self::Link(Link {
                     content: Cow::Borrowed(content),
                 }),
@@ -185,9 +180,7 @@ pub struct Emote<'a> {
 
 impl Render for Emote<'_> {
     fn render(&self, out: &mut String) {
-        out.push(':');
-        out.push_str(&self.content);
-        out.push(':');
+        let _ = write!(out, ":{}:", self.content);
     }
 }
 
@@ -200,8 +193,7 @@ pub struct Hashtag<'a> {
 
 impl Render for Hashtag<'_> {
     fn render(&self, out: &mut String) {
-        out.push('#');
-        out.push_str(&self.content);
+        let _ = write!(out, "#{}", self.content);
     }
 }
 
@@ -220,24 +212,15 @@ pub struct Html<'a> {
 
 impl Render for Html<'_> {
     fn render(&self, out: &mut String) {
-        out.push('<');
-        out.push_str(&self.tag);
-
+        let _ = write!(out, "<{}", self.tag);
         for (name, value) in &self.attributes {
-            out.push(' ');
-            out.push_str(name);
-            out.push_str("=\"");
-            out.push_str(value);
-            out.push('"');
+            let _ = write!(out, " {name}=\"{value}\"");
         }
-
         out.push('>');
 
         self.content.render(out);
 
-        out.push_str("</");
-        out.push_str(&self.tag);
-        out.push('>');
+        let _ = write!(out, "</{}>", self.tag);
     }
 }
 
@@ -266,12 +249,10 @@ pub struct Mention<'a> {
 
 impl Render for Mention<'_> {
     fn render(&self, out: &mut String) {
-        out.push('@');
-        out.push_str(&self.username);
+        let _ = write!(out, "@{}", self.username);
 
         if let Some(ref domain) = self.domain {
-            out.push('@');
-            out.push_str(domain);
+            let _ = write!(out, "@{domain}");
         }
     }
 }
