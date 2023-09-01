@@ -21,7 +21,7 @@ kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 pin-project-lite = "0.2.13"
 serde = "1.0.188"
 simd-json = "0.10.6"
-tower = "0.4.13"
+tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.3", features = [
     "decompression-full",
     "follow-redirect",

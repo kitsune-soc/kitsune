@@ -11,7 +11,7 @@ dotenvy = "0.15.7"
 envy = "0.4.2"
 futures-util = "0.3.28"
 human-size = { version = "0.4.3", features = ["serde"] }
-jemallocator = { version = "0.5.4", default-features = false, features = [
+tikv-jemallocator = { version = "0.5.4", default-features = false, features = [
     "background_threads",
 ] }
 kitsune-search-proto = { path = "proto" }

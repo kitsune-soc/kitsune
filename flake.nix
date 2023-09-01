@@ -91,7 +91,7 @@
 
             main = rustPlatform.buildRustPackage (basePackage // {
               pname = "kitsune";
-              buildFeatures = [ "meilisearch" ];
+              buildFeatures = [ "meilisearch" "oidc" ];
               cargoBuildFlags = "-p kitsune";
             });
 
