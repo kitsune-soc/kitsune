@@ -1,0 +1,6 @@
+---
+source: lib/post-process/tests/transformation.rs
+assertion_line: 46
+expression: transformed
+---
+@真島@goro.org how are you doing? <a href="https://example.com/emote/friday-night">:friday-night:</a> <a href="https://example.com/hashtag/龍が如く0">#龍が如く0</a>

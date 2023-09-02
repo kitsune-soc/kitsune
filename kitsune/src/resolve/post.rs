@@ -2,11 +2,9 @@ use crate::{
     error::{Error, Result},
     service::account::{AccountService, GetUser},
 };
-use futures_util::FutureExt;
-use parking_lot::Mutex;
 use post_process::{BoxError, Element, Html, Render};
 use speedy_uuid::Uuid;
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, sync::mpsc};
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
@@ -18,7 +16,7 @@ impl PostResolver {
     async fn transform<'a>(
         &'a self,
         element: Element<'a>,
-        mentioned_accounts: &'a Mutex<HashMap<Uuid, String>>,
+        mentioned_accounts: mpsc::Sender<(Uuid, String)>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -30,7 +28,7 @@ impl PostResolver {
                 if let Some(account) = self.account.get(get_user).await? {
                     let mut mention_text = String::new();
                     Element::Mention(mention.clone()).render(&mut mention_text);
-                    mentioned_accounts.lock().insert(account.id, mention_text);
+                    let _ = mentioned_accounts.send((account.id, mention_text));
 
                     Element::Html(Html {
                         tag: Cow::Borrowed("a"),
@@ -63,18 +61,15 @@ impl PostResolver {
     /// - Content with the mentions replaced by links
     #[instrument(skip_all)]
     pub async fn resolve<'a>(&'a self, content: &'a str) -> Result<(Vec<(Uuid, String)>, String)> {
-        let mentioned_account_ids = Mutex::default();
+        let (mentioned_account_ids_acc, mentioned_account_ids) = mpsc::channel();
 
-        let content =
-            post_process::transform(content, |elem| self.transform(elem, &mentioned_account_ids))
-                .boxed()
-                .await
-                .map_err(Error::PostProcessing)?;
+        let content = post_process::transform(content, |elem| {
+            self.transform(elem, mentioned_account_ids_acc.clone())
+        })
+        .await
+        .map_err(Error::PostProcessing)?;
 
-        Ok((
-            mentioned_account_ids.into_inner().into_iter().collect(),
-            content,
-        ))
+        Ok((mentioned_account_ids.try_iter().collect(), content))
     }
 }
 

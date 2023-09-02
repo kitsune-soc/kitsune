@@ -18,7 +18,7 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     let end = lexer.span().end;
-    if lexer.source().len() == end {
+    if end == lexer.source().len() {
         true
     } else {
         lexer.source().as_bytes()[end + 1].is_ascii_whitespace()
@@ -77,9 +77,9 @@ pub enum PostElement<'a> {
 /// # Errors
 ///
 /// - Transformation of an element fails
-pub async fn transform<'a, F, Fut>(text: &'a str, transformer: F) -> Result<String>
+pub async fn transform<'a, F, Fut>(text: &'a str, mut transformer: F) -> Result<String>
 where
-    F: Fn(Element<'a>) -> Fut,
+    F: FnMut(Element<'a>) -> Fut,
     Fut: Future<Output = Result<Element<'a>>>,
 {
     let element_iter = {
@@ -98,6 +98,7 @@ where
 
     for (element, span) in element_iter {
         let element = transformer(element).await?;
+
         element.render(&mut buffer);
         out.replace_range(span, &buffer);
         buffer.clear();
