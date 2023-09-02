@@ -34,7 +34,7 @@ use kitsune_db::{
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
         notification::{NewNotification, Notification},
-        post::{NewPost, Post, PostChangeset, PostSource, Visibility},
+        post::{NewPost, PartialPostChangeset, Post, PostSource, Visibility},
         user_role::Role,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
@@ -594,7 +594,7 @@ impl PostService {
             .with_transaction(move |tx| {
                 async move {
                     let post: Post = diesel::update(posts::table)
-                        .set(PostChangeset {
+                        .set(PartialPostChangeset {
                             id: update_post.post_id,
                             subject: subject.as_deref(),
                             content: content.as_deref(),

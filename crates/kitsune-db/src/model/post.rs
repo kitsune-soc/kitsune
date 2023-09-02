@@ -76,7 +76,24 @@ pub struct NewPost<'a> {
 
 #[derive(AsChangeset)]
 #[diesel(table_name = posts)]
-pub struct PostChangeset<'a> {
+pub struct FullPostChangeset<'a> {
+    pub account_id: Uuid,
+    pub in_reply_to_id: Option<Uuid>,
+    pub reposted_post_id: Option<Uuid>,
+    pub is_sensitive: bool,
+    pub subject: Option<&'a str>,
+    pub content: &'a str,
+    pub content_source: &'a str,
+    pub content_lang: LanguageIsoCode,
+    pub link_preview_url: Option<&'a str>,
+    pub visibility: Visibility,
+    pub is_local: bool,
+    pub updated_at: Timestamp,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = posts)]
+pub struct PartialPostChangeset<'a> {
     pub id: Uuid,
     pub is_sensitive: Option<bool>,
     pub subject: Option<&'a str>,

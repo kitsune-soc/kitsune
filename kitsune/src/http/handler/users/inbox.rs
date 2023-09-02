@@ -1,5 +1,5 @@
 use crate::{
-    activitypub::{process_new_object, ProcessNewObject},
+    activitypub::{process_new_object, update_object, ProcessNewObject},
     error::{Error, Result},
     event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
@@ -302,6 +302,32 @@ async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> 
     Ok(())
 }
 
+async fn update_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+    if let Some(object) = activity.object.into_object() {
+        let process_data = ProcessNewObject::builder()
+            .author(author)
+            .db_pool(&state.db_pool)
+            .embed_client(state.embed_client.as_ref())
+            .fetcher(&state.fetcher)
+            .object(object)
+            .search_service(&state.service.search)
+            .build();
+        let modified_post = update_object(process_data).await?;
+
+        state
+            .event_emitter
+            .post
+            .emit(PostEvent {
+                r#type: EventType::Update,
+                post_id: modified_post.id,
+            })
+            .await
+            .map_err(Error::Event)?;
+    }
+
+    Ok(())
+}
+
 /// It's fine that the extractor doesn't check for "activity author == object author" since the logic
 /// of this inbox implementation attributes the contents of the object to the activity author
 ///
@@ -331,6 +357,6 @@ pub async fn post(
         ActivityType::Like => like_activity(&state, author, activity).await,
         ActivityType::Reject => reject_activity(&state, author, activity).await,
         ActivityType::Undo => undo_activity(&state, author, activity).await,
-        ActivityType::Update => todo!(),
+        ActivityType::Update => update_activity(&state, author, activity).await,
     }
 }
