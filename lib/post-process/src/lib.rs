@@ -21,7 +21,8 @@ fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     if end == lexer.source().len() {
         true
     } else {
-        !lexer.source().as_bytes()[end].is_ascii_alphanumeric()
+        let c = lexer.source().as_bytes()[end];
+        !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
     }
 }
 
@@ -30,7 +31,8 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     if start == 0 {
         true
     } else {
-        !lexer.source().as_bytes()[start - 1].is_ascii_alphanumeric()
+        let c = lexer.source().as_bytes()[start - 1];
+        !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
     }
 }
 
