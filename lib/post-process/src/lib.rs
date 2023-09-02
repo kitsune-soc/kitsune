@@ -16,26 +16,32 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 /// Result type with the error branch defaulting to [`BoxError`]
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
+#[inline]
+fn is_delimiter(c: u8) -> bool {
+    !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
+}
+
+#[inline]
 fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     let end = lexer.span().end;
     if end == lexer.source().len() {
         true
     } else {
-        let c = lexer.source().as_bytes()[end];
-        !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
+        is_delimiter(lexer.source().as_bytes()[end])
     }
 }
 
+#[inline]
 fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     let start = lexer.span().start;
     if start == 0 {
         true
     } else {
-        let c = lexer.source().as_bytes()[start - 1];
-        !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
+        is_delimiter(lexer.source().as_bytes()[start - 1])
     }
 }
 
+#[inline]
 fn mention_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Option<&'a str>)> {
     if !enforce_prefix(lexer) || !enforce_postfix(lexer) {
         return None;
