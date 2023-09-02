@@ -16,6 +16,15 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 /// Result type with the error branch defaulting to [`BoxError`]
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
+fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
+    let end = lexer.span().end;
+    if lexer.source().len() == end {
+        true
+    } else {
+        lexer.source().as_bytes()[end + 1].is_ascii_whitespace()
+    }
+}
+
 fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     let start = lexer.span().start;
     if start == 0 {
@@ -26,7 +35,7 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
 }
 
 fn mention_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Option<&'a str>)> {
-    if !enforce_prefix(lexer) {
+    if !enforce_prefix(lexer) || !enforce_postfix(lexer) {
         return None;
     }
 
