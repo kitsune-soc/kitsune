@@ -21,7 +21,7 @@ fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     if end == lexer.source().len() {
         true
     } else {
-        lexer.source().as_bytes()[end + 1].is_ascii_whitespace()
+        !lexer.source().as_bytes()[end].is_ascii_alphanumeric()
     }
 }
 
@@ -30,7 +30,7 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     if start == 0 {
         true
     } else {
-        lexer.source().as_bytes()[start - 1].is_ascii_whitespace()
+        !lexer.source().as_bytes()[start - 1].is_ascii_alphanumeric()
     }
 }
 
@@ -77,9 +77,9 @@ pub enum PostElement<'a> {
 /// # Errors
 ///
 /// - Transformation of an element fails
-pub async fn transform<'a, F, Fut>(text: &'a str, mut transformer: F) -> Result<String>
+pub async fn transform<'a, F, Fut>(text: &'a str, transformer: F) -> Result<String>
 where
-    F: FnMut(Element<'a>) -> Fut,
+    F: Fn(Element<'a>) -> Fut,
     Fut: Future<Output = Result<Element<'a>>>,
 {
     let element_iter = {

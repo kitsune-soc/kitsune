@@ -1,99 +1,29 @@
 ---
-source: post-process/tests/mention.rs
-expression: "PostParser::parse(Rule::post, &post).unwrap()"
-input_file: post-process/tests/input/mention/full_post_3
+source: lib/post-process/tests/mention.rs
+expression: parse_to_test_output(&post)
+input_file: lib/post-process/tests/input/mention/full_post_3
 ---
 [
-    Pair {
-        rule: text,
-        span: Span {
-            str: "pls stop burining the water. you know who ",
-            start: 0,
-            end: 42,
-        },
-        inner: [],
-    },
-    Pair {
-        rule: mention,
-        span: Span {
-            str: "(@majima@go.ro",
-            start: 42,
-            end: 56,
-        },
-        inner: [
-            Pair {
-                rule: component_prefix,
-                span: Span {
-                    str: "(",
-                    start: 42,
-                    end: 43,
-                },
-                inner: [],
-            },
-            Pair {
-                rule: mention_username,
-                span: Span {
-                    str: "majima",
-                    start: 44,
-                    end: 50,
-                },
-                inner: [],
-            },
-            Pair {
-                rule: mention_domain,
-                span: Span {
-                    str: "go.ro",
-                    start: 51,
-                    end: 56,
-                },
-                inner: [],
-            },
-        ],
-    },
-    Pair {
-        rule: text,
-        span: Span {
-            str: ") ",
-            start: 56,
-            end: 58,
-        },
-        inner: [],
-    },
-    Pair {
-        rule: mention,
-        span: Span {
-            str: "[@saejima",
-            start: 58,
-            end: 67,
-        },
-        inner: [
-            Pair {
-                rule: component_prefix,
-                span: Span {
-                    str: "[",
-                    start: 58,
-                    end: 59,
-                },
-                inner: [],
-            },
-            Pair {
-                rule: mention_username,
-                span: Span {
-                    str: "saejima",
-                    start: 60,
-                    end: 67,
-                },
-                inner: [],
-            },
-        ],
-    },
-    Pair {
-        rule: text,
-        span: Span {
-            str: "]",
-            start: 67,
-            end: 68,
-        },
-        inner: [],
-    },
+    (
+        Mention(
+            (
+                "majima",
+                Some(
+                    "go.ro",
+                ),
+            ),
+        ),
+        43..56,
+        "@majima@go.ro",
+    ),
+    (
+        Mention(
+            (
+                "saejima",
+                None,
+            ),
+        ),
+        59..67,
+        "@saejima",
+    ),
 ]

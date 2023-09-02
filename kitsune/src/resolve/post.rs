@@ -14,7 +14,7 @@ pub struct PostResolver {
 
 impl PostResolver {
     async fn transform<'a>(
-        &'a self,
+        &self,
         element: Element<'a>,
         mentioned_accounts: mpsc::Sender<(Uuid, String)>,
     ) -> Result<Element<'a>, BoxError> {
@@ -60,7 +60,7 @@ impl PostResolver {
     /// - List of mentioned accounts, represented as `(Account ID, Mention text)`
     /// - Content with the mentions replaced by links
     #[instrument(skip_all)]
-    pub async fn resolve<'a>(&'a self, content: &'a str) -> Result<(Vec<(Uuid, String)>, String)> {
+    pub async fn resolve(&self, content: &str) -> Result<(Vec<(Uuid, String)>, String)> {
         let (mentioned_account_ids_acc, mentioned_account_ids) = mpsc::channel();
 
         let content = post_process::transform(content, |elem| {
