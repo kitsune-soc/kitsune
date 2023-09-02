@@ -1,27 +1,6 @@
 ---
-source: post-process/tests/hashtag.rs
-expression: "PostParser::parse(Rule::hashtag, &hashtag)"
-input_file: post-process/tests/input/hashtag/invalid_1
+source: lib/post-process/tests/hashtag.rs
+expression: parse_to_test_output(&hashtag)
+input_file: lib/post-process/tests/input/hashtag/invalid_1
 ---
-Err(
-    Error {
-        variant: ParsingError {
-            positives: [
-                hashtag_content,
-            ],
-            negatives: [],
-        },
-        location: Pos(
-            1,
-        ),
-        line_col: Pos(
-            (
-                1,
-                2,
-            ),
-        ),
-        path: None,
-        line: "##invalid",
-        continued_line: None,
-    },
-)
+[]

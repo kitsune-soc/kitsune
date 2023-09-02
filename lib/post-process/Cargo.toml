@@ -4,11 +4,18 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-futures-util = "0.3.28"
-pest = "2.7.3"
-pest_derive = "2.7.3"
+logos = "0.13.0"
 
 [dev-dependencies]
+criterion = { version = "0.5.1", default-features = false, features = [
+    "cargo_bench_support",
+    "async_futures",
+    "rayon",
+] }
+futures = "0.3.28"
 insta = { version = "1.31.0", features = ["glob"] }
 pretty_assertions = "1.4.0"
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
+
+[[bench]]
+name = "simple"
+harness = false

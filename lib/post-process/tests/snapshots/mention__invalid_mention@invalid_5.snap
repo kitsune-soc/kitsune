@@ -1,16 +1,6 @@
 ---
-source: post-process/tests/mention.rs
-expression: "PostParser::parse(Rule::post, &mention).unwrap()"
-input_file: post-process/tests/input/mention/invalid_5
+source: lib/post-process/tests/mention.rs
+expression: parse_to_test_output(&mention)
+input_file: lib/post-process/tests/input/mention/invalid_5
 ---
-[
-    Pair {
-        rule: text,
-        span: Span {
-            str: "@test@hel\\lo.world",
-            start: 0,
-            end: 18,
-        },
-        inner: [],
-    },
-]
+[]
