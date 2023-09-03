@@ -14,7 +14,7 @@ askama = { version = "0.12.0", default-features = false, features = [
     "with-axum",
 ] }
 askama_axum = "0.3.0"
-async-recursion = "1.0.4"
+async-recursion = "1.0.5"
 async-stream = "0.3.5"
 async-trait = "0.1.73"
 athena = { path = "../lib/athena" }
@@ -38,7 +38,7 @@ const-oid = { version = "0.9.5", features = ["db"] }
 deadpool-redis = "0.12.0"
 derive_builder = "0.12.0"
 diesel = "2.1.1"
-diesel-async = "0.3.2"
+diesel-async = "0.4.1"
 diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.12"
 eyre = "0.6.8"
@@ -50,7 +50,7 @@ garde = { version = "0.14.1", default-features = false, features = [
     "regex",
 ] }
 globset = "0.4.13"
-headers = "0.3.8"
+headers = "0.3.9"
 hex-simd = "0.8.0"
 http = "0.2.9"
 human-panic = "1.2.0"
@@ -86,7 +86,7 @@ pulldown-cmark = { version = "0.9.3", default-features = false, features = [
 ] }
 rand = "0.8.5"
 rayon = "1.7.0"
-redis = "0.23.2"
+redis = "0.23.3"
 rsa = "0.9.2"
 scoped-futures = "0.1.3"
 serde = { version = "1.0.188", features = ["derive"] }
@@ -97,12 +97,12 @@ smol_str = "0.2.0"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.8.0"
-thiserror = "1.0.47"
+thiserror = "1.0.48"
 time = "0.3.28"
 tokio = { version = "1.32.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
 toml = "0.7.6"
-tower-http = { version = "0.4.3", features = [
+tower-http = { version = "0.4.4", features = [
     "catch-panic",
     "cors",
     "fs",
@@ -121,7 +121,7 @@ zxcvbn = { version = "2.2.2", default-features = false }
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "6.0.4", default-features = false, features = [
+async-graphql = { version = "6.0.5", default-features = false, features = [
     "playground",
     "tempfile",
     "time",
@@ -129,7 +129,7 @@ async-graphql = { version = "6.0.4", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "6.0.4", optional = true }
+async-graphql-axum = { version = "6.0.5", optional = true }
 
 # "metrics" feature
 axum-prometheus = { version = "0.4.0", optional = true }
