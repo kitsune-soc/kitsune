@@ -9,7 +9,7 @@ build = "build.rs"
 [dependencies]
 autometrics = { version = "0.6.0", default-features = false }
 ammonia = "3.3.0"
-argon2 = { version = "0.5.1", features = ["std"] }
+argon2 = { version = "0.5.2", features = ["std"] }
 askama = { version = "0.12.0", default-features = false, features = [
     "with-axum",
 ] }
