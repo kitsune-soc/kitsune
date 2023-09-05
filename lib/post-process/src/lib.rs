@@ -7,10 +7,8 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
-use futures_util::{pin_mut, stream, StreamExt};
-use pest::{iterators::Pairs, Parser};
-use pest_derive::Parser;
-use std::{borrow::Cow, error::Error, future::Future, marker::PhantomData};
+use logos::{Lexer, Logos, Span};
+use std::{borrow::Cow, error::Error, fmt, future::Future};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;
@@ -18,68 +16,109 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 /// Result type with the error branch defaulting to [`BoxError`]
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
-/// Pest-based parser
-#[derive(Parser)]
-#[grammar = "../grammar/post.pest"]
-pub struct PostParser;
-
-/// Post transformer
-///
-/// Transforms elements of a post into other elements
-#[derive(Clone)]
-pub struct Transformer<'a, F, T>
-where
-    F: Fn(Element<'a>) -> T,
-    T: Future<Output = Result<Element<'a>>>,
-{
-    transformation: F,
-    _lt: PhantomData<&'a ()>,
+#[inline]
+fn is_delimiter(c: u8) -> bool {
+    !c.is_ascii_alphanumeric() && c != b'@' && c != b'#'
 }
 
-impl<'a, F, T> Transformer<'a, F, T>
+#[inline]
+fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
+    let end = lexer.span().end;
+    if end == lexer.source().len() {
+        true
+    } else {
+        is_delimiter(lexer.source().as_bytes()[end])
+    }
+}
+
+#[inline]
+fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
+    let start = lexer.span().start;
+    if start == 0 {
+        true
+    } else {
+        is_delimiter(lexer.source().as_bytes()[start - 1])
+    }
+}
+
+#[inline]
+fn mention_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Option<&'a str>)> {
+    if !enforce_prefix(lexer) || !enforce_postfix(lexer) {
+        return None;
+    }
+
+    let slice = lexer.slice();
+    let slice = slice.trim_start_matches('@');
+
+    let mention_data = if let Some((username, domain)) = slice.split_once('@') {
+        (username, Some(domain))
+    } else {
+        (slice, None)
+    };
+
+    Some(mention_data)
+}
+
+#[derive(Debug, Logos, PartialEq)]
+pub enum PostElement<'a> {
+    #[regex(
+        r":[\w\d-]+:",
+        |lexer| lexer.slice().trim_matches(':'),
+    )]
+    Emote(&'a str),
+
+    #[regex(
+        r"#[\w_-]+",
+        |lexer| enforce_prefix(lexer).then(|| lexer.slice().trim_start_matches('#')),
+    )]
+    Hashtag(&'a str),
+
+    #[regex(r"@[\w\-_]+(@[\w\-_]+\.[\.\w]+)?", mention_split)]
+    Mention((&'a str, Option<&'a str>)),
+
+    #[regex(r"[\w]+://[^\s<]+")]
+    Link(&'a str),
+}
+
+/// Transform a post
+///
+/// # Errors
+///
+/// - Transformation of an element fails
+pub async fn transform<'a, F, Fut>(text: &'a str, transformer: F) -> Result<String>
 where
-    F: Fn(Element<'a>) -> T,
-    T: Future<Output = Result<Element<'a>>>,
+    F: Fn(Element<'a>) -> Fut,
+    Fut: Future<Output = Result<Element<'a>>>,
 {
-    /// Create a new transformer from a transformation function
-    pub fn new(transformation: F) -> Self {
-        Self {
-            transformation,
-            _lt: PhantomData,
-        }
+    let element_iter = {
+        let pairs = Lexer::new(text)
+            .spanned()
+            .flat_map(|(token, span)| token.map(|token| (token, span)));
+
+        Element::from_pairs(pairs)
+            .collect::<Vec<(Element<'a>, Span)>>()
+            .into_iter()
+            .rev()
+    };
+
+    let mut out = text.to_string();
+    let mut buffer = String::new();
+
+    for (element, span) in element_iter {
+        let element = transformer(element).await?;
+
+        element.render(&mut buffer);
+        out.replace_range(span, &buffer);
+        buffer.clear();
     }
 
-    /// Transform a post
-    ///
-    /// # Errors
-    ///
-    /// - Transformation of an element fails
-    ///
-    /// # Panics
-    ///
-    /// This should never panic. If it does, please submit an issue
-    pub async fn transform(&self, text: &'a str) -> Result<String> {
-        let transformed = {
-            let pairs = PostParser::parse(Rule::post, text).unwrap();
-            let elements: Vec<Element<'a>> = Element::from_pairs(pairs).collect();
-            stream::iter(elements).then(&self.transformation)
-        };
-
-        pin_mut!(transformed);
-
-        let mut out = String::new();
-        while let Some(elem) = transformed.next().await.transpose()? {
-            elem.render(&mut out);
-        }
-
-        Ok(out)
-    }
+    Ok(out)
 }
 
 /// Render something into a string
 pub trait Render {
     /// Render the element into its string representation
-    fn render(&self, out: &mut String);
+    fn render(&self, out: &mut impl fmt::Write);
 }
 
 /// Elements of a post
@@ -106,64 +145,33 @@ pub enum Element<'a> {
 
 impl<'a> Element<'a> {
     /// Generate a bunch of elements from their `Pairs` representation
-    ///
-    /// # Panics
-    ///
-    /// This should never panic. If it ever does, please submit an issue.
-    pub fn from_pairs(pairs: Pairs<'a, Rule>) -> impl Iterator<Item = Element<'a>> {
-        pairs.flat_map(|pair| match pair.as_rule() {
-            Rule::emote => {
-                let content = pair.into_inner().next().unwrap();
+    pub fn from_pairs(
+        pairs: impl Iterator<Item = (PostElement<'a>, Span)>,
+    ) -> impl Iterator<Item = (Element<'a>, Span)> {
+        pairs.map(|(item, span)| {
+            let element = match item {
+                PostElement::Emote(name) => Self::Emote(Emote {
+                    content: Cow::Borrowed(name),
+                }),
+                PostElement::Hashtag(content) => Self::Hashtag(Hashtag {
+                    content: Cow::Borrowed(content),
+                }),
+                PostElement::Mention((username, domain)) => Self::Mention(Mention {
+                    username: Cow::Borrowed(username),
+                    domain: domain.map(Cow::Borrowed),
+                }),
+                PostElement::Link(content) => Self::Link(Link {
+                    content: Cow::Borrowed(content),
+                }),
+            };
 
-                vec![Self::Emote(Emote {
-                    content: Cow::Borrowed(content.as_str()),
-                })]
-            }
-            Rule::hashtag => {
-                let mut hashtag = pair.into_inner();
-                let prefix = hashtag.next().unwrap();
-                let content = hashtag.next().unwrap();
-
-                vec![
-                    Self::Text(Text {
-                        content: Cow::Borrowed(prefix.as_str()),
-                    }),
-                    Self::Hashtag(Hashtag {
-                        content: Cow::Borrowed(content.as_str()),
-                    }),
-                ]
-            }
-            Rule::mention => {
-                let mut mention = pair.into_inner();
-                let prefix = mention.next().unwrap();
-                let username = mention.next().unwrap();
-                let domain = mention.next().map(|domain| Cow::Borrowed(domain.as_str()));
-
-                vec![
-                    Self::Text(Text {
-                        content: Cow::Borrowed(prefix.as_str()),
-                    }),
-                    Self::Mention(Mention {
-                        username: Cow::Borrowed(username.as_str()),
-                        domain,
-                    }),
-                ]
-            }
-            Rule::text => vec![Self::Text(Text {
-                content: Cow::Borrowed(pair.as_str()),
-            })],
-            Rule::link => {
-                vec![Self::Link(Link {
-                    content: Cow::Borrowed(pair.as_str()),
-                })]
-            }
-            _ => unreachable!(),
+            (element, span)
         })
     }
 }
 
 impl Render for Element<'_> {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut impl fmt::Write) {
         match self {
             Self::Emote(emote) => emote.render(out),
             Self::Hashtag(hashtag) => hashtag.render(out),
@@ -183,10 +191,8 @@ pub struct Emote<'a> {
 }
 
 impl Render for Emote<'_> {
-    fn render(&self, out: &mut String) {
-        out.push(':');
-        out.push_str(&self.content);
-        out.push(':');
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = write!(out, ":{}:", self.content);
     }
 }
 
@@ -198,9 +204,8 @@ pub struct Hashtag<'a> {
 }
 
 impl Render for Hashtag<'_> {
-    fn render(&self, out: &mut String) {
-        out.push('#');
-        out.push_str(&self.content);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = write!(out, "#{}", self.content);
     }
 }
 
@@ -218,25 +223,16 @@ pub struct Html<'a> {
 }
 
 impl Render for Html<'_> {
-    fn render(&self, out: &mut String) {
-        out.push('<');
-        out.push_str(&self.tag);
-
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = write!(out, "<{}", self.tag);
         for (name, value) in &self.attributes {
-            out.push(' ');
-            out.push_str(name);
-            out.push_str("=\"");
-            out.push_str(value);
-            out.push('"');
+            let _ = write!(out, " {name}=\"{value}\"");
         }
-
-        out.push('>');
+        let _ = out.write_char('>');
 
         self.content.render(out);
 
-        out.push_str("</");
-        out.push_str(&self.tag);
-        out.push('>');
+        let _ = write!(out, "</{}>", self.tag);
     }
 }
 
@@ -248,8 +244,8 @@ pub struct Link<'a> {
 }
 
 impl Render for Link<'_> {
-    fn render(&self, out: &mut String) {
-        out.push_str(&self.content);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = out.write_str(&self.content);
     }
 }
 
@@ -264,13 +260,11 @@ pub struct Mention<'a> {
 }
 
 impl Render for Mention<'_> {
-    fn render(&self, out: &mut String) {
-        out.push('@');
-        out.push_str(&self.username);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = write!(out, "@{}", self.username);
 
         if let Some(ref domain) = self.domain {
-            out.push('@');
-            out.push_str(domain);
+            let _ = write!(out, "@{domain}");
         }
     }
 }
@@ -283,7 +277,7 @@ pub struct Text<'a> {
 }
 
 impl Render for Text<'_> {
-    fn render(&self, out: &mut String) {
-        out.push_str(&self.content);
+    fn render(&self, out: &mut impl fmt::Write) {
+        let _ = out.write_str(&self.content);
     }
 }
