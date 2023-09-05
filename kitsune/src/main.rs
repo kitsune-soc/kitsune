@@ -130,10 +130,7 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
     message.into()
 }
 
-#[tokio::main]
-async fn main() -> eyre::Result<()> {
-    install_handlers()?;
-
+async fn boot() -> eyre::Result<()> {
     println!("{STARTUP_FIGLET}");
 
     let args: Vec<String> = env::args().take(2).collect();
@@ -167,4 +164,15 @@ async fn main() -> eyre::Result<()> {
     future::pending::<()>().await;
 
     Ok(())
+}
+
+fn main() -> eyre::Result<()> {
+    install_handlers()?;
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_stack_size(4 * 1024 * 1024) // Set the stack size to 4MiB
+        .build()?;
+
+    runtime.block_on(boot())
 }
