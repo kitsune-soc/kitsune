@@ -295,6 +295,7 @@ mod test {
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
+    use http::uri::PathAndQuery;
     use hyper::{Body, Request, Response, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
@@ -521,9 +522,10 @@ mod test {
 
             let client = service_fn(|req: Request<_>| {
                 // Let `fetch_object` fetch `attributedTo`
-                if req.uri().path_and_query() != "/users/0x0" {
+                if req.uri().path_and_query().map(PathAndQuery::as_str) != Some("/users/0x0") {
                     assert_ne!(req.uri().host(), Some("corteximplant.com"));
                 }
+
                 handle(req)
             });
             let client = Client::builder().service(client);

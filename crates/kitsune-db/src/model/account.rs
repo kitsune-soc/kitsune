@@ -14,7 +14,7 @@ use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-#[derive(Clone, Deserialize, Identifiable, Serialize, Selectable, Queryable)]
+#[derive(Clone, Debug, Deserialize, Identifiable, Serialize, Selectable, Queryable)]
 pub struct Account {
     pub id: Uuid,
     pub avatar_id: Option<Uuid>,
