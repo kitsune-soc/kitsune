@@ -5,6 +5,7 @@ use crate::{
 };
 use diesel::SelectableHelper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use http::Uri;
 use kitsune_db::{
     model::{
         account::Account,
@@ -133,6 +134,10 @@ pub async fn process_new_object(
     let user = if let Some(author) = author {
         author
     } else {
+        if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
+            return Err(ApiError::BadRequest.into());
+        }
+
         fetcher.fetch_actor(attributed_to.into()).await?
     };
 

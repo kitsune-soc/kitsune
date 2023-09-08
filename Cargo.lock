@@ -3261,6 +3261,7 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "kitsune-http-signatures",
+ "kitsune-type",
  "pin-project-lite",
  "serde",
  "simd-json",

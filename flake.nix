@@ -81,6 +81,7 @@
           };
         in
         {
+          formatter = pkgs.nixpkgs-fmt;
           packages = rec {
             default = main;
 

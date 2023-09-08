@@ -19,6 +19,7 @@ use hyper::{
 };
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
+use kitsune_type::jsonld::RdfNode;
 use pin_project_lite::pin_project;
 use serde::de::DeserializeOwned;
 use std::{
@@ -30,8 +31,10 @@ use std::{
 };
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
-    decompression::DecompressionLayer, follow_redirect::FollowRedirectLayer,
-    map_response_body::MapResponseBodyLayer, timeout::TimeoutLayer,
+    decompression::DecompressionLayer,
+    follow_redirect::{FollowRedirectLayer, RequestUri},
+    map_response_body::MapResponseBodyLayer,
+    timeout::TimeoutLayer,
 };
 
 mod util;
@@ -372,6 +375,46 @@ impl Response {
     {
         let bytes = self.bytes().await?;
         Ok(simd_json::from_reader(bytes.reader()).map_err(BoxError::from)?)
+    }
+
+    /// Read the body and deserialise it as JSON-LD node and verify the returned node's `@id`
+    ///
+    /// # Errors
+    ///
+    /// - Reading the body from the remote failed
+    /// - Deserialising the body into the structure failed
+    /// - The authority part of the returned JSON-LD node's `@id` doesn't belong to the originating server
+    pub async fn jsonld<T>(mut self) -> Result<T>
+    where
+        T: DeserializeOwned + RdfNode,
+    {
+        let Some(server_authority) = self
+            .inner
+            .extensions_mut()
+            .remove()
+            .and_then(|RequestUri(uri)| uri.authority().cloned())
+        else {
+            // This only happens if the `FollowRedirect` middleware neglect to insert the extension
+            // or the URI doesn't contain the authority part, which won't occur in the current
+            // version of `tower-http`
+            return Err(BoxError::from("Failed to get the server authority").into());
+        };
+
+        let node: T = self.json().await?;
+        if let Some(id) = node.id() {
+            if Uri::try_from(id)
+                .map_err(BoxError::from)?
+                .authority()
+                .map_or(true, |node_authority| *node_authority != server_authority)
+            {
+                return Err(BoxError::from(
+                    "Authority of `@id` doesn't belong to the originating server",
+                )
+                .into());
+            }
+        }
+
+        Ok(node)
     }
 
     /// Get the status of the request
