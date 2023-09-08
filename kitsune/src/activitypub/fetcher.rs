@@ -121,7 +121,7 @@ impl Fetcher {
             return Err(ApiError::Unauthorised.into());
         }
 
-        let mut actor: Actor = self.client.get(url.as_str()).await?.json().await?;
+        let mut actor: Actor = self.client.get(url.as_str()).await?.jsonld().await?;
         actor.clean_html();
 
         let account: Account = self
@@ -136,7 +136,7 @@ impl Fetcher {
                             username: actor.preferred_username.as_str(),
                             locked: actor.manually_approves_followers,
                             local: false,
-                            domain: url.host_str().unwrap(),
+                            domain: Url::parse(&actor.id)?.host_str().unwrap(),
                             actor_type: actor.r#type.into(),
                             url: actor.id.as_str(),
                             featured_collection_url: actor.featured.as_deref(),
@@ -255,7 +255,7 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let object: Object = self.client.get(url.as_str()).await?.json().await?;
+        let object: Object = self.client.get(url.as_str()).await?.jsonld().await?;
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
@@ -484,6 +484,55 @@ mod test {
                 .fetch_object("https://example.com/notes/0")
                 .await
                 .is_ok());
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn check_ap_id_authority() {
+        database_test(|db_pool| async move {
+            let builder = Fetcher::builder()
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()));
+
+            let client = service_fn(|req: Request<_>| {
+                assert_ne!(req.uri().host(), Some("corteximplant.com"));
+                handle(req)
+            });
+            let client = Client::builder().service(client);
+            let fetcher = builder.clone().client(client).build();
+
+            // The mock HTTP client ensures that the fetcher doesn't access the correct server
+            // so this should return error
+            let _ = fetcher
+                .fetch_actor("https://example.com/users/0x0".into())
+                .await
+                .unwrap_err();
+
+            let client = service_fn(|req: Request<_>| {
+                // Let `fetch_object` fetch `attributedTo`
+                if req.uri().path_and_query() != "/users/0x0" {
+                    assert_ne!(req.uri().host(), Some("corteximplant.com"));
+                }
+                handle(req)
+            });
+            let client = Client::builder().service(client);
+            let fetcher = builder.client(client).build();
+
+            let _ = fetcher
+                .fetch_object("https://example.com/@0x0/109501674056556919")
+                .await
+                .unwrap_err();
         })
         .await;
     }
