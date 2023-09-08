@@ -160,6 +160,9 @@ pub enum Error {
     HttpSignature(#[from] kitsune_http_signatures::Error),
 
     #[error(transparent)]
+    InvalidUri(#[from] http::uri::InvalidUri),
+
+    #[error(transparent)]
     KeyRejected(#[from] kitsune_http_signatures::ring::error::KeyRejected),
 
     #[error(transparent)]
@@ -182,12 +185,6 @@ pub enum Error {
 
     #[error(transparent)]
     Oneshot(#[from] oneshot::error::RecvError),
-
-    #[error(transparent)]
-    Rsa(#[from] rsa::errors::Error),
-
-    #[error(transparent)]
-    TokioJoin(#[from] tokio::task::JoinError),
 
     #[cfg(feature = "oidc")]
     #[error(transparent)]
@@ -212,6 +209,9 @@ pub enum Error {
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
+    Rsa(#[from] rsa::errors::Error),
+
+    #[error(transparent)]
     Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
@@ -222,6 +222,9 @@ pub enum Error {
 
     #[error(transparent)]
     Storage(kitsune_storage::BoxError),
+
+    #[error(transparent)]
+    TokioJoin(#[from] tokio::task::JoinError),
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
