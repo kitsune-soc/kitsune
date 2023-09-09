@@ -43,11 +43,12 @@ diesel_full_text_search = { version = "2.1.0", default-features = false }
 enum_dispatch = "0.3.12"
 eyre = "0.6.8"
 futures-util = "0.3.28"
-garde = { version = "0.14.1", default-features = false, features = [
+garde = { version = "0.15.0", default-features = false, features = [
     "derive",
     "email",
     "email-idna",
     "regex",
+    "serde",
 ] }
 globset = "0.4.13"
 headers = "0.3.9"
@@ -101,7 +102,7 @@ thiserror = "1.0.48"
 time = "0.3.28"
 tokio = { version = "1.32.0", features = ["full"] }
 tokio-util = { version = "0.7.8", features = ["compat"] }
-toml = "0.7.7"
+toml = "0.7.8"
 tower-http = { version = "0.4.4", features = [
     "catch-panic",
     "cors",
