@@ -3,26 +3,28 @@ use crate::{
     sanitize::CleanHtmlExt,
     util::timestamp_to_uuid,
 };
-use diesel::SelectableHelper;
+use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::Uri;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
         media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
         mention::NewMention,
-        post::{NewPost, Post, PostConflictChangeset, Visibility},
+        post::{FullPostChangeset, NewPost, Post, PostConflictChangeset, Visibility},
     },
     schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_language::DetectionBackend;
+use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::{SearchBackend, SearchService};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
+use std::borrow::Cow;
 use typed_builder::TypedBuilder;
 
 pub mod deliverer;
@@ -107,19 +109,31 @@ pub async fn process_attachments(
 
 #[derive(TypedBuilder)]
 pub struct ProcessNewObject<'a> {
-    #[builder(default, setter(strip_option))]
-    author: Option<Account>,
+    #[builder(default, setter(into, strip_option))]
+    author: Option<&'a Account>,
     #[builder(default = 0)]
     call_depth: u32,
     db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
-    object: Object,
+    object: Box<Object>,
     fetcher: &'a Fetcher,
     search_service: &'a SearchService,
 }
 
+#[derive(TypedBuilder)]
+struct PreprocessedObject<'a> {
+    user: Cow<'a, Account>,
+    visibility: Visibility,
+    in_reply_to_id: Option<Uuid>,
+    link_preview_url: Option<String>,
+    content_lang: Language,
+    db_pool: &'a PgPool,
+    object: Box<Object>,
+    search_service: &'a SearchService,
+}
+
 #[allow(clippy::missing_panics_doc)]
-pub async fn process_new_object(
+async fn preprocess_object(
     ProcessNewObject {
         author,
         call_depth,
@@ -129,16 +143,16 @@ pub async fn process_new_object(
         fetcher,
         search_service,
     }: ProcessNewObject<'_>,
-) -> Result<Post> {
+) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
     let user = if let Some(author) = author {
-        author
+        Cow::Borrowed(author)
     } else {
         if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
             return Err(ApiError::BadRequest.into());
         }
 
-        fetcher.fetch_actor(attributed_to.into()).await?
+        Cow::Owned(fetcher.fetch_actor(attributed_to.into()).await?)
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
@@ -177,6 +191,31 @@ pub async fn process_new_object(
 
     let content_lang =
         kitsune_language::detect_language(DetectionBackend::default(), object.content.as_str());
+
+    Ok(PreprocessedObject {
+        user,
+        visibility,
+        in_reply_to_id,
+        link_preview_url,
+        content_lang,
+        db_pool,
+        object,
+        search_service,
+    })
+}
+
+#[allow(clippy::missing_panics_doc)]
+pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
+    let PreprocessedObject {
+        user,
+        visibility,
+        in_reply_to_id,
+        link_preview_url,
+        content_lang,
+        db_pool,
+        object,
+        search_service,
+    } = preprocess_object(process_data).await?;
 
     let post = db_pool
         .with_transaction(|tx| {
@@ -232,6 +271,72 @@ pub async fn process_new_object(
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
         search_service.add_to_index(post.clone().into()).await?;
+    }
+
+    Ok(post)
+}
+
+#[allow(clippy::missing_panics_doc)]
+pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
+    let PreprocessedObject {
+        user,
+        visibility,
+        in_reply_to_id,
+        link_preview_url,
+        content_lang,
+        db_pool,
+        object,
+        search_service,
+    } = preprocess_object(process_data).await?;
+
+    let post = db_pool
+        .with_transaction(|tx| {
+            async move {
+                let updated_post = diesel::update(posts::table)
+                    .filter(posts::url.eq(object.id.as_str()))
+                    .set(FullPostChangeset {
+                        account_id: user.id,
+                        in_reply_to_id,
+                        reposted_post_id: None,
+                        subject: object.summary.as_deref(),
+                        content: object.content.as_str(),
+                        content_source: "",
+                        content_lang: content_lang.into(),
+                        link_preview_url: link_preview_url.as_deref(),
+                        is_sensitive: object.sensitive,
+                        visibility,
+                        is_local: false,
+                        updated_at: Timestamp::now_utc(),
+                    })
+                    .returning(Post::as_returning())
+                    .get_result::<Post>(tx)
+                    .await?;
+
+                let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
+                diesel::insert_into(posts_media_attachments::table)
+                    .values(
+                        attachment_ids
+                            .into_iter()
+                            .map(|attachment_id| NewPostMediaAttachment {
+                                post_id: updated_post.id,
+                                media_attachment_id: attachment_id,
+                            })
+                            .collect::<Vec<NewPostMediaAttachment>>(),
+                    )
+                    .on_conflict_do_nothing()
+                    .execute(tx)
+                    .await?;
+
+                handle_mentions(tx, &user, updated_post.id, &object.tag).await?;
+
+                Ok::<_, Error>(updated_post)
+            }
+            .scope_boxed()
+        })
+        .await?;
+
+    if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
+        search_service.update_in_index(post.clone().into()).await?;
     }
 
     Ok(post)

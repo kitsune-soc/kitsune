@@ -262,7 +262,7 @@ impl Fetcher {
             .db_pool(&self.db_pool)
             .embed_client(self.embed_client.as_ref())
             .fetcher(self)
-            .object(object)
+            .object(Box::new(object))
             .search_service(&self.search_service)
             .build();
         let post = process_new_object(process_data).await?;
