@@ -1,5 +1,3 @@
-use std::cmp::min;
-
 use crate::{
     consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
     error::{Error, Result},
@@ -17,6 +15,7 @@ use kitsune_db::{
 };
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
+use std::cmp::min;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]

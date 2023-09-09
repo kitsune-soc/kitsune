@@ -1,0 +1,87 @@
+[package]
+name = "kitsune-core"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+ammonia = "3.3.0"
+argon2 = "0.5.2"
+askama = { version = "0.12.0", features = [
+    "with-axum",
+], default-features = false }
+askama_axum = "0.3.0"
+async-trait = "0.1.73"
+athena = { path = "../../lib/athena" }
+autometrics = { version = "0.6.0", default-features = false }
+axum = "0.6.20"
+axum-extra = { version = "0.7.7", features = ["cookie"] }
+axum-flash = "0.7.0"
+base64-simd = "0.8.0"
+bytes = "1.5.0"
+const_format = "0.2.31"
+chrono = { version = "0.4.30", default-features = false }
+deadpool-redis = { version = "0.12.0", default-features = false }
+derive_builder = "0.12.0"
+diesel = "2.1.1"
+diesel-async = { version = "0.4.1", features = ["postgres"] }
+eyre = "0.6.8"
+futures-util = "0.3.28"
+garde = { version = "0.15.0", default-features = false, features = [
+    "derive",
+    "email",
+    "email-idna",
+    "regex",
+    "serde",
+] }
+globset = "0.4.13"
+hex-simd = "0.8.0"
+http = "0.2.9"
+iso8601-timestamp = "0.2.11"
+just-retry = { path = "../../lib/just-retry" }
+kitsune-cache = { path = "../kitsune-cache" }
+kitsune-captcha = { path = "../kitsune-captcha" }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-email = { path = "../kitsune-email" }
+kitsune-embed = { path = "../kitsune-embed" }
+kitsune-http-client = { path = "../kitsune-http-client" }
+kitsune-search = { path = "../kitsune-search" }
+kitsune-storage = { path = "../kitsune-storage" }
+kitsune-type = { path = "../kitsune-type" }
+mime = "0.3.17"
+oxide-auth = "0.5.3"
+oxide-auth-async = "0.1.0"
+oxide-auth-axum = "0.3.0"
+pin-project-lite = "0.2.13"
+post-process = { path = "../../lib/post-process" }
+pulldown-cmark = { version = "0.9.3", default-features = false, features = [
+    "simd",
+] }
+rand = "0.8.5"
+rayon = "1.7.0"
+rsa = "0.9.2"
+scoped-futures = "0.1.3"
+serde = { version = "1.0.188", features = ["derive"] }
+smol_str = "0.2.0"
+speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
+strum = { version = "0.25.0", features = ["derive", "phf"] }
+thiserror = "1.0.48"
+time = "0.3.28"
+tokio = { version = "1.32.0", features = ["macros", "rt"] }
+tracing = "0.1.37"
+typed-builder = "0.16.0"
+url = "2.4.1"
+zxcvbn = "2.2.2"
+
+# "oidc" feature
+openidconnect = { version = "3.3.1", default-features = false, optional = true }
+
+[features]
+oidc = ["dep:openidconnect"]
+
+[build-dependencies]
+vergen = { version = "8.2.4", features = ["build", "git", "gitcl"] }
+
+[dev-dependencies]
+hyper = "0.14.27"
+pretty_assertions = "1.4.0"
+tower = "0.4.13"

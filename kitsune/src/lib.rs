@@ -19,21 +19,9 @@ extern crate tracing;
 #[cfg(test)]
 mod test;
 
-pub mod activitypub;
-pub mod blocking;
-pub mod config;
-pub mod consts;
 pub mod error;
 pub mod event;
 pub mod http;
-pub mod job;
-pub mod mapping;
-pub mod resolve;
-pub mod sanitize;
-pub mod service;
-pub mod state;
-pub mod util;
-pub mod webfinger;
 
 use self::{
     activitypub::Fetcher,
@@ -43,20 +31,6 @@ use self::{
     },
     job::KitsuneContextRepo,
     resolve::PostResolver,
-    service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        captcha::CaptchaService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        mailing::MailingService,
-        oauth2::{OAuth2Service, OAuthEndpoint},
-        post::PostService,
-        timeline::TimelineService,
-        url::UrlService,
-        user::UserService,
-    },
     state::{EventEmitter, Service, SessionConfig, Zustand},
     webfinger::Webfinger,
 };
@@ -67,6 +41,20 @@ use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::Captcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
+use kitsune_core::service::{
+    account::AccountService,
+    attachment::AttachmentService,
+    captcha::CaptchaService,
+    federation_filter::FederationFilterService,
+    instance::InstanceService,
+    job::JobService,
+    mailing::MailingService,
+    oauth2::{OAuth2Service, OAuthEndpoint},
+    post::PostService,
+    timeline::TimelineService,
+    url::UrlService,
+    user::UserService,
+};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
