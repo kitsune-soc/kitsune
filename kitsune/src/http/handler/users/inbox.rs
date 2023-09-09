@@ -1,17 +1,20 @@
 use crate::{
-    activitypub::{process_new_object, update_object, ProcessNewObject},
     error::{Error, Result},
-    event::{post::EventType, PostEvent},
     http::extractor::SignedActivity,
-    job::deliver::accept::DeliverAccept,
-    service::{federation_filter::FederationFilterService, job::Enqueue},
-    state::Zustand,
-    try_join,
 };
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::{
+    activitypub::{process_new_object, update_object, ProcessNewObject},
+    error::Error as CoreError,
+    event::{post::EventType, PostEvent},
+    job::deliver::accept::DeliverAccept,
+    service::{federation_filter::FederationFilterService, job::Enqueue},
+    state::Zustand,
+    try_join,
+};
 use kitsune_db::{
     model::{
         account::Account,
@@ -96,7 +99,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
                 post_id: new_post.id,
             })
             .await
-            .map_err(Error::Event)?;
+            .map_err(CoreError::Event)?;
     }
 
     Ok(())
@@ -132,7 +135,7 @@ async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -
             post_id,
         })
         .await
-        .map_err(Error::Event)?;
+        .map_err(CoreError::Event)?;
 
     Ok(())
 }
@@ -322,7 +325,7 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
                 post_id: modified_post.id,
             })
             .await
-            .map_err(Error::Event)?;
+            .map_err(CoreError::Event)?;
     }
 
     Ok(())
@@ -343,7 +346,10 @@ pub async fn post(
     #[cfg(feature = "metrics")]
     increment_counter!("received_activities");
 
-    if !federation_filter.is_entity_allowed(&activity)? {
+    if !federation_filter
+        .is_entity_allowed(&activity)
+        .map_err(CoreError::from)?
+    {
         return Ok(());
     }
 

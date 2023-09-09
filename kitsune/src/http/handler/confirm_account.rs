@@ -1,9 +1,10 @@
-use crate::{error::Result, service::user::UserService, state::Zustand};
+use crate::error::Result;
 use axum::{
     debug_handler,
     extract::{Path, State},
     routing, Router,
 };
+use kitsune_core::{service::user::UserService, state::Zustand};
 use serde::Deserialize;
 
 #[derive(Deserialize)]

@@ -35,6 +35,9 @@ pub enum Error {
     Multipart(#[from] MultipartError),
 
     #[error(transparent)]
+    OAuth2(#[from] OAuth2Error),
+
+    #[error(transparent)]
     ParseBool(#[from] ParseBoolError),
 
     #[error(transparent)]
@@ -47,7 +50,25 @@ pub enum Error {
     UnconfirmedEmailAddress,
 
     #[error(transparent)]
+    UrlParse(#[from] url::ParseError),
+
+    #[error(transparent)]
     Uuid(#[from] speedy_uuid::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum OAuth2Error {
+    #[error("Missing grant type")]
+    MissingGrantType,
+
+    #[error(transparent)]
+    OxideAuth(#[from] oxide_auth::endpoint::OAuthError),
+
+    #[error("Unknown grant type")]
+    UnknownGrantType,
+
+    #[error(transparent)]
+    Web(#[from] oxide_auth_axum::WebError),
 }
 
 impl From<ApiError> for Error {

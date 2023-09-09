@@ -1,14 +1,11 @@
-use super::url::UrlService;
-use crate::{
-    error::{Error, Result},
-    util::generate_secret,
-};
+use crate::error::{Error, Result};
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::{Redirect, Response};
 use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::{service::url::UrlService, util::generate_secret};
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},

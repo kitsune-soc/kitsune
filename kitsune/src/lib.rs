@@ -18,7 +18,9 @@ extern crate tracing;
 
 pub mod error;
 pub mod http;
+pub mod oauth2;
 
+use self::oauth2::OAuth2Service;
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
@@ -34,19 +36,10 @@ use kitsune_core::{
     job::KitsuneContextRepo,
     resolve::PostResolver,
     service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        captcha::CaptchaService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        mailing::MailingService,
-        notification::NotificationService,
-        oauth2::{OAuth2Service, OAuthEndpoint},
-        post::PostService,
-        timeline::TimelineService,
-        url::UrlService,
-        user::UserService,
+        account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        mailing::MailingService, notification::NotificationService, post::PostService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     state::{EventEmitter, Service, SessionConfig, Zustand},
     webfinger::Webfinger,
@@ -416,7 +409,6 @@ pub async fn initialise_state(
         fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
-        oauth_endpoint: OAuthEndpoint::from(conn),
         service: Service {
             account: account_service,
             captcha: captcha_service,
@@ -425,7 +417,6 @@ pub async fn initialise_state(
             job: job_service,
             mailing: mailing_service,
             notification: notification_service,
-            oauth2: oauth2_service,
             #[cfg(feature = "oidc")]
             oidc: oidc_service,
             search: search_service,

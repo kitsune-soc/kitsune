@@ -93,9 +93,6 @@ pub enum Error {
     #[error(transparent)]
     Mime(#[from] mime::FromStrError),
 
-    #[error(transparent)]
-    OAuth2(#[from] OAuth2Error),
-
     #[cfg(feature = "oidc")]
     #[error(transparent)]
     Oidc(#[from] OidcError),
@@ -147,21 +144,6 @@ where
             kitsune_db::PoolError::User(err) => err.into(),
         }
     }
-}
-
-#[derive(Debug, Error)]
-pub enum OAuth2Error {
-    #[error("Missing grant type")]
-    MissingGrantType,
-
-    #[error(transparent)]
-    OxideAuth(#[from] oxide_auth::endpoint::OAuthError),
-
-    #[error("Unknown grant type")]
-    UnknownGrantType,
-
-    #[error(transparent)]
-    Web(#[from] oxide_auth_axum::WebError),
 }
 
 #[cfg(feature = "oidc")]

@@ -1,4 +1,4 @@
-use crate::{error::Result, service::attachment::AttachmentService, state::Zustand};
+use crate::error::Result;
 use axum::{
     body::HttpBody,
     extract::{Path, State},
@@ -7,6 +7,7 @@ use axum::{
 };
 use http::header::CONTENT_TYPE;
 use hyper::Body;
+use kitsune_core::{service::attachment::AttachmentService, state::Zustand};
 use speedy_uuid::Uuid;
 
 async fn get(

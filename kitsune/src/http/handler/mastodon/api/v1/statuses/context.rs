@@ -12,7 +12,7 @@ use kitsune_type::mastodon::status::Context;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/context",

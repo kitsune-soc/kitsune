@@ -25,6 +25,7 @@ axum-extra = { version = "0.7.7", features = [
 ] }
 axum-flash = "0.7.0"
 bytes = "1.5.0"
+chrono = { version = "0.4.30", default-features = false }
 color-eyre = "0.6.2"
 const-oid = { version = "0.9.5", features = ["db"] }
 deadpool-redis = "0.12.0"
@@ -52,10 +53,13 @@ kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
+kitsune-language = { path = "../crates/kitsune-language", default-features = false }
 kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
+oxide-auth = "0.5.3"
+oxide-auth-async = "0.1.0"
 oxide-auth-axum = "0.3.0"
 parking_lot = "0.12.1"
 redis = "0.23.3"
@@ -65,6 +69,7 @@ serde = { version = "1.0.188", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.10.6"
 speedy-uuid = { path = "../lib/speedy-uuid" }
+strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.8.0"
 thiserror = "1.0.48"
 time = "0.3.28"
@@ -81,6 +86,7 @@ tracing = "0.1.37"
 tracing-error = "0.2.0"
 tracing-subscriber = "0.3.17"
 typed-builder = "0.16.0"
+url = "2.4.1"
 utoipa = { version = "3.5.0", features = ["axum_extras", "time", "uuid"] }
 utoipa-swagger-ui = { version = "3.1.5", features = ["axum"] }
 

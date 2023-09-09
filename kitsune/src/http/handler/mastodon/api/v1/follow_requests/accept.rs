@@ -1,19 +1,21 @@
+use crate::{
+    error::Result,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use kitsune_type::mastodon::relationship::Relationship;
-use speedy_uuid::Uuid;
-
-use crate::{
-    error::{ApiError, Result},
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+use kitsune_core::{
+    error::ApiError,
     mapping::MastodonMapper,
     service::account::{AccountService, FollowRequest},
 };
+use kitsune_type::mastodon::relationship::Relationship;
+use speedy_uuid::Uuid;
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     post,
     path = "/api/v1/follow_requests/{id}/authorize",

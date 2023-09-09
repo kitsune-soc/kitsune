@@ -18,7 +18,7 @@ pub struct LookupQuery {
     acct: String,
 }
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/lookup",

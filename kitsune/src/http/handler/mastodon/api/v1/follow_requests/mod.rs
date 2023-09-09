@@ -39,7 +39,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/follow_requests",

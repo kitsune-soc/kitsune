@@ -1,7 +1,8 @@
-use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand, try_join};
+use crate::error::Result;
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use kitsune_core::{consts::VERSION, service::user::UserService, state::Zustand, try_join};
 use kitsune_db::{
     schema::{posts, users},
     PgPool,
@@ -12,7 +13,7 @@ use kitsune_type::nodeinfo::two_one::{
 use scoped_futures::ScopedFutureExt;
 use simd_json::{Builder, OwnedValue};
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/nodeinfo/2.1",

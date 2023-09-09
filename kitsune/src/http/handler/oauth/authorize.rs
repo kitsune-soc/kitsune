@@ -1,7 +1,5 @@
-use crate::{
-    error::{Error, Result},
-    service::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor},
-};
+use crate::error::{Error, Result};
+use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
@@ -105,7 +103,7 @@ pub async fn get(
         .map_err(Error::from)
 }
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 pub async fn post(
     State(db_pool): State<PgPool>,
     OriginalUri(original_url): OriginalUri,
@@ -146,7 +144,7 @@ pub async fn post(
         )));
     }
 
-    let is_valid = crate::blocking::cpu(move || {
+    let is_valid = kitsune_core::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 

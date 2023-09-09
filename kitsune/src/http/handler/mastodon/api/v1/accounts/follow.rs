@@ -20,7 +20,7 @@ pub struct FollowBody {
     notify: bool,
 }
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     post,
     path = "/api/v1/accounts/{id}/follow",

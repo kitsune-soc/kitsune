@@ -1,10 +1,19 @@
 use crate::{
-    error::{ApiError, Result},
+    error::{Error, Result},
     http::{
         cond,
         page::{PostComponent, UserPage},
         responder::ActivityPubJson,
     },
+};
+use axum::{
+    extract::{Path, Query, State},
+    routing::{self, post},
+    Router,
+};
+use futures_util::{future::OptionFuture, TryStreamExt};
+use kitsune_core::{
+    error::ApiError,
     mapping::IntoObject,
     service::{
         account::{AccountService, GetPosts},
@@ -13,12 +22,6 @@ use crate::{
     },
     state::Zustand,
 };
-use axum::{
-    extract::{Path, Query, State},
-    routing::{self, post},
-    Router,
-};
-use futures_util::{future::OptionFuture, TryStreamExt};
 use kitsune_type::ap::actor::Actor;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -56,6 +59,7 @@ async fn get_html(
     let posts = account_service
         .get_posts(get_posts)
         .await?
+        .map_err(Error::from)
         .and_then(|post| PostComponent::prepare(&state, post))
         .try_collect()
         .await?;

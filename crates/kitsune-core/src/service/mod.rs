@@ -6,7 +6,6 @@ pub mod instance;
 pub mod job;
 pub mod mailing;
 pub mod notification;
-pub mod oauth2;
 #[cfg(feature = "oidc")]
 pub mod oidc;
 pub mod post;

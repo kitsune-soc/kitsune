@@ -1,5 +1,5 @@
-use crate::state::Zustand;
 use axum::{routing, Router};
+use kitsune_core::state::Zustand;
 
 pub mod home;
 pub mod public;

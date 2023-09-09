@@ -15,7 +15,7 @@ pub mod service;
 pub mod state;
 
 #[cfg(test)]
-mod test;
+pub mod test;
 
 pub mod util;
 pub mod webfinger;

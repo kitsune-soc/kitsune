@@ -11,7 +11,7 @@ use axum::{
 use kitsune_type::mastodon::status::StatusSource;
 use speedy_uuid::Uuid;
 
-#[debug_handler(state = crate::state::Zustand)]
+#[debug_handler(state = kitsune_core::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/source",
