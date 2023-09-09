@@ -19,14 +19,14 @@ metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 metrics-tracing-context = "0.14.0"
 metrics-util = "0.15.1"
-prost = "0.11.9"
+prost = "0.12.0"
 serde = { version = "1.0.188", features = ["derive"] }
-tantivy = "0.20.2"
+tantivy = "0.21.0"
 time = "0.3.28"
 tokio = { version = "1.32.0", features = ["full"] }
-tonic = "0.9.2"
-tonic-health = "0.9.2"
-tower-http = { version = "0.4.3", features = ["add-extension", "trace"] }
+tonic = "0.10.0"
+tonic-health = "0.10.0"
+tower-http = { version = "0.4.4", features = ["add-extension", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 

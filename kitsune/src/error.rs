@@ -1,3 +1,4 @@
+use crate::http::extractor::Json;
 use argon2::password_hash;
 use axum::{
     extract::multipart::MultipartError,
@@ -236,7 +237,7 @@ pub enum Error {
     Uuid(#[from] speedy_uuid::Error),
 
     #[error(transparent)]
-    Validation(#[from] garde::Errors),
+    Validation(#[from] garde::Report),
 }
 
 impl From<Error> for Response {
@@ -263,11 +264,7 @@ impl IntoResponse for Error {
             Self::Database(diesel::result::Error::NotFound) => {
                 StatusCode::NOT_FOUND.into_response()
             }
-            Self::Validation(_errors) => {
-                // TODO: Return actual errors via JSON responses. I complained to the dev already to make them serializable :D
-                //(StatusCode::BAD_REQUEST, Json(errors.flatten())).into_response()
-                StatusCode::BAD_REQUEST.into_response()
-            }
+            Self::Validation(report) => (StatusCode::BAD_REQUEST, Json(report)).into_response(),
             err @ Self::Api(ApiError::NotFound) => {
                 (StatusCode::NOT_FOUND, err.to_string()).into_response()
             }
