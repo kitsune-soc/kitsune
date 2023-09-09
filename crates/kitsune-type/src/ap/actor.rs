@@ -1,4 +1,5 @@
 use super::object::MediaAttachment;
+use crate::jsonld::RdfNode;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use simd_json::OwnedValue;
@@ -43,6 +44,12 @@ pub struct Actor {
     pub following: Option<String>,
     #[serde(default = "Timestamp::now_utc")]
     pub published: Timestamp,
+}
+
+impl RdfNode for Actor {
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

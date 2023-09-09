@@ -3,6 +3,7 @@ use self::{
     helper::StringOrObject,
     object::MediaAttachment,
 };
+use crate::jsonld::RdfNode;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use simd_json::{json, OwnedValue};
@@ -143,6 +144,12 @@ impl Activity {
     }
 }
 
+impl RdfNode for Activity {
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ObjectType {
     Article,
@@ -185,6 +192,12 @@ impl Object {
             AttributedToField::Url(ref url) => Some(url),
             AttributedToField::List(ref list) => list.iter().map(|item| item.id.as_str()).next(),
         }
+    }
+}
+
+impl RdfNode for Object {
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 

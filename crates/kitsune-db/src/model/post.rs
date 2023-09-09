@@ -19,7 +19,9 @@ use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-#[derive(Associations, Clone, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
 #[diesel(belongs_to(Account), table_name = posts)]
 pub struct Post {
     pub id: Uuid,
