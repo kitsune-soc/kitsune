@@ -23,6 +23,7 @@ use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
+use std::borrow::Cow;
 use typed_builder::TypedBuilder;
 
 pub mod deliverer;
@@ -107,31 +108,31 @@ pub async fn process_attachments(
 
 #[derive(TypedBuilder)]
 pub struct ProcessNewObject<'a> {
-    #[builder(default, setter(strip_option))]
-    author: Option<Account>,
+    #[builder(default, setter(into, strip_option))]
+    author: Option<&'a Account>,
     #[builder(default = 0)]
     call_depth: u32,
     db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
-    object: Object,
+    object: Box<Object>,
     fetcher: &'a Fetcher,
     search_service: &'a SearchService,
 }
 
 #[derive(TypedBuilder)]
-pub struct PreprocessedObject<'a> {
-    user: Account,
+struct PreprocessedObject<'a> {
+    user: Cow<'a, Account>,
     visibility: Visibility,
     in_reply_to_id: Option<Uuid>,
     link_preview_url: Option<String>,
     content_lang: Language,
     db_pool: &'a PgPool,
-    object: Object,
+    object: Box<Object>,
     search_service: &'a SearchService,
 }
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn preprocess_object(
+async fn preprocess_object(
     ProcessNewObject {
         author,
         call_depth,
@@ -144,9 +145,9 @@ pub async fn preprocess_object(
 ) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
     let user = if let Some(author) = author {
-        author
+        Cow::Borrowed(author)
     } else {
-        fetcher.fetch_actor(attributed_to.into()).await?
+        Cow::Owned(fetcher.fetch_actor(attributed_to.into()).await?)
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();

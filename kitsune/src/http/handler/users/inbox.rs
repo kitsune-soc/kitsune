@@ -79,11 +79,11 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
 async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
-            .author(author)
+            .author(&author)
             .db_pool(&state.db_pool)
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
-            .object(object)
+            .object(Box::new(object))
             .search_service(&state.service.search)
             .build();
         let new_post = process_new_object(process_data).await?;
@@ -305,11 +305,11 @@ async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> 
 async fn update_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
-            .author(author)
+            .author(&author)
             .db_pool(&state.db_pool)
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
-            .object(object)
+            .object(Box::new(object))
             .search_service(&state.service.search)
             .build();
         let modified_post = update_object(process_data).await?;
