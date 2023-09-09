@@ -16,14 +16,16 @@ extern crate metrics;
 #[macro_use]
 extern crate tracing;
 
-#[cfg(test)]
-mod test;
-
 pub mod error;
-pub mod event;
 pub mod http;
 
-use self::{
+use athena::JobQueue;
+use aws_credential_types::Credentials;
+use aws_sdk_s3::config::Region;
+use eyre::Context;
+use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
+use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, Captcha};
+use kitsune_core::{
     activitypub::Fetcher,
     config::{
         CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
@@ -31,29 +33,23 @@ use self::{
     },
     job::KitsuneContextRepo,
     resolve::PostResolver,
+    service::{
+        account::AccountService,
+        attachment::AttachmentService,
+        captcha::CaptchaService,
+        federation_filter::FederationFilterService,
+        instance::InstanceService,
+        job::JobService,
+        mailing::MailingService,
+        notification::NotificationService,
+        oauth2::{OAuth2Service, OAuthEndpoint},
+        post::PostService,
+        timeline::TimelineService,
+        url::UrlService,
+        user::UserService,
+    },
     state::{EventEmitter, Service, SessionConfig, Zustand},
     webfinger::Webfinger,
-};
-use athena::JobQueue;
-use aws_credential_types::Credentials;
-use aws_sdk_s3::config::Region;
-use eyre::Context;
-use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::Captcha;
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
-use kitsune_core::service::{
-    account::AccountService,
-    attachment::AttachmentService,
-    captcha::CaptchaService,
-    federation_filter::FederationFilterService,
-    instance::InstanceService,
-    job::JobService,
-    mailing::MailingService,
-    oauth2::{OAuth2Service, OAuthEndpoint},
-    post::PostService,
-    timeline::TimelineService,
-    url::UrlService,
-    user::UserService,
 };
 use kitsune_db::PgPool;
 use kitsune_email::{
@@ -67,7 +63,6 @@ use kitsune_messaging::{
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use serde::{de::DeserializeOwned, Serialize};
-use service::notification::NotificationService;
 use std::{
     fmt::Display,
     str::FromStr,
@@ -397,7 +392,7 @@ pub async fn initialise_state(
         .build();
 
     #[cfg(feature = "mastodon-api")]
-    let mastodon_mapper = self::mapping::MastodonMapper::builder()
+    let mastodon_mapper = kitsune_core::mapping::MastodonMapper::builder()
         .attachment_service(attachment_service.clone())
         .cache_invalidator(
             status_event_emitter

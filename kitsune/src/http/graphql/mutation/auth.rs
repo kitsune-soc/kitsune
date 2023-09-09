@@ -1,11 +1,9 @@
-use crate::{
-    http::graphql::{
-        types::{OAuth2Application, User},
-        ContextExt,
-    },
-    service::{oauth2::CreateApp, user::Register},
+use crate::http::graphql::{
+    types::{OAuth2Application, User},
+    ContextExt,
 };
 use async_graphql::{Context, Object, Result};
+use kitsune_core::service::{oauth2::CreateApp, user::Register};
 
 #[derive(Default)]
 pub struct AuthMutation;

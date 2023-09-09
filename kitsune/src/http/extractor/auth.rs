@@ -1,4 +1,4 @@
-use crate::{error::Error, state::Zustand};
+use crate::error::Error;
 use async_trait::async_trait;
 use axum::{
     extract::FromRequestParts,
@@ -9,6 +9,7 @@ use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
+use kitsune_core::state::Zustand;
 use kitsune_db::{
     model::{account::Account, user::User},
     schema::{accounts, oauth2_access_tokens, users},

@@ -1,8 +1,4 @@
-use crate::{
-    activitypub::fetcher::FetchOptions,
-    error::{ApiError, Error, Result},
-    state::Zustand,
-};
+use crate::error::{Error, Result};
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -15,6 +11,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
+use kitsune_core::{activitypub::fetcher::FetchOptions, error::ApiError, state::Zustand};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
     ring::signature::{
@@ -62,11 +59,16 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         };
 
         let ap_id = activity.actor();
-        let remote_user = state.fetcher.fetch_actor(ap_id.into()).await?;
+        let remote_user = state
+            .fetcher
+            .fetch_actor(ap_id.into())
+            .await
+            .map_err(Error::from)?;
+
         if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
-            let remote_user = state.fetcher.fetch_actor(opts).await?;
+            let remote_user = state.fetcher.fetch_actor(opts).await.map_err(Error::from)?;
 
             if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());

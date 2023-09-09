@@ -1,11 +1,9 @@
-use crate::{
-    http::graphql::{
-        types::{Post, Visibility},
-        ContextExt,
-    },
-    service::post::{CreatePost, DeletePost},
+use crate::http::graphql::{
+    types::{Post, Visibility},
+    ContextExt,
 };
 use async_graphql::{Context, Object, Result};
+use kitsune_core::service::post::{CreatePost, DeletePost};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]

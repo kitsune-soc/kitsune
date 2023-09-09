@@ -1,5 +1,5 @@
 use super::{MediaAttachment, Post};
-use crate::{http::graphql::ContextExt, service::account::GetPosts};
+use crate::http::graphql::ContextExt;
 use async_graphql::{
     connection::{self, Connection, Edge},
     ComplexObject, Context, Result, SimpleObject,
@@ -7,6 +7,7 @@ use async_graphql::{
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
+use kitsune_core::service::account::GetPosts;
 use kitsune_db::{
     model::{
         account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,

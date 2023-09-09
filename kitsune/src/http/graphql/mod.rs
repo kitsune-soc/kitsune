@@ -1,6 +1,5 @@
 use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
-use crate::state::Zustand;
 use async_graphql::{
     extensions::Tracing,
     http::{playground_source, GraphQLPlaygroundConfig},
@@ -13,6 +12,7 @@ use axum::{
     routing::{any, get},
     Extension, Router,
 };
+use kitsune_core::state::Zustand;
 
 type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 

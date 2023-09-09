@@ -2,8 +2,8 @@ use self::{
     handler::{confirm_account, media, nodeinfo, oauth, posts, users, well_known},
     openapi::api_docs,
 };
-use crate::{config::ServerConfiguration, state::Zustand};
 use axum::{extract::DefaultBodyLimit, Router};
+use kitsune_core::{config::ServerConfiguration, state::Zustand};
 use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,

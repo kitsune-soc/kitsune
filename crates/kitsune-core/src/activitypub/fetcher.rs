@@ -633,17 +633,19 @@ mod test {
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
-                let body = include_str!("../test-fixtures/0x0_actor.json");
+                let body = include_str!("../../../../test-fixtures/0x0_actor.json");
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             "/@0x0/109501674056556919" => {
-                let body =
-                    include_str!("../test-fixtures/corteximplant.com_109501674056556919.json");
+                let body = include_str!(
+                    "../../../../test-fixtures/corteximplant.com_109501674056556919.json"
+                );
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             "/users/0x0/statuses/109501659207519785" => {
-                let body =
-                    include_str!("../test-fixtures/corteximplant.com_109501659207519785.json");
+                let body = include_str!(
+                    "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
+                );
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             path => panic!("HTTP client hit unexpected route: {path}"),

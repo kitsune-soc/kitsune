@@ -1,12 +1,10 @@
-use crate::{
-    http::graphql::{types::Post, ContextExt},
-    service::timeline::{GetHome, GetPublic},
-};
+use crate::http::graphql::{types::Post, ContextExt};
 use async_graphql::{
     connection::{self, Connection, Edge},
     Context, Object, Result,
 };
 use futures_util::TryStreamExt;
+use kitsune_core::service::timeline::{GetHome, GetPublic};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]
