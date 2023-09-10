@@ -23,7 +23,7 @@ use kitsune_http_signatures::{
     HttpVerifier,
 };
 use kitsune_type::ap::Activity;
-use rsa::pkcs8::{Document, SubjectPublicKeyInfoRef};
+use pkcs8::{Document, SubjectPublicKeyInfoRef};
 use scoped_futures::ScopedFutureExt;
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature

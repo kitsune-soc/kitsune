@@ -14,7 +14,6 @@ autometrics = { version = "0.6.0", default-features = false }
 base64-simd = "0.8.0"
 bytes = "1.5.0"
 const_format = "0.2.31"
-chrono = { version = "0.4.30", default-features = false }
 deadpool-redis = { version = "0.12.0", default-features = false }
 derive_builder = "0.12.0"
 diesel = "2.1.1"

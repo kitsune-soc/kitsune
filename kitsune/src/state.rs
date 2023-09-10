@@ -1,7 +1,4 @@
-use crate::{
-    oauth2::{OAuth2Service, OAuthEndpoint},
-    oidc::OidcService,
-};
+use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum::extract::FromRef;
 use axum_extra::extract::cookie;
 use kitsune_core::{
@@ -16,6 +13,9 @@ use kitsune_core::{
 };
 use kitsune_db::PgPool;
 use kitsune_search::SearchService;
+
+#[cfg(feature = "oidc")]
+use crate::oidc::OidcService;
 
 #[macro_export]
 macro_rules! impl_from_ref {
