@@ -15,7 +15,6 @@ env:
 jobs:
   clippy:
     name: Clippy
-    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -37,7 +36,6 @@ jobs:
   
   test:
     name: Test
-    needs: fmt
     runs-on: ubuntu-latest
     services:
       postgres:
