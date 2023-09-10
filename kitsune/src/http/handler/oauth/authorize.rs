@@ -27,7 +27,7 @@ use speedy_uuid::Uuid;
 
 #[cfg(feature = "oidc")]
 use {
-    crate::service::oidc::OidcService,
+    crate::oidc::OidcService,
     axum::extract::Query,
     kitsune_db::{model::oauth2, schema::oauth2_applications},
 };
@@ -56,6 +56,7 @@ pub struct LoginPage {
 pub async fn get(
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+
     State(db_pool): State<PgPool>,
     State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
@@ -103,7 +104,7 @@ pub async fn get(
         .map_err(Error::from)
 }
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 pub async fn post(
     State(db_pool): State<PgPool>,
     OriginalUri(original_url): OriginalUri,

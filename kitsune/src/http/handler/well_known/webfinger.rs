@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::{error::Result, state::AppState};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
@@ -7,7 +7,7 @@ use axum_extra::either::Either;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_core::{service::url::UrlService, state::Zustand};
+use kitsune_core::service::url::UrlService;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::webfinger::{Link, Resource};
 use scoped_futures::ScopedFutureExt;
@@ -73,7 +73,7 @@ async fn get(
     })))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/", routing::get(get))
 }
 

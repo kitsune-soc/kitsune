@@ -6,7 +6,7 @@ use self::{
     },
     mailing::confirmation::SendConfirmationMail,
 };
-use crate::{activitypub::Deliverer, error::Result, state::Zustand};
+use crate::{activitypub::Deliverer, error::Result, state::State};
 use async_trait::async_trait;
 use athena::{JobContextRepository, JobQueue, Runnable};
 use diesel::{ExpressionMethods, QueryDsl};
@@ -61,7 +61,7 @@ macro_rules! impl_from {
 
 pub struct JobRunnerContext {
     deliverer: Deliverer,
-    state: Zustand,
+    state: State,
 }
 
 impl_from! {
@@ -175,7 +175,7 @@ impl JobContextRepository for KitsuneContextRepo {
 #[instrument(skip(job_queue, state))]
 pub async fn run_dispatcher(
     job_queue: JobQueue<KitsuneContextRepo>,
-    state: Zustand,
+    state: State,
     num_job_workers: usize,
 ) {
     let deliverer = Deliverer::builder()

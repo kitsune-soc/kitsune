@@ -1,4 +1,4 @@
-use crate::state::Zustand;
+use crate::state::State;
 use base64_simd::AsOut;
 use hex_simd::AsciiCase;
 use iso8601_timestamp::Timestamp;
@@ -53,12 +53,12 @@ impl AccessTokenTtl for AccessToken {
 }
 
 pub trait BaseToCc {
-    fn base_to_cc(&self, state: &Zustand, account: &Account) -> (Vec<String>, Vec<String>);
+    fn base_to_cc(&self, state: &State, account: &Account) -> (Vec<String>, Vec<String>);
 }
 
 impl BaseToCc for Visibility {
     #[inline]
-    fn base_to_cc(&self, state: &Zustand, account: &Account) -> (Vec<String>, Vec<String>) {
+    fn base_to_cc(&self, state: &State, account: &Account) -> (Vec<String>, Vec<String>) {
         let followers_url = state.service.url.followers_url(account.id);
 
         match self {

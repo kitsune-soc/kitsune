@@ -1,5 +1,6 @@
+use crate::state::AppState;
 use axum::{extract::State, routing, Json, Router};
-use kitsune_core::{service::url::UrlService, state::Zustand};
+use kitsune_core::service::url::UrlService;
 use kitsune_type::nodeinfo::well_known::{Link, WellKnown};
 
 #[allow(clippy::unused_async)]
@@ -21,6 +22,6 @@ async fn get(State(url_service): State<UrlService>) -> Json<WellKnown> {
     })
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/", routing::get(get))
 }

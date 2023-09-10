@@ -1,12 +1,10 @@
 use crate::{
-    error::{ApiError, Result},
+    error::{Error, Result},
     http::{
         extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
-    mapping::MastodonMapper,
-    service::attachment::{AttachmentService, Update, Upload},
-    state::Zustand,
+    state::AppState,
 };
 use axum::{
     debug_handler,
@@ -14,6 +12,11 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
+use kitsune_core::{
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::attachment::{AttachmentService, Update, Upload},
+};
 use kitsune_type::mastodon::MediaAttachment;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -91,7 +94,7 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     put,
     path = "/api/v1/media/{id}",
@@ -119,11 +122,12 @@ pub async fn put(
     attachment_service
         .update(update)
         .and_then(|model| mastodon_mapper.map(model))
+        .map_err(Error::from)
         .map_ok(Json)
         .await
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).put(put))

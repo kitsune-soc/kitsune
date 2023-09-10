@@ -1,6 +1,6 @@
 use crate::{
     error::{ApiError, Error, Result},
-    state::Zustand,
+    state::State,
     try_join,
     util::BaseToCc,
 };
@@ -31,14 +31,14 @@ use std::str::FromStr;
 pub trait IntoObject {
     type Output;
 
-    async fn into_object(self, state: &Zustand) -> Result<Self::Output>;
+    async fn into_object(self, state: &State) -> Result<Self::Output>;
 }
 
 #[async_trait]
 impl IntoObject for DbMediaAttachment {
     type Output = MediaAttachment;
 
-    async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+    async fn into_object(self, state: &State) -> Result<Self::Output> {
         let mime =
             Mime::from_str(&self.content_type).map_err(|_| ApiError::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
@@ -63,7 +63,7 @@ impl IntoObject for DbMediaAttachment {
 impl IntoObject for Post {
     type Output = Object;
 
-    async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+    async fn into_object(self, state: &State) -> Result<Self::Output> {
         // Right now a repost can't have content
         // Therefore it's also not an object
         // We just return en error here
@@ -163,7 +163,7 @@ impl IntoObject for Post {
 impl IntoObject for Account {
     type Output = Actor;
 
-    async fn into_object(self, state: &Zustand) -> Result<Self::Output> {
+    async fn into_object(self, state: &State) -> Result<Self::Output> {
         let (icon, image) = state
             .db_pool
             .with_connection(|db_conn| {

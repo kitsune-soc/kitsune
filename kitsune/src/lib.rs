@@ -19,8 +19,14 @@ extern crate tracing;
 pub mod error;
 pub mod http;
 pub mod oauth2;
+#[cfg(feature = "oidc")]
+pub mod oidc;
+pub mod state;
 
-use self::oauth2::OAuth2Service;
+use self::{
+    oauth2::OAuth2Service,
+    state::{AppState, SessionConfig},
+};
 use athena::JobQueue;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::Region;
@@ -41,7 +47,7 @@ use kitsune_core::{
         mailing::MailingService, notification::NotificationService, post::PostService,
         timeline::TimelineService, url::UrlService, user::UserService,
     },
-    state::{EventEmitter, Service, SessionConfig, Zustand},
+    state::{EventEmitter, Service, State as CoreState},
     webfinger::Webfinger,
 };
 use kitsune_db::PgPool;
@@ -55,6 +61,7 @@ use kitsune_messaging::{
 };
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
+use oauth2::OAuthEndpoint;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fmt::Display,
@@ -71,11 +78,9 @@ use kitsune_search::MeiliSearchService;
 
 #[cfg(feature = "oidc")]
 use {
-    self::{
-        config::OidcConfiguration,
-        service::oidc::{async_client, OidcService},
-    },
+    self::oidc::{async_client, OidcService},
     futures_util::future::OptionFuture,
+    kitsune_core::config::OidcConfiguration,
     openidconnect::{
         core::{CoreClient, CoreProviderMetadata},
         ClientId, ClientSecret, IssuerUrl, RedirectUrl,
@@ -271,7 +276,7 @@ pub async fn initialise_state(
     config: &Configuration,
     conn: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
-) -> eyre::Result<Zustand> {
+) -> eyre::Result<AppState> {
     let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
@@ -400,33 +405,37 @@ pub async fn initialise_state(
         .build()
         .expect("[Bug] Failed to initialise Mastodon mapper");
 
-    Ok(Zustand {
-        db_pool: conn.clone(),
-        embed_client,
-        event_emitter: EventEmitter {
-            post: status_event_emitter.clone(),
+    Ok(AppState {
+        core: CoreState {
+            db_pool: conn.clone(),
+            embed_client,
+            event_emitter: EventEmitter {
+                post: status_event_emitter.clone(),
+            },
+            fetcher,
+            #[cfg(feature = "mastodon-api")]
+            mastodon_mapper,
+            service: Service {
+                account: account_service,
+                captcha: captcha_service,
+                federation_filter: federation_filter_service,
+                instance: instance_service,
+                job: job_service,
+                mailing: mailing_service,
+                notification: notification_service,
+                search: search_service,
+                post: post_service,
+                timeline: timeline_service,
+                attachment: attachment_service,
+                url: url_service,
+                user: user_service,
+            },
+            webfinger,
         },
-        fetcher,
-        #[cfg(feature = "mastodon-api")]
-        mastodon_mapper,
-        service: Service {
-            account: account_service,
-            captcha: captcha_service,
-            federation_filter: federation_filter_service,
-            instance: instance_service,
-            job: job_service,
-            mailing: mailing_service,
-            notification: notification_service,
-            #[cfg(feature = "oidc")]
-            oidc: oidc_service,
-            search: search_service,
-            post: post_service,
-            timeline: timeline_service,
-            attachment: attachment_service,
-            url: url_service,
-            user: user_service,
-        },
+        oauth2: oauth2_service,
+        oauth_endpoint: OAuthEndpoint::from(conn),
+        #[cfg(feature = "oidc")]
+        oidc: oidc_service,
         session_config: SessionConfig::generate(),
-        webfinger,
     })
 }

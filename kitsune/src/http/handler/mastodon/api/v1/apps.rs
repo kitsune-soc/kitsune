@@ -1,8 +1,8 @@
+use crate::state::AppState;
 use crate::{
     error::Result,
     http::extractor::FormOrJson,
-    service::oauth2::{CreateApp, OAuth2Service},
-    state::Zustand,
+    oauth2::{CreateApp, OAuth2Service},
 };
 use axum::{extract::State, routing, Json, Router};
 use kitsune_type::mastodon::App;
@@ -42,6 +42,6 @@ async fn post(
     }))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/", routing::post(post))
 }

@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::{error::Result, state::AppState};
 use axum::{
     body::HttpBody,
     extract::{Path, State},
@@ -7,7 +7,7 @@ use axum::{
 };
 use http::header::CONTENT_TYPE;
 use hyper::Body;
-use kitsune_core::{service::attachment::AttachmentService, state::Zustand};
+use kitsune_core::service::attachment::AttachmentService;
 use speedy_uuid::Uuid;
 
 async fn get(
@@ -24,6 +24,6 @@ async fn get(
         .into_response())
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/:id", routing::get(get))
 }

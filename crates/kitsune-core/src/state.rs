@@ -9,59 +9,12 @@ use crate::{
     },
     webfinger::Webfinger,
 };
-use axum::extract::FromRef;
-use axum_extra::extract::cookie;
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
 
 #[cfg(feature = "oidc")]
 use crate::service::oidc::OidcService;
-
-macro_rules! impl_from_ref {
-    ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
-        $(
-            impl ::axum::extract::FromRef<$source> for $target {
-                fn from_ref(input: &$source) -> Self {
-                    #[allow(clippy::redundant_closure_call)]
-                    ($extract_impl)(input)
-                }
-            }
-        )+
-    };
-}
-
-impl_from_ref! {
-    Zustand;
-    [
-        AccountService => |input: &Zustand| input.service.account.clone(),
-        AttachmentService => |input: &Zustand| input.service.attachment.clone(),
-        FederationFilterService => |input: &Zustand| input.service.federation_filter.clone(),
-        JobService => |input: &Zustand| input.service.job.clone(),
-        NotificationService => |input: &Zustand| input.service.notification.clone(),
-        PostService => |input: &Zustand| input.service.post.clone(),
-        SearchService => |input: &Zustand| input.service.search.clone(),
-        InstanceService => |input: &Zustand| input.service.instance.clone(),
-        TimelineService => |input: &Zustand| input.service.timeline.clone(),
-        UrlService => |input: &Zustand| input.service.url.clone(),
-        UserService => |input: &Zustand| input.service.user.clone()
-    ]
-}
-
-#[cfg(feature = "oidc")]
-impl_from_ref! {
-    Zustand;
-    [
-        Option<OidcService> => |input: &Zustand| input.service.oidc.clone()
-    ]
-}
-
-impl_from_ref! {
-    Zustand;
-    [
-        PostEventEmitter => |input: &Zustand| input.event_emitter.post.clone()
-    ]
-}
 
 /// Emitter collection
 ///
@@ -70,40 +23,6 @@ impl_from_ref! {
 #[derive(Clone)]
 pub struct EventEmitter {
     pub post: PostEventEmitter,
-}
-
-#[derive(Clone)]
-pub struct SessionConfig {
-    pub cookie_key: cookie::Key,
-    pub flash_config: axum_flash::Config,
-}
-
-impl SessionConfig {
-    /// Randomly generates the keys for the cookie jars
-    #[must_use]
-    pub fn generate() -> Self {
-        let cookie_key = cookie::Key::generate();
-        #[allow(unused_mut)]
-        let mut flash_config = axum_flash::Config::new(axum_flash::Key::generate());
-
-        #[cfg(debug_assertions)]
-        {
-            flash_config = flash_config.use_secure_cookies(false);
-        }
-
-        Self {
-            cookie_key,
-            flash_config,
-        }
-    }
-}
-
-impl_from_ref! {
-    Zustand;
-    [
-        cookie::Key => |input: &Zustand| input.session_config.cookie_key.clone(),
-        axum_flash::Config => |input: &Zustand| input.session_config.flash_config.clone()
-    ]
 }
 
 /// Service collection
@@ -119,8 +38,6 @@ pub struct Service {
     pub job: JobService,
     pub mailing: MailingService,
     pub notification: NotificationService,
-    #[cfg(feature = "oidc")]
-    pub oidc: Option<OidcService>,
     pub post: PostService,
     pub instance: InstanceService,
     pub search: SearchService,
@@ -129,12 +46,10 @@ pub struct Service {
     pub user: UserService,
 }
 
-/// Application state
-///
-/// Called it "Zustand" to avoid a name collission with `axum::extract::State`.
-/// "Zustand" is just the german word for state.
-#[derive(Clone, FromRef)]
-pub struct Zustand {
+/// Core application state
+#[derive(Clone)]
+#[cfg_attr(feature = "axum", derive(axum::extract::FromRef))]
+pub struct State {
     pub db_pool: PgPool,
     pub embed_client: Option<EmbedClient>,
     pub event_emitter: EventEmitter,
@@ -142,6 +57,5 @@ pub struct Zustand {
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: crate::mapping::MastodonMapper,
     pub service: Service,
-    pub session_config: SessionConfig,
     pub webfinger: Webfinger,
 }

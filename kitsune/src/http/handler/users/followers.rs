@@ -1,8 +1,8 @@
-use crate::{error::Result, http::responder::ActivityPubJson};
+use crate::{error::Result, http::responder::ActivityPubJson, state::AppState};
 use axum::extract::{OriginalUri, Path, State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::{service::url::UrlService, state::Zustand};
+use kitsune_core::service::url::UrlService;
 use kitsune_db::schema::{accounts, accounts_follows};
 use kitsune_type::ap::{
     ap_context,
@@ -12,7 +12,7 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 
 pub async fn get(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,

@@ -1,16 +1,10 @@
 use crate::{
-    consts::API_DEFAULT_LIMIT,
-    error::{ApiError, Result},
+    error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    mapping::MastodonMapper,
-    service::{
-        notification::{GetNotifications, NotificationService},
-        url::UrlService,
-    },
-    state::Zustand,
+    state::AppState,
 };
 use axum::{
     debug_handler,
@@ -19,6 +13,15 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
+use kitsune_core::{
+    consts::API_DEFAULT_LIMIT,
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::{
+        notification::{GetNotifications, NotificationService},
+        url::UrlService,
+    },
+};
 use kitsune_type::mastodon::{notification::NotificationType, Notification};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -49,7 +52,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/notifications",
@@ -105,7 +108,7 @@ pub async fn get(
     Ok((link_header, Json(notifications)))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/notifications/{id}",
@@ -130,7 +133,7 @@ pub async fn get_by_id(
     Ok(Json(mastodon_mapper.map(notification).await?))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", routing::get(get))
         .route("/:id", routing::get(get_by_id))

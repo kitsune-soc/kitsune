@@ -1,8 +1,8 @@
+use crate::state::AppState;
 use axum::Router;
-use kitsune_core::state::Zustand;
 
 pub mod two_one;
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().nest("/2.1", two_one::routes())
 }

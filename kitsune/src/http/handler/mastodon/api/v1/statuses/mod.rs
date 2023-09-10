@@ -1,9 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
-    mapping::MastodonMapper,
-    service::post::{CreatePost, DeletePost, PostService, UpdatePost},
-    state::Zustand,
+    state::AppState,
 };
 use axum::{
     debug_handler,
@@ -11,6 +9,10 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
+use kitsune_core::{
+    mapping::MastodonMapper,
+    service::post::{CreatePost, DeletePost, PostService, UpdatePost},
+};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -48,7 +50,7 @@ pub struct UpdateForm {
     spoiler_text: Option<String>,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     delete,
     path = "/api/v1/statuses/{id}",
@@ -76,7 +78,7 @@ async fn delete(
     Ok(StatusCode::OK)
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}",
@@ -107,7 +109,7 @@ async fn get(
     Ok(Json(status))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     post,
     path = "/api/v1/statuses",
@@ -147,7 +149,7 @@ async fn post(
     Ok(Json(status))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     put,
     path = "/api/v1/statuses/{id}",
@@ -182,7 +184,7 @@ async fn put(
     Ok(Json(status))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).delete(delete).put(put))

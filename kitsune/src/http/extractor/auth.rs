@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::{error::Error, state::AppState};
 use async_trait::async_trait;
 use axum::{
     extract::FromRequestParts,
@@ -9,7 +9,6 @@ use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
-use kitsune_core::state::Zustand;
 use kitsune_db::{
     model::{account::Account, user::User},
     schema::{accounts, oauth2_access_tokens, users},
@@ -37,14 +36,14 @@ pub struct UserData {
 pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
 
 #[async_trait]
-impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
+impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<AppState>
     for AuthExtractor<ENFORCE_EXPIRATION>
 {
     type Rejection = Response;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &Zustand,
+        state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization::<Bearer>(bearer_token)) = parts
             .extract_with_state(state)

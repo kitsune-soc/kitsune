@@ -1,5 +1,5 @@
+use crate::state::AppState;
 use axum::Router;
-use kitsune_core::state::Zustand;
 
 pub mod accounts;
 pub mod apps;
@@ -10,7 +10,7 @@ pub mod notifications;
 pub mod statuses;
 pub mod timelines;
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .nest("/apps", apps::routes())
         .nest("/accounts", accounts::routes())

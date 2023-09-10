@@ -2,8 +2,9 @@ use self::{
     handler::{confirm_account, media, nodeinfo, oauth, posts, users, well_known},
     openapi::api_docs,
 };
+use crate::state::AppState;
 use axum::{extract::DefaultBodyLimit, Router};
-use kitsune_core::{config::ServerConfiguration, state::Zustand};
+use kitsune_core::config::ServerConfiguration;
 use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,
@@ -28,7 +29,7 @@ mod util;
 
 pub mod extractor;
 
-pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
+pub fn create_router(state: AppState, server_config: &ServerConfiguration) -> Router {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.to_string();
@@ -92,7 +93,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
 }
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: ServerConfiguration) {
+pub async fn run(state: AppState, server_config: ServerConfiguration) {
     let router = create_router(state, &server_config);
     axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())

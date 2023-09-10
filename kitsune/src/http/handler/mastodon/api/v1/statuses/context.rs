@@ -1,18 +1,16 @@
-use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::MastodonMapper,
-    service::post::PostService,
-};
+use crate::{error::Result, http::extractor::MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
 use futures_util::TryStreamExt;
+use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
 use kitsune_type::mastodon::status::Context;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/context",

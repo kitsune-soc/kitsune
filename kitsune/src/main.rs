@@ -3,10 +3,11 @@
 
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
-use kitsune::{
+use kitsune::http;
+use kitsune_core::{
     config::Configuration,
     consts::{STARTUP_FIGLET, VERSION},
-    http, job,
+    job,
 };
 use std::{
     borrow::Cow,
@@ -157,7 +158,7 @@ async fn boot() -> eyre::Result<()> {
     tokio::spawn(self::http::run(state.clone(), config.server.clone()));
     tokio::spawn(self::job::run_dispatcher(
         job_queue,
-        state.clone(),
+        state.core.clone(),
         config.job_queue.num_workers.get(),
     ));
 

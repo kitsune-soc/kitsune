@@ -1,6 +1,7 @@
 use crate::{
     error::{Error, Result},
     http::extractor::SignedActivity,
+    state::AppState,
 };
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
@@ -12,7 +13,6 @@ use kitsune_core::{
     event::{post::EventType, PostEvent},
     job::deliver::accept::DeliverAccept,
     service::{federation_filter::FederationFilterService, job::Enqueue},
-    state::Zustand,
     try_join,
 };
 use kitsune_db::{
@@ -32,7 +32,7 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::ops::Not;
 
-async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
+async fn accept_activity(state: &AppState, activity: Activity) -> Result<()> {
     state
         .db_pool
         .with_connection(|db_conn| {
@@ -48,7 +48,7 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
     Ok(())
 }
 
-async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn announce_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     let reposted_post = state.fetcher.fetch_object(activity.object()).await?;
 
     state
@@ -79,7 +79,7 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
     Ok(())
 }
 
-async fn create_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn create_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
             .author(&author)
@@ -105,7 +105,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
     Ok(())
 }
 
-async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn delete_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     let post_id = state
         .db_pool
         .with_connection(|db_conn| {
@@ -140,7 +140,7 @@ async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -
     Ok(())
 }
 
-async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn follow_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
 
@@ -207,7 +207,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
     Ok(())
 }
 
-async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn like_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     let permission_check = PermissionCheck::builder()
         .fetching_account_id(Some(author.id))
         .build()
@@ -244,7 +244,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
     Ok(())
 }
 
-async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn reject_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     state
         .db_pool
         .with_connection(|db_conn| {
@@ -263,7 +263,7 @@ async fn reject_activity(state: &Zustand, author: Account, activity: Activity) -
     Ok(())
 }
 
-async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn undo_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     state
         .db_pool
         .with_connection(|db_conn| {
@@ -305,7 +305,7 @@ async fn undo_activity(state: &Zustand, author: Account, activity: Activity) -> 
     Ok(())
 }
 
-async fn update_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
+async fn update_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
             .author(&author)
@@ -337,9 +337,9 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
 /// Since the extractor validates "request signer == activity author", it is safe to assume that the object author is the activity author.
 /// There aren't really any scenarios where this could be used for any nefarious purposes since a user would have *much* bigger problems than
 /// getting someone elses post attributed to them.
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 pub async fn post(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(federation_filter): State<FederationFilterService>,
     SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {

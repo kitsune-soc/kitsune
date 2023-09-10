@@ -1,10 +1,10 @@
-use crate::error::Result;
+use crate::{error::Result, state::AppState};
 use axum::{
     debug_handler,
     extract::{Path, State},
     routing, Router,
 };
-use kitsune_core::{service::user::UserService, state::Zustand};
+use kitsune_core::service::user::UserService;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -12,7 +12,7 @@ struct GetPath {
     confirmation_token: String,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 async fn get(
     State(user_service): State<UserService>,
     Path(path): Path<GetPath>,
@@ -24,6 +24,6 @@ async fn get(
     Ok("Account confirmed successfully! You can log in now")
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/:confirmation_token", routing::get(get))
 }

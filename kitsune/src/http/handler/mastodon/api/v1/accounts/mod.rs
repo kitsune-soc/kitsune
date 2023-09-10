@@ -1,13 +1,9 @@
-use crate::{
-    error::{ApiError, Result},
-    mapping::MastodonMapper,
-    service::account::AccountService,
-    state::Zustand,
-};
+use crate::{error::Result, state::AppState};
 use axum::{
     extract::{Path, State},
     routing, Json, Router,
 };
+use kitsune_core::{error::ApiError, mapping::MastodonMapper, service::account::AccountService};
 use kitsune_type::mastodon;
 use speedy_uuid::Uuid;
 
@@ -40,7 +36,7 @@ async fn get(
     Ok(Json(mastodon_mapper.map(account).await?))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/:id", routing::get(get))
         .route("/:id/follow", routing::post(follow::post))

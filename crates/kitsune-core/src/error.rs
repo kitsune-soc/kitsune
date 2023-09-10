@@ -93,10 +93,6 @@ pub enum Error {
     #[error(transparent)]
     Mime(#[from] mime::FromStrError),
 
-    #[cfg(feature = "oidc")]
-    #[error(transparent)]
-    Oidc(#[from] OidcError),
-
     #[error(transparent)]
     PasswordHash(#[from] password_hash::Error),
 
@@ -144,47 +140,4 @@ where
             kitsune_db::PoolError::User(err) => err.into(),
         }
     }
-}
-
-#[cfg(feature = "oidc")]
-use openidconnect::{
-    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
-    StandardErrorResponse,
-};
-
-#[cfg(feature = "oidc")]
-#[derive(Debug, Error)]
-pub enum OidcError {
-    #[error(transparent)]
-    ClaimsVerification(#[from] ClaimsVerificationError),
-
-    #[error(transparent)]
-    LoginState(#[from] kitsune_cache::Error),
-
-    #[error("Missing Email address")]
-    MissingEmail,
-
-    #[error("Mismatching hash")]
-    MismatchingHash,
-
-    #[error("Missing ID token")]
-    MissingIdToken,
-
-    #[error("Missing username")]
-    MissingUsername,
-
-    #[error(transparent)]
-    RequestToken(
-        #[from]
-        RequestTokenError<
-            kitsune_http_client::Error,
-            StandardErrorResponse<CoreErrorResponseType>,
-        >,
-    ),
-
-    #[error(transparent)]
-    Signing(#[from] SigningError),
-
-    #[error("Unknown CSRF token")]
-    UnknownCsrfToken,
 }

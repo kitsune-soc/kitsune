@@ -1,10 +1,9 @@
-use crate::{
-    consts::VERSION,
-    error::Result,
-    service::{instance::InstanceService, url::UrlService},
-    state::Zustand,
-};
+use crate::{error::Result, state::AppState};
 use axum::{extract::State, routing, Json, Router};
+use kitsune_core::{
+    consts::VERSION,
+    service::{instance::InstanceService, url::UrlService},
+};
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,
@@ -44,6 +43,6 @@ async fn get(
     }))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/", routing::get(get))
 }

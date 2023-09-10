@@ -1,13 +1,16 @@
 use crate::{
-    error::{ApiError, Result},
+    error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
-    mapping::MastodonMapper,
-    service::account::{AccountService, Follow},
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
+};
+use kitsune_core::{
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::account::{AccountService, Follow},
 };
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
@@ -20,7 +23,7 @@ pub struct FollowBody {
     notify: bool,
 }
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 #[utoipa::path(
     post,
     path = "/api/v1/accounts/{id}/follow",

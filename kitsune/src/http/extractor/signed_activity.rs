@@ -1,4 +1,7 @@
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    state::AppState,
+};
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -11,7 +14,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
-use kitsune_core::{activitypub::fetcher::FetchOptions, error::ApiError, state::Zustand};
+use kitsune_core::{activitypub::fetcher::FetchOptions, error::ApiError};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
     ring::signature::{
@@ -30,12 +33,12 @@ use scoped_futures::ScopedFutureExt;
 pub struct SignedActivity(pub Account, pub Activity);
 
 #[async_trait]
-impl FromRequest<Zustand, Body> for SignedActivity {
+impl FromRequest<AppState, Body> for SignedActivity {
     type Rejection = Response;
 
     async fn from_request(
         mut req: http::Request<Body>,
-        state: &Zustand,
+        state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         // Axum will cut out the "/users" part of the router (due to the nesting)
         // That's why we get the original URI here (which includes the full path)

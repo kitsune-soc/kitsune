@@ -3077,6 +3077,7 @@ dependencies = [
 name = "kitsune"
 version = "0.0.1-pre.3"
 dependencies = [
+ "argon2",
  "askama",
  "askama_axum",
  "async-graphql",
@@ -3113,6 +3114,7 @@ dependencies = [
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
+ "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-language",
  "kitsune-messaging",
@@ -3125,6 +3127,7 @@ dependencies = [
  "metrics-util",
  "mime",
  "mime_guess",
+ "openidconnect",
  "oxide-auth",
  "oxide-auth-async",
  "oxide-auth-axum",
@@ -3220,9 +3223,6 @@ dependencies = [
  "async-trait",
  "athena",
  "autometrics",
- "axum",
- "axum-extra",
- "axum-flash",
  "base64-simd",
  "bytes",
  "chrono",
@@ -3254,7 +3254,6 @@ dependencies = [
  "kitsune-type",
  "mime",
  "mime_guess",
- "openidconnect",
  "password-hash",
  "pin-project-lite",
  "pkcs8",

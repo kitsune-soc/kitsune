@@ -1,9 +1,12 @@
-use crate::http::graphql::{
-    types::{OAuth2Application, User},
-    ContextExt,
+use crate::{
+    http::graphql::{
+        types::{OAuth2Application, User},
+        ContextExt,
+    },
+    oauth2::CreateApp,
 };
 use async_graphql::{Context, Object, Result};
-use kitsune_core::service::{oauth2::CreateApp, user::Register};
+use kitsune_core::service::user::Register;
 
 #[derive(Default)]
 pub struct AuthMutation;
@@ -20,7 +23,7 @@ impl AuthMutation {
             .name(name)
             .redirect_uris(redirect_uri)
             .build();
-        let application = ctx.state().service.oauth2.create_app(create_app).await?;
+        let application = ctx.state().oauth2.create_app(create_app).await?;
 
         Ok(application.into())
     }

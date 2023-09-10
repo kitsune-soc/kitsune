@@ -1,16 +1,10 @@
 use crate::{
-    consts::API_DEFAULT_LIMIT,
     error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    mapping::MastodonMapper,
-    service::{
-        account::{AccountService, GetFollowRequests},
-        url::UrlService,
-    },
-    state::Zustand,
+    state::AppState,
 };
 use axum::{
     debug_handler,
@@ -19,6 +13,14 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
+use kitsune_core::{
+    consts::API_DEFAULT_LIMIT,
+    mapping::MastodonMapper,
+    service::{
+        account::{AccountService, GetFollowRequests},
+        url::UrlService,
+    },
+};
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -39,7 +41,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/follow_requests",
@@ -84,7 +86,7 @@ pub async fn get(
     Ok((link_header, Json(accounts)))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", routing::get(get))
         .route("/:id/authorize", routing::post(accept::post))

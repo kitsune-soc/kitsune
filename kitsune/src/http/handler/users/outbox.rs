@@ -1,4 +1,4 @@
-use crate::{error::Result, http::responder::ActivityPubJson};
+use crate::{error::Result, http::responder::ActivityPubJson, state::AppState};
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
@@ -7,7 +7,6 @@ use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_core::{
     mapping::IntoActivity,
     service::{account::GetPosts, url::UrlService},
-    state::Zustand,
 };
 use kitsune_db::{
     model::{account::Account, post::Post},
@@ -34,7 +33,7 @@ pub struct OutboxQuery {
 }
 
 pub async fn get(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,

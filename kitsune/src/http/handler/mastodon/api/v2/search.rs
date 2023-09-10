@@ -1,14 +1,17 @@
 use crate::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
     error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    state::Zustand,
+    state::AppState,
 };
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
+use kitsune_core::{
+    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    error::Error as CoreError,
+};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -49,7 +52,7 @@ struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     get,
     path = "/api/v2/search",
@@ -62,7 +65,7 @@ struct SearchQuery {
     ),
 )]
 async fn get(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(search): State<SearchService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
@@ -91,7 +94,8 @@ async fn get(
                 query.min_id,
                 query.max_id,
             )
-            .await?;
+            .await
+            .map_err(CoreError::from)?;
 
         for result in results {
             search_result = state
@@ -154,6 +158,6 @@ async fn get(
     Ok(Either::E1(Json(search_result)))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/", routing::get(get))
 }

@@ -5,21 +5,20 @@ use crate::{
         page::{PostComponent, PostPage},
         responder::ActivityPubJson,
     },
+    state::AppState,
 };
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
 use futures_util::TryStreamExt;
-use kitsune_core::{
-    consts::VERSION, mapping::IntoObject, service::post::PostService, state::Zustand,
-};
+use kitsune_core::{consts::VERSION, mapping::IntoObject, service::post::PostService};
 use kitsune_type::ap::Object;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;
 
 mod activity;
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 async fn get_html(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(post_service): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<PostPage> {
@@ -52,9 +51,9 @@ async fn get_html(
     })
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 async fn get(
-    State(state): State<Zustand>,
+    State(state): State<AppState>,
     State(post): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Object>> {
@@ -62,7 +61,7 @@ async fn get(
     Ok(ActivityPubJson(post.into_object(&state).await?))
 }
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/:id", routing::get(cond::html(get_html, get)))
         .route("/:id/activity", routing::get(activity::get))

@@ -1,10 +1,10 @@
+use crate::state::AppState;
 use axum::Router;
-use kitsune_core::state::Zustand;
 
 pub mod nodeinfo;
 pub mod webfinger;
 
-pub fn routes() -> Router<Zustand> {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .nest("/nodeinfo", nodeinfo::routes())
         .nest("/webfinger", webfinger::routes())

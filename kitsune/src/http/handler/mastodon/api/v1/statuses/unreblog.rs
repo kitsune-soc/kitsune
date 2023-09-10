@@ -1,20 +1,21 @@
+use crate::{
+    error::Result,
+    http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    state::AppState,
+};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
+use kitsune_core::{
+    mapping::MastodonMapper,
+    service::post::{PostService, UnrepostPost},
+};
 use kitsune_type::mastodon::Status;
 use speedy_uuid::Uuid;
 
-use crate::{
-    error::Result,
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    mapping::MastodonMapper,
-    service::post::{PostService, UnrepostPost},
-    state::Zustand,
-};
-
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = AppState)]
 #[utoipa::path(
     delete,
     path = "/api/v1/statuses/{id}/unreblog",

@@ -7,6 +7,7 @@ homepage = "https://joinkitsune.org"
 
 [dependencies]
 athena = { version = "0.0.1-pre.3", path = "../lib/athena" }
+argon2 = { version = "0.5.2", features = ["std"] }
 autometrics = { version = "0.6.0", default-features = false }
 askama = { version = "0.12.0", features = [
     "with-axum",
@@ -52,6 +53,7 @@ kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
+kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-language = { path = "../crates/kitsune-language", default-features = false }
 kitsune-messaging = { path = "../crates/kitsune-messaging" }
@@ -110,6 +112,9 @@ metrics-exporter-prometheus = { version = "0.12.1", optional = true }
 metrics-tracing-context = { version = "0.14.0", optional = true }
 metrics-util = { version = "0.15.1", optional = true }
 
+# "oidc" feature
+openidconnect = { version = "3.3.1", default-features = false, optional = true }
+
 [dev-dependencies]
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
@@ -133,4 +138,4 @@ metrics = [
     "dep:metrics-tracing-context",
     "dep:metrics-util",
 ]
-oidc = ["kitsune-core/oidc"]
+oidc = ["dep:openidconnect"]

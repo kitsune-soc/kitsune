@@ -6,8 +6,6 @@ pub mod instance;
 pub mod job;
 pub mod mailing;
 pub mod notification;
-#[cfg(feature = "oidc")]
-pub mod oidc;
 pub mod post;
 pub mod timeline;
 pub mod url;

@@ -1,9 +1,12 @@
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    state::AppState,
+};
 use askama::Template;
 use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, TryStreamExt};
-use kitsune_core::{state::Zustand, try_join};
+use kitsune_core::try_join;
 use kitsune_db::{
     model::{
         account::Account,
@@ -34,7 +37,7 @@ pub struct PostComponent {
 }
 
 impl PostComponent {
-    pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
+    pub async fn prepare(state: &AppState, post: Post) -> Result<Self> {
         let (author, attachments_stream) = state
             .db_pool
             .with_connection(|db_conn| {

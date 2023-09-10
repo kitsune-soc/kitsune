@@ -1,17 +1,16 @@
 use crate::{
     error::Result,
     http::extractor::{Json, MastodonAuthExtractor},
-    mapping::MastodonMapper,
-    service::post::PostService,
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
 };
+use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
 use kitsune_type::mastodon::status::StatusSource;
 use speedy_uuid::Uuid;
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/source",

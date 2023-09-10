@@ -15,7 +15,7 @@ use kitsune_core::{
 use kitsune_type::mastodon::relationship::Relationship;
 use speedy_uuid::Uuid;
 
-#[debug_handler(state = kitsune_core::state::Zustand)]
+#[debug_handler(state = crate::state::AppState)]
 #[utoipa::path(
     post,
     path = "/api/v1/follow_requests/{id}/authorize",
