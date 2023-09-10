@@ -13,9 +13,5 @@ pub mod resolve;
 pub mod sanitize;
 pub mod service;
 pub mod state;
-
-#[cfg(test)]
-pub mod test;
-
 pub mod util;
 pub mod webfinger;

@@ -7,8 +7,6 @@ use kitsune_type::ap::PUBLIC_IDENTIFIER;
 use pulldown_cmark::{html, Options, Parser};
 use speedy_uuid::{uuid, Uuid};
 
-pub mod catch_panic;
-
 const TOKEN_LENGTH: usize = 32;
 
 #[inline]

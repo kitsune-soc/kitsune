@@ -3120,6 +3120,7 @@ dependencies = [
  "kitsune-messaging",
  "kitsune-search",
  "kitsune-storage",
+ "kitsune-test",
  "kitsune-type",
  "metrics",
  "metrics-exporter-prometheus",
@@ -3251,11 +3252,11 @@ dependencies = [
  "kitsune-messaging",
  "kitsune-search",
  "kitsune-storage",
+ "kitsune-test",
  "kitsune-type",
  "mime",
  "mime_guess",
  "password-hash",
- "pin-project-lite",
  "pkcs8",
  "post-process",
  "pretty_assertions",
@@ -3482,6 +3483,20 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-util",
+]
+
+[[package]]
+name = "kitsune-test"
+version = "0.0.1-pre.3"
+dependencies = [
+ "deadpool-redis",
+ "diesel",
+ "diesel-async",
+ "futures-util",
+ "kitsune-db",
+ "pin-project-lite",
+ "redis",
+ "scoped-futures",
 ]
 
 [[package]]

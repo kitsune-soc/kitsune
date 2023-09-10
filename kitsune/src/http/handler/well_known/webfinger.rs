@@ -88,11 +88,12 @@ mod tests {
     use axum_extra::either::Either;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::StatusCode;
-    use kitsune_core::{service::url::UrlService, test::database_test};
+    use kitsune_core::service::url::UrlService;
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
     };
+    use kitsune_test::database_test;
     use kitsune_type::webfinger::Link;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;

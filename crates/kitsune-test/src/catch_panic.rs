@@ -45,8 +45,8 @@ where
                 Ok(Poll::Pending) => Poll::Pending,
                 Err(err) => Poll::Ready(Err(err)),
             };
-
         *this.polled_to_completion = poll_result.is_ready();
+
         poll_result
     }
 }

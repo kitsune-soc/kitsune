@@ -48,7 +48,6 @@ kitsune-type = { path = "../kitsune-type" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 password-hash = { version = "0.5.0", features = ["std"] }
-pin-project-lite = "0.2.13"
 pkcs8 = { version = "0.10.2", features = ["std"] }
 post-process = { path = "../../lib/post-process" }
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [
@@ -82,6 +81,7 @@ vergen = { version = "8.2.4", features = ["build", "git", "gitcl"] }
 
 [dev-dependencies]
 hyper = "0.14.27"
+kitsune-test = { path = "../kitsune-test" }
 pretty_assertions = "1.4.0"
 redis = "0.23.3"
 serial_test = "2.0.0"

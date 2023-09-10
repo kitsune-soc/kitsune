@@ -24,6 +24,7 @@ members = [
     "crates/kitsune-messaging",
     "crates/kitsune-search",
     "crates/kitsune-storage",
+    "crates/kitsune-test",
     "crates/kitsune-type",
     "kitsune",
     "kitsune-cli",

@@ -84,7 +84,6 @@ mod test {
             account::AccountService, attachment::AttachmentService,
             federation_filter::FederationFilterService, job::JobService, url::UrlService,
         },
-        test::{database_test, redis_test},
         webfinger::Webfinger,
     };
     use athena::JobQueue;
@@ -97,6 +96,7 @@ mod test {
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
+    use kitsune_test::{database_test, redis_test};
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use std::sync::Arc;

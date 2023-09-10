@@ -116,6 +116,7 @@ metrics-util = { version = "0.15.1", optional = true }
 openidconnect = { version = "3.3.1", default-features = false, optional = true }
 
 [dev-dependencies]
+kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tower = "0.4.13"
