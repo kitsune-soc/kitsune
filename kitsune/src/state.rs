@@ -4,7 +4,6 @@ use axum_extra::extract::cookie;
 use kitsune_core::{
     activitypub::Fetcher,
     event::PostEventEmitter,
-    mapping::MastodonMapper,
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
@@ -16,6 +15,9 @@ use kitsune_core::{
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
+
+#[cfg(feature = "mastodon-api")]
+use kitsune_core::mapping::MastodonMapper;
 
 #[cfg(feature = "oidc")]
 use crate::oidc::OidcService;
@@ -144,6 +146,7 @@ impl AppState {
 
     #[inline]
     #[must_use]
+    #[cfg(feature = "mastodon-api")]
     pub fn mastodon_mapper(&self) -> &MastodonMapper {
         &self.core.mastodon_mapper
     }
