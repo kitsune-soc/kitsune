@@ -10,7 +10,7 @@ impl AccountQuery {
     pub async fn get_account_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<Account>> {
         Ok(ctx
             .state()
-            .service
+            .service()
             .account
             .get_by_id(id)
             .await?

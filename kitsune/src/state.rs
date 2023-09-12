@@ -2,16 +2,19 @@ use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum::extract::FromRef;
 use axum_extra::extract::cookie;
 use kitsune_core::{
+    activitypub::Fetcher,
     event::PostEventEmitter,
+    mapping::MastodonMapper,
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
         notification::NotificationService, post::PostService, timeline::TimelineService,
         url::UrlService, user::UserService,
     },
-    state::State as CoreState,
+    state::{EventEmitter, Service as CoreServiceState, State as CoreState},
 };
 use kitsune_db::PgPool;
+use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
 
 #[cfg(feature = "oidc")]
@@ -114,11 +117,40 @@ pub struct AppState {
     pub session_config: SessionConfig,
 }
 
-// BAD BAD ANTI-PATTERN BAD
-impl std::ops::Deref for AppState {
-    type Target = CoreState;
+impl AppState {
+    #[inline]
+    #[must_use]
+    pub fn db_pool(&self) -> &PgPool {
+        &self.core.db_pool
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.core
+    #[inline]
+    #[must_use]
+    pub fn embed_client(&self) -> Option<&EmbedClient> {
+        self.core.embed_client.as_ref()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn event_emitter(&self) -> &EventEmitter {
+        &self.core.event_emitter
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn fetcher(&self) -> &Fetcher {
+        &self.core.fetcher
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn mastodon_mapper(&self) -> &MastodonMapper {
+        &self.core.mastodon_mapper
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn service(&self) -> &CoreServiceState {
+        &self.core.service
     }
 }

@@ -12,6 +12,6 @@ pub async fn get(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Activity>> {
-    let post = state.service.post.get_by_id(id, None).await?;
-    Ok(ActivityPubJson(post.into_activity(&state).await?))
+    let post = state.service().post.get_by_id(id, None).await?;
+    Ok(ActivityPubJson(post.into_activity(&state.core).await?))
 }

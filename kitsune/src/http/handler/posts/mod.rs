@@ -58,7 +58,7 @@ async fn get(
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Object>> {
     let post = post.get_by_id(id, None).await?;
-    Ok(ActivityPubJson(post.into_object(&state).await?))
+    Ok(ActivityPubJson(post.into_object(&state.core).await?))
 }
 
 pub fn routes() -> Router<AppState> {

@@ -29,7 +29,7 @@ impl PostMutation {
             .build()
             .unwrap();
 
-        let post = state.service.post.create(create_post).await?;
+        let post = state.service().post.create(create_post).await?;
 
         Ok(post.into())
     }
@@ -45,7 +45,7 @@ impl PostMutation {
             .build()
             .unwrap();
 
-        state.service.post.delete(delete_post).await?;
+        state.service().post.delete(delete_post).await?;
 
         Ok(id)
     }

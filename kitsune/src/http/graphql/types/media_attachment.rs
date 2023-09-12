@@ -21,7 +21,7 @@ pub struct MediaAttachment {
 impl MediaAttachment {
     pub async fn uploader(&self, ctx: &Context<'_>) -> Result<Account> {
         ctx.state()
-            .service
+            .service()
             .account
             .get_by_id(self.account_id)
             .await
@@ -32,7 +32,7 @@ impl MediaAttachment {
 
     pub async fn url(&self, ctx: &Context<'_>) -> Result<String> {
         ctx.state()
-            .service
+            .service()
             .attachment
             .get_url(self.id)
             .await

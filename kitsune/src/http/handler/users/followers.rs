@@ -18,7 +18,7 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Collection>> {
     let follower_count = state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             accounts_follows::table
                 .inner_join(

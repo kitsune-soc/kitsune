@@ -99,7 +99,7 @@ async fn get(
 
         for result in results {
             search_result = state
-                .db_pool
+                .db_pool()
                 .with_connection(|db_conn| {
                     async {
                         match index {
@@ -112,7 +112,7 @@ async fn get(
 
                                 search_result
                                     .accounts
-                                    .push(state.mastodon_mapper.map(account).await?);
+                                    .push(state.mastodon_mapper().map(account).await?);
                             }
                             SearchIndex::Post => {
                                 let post = posts::table
@@ -123,7 +123,7 @@ async fn get(
 
                                 search_result
                                     .statuses
-                                    .push(state.mastodon_mapper.map(post).await?);
+                                    .push(state.mastodon_mapper().map(post).await?);
                             }
                         }
 
@@ -136,18 +136,22 @@ async fn get(
     }
 
     if Url::parse(&query.query).is_ok() {
-        match state.fetcher.fetch_actor(query.query.as_str().into()).await {
+        match state
+            .fetcher()
+            .fetch_actor(query.query.as_str().into())
+            .await
+        {
             Ok(account) => search_result
                 .accounts
-                .insert(0, state.mastodon_mapper.map(account).await?),
+                .insert(0, state.mastodon_mapper().map(account).await?),
             Err(error) => debug!(?error, "couldn't fetch actor via url"),
         }
 
-        match state.fetcher.fetch_object(query.query.as_str()).await {
+        match state.fetcher().fetch_object(query.query.as_str()).await {
             Ok(post) => search_result.statuses.insert(
                 0,
                 state
-                    .mastodon_mapper
+                    .mastodon_mapper()
                     .map((&user_data.account, post))
                     .await?,
             ),

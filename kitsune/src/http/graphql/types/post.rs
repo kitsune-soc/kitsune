@@ -33,7 +33,7 @@ pub struct Post {
 impl Post {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
         ctx.state()
-            .service
+            .service()
             .account
             .get_by_id(self.account_id)
             .await
@@ -43,7 +43,7 @@ impl Post {
     }
 
     pub async fn attachments(&self, ctx: &Context<'_>) -> Result<Vec<MediaAttachment>> {
-        let db_pool = &ctx.state().db_pool;
+        let db_pool = &ctx.state().db_pool();
         let attachments = db_pool
             .with_connection(|db_conn| {
                 async move {

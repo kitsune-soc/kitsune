@@ -34,7 +34,7 @@ use std::ops::Not;
 
 async fn accept_activity(state: &AppState, activity: Activity) -> Result<()> {
     state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             diesel::update(
                 accounts_follows::table.filter(accounts_follows::url.eq(activity.object())),
@@ -49,10 +49,10 @@ async fn accept_activity(state: &AppState, activity: Activity) -> Result<()> {
 }
 
 async fn announce_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
-    let reposted_post = state.fetcher.fetch_object(activity.object()).await?;
+    let reposted_post = state.fetcher().fetch_object(activity.object()).await?;
 
     state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             diesel::insert_into(posts::table)
                 .values(NewPost {
@@ -83,16 +83,16 @@ async fn create_activity(state: &AppState, author: Account, activity: Activity) 
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
             .author(&author)
-            .db_pool(&state.db_pool)
-            .embed_client(state.embed_client.as_ref())
-            .fetcher(&state.fetcher)
+            .db_pool(state.db_pool())
+            .embed_client(state.embed_client())
+            .fetcher(state.fetcher())
             .object(Box::new(object))
-            .search_service(&state.service.search)
+            .search_service(&state.service().search)
             .build();
         let new_post = process_new_object(process_data).await?;
 
         state
-            .event_emitter
+            .event_emitter()
             .post
             .emit(PostEvent {
                 r#type: EventType::Create,
@@ -107,7 +107,7 @@ async fn create_activity(state: &AppState, author: Account, activity: Activity) 
 
 async fn delete_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     let post_id = state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             async move {
                 let post_id = posts::table
@@ -128,7 +128,7 @@ async fn delete_activity(state: &AppState, author: Account, activity: Activity) 
         .await?;
 
     state
-        .event_emitter
+        .event_emitter()
         .post
         .emit(PostEvent {
             r#type: EventType::Delete,
@@ -141,11 +141,14 @@ async fn delete_activity(state: &AppState, author: Account, activity: Activity) 
 }
 
 async fn follow_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
-    let followed_user = state.fetcher.fetch_actor(activity.object().into()).await?;
+    let followed_user = state
+        .fetcher()
+        .fetch_actor(activity.object().into())
+        .await?;
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
 
     let follow_id = state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             diesel::insert_into(accounts_follows::table)
                 .values(NewFollow {
@@ -165,7 +168,7 @@ async fn follow_activity(state: &AppState, author: Account, activity: Activity) 
 
     if followed_user.local {
         let preferences = state
-            .db_pool
+            .db_pool()
             .with_connection(|mut db_conn| {
                 accounts_preferences::table
                     .find(followed_user.id)
@@ -187,7 +190,7 @@ async fn follow_activity(state: &AppState, author: Account, activity: Activity) 
                     .follow(author.id)
             };
             state
-                .db_pool
+                .db_pool()
                 .with_connection(|mut db_conn| {
                     diesel::insert_into(notifications::table)
                         .values(notification)
@@ -198,7 +201,7 @@ async fn follow_activity(state: &AppState, author: Account, activity: Activity) 
                 .await?;
         }
         state
-            .service
+            .service()
             .job
             .enqueue(Enqueue::builder().job(DeliverAccept { follow_id }).build())
             .await?;
@@ -214,7 +217,7 @@ async fn like_activity(state: &AppState, author: Account, activity: Activity) ->
         .unwrap();
 
     state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             async move {
                 let post = posts::table
@@ -246,7 +249,7 @@ async fn like_activity(state: &AppState, author: Account, activity: Activity) ->
 
 async fn reject_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             diesel::delete(
                 accounts_follows::table.filter(
@@ -265,7 +268,7 @@ async fn reject_activity(state: &AppState, author: Account, activity: Activity) 
 
 async fn undo_activity(state: &AppState, author: Account, activity: Activity) -> Result<()> {
     state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             async move {
                 // An undo activity can apply for likes and follows and announces
@@ -309,16 +312,16 @@ async fn update_activity(state: &AppState, author: Account, activity: Activity) 
     if let Some(object) = activity.object.into_object() {
         let process_data = ProcessNewObject::builder()
             .author(&author)
-            .db_pool(&state.db_pool)
-            .embed_client(state.embed_client.as_ref())
-            .fetcher(&state.fetcher)
+            .db_pool(state.db_pool())
+            .embed_client(state.embed_client())
+            .fetcher(state.fetcher())
             .object(Box::new(object))
-            .search_service(&state.service.search)
+            .search_service(&state.service().search)
             .build();
         let modified_post = update_object(process_data).await?;
 
         state
-            .event_emitter
+            .event_emitter()
             .post
             .emit(PostEvent {
                 r#type: EventType::Update,

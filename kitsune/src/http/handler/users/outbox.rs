@@ -40,7 +40,7 @@ pub async fn get(
     Query(query): Query<OutboxQuery>,
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
     let account = state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             accounts::table
                 .find(account_id)
@@ -62,7 +62,7 @@ pub async fn get(
             .build();
 
         let posts: Vec<Post> = state
-            .service
+            .service()
             .account
             .get_posts(get_posts)
             .await?
@@ -79,7 +79,7 @@ pub async fn get(
             posts.last().map_or(Uuid::nil(), |post| post.id)
         );
         let ordered_items = stream::iter(posts)
-            .then(|post| post.into_activity(&state))
+            .then(|post| post.into_activity(&state.core))
             .try_collect()
             .await?;
 
@@ -94,7 +94,7 @@ pub async fn get(
         })))
     } else {
         let public_post_count = state
-            .db_pool
+            .db_pool()
             .with_connection(|db_conn| {
                 Post::belonging_to(&account)
                     .add_post_permission_check(PermissionCheck::default())

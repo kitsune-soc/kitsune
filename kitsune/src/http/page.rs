@@ -39,7 +39,7 @@ pub struct PostComponent {
 impl PostComponent {
     pub async fn prepare(state: &AppState, post: Post) -> Result<Self> {
         let (author, attachments_stream) = state
-            .db_pool
+            .db_pool()
             .with_connection(|db_conn| {
                 async {
                     let author_fut = accounts::table
@@ -61,7 +61,7 @@ impl PostComponent {
         let attachments = attachments_stream
             .map_err(Error::from)
             .and_then(|attachment| async move {
-                let url = state.service.attachment.get_url(attachment.id).await?;
+                let url = state.service().attachment.get_url(attachment.id).await?;
 
                 Ok(MediaAttachment {
                     content_type: attachment.content_type,
@@ -75,7 +75,7 @@ impl PostComponent {
         let profile_picture_url = OptionFuture::from(
             author
                 .avatar_id
-                .map(|id| state.service.attachment.get_url(id)),
+                .map(|id| state.service().attachment.get_url(id)),
         )
         .await
         .transpose()?;
@@ -94,7 +94,7 @@ impl PostComponent {
             acct,
             profile_url: author.url,
             profile_picture_url: profile_picture_url
-                .unwrap_or_else(|| state.service.url.default_avatar_url()),
+                .unwrap_or_else(|| state.service().url.default_avatar_url()),
             content: post.content,
             url: post.url,
         })

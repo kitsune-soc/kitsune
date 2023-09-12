@@ -98,7 +98,7 @@ async fn get(
         .await?
         .ok_or(ApiError::NotFound)?;
 
-    Ok(ActivityPubJson(account.into_object(&state).await?))
+    Ok(ActivityPubJson(account.into_object(&state.core).await?))
 }
 
 pub fn routes() -> Router<AppState> {
