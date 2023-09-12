@@ -13,7 +13,7 @@ use hyper::{
     body::Bytes,
     client::HttpConnector,
     header::{HeaderName, USER_AGENT},
-    http::{self, HeaderValue},
+    http::{self, Extensions, HeaderValue},
     Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
     Version,
 };
@@ -344,6 +344,12 @@ impl Response {
     /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
         hyper::body::to_bytes(self.inner).await.map_err(Into::into)
+    }
+
+    /// Get a reference to the response extensions
+    #[must_use]
+    pub fn extensions(&self) -> &Extensions {
+        self.inner.extensions()
     }
 
     /// Get a reference to the headers

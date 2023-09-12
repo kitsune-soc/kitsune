@@ -311,16 +311,16 @@ impl AccountService {
                 return Ok(None);
             }
 
-            let Some(actor_url) = self
+            let Some(webfinger_actor) = self
                 .webfinger
-                .fetch_actor_url(get_user.username, domain)
+                .resolve_actor(get_user.username, domain)
                 .await?
             else {
                 return Ok(None);
             };
 
             self.fetcher
-                .fetch_actor(actor_url.as_str().into())
+                .fetch_actor(webfinger_actor.uri.as_str().into())
                 .await
                 .map(Some)
                 .map_err(Error::from)
