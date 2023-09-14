@@ -3,12 +3,8 @@
 
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
-use kitsune::http;
-use kitsune_core::{
-    config::Configuration,
-    consts::{STARTUP_FIGLET, VERSION},
-    job,
-};
+use kitsune::{consts::STARTUP_FIGLET, http};
+use kitsune_core::{config::Configuration, consts::VERSION, job};
 use std::{
     borrow::Cow,
     env, future,

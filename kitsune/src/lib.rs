@@ -16,6 +16,7 @@ extern crate metrics;
 #[macro_use]
 extern crate tracing;
 
+pub mod consts;
 pub mod error;
 pub mod http;
 pub mod oauth2;
