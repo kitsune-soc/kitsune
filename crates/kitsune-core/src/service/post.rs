@@ -55,6 +55,13 @@ pub struct PostValidationContext {
     character_limit: usize,
 }
 
+impl PostValidationContext {
+    fn max_character_limit(&self, other_value: usize) -> usize {
+        // Saturating subtraction to prevent panics/wrapping
+        self.character_limit.saturating_sub(other_value)
+    }
+}
+
 #[derive(Builder, Clone, Validate)]
 #[garde(context(PostValidationContext as ctx))]
 pub struct CreatePost {
@@ -92,7 +99,7 @@ pub struct CreatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit.saturating_sub(
+            max = ctx.max_character_limit(
                 content.chars().count()
             )
         )
@@ -102,8 +109,8 @@ pub struct CreatePost {
     /// Content of the post
     #[garde(
         length(
-            min = 1,
-            max = ctx.character_limit.saturating_sub(
+            min = self.min_character_limit(),
+            max = ctx.max_character_limit(
                 subject.as_ref().map_or(0, |subject| subject.chars().count())
             )
         )
@@ -136,6 +143,14 @@ impl CreatePost {
     #[must_use]
     pub fn builder() -> CreatePostBuilder {
         CreatePostBuilder::default()
+    }
+
+    fn min_character_limit(&self) -> usize {
+        if self.media_ids.is_empty() {
+            1
+        } else {
+            0
+        }
     }
 }
 
