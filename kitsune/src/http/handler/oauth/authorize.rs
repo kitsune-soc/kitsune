@@ -104,7 +104,7 @@ pub async fn get(
         .map_err(Error::from)
 }
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
     State(db_pool): State<PgPool>,
     OriginalUri(original_url): OriginalUri,

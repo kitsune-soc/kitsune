@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{
     debug_handler,
     extract::{Path, State},
@@ -12,7 +12,7 @@ struct GetPath {
     confirmation_token: String,
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 async fn get(
     State(user_service): State<UserService>,
     Path(path): Path<GetPath>,
@@ -24,6 +24,6 @@ async fn get(
     Ok("Account confirmed successfully! You can log in now")
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/:confirmation_token", routing::get(get))
 }

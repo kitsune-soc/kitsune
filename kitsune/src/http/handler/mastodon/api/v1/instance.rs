@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{extract::State, routing, Json, Router};
 use kitsune_core::{
     consts::VERSION,
@@ -43,6 +43,6 @@ async fn get(
     }))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }

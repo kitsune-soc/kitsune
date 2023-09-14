@@ -37,41 +37,41 @@ macro_rules! impl_from_ref {
 }
 
 impl_from_ref! {
-    AppState;
+    Zustand;
     [
-        PgPool => |input: &AppState| input.core.db_pool.clone()
+        PgPool => |input: &Zustand| input.core.db_pool.clone()
     ]
 }
 
 #[cfg(feature = "mastodon-api")]
 impl_from_ref! {
-    AppState;
+    Zustand;
     [
-        kitsune_core::mapping::MastodonMapper => |input: &AppState| input.core.mastodon_mapper.clone()
+        kitsune_core::mapping::MastodonMapper => |input: &Zustand| input.core.mastodon_mapper.clone()
     ]
 }
 
 impl_from_ref! {
-    AppState;
+    Zustand;
     [
-        AccountService => |input: &AppState| input.core.service.account.clone(),
-        AttachmentService => |input: &AppState| input.core.service.attachment.clone(),
-        FederationFilterService => |input: &AppState| input.core.service.federation_filter.clone(),
-        JobService => |input: &AppState| input.core.service.job.clone(),
-        NotificationService => |input: &AppState| input.core.service.notification.clone(),
-        PostService => |input: &AppState| input.core.service.post.clone(),
-        SearchService => |input: &AppState| input.core.service.search.clone(),
-        InstanceService => |input: &AppState| input.core.service.instance.clone(),
-        TimelineService => |input: &AppState| input.core.service.timeline.clone(),
-        UrlService => |input: &AppState| input.core.service.url.clone(),
-        UserService => |input: &AppState| input.core.service.user.clone()
+        AccountService => |input: &Zustand| input.core.service.account.clone(),
+        AttachmentService => |input: &Zustand| input.core.service.attachment.clone(),
+        FederationFilterService => |input: &Zustand| input.core.service.federation_filter.clone(),
+        JobService => |input: &Zustand| input.core.service.job.clone(),
+        NotificationService => |input: &Zustand| input.core.service.notification.clone(),
+        PostService => |input: &Zustand| input.core.service.post.clone(),
+        SearchService => |input: &Zustand| input.core.service.search.clone(),
+        InstanceService => |input: &Zustand| input.core.service.instance.clone(),
+        TimelineService => |input: &Zustand| input.core.service.timeline.clone(),
+        UrlService => |input: &Zustand| input.core.service.url.clone(),
+        UserService => |input: &Zustand| input.core.service.user.clone()
     ]
 }
 
 impl_from_ref! {
-    AppState;
+    Zustand;
     [
-        PostEventEmitter => |input: &AppState| input.core.event_emitter.post.clone()
+        PostEventEmitter => |input: &Zustand| input.core.event_emitter.post.clone()
     ]
 }
 
@@ -102,15 +102,15 @@ impl SessionConfig {
 }
 
 impl_from_ref! {
-    AppState;
+    Zustand;
     [
-        cookie::Key => |input: &AppState| input.session_config.cookie_key.clone(),
-        axum_flash::Config => |input: &AppState| input.session_config.flash_config.clone()
+        cookie::Key => |input: &Zustand| input.session_config.cookie_key.clone(),
+        axum_flash::Config => |input: &Zustand| input.session_config.flash_config.clone()
     ]
 }
 
 #[derive(Clone, FromRef)]
-pub struct AppState {
+pub struct Zustand {
     pub core: CoreState,
     pub oauth2: OAuth2Service,
     pub oauth_endpoint: OAuthEndpoint,
@@ -119,7 +119,7 @@ pub struct AppState {
     pub session_config: SessionConfig,
 }
 
-impl AppState {
+impl Zustand {
     #[inline]
     #[must_use]
     pub fn db_pool(&self) -> &PgPool {

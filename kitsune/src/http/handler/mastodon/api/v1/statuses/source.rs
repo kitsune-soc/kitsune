@@ -10,7 +10,7 @@ use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
 use kitsune_type::mastodon::status::StatusSource;
 use speedy_uuid::Uuid;
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}/source",

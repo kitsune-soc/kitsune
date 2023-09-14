@@ -4,7 +4,7 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::AppState,
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -52,7 +52,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/notifications",
@@ -108,7 +108,7 @@ pub async fn get(
     Ok((link_header, Json(notifications)))
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/notifications/{id}",
@@ -133,7 +133,7 @@ pub async fn get_by_id(
     Ok(Json(mastodon_mapper.map(notification).await?))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::get(get))
         .route("/:id", routing::get(get_by_id))

@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{
     body::HttpBody,
     extract::{Path, State},
@@ -24,6 +24,6 @@ async fn get(
         .into_response())
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/:id", routing::get(get))
 }

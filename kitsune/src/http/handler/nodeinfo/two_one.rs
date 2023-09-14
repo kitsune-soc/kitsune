@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -13,7 +13,7 @@ use kitsune_type::nodeinfo::two_one::{
 use scoped_futures::ScopedFutureExt;
 use simd_json::{Builder, OwnedValue};
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/nodeinfo/2.1",
@@ -67,6 +67,6 @@ async fn get(
     }))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }

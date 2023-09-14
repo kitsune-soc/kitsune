@@ -1,4 +1,4 @@
-use crate::{error::Error, state::AppState};
+use crate::{error::Error, state::Zustand};
 use async_trait::async_trait;
 use axum::{
     extract::FromRequestParts,
@@ -36,14 +36,14 @@ pub struct UserData {
 pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
 
 #[async_trait]
-impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<AppState>
+impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
     for AuthExtractor<ENFORCE_EXPIRATION>
 {
     type Rejection = Response;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &AppState,
+        state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization::<Bearer>(bearer_token)) = parts
             .extract_with_state(state)

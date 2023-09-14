@@ -4,7 +4,7 @@ use crate::{
         extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
-    state::AppState,
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -94,7 +94,7 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     put,
     path = "/api/v1/media/{id}",
@@ -127,7 +127,7 @@ pub async fn put(
         .await
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).put(put))

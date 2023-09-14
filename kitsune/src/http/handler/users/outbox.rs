@@ -1,4 +1,4 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::AppState};
+use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
@@ -33,7 +33,7 @@ pub struct OutboxQuery {
 }
 
 pub async fn get(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(url_service): State<UrlService>,
     OriginalUri(original_uri): OriginalUri,
     Path(account_id): Path<Uuid>,

@@ -5,7 +5,7 @@ use crate::{
         page::{PostComponent, PostPage},
         responder::ActivityPubJson,
     },
-    state::AppState,
+    state::Zustand,
 };
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
 use futures_util::TryStreamExt;
@@ -16,9 +16,9 @@ use std::collections::VecDeque;
 
 mod activity;
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 async fn get_html(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(post_service): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<PostPage> {
@@ -51,9 +51,9 @@ async fn get_html(
     })
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 async fn get(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(post): State<PostService>,
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Object>> {
@@ -61,7 +61,7 @@ async fn get(
     Ok(ActivityPubJson(post.into_object(&state.core).await?))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:id", routing::get(cond::html(get_html, get)))
         .route("/:id/activity", routing::get(activity::get))

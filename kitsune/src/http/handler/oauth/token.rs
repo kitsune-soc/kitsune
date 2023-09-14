@@ -9,7 +9,7 @@ use oxide_auth_async::endpoint::{
 };
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(post, path = "/oauth/token")]
 pub async fn post(
     State(oauth_endpoint): State<OAuthEndpoint>,

@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Path, State},
     routing, Json, Router,
@@ -36,7 +36,7 @@ async fn get(
     Ok(Json(mastodon_mapper.map(account).await?))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:id", routing::get(get))
         .route("/:id/follow", routing::post(follow::post))

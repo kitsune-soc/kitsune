@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    state::AppState,
+    state::Zustand,
 };
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
@@ -52,7 +52,7 @@ struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v2/search",
@@ -65,7 +65,7 @@ struct SearchQuery {
     ),
 )]
 async fn get(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(search): State<SearchService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
@@ -162,6 +162,6 @@ async fn get(
     Ok(Either::E1(Json(search_result)))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }

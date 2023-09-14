@@ -15,7 +15,7 @@ use kitsune_core::{
 use kitsune_type::mastodon::relationship::Relationship;
 use speedy_uuid::Uuid;
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

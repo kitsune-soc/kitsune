@@ -1,4 +1,4 @@
-use crate::state::AppState;
+use crate::state::Zustand;
 use axum::{extract::State, routing, Json, Router};
 use kitsune_core::service::url::UrlService;
 use kitsune_type::nodeinfo::well_known::{Link, WellKnown};
@@ -22,6 +22,6 @@ async fn get(State(url_service): State<UrlService>) -> Json<WellKnown> {
     })
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }

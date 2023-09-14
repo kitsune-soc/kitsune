@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    state::AppState,
+    state::Zustand,
 };
 use askama::Template;
 use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
@@ -37,7 +37,7 @@ pub struct PostComponent {
 }
 
 impl PostComponent {
-    pub async fn prepare(state: &AppState, post: Post) -> Result<Self> {
+    pub async fn prepare(state: &Zustand, post: Post) -> Result<Self> {
         let (author, attachments_stream) = state
             .db_pool()
             .with_connection(|db_conn| {

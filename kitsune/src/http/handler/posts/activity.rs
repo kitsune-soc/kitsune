@@ -1,4 +1,4 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::AppState};
+use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     debug_handler,
     extract::{Path, State},
@@ -9,7 +9,7 @@ use speedy_uuid::Uuid;
 
 #[debug_handler]
 pub async fn get(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Activity>> {
     let post = state.service().post.get_by_id(id, None).await?;

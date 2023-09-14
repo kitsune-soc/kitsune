@@ -2,7 +2,7 @@
 //! Standard-compliant OAuth2 flows
 //!
 
-use crate::state::AppState;
+use crate::state::Zustand;
 use axum::{
     routing::{get, post},
     Router,
@@ -11,7 +11,7 @@ use axum::{
 pub mod authorize;
 pub mod token;
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/authorize", get(authorize::get).post(authorize::post))
         .route("/token", post(token::post))

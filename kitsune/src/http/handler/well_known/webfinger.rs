@@ -1,4 +1,4 @@
-use crate::{error::Result, state::AppState};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
@@ -73,7 +73,7 @@ async fn get(
     })))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::get(get))
 }
 

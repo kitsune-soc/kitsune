@@ -1,6 +1,6 @@
 use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
-use crate::state::AppState;
+use crate::state::Zustand;
 use async_graphql::{
     extensions::Tracing,
     http::{playground_source, GraphQLPlaygroundConfig},
@@ -21,12 +21,12 @@ mod query;
 mod types;
 
 pub trait ContextExt {
-    fn state(&self) -> &AppState;
+    fn state(&self) -> &Zustand;
     fn user_data(&self) -> Result<&UserData>;
 }
 
 impl ContextExt for &Context<'_> {
-    fn state(&self) -> &AppState {
+    fn state(&self) -> &Zustand {
         self.data().expect("[Bug] State missing in GraphQL context")
     }
 
@@ -36,7 +36,7 @@ impl ContextExt for &Context<'_> {
     }
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 async fn graphql_route(
     Extension(schema): Extension<GraphQLSchema>,
     user_data: Option<AuthExtractor<true>>,
@@ -58,7 +58,7 @@ async fn graphiql_route() -> Html<String> {
     Html(playground_source(config))
 }
 
-pub fn routes(state: AppState) -> Router<AppState> {
+pub fn routes(state: Zustand) -> Router<Zustand> {
     let schema: GraphQLSchema = Schema::build(
         RootQuery::default(),
         RootMutation::default(),

@@ -26,7 +26,7 @@ pub mod state;
 
 use self::{
     oauth2::OAuth2Service,
-    state::{AppState, SessionConfig},
+    state::{SessionConfig, Zustand},
 };
 use athena::JobQueue;
 use aws_credential_types::Credentials;
@@ -277,7 +277,7 @@ pub async fn initialise_state(
     config: &Configuration,
     conn: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
-) -> eyre::Result<AppState> {
+) -> eyre::Result<Zustand> {
     let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
@@ -406,7 +406,7 @@ pub async fn initialise_state(
         .build()
         .expect("[Bug] Failed to initialise Mastodon mapper");
 
-    Ok(AppState {
+    Ok(Zustand {
         core: CoreState {
             db_pool: conn.clone(),
             embed_client,

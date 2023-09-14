@@ -5,7 +5,7 @@ use crate::{
         page::{PostComponent, UserPage},
         responder::ActivityPubJson,
     },
-    state::AppState,
+    state::Zustand,
 };
 use axum::{
     extract::{Path, Query, State},
@@ -38,7 +38,7 @@ struct PageQuery {
 }
 
 async fn get_html(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(account_service): State<AccountService>,
     State(attachment_service): State<AttachmentService>,
     State(url_service): State<UrlService>,
@@ -86,7 +86,7 @@ async fn get_html(
 }
 
 async fn get(
-    State(state): State<AppState>,
+    State(state): State<Zustand>,
     State(account_service): State<AccountService>,
     _: State<AttachmentService>, // Needed to get the same types for the conditional routing
     _: State<UrlService>,        // Needed to get the same types for the conditional routing
@@ -101,7 +101,7 @@ async fn get(
     Ok(ActivityPubJson(account.into_object(&state.core).await?))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/:user_id", routing::get(cond::html(get_html, get)))
         .route("/:user_id/followers", routing::get(followers::get))

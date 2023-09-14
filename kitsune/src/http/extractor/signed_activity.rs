@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    state::AppState,
+    state::Zustand,
 };
 use async_trait::async_trait;
 use axum::{
@@ -33,12 +33,12 @@ use scoped_futures::ScopedFutureExt;
 pub struct SignedActivity(pub Account, pub Activity);
 
 #[async_trait]
-impl FromRequest<AppState, Body> for SignedActivity {
+impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
     async fn from_request(
         mut req: http::Request<Body>,
-        state: &AppState,
+        state: &Zustand,
     ) -> Result<Self, Self::Rejection> {
         // Axum will cut out the "/users" part of the router (due to the nesting)
         // That's why we get the original URI here (which includes the full path)

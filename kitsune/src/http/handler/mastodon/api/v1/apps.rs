@@ -1,4 +1,4 @@
-use crate::state::AppState;
+use crate::state::Zustand;
 use crate::{
     error::Result,
     http::extractor::FormOrJson,
@@ -42,6 +42,6 @@ async fn post(
     }))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new().route("/", routing::post(post))
 }

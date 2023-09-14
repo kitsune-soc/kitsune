@@ -1,7 +1,7 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
-    state::AppState,
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -50,7 +50,7 @@ pub struct UpdateForm {
     spoiler_text: Option<String>,
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     delete,
     path = "/api/v1/statuses/{id}",
@@ -78,7 +78,7 @@ async fn delete(
     Ok(StatusCode::OK)
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/statuses/{id}",
@@ -109,7 +109,7 @@ async fn get(
     Ok(Json(status))
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     post,
     path = "/api/v1/statuses",
@@ -149,7 +149,7 @@ async fn post(
     Ok(Json(status))
 }
 
-#[debug_handler(state = AppState)]
+#[debug_handler(state = Zustand)]
 #[utoipa::path(
     put,
     path = "/api/v1/statuses/{id}",
@@ -184,7 +184,7 @@ async fn put(
     Ok(Json(status))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::post(post))
         .route("/:id", routing::get(get).delete(delete).put(put))

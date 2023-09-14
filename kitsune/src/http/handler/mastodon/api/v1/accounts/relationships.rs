@@ -20,7 +20,7 @@ pub struct RelationshipQuery {
     id: Vec<Uuid>,
 }
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/accounts/relationships",

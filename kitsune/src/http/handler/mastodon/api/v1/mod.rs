@@ -1,4 +1,4 @@
-use crate::state::AppState;
+use crate::state::Zustand;
 use axum::Router;
 
 pub mod accounts;
@@ -10,7 +10,7 @@ pub mod notifications;
 pub mod statuses;
 pub mod timelines;
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .nest("/apps", apps::routes())
         .nest("/accounts", accounts::routes())

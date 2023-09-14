@@ -4,7 +4,7 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::AppState,
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -41,7 +41,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = crate::state::AppState)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     get,
     path = "/api/v1/follow_requests",
@@ -86,7 +86,7 @@ pub async fn get(
     Ok((link_header, Json(accounts)))
 }
 
-pub fn routes() -> Router<AppState> {
+pub fn routes() -> Router<Zustand> {
     Router::new()
         .route("/", routing::get(get))
         .route("/:id/authorize", routing::post(accept::post))
