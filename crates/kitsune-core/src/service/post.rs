@@ -1144,6 +1144,31 @@ mod test {
         assert!(create_post
             .validate(&PostValidationContext { character_limit: 2 })
             .is_err());
+
+        let create_post = CreatePost::builder()
+            .author_id(Uuid::now_v7())
+            .content(String::new())
+            .build()
+            .unwrap();
+
+        assert!(create_post
+            .validate(&PostValidationContext {
+                character_limit: 25
+            })
+            .is_err());
+
+        let create_post = CreatePost::builder()
+            .author_id(Uuid::now_v7())
+            .media_ids(vec![Uuid::now_v7()])
+            .content(String::new())
+            .build()
+            .unwrap();
+
+        assert!(create_post
+            .validate(&PostValidationContext {
+                character_limit: 25
+            })
+            .is_ok());
     }
 
     #[test]
