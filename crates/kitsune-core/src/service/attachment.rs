@@ -1,6 +1,6 @@
 use super::url::UrlService;
 use crate::{
-    consts::USER_AGENT,
+    consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT},
     error::{ApiError, Error, Result},
 };
 use bytes::Bytes;
@@ -8,6 +8,7 @@ use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, StreamExt, TryStreamExt};
+use garde::Validate;
 use kitsune_db::{
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
@@ -21,23 +22,43 @@ use typed_builder::TypedBuilder;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 
-#[derive(TypedBuilder)]
+fn is_allowed_filetype(value: &str, _ctx: &()) -> garde::Result {
+    let content_type: mime::Mime = value
+        .parse()
+        .map_err(|err: mime::FromStrError| garde::Error::new(err.to_string()))?;
+
+    if !ALLOWED_FILETYPES.contains(&content_type.type_()) {
+        return Err(garde::Error::new("Invalid file type"));
+    }
+
+    Ok(())
+}
+
+#[derive(TypedBuilder, Validate)]
 pub struct Update {
+    #[garde(skip)]
     account_id: Uuid,
+    #[garde(skip)]
     attachment_id: Uuid,
     #[builder(setter(strip_option))]
+    #[garde(length(max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
 }
 
-#[derive(Builder)]
+#[derive(Builder, Validate)]
 #[builder(pattern = "owned")]
 pub struct Upload<S> {
+    #[garde(skip)]
     account_id: Uuid,
+    #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[builder(default, setter(strip_option))]
+    #[garde(length(max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
     #[builder(default = "Uuid::now_v7().to_string()")]
+    #[garde(skip)]
     path: String,
+    #[garde(skip)]
     stream: S,
 }
 
@@ -125,6 +146,8 @@ impl AttachmentService {
     }
 
     pub async fn update(&self, update: Update) -> Result<MediaAttachment> {
+        update.validate(&())?;
+
         let mut changeset = UpdateMediaAttachment::default();
         if let Some(ref description) = update.description {
             changeset = UpdateMediaAttachment {
@@ -153,10 +176,7 @@ impl AttachmentService {
     where
         S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
     {
-        let content_type: mime::Mime = upload.content_type.parse()?;
-        if !ALLOWED_FILETYPES.contains(&content_type.type_()) {
-            return Err(ApiError::UnsupportedMediaType.into());
-        }
+        upload.validate(&())?;
 
         self.storage_backend
             .put(&upload.path, upload.stream)

@@ -39,7 +39,7 @@ macro_rules! impl_from_ref {
 impl_from_ref! {
     Zustand;
     [
-        PgPool => |input: &Zustand| input.core.db_pool.clone()
+        PgPool => |input: &Zustand| input.db_pool().clone()
     ]
 }
 
@@ -47,7 +47,7 @@ impl_from_ref! {
 impl_from_ref! {
     Zustand;
     [
-        kitsune_core::mapping::MastodonMapper => |input: &Zustand| input.core.mastodon_mapper.clone()
+        kitsune_core::mapping::MastodonMapper => |input: &Zustand| input.mastodon_mapper().clone()
     ]
 }
 
@@ -71,7 +71,7 @@ impl_from_ref! {
 impl_from_ref! {
     Zustand;
     [
-        PostEventEmitter => |input: &Zustand| input.core.event_emitter.post.clone()
+        PostEventEmitter => |input: &Zustand| input.event_emitter().post.clone()
     ]
 }
 
