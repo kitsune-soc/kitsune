@@ -51,6 +51,16 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
+macro_rules! min_character_limit {
+    ($self:ident) => {{
+        if $self.media_ids.is_empty() {
+            1
+        } else {
+            0
+        }
+    }};
+}
+
 pub struct PostValidationContext {
     character_limit: usize,
 }
@@ -109,7 +119,7 @@ pub struct CreatePost {
     /// Content of the post
     #[garde(
         length(
-            min = self.min_character_limit(),
+            min = min_character_limit!(self),
             max = ctx.max_character_limit(
                 subject.as_ref().map_or(0, |subject| subject.chars().count())
             )
@@ -143,14 +153,6 @@ impl CreatePost {
     #[must_use]
     pub fn builder() -> CreatePostBuilder {
         CreatePostBuilder::default()
-    }
-
-    fn min_character_limit(&self) -> usize {
-        if self.media_ids.is_empty() {
-            1
-        } else {
-            0
-        }
     }
 }
 
@@ -208,7 +210,7 @@ pub struct UpdatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit.saturating_sub(
+            max = ctx.max_character_limit(
                 content.as_ref().map_or(0, |content| content.chars().count())
             )
         )
@@ -219,8 +221,8 @@ pub struct UpdatePost {
     #[builder(default)]
     #[garde(
         length(
-            min = 1,
-            max = ctx.character_limit.saturating_sub(
+            min = min_character_limit!(self),
+            max = ctx.max_character_limit(
                 subject.as_ref().map_or(0, |subject| subject.chars().count())
             )
         )
