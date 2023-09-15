@@ -1,1 +1,8 @@
-doc-valid-idents = ["ActivityPub", "gRPC", "PostgreSQL"]
+doc-valid-idents = [
+    "ActivityPub",
+    "gRPC",
+    "OAuth",
+    "OAuth2",
+    "PostgreSQL",
+    "PubSub",
+]

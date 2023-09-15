@@ -1,9 +1,7 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(
-    clippy::cast_possible_wrap,
     clippy::cast_sign_loss,
-    clippy::doc_markdown,
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
     forbidden_lint_groups

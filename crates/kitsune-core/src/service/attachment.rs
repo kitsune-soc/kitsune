@@ -22,6 +22,7 @@ use typed_builder::TypedBuilder;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 fn is_allowed_filetype(value: &str, _ctx: &()) -> garde::Result {
     let content_type: mime::Mime = value
         .parse()
