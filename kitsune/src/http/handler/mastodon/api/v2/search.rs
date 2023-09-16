@@ -1,4 +1,5 @@
 use crate::{
+    consts::default_limit,
     error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
@@ -8,10 +9,7 @@ use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_core::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
-    error::Error as CoreError,
-};
+use kitsune_core::{consts::API_MAX_LIMIT, error::Error as CoreError};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -24,10 +22,6 @@ use speedy_uuid::Uuid;
 use std::cmp::min;
 use url::Url;
 use utoipa::{IntoParams, ToSchema};
-
-fn default_page_limit() -> u64 {
-    API_DEFAULT_LIMIT as u64
-}
 
 #[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -46,7 +40,7 @@ struct SearchQuery {
     resolve: bool,*/
     max_id: Option<Uuid>,
     min_id: Option<Uuid>,
-    #[serde(default = "default_page_limit")]
+    #[serde(default = "default_limit")]
     limit: u64,
     #[serde(default)]
     offset: u64,

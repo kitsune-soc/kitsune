@@ -1,5 +1,5 @@
 use crate::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    consts::API_MAX_LIMIT,
     error::{Error, Result},
 };
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
@@ -20,7 +20,6 @@ use typed_builder::TypedBuilder;
 pub struct GetHome {
     fetching_account_id: Uuid,
 
-    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     #[builder(default)]
@@ -35,7 +34,6 @@ pub struct GetHome {
 
 #[derive(Clone, TypedBuilder)]
 pub struct GetPublic {
-    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     #[builder(default)]

@@ -1,4 +1,5 @@
 use crate::{
+    consts::default_limit,
     error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
@@ -14,7 +15,6 @@ use axum::{
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
 use kitsune_core::{
-    consts::API_DEFAULT_LIMIT,
     mapping::MastodonMapper,
     service::{
         account::{AccountService, GetFollowRequests},
@@ -28,10 +28,6 @@ use utoipa::IntoParams;
 
 pub mod accept;
 pub mod reject;
-
-fn default_limit() -> usize {
-    API_DEFAULT_LIMIT
-}
 
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {

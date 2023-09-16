@@ -1,5 +1,5 @@
 use crate::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    consts::API_MAX_LIMIT,
     error::{Error, Result},
 };
 use diesel::{
@@ -39,7 +39,6 @@ pub struct GetNotifications {
     excluded_types: Vec<NotificationType>,
 
     /// Limit of returned posts
-    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     /// Smallest ID, return results starting from this ID

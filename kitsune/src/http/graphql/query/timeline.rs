@@ -1,4 +1,7 @@
-use crate::http::graphql::{types::Post, ContextExt};
+use crate::{
+    consts::API_DEFAULT_LIMIT,
+    http::graphql::{types::Post, ContextExt},
+};
 use async_graphql::{
     connection::{self, Connection, Edge},
     Context, Object, Result,
@@ -35,7 +38,7 @@ impl TimelineQuery {
                 let get_home = if let Some(first) = first {
                     get_home.limit(first).build()
                 } else {
-                    get_home.build()
+                    get_home.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = timeline_service
@@ -78,7 +81,7 @@ impl TimelineQuery {
                 let get_public = if let Some(first) = first {
                     get_public.limit(first).build()
                 } else {
-                    get_public.build()
+                    get_public.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = timeline_service

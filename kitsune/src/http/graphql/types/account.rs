@@ -1,5 +1,5 @@
 use super::{MediaAttachment, Post};
-use crate::http::graphql::ContextExt;
+use crate::{consts::API_DEFAULT_LIMIT, http::graphql::ContextExt};
 use async_graphql::{
     connection::{self, Connection, Edge},
     ComplexObject, Context, Result, SimpleObject,
@@ -107,7 +107,7 @@ impl Account {
                 let get_posts = if let Some(first) = first {
                     get_posts.limit(first).build()
                 } else {
-                    get_posts.build()
+                    get_posts.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = account_service

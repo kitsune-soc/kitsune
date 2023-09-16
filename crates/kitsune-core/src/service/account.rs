@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     activitypub::Fetcher,
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    consts::API_MAX_LIMIT,
     error::{Error, Result},
     job::deliver::{
         accept::DeliverAccept,
@@ -77,7 +77,6 @@ pub struct GetPosts {
     fetching_account_id: Option<Uuid>,
 
     /// Limit of returned posts
-    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     /// Smallest ID, return results starting from this ID
@@ -105,7 +104,6 @@ pub struct GetFollowRequests {
     account_id: Uuid,
 
     /// Limit of returned posts
-    #[builder(default = API_DEFAULT_LIMIT)]
     limit: usize,
 
     /// Smallest ID

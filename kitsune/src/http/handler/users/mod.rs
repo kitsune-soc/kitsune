@@ -1,4 +1,5 @@
 use crate::{
+    consts::API_DEFAULT_LIMIT,
     error::{Error, Result},
     http::{
         cond,
@@ -54,6 +55,7 @@ async fn get_html(
         .account_id(account.id)
         .max_id(query.max_id)
         .min_id(query.min_id)
+        .limit(API_DEFAULT_LIMIT)
         .build();
 
     let posts = account_service
