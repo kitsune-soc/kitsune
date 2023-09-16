@@ -19,7 +19,7 @@ metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 metrics-tracing-context = "0.14.0"
 metrics-util = "0.15.1"
-prost = "0.12.0"
+prost = "0.12.1"
 serde = { version = "1.0.188", features = ["derive"] }
 tantivy = "0.21.0"
 time = "0.3.28"

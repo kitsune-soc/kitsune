@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-prost = "0.12.0"
+prost = "0.12.1"
 serde = { version = "1.0.188", features = ["derive"] }
 tonic = { version = "0.10.0", default-features = false, features = [
     "codegen",
