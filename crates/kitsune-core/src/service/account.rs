@@ -2,10 +2,10 @@ use super::{
     attachment::{AttachmentService, Upload},
     job::{Enqueue, JobService},
     url::UrlService,
+    LimitContext,
 };
 use crate::{
     activitypub::Fetcher,
-    consts::API_MAX_LIMIT,
     error::{Error, Result},
     job::deliver::{
         accept::DeliverAccept,
@@ -43,7 +43,6 @@ use kitsune_db::{
 };
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
-use std::cmp::min;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
@@ -67,55 +66,67 @@ impl<'a> From<&'a str> for GetUser<'a> {
     }
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
 pub struct GetPosts {
     /// ID of the account whose posts are getting fetched
+    #[garde(skip)]
     account_id: Uuid,
 
     /// ID of the account that is requesting the posts
     #[builder(default)]
+    #[garde(skip)]
     fetching_account_id: Option<Uuid>,
 
     /// Limit of returned posts
+    #[garde(range(max = ctx.limit))]
     limit: usize,
 
     /// Smallest ID, return results starting from this ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     min_id: Option<Uuid>,
 
     /// Smallest ID, return highest results
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     since_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     max_id: Option<Uuid>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
 pub struct GetFollowRequests {
     /// ID of the account whose follow requests are getting fetched
+    #[garde(skip)]
     account_id: Uuid,
 
     /// Limit of returned posts
+    #[garde(range(max = ctx.limit))]
     limit: usize,
 
     /// Smallest ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     since_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     max_id: Option<Uuid>,
 }
 
@@ -362,6 +373,8 @@ impl AccountService {
         &self,
         get_posts: GetPosts,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        get_posts.validate(&LimitContext::default())?;
+
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
             .build()
@@ -372,7 +385,7 @@ impl AccountService {
             .add_post_permission_check(permission_check)
             .select(Post::as_select())
             .order(posts::id.desc())
-            .limit(min(get_posts.limit, API_MAX_LIMIT) as i64)
+            .limit(get_posts.limit as i64)
             .into_boxed();
 
         if let Some(max_id) = get_posts.max_id {
@@ -460,6 +473,8 @@ impl AccountService {
         &self,
         get_follow_requests: GetFollowRequests,
     ) -> Result<impl Stream<Item = Result<Account>> + '_> {
+        get_follow_requests.validate(&LimitContext::default())?;
+
         let mut query = accounts_follows::table
             .inner_join(accounts::table.on(accounts_follows::follower_id.eq(accounts::id)))
             .filter(
@@ -469,7 +484,7 @@ impl AccountService {
             )
             .select(Account::as_select())
             .order(accounts::id.desc())
-            .limit(min(get_follow_requests.limit, API_MAX_LIMIT) as i64)
+            .limit(get_follow_requests.limit as i64)
             .into_boxed();
 
         if let Some(since_id) = get_follow_requests.since_id {

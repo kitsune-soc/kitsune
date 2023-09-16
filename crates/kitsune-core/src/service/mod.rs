@@ -1,3 +1,5 @@
+use crate::consts::API_MAX_LIMIT;
+
 pub mod account;
 pub mod attachment;
 pub mod captcha;
@@ -10,3 +12,15 @@ pub mod post;
 pub mod timeline;
 pub mod url;
 pub mod user;
+
+pub struct LimitContext {
+    limit: usize,
+}
+
+impl Default for LimitContext {
+    fn default() -> Self {
+        Self {
+            limit: API_MAX_LIMIT,
+        }
+    }
+}

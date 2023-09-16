@@ -1,10 +1,9 @@
-use crate::{
-    consts::API_MAX_LIMIT,
-    error::{Error, Result},
-};
+use super::LimitContext;
+use crate::error::{Error, Result};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
+use garde::Validate;
 use kitsune_db::{
     model::post::{Post, Visibility},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
@@ -13,42 +12,54 @@ use kitsune_db::{
 };
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
-use std::cmp::min;
 use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
 pub struct GetHome {
+    #[garde(skip)]
     fetching_account_id: Uuid,
 
+    #[garde(range(max = ctx.limit))]
     limit: usize,
 
     #[builder(default)]
+    #[garde(skip)]
     max_id: Option<Uuid>,
 
     #[builder(default)]
+    #[garde(skip)]
     since_id: Option<Uuid>,
 
     #[builder(default)]
+    #[garde(skip)]
     min_id: Option<Uuid>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
 pub struct GetPublic {
+    #[garde(range(max = ctx.limit))]
     limit: usize,
 
     #[builder(default)]
+    #[garde(skip)]
     max_id: Option<Uuid>,
 
     #[builder(default)]
+    #[garde(skip)]
     since_id: Option<Uuid>,
 
     #[builder(default)]
+    #[garde(skip)]
     min_id: Option<Uuid>,
 
     #[builder(default)]
+    #[garde(skip)]
     only_local: bool,
 
     #[builder(default)]
+    #[garde(skip)]
     only_remote: bool,
 }
 
@@ -63,6 +74,8 @@ impl TimelineService {
         &self,
         get_home: GetHome,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        get_home.validate(&LimitContext::default())?;
+
         let mut query = posts::table
             .filter(
                 // Post is owned by the user
@@ -94,7 +107,7 @@ impl TimelineService {
                     )),
             )
             .order(posts::id.desc())
-            .limit(min(get_home.limit, API_MAX_LIMIT) as i64)
+            .limit(get_home.limit as i64)
             .select(Post::as_select())
             .into_boxed();
 
@@ -129,6 +142,8 @@ impl TimelineService {
         &self,
         get_public: GetPublic,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
+        get_public.validate(&LimitContext::default())?;
+
         let permission_check = PermissionCheck::builder()
             .include_unlisted(false)
             .build()
@@ -137,7 +152,7 @@ impl TimelineService {
         let mut query = posts::table
             .add_post_permission_check(permission_check)
             .order(posts::id.desc())
-            .limit(min(get_public.limit, API_MAX_LIMIT) as i64)
+            .limit(get_public.limit as i64)
             .select(Post::as_select())
             .into_boxed();
 
