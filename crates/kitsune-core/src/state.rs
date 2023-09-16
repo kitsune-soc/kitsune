@@ -13,9 +13,6 @@ use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
 
-#[cfg(feature = "oidc")]
-use crate::service::oidc::OidcService;
-
 /// Emitter collection
 ///
 /// This contains all the "emitters" that can emit events inside of Kitsune.
@@ -48,7 +45,6 @@ pub struct Service {
 
 /// Core application state
 #[derive(Clone)]
-#[cfg_attr(feature = "axum", derive(axum::extract::FromRef))]
 pub struct State {
     pub db_pool: PgPool,
     pub embed_client: Option<EmbedClient>,
