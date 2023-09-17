@@ -18,7 +18,6 @@ async fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
     let args = Args::parse();
-
     let raw_config = fs::read_to_string(args.config).await?;
     let config: Configuration = toml::from_str(&raw_config)?;
 
