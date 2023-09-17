@@ -1,7 +1,5 @@
-use crate::{
-    error::{Error, Result},
-    service::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor},
-};
+use crate::error::{Error, Result};
+use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
 use axum::{
@@ -29,7 +27,7 @@ use speedy_uuid::Uuid;
 
 #[cfg(feature = "oidc")]
 use {
-    crate::service::oidc::OidcService,
+    crate::oidc::OidcService,
     axum::extract::Query,
     kitsune_db::{model::oauth2, schema::oauth2_applications},
 };
@@ -58,6 +56,7 @@ pub struct LoginPage {
 pub async fn get(
     #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
     #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+
     State(db_pool): State<PgPool>,
     State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
@@ -146,7 +145,7 @@ pub async fn post(
         )));
     }
 
-    let is_valid = crate::blocking::cpu(move || {
+    let is_valid = kitsune_core::blocking::cpu(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 

@@ -1,15 +1,12 @@
-use std::cmp::min;
-
-use crate::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
-    error::{Error, Result},
-};
+use super::LimitContext;
+use crate::error::{Error, Result};
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl,
     SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{Stream, TryStreamExt};
+use garde::Validate;
 use kitsune_db::{
     model::notification::{NewNotification, Notification, NotificationType},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
@@ -24,41 +21,49 @@ pub struct NotificationService {
     db_pool: PgPool,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
 pub struct GetNotifications {
     /// ID of the account whose notifications are getting fetched
+    #[garde(skip)]
     receiving_account_id: Uuid,
 
     /// ID of the account which triggered the notifications
     #[builder(default)]
+    #[garde(skip)]
     triggering_account_id: Option<Uuid>,
 
     /// Included notification types
+    #[garde(skip)]
     included_types: Vec<NotificationType>,
 
     /// excluded notification types
+    #[garde(skip)]
     excluded_types: Vec<NotificationType>,
 
     /// Limit of returned posts
-    #[builder(default = API_DEFAULT_LIMIT)]
+    #[garde(range(max = ctx.limit))]
     limit: usize,
 
     /// Smallest ID, return results starting from this ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     min_id: Option<Uuid>,
 
     /// Smallest ID, return highest results
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     since_id: Option<Uuid>,
 
     /// Largest ID
     ///
     /// Used for pagination
     #[builder(default)]
+    #[garde(skip)]
     max_id: Option<Uuid>,
 }
 
@@ -67,6 +72,8 @@ impl NotificationService {
         &self,
         get_notifications: GetNotifications,
     ) -> Result<impl Stream<Item = Result<Notification>> + '_> {
+        get_notifications.validate(&LimitContext::default())?;
+
         let mut query = notifications::table
             .filter(
                 notifications::receiving_account_id
@@ -75,7 +82,7 @@ impl NotificationService {
             )
             .select(Notification::as_select())
             .order(notifications::id.desc())
-            .limit(min(get_notifications.limit, API_MAX_LIMIT) as i64)
+            .limit(get_notifications.limit as i64)
             .into_boxed();
 
         if let Some(account_id) = get_notifications.triggering_account_id {

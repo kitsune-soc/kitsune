@@ -1,12 +1,13 @@
 use crate::{
+    consts::API_DEFAULT_LIMIT,
     http::graphql::{types::Post, ContextExt},
-    service::timeline::{GetHome, GetPublic},
 };
 use async_graphql::{
     connection::{self, Connection, Edge},
     Context, Object, Result,
 };
 use futures_util::TryStreamExt;
+use kitsune_core::service::timeline::{GetHome, GetPublic};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]
@@ -22,7 +23,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service.timeline;
+        let timeline_service = &ctx.state().service().timeline;
 
         connection::query(
             after,
@@ -37,7 +38,7 @@ impl TimelineQuery {
                 let get_home = if let Some(first) = first {
                     get_home.limit(first).build()
                 } else {
-                    get_home.build()
+                    get_home.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = timeline_service
@@ -65,7 +66,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service.timeline;
+        let timeline_service = &ctx.state().service().timeline;
 
         connection::query(
             after,
@@ -80,7 +81,7 @@ impl TimelineQuery {
                 let get_public = if let Some(first) = first {
                     get_public.limit(first).build()
                 } else {
-                    get_public.build()
+                    get_public.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = timeline_service

@@ -1,7 +1,8 @@
-use crate::{consts::VERSION, error::Result, service::user::UserService, state::Zustand, try_join};
+use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use kitsune_core::{consts::VERSION, service::user::UserService, try_join};
 use kitsune_db::{
     schema::{posts, users},
     PgPool,

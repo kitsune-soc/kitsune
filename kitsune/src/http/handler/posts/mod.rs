@@ -1,17 +1,15 @@
 use crate::{
-    consts::VERSION,
-    error::Result,
+    error::{Error, Result},
     http::{
         cond,
         page::{PostComponent, PostPage},
         responder::ActivityPubJson,
     },
-    mapping::IntoObject,
-    service::post::PostService,
     state::Zustand,
 };
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
 use futures_util::TryStreamExt;
+use kitsune_core::{consts::VERSION, mapping::IntoObject, service::post::PostService};
 use kitsune_type::ap::Object;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;
@@ -27,6 +25,7 @@ async fn get_html(
     let post = post_service.get_by_id(id, None).await?;
     let ancestors = post_service
         .get_ancestors(post.id, None)
+        .map_err(Error::from)
         .try_fold(VecDeque::new(), |mut acc, item| {
             let state = &state;
             async move {
@@ -39,6 +38,7 @@ async fn get_html(
 
     let descendants = post_service
         .get_descendants(post.id, None)
+        .map_err(Error::from)
         .and_then(|item| PostComponent::prepare(&state, item))
         .try_collect()
         .await?;
@@ -58,7 +58,7 @@ async fn get(
     Path(id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Object>> {
     let post = post.get_by_id(id, None).await?;
-    Ok(ActivityPubJson(post.into_object(&state).await?))
+    Ok(ActivityPubJson(post.into_object(&state.core).await?))
 }
 
 pub fn routes() -> Router<Zustand> {

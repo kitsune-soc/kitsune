@@ -1,8 +1,6 @@
-use crate::{
-    consts::VERSION,
-    http::graphql::{types::Instance, ContextExt},
-};
+use crate::http::graphql::{types::Instance, ContextExt};
 use async_graphql::{Context, Object, Result};
+use kitsune_core::consts::VERSION;
 use std::convert::Into;
 
 #[derive(Default)]
@@ -13,9 +11,9 @@ impl InstanceQuery {
     #[allow(clippy::unused_async)]
     pub async fn instance(&self, ctx: &Context<'_>) -> Result<Instance> {
         let state = ctx.state();
-        let instance_service = &state.service.instance;
-        let url_service = &state.service.url;
-        let captcha = state.service.captcha.backend.clone().map(Into::into);
+        let instance_service = &state.service().instance;
+        let url_service = &state.service().url;
+        let captcha = state.service().captcha.backend.clone().map(Into::into);
 
         let description = instance_service.description().into();
         let domain = url_service.webfinger_domain().into();

@@ -1,9 +1,13 @@
-use crate::{error::Error, util::catch_panic::CatchPanic};
+use self::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
-use std::{env, panic};
+use std::{env, error::Error, panic};
+
+mod catch_panic;
+
+type BoxError = Box<dyn Error + Send + Sync>;
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where
@@ -29,7 +33,7 @@ where
                 .await
                 .expect("Failed to create schema");
 
-            Ok::<_, Error>(())
+            Ok::<_, BoxError>(())
         }
         .scoped()
     })

@@ -1,9 +1,9 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    mapping::MastodonMapper,
 };
 use axum::{extract::State, Json};
+use kitsune_core::mapping::MastodonMapper;
 use kitsune_type::mastodon::Account;
 
 #[utoipa::path(

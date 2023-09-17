@@ -12,7 +12,7 @@ impl PostQuery {
         let account_id = ctx.user_data().ok().map(|user_data| user_data.account.id);
 
         Ok(state
-            .service
+            .service()
             .post
             .get_by_id(id, account_id)
             .await

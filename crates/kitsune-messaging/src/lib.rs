@@ -2,7 +2,6 @@
 #![forbid(missing_docs, rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(
-    clippy::doc_markdown,
     clippy::module_name_repetitions,
     clippy::similar_names,
     forbidden_lint_groups

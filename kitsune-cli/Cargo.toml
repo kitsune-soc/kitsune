@@ -5,7 +5,7 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-clap = { version = "4.4.2", features = ["derive"] }
+clap = { version = "4.4.3", features = ["derive"] }
 color-eyre = "0.6.2"
 diesel = "2.1.1"
 diesel-async = "0.4.1"
@@ -19,4 +19,4 @@ tokio = { version = "1.32.0", features = ["full"] }
 tracing-subscriber = "0.3.17"
 
 [build-dependencies]
-vergen = { version = "8.2.4", features = ["build", "git", "gitcl"] }
+vergen = { version = "8.2.5", features = ["build", "git", "gitcl"] }

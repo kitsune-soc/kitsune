@@ -1,15 +1,10 @@
 use crate::{
-    error::{ApiError, Result},
+    consts::API_DEFAULT_LIMIT,
+    error::{Error, Result},
     http::{
         cond,
         page::{PostComponent, UserPage},
         responder::ActivityPubJson,
-    },
-    mapping::IntoObject,
-    service::{
-        account::{AccountService, GetPosts},
-        attachment::AttachmentService,
-        url::UrlService,
     },
     state::Zustand,
 };
@@ -19,6 +14,15 @@ use axum::{
     Router,
 };
 use futures_util::{future::OptionFuture, TryStreamExt};
+use kitsune_core::{
+    error::ApiError,
+    mapping::IntoObject,
+    service::{
+        account::{AccountService, GetPosts},
+        attachment::AttachmentService,
+        url::UrlService,
+    },
+};
 use kitsune_type::ap::actor::Actor;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -51,11 +55,13 @@ async fn get_html(
         .account_id(account.id)
         .max_id(query.max_id)
         .min_id(query.min_id)
+        .limit(API_DEFAULT_LIMIT)
         .build();
 
     let posts = account_service
         .get_posts(get_posts)
         .await?
+        .map_err(Error::from)
         .and_then(|post| PostComponent::prepare(&state, post))
         .try_collect()
         .await?;
@@ -94,7 +100,7 @@ async fn get(
         .await?
         .ok_or(ApiError::NotFound)?;
 
-    Ok(ActivityPubJson(account.into_object(&state).await?))
+    Ok(ActivityPubJson(account.into_object(&state.core).await?))
 }
 
 pub fn routes() -> Router<Zustand> {

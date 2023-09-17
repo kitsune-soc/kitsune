@@ -2,5 +2,8 @@
     "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
     "rust-analyzer.cargo.buildScripts.enable": true,
     "editor.formatOnSave": true,
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.cargo.features": [
+        "oidc"
+    ]
 }

@@ -1,8 +1,9 @@
 use super::{chrono_to_timestamp, timestamp_to_chrono};
-use crate::{error::Error, util::generate_secret};
+use crate::error::Error;
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use kitsune_core::util::generate_secret;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_access_tokens, oauth2_applications, oauth2_refresh_tokens},

@@ -1,10 +1,7 @@
 use crate::{
-    error::{ApiError, Result},
-    service::{
-        oauth2::{AuthorisationCode, OAuth2Service},
-        oidc::OidcService,
-        user::{Register, UserService},
-    },
+    error::{OAuth2Error, Result},
+    oauth2::{AuthorisationCode, OAuth2Service},
+    oidc::OidcService,
 };
 use axum::{
     extract::{Query, State},
@@ -12,6 +9,10 @@ use axum::{
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
+use kitsune_core::{
+    error::ApiError,
+    service::user::{Register, UserService},
+};
 use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
@@ -75,7 +76,7 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
-        .scopes(user_info.oauth2.scope.parse()?)
+        .scopes(user_info.oauth2.scope.parse().map_err(OAuth2Error::from)?)
         .build();
 
     oauth_service

@@ -1,13 +1,16 @@
 use crate::{
-    error::{ApiError, Result},
+    error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    mapping::MastodonMapper,
-    service::account::{AccountService, Unfollow},
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
+};
+use kitsune_core::{
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::account::{AccountService, Unfollow},
 };
 use kitsune_type::mastodon::relationship::Relationship;
 use speedy_uuid::Uuid;

@@ -51,8 +51,25 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
+macro_rules! min_character_limit {
+    ($self:ident) => {{
+        if $self.media_ids.is_empty() {
+            1
+        } else {
+            0
+        }
+    }};
+}
+
 pub struct PostValidationContext {
     character_limit: usize,
+}
+
+impl PostValidationContext {
+    fn max_character_limit(&self, other_value: usize) -> usize {
+        // Saturating subtraction to prevent panics/wrapping
+        self.character_limit.saturating_sub(other_value)
+    }
 }
 
 #[derive(Builder, Clone, Validate)]
@@ -92,7 +109,7 @@ pub struct CreatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit.saturating_sub(
+            max = ctx.max_character_limit(
                 content.chars().count()
             )
         )
@@ -102,8 +119,8 @@ pub struct CreatePost {
     /// Content of the post
     #[garde(
         length(
-            min = 1,
-            max = ctx.character_limit.saturating_sub(
+            min = min_character_limit!(self),
+            max = ctx.max_character_limit(
                 subject.as_ref().map_or(0, |subject| subject.chars().count())
             )
         )
@@ -193,7 +210,7 @@ pub struct UpdatePost {
     #[garde(
         length(
             min = 1,
-            max = ctx.character_limit.saturating_sub(
+            max = ctx.max_character_limit(
                 content.as_ref().map_or(0, |content| content.chars().count())
             )
         )
@@ -204,8 +221,8 @@ pub struct UpdatePost {
     #[builder(default)]
     #[garde(
         length(
-            min = 1,
-            max = ctx.character_limit.saturating_sub(
+            min = min_character_limit!(self),
+            max = ctx.max_character_limit(
                 subject.as_ref().map_or(0, |subject| subject.chars().count())
             )
         )
@@ -1129,6 +1146,31 @@ mod test {
         assert!(create_post
             .validate(&PostValidationContext { character_limit: 2 })
             .is_err());
+
+        let create_post = CreatePost::builder()
+            .author_id(Uuid::now_v7())
+            .content(String::new())
+            .build()
+            .unwrap();
+
+        assert!(create_post
+            .validate(&PostValidationContext {
+                character_limit: 25
+            })
+            .is_err());
+
+        let create_post = CreatePost::builder()
+            .author_id(Uuid::now_v7())
+            .media_ids(vec![Uuid::now_v7()])
+            .content(String::new())
+            .build()
+            .unwrap();
+
+        assert!(create_post
+            .validate(&PostValidationContext {
+                character_limit: 25
+            })
+            .is_ok());
     }
 
     #[test]

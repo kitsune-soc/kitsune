@@ -1,5 +1,6 @@
-use crate::{service::url::UrlService, state::Zustand};
+use crate::state::Zustand;
 use axum::{extract::State, routing, Json, Router};
+use kitsune_core::service::url::UrlService;
 use kitsune_type::nodeinfo::well_known::{Link, WellKnown};
 
 #[allow(clippy::unused_async)]

@@ -1,32 +1,28 @@
-use crate::{
+use crate::oauth2::{OAuth2Service, OAuthEndpoint};
+use axum::extract::FromRef;
+use axum_extra::extract::cookie;
+use kitsune_core::{
     activitypub::Fetcher,
     event::PostEventEmitter,
     service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        captcha::CaptchaService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        mailing::MailingService,
-        notification::NotificationService,
-        oauth2::{OAuth2Service, OAuthEndpoint},
-        post::PostService,
-        timeline::TimelineService,
-        url::UrlService,
-        user::UserService,
+        account::AccountService, attachment::AttachmentService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        notification::NotificationService, post::PostService, timeline::TimelineService,
+        url::UrlService, user::UserService,
     },
-    webfinger::Webfinger,
+    state::{EventEmitter, Service as CoreServiceState, State as CoreState},
 };
-use axum::extract::FromRef;
-use axum_extra::extract::cookie;
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_search::SearchService;
 
-#[cfg(feature = "oidc")]
-use crate::service::oidc::OidcService;
+#[cfg(feature = "mastodon-api")]
+use kitsune_core::mapping::MastodonMapper;
 
+#[cfg(feature = "oidc")]
+use crate::oidc::OidcService;
+
+#[macro_export]
 macro_rules! impl_from_ref {
     ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
         $(
@@ -43,43 +39,40 @@ macro_rules! impl_from_ref {
 impl_from_ref! {
     Zustand;
     [
-        AccountService => |input: &Zustand| input.service.account.clone(),
-        AttachmentService => |input: &Zustand| input.service.attachment.clone(),
-        FederationFilterService => |input: &Zustand| input.service.federation_filter.clone(),
-        JobService => |input: &Zustand| input.service.job.clone(),
-        NotificationService => |input: &Zustand| input.service.notification.clone(),
-        OAuth2Service => |input: &Zustand| input.service.oauth2.clone(),
-        PostService => |input: &Zustand| input.service.post.clone(),
-        SearchService => |input: &Zustand| input.service.search.clone(),
-        InstanceService => |input: &Zustand| input.service.instance.clone(),
-        TimelineService => |input: &Zustand| input.service.timeline.clone(),
-        UrlService => |input: &Zustand| input.service.url.clone(),
-        UserService => |input: &Zustand| input.service.user.clone()
+        PgPool => |input: &Zustand| input.db_pool().clone()
     ]
 }
 
-#[cfg(feature = "oidc")]
+#[cfg(feature = "mastodon-api")]
 impl_from_ref! {
     Zustand;
     [
-        Option<OidcService> => |input: &Zustand| input.service.oidc.clone()
+        kitsune_core::mapping::MastodonMapper => |input: &Zustand| input.mastodon_mapper().clone()
     ]
 }
 
 impl_from_ref! {
     Zustand;
     [
-        PostEventEmitter => |input: &Zustand| input.event_emitter.post.clone()
+        AccountService => |input: &Zustand| input.core.service.account.clone(),
+        AttachmentService => |input: &Zustand| input.core.service.attachment.clone(),
+        FederationFilterService => |input: &Zustand| input.core.service.federation_filter.clone(),
+        JobService => |input: &Zustand| input.core.service.job.clone(),
+        NotificationService => |input: &Zustand| input.core.service.notification.clone(),
+        PostService => |input: &Zustand| input.core.service.post.clone(),
+        SearchService => |input: &Zustand| input.core.service.search.clone(),
+        InstanceService => |input: &Zustand| input.core.service.instance.clone(),
+        TimelineService => |input: &Zustand| input.core.service.timeline.clone(),
+        UrlService => |input: &Zustand| input.core.service.url.clone(),
+        UserService => |input: &Zustand| input.core.service.user.clone()
     ]
 }
 
-/// Emitter collection
-///
-/// This contains all the "emitters" that can emit events inside of Kitsune.
-/// Something like "a post has been created" or "an account has been followed".
-#[derive(Clone)]
-pub struct EventEmitter {
-    pub post: PostEventEmitter,
+impl_from_ref! {
+    Zustand;
+    [
+        PostEventEmitter => |input: &Zustand| input.event_emitter().post.clone()
+    ]
 }
 
 #[derive(Clone)]
@@ -116,44 +109,51 @@ impl_from_ref! {
     ]
 }
 
-/// Service collection
-///
-/// This contains all the "services" that Kitsune consists of.
-/// These are things like the search service, post service, etc.
-#[derive(Clone)]
-pub struct Service {
-    pub account: AccountService,
-    pub attachment: AttachmentService,
-    pub captcha: CaptchaService,
-    pub federation_filter: FederationFilterService,
-    pub job: JobService,
-    pub mailing: MailingService,
-    pub notification: NotificationService,
-    pub oauth2: OAuth2Service,
-    #[cfg(feature = "oidc")]
-    pub oidc: Option<OidcService>,
-    pub post: PostService,
-    pub instance: InstanceService,
-    pub search: SearchService,
-    pub timeline: TimelineService,
-    pub url: UrlService,
-    pub user: UserService,
-}
-
-/// Application state
-///
-/// Called it "Zustand" to avoid a name collission with `axum::extract::State`.
-/// "Zustand" is just the german word for state.
 #[derive(Clone, FromRef)]
 pub struct Zustand {
-    pub db_pool: PgPool,
-    pub embed_client: Option<EmbedClient>,
-    pub event_emitter: EventEmitter,
-    pub fetcher: Fetcher,
-    #[cfg(feature = "mastodon-api")]
-    pub mastodon_mapper: crate::mapping::MastodonMapper,
+    pub core: CoreState,
+    pub oauth2: OAuth2Service,
     pub oauth_endpoint: OAuthEndpoint,
-    pub service: Service,
+    #[cfg(feature = "oidc")]
+    pub oidc: Option<OidcService>,
     pub session_config: SessionConfig,
-    pub webfinger: Webfinger,
+}
+
+impl Zustand {
+    #[inline]
+    #[must_use]
+    pub fn db_pool(&self) -> &PgPool {
+        &self.core.db_pool
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn embed_client(&self) -> Option<&EmbedClient> {
+        self.core.embed_client.as_ref()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn event_emitter(&self) -> &EventEmitter {
+        &self.core.event_emitter
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn fetcher(&self) -> &Fetcher {
+        &self.core.fetcher
+    }
+
+    #[inline]
+    #[must_use]
+    #[cfg(feature = "mastodon-api")]
+    pub fn mastodon_mapper(&self) -> &MastodonMapper {
+        &self.core.mastodon_mapper
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn service(&self) -> &CoreServiceState {
+        &self.core.service
+    }
 }

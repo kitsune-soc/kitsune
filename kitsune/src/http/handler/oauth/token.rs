@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, OAuth2Error, Result},
-    service::oauth2::OAuthEndpoint,
+    oauth2::OAuthEndpoint,
 };
 use axum::{debug_handler, extract::State};
 use oxide_auth::endpoint::QueryParameter;

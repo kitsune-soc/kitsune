@@ -14,6 +14,7 @@ exclude = ["xtask"]
 members = [
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
+    "crates/kitsune-core",
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",
@@ -23,6 +24,7 @@ members = [
     "crates/kitsune-messaging",
     "crates/kitsune-search",
     "crates/kitsune-storage",
+    "crates/kitsune-test",
     "crates/kitsune-type",
     "kitsune",
     "kitsune-cli",

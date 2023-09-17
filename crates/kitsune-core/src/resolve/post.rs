@@ -84,7 +84,6 @@ mod test {
             account::AccountService, attachment::AttachmentService,
             federation_filter::FederationFilterService, job::JobService, url::UrlService,
         },
-        test::{database_test, redis_test},
         webfinger::Webfinger,
     };
     use athena::JobQueue;
@@ -97,6 +96,7 @@ mod test {
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
+    use kitsune_test::{database_test, redis_test};
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use std::sync::Arc;
@@ -112,11 +112,11 @@ mod test {
                 let client = service_fn(|req: Request<_>| async move {
                     match req.uri().path_and_query().unwrap().as_str() {
                         "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"=> {
-                            let body = include_str!("../test-fixtures/0x0_jrd.json");
+                            let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
                             Ok::<_, Infallible>(Response::new(Body::from(body)))
                         }
                         "/users/0x0" => {
-                            let body = include_str!("../test-fixtures/0x0_actor.json");
+                            let body = include_str!("../../../../test-fixtures/0x0_actor.json");
                             Ok::<_, Infallible>(Response::new(Body::from(body)))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),

@@ -1,9 +1,8 @@
-use crate::{
-    error::Result, http::responder::ActivityPubJson, service::url::UrlService, state::Zustand,
-};
+use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::extract::{OriginalUri, Path, State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
+use kitsune_core::service::url::UrlService;
 use kitsune_db::schema::{accounts, accounts_follows};
 use kitsune_type::ap::{
     ap_context,
@@ -19,7 +18,7 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
 ) -> Result<ActivityPubJson<Collection>> {
     let follower_count = state
-        .db_pool
+        .db_pool()
         .with_connection(|db_conn| {
             accounts_follows::table
                 .inner_join(

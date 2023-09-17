@@ -1,9 +1,7 @@
 use super::handle_upload;
-use crate::{
-    http::graphql::{types::Account, ContextExt},
-    service::account::Update,
-};
+use crate::http::graphql::{types::Account, ContextExt};
 use async_graphql::{Context, Error, Object, Result, Upload};
+use kitsune_core::service::account::Update;
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -19,7 +17,7 @@ impl UserMutation {
         header: Option<Upload>,
         locked: Option<bool>,
     ) -> Result<Account> {
-        let account_service = &ctx.state().service.account;
+        let account_service = &ctx.state().service().account;
         let mut account_update = Update::builder();
 
         if let Some(display_name) = display_name {

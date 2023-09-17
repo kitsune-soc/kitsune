@@ -1,14 +1,9 @@
 use crate::{
-    consts::API_DEFAULT_LIMIT,
+    consts::default_limit,
     error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
-    },
-    mapping::MastodonMapper,
-    service::{
-        timeline::{GetHome, TimelineService},
-        url::UrlService,
     },
 };
 use axum::{
@@ -16,14 +11,17 @@ use axum::{
     Json,
 };
 use futures_util::TryStreamExt;
+use kitsune_core::{
+    mapping::MastodonMapper,
+    service::{
+        timeline::{GetHome, TimelineService},
+        url::UrlService,
+    },
+};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;
-
-fn default_limit() -> usize {
-    API_DEFAULT_LIMIT
-}
 
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {

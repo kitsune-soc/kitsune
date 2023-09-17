@@ -1,5 +1,5 @@
 use super::{MediaAttachment, Post};
-use crate::{http::graphql::ContextExt, service::account::GetPosts};
+use crate::{consts::API_DEFAULT_LIMIT, http::graphql::ContextExt};
 use async_graphql::{
     connection::{self, Connection, Edge},
     ComplexObject, Context, Result, SimpleObject,
@@ -7,6 +7,7 @@ use async_graphql::{
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
+use kitsune_core::service::account::GetPosts;
 use kitsune_db::{
     model::{
         account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
@@ -37,7 +38,7 @@ pub struct Account {
 #[ComplexObject]
 impl Account {
     pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let db_pool = &ctx.state().db_pool;
+        let db_pool = &ctx.state().db_pool();
 
         if let Some(avatar_id) = self.avatar_id {
             db_pool
@@ -60,7 +61,7 @@ impl Account {
     }
 
     pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let db_pool = &ctx.state().db_pool;
+        let db_pool = &ctx.state().db_pool();
 
         if let Some(header_id) = self.header_id {
             db_pool
@@ -96,7 +97,7 @@ impl Account {
             first,
             last,
             |after, before, first, _last| async move {
-                let account_service = &ctx.state().service.account;
+                let account_service = &ctx.state().service().account;
                 let get_posts = GetPosts::builder()
                     .account_id(self.id)
                     .fetching_account_id(ctx.user_data().ok().map(|user_data| user_data.account.id))
@@ -106,7 +107,7 @@ impl Account {
                 let get_posts = if let Some(first) = first {
                     get_posts.limit(first).build()
                 } else {
-                    get_posts.build()
+                    get_posts.limit(API_DEFAULT_LIMIT).build()
                 };
 
                 let mut post_stream = account_service

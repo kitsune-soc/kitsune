@@ -1,8 +1,8 @@
+use crate::state::Zustand;
 use crate::{
     error::Result,
     http::extractor::FormOrJson,
-    service::oauth2::{CreateApp, OAuth2Service},
-    state::Zustand,
+    oauth2::{CreateApp, OAuth2Service},
 };
 use axum::{extract::State, routing, Json, Router};
 use kitsune_type::mastodon::App;

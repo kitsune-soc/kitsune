@@ -1,7 +1,4 @@
-use const_format::concatcp;
-
 pub const API_DEFAULT_LIMIT: usize = 20;
-pub const API_MAX_LIMIT: usize = 40;
 pub const STARTUP_FIGLET: &str = r#"
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                           ┃
@@ -16,5 +13,13 @@ pub const STARTUP_FIGLET: &str = r#"
 ┃                                                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#;
-pub const USER_AGENT: &str = concatcp!(env!("CARGO_PKG_NAME"), "/", VERSION);
-pub const VERSION: &str = concatcp!(env!("CARGO_PKG_VERSION"), "-", env!("VERGEN_GIT_SHA"));
+
+#[must_use]
+pub fn default_limit<T>() -> T
+where
+    T: From<u16>,
+{
+    // We use u16 since this is the only integer that implements `Into` for `u64` and `usize` (besides u8)
+    #[allow(clippy::cast_possible_truncation)]
+    (API_DEFAULT_LIMIT as u16).into()
+}

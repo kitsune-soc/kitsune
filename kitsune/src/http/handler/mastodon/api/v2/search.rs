@@ -1,5 +1,5 @@
 use crate::{
-    consts::{API_DEFAULT_LIMIT, API_MAX_LIMIT},
+    consts::default_limit,
     error::{Error, Result},
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
@@ -9,6 +9,7 @@ use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
+use kitsune_core::{consts::API_MAX_LIMIT, error::Error as CoreError};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -21,10 +22,6 @@ use speedy_uuid::Uuid;
 use std::cmp::min;
 use url::Url;
 use utoipa::{IntoParams, ToSchema};
-
-fn default_page_limit() -> u64 {
-    API_DEFAULT_LIMIT as u64
-}
 
 #[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -43,7 +40,7 @@ struct SearchQuery {
     resolve: bool,*/
     max_id: Option<Uuid>,
     min_id: Option<Uuid>,
-    #[serde(default = "default_page_limit")]
+    #[serde(default = "default_limit")]
     limit: u64,
     #[serde(default)]
     offset: u64,
@@ -91,11 +88,12 @@ async fn get(
                 query.min_id,
                 query.max_id,
             )
-            .await?;
+            .await
+            .map_err(CoreError::from)?;
 
         for result in results {
             search_result = state
-                .db_pool
+                .db_pool()
                 .with_connection(|db_conn| {
                     async {
                         match index {
@@ -108,7 +106,7 @@ async fn get(
 
                                 search_result
                                     .accounts
-                                    .push(state.mastodon_mapper.map(account).await?);
+                                    .push(state.mastodon_mapper().map(account).await?);
                             }
                             SearchIndex::Post => {
                                 let post = posts::table
@@ -119,7 +117,7 @@ async fn get(
 
                                 search_result
                                     .statuses
-                                    .push(state.mastodon_mapper.map(post).await?);
+                                    .push(state.mastodon_mapper().map(post).await?);
                             }
                         }
 
@@ -132,18 +130,22 @@ async fn get(
     }
 
     if Url::parse(&query.query).is_ok() {
-        match state.fetcher.fetch_actor(query.query.as_str().into()).await {
+        match state
+            .fetcher()
+            .fetch_actor(query.query.as_str().into())
+            .await
+        {
             Ok(account) => search_result
                 .accounts
-                .insert(0, state.mastodon_mapper.map(account).await?),
+                .insert(0, state.mastodon_mapper().map(account).await?),
             Err(error) => debug!(?error, "couldn't fetch actor via url"),
         }
 
-        match state.fetcher.fetch_object(query.query.as_str()).await {
+        match state.fetcher().fetch_object(query.query.as_str()).await {
             Ok(post) => search_result.statuses.insert(
                 0,
                 state
-                    .mastodon_mapper
+                    .mastodon_mapper()
                     .map((&user_data.account, post))
                     .await?,
             ),

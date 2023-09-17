@@ -290,9 +290,7 @@ mod test {
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
         service::federation_filter::FederationFilterService,
-        test::database_test,
     };
-    use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use http::uri::PathAndQuery;
@@ -302,15 +300,19 @@ mod test {
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
+    use kitsune_test::database_test;
     use kitsune_type::ap::{
         actor::{Actor, ActorType, PublicKey},
         ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
     };
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
-    use std::sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc,
+    use std::{
+        convert::Infallible,
+        sync::{
+            atomic::{AtomicU32, Ordering},
+            Arc,
+        },
     };
     use tower::service_fn;
 
@@ -633,17 +635,19 @@ mod test {
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
-                let body = include_str!("../test-fixtures/0x0_actor.json");
+                let body = include_str!("../../../../test-fixtures/0x0_actor.json");
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             "/@0x0/109501674056556919" => {
-                let body =
-                    include_str!("../test-fixtures/corteximplant.com_109501674056556919.json");
+                let body = include_str!(
+                    "../../../../test-fixtures/corteximplant.com_109501674056556919.json"
+                );
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             "/users/0x0/statuses/109501659207519785" => {
-                let body =
-                    include_str!("../test-fixtures/corteximplant.com_109501659207519785.json");
+                let body = include_str!(
+                    "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
+                );
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
             path => panic!("HTTP client hit unexpected route: {path}"),

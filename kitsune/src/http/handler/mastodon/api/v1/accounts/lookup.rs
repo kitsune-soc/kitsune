@@ -1,13 +1,13 @@
-use crate::{
-    error::{ApiError, Result},
-    http::extractor::MastodonAuthExtractor,
-    mapping::MastodonMapper,
-    service::account::{AccountService, GetUser},
-};
+use crate::{error::Result, http::extractor::MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Query, State},
     Json,
+};
+use kitsune_core::{
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::account::{AccountService, GetUser},
 };
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;

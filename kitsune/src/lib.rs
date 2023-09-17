@@ -1,9 +1,7 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(
-    clippy::cast_possible_wrap,
     clippy::cast_sign_loss,
-    clippy::doc_markdown,
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
     forbidden_lint_groups
@@ -16,26 +14,25 @@ extern crate metrics;
 #[macro_use]
 extern crate tracing;
 
-#[cfg(test)]
-mod test;
-
-pub mod activitypub;
-pub mod blocking;
-pub mod config;
 pub mod consts;
 pub mod error;
-pub mod event;
 pub mod http;
-pub mod job;
-pub mod mapping;
-pub mod resolve;
-pub mod sanitize;
-pub mod service;
+pub mod oauth2;
+#[cfg(feature = "oidc")]
+pub mod oidc;
 pub mod state;
-pub mod util;
-pub mod webfinger;
 
 use self::{
+    oauth2::OAuth2Service,
+    state::{SessionConfig, Zustand},
+};
+use athena::JobQueue;
+use aws_credential_types::Credentials;
+use aws_sdk_s3::config::Region;
+use eyre::Context;
+use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
+use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, Captcha};
+use kitsune_core::{
     activitypub::Fetcher,
     config::{
         CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
@@ -44,29 +41,14 @@ use self::{
     job::KitsuneContextRepo,
     resolve::PostResolver,
     service::{
-        account::AccountService,
-        attachment::AttachmentService,
-        captcha::CaptchaService,
-        federation_filter::FederationFilterService,
-        instance::InstanceService,
-        job::JobService,
-        mailing::MailingService,
-        oauth2::{OAuth2Service, OAuthEndpoint},
-        post::PostService,
-        timeline::TimelineService,
-        url::UrlService,
-        user::UserService,
+        account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
+        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
+        mailing::MailingService, notification::NotificationService, post::PostService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
-    state::{EventEmitter, Service, SessionConfig, Zustand},
+    state::{EventEmitter, Service, State as CoreState},
     webfinger::Webfinger,
 };
-use athena::JobQueue;
-use aws_credential_types::Credentials;
-use aws_sdk_s3::config::Region;
-use eyre::Context;
-use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::Captcha;
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
@@ -78,8 +60,8 @@ use kitsune_messaging::{
 };
 use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
+use oauth2::OAuthEndpoint;
 use serde::{de::DeserializeOwned, Serialize};
-use service::notification::NotificationService;
 use std::{
     fmt::Display,
     str::FromStr,
@@ -95,11 +77,9 @@ use kitsune_search::MeiliSearchService;
 
 #[cfg(feature = "oidc")]
 use {
-    self::{
-        config::OidcConfiguration,
-        service::oidc::{async_client, OidcService},
-    },
+    self::oidc::{async_client, OidcService},
     futures_util::future::OptionFuture,
+    kitsune_core::config::OidcConfiguration,
     openidconnect::{
         core::{CoreClient, CoreProviderMetadata},
         ClientId, ClientSecret, IssuerUrl, RedirectUrl,
@@ -409,7 +389,7 @@ pub async fn initialise_state(
         .build();
 
     #[cfg(feature = "mastodon-api")]
-    let mastodon_mapper = self::mapping::MastodonMapper::builder()
+    let mastodon_mapper = kitsune_core::mapping::MastodonMapper::builder()
         .attachment_service(attachment_service.clone())
         .cache_invalidator(
             status_event_emitter
@@ -425,34 +405,36 @@ pub async fn initialise_state(
         .expect("[Bug] Failed to initialise Mastodon mapper");
 
     Ok(Zustand {
-        db_pool: conn.clone(),
-        embed_client,
-        event_emitter: EventEmitter {
-            post: status_event_emitter.clone(),
+        core: CoreState {
+            db_pool: conn.clone(),
+            embed_client,
+            event_emitter: EventEmitter {
+                post: status_event_emitter.clone(),
+            },
+            fetcher,
+            #[cfg(feature = "mastodon-api")]
+            mastodon_mapper,
+            service: Service {
+                account: account_service,
+                captcha: captcha_service,
+                federation_filter: federation_filter_service,
+                instance: instance_service,
+                job: job_service,
+                mailing: mailing_service,
+                notification: notification_service,
+                search: search_service,
+                post: post_service,
+                timeline: timeline_service,
+                attachment: attachment_service,
+                url: url_service,
+                user: user_service,
+            },
+            webfinger,
         },
-        fetcher,
-        #[cfg(feature = "mastodon-api")]
-        mastodon_mapper,
+        oauth2: oauth2_service,
         oauth_endpoint: OAuthEndpoint::from(conn),
-        service: Service {
-            account: account_service,
-            captcha: captcha_service,
-            federation_filter: federation_filter_service,
-            instance: instance_service,
-            job: job_service,
-            mailing: mailing_service,
-            notification: notification_service,
-            oauth2: oauth2_service,
-            #[cfg(feature = "oidc")]
-            oidc: oidc_service,
-            search: search_service,
-            post: post_service,
-            timeline: timeline_service,
-            attachment: attachment_service,
-            url: url_service,
-            user: user_service,
-        },
+        #[cfg(feature = "oidc")]
+        oidc: oidc_service,
         session_config: SessionConfig::generate(),
-        webfinger,
     })
 }

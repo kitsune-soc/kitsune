@@ -1,4 +1,4 @@
-use crate::{error::Result, service::url::UrlService, state::Zustand};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
@@ -7,6 +7,7 @@ use axum_extra::either::Either;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
+use kitsune_core::service::url::UrlService;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::webfinger::{Link, Resource};
 use scoped_futures::ScopedFutureExt;
@@ -79,7 +80,7 @@ pub fn routes() -> Router<Zustand> {
 #[cfg(test)]
 mod tests {
     use super::{get, WebfingerQuery};
-    use crate::{error::Error, service::url::UrlService, test::database_test};
+    use crate::error::Error;
     use axum::{
         extract::{Query, State},
         Json,
@@ -87,10 +88,12 @@ mod tests {
     use axum_extra::either::Either;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::StatusCode;
+    use kitsune_core::service::url::UrlService;
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
     };
+    use kitsune_test::database_test;
     use kitsune_type::webfinger::Link;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;

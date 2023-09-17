@@ -1,14 +1,9 @@
 use crate::{
-    consts::API_DEFAULT_LIMIT,
-    error::{ApiError, Result},
+    consts::default_limit,
+    error::Result,
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
-    },
-    mapping::MastodonMapper,
-    service::{
-        notification::{GetNotifications, NotificationService},
-        url::UrlService,
     },
     state::Zustand,
 };
@@ -19,6 +14,14 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
+use kitsune_core::{
+    error::ApiError,
+    mapping::MastodonMapper,
+    service::{
+        notification::{GetNotifications, NotificationService},
+        url::UrlService,
+    },
+};
 use kitsune_type::mastodon::{notification::NotificationType, Notification};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -26,10 +29,6 @@ use utoipa::IntoParams;
 
 pub mod clear;
 pub mod dismiss;
-
-fn default_limit() -> usize {
-    API_DEFAULT_LIMIT
-}
 
 #[derive(Deserialize, IntoParams)]
 pub struct GetQuery {

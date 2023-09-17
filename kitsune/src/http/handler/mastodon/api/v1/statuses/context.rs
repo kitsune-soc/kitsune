@@ -1,13 +1,11 @@
-use crate::{
-    error::Result, http::extractor::MastodonAuthExtractor, mapping::MastodonMapper,
-    service::post::PostService,
-};
+use crate::{error::Result, http::extractor::MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
 use futures_util::TryStreamExt;
+use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
 use kitsune_type::mastodon::status::Context;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;

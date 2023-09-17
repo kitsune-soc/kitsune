@@ -3,13 +3,15 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(forbidden_lint_groups)]
 
-use self::error::{CaptchaVerification, Error};
+use self::error::CaptchaVerification;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 
 pub mod error;
 pub mod hcaptcha;
 pub mod mcaptcha;
+
+pub use self::error::Error;
 
 /// Result alias where the error defaults to [`BoxError`]
 pub type Result<T, E = Error> = std::result::Result<T, E>;
