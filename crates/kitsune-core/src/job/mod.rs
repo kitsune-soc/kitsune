@@ -8,7 +8,7 @@ use self::{
 };
 use crate::{activitypub::Deliverer, error::Result, state::State};
 use async_trait::async_trait;
-use athena::{JobContextRepository, JobQueue, Runnable};
+use athena::{JobContextRepository, Runnable};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
@@ -21,14 +21,11 @@ use kitsune_db::{
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use std::{sync::Arc, time::Duration};
-use tokio::task::JoinSet;
 use typed_builder::TypedBuilder;
 
 pub mod deliver;
 pub mod mailing;
 
-const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
 macro_rules! impl_from {
@@ -60,8 +57,8 @@ macro_rules! impl_from {
 }
 
 pub struct JobRunnerContext {
-    deliverer: Deliverer,
-    state: State,
+    pub deliverer: Deliverer,
+    pub state: State,
 }
 
 impl_from! {
@@ -169,35 +166,5 @@ impl JobContextRepository for KitsuneContextRepo {
             .await?;
 
         Ok(())
-    }
-}
-
-#[instrument(skip(job_queue, state))]
-pub async fn run_dispatcher(
-    job_queue: JobQueue<KitsuneContextRepo>,
-    state: State,
-    num_job_workers: usize,
-) {
-    let deliverer = Deliverer::builder()
-        .federation_filter(state.service.federation_filter.clone())
-        .build();
-    let ctx = Arc::new(JobRunnerContext { deliverer, state });
-
-    let mut job_joinset = JoinSet::new();
-    loop {
-        while let Err(error) = job_queue
-            .spawn_jobs(
-                num_job_workers - job_joinset.len(),
-                Arc::clone(&ctx),
-                &mut job_joinset,
-            )
-            .await
-        {
-            error!(?error, "failed to spawn more jobs");
-            just_retry::sleep_a_bit().await;
-        }
-
-        let join_all = async { while job_joinset.join_next().await.is_some() {} };
-        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, join_all).await;
     }
 }

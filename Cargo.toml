@@ -28,6 +28,7 @@ members = [
     "crates/kitsune-type",
     "kitsune",
     "kitsune-cli",
+    "kitsune-job-runner",
     "kitsune-search-server",
     "kitsune-search-server/proto",
     "lib/athena",

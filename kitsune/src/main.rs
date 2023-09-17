@@ -1,15 +1,16 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use clap::Parser;
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
-use kitsune::{consts::STARTUP_FIGLET, http};
-use kitsune_core::{config::Configuration, consts::VERSION, job};
+use kitsune::consts::STARTUP_FIGLET;
+use kitsune_core::{config::Configuration, consts::VERSION};
 use std::{
     borrow::Cow,
     env, future,
     panic::{self, PanicInfo},
-    process,
+    path::PathBuf,
 };
 use tracing::level_filters::LevelFilter;
 use tracing_error::ErrorLayer;
@@ -127,16 +128,20 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
     message.into()
 }
 
+/// Kitsune Social Media server
+#[derive(Parser)]
+#[command(about, author, version = VERSION)]
+struct Args {
+    /// Path to the configuration file
+    #[clap(long, short)]
+    config: PathBuf,
+}
+
 async fn boot() -> eyre::Result<()> {
     println!("{STARTUP_FIGLET}");
 
-    let args: Vec<String> = env::args().take(2).collect();
-    if args.len() == 1 {
-        eprintln!("Usage: {} <Path to configuration file>", args[0]);
-        process::exit(1);
-    }
-
-    let config = Configuration::load(&args[1]).await?;
+    let args = Args::parse();
+    let config = Configuration::load(args.config).await?;
     initialise_logging(&config)?;
 
     let conn = kitsune_db::connect(
@@ -147,12 +152,12 @@ async fn boot() -> eyre::Result<()> {
     .context("Failed to connect to and migrate the database")
     .with_suggestion(|| postgres_url_diagnostics(&config.database.url))?;
 
-    let job_queue = kitsune::prepare_job_queue(conn.clone(), &config.job_queue)
+    let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
         .context("Failed to connect to the Redis instance for the job scheduler")?;
     let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
 
-    tokio::spawn(self::http::run(state.clone(), config.server.clone()));
-    tokio::spawn(self::job::run_dispatcher(
+    tokio::spawn(kitsune::http::run(state.clone(), config.server.clone()));
+    tokio::spawn(kitsune_job_runner::run_dispatcher(
         job_queue,
         state.core.clone(),
         config.job_queue.num_workers.get(),

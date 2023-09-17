@@ -3087,6 +3087,7 @@ dependencies = [
  "axum-prometheus",
  "bytes",
  "chrono",
+ "clap",
  "color-eyre",
  "const-oid",
  "deadpool-redis",
@@ -3108,6 +3109,7 @@ dependencies = [
  "kitsune-embed",
  "kitsune-http-client",
  "kitsune-http-signatures",
+ "kitsune-job-runner",
  "kitsune-language",
  "kitsune-messaging",
  "kitsune-search",
@@ -3215,6 +3217,8 @@ dependencies = [
  "async-trait",
  "athena",
  "autometrics",
+ "aws-credential-types",
+ "aws-sdk-s3",
  "base64-simd",
  "bytes",
  "const_format",
@@ -3361,6 +3365,22 @@ dependencies = [
  "thiserror",
  "time",
  "tokio",
+]
+
+[[package]]
+name = "kitsune-job-runner"
+version = "0.0.1-pre.3"
+dependencies = [
+ "athena",
+ "clap",
+ "color-eyre",
+ "deadpool-redis",
+ "just-retry",
+ "kitsune-core",
+ "kitsune-db",
+ "tokio",
+ "toml 0.8.0",
+ "tracing",
 ]
 
 [[package]]
