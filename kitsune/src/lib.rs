@@ -27,7 +27,6 @@ use self::{
     state::{SessionConfig, Zustand},
 };
 use athena::JobQueue;
-use eyre::Context;
 use kitsune_core::{config::Configuration, job::KitsuneContextRepo};
 use kitsune_db::PgPool;
 use oauth2::OAuthEndpoint;
@@ -48,6 +47,8 @@ async fn prepare_oidc_client(
     oidc_config: &OidcConfiguration,
     url_service: &UrlService,
 ) -> eyre::Result<CoreClient> {
+    use eyre::Context;
+
     let provider_metadata = CoreProviderMetadata::discover_async(
         IssuerUrl::new(oidc_config.server_url.to_string()).context("Invalid OIDC issuer URL")?,
         async_client,
