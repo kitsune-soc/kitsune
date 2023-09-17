@@ -70,8 +70,7 @@ async fn delete(
         .account_id(user_data.account.id)
         .user_id(user_data.user.id)
         .post_id(id)
-        .build()
-        .unwrap();
+        .build();
 
     post.delete(delete_post).await?;
 
@@ -123,30 +122,23 @@ async fn get(
 )]
 async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
-    State(post): State<PostService>,
+    State(post_service): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     FormOrJson(form): FormOrJson<CreateForm>,
 ) -> Result<Json<Status>> {
-    let mut create_post = CreatePost::builder()
+    let create_post = CreatePost::builder()
         .author_id(user_data.account.id)
         .content(form.status)
+        .in_reply_to_id(form.in_reply_to_id)
         .media_ids(form.media_ids)
         .sensitive(form.sensitive)
+        .subject(form.spoiler_text.filter(|subject| !subject.is_empty()))
         .visibility(form.visibility.into())
-        .clone();
+        .build();
 
-    if let Some(subject) = form.spoiler_text.filter(|subject| !subject.is_empty()) {
-        create_post.subject(subject);
-    }
-    if let Some(in_reply_to_id) = form.in_reply_to_id {
-        create_post.in_reply_to_id(in_reply_to_id);
-    }
+    let post = post_service.create(create_post).await?;
 
-    let status = mastodon_mapper
-        .map(post.create(create_post.build().unwrap()).await?)
-        .await?;
-
-    Ok(Json(status))
+    Ok(Json(mastodon_mapper.map(post).await?))
 }
 
 #[debug_handler(state = Zustand)]
@@ -176,8 +168,7 @@ async fn put(
         .media_ids(form.media_ids)
         .sensitive(form.sensitive)
         .subject(form.spoiler_text.filter(|subject| !subject.is_empty()))
-        .build()
-        .unwrap();
+        .build();
 
     let status = mastodon_mapper.map(post.update(update_post).await?).await?;
 

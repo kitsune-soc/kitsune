@@ -19,7 +19,6 @@ use crate::{
     util::process_markdown,
 };
 use async_stream::try_stream;
-use derive_builder::Builder;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
     SelectableHelper,
@@ -72,7 +71,7 @@ impl PostValidationContext {
     }
 }
 
-#[derive(Builder, Clone, Validate)]
+#[derive(Clone, TypedBuilder, Validate)]
 #[garde(context(PostValidationContext as ctx))]
 pub struct CreatePost {
     /// ID of the author
@@ -84,7 +83,7 @@ pub struct CreatePost {
     /// ID of the post this post is replying to
     ///
     /// This is validated. If you pass in an non-existent ID, it will be ignored.
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     #[garde(skip)]
     in_reply_to_id: Option<Uuid>,
 
@@ -105,7 +104,7 @@ pub struct CreatePost {
     /// Subject of the post
     ///
     /// This is optional
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     #[garde(
         length(
             min = 1,
@@ -130,14 +129,14 @@ pub struct CreatePost {
     /// Process the content as a markdown document
     ///
     /// Defaults to true
-    #[builder(default = "true")]
+    #[builder(default = true)]
     #[garde(skip)]
     process_markdown: bool,
 
     /// Visibility of the post
     ///
     /// Defaults to public
-    #[builder(default = "Visibility::Public")]
+    #[builder(default = Visibility::Public)]
     #[garde(skip)]
     visibility: Visibility,
 
@@ -149,14 +148,7 @@ pub struct CreatePost {
     language: Option<String>,
 }
 
-impl CreatePost {
-    #[must_use]
-    pub fn builder() -> CreatePostBuilder {
-        CreatePostBuilder::default()
-    }
-}
-
-#[derive(Clone, Builder)]
+#[derive(Clone, TypedBuilder)]
 pub struct DeletePost {
     /// ID of the account that is associated with the user
     account_id: Uuid,
@@ -171,14 +163,7 @@ pub struct DeletePost {
     post_id: Uuid,
 }
 
-impl DeletePost {
-    #[must_use]
-    pub fn builder() -> DeletePostBuilder {
-        DeletePostBuilder::default()
-    }
-}
-
-#[derive(Builder, Clone, Validate)]
+#[derive(Clone, TypedBuilder, Validate)]
 #[garde(context(PostValidationContext as ctx))]
 pub struct UpdatePost {
     /// ID of the post that is supposed to be updated
@@ -232,7 +217,7 @@ pub struct UpdatePost {
     /// Process the content as a markdown document
     ///
     /// Defaults to true
-    #[builder(default = "true")]
+    #[builder(default = true)]
     #[garde(skip)]
     process_markdown: bool,
 
@@ -244,14 +229,7 @@ pub struct UpdatePost {
     language: Option<String>,
 }
 
-impl UpdatePost {
-    #[must_use]
-    pub fn builder() -> UpdatePostBuilder {
-        UpdatePostBuilder::default()
-    }
-}
-
-#[derive(Clone, Builder)]
+#[derive(Clone, TypedBuilder)]
 pub struct RepostPost {
     /// ID of the account that reposts the post
     account_id: Uuid,
@@ -262,31 +240,17 @@ pub struct RepostPost {
     /// Visibility of the repost
     ///
     /// Defaults to Public
-    #[builder(default = "Visibility::Public")]
+    #[builder(default = Visibility::Public)]
     visibility: Visibility,
 }
 
-impl RepostPost {
-    #[must_use]
-    pub fn builder() -> RepostPostBuilder {
-        RepostPostBuilder::default()
-    }
-}
-
-#[derive(Clone, Builder)]
+#[derive(Clone, TypedBuilder)]
 pub struct UnrepostPost {
     /// ID of the account that is associated with the user
     account_id: Uuid,
 
     /// ID of the post that is supposed to be unreposted
     post_id: Uuid,
-}
-
-impl UnrepostPost {
-    #[must_use]
-    pub fn builder() -> UnrepostPostBuilder {
-        UnrepostPostBuilder::default()
-    }
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -1121,10 +1085,9 @@ mod test {
     fn new_post_character_limit() {
         let create_post = CreatePost::builder()
             .author_id(Uuid::now_v7())
-            .subject("hello".into())
+            .subject(Some("hello".into()))
             .content("world".into())
-            .build()
-            .unwrap();
+            .build();
 
         assert!(create_post
             .validate(&PostValidationContext {
@@ -1143,8 +1106,7 @@ mod test {
         let create_post = CreatePost::builder()
             .author_id(Uuid::now_v7())
             .content(String::new())
-            .build()
-            .unwrap();
+            .build();
 
         assert!(create_post
             .validate(&PostValidationContext {
@@ -1156,8 +1118,7 @@ mod test {
             .author_id(Uuid::now_v7())
             .media_ids(vec![Uuid::now_v7()])
             .content(String::new())
-            .build()
-            .unwrap();
+            .build();
 
         assert!(create_post
             .validate(&PostValidationContext {
@@ -1173,8 +1134,7 @@ mod test {
             .account_id(Uuid::now_v7())
             .subject(Some("hello".into()))
             .content(Some("world".into()))
-            .build()
-            .unwrap();
+            .build();
 
         assert!(update_post
             .validate(&PostValidationContext {

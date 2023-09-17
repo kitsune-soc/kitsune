@@ -36,8 +36,7 @@ pub async fn post(
     let unrepost_post = UnrepostPost::builder()
         .account_id(user_data.account.id)
         .post_id(id)
-        .build()
-        .unwrap();
+        .build();
 
     let status = mastodon_mapper
         .map((&user_data.account, post.unrepost(unrepost_post).await?))
