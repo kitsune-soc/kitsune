@@ -1,6 +1,7 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+use clap::Parser;
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
 use kitsune::consts::STARTUP_FIGLET;
@@ -9,7 +10,7 @@ use std::{
     borrow::Cow,
     env, future,
     panic::{self, PanicInfo},
-    process,
+    path::PathBuf,
 };
 use tracing::level_filters::LevelFilter;
 use tracing_error::ErrorLayer;
@@ -127,16 +128,20 @@ fn postgres_url_diagnostics(db_url: &str) -> String {
     message.into()
 }
 
+/// Kitsune Social Media server
+#[derive(Parser)]
+#[command(about, author, version = VERSION)]
+struct Args {
+    /// Path to the configuration file
+    #[clap(long, short)]
+    config: PathBuf,
+}
+
 async fn boot() -> eyre::Result<()> {
     println!("{STARTUP_FIGLET}");
 
-    let args: Vec<String> = env::args().take(2).collect();
-    if args.len() == 1 {
-        eprintln!("Usage: {} <Path to configuration file>", args[0]);
-        process::exit(1);
-    }
-
-    let config = Configuration::load(&args[1]).await?;
+    let args = Args::parse();
+    let config = Configuration::load(args.config).await?;
     initialise_logging(&config)?;
 
     let conn = kitsune_db::connect(

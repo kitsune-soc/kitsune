@@ -1,12 +1,12 @@
 use clap::Parser;
 use color_eyre::eyre;
-use kitsune_core::config::Configuration;
+use kitsune_core::{config::Configuration, consts::VERSION};
 use std::path::PathBuf;
 use tokio::fs;
 
 /// Dedicated Kitsune job runner
 #[derive(Parser)]
-#[command(about, author, version)]
+#[command(about, author, version = VERSION)]
 struct Args {
     /// Path to the configuration
     #[arg(long, short)]
