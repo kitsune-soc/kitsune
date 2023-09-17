@@ -146,10 +146,6 @@
                     [ -z "$REDIS_URL" ] && export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
                   '';
 
-                  pre-commit.hooks = {
-                    nixpkgs-fmt.enable = true;
-                  };
-
                   services = {
                     postgres = {
                       enable = true;
