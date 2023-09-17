@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://joinkitsune.org"
+build = "build.rs"
 
 [dependencies]
 athena = { version = "0.0.1-pre.3", path = "../lib/athena" }
@@ -54,6 +55,7 @@ kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
+kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-language = { path = "../crates/kitsune-language", default-features = false }
 kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-search = { path = "../crates/kitsune-search" }
@@ -125,9 +127,9 @@ graphql-api = [
     "dep:async-graphql-axum",
     "speedy-uuid/async-graphql",
 ]
-kitsune-search = ["kitsune-search/kitsune-search"]
+kitsune-search = ["kitsune-core/kitsune-search"]
 mastodon-api = ["kitsune-core/mastodon-api"]
-meilisearch = ["kitsune-search/meilisearch"]
+meilisearch = ["kitsune-core/meilisearch"]
 metrics = [
     "autometrics/metrics",
     "dep:axum-prometheus",
