@@ -1,13 +1,12 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    state::Zustand,
 };
 use axum::{debug_handler, extract::State};
 use http::StatusCode;
 use kitsune_core::service::notification::NotificationService;
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(
     post,
     path = "/api/v1/notifications/clear",
