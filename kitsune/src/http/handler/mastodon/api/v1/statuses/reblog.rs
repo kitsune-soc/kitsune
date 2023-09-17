@@ -45,8 +45,7 @@ pub async fn post(
         .account_id(user_data.account.id)
         .post_id(id)
         .visibility(body.visibility.into())
-        .build()
-        .unwrap();
+        .build();
 
     let status = mastodon_mapper
         .map((&user_data.account, post.repost(repost_post).await?))

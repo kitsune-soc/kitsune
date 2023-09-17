@@ -377,8 +377,7 @@ impl AccountService {
 
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
-            .build()
-            .unwrap();
+            .build();
 
         let mut query = posts::table
             .filter(posts::account_id.eq(get_posts.account_id))

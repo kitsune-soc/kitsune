@@ -26,8 +26,7 @@ impl PostMutation {
             .sensitive(is_sensitive)
             .content(content)
             .visibility(visibility.into())
-            .build()
-            .unwrap();
+            .build();
 
         let post = state.service().post.create(create_post).await?;
 
@@ -42,8 +41,7 @@ impl PostMutation {
             .account_id(user_data.account.id)
             .user_id(user_data.user.id)
             .post_id(id)
-            .build()
-            .unwrap();
+            .build();
 
         state.service().post.delete(delete_post).await?;
 

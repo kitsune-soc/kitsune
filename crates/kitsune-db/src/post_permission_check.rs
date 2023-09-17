@@ -2,7 +2,6 @@ use crate::{
     model::post::Visibility,
     schema::{accounts_follows, posts, posts_mentions},
 };
-use derive_builder::Builder;
 use diesel::{
     pg::Pg,
     query_dsl::{filter_dsl::FilterDsl, select_dsl::SelectDsl},
@@ -10,34 +9,25 @@ use diesel::{
     BoolExpressionMethods, BoxableExpression, ExpressionMethods,
 };
 use speedy_uuid::Uuid;
+use typed_builder::TypedBuilder;
 
 /// Parameters for adding a permission check to a post select query
-#[derive(Builder, Clone, Copy)]
+#[derive(Clone, Copy, TypedBuilder)]
 pub struct PermissionCheck {
     /// ID of the account that is fetching the posts
     #[builder(default)]
-    #[doc(hidden)]
-    pub fetching_account_id: Option<Uuid>,
+    fetching_account_id: Option<Uuid>,
 
     /// Include unlisted posts in the results
     ///
     /// Default: true
-    #[builder(default = "true")]
-    #[doc(hidden)]
-    pub include_unlisted: bool,
-}
-
-impl PermissionCheck {
-    /// Create a new permission check builder
-    #[must_use]
-    pub fn builder() -> PermissionCheckBuilder {
-        PermissionCheckBuilder::default()
-    }
+    #[builder(default = true)]
+    include_unlisted: bool,
 }
 
 impl Default for PermissionCheck {
     fn default() -> Self {
-        Self::builder().build().unwrap()
+        Self::builder().build()
     }
 }
 

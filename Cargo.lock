@@ -3279,7 +3279,6 @@ dependencies = [
 name = "kitsune-db"
 version = "0.0.1-pre.3"
 dependencies = [
- "derive_builder",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",

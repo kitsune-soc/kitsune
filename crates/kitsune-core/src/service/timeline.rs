@@ -144,10 +144,7 @@ impl TimelineService {
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
         get_public.validate(&LimitContext::default())?;
 
-        let permission_check = PermissionCheck::builder()
-            .include_unlisted(false)
-            .build()
-            .unwrap();
+        let permission_check = PermissionCheck::builder().include_unlisted(false).build();
 
         let mut query = posts::table
             .add_post_permission_check(permission_check)

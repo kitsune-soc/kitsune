@@ -5,7 +5,6 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-derive_builder = "0.12.0"
 diesel = { version = "2.1.1", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = ["deadpool", "postgres"] }
 diesel_full_text_search = { version = "2.1.0", default-features = false }

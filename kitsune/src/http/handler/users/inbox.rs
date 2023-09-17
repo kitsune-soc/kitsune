@@ -213,8 +213,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
 async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let permission_check = PermissionCheck::builder()
         .fetching_account_id(Some(author.id))
-        .build()
-        .unwrap();
+        .build();
 
     state
         .db_pool()
