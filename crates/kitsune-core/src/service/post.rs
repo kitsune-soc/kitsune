@@ -673,8 +673,7 @@ impl PostService {
     pub async fn repost(&self, repost_post: RepostPost) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(Some(repost_post.account_id))
-            .build()
-            .unwrap();
+            .build();
 
         let existing_repost: Option<Post> = self
             .db_pool
@@ -781,8 +780,7 @@ impl PostService {
     pub async fn unrepost(&self, unrepost_post: UnrepostPost) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(Some(unrepost_post.account_id))
-            .build()
-            .unwrap();
+            .build();
 
         let post: Post = self
             .db_pool
@@ -827,8 +825,7 @@ impl PostService {
     pub async fn favourite(&self, post_id: Uuid, favouriting_account_id: Uuid) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(Some(favouriting_account_id))
-            .build()
-            .unwrap();
+            .build();
 
         let post: Post = self
             .db_pool
@@ -950,8 +947,7 @@ impl PostService {
     pub async fn get_by_id(&self, id: Uuid, fetching_account_id: Option<Uuid>) -> Result<Post> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(fetching_account_id)
-            .build()
-            .unwrap();
+            .build();
 
         self.db_pool
             .with_connection(|db_conn| {
@@ -977,8 +973,7 @@ impl PostService {
     ) -> Result<PostSource> {
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(fetching_account_id)
-            .build()
-            .unwrap();
+            .build();
 
         self.db_pool
             .with_connection(|db_conn| {
@@ -1007,8 +1002,7 @@ impl PostService {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
-                .build()
-                .unwrap();
+                .build();
 
             while let Some(in_reply_to_id) = last_post.in_reply_to_id {
                 let post = self.db_pool
@@ -1043,8 +1037,7 @@ impl PostService {
         try_stream! {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
-                .build()
-                .unwrap();
+                .build();
 
             let descendant_stream = self.db_pool
                 .with_connection(|db_conn| {
