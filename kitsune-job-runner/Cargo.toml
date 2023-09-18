@@ -11,6 +11,7 @@ deadpool-redis = "0.12.0"
 just-retry = { path = "../lib/just-retry" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+mimalloc = "0.1.39"
 tokio = { version = "1.32.0", features = ["full"] }
 toml = "0.8.0"
 tracing = "0.1.37"

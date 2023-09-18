@@ -4,6 +4,9 @@ use kitsune_core::{config::Configuration, consts::VERSION};
 use std::path::PathBuf;
 use tokio::fs;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 /// Dedicated Kitsune job runner
 #[derive(Parser)]
 #[command(about, author, version = VERSION)]
