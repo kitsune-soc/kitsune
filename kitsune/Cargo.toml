@@ -42,12 +42,10 @@ http = "0.2.9"
 human-panic = "1.2.0"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.11"
+mimalloc = "0.1.39"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 pkcs8 = "0.10.2"
-tikv-jemallocator = { version = "0.5.4", default-features = false, features = [
-    "background_threads",
-] }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-core = { path = "../crates/kitsune-core" }

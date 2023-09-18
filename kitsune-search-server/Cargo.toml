@@ -11,14 +11,12 @@ dotenvy = "0.15.7"
 envy = "0.4.2"
 futures-util = "0.3.28"
 human-size = { version = "0.4.3", features = ["serde"] }
-tikv-jemallocator = { version = "0.5.4", default-features = false, features = [
-    "background_threads",
-] }
 kitsune-search-proto = { path = "proto" }
 metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 metrics-tracing-context = "0.14.0"
 metrics-util = "0.15.1"
+mimalloc = "0.1.39"
 prost = "0.12.1"
 serde = { version = "1.0.188", features = ["derive"] }
 tantivy = "0.21.0"
