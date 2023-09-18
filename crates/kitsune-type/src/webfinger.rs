@@ -11,7 +11,9 @@ pub struct Link {
 #[derive(Deserialize, Serialize, ToSchema)]
 pub struct Resource {
     pub subject: String,
+    #[serde(default)]
     pub aliases: Vec<String>,
+    #[serde(default)]
     pub links: Vec<Link>,
 }
 
