@@ -18,7 +18,7 @@ use tracing::metadata::LevelFilter;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer as _, Registry};
 
 #[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 const STARTUP_FIGLET: &str = r#"
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

@@ -18,7 +18,7 @@ use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry}
 use url::Url;
 
 #[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn install_handlers() -> eyre::Result<()> {
     let (eyre_panic_hook, eyre_hook) = HookBuilder::new().into_hooks();
