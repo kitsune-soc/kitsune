@@ -5,7 +5,7 @@ use super::{
     LimitContext,
 };
 use crate::{
-    activitypub::Fetcher,
+    activitypub::fetcher::{FetchOptions, Fetcher},
     error::{Error, Result},
     job::deliver::{
         accept::DeliverAccept,
@@ -319,8 +319,12 @@ impl AccountService {
                 return Ok(None);
             };
 
+            let opts = FetchOptions::builder()
+                .acct((&webfinger_actor.username, &webfinger_actor.domain))
+                .url(&webfinger_actor.uri)
+                .build();
             self.fetcher
-                .fetch_actor(webfinger_actor.uri.as_str().into())
+                .fetch_actor(opts)
                 .await
                 .map(Some)
                 .map_err(Error::from)
@@ -400,7 +404,7 @@ impl AccountService {
         self.db_pool
             .with_connection(|db_conn| {
                 async move {
-                    Ok::<_, Error>(query.load_stream( db_conn).await?.map_err(Error::from))
+                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
                 }.scoped()
             })
             .await

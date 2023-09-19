@@ -135,6 +135,7 @@ mod test {
                         .unwrap(),
                     )
                     .search_service(NoopSearchService)
+                    .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
                     .post_cache(Arc::new(NoopCache.into()))
                     .user_cache(Arc::new(NoopCache.into()))
                     .build();

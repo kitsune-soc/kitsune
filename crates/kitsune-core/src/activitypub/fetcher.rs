@@ -6,6 +6,7 @@ use crate::{
     sanitize::CleanHtmlExt,
     service::federation_filter::FederationFilterService,
     util::timestamp_to_uuid,
+    webfinger::Webfinger,
 };
 use async_recursion::async_recursion;
 use autometrics::autometrics;
@@ -36,6 +37,10 @@ const MAX_FETCH_DEPTH: u32 = 30;
 #[derive(Clone, Debug, TypedBuilder)]
 /// Options passed to the fetcher
 pub struct FetchOptions<'a> {
+    /// Prefetched WebFinger `acct` URI
+    #[builder(default, setter(strip_option))]
+    acct: Option<(&'a str, &'a str)>,
+
     /// Refetch the ActivityPub entity
     ///
     /// This is mainly used to refresh possibly stale actors
@@ -75,6 +80,7 @@ pub struct Fetcher {
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
     search_service: SearchService,
+    webfinger: Webfinger,
 
     // Caches
     post_cache: ArcCache<str, Post>,
@@ -116,12 +122,43 @@ impl Fetcher {
             }
         }
 
-        let url = Url::parse(opts.url)?;
+        let mut url = Url::parse(opts.url)?;
         if !self.federation_filter.is_url_allowed(&url)? {
             return Err(ApiError::Unauthorised.into());
         }
 
         let mut actor: Actor = self.client.get(url.as_str()).await?.jsonld().await?;
+
+        let mut domain = url.host_str().unwrap();
+        let domain_buf;
+        let fetch_webfinger = opts
+            .acct
+            .map_or(true, |acct| acct != (&actor.preferred_username, domain));
+        let used_webfinger = if fetch_webfinger {
+            match self
+                .webfinger
+                .resolve_actor(&actor.preferred_username, domain)
+                .await?
+            {
+                Some(resource) if resource.uri == actor.id => {
+                    actor.preferred_username = resource.username;
+                    domain_buf = resource.domain;
+                    domain = &domain_buf;
+                    true
+                }
+                _ => {
+                    // Fall back to `{preferredUsername}@{domain}`
+                    false
+                }
+            }
+        } else {
+            false
+        };
+        if !used_webfinger && actor.id != url.as_str() {
+            url = Url::parse(&actor.id)?;
+            domain = url.host_str().unwrap();
+        }
+
         actor.clean_html();
 
         let account: Account = self
@@ -136,7 +173,7 @@ impl Fetcher {
                             username: actor.preferred_username.as_str(),
                             locked: actor.manually_approves_followers,
                             local: false,
-                            domain: Url::parse(&actor.id)?.host_str().unwrap(),
+                            domain,
                             actor_type: actor.r#type.into(),
                             url: actor.id.as_str(),
                             featured_collection_url: actor.featured.as_deref(),
@@ -290,20 +327,24 @@ mod test {
         config::FederationFilterConfiguration,
         error::{ApiError, Error},
         service::federation_filter::FederationFilterService,
+        webfinger::Webfinger,
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use http::uri::PathAndQuery;
-    use hyper::{Body, Request, Response, Uri};
+    use hyper::{Body, Request, Response, StatusCode, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_test::database_test;
-    use kitsune_type::ap::{
-        actor::{Actor, ActorType, PublicKey},
-        ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+    use kitsune_type::{
+        ap::{
+            actor::{Actor, ActorType, PublicKey},
+            ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+        },
+        webfinger::{Link, Resource},
     };
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
@@ -323,7 +364,7 @@ mod test {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
-                .client(client)
+                .client(client.clone())
                 .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
@@ -333,6 +374,7 @@ mod test {
                     .unwrap(),
                 )
                 .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
                 .build();
@@ -355,12 +397,148 @@ mod test {
 
     #[tokio::test]
     #[serial_test::serial]
+    async fn fetch_actor_with_custom_acct() {
+        database_test(|db_pool| async move {
+            let mut jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json").to_owned();
+            let jrd_body = simd_json::to_string(&Resource {
+                subject: "acct:0x0@joinkitsune.org".into(),
+                ..simd_json::from_slice(&mut jrd_base).unwrap()
+            })
+            .unwrap();
+            let client = service_fn(move |req: Request<_>| {
+                let jrd_body = jrd_body.clone();
+                async move {
+                    match (
+                        req.uri().authority().unwrap().as_str(),
+                        req.uri().path_and_query().unwrap().as_str(),
+                    ) {
+                        (
+                            "corteximplant.com",
+                            "/.well-known/webfinger?resource=acct:0x0@corteximplant.com",
+                        )
+                        | (
+                            "joinkitsune.org",
+                            "/.well-known/webfinger?resource=acct:0x0@joinkitsune.org",
+                        ) => Ok::<_, Infallible>(Response::new(Body::from(jrd_body))),
+                        _ => handle(req).await,
+                    }
+                }
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            let user = fetcher
+                .fetch_actor("https://corteximplant.com/users/0x0".into())
+                .await
+                .expect("Fetch actor");
+
+            assert_eq!(user.username, "0x0");
+            assert_eq!(user.domain, "joinkitsune.org");
+            assert_eq!(user.url, "https://corteximplant.com/users/0x0");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn ignore_fake_webfinger_acct() {
+        database_test(|db_pool| async move {
+            let link = Link {
+                rel: "self".to_owned(),
+                r#type: Some("application/activity+json".to_owned()),
+                href: Some("https://social.whitehouse.gov/users/POTUS".to_owned()),
+            };
+            let jrd = Resource {
+                subject: "acct:POTUS@whitehouse.gov".into(),
+                aliases: Vec::new(),
+                links: vec![link.clone()],
+            };
+            let client = service_fn(move |req: Request<_>| {
+                let link = link.clone();
+                let jrd = jrd.clone();
+                async move {
+                    match (
+                        req.uri().authority().unwrap().as_str(),
+                        req.uri().path_and_query().unwrap().as_str(),
+                    ) {
+                        (
+                            "corteximplant.com",
+                            "/.well-known/webfinger?resource=acct:0x0@corteximplant.com",
+                        ) => {
+                            let fake_jrd = Resource {
+                                links: vec![Link {
+                                    href: Some("https://corteximplant.com/users/0x0".to_owned()),
+                                    ..link
+                                }],
+                                ..jrd
+                            };
+                            let body = simd_json::to_string(&fake_jrd).unwrap();
+                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                        }
+                        (
+                            "whitehouse.gov",
+                            "/.well-known/webfinger?resource=acct:POTUS@whitehouse.gov",
+                        ) => {
+                            let body = simd_json::to_string(&jrd).unwrap();
+                            Ok(Response::new(Body::from(body)))
+                        }
+                        _ => handle(req).await,
+                    }
+                }
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            let user = fetcher
+                .fetch_actor("https://corteximplant.com/users/0x0".into())
+                .await
+                .expect("Fetch actor");
+
+            assert_eq!(user.username, "0x0");
+            assert_eq!(user.domain, "corteximplant.com");
+            assert_eq!(user.url, "https://corteximplant.com/users/0x0");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
     async fn fetch_note() {
         database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
             let fetcher = Fetcher::builder()
-                .client(client)
+                .client(client.clone())
                 .db_pool(db_pool.clone())
                 .embed_client(None)
                 .federation_filter(
@@ -370,6 +548,7 @@ mod test {
                     .unwrap(),
                 )
                 .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
                 .build();
@@ -456,20 +635,18 @@ mod test {
                         };
                         let body = simd_json::to_string(&note).unwrap();
                         Ok::<_, Infallible>(Response::new(Body::from(body)))
-                    } else {
-                        assert_eq!(
-                            req.uri().path_and_query().unwrap(),
-                            Uri::try_from(&author.id).unwrap().path_and_query().unwrap()
-                        );
+                    } else if req.uri().path_and_query().unwrap() == Uri::try_from(&author.id).unwrap().path_and_query().unwrap() {
                         let body = simd_json::to_string(&author).unwrap();
                         Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    } else {
+                        handle(req).await
                     }
                 }
             });
             let client = Client::builder().service(client);
 
             let fetcher = Fetcher::builder()
-                .client(client)
+                .client(client.clone())
                 .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
@@ -479,6 +656,7 @@ mod test {
                     .unwrap(),
                 )
                 .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
                 .build();
@@ -513,7 +691,11 @@ mod test {
                 handle(req)
             });
             let client = Client::builder().service(client);
-            let fetcher = builder.clone().client(client).build();
+            let fetcher = builder
+                .clone()
+                .client(client.clone())
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .build();
 
             // The mock HTTP client ensures that the fetcher doesn't access the correct server
             // so this should return error
@@ -531,7 +713,11 @@ mod test {
                 handle(req)
             });
             let client = Client::builder().service(client);
-            let fetcher = builder.client(client).build();
+            let fetcher = builder
+                .clone()
+                .client(client.clone())
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .build();
 
             let _ = fetcher
                 .fetch_object("https://example.com/@0x0/109501674056556919")
@@ -565,7 +751,11 @@ mod test {
                 },
             );
             let client = Client::builder().service(client);
-            let fetcher = builder.clone().client(client).build();
+            let fetcher = builder
+                .clone()
+                .client(client.clone())
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .build();
 
             assert!(matches!(
                 fetcher.fetch_object("https://example.com/fakeobject").await,
@@ -579,7 +769,11 @@ mod test {
             ));
 
             let client = Client::builder().service(service_fn(handle));
-            let fetcher = builder.client(client).build();
+            let fetcher = builder
+                .clone()
+                .client(client.clone())
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .build();
 
             assert!(matches!(
                 fetcher
@@ -604,7 +798,7 @@ mod test {
             let client = Client::builder().service(client);
 
             let fetcher = Fetcher::builder()
-                .client(client)
+                .client(client.clone())
                 .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
@@ -614,6 +808,7 @@ mod test {
                     .unwrap(),
                 )
                 .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
                 .build();
@@ -650,6 +845,16 @@ mod test {
                 );
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
             }
+            "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
+                let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
+                Ok::<_, Infallible>(Response::new(Body::from(body)))
+            }
+            path if path.starts_with("/.well-known/webfinger?") => Ok::<_, Infallible>(
+                Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(Body::empty())
+                    .unwrap(),
+            ),
             path => panic!("HTTP client hit unexpected route: {path}"),
         }
     }
