@@ -105,27 +105,7 @@ impl Webfinger {
 
             let resource: Resource = response.json().await?;
 
-            let Some((resolved_username, resolved_domain)) = resource
-                .subject
-                .strip_prefix("acct:")
-                .and_then(|acct| acct.split_once('@'))
-            else {
-                return Ok(None);
-            };
-
-            let is_same_domain = resolved_domain.eq_ignore_ascii_case(domain);
-            let is_same_subject = is_same_domain && resolved_username == username;
-            let atmark_idx = resolved_username.len();
-            // Use the resolved `subject` even when it's "same" as the original `acct` to adopt the
-            // casing of the resolved domain name.
-            acct_buf = resource.subject;
-            acct = &acct_buf;
-            // Reconstruct `(resolved_username, resolved_domain)` pair that was invalidated when
-            // reassigned `acct_buf`
-            (username, domain) = acct["acct:".len()..].split_at(atmark_idx);
-            domain = &domain[1..];
-
-            if is_same_subject {
+            if resource.subject == acct {
                 break resource.links;
             }
 
@@ -135,8 +115,18 @@ impl Webfinger {
                 return Ok(None);
             }
 
+            acct_buf = resource.subject;
+            acct = &acct_buf;
+            let Some(username_domain) = acct
+                .strip_prefix("acct:")
+                .and_then(|acct| acct.split_once('@'))
+            else {
+                return Ok(None);
+            };
+            (username, domain) = username_domain;
+
             let mut parts = webfinger_uri.into_parts();
-            if !is_same_domain {
+            if parts.authority.as_ref().unwrap() != domain {
                 parts.authority = Some(domain.try_into()?);
             }
             parts.path_and_query =
