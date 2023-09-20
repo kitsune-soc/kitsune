@@ -594,7 +594,7 @@ mod test {
                         id: author_id.clone(),
                         r#type: ActorType::Person,
                         name: None,
-                        preferred_username: "Infinite notes".into(),
+                        preferred_username: "InfiniteNotes".into(),
                         subject: None,
                         icon: None,
                         image: None,
