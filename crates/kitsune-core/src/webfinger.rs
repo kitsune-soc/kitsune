@@ -2,7 +2,7 @@ use crate::{consts::USER_AGENT, error::Result, try_join};
 use autometrics::autometrics;
 use core::ptr;
 use futures_util::future::{FutureExt, OptionFuture};
-use http::{HeaderValue, StatusCode, Uri};
+use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
@@ -84,9 +84,6 @@ impl Webfinger {
 
         let mut acct_buf: String;
         let mut acct = original_acct.as_str();
-        let mut webfinger_uri = Uri::try_from(format!(
-            "https://{domain}/.well-known/webfinger?resource={acct}"
-        ))?;
         let mut remaining_redirects = MAX_JRD_REDIRECTS;
         let links = loop {
             if let Some(ret) = self.cache.get(acct).await? {
@@ -96,7 +93,8 @@ impl Webfinger {
                 return Ok(Some(ret));
             }
 
-            let response = self.client.get(webfinger_uri.clone()).await?;
+            let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
+            let response = self.client.get(webfinger_url).await?;
 
             if matches!(response.status(), StatusCode::NOT_FOUND | StatusCode::GONE) {
                 // Either the actor couldn't be found or the server doesn't support WebFinger
@@ -124,14 +122,6 @@ impl Webfinger {
                 return Ok(None);
             };
             (username, domain) = username_domain;
-
-            let mut parts = webfinger_uri.into_parts();
-            if parts.authority.as_ref().unwrap() != domain {
-                parts.authority = Some(domain.try_into()?);
-            }
-            parts.path_and_query =
-                Some(format!("/.well-known/webfinger?resource={acct}").try_into()?);
-            webfinger_uri = parts.try_into().unwrap();
 
             remaining_redirects -= 1;
         };
