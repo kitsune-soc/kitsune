@@ -34,6 +34,7 @@ garde = { version = "0.15.0", default-features = false, features = [
 globset = "0.4.13"
 hex-simd = "0.8.0"
 http = "0.2.9"
+img-parts = "0.3.0"
 iso8601-timestamp = "0.2.11"
 just-retry = { path = "../../lib/just-retry" }
 kitsune-cache = { path = "../kitsune-cache" }
@@ -90,4 +91,5 @@ kitsune-test = { path = "../kitsune-test" }
 pretty_assertions = "1.4.0"
 redis = "0.23.3"
 serial_test = "2.0.0"
+tempfile = "3.8.0"
 tower = "0.4.13"

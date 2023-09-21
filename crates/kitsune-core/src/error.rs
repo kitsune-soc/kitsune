@@ -1,7 +1,10 @@
+use std::error::Error as ErrorTrait;
+
 use kitsune_http_signatures::ring;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
+pub type BoxError = Box<dyn ErrorTrait + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
@@ -44,6 +47,15 @@ pub enum FederationFilterError {
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
+}
+
+#[derive(Debug, Error)]
+pub enum UploadError {
+    #[error(transparent)]
+    ImageProcessingError(#[from] img_parts::Error),
+
+    #[error(transparent)]
+    StreamError(#[from] BoxError),
 }
 
 #[derive(Debug, Error)]
@@ -119,6 +131,9 @@ pub enum Error {
 
     #[error(transparent)]
     TokioOneshot(#[from] oneshot::error::RecvError),
+
+    #[error(transparent)]
+    Upload(#[from] UploadError),
 
     #[error(transparent)]
     UriInvalid(#[from] http::uri::InvalidUri),
