@@ -4,9 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-iso8601-timestamp = "0.2.11"
+iso8601-timestamp = "0.2.12"
 serde = { version = "1.0.188", features = ["derive"] }
-simd-json = "0.10.7"
+simd-json = "0.11.0"
 smol_str = { version = "0.2.0", features = ["serde"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 utoipa = { version = "3.5.0", features = ["chrono", "uuid"] }

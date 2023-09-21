@@ -54,7 +54,6 @@ where
 #[cfg(test)]
 mod test {
     use crate::{CacheBackend, InMemoryCache};
-    use moka::sync::ConcurrentCacheExt;
     use std::time::Duration;
 
     #[tokio::test]
@@ -72,7 +71,7 @@ mod test {
         cache.set(&"hello", &"world").await.unwrap();
         cache.set(&"another", &"pair").await.unwrap();
 
-        cache.inner.sync();
+        cache.inner.run_pending_tasks();
 
         assert_eq!(cache.inner.entry_count(), 1);
     }
