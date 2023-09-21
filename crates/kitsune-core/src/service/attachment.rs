@@ -198,7 +198,7 @@ impl AttachmentService {
             {
                 img_bytes.extend_from_slice(&chunk);
             }
-            
+
             let img_bytes = img_bytes.freeze();
             let final_bytes = DynImage::from_bytes(img_bytes)
                 .map_err(UploadError::ImageProcessingError)?
@@ -208,7 +208,7 @@ impl AttachmentService {
                     image.encoder().bytes()
                 })
                 .map_err(UploadError::ImageProcessingError)?;
-            
+
             self.storage_backend
                 .put(&upload.path, stream::once(async { Ok(final_bytes) }))
         } else {
@@ -306,7 +306,7 @@ mod test {
 
             let base = hex_simd::decode_to_vec("ffd8ffe000104a46494600010101004800480000ffdb004300030202020202030202020303030304060404040404080606050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010ffc9000b080001000101011100ffcc000600101005ffda0008010100003f00d2cf20ffd9").unwrap();
             let mut jpeg = img_parts::jpeg::Jpeg::from_bytes(Bytes::from(base)).unwrap();
-            
+
             let comment_segment = JpegSegment::new_with_contents(
                 markers::APP1,
                 Bytes::from("Exif\0\0Some info to be stripped")
