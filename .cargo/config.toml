@@ -3,12 +3,7 @@ xtask = "run --manifest-path ./xtask/Cargo.toml --"
 
 [build]
 rustdocflags = ["--document-private-items"]
-rustflags = [
-    "--cfg",
-    "uuid_unstable",
-    "-C",
-    "target-cpu=native", # This probably isn't good, could lead to some weird issues but better than end-users having to struggle with arcane `simd-json` errors
-]
+rustflags = ["--cfg", "uuid_unstable"]
 
 [registries.crates-io]
 protocol = "sparse"
