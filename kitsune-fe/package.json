@@ -25,7 +25,7 @@
     "@zxcvbn-ts/language-common": "^3.0.3",
     "@zxcvbn-ts/language-en": "^3.0.1",
     "floating-vue": "^2.0.0-beta.24",
-    "graphql": "^16.6.0",
+    "graphql": "^16.8.1",
     "lodash": "^4.17.21",
     "pinia": "^2.1.6",
     "pinia-plugin-persistedstate": "^3.2.0",
