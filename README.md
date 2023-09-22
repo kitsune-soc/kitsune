@@ -34,6 +34,7 @@ So, as long as this disclaimer is here, make sure to double check all the change
 - `kitsune/`: Main Kitsune server binary
 - `kitsune-cli/`: Kitsune CLI binary
 - `kitsune-fe/`: Kitsune frontend project
+- `kitsune-job-runner/`: Kitsune dedicated job runner
 - `kitsune-search-server/`: Search server for Kitsune
 - `lib/`: Libraries made for Kitsune but with no dependencies on Kitsune-specific code. Easily usable by other projects
 - `proto/`: Any Protobuf definitions for the Kitsune project
