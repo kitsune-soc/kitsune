@@ -37,6 +37,7 @@ fn is_allowed_filetype(value: &str, _ctx: &()) -> garde::Result {
 }
 
 fn is_image_type_with_supported_metadata(mime: &str) -> bool {
+    // TODO: migrate the match to use the mime crate enums
     matches!(mime, "image/jpeg" | "image/png" | "image/webp")
 }
 
