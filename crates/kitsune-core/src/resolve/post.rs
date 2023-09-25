@@ -124,6 +124,8 @@ mod test {
                 });
                 let client = Client::builder().service(client);
 
+                let webfinger = Webfinger::with_client(client.clone(), Arc::new(NoopCache.into()));
+
                 let fetcher = Fetcher::builder()
                     .client(client)
                     .db_pool(db_pool.clone())
@@ -135,6 +137,7 @@ mod test {
                         .unwrap(),
                     )
                     .search_service(NoopSearchService)
+                    .webfinger(webfinger.clone())
                     .post_cache(Arc::new(NoopCache.into()))
                     .user_cache(Arc::new(NoopCache.into()))
                     .build();
@@ -166,7 +169,7 @@ mod test {
                     .fetcher(fetcher)
                     .job_service(job_service)
                     .url_service(url_service.clone())
-                    .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+                    .webfinger(webfinger)
                     .build();
 
                 let mention_resolver = PostResolver::builder()

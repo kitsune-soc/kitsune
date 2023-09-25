@@ -242,16 +242,17 @@ pub async fn prepare_state(
         FederationFilterService::new(&config.instance.federation_filter)
             .context("Couldn't build the federation filter (check your glob syntax)")?;
 
+    let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
+
     let fetcher = Fetcher::builder()
         .db_pool(db_pool.clone())
         .embed_client(embed_client.clone())
         .federation_filter(federation_filter_service.clone())
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
+        .webfinger(webfinger.clone())
         .search_service(search_service.clone())
         .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
         .build();
-
-    let webfinger = Webfinger::new(prepare_cache(config, "WEBFINGER"));
 
     let job_service = JobService::builder().job_queue(job_queue).build();
 
