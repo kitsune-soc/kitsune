@@ -5,15 +5,15 @@ version.workspace = true
 
 [dependencies]
 athena = { path = "../lib/athena" }
-clap = { version = "4.4.4", features = ["derive"] }
+clap = { version = "4.4.5", features = ["derive"] }
 color-eyre = "0.6.2"
-deadpool-redis = "0.12.0"
+deadpool-redis = "0.13.0"
 just-retry = { path = "../lib/just-retry" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 mimalloc = "0.1.39"
 tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.8.0"
+toml = "0.8.1"
 tracing = "0.1.37"
 
 [features]

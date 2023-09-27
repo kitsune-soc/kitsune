@@ -5,16 +5,16 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-clap = { version = "4.4.4", features = ["derive"] }
+clap = { version = "4.4.5", features = ["derive"] }
 color-eyre = "0.6.2"
-diesel = "2.1.1"
+diesel = "2.1.2"
 diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { path = "../crates/kitsune-db" }
 serde = { version = "1.0.188", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
-time = "0.3.28"
+time = "0.3.29"
 tokio = { version = "1.32.0", features = ["full"] }
 tracing-subscriber = "0.3.17"
 

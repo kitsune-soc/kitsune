@@ -5,14 +5,14 @@ version.workspace = true
 
 [dependencies]
 async-trait = "0.1.73"
-deadpool-redis = "0.12.0"
+deadpool-redis = "0.13.0"
 derive_builder = "0.12.0"
 enum_dispatch = "0.3.12"
 moka = { version = "0.12.0", features = ["sync"] }
 redis = "0.23.3"
 serde = "1.0.188"
-simd-json = "0.11.0"
-thiserror = "1.0.48"
+simd-json = "0.11.1"
+thiserror = "1.0.49"
 tracing = "0.1.37"
 
 [dev-dependencies]
