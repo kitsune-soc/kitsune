@@ -35,6 +35,7 @@ members = [
     "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
+    "lib/tokio-run-local",
 ]
 resolver = "2"
 
