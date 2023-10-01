@@ -442,9 +442,9 @@ dependencies = [
  "async-trait",
  "deadpool-redis",
  "either",
- "futures-retry-policies",
  "futures-util",
  "iso8601-timestamp",
+ "kitsune-retry-policies",
  "once_cell",
  "rand",
  "redis",
@@ -2181,9 +2181,9 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "errno"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "136526188508e25c6fef639d7927dfb3e0e3084488bf202267829cf7fc23dbdd"
+checksum = "add4f07d43996f76ef320709726a556a9d4f965d9410d8d0271132d2f8293480"
 dependencies = [
  "errno-dragonfly",
  "libc",
@@ -3444,11 +3444,10 @@ dependencies = [
  "clap",
  "color-eyre",
  "deadpool-redis",
- "futures-retry-policies",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-retry-policies",
  "mimalloc",
- "retry-policies",
  "tokio",
  "toml 0.8.1",
  "tracing",
@@ -3472,16 +3471,23 @@ version = "0.0.1-pre.3"
 dependencies = [
  "ahash 0.8.3",
  "async-trait",
- "futures-retry-policies",
  "futures-util",
+ "kitsune-retry-policies",
  "pin-project-lite",
  "redis",
- "retry-policies",
  "serde",
  "simd-json",
  "tokio",
  "tokio-stream",
  "tracing",
+]
+
+[[package]]
+name = "kitsune-retry-policies"
+version = "0.0.1-pre.3"
+dependencies = [
+ "futures-retry-policies",
+ "retry-policies",
 ]
 
 [[package]]

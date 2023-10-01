@@ -3,11 +3,9 @@ use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, Runn
 use ahash::AHashMap;
 use deadpool_redis::Pool as RedisPool;
 use either::Either;
-use futures_retry_policies::{
-    retry_policies::RetryPolicies, tokio::RetryFutureExt, tracing::Traced, ShouldRetry,
-};
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
+use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
@@ -18,7 +16,6 @@ use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
 use std::{
-    fmt::Debug,
     str::FromStr,
     sync::Arc,
     time::{Duration, SystemTime},
@@ -33,20 +30,6 @@ const BLOCK_TIME: Duration = Duration::from_secs(2);
 const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
 const MAX_RETRIES: u32 = 10;
-
-fn futures_backoff_policy<Res>() -> impl futures_retry_policies::RetryPolicy<Res>
-where
-    Res: Debug + ShouldRetry,
-{
-    Traced(RetryPolicies::new(backoff_policy()))
-}
-
-fn backoff_policy() -> impl retry_policies::RetryPolicy {
-    ExponentialBackoff::builder()
-        .jitter(Jitter::Bounded)
-        .build_with_total_retry_duration(Duration::from_secs(24 * 3600)) // Kill the retrying after 24 hours
-        .for_task_started_at(SystemTime::now().into())
-}
 
 enum JobState<'a> {
     Succeeded {

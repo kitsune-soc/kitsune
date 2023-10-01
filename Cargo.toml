@@ -22,6 +22,7 @@ members = [
     "crates/kitsune-http-signatures",
     "crates/kitsune-language",
     "crates/kitsune-messaging",
+    "crates/kitsune-retry-policies",
     "crates/kitsune-search",
     "crates/kitsune-storage",
     "crates/kitsune-test",

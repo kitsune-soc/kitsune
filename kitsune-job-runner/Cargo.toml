@@ -8,15 +8,10 @@ athena = { path = "../lib/athena" }
 clap = { version = "4.4.6", features = ["derive"] }
 color-eyre = "0.6.2"
 deadpool-redis = "0.13.0"
-futures-retry-policies = { version = "0.3.1", features = [
-    "retry-policies",
-    "tokio",
-    "tracing",
-] }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-retry-policies = { path = "../crates/kitsune-retry-policies" }
 mimalloc = "0.1.39"
-retry-policies = "0.2.0"
 tokio = { version = "1.32.0", features = ["full"] }
 toml = "0.8.1"
 tracing = "0.1.37"

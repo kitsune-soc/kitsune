@@ -2,9 +2,6 @@
 extern crate tracing;
 
 use athena::JobQueue;
-use futures_retry_policies::{
-    retry_policies::RetryPolicies, tracing::Traced, RetryPolicy, ShouldRetry,
-};
 use kitsune_core::{
     activitypub::Deliverer,
     config::JobQueueConfiguration,
@@ -12,28 +9,11 @@ use kitsune_core::{
     state::State as CoreState,
 };
 use kitsune_db::PgPool;
-use retry_policies::{policies::ExponentialBackoff, Jitter};
-use std::{
-    fmt::Debug,
-    ops::ControlFlow,
-    sync::Arc,
-    time::{Duration, SystemTime},
-};
+use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
+use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
-
-fn futures_backoff_policy<Res>() -> impl RetryPolicy<Res>
-where
-    Res: Debug + ShouldRetry,
-{
-    let policy = ExponentialBackoff::builder()
-        .jitter(Jitter::Bounded)
-        .build_with_total_retry_duration(Duration::from_secs(24 * 3600))
-        .for_task_started_at(SystemTime::now().into());
-
-    Traced(RetryPolicies::new(policy))
-}
 
 pub fn prepare_job_queue(
     db_pool: PgPool,
@@ -66,7 +46,6 @@ pub async fn run_dispatcher(
     let mut job_joinset = JoinSet::new();
     loop {
         let mut backoff_policy = futures_backoff_policy();
-
         loop {
             let result = job_queue
                 .spawn_jobs(

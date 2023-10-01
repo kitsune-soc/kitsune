@@ -28,6 +28,8 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 /// Type alias for Result, defaulting to [`BoxError`] on the error branch
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
+mod util;
+
 pub mod redis;
 pub mod tokio_broadcast;
 
