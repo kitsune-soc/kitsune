@@ -3,19 +3,23 @@ use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, Runn
 use ahash::AHashMap;
 use deadpool_redis::Pool as RedisPool;
 use either::Either;
-use exponential_backoff::Backoff;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
-use just_retry::rerun_until_success;
+use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
     AsyncCommands, RedisResult,
 };
+use retry_policies::{policies::ExponentialBackoff, Jitter, RetryDecision, RetryPolicy};
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{str::FromStr, sync::Arc, time::Duration};
+use std::{
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 use tokio::{sync::OnceCell, task::JoinSet, time::Instant};
 use typed_builder::TypedBuilder;
 
@@ -26,7 +30,6 @@ const BLOCK_TIME: Duration = Duration::from_secs(2);
 const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
 
 const MAX_RETRIES: u32 = 10;
-const MIN_BACKOFF_DURATION: Duration = Duration::from_secs(5);
 
 enum JobState<'a> {
     Succeeded {
@@ -256,13 +259,17 @@ where
             JobState::Failed {
                 fail_count, job_id, ..
             } => {
-                let backoff = Backoff::new(self.max_retries, MIN_BACKOFF_DURATION, None);
-                if let Some(backoff_duration) = backoff.next(*fail_count) {
+                let backoff = ExponentialBackoff::builder()
+                    .jitter(Jitter::Bounded)
+                    .build_with_max_retries(self.max_retries);
+
+                if let RetryDecision::Retry { execute_after } = backoff.should_retry(*fail_count) {
                     let job_meta = JobMeta {
                         job_id: *job_id,
                         fail_count: fail_count + 1,
                     };
-                    let backoff_timestamp = Timestamp::now_utc() + backoff_duration;
+
+                    let backoff_timestamp = Timestamp::from(SystemTime::from(execute_after));
                     let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
 
                     pipeline.add_command(enqueue_cmd);
@@ -348,7 +355,10 @@ where
                     tokio::select! {
                         result = &mut run_fut => break result,
                         _ = tick_interval.tick() => {
-                            rerun_until_success(|| this.reclaim_job(job_data)).await;
+                            (|| this.reclaim_job(job_data))
+                                .retry(futures_backoff_policy())
+                                .await
+                                .expect("Failed to reclaim job");
                         }
                     }
                 };
@@ -367,7 +377,10 @@ where
                     }
                 };
 
-                rerun_until_success(|| this.complete_job(&job_state)).await;
+                (|| this.complete_job(&job_state))
+                    .retry(futures_backoff_policy())
+                    .await
+                    .expect("Failed to mark job as completed");
             });
         }
 

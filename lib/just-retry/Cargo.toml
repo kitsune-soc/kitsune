@@ -1,9 +1,0 @@
-[package]
-name = "just-retry"
-edition.workspace = true
-version.workspace = true
-
-[dependencies]
-rand = "0.8.5"
-tokio = { version = "1.32.0", features = ["time"] }
-tracing = "0.1.37"

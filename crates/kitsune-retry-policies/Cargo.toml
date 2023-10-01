@@ -1,0 +1,12 @@
+[package]
+name = "kitsune-retry-policies"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+futures-retry-policies = { version = "0.3.1", features = [
+    "retry-policies",
+    "tokio",
+    "tracing",
+] }
+retry-policies = "0.2.0"

@@ -1,5 +1,5 @@
 pub const API_DEFAULT_LIMIT: usize = 20;
-pub const STARTUP_FIGLET: &str = r#"
+pub const STARTUP_FIGLET: &str = r"
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                           ┃
 ┃  ██╗  ██╗██╗████████╗███████╗██╗   ██╗███╗   ██╗███████╗  ┃
@@ -12,7 +12,7 @@ pub const STARTUP_FIGLET: &str = r#"
 ┃            ActivityPub-federated microblogging            ┃
 ┃                                                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-"#;
+";
 
 #[must_use]
 pub fn default_limit<T>() -> T

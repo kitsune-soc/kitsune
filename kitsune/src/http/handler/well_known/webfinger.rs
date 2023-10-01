@@ -126,7 +126,7 @@ mod tests {
                 .unwrap();
             let resource = match response {
                 Either::E1(Json(resource)) => resource,
-                Either::E2(status) => panic!("Unexpected status code: {}", status),
+                Either::E2(status) => panic!("Unexpected status code: {status}"),
             };
 
             assert_eq!(resource.subject, "acct:alice@example.com");
@@ -191,7 +191,7 @@ mod tests {
                 .unwrap();
             let resource = match response {
                 Either::E1(Json(resource)) => resource,
-                Either::E2(status) => panic!("Unexpected status code: {}", status),
+                Either::E2(status) => panic!("Unexpected status code: {status}"),
             };
 
             assert_eq!(resource.subject, "acct:alice@alice.example");
@@ -203,7 +203,7 @@ mod tests {
             let response = get(db_pool, url_service, Query(query)).await.unwrap();
             let resource = match response {
                 Either::E1(Json(resource)) => resource,
-                Either::E2(status) => panic!("Unexpected status code: {}", status),
+                Either::E2(status) => panic!("Unexpected status code: {status}"),
             };
 
             assert_eq!(resource.subject, "acct:alice@alice.example");

@@ -9,10 +9,9 @@ ahash = "0.7.6" # We can not update because of the "redis" crate
 async-trait = "0.1.73"
 deadpool-redis = "0.13.0"
 either = { version = "1.9.0", default-features = false }
-exponential-backoff = "1.2.0"
 futures-util = { version = "0.3.28", default-features = false }
 iso8601-timestamp = { version = "0.2.12", features = ["diesel-pg"] }
-just-retry = { path = "../just-retry" }
+kitsune-retry-policies = { path = "../../crates/kitsune-retry-policies" }
 once_cell = "1.18.0"
 rand = "0.8.5"
 redis = { version = "0.23.3", default-features = false, features = [
@@ -22,6 +21,7 @@ redis = { version = "0.23.3", default-features = false, features = [
     "streams",
     "tokio-rustls-comp",
 ] }
+retry-policies = "0.2.0"
 serde = { version = "1.0.188", features = ["derive"] }
 simd-json = "0.11.1"
 smol_str = "0.2.0"

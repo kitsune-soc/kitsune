@@ -9,7 +9,8 @@ use kitsune_core::{
     state::State as CoreState,
 };
 use kitsune_db::PgPool;
-use std::{sync::Arc, time::Duration};
+use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
+use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
@@ -44,19 +45,26 @@ pub async fn run_dispatcher(
 
     let mut job_joinset = JoinSet::new();
     loop {
-        while let Err(error) = job_queue
-            .spawn_jobs(
-                num_job_workers - job_joinset.len(),
-                Arc::clone(&ctx),
-                &mut job_joinset,
-            )
-            .await
-        {
-            error!(?error, "failed to spawn more jobs");
-            just_retry::sleep_a_bit().await;
+        let mut backoff_policy = futures_backoff_policy();
+        loop {
+            let result = job_queue
+                .spawn_jobs(
+                    num_job_workers - job_joinset.len(),
+                    Arc::clone(&ctx),
+                    &mut job_joinset,
+                )
+                .await;
+
+            if let ControlFlow::Continue(duration) = backoff_policy.should_retry(result) {
+                tokio::time::sleep(duration).await;
+            } else {
+                break;
+            }
         }
 
-        let join_all = async { while job_joinset.join_next().await.is_some() {} };
-        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, join_all).await;
+        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, async {
+            while job_joinset.join_next().await.is_some() {}
+        })
+        .await;
     }
 }

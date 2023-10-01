@@ -2,20 +2,20 @@
 //! Redis implementation
 //!
 
-use crate::{MessagingBackend, Result};
+use crate::{util::TransparentDebug, MessagingBackend, Result};
 use ahash::AHashMap;
 use async_trait::async_trait;
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
+use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
 use redis::{
     aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
 };
-use std::time::Duration;
+use std::fmt::Debug;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
 
 const BROADCAST_CAPACITY: usize = 10;
-const CONNECTION_RETRY_DELAY: Duration = Duration::from_secs(5);
 const REGISTRATION_QUEUE_SIZE: usize = 50;
 
 macro_rules! handle_err {
@@ -79,15 +79,19 @@ impl MultiplexActor {
                             debug!(%pattern, "Failed to find correct receiver");
                         }
                     } else {
-                        self.conn = loop {
-                            match self.client.get_async_connection().await {
-                                Ok(conn) => break conn.into_pubsub(),
-                                Err(err) => {
-                                    error!(error = %err, "Failed to connect to Redis instance");
-                                    tokio::time::sleep(CONNECTION_RETRY_DELAY).await;
-                                }
+                        self.conn = (|| {
+                            let client = self.client.clone();
+                            async move {
+                                client
+                                    .get_async_connection()
+                                    .await
+                                    .map(|conn| TransparentDebug(conn.into_pubsub()))
                             }
-                        };
+                        })
+                        .retry(futures_backoff_policy())
+                        .await
+                        .map(|conn| conn.0)
+                        .unwrap();
 
                         for key in self.mapping.keys() {
                             handle_err!(
