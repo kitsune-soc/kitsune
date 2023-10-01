@@ -13,7 +13,7 @@ criterion = { version = "0.5.1", default-features = false, features = [
     "rayon",
 ] }
 futures = "0.3.28"
-insta = { version = "1.32.0", features = ["glob"] }
+insta = { version = "1.33.0", features = ["glob"] }
 pretty_assertions = "1.4.0"
 
 [[bench]]

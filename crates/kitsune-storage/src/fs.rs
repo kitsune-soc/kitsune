@@ -64,7 +64,7 @@ mod test {
     use std::str;
     use tempfile::TempDir;
 
-    const TEST_TEXT: &str = r#"
+    const TEST_TEXT: &str = r"
     新時代はこの未来だ
     世界中全部 変えてしまえば 変えてしまえば
     ジャマモノ やなもの なんて消して
@@ -99,7 +99,7 @@ mod test {
     果てしない音楽がもっと届くように
     夢を見せるよ 夢を見せるよ 新時代だ
     Ooh
-    新時代だ"#;
+    新時代だ";
 
     #[tokio::test]
     async fn basic() {

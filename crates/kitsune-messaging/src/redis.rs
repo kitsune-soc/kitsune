@@ -5,18 +5,37 @@
 use crate::{MessagingBackend, Result};
 use ahash::AHashMap;
 use async_trait::async_trait;
+use futures_retry_policies::{
+    retry_policies::RetryPolicies, tokio::RetryFutureExt, tracing::Traced, RetryPolicy, ShouldRetry,
+};
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
 use redis::{
     aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
 };
-use std::time::Duration;
+use retry_policies::{policies::ExponentialBackoff, Jitter};
+use std::{
+    fmt::Debug,
+    time::{Duration, SystemTime},
+};
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
 
 const BROADCAST_CAPACITY: usize = 10;
 const CONNECTION_RETRY_DELAY: Duration = Duration::from_secs(5);
 const REGISTRATION_QUEUE_SIZE: usize = 50;
+
+fn futures_backoff_policy<Res>() -> impl RetryPolicy<Res>
+where
+    Res: Debug + ShouldRetry,
+{
+    let policy = ExponentialBackoff::builder()
+        .jitter(Jitter::Bounded)
+        .build_with_total_retry_duration(Duration::from_secs(24 * 3600))
+        .for_task_started_at(SystemTime::now().into());
+
+    Traced(RetryPolicies::new(policy))
+}
 
 macro_rules! handle_err {
     ($result:expr, $msg:literal $(,)?) => {{
@@ -79,15 +98,15 @@ impl MultiplexActor {
                             debug!(%pattern, "Failed to find correct receiver");
                         }
                     } else {
-                        self.conn = loop {
-                            match self.client.get_async_connection().await {
-                                Ok(conn) => break conn.into_pubsub(),
-                                Err(err) => {
-                                    error!(error = %err, "Failed to connect to Redis instance");
-                                    tokio::time::sleep(CONNECTION_RETRY_DELAY).await;
-                                }
-                            }
-                        };
+                        self.conn = (|| async move {
+                            self.client
+                                .get_async_connection()
+                                .await
+                                .map(|conn| conn.into_pubsub())
+                        })
+                        .retry(futures_backoff_policy())
+                        .await
+                        .unwrap();
 
                         for key in self.mapping.keys() {
                             handle_err!(

@@ -32,7 +32,6 @@ members = [
     "kitsune-search-server",
     "kitsune-search-server/proto",
     "lib/athena",
-    "lib/just-retry",
     "lib/post-process",
     "lib/speedy-uuid",
 ]

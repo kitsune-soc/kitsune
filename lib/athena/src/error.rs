@@ -1,3 +1,4 @@
+use futures_retry_policies::ShouldRetry;
 use thiserror::Error;
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
@@ -19,4 +20,10 @@ pub enum Error {
 
     #[error(transparent)]
     Uuid(#[from] speedy_uuid::Error),
+}
+
+impl ShouldRetry for Error {
+    fn should_retry(&self, _attempts: u32) -> bool {
+        false
+    }
 }

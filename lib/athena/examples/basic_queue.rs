@@ -95,16 +95,15 @@ async fn main() {
 
     let mut jobs = JoinSet::new();
     loop {
-        if let Ok(join_set) = tokio::time::timeout(
+        if tokio::time::timeout(
             Duration::from_secs(5),
             queue.spawn_jobs(20, Arc::new(()), &mut jobs),
         )
         .await
+        .is_err()
         {
-            join_set.unwrap()
-        } else {
             return;
-        };
+        }
 
         while jobs.join_next().await.is_some() {}
     }
