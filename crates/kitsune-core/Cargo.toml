@@ -77,7 +77,6 @@ zxcvbn = { version = "2.2.2", default-features = false }
 
 [features]
 default = []
-kitsune-search = ["kitsune-search/kitsune-search"]
 mastodon-api = []
 meilisearch = ["kitsune-search/meilisearch"]
 

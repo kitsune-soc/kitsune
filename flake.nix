@@ -96,11 +96,6 @@
               cargoBuildFlags = "-p kitsune";
             });
 
-            search = rustPlatform.buildRustPackage (basePackage // {
-              pname = "kitsune-search";
-              cargoBuildFlags = "-p kitsune-search";
-            });
-
             frontend = pkgs.mkYarnPackage {
               inherit version;
 

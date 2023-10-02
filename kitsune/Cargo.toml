@@ -126,7 +126,6 @@ graphql-api = [
     "dep:async-graphql-axum",
     "speedy-uuid/async-graphql",
 ]
-kitsune-search = ["kitsune-core/kitsune-search"]
 mastodon-api = ["kitsune-core/mastodon-api"]
 meilisearch = ["kitsune-core/meilisearch"]
 metrics = [

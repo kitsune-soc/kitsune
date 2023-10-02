@@ -13,15 +13,11 @@ use speedy_uuid::Uuid;
 use strum::EnumIter;
 
 mod error;
-#[cfg(feature = "kitsune-search")]
-mod grpc;
 #[cfg(feature = "meilisearch")]
 mod meilisearch;
 mod sql;
 
 pub use self::error::Error;
-#[cfg(feature = "kitsune-search")]
-pub use self::grpc::SearchService as GrpcSearchService;
 #[cfg(feature = "meilisearch")]
 pub use self::meilisearch::MeiliSearchService;
 pub use self::sql::SearchService as SqlSearchService;
@@ -31,8 +27,6 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
 pub enum SearchService {
-    #[cfg(feature = "kitsune-search")]
-    Grpc(GrpcSearchService),
     #[cfg(feature = "meilisearch")]
     Meilisearch(MeiliSearchService),
     Noop(NoopSearchService),

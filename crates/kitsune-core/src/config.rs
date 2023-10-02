@@ -112,13 +112,6 @@ pub enum MessagingConfiguration {
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct KitsuneSearchConfiguration {
-    pub index_server: SmolStr,
-    pub search_servers: Vec<SmolStr>,
-}
-
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
 pub struct MeiliSearchConfiguration {
     pub instance_url: SmolStr,
     pub api_key: SmolStr,
@@ -127,7 +120,6 @@ pub struct MeiliSearchConfiguration {
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "type")]
 pub enum SearchConfiguration {
-    Kitsune(KitsuneSearchConfiguration),
     Meilisearch(MeiliSearchConfiguration),
     Sql,
     None,
