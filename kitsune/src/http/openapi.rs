@@ -7,7 +7,7 @@ use utoipa::{
         security::{AuthorizationCode, Flow, OAuth2, Scopes, SecurityScheme},
         OpenApi as OpenApiStruct,
     },
-    Modify, OpenApi,
+    Modify, OpenApi, ToSchema,
 };
 
 #[cfg(feature = "mastodon-api")]
@@ -28,9 +28,14 @@ impl Modify for SecurityAddon {
     }
 }
 
+#[derive(ToSchema)]
+#[schema(as = Timestamp)]
+struct TimestampPolyfill(String);
+
 #[derive(OpenApi)]
 #[openapi(
     components(schemas(
+        TimestampPolyfill,
         mastodon_type::App,
         mastodon_type::account::Account,
         mastodon_type::account::Field,
