@@ -6,11 +6,14 @@ build = "build.rs"
 
 [dependencies]
 diesel = { version = "2.1.2", features = ["uuid"] }
-diesel-async = { version = "0.4.1", features = ["deadpool", "postgres"] }
-diesel_full_text_search = { version = "2.1.0", default-features = false }
-diesel_migrations_async = { git = "https://github.com/aumetra/diesel_migrations_async.git", rev = "8e7085e7c93baca31b817b1814e14c4ac2beb2c4", features = [
+diesel-async = { version = "0.4.1", features = [
+    "async-connection-wrapper",
+    "deadpool",
     "postgres",
+    "tokio",
 ] }
+diesel_full_text_search = { version = "2.1.0", default-features = false }
+diesel_migrations = "2.1.0"
 iso8601-timestamp = { version = "0.2.12", features = ["diesel-pg"] }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
@@ -20,5 +23,6 @@ serde = { version = "1.0.188", features = ["derive"] }
 simd-json = "0.11.1"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.49"
+tokio = { version = "1.32.0", features = ["rt"] }
 tracing-log = "0.1.3"
 typed-builder = "0.16.2"

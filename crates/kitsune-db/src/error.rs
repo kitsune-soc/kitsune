@@ -41,8 +41,14 @@ pub enum Error {
     Diesel(#[from] diesel::result::Error),
 
     #[error(transparent)]
+    DieselConnection(#[from] diesel::result::ConnectionError),
+
+    #[error(transparent)]
     Migration(BoxError),
 
     #[error(transparent)]
     Pool(#[from] PoolError),
+
+    #[error(transparent)]
+    TokioJoin(#[from] tokio::task::JoinError),
 }

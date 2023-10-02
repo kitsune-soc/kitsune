@@ -240,9 +240,9 @@ checksum = "619743e34b5ba4e9703bba34deac3427c72507c7159f5fd030aea8cac0cfe341"
 
 [[package]]
 name = "askama_parser"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c281ace75bcec9b4a608a6dbe5518d7bc97e8760476943bbf656e0a91b2a7c4d"
+checksum = "c268a96e01a4c47c8c5c2472aaa570707e006a875ea63e819f75474ceedaf7b4"
 dependencies = [
  "nom",
 ]
@@ -1913,16 +1913,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel_migrations_async"
-version = "0.1.0"
-source = "git+https://github.com/aumetra/diesel_migrations_async.git?rev=8e7085e7c93baca31b817b1814e14c4ac2beb2c4#8e7085e7c93baca31b817b1814e14c4ac2beb2c4"
+name = "diesel_migrations"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6036b3f0120c5961381b570ee20a02432d7e2d27ea60de9578799cf9156914ac"
 dependencies = [
- "async-trait",
  "diesel",
- "diesel-async",
  "migrations_internals",
  "migrations_macros",
- "tokio",
 ]
 
 [[package]]
@@ -3235,7 +3233,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
- "diesel_migrations_async",
+ "diesel_migrations",
  "iso8601-timestamp",
  "kitsune-language",
  "kitsune-type",
@@ -3245,6 +3243,7 @@ dependencies = [
  "simd-json",
  "speedy-uuid",
  "thiserror",
+ "tokio",
  "tracing-log",
  "typed-builder",
 ]
@@ -3857,8 +3856,9 @@ dependencies = [
 
 [[package]]
 name = "migrations_internals"
-version = "0.1.0"
-source = "git+https://github.com/aumetra/diesel_migrations_async.git?rev=8e7085e7c93baca31b817b1814e14c4ac2beb2c4#8e7085e7c93baca31b817b1814e14c4ac2beb2c4"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f23f71580015254b020e856feac3df5878c2c7a8812297edd6c0a485ac9dada"
 dependencies = [
  "serde",
  "toml 0.7.8",
@@ -3866,8 +3866,9 @@ dependencies = [
 
 [[package]]
 name = "migrations_macros"
-version = "0.1.0"
-source = "git+https://github.com/aumetra/diesel_migrations_async.git?rev=8e7085e7c93baca31b817b1814e14c4ac2beb2c4#8e7085e7c93baca31b817b1814e14c4ac2beb2c4"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cce3325ac70e67bbab5bd837a31cae01f1a6db64e0e744a33cb03a543469ef08"
 dependencies = [
  "migrations_internals",
  "proc-macro2",
