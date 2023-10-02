@@ -39,12 +39,6 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
     LogTracer::init().ok();
 
-    let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(conn_str);
-    let pool = Pool::builder(config)
-        .max_size(max_pool_size)
-        .build()
-        .unwrap();
-
     tokio::task::spawn_blocking({
         let conn_str = conn_str.to_string();
 
@@ -61,7 +55,14 @@ pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
     })
     .await??;
 
+    let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(conn_str);
+    let pool = Pool::builder(config)
+        .max_size(max_pool_size)
+        .build()
+        .unwrap();
+
     let mut conn = pool.get().await?;
+
     kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
     kitsune_language::generate_regconfig_function(
         &mut conn,
