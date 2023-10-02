@@ -30,8 +30,6 @@ members = [
     "kitsune",
     "kitsune-cli",
     "kitsune-job-runner",
-    "kitsune-search-server",
-    "kitsune-search-server/proto",
     "lib/athena",
     "lib/post-process",
     "lib/speedy-uuid",

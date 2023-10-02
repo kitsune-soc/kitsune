@@ -16,8 +16,6 @@ services:
       JOB_WORKERS: 1
       REDIS_URL: redis://redis:6379
       RUST_LOG: debug
-      SEARCH_INDEX_SERVER: http://backend-search:8080
-      SEARCH_SERVERS: http://backend-search:8080
     volumes:
       - upload-data:/app/uploads
       - type: bind
@@ -27,20 +25,6 @@ services:
     depends_on:
       - db
       - redis
-
-  backend-search:
-    image: kitsune-search
-    networks:
-      - backend
-    environment:
-      INDEX_DIR_PATH: search-index
-      LEVENSHTEIN_DISTANCE: 2
-      MEMORY_ARENA_SIZE: 3MB
-      PORT: 8080
-      READ_ONLY: false
-      RUST_LOG: debug
-    volumes:
-      - search-index:/app/search-index
 
   db:
     image: postgres:15-alpine

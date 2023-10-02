@@ -69,9 +69,6 @@ use std::{
     time::Duration,
 };
 
-#[cfg(feature = "kitsune-search")]
-use kitsune_search::GrpcSearchService;
-
 #[cfg(feature = "meilisearch")]
 use kitsune_search::MeiliSearchService;
 
@@ -188,20 +185,6 @@ async fn prepare_search(
     db_pool: &PgPool,
 ) -> eyre::Result<SearchService> {
     let service = match search_config {
-        SearchConfiguration::Kitsune(_config) => {
-            #[cfg(not(feature = "kitsune-search"))]
-            panic!("Server compiled without Kitsune Search compatibility");
-
-            #[cfg(feature = "kitsune-search")]
-            #[allow(clippy::used_underscore_binding)]
-            GrpcSearchService::connect(
-                &_config.index_server,
-                _config.search_servers.iter().map(ToString::to_string),
-            )
-            .await
-            .context("Failed to connect to the search servers")?
-            .into()
-        }
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]
             panic!("Server compiled without Meilisearch compatibility");
