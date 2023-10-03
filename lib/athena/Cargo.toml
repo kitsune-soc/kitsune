@@ -5,7 +5,7 @@ version.workspace = true
 license = "MIT"
 
 [dependencies]
-ahash = "0.7.6" # We can not update because of the "redis" crate
+ahash = "0.8.3"
 async-trait = "0.1.73"
 deadpool-redis = "0.13.0"
 either = { version = "1.9.0", default-features = false }

@@ -13,7 +13,7 @@ kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-retry-policies = { path = "../crates/kitsune-retry-policies" }
 mimalloc = "0.1.39"
 tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.8.1"
+toml = "0.8.2"
 tracing = "0.1.37"
 
 [features]
