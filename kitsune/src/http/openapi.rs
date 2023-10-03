@@ -29,12 +29,17 @@ impl Modify for SecurityAddon {
 }
 
 #[derive(ToSchema)]
+#[schema(as = SmolStr)]
+struct SmolStrPolyfill(String);
+
+#[derive(ToSchema)]
 #[schema(as = Timestamp)]
 struct TimestampPolyfill(String);
 
 #[derive(OpenApi)]
 #[openapi(
     components(schemas(
+        SmolStrPolyfill,
         TimestampPolyfill,
         mastodon_type::App,
         mastodon_type::account::Account,
@@ -45,6 +50,8 @@ struct TimestampPolyfill(String);
         mastodon_type::instance::Instance,
         mastodon_type::media_attachment::MediaType,
         mastodon_type::media_attachment::MediaAttachment,
+        mastodon_type::preview_card::PreviewCard,
+        mastodon_type::preview_card::PreviewType,
         mastodon_type::relationship::Relationship,
         mastodon_type::search::SearchResult,
         mastodon_type::status::Context,
