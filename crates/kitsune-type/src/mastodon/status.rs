@@ -7,6 +7,7 @@ use utoipa::ToSchema;
 
 #[derive(Deserialize, Serialize, ToSchema)]
 pub struct Context {
+    #[schema(value_type = Vec<Status>)]
     pub ancestors: VecDeque<Status>,
     pub descendants: Vec<Status>,
 }
