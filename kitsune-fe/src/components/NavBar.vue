@@ -7,8 +7,7 @@
     </div>
     <div class="nav-bar-profile">
       <div class="nav-bar-element profile-menu-button">
-        <!-- Without this weird double quote stuff Vite would have tried to do some fucked up shit -->
-        <img :src="'/public/assets/default-avatar.png'" />
+        <img :src="DEFAULT_PROFILE_PICTURE_URL" />
       </div>
       <div class="nav-bar-element">
         <font-awesome-icon
@@ -21,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+  import { DEFAULT_PROFILE_PICTURE_URL } from '../consts';
   import NavBarLink from './NavBarLink.vue';
 
   type RouteInfo = {

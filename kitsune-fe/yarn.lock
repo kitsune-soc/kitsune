@@ -3839,6 +3839,11 @@ postcss@^8.1.10, postcss@^8.4.27:
     picocolors "^1.0.0"
     source-map-js "^1.0.2"
 
+powerglitch@^2.2.0:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/powerglitch/-/powerglitch-2.3.2.tgz#3260ed57a4b186f78038cab8e2edfea4457566f9"
+  integrity sha512-nRKMttDRu0aOeu5/rUm0CFvwuaE3b7Klujjn0AIgoLUim0E2+4YpXZ76+2t9cJERQuFZ+7D36ywG7GLtRUSyMQ==
+
 prelude-ls@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
@@ -4412,6 +4417,13 @@ vue-observe-visibility@^2.0.0-alpha.1:
   version "2.0.0-alpha.1"
   resolved "https://registry.yarnpkg.com/vue-observe-visibility/-/vue-observe-visibility-2.0.0-alpha.1.tgz#1e4eda7b12562161d58984b7e0dea676d83bdb13"
   integrity sha512-flFbp/gs9pZniXR6fans8smv1kDScJ8RS7rEpMjhVabiKeq7Qz3D9+eGsypncjfIyyU84saU88XZ0zjbD6Gq/g==
+
+vue-powerglitch@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/vue-powerglitch/-/vue-powerglitch-1.0.0.tgz#0c40f753f7a85cf3b695ec1921842e1f530fb851"
+  integrity sha512-archjrInM46s2zMes6ZB9ob5799adn8oXTU0KHBp/plst+za1gdS/qk5RynfJjtFyCHJ02BT2v1Pl89ILfZP+Q==
+  dependencies:
+    powerglitch "^2.2.0"
 
 vue-resize@^2.0.0-alpha.1:
   version "2.0.0-alpha.1"

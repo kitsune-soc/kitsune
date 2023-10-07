@@ -4,12 +4,16 @@
     :to="to"
     draggable="false"
   >
-    <font-awesome-icon class="icon" :icon="icon" />
-    <span v-if="detail" class="detail">{{ detail }}</span>
+    <GlitchedElement :options="{ playMode: 'hover' }">
+      <font-awesome-icon class="icon" :icon="icon" />
+      <span v-if="detail" class="detail">{{ detail }}</span>
+    </GlitchedElement>
   </router-link>
 </template>
 
 <script lang="ts" setup>
+  import { GlitchedElement } from 'vue-powerglitch';
+
   defineProps<{
     class?: string;
     to: string;
