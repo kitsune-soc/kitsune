@@ -13,17 +13,3 @@
     data.value ? data.value.homeTimeline.nodes : [],
   );
 </script>
-
-<style lang="scss" scoped>
-  @use '../../styles/colours' as *;
-
-  .home-timeline {
-    margin: auto;
-    max-width: 90ch;
-    border-color: grey;
-  }
-
-  .post-container * {
-    margin-bottom: 15px;
-  }
-</style>

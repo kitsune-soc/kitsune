@@ -68,6 +68,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    z-index: 999;
 
     @include only-on-mobile {
       padding: 0;

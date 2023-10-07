@@ -9,6 +9,7 @@ use async_graphql::{
 use futures_util::TryStreamExt;
 use kitsune_core::service::timeline::{GetHome, GetPublic};
 use speedy_uuid::Uuid;
+use std::collections::VecDeque;
 
 #[derive(Default)]
 pub struct TimelineQuery;
@@ -47,9 +48,11 @@ impl TimelineQuery {
                     .map_ok(Post::from);
 
                 let mut connection = Connection::new(true, true); // TODO: Set actual values
+                let mut edges = VecDeque::new();
                 while let Some(post) = post_stream.try_next().await? {
-                    connection.edges.push(Edge::new(post.id, post));
+                    edges.push_front(Edge::new(post.id, post));
                 }
+                connection.edges = edges.into();
 
                 Ok::<_, async_graphql::Error>(connection)
             },

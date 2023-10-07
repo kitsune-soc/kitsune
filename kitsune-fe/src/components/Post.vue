@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
   type Props = {
-    subject: string;
+    subject?: string | null;
     content: string;
   };
 

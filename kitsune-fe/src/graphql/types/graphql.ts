@@ -303,6 +303,7 @@ export type GetHomeTimelineQuery = {
         displayName?: string | null;
         username: string;
         url: string;
+        avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
       };
     }>;
     pageInfo: {
@@ -565,6 +566,19 @@ export const GetHomeTimelineDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatar' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'url' },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',

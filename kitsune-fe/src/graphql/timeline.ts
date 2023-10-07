@@ -15,6 +15,9 @@ function getHome() {
             url
             account {
               id
+              avatar {
+                url
+              }
               displayName
               username
               url
