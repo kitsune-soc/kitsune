@@ -1,17 +1,17 @@
 <template>
-  <fieldset class="home-timeline">
-    <legend>INCOMING TRANSMISSIONS</legend>
-    <div class="post-container" v-for="shit in data?.homeTimeline.nodes">
-      <Post :subject="shit?.subject" :content="shit?.content" />
-    </div>
-  </fieldset>
+  <BaseTimeline :posts="processedData" />
 </template>
 
 <script lang="ts" setup>
-  import Post from '../../components/Post.vue';
+  import { computed } from 'vue';
+
+  import BaseTimeline from '../../components/BaseTimeline.vue';
   import { getHome } from '../../graphql/timeline';
 
-  const { data } = getHome() as any;
+  const data = getHome();
+  const processedData = computed(() =>
+    data.value ? data.value.homeTimeline.nodes : [],
+  );
 </script>
 
 <style lang="scss" scoped>
@@ -23,7 +23,7 @@
     border-color: grey;
   }
 
-  .post-container {
+  .post-container * {
     margin-bottom: 15px;
   }
 </style>

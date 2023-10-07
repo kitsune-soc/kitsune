@@ -8,6 +8,8 @@ import urql from '@urql/vue';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 import App from './App.vue';
 import './icons';
@@ -20,6 +22,8 @@ const pinia = createPinia().use(piniaPluginPersistedState);
 
 createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)
+  .component('DynamicScroller', DynamicScroller)
+  .component('DynamicScrollerItem', DynamicScrollerItem)
   .use(
     FormkitPlugin,
     defaultFormkitConfig({

@@ -2,8 +2,8 @@ import { useQuery } from '@urql/vue';
 
 import { graphql } from './types';
 
-function getHome(): unknown {
-  return useQuery({
+function getHome() {
+  const { data } = useQuery({
     query: graphql(`
       query getHomeTimeline {
         homeTimeline(before: "00000000-0000-0000-0000-000000000000")
@@ -28,6 +28,8 @@ function getHome(): unknown {
       }
     `),
   });
+
+  return data;
 }
 
 export { getHome };
