@@ -37,11 +37,23 @@
 </template>
 
 <script setup lang="ts">
+  import { onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+
   import AuthForms from '../components/AuthForms.vue';
   import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
+  import { useAuthStore } from '../store/auth';
 
+  const authStore = useAuthStore();
   const instanceInfo = useInstanceInfo();
+
+  onMounted(async () => {
+    if (authStore.isAuthenticated()) {
+      const router = useRouter();
+      router.replace('/timeline/home');
+    }
+  });
 </script>
 
 <style scoped lang="scss">

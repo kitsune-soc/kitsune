@@ -285,6 +285,34 @@ export type GetInstanceInfoQuery = {
   };
 };
 
+export type GetHomeTimelineQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetHomeTimelineQuery = {
+  __typename?: 'RootQuery';
+  homeTimeline: {
+    __typename?: 'PostConnection';
+    nodes: Array<{
+      __typename?: 'Post';
+      id: any;
+      subject?: string | null;
+      content: string;
+      url: string;
+      account: {
+        __typename?: 'Account';
+        id: any;
+        displayName?: string | null;
+        username: string;
+        url: string;
+      };
+    }>;
+    pageInfo: {
+      __typename?: 'PageInfo';
+      startCursor?: string | null;
+      endCursor?: string | null;
+    };
+  };
+};
+
 export type RegisterOauthApplicationMutationVariables = Exact<{
   name: Scalars['String']['input'];
   redirect_uri: Scalars['String']['input'];
@@ -467,6 +495,122 @@ export const GetInstanceInfoDocument = {
 } as unknown as DocumentNode<
   GetInstanceInfoQuery,
   GetInstanceInfoQueryVariables
+>;
+export const GetHomeTimelineDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getHomeTimeline' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'homeTimeline' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'before' },
+                value: {
+                  kind: 'StringValue',
+                  value: '00000000-0000-0000-0000-000000000000',
+                  block: false,
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: 'Directive',
+                name: { kind: 'Name', value: '_relayPagination' },
+                arguments: [
+                  {
+                    kind: 'Argument',
+                    name: { kind: 'Name', value: 'mergeMode' },
+                    value: {
+                      kind: 'StringValue',
+                      value: 'after',
+                      block: false,
+                    },
+                  },
+                ],
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodes' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'subject' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'account' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'displayName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'username' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pageInfo' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'startCursor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endCursor' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetHomeTimelineQuery,
+  GetHomeTimelineQueryVariables
 >;
 export const RegisterOauthApplicationDocument = {
   kind: 'Document',

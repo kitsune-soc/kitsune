@@ -1,9 +1,8 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
-    "rust-analyzer.cargo.buildScripts.enable": true,
-    "editor.formatOnSave": true,
-    "rust-analyzer.showUnlinkedFileNotification": false,
-    "rust-analyzer.cargo.features": [
-        "oidc"
-    ]
+  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
+  "rust-analyzer.cargo.buildScripts.enable": true,
+  "editor.formatOnSave": true,
+  "rust-analyzer.showUnlinkedFileNotification": false,
+  "rust-analyzer.cargo.features": ["oidc"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
