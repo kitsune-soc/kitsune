@@ -22,6 +22,11 @@ function getHome() {
               username
               url
             }
+            attachments {
+              contentType
+              description
+              url
+            }
           }
           pageInfo {
             startCursor

@@ -24,6 +24,7 @@
             :account="item.account"
             :subject="item.subject"
             :content="item.content"
+            :attachments="item.attachments"
           />
           <!-- Load bearing little div -->
           <!-- Without this div, the height computation is all messed up and the margin of the post gets ignored -->

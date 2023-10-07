@@ -305,6 +305,12 @@ export type GetHomeTimelineQuery = {
         url: string;
         avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
       };
+      attachments: Array<{
+        __typename?: 'MediaAttachment';
+        contentType: string;
+        description?: string | null;
+        url: string;
+      }>;
     }>;
     pageInfo: {
       __typename?: 'PageInfo';
@@ -587,6 +593,27 @@ export const GetHomeTimelineDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'username' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'attachments' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'contentType' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
                             },
                             {
                               kind: 'Field',
