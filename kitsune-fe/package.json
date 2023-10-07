@@ -30,6 +30,7 @@
     "lodash": "^4.17.21",
     "pinia": "^2.1.6",
     "pinia-plugin-persistedstate": "^3.2.0",
+    "unhead": "^1.7.4",
     "vue": "^3.2.41",
     "vue-powerglitch": "^1.0.0",
     "vue-router": "^4.2.5",

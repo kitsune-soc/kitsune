@@ -7,6 +7,7 @@ import urql from '@urql/vue';
 
 import { createPinia } from 'pinia';
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
+import { createHead } from 'unhead';
 import { createApp } from 'vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
@@ -17,6 +18,8 @@ import { router } from './router';
 import './styles/root.scss';
 import { urqlClient } from './urql';
 import { zxcvbnRule, zxcvbnValidationMessage } from './zxcvbn';
+
+createHead();
 
 const pinia = createPinia().use(piniaPluginPersistedState);
 
