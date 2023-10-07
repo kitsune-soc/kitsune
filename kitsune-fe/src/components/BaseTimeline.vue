@@ -8,7 +8,7 @@
           index,
           active,
         }: {
-          item: Post;
+          item: PostType;
           index: number;
           active: boolean;
         }"
@@ -20,7 +20,11 @@
           :size-dependencies="[item.subject, item.content]"
           :data-index="index"
         >
-          <Post :subject="item.subject" :content="item.content" />
+          <Post
+            :account="item.account"
+            :subject="item.subject"
+            :content="item.content"
+          />
           <!-- Load bearing little div -->
           <!-- Without this div, the height computation is all messed up and the margin of the post gets ignored -->
           <div style="height: 1px"></div>
@@ -35,14 +39,9 @@
 
   import { ref } from 'vue';
 
-  import Post from './Post.vue';
+  import Post, { Post as PostType } from './Post.vue';
 
-  export type Post = {
-    subject?: string | null;
-    content: string;
-  };
-
-  defineProps<{ posts: Post[] }>();
+  defineProps<{ posts: PostType[] }>();
 
   const scroller = ref<HTMLElement>();
   useInfiniteScroll(
@@ -50,16 +49,17 @@
     () => {
       console.log('hmm');
     },
-    { distance: 10 },
+    { distance: 3 },
   );
 </script>
 
 <style lang="scss" scoped>
   .timeline {
-    margin: 1em;
+    margin: auto;
     border-color: grey;
 
     max-height: 80vh;
+    max-width: 100ch;
     overflow-y: scroll;
   }
 
