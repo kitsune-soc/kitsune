@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 async-trait = "0.1.73"
-aws-sdk-s3 = "0.31.2"
+aws-sdk-s3 = "0.33.0"
 aws-smithy-http = "0.56.1"
 bytes = "1.5.0"
 enum_dispatch = "0.3.12"
