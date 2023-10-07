@@ -30,6 +30,10 @@ const routes = [
     component: () => import('./views/OAuthCallback.vue'),
   },
   {
+    path: '/posts/:id',
+    component: () => import('./views/PostPage.vue'),
+  },
+  {
     path: '/:catchAll(.*)',
     component: () => import('./views/NotFound.vue'),
   },

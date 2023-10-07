@@ -285,6 +285,34 @@ export type GetInstanceInfoQuery = {
   };
 };
 
+export type GetPostByIdQueryVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+export type GetPostByIdQuery = {
+  __typename?: 'RootQuery';
+  getPostById: {
+    __typename?: 'Post';
+    id: any;
+    subject?: string | null;
+    content: string;
+    account: {
+      __typename?: 'Account';
+      id: any;
+      displayName?: string | null;
+      username: string;
+      url: string;
+      avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
+    };
+    attachments: Array<{
+      __typename?: 'MediaAttachment';
+      contentType: string;
+      description?: string | null;
+      url: string;
+    }>;
+  };
+};
+
 export type GetHomeTimelineQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetHomeTimelineQuery = {
@@ -503,6 +531,103 @@ export const GetInstanceInfoDocument = {
   GetInstanceInfoQuery,
   GetInstanceInfoQueryVariables
 >;
+export const GetPostByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPostById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getPostById' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'subject' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'account' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'displayName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'username' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'avatar' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attachments' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'contentType' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPostByIdQuery, GetPostByIdQueryVariables>;
 export const GetHomeTimelineDocument = {
   kind: 'Document',
   definitions: [

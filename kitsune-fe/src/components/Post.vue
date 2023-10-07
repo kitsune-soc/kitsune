@@ -115,7 +115,7 @@
 
       & * {
         width: 100%;
-        max-height: 50ch;
+        max-height: 30ch;
       }
     }
   }

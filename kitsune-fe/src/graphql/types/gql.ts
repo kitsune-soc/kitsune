@@ -18,6 +18,8 @@ const documents = {
     types.RegisterUserDocument,
   '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ':
     types.GetInstanceInfoDocument,
+  '\n      query getPostById($id: UUID!) {\n        getPostById(id: $id) {\n          id\n          subject\n          content\n          account {\n            id\n            displayName\n            username\n            avatar {\n              url\n            }\n            url\n          }\n          attachments {\n            contentType\n            description\n            url\n          }\n        }\n      }\n    ':
+    types.GetPostByIdDocument,
   '\n      query getHomeTimeline {\n        homeTimeline(before: "00000000-0000-0000-0000-000000000000")\n          @_relayPagination(mergeMode: "after") {\n          nodes {\n            id\n            subject\n            content\n            url\n            account {\n              id\n              avatar {\n                url\n              }\n              displayName\n              username\n              url\n            }\n            attachments {\n              contentType\n              description\n              url\n            }\n          }\n          pageInfo {\n            startCursor\n            endCursor\n          }\n        }\n      }\n    ':
     types.GetHomeTimelineDocument,
   '\n      mutation registerOauthApplication(\n        $name: String!\n        $redirect_uri: String!\n      ) {\n        registerOauthApplication(name: $name, redirectUri: $redirect_uri) {\n          id\n          secret\n          redirectUri\n        }\n      }\n    ':
@@ -50,6 +52,12 @@ export function graphql(
 export function graphql(
   source: '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ',
 ): (typeof documents)['\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    '];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n      query getPostById($id: UUID!) {\n        getPostById(id: $id) {\n          id\n          subject\n          content\n          account {\n            id\n            displayName\n            username\n            avatar {\n              url\n            }\n            url\n          }\n          attachments {\n            contentType\n            description\n            url\n          }\n        }\n      }\n    ',
+): (typeof documents)['\n      query getPostById($id: UUID!) {\n        getPostById(id: $id) {\n          id\n          subject\n          content\n          account {\n            id\n            displayName\n            username\n            avatar {\n              url\n            }\n            url\n          }\n          attachments {\n            contentType\n            description\n            url\n          }\n        }\n      }\n    '];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
