@@ -16,14 +16,8 @@
         </strong>
       </div>
     </div>
-
-    <GenericFooter />
   </div>
 </template>
-
-<script setup lang="ts">
-  import GenericFooter from '../components/GenericFooter.vue';
-</script>
 
 <style scoped lang="scss">
   @use '../styles/colours' as *;

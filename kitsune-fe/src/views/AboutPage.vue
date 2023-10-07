@@ -14,12 +14,10 @@
       <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="instanceData?.description" />
     </fieldset>
-    <GenericFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-  import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
 
   const instanceData = useInstanceInfo();

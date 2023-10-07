@@ -31,8 +31,6 @@
 
       <AuthForms />
     </div>
-
-    <GenericFooter />
   </div>
 </template>
 
@@ -41,7 +39,6 @@
   import { useRouter } from 'vue-router';
 
   import AuthForms from '../components/AuthForms.vue';
-  import GenericFooter from '../components/GenericFooter.vue';
   import { useInstanceInfo } from '../graphql/instance-info';
   import { useAuthStore } from '../store/auth';
 

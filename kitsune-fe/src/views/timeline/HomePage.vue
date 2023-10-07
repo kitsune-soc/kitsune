@@ -1,22 +1,29 @@
 <template>
-  <div v-for="shit in data?.homeTimeline.nodes">
-    Post ID: {{ shit?.id }} Account ID: {{ shit?.account?.id }}
-  </div>
+  <fieldset class="home-timeline">
+    <legend>INCOMING TRANSMISSIONS</legend>
+    <div class="post-container" v-for="shit in data?.homeTimeline.nodes">
+      <Post :subject="shit?.subject" :content="shit?.content" />
+    </div>
+  </fieldset>
 </template>
 
 <script lang="ts" setup>
-  import { watch } from 'vue';
-
+  import Post from '../../components/Post.vue';
   import { getHome } from '../../graphql/timeline';
 
   const { data } = getHome() as any;
-
-  watch(
-    data,
-    (neww, old) => {
-      console.log(old);
-      console.log(neww);
-    },
-    { deep: true },
-  );
 </script>
+
+<style lang="scss" scoped>
+  @use '../../styles/colours' as *;
+
+  .home-timeline {
+    margin: auto;
+    max-width: 90ch;
+    border-color: grey;
+  }
+
+  .post-container {
+    margin-bottom: 15px;
+  }
+</style>
