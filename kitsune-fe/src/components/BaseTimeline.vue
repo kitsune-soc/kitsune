@@ -23,6 +23,7 @@
           :data-index="index"
         >
           <Post
+            :id="item.id"
             :account="item.account"
             :subject="item.subject"
             :content="item.content"

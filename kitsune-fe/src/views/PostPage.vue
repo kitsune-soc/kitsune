@@ -2,6 +2,7 @@
   <div class="post-view">
     <Post
       v-if="postData"
+      :id="postData.id"
       :subject="postData.subject"
       :content="postData.content"
       :account="postData.account"

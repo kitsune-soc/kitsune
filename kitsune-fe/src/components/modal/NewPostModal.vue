@@ -43,6 +43,12 @@
     </FloatingMenu>
 
     <EditorContent class="editor" :editor="editor" />
+
+    <div class="controls">
+      <div class="controls-modifiers">lmao</div>
+
+      <button class="controls-post-button">Post!</button>
+    </div>
   </BaseModal>
 </template>
 
@@ -72,8 +78,14 @@
 <style lang="scss" scoped>
   .editor {
     width: 500px;
+    max-width: 90vw;
     height: fit-content;
 
-    max-width: 90vw;
+    border: 1px solid white;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <article class="post">
+  <article class="post" @click="goToThreadView">
     <a class="account-info" :href="account.url">
       <img
         class="account-info-profile-picture"
@@ -50,6 +50,7 @@
 
 <script lang="ts" setup>
   import { computed } from 'vue';
+  import { useRouter } from 'vue-router';
 
   import { DEFAULT_PROFILE_PICTURE_URL } from '../consts';
 
@@ -69,6 +70,7 @@
   };
 
   export type Post = {
+    id: string;
     subject?: string | null;
     content: string;
     account: PostAccount;
@@ -79,6 +81,11 @@
   const profilePictureUrl = computed(
     () => props.account.avatar?.url ?? DEFAULT_PROFILE_PICTURE_URL,
   );
+  const router = useRouter();
+
+  function goToThreadView() {
+    router.push(`/posts/${props.id}`);
+  }
 </script>
 
 <style lang="scss" scoped>

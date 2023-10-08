@@ -1,6 +1,6 @@
 import type {
-  DocumentTypeDecoration,
   ResultOf,
+  DocumentTypeDecoration,
   TypedDocumentNode,
 } from '@graphql-typed-document-node/core';
 

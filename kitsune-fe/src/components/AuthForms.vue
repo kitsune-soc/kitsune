@@ -72,8 +72,8 @@
   import { useInstanceInfo } from '../graphql/instance-info';
   import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
-  import BaseModal from './BaseModal.vue';
   import CaptchaComponent from './CaptchaComponent.vue';
+  import BaseModal from './modal/BaseModal.vue';
 
   const modalData = reactive({
     show: false,
