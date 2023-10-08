@@ -65,8 +65,7 @@
   } from '@tiptap/vue-3';
 
   import { Markdown } from 'tiptap-markdown';
-  import { reactive } from 'vue';
-  import { computed } from 'vue';
+  import { computed, reactive } from 'vue';
 
   import { useInstanceInfo } from '../../graphql/instance-info';
   import BaseModal from './BaseModal.vue';
