@@ -87,6 +87,7 @@ export type CaptchaInfo = {
 export type Instance = {
   __typename?: 'Instance';
   captcha?: Maybe<CaptchaInfo>;
+  characterLimit: Scalars['Int']['output'];
   description: Scalars['String']['output'];
   domain: Scalars['String']['output'];
   localPostCount: Scalars['Int']['output'];
@@ -270,6 +271,7 @@ export type GetInstanceInfoQuery = {
   __typename?: 'RootQuery';
   instance: {
     __typename?: 'Instance';
+    characterLimit: number;
     description: string;
     domain: string;
     localPostCount: number;
@@ -493,19 +495,6 @@ export const GetInstanceInfoDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'domain' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'localPostCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'registrationsOpen' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'userCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'captcha' },
@@ -520,6 +509,23 @@ export const GetInstanceInfoDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'characterLimit' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'domain' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'localPostCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'registrationsOpen' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
               ],
             },
           },

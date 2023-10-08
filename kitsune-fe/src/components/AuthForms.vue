@@ -67,13 +67,16 @@
 <script setup lang="ts">
   import { useMutation } from '@urql/vue';
 
-  import { reactive } from 'vue';
+  import { defineAsyncComponent, reactive } from 'vue';
 
   import { useInstanceInfo } from '../graphql/instance-info';
   import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
-  import CaptchaComponent from './CaptchaComponent.vue';
   import BaseModal from './modal/BaseModal.vue';
+
+  const CaptchaComponent = defineAsyncComponent(
+    () => import('./CaptchaComponent.vue'),
+  );
 
   const modalData = reactive({
     show: false,

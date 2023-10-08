@@ -16,7 +16,7 @@ import * as types from './graphql';
 const documents = {
   '\n      mutation registerUser(\n        $username: String!\n        $email: String!\n        $password: String!\n        $captchaToken: String\n      ) {\n        registerUser(\n          username: $username\n          email: $email\n          password: $password\n          captchaToken: $captchaToken\n        ) {\n          id\n        }\n      }\n    ':
     types.RegisterUserDocument,
-  '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ':
+  '\n      query getInstanceInfo {\n        instance {\n          captcha {\n            backend\n            key\n          }\n          characterLimit\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n        }\n      }\n    ':
     types.GetInstanceInfoDocument,
   '\n      query getPostById($id: UUID!) {\n        getPostById(id: $id) {\n          id\n          subject\n          content\n          account {\n            id\n            displayName\n            username\n            avatar {\n              url\n            }\n            url\n          }\n          attachments {\n            contentType\n            description\n            url\n          }\n        }\n      }\n    ':
     types.GetPostByIdDocument,
@@ -50,8 +50,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    ',
-): (typeof documents)['\n      query getInstanceInfo {\n        instance {\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n          captcha {\n            backend\n            key\n          }\n        }\n      }\n    '];
+  source: '\n      query getInstanceInfo {\n        instance {\n          captcha {\n            backend\n            key\n          }\n          characterLimit\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n        }\n      }\n    ',
+): (typeof documents)['\n      query getInstanceInfo {\n        instance {\n          captcha {\n            backend\n            key\n          }\n          characterLimit\n          description\n          domain\n          localPostCount\n          registrationsOpen\n          name\n          userCount\n          version\n        }\n      }\n    '];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

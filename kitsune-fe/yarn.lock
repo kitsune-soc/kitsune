@@ -1715,10 +1715,28 @@
   resolved "https://registry.yarnpkg.com/@types/json-stable-stringify/-/json-stable-stringify-1.0.34.tgz#c0fb25e4d957e0ee2e497c1f553d7f8bb668fd75"
   integrity sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==
 
+"@types/linkify-it@*":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@types/linkify-it/-/linkify-it-3.0.3.tgz#15a0712296c5041733c79efe233ba17ae5a7587b"
+  integrity sha512-pTjcqY9E4nOI55Wgpz7eiI8+LzdYnw3qxXCfHyBDdPbYvbyLgWLJGh8EdPvqawwMK1Uo1794AUkkR38Fr0g+2g==
+
 "@types/lodash@^4.14.199":
   version "4.14.199"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.199.tgz#c3edb5650149d847a277a8961a7ad360c474e9bf"
   integrity sha512-Vrjz5N5Ia4SEzWWgIVwnHNEnb1UE1XMkvY5DGXrAeOGE9imk0hgTHh5GyDjLDJi9OTCn9oo9dXH1uToK1VRfrg==
+
+"@types/markdown-it@^12.2.3":
+  version "12.2.3"
+  resolved "https://registry.yarnpkg.com/@types/markdown-it/-/markdown-it-12.2.3.tgz#0d6f6e5e413f8daaa26522904597be3d6cd93b51"
+  integrity sha512-GKMHFfv3458yYy+v/N8gjufHO6MSZKCOXpZc5GXIWWy8uldwfmPn98vp81gZ5f9SVw8YYBctgfJ22a2d7AOMeQ==
+  dependencies:
+    "@types/linkify-it" "*"
+    "@types/mdurl" "*"
+
+"@types/mdurl@*":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@types/mdurl/-/mdurl-1.0.3.tgz#d0aefccdd1a96f4bec76047d6b314601f0b0f3de"
+  integrity sha512-T5k6kTXak79gwmIOaDF2UUQXFbnBE0zBUzF20pz7wDYu0RQMzWg+Ml/Pz50214NsFHBITkoi5VtdjFZnJ2ijjA==
 
 "@types/node@*":
   version "20.8.3"
@@ -3774,6 +3792,11 @@ map-cache@^0.2.0:
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==
 
+markdown-it-task-lists@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/markdown-it-task-lists/-/markdown-it-task-lists-2.1.1.tgz#f68f4d2ac2bad5a2c373ba93081a1a6848417088"
+  integrity sha512-TxFAc76Jnhb2OUu+n3yz9RMu4CwGfaT788br6HhEDlvWfdeJcLUsxk1Hgw2yJio0OXsxv7pyIPmvECY7bMbluA==
+
 markdown-it@^13.0.1:
   version "13.0.2"
   resolved "https://registry.yarnpkg.com/markdown-it/-/markdown-it-13.0.2.tgz#1bc22e23379a6952e5d56217fbed881e0c94d536"
@@ -4293,7 +4316,7 @@ prosemirror-keymap@^1.0.0, prosemirror-keymap@^1.1.2, prosemirror-keymap@^1.2.0:
     prosemirror-state "^1.0.0"
     w3c-keyname "^2.2.0"
 
-prosemirror-markdown@^1.10.1:
+prosemirror-markdown@^1.10.1, prosemirror-markdown@^1.11.1:
   version "1.11.2"
   resolved "https://registry.yarnpkg.com/prosemirror-markdown/-/prosemirror-markdown-1.11.2.tgz#f6e529e669d11fa3eec859e93c0d2c91788d6c80"
   integrity sha512-Eu5g4WPiCdqDTGhdSsG9N6ZjACQRYrsAkrF9KYfdMaCmjIApH75aVncsWYOJvEk2i1B3i8jZppv3J/tnuHGiUQ==
@@ -4762,6 +4785,16 @@ tippy.js@^6.3.7:
   integrity sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==
   dependencies:
     "@popperjs/core" "^2.9.0"
+
+tiptap-markdown@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/tiptap-markdown/-/tiptap-markdown-0.8.2.tgz#93d42ef6225042d8bfe77861b93450aab184d67b"
+  integrity sha512-RyfpnH475+FYVh1fCiWF9+wBvA8T6X3PqxZR1MApEewxkoQ5kREQFiVwjZiez9qUQk/Bxu3RerFSJot65V6cbQ==
+  dependencies:
+    "@types/markdown-it" "^12.2.3"
+    markdown-it "^13.0.1"
+    markdown-it-task-lists "^2.1.1"
+    prosemirror-markdown "^1.11.1"
 
 title-case@^3.0.3:
   version "3.0.3"

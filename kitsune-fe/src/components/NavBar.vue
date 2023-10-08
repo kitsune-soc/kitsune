@@ -25,11 +25,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { defineAsyncComponent, ref } from 'vue';
 
   import { DEFAULT_PROFILE_PICTURE_URL } from '../consts';
   import NavBarLink from './NavBarLink.vue';
-  import NewPostModal from './modal/NewPostModal.vue';
 
   type RouteInfo = {
     icon: string;
@@ -59,6 +58,9 @@
     },
   };
 
+  const NewPostModal = defineAsyncComponent(
+    () => import('./modal/NewPostModal.vue'),
+  );
   const showPostModal = ref(false);
 </script>
 

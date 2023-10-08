@@ -9,6 +9,11 @@ function useInstanceInfo() {
     query: graphql(`
       query getInstanceInfo {
         instance {
+          captcha {
+            backend
+            key
+          }
+          characterLimit
           description
           domain
           localPostCount
@@ -16,10 +21,6 @@ function useInstanceInfo() {
           name
           userCount
           version
-          captcha {
-            backend
-            key
-          }
         }
       }
     `),

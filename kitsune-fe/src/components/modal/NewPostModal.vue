@@ -47,7 +47,10 @@
     <div class="controls">
       <div class="controls-modifiers">lmao</div>
 
-      <button class="controls-post-button">Post!</button>
+      <div class="controls-post">
+        {{ remainingCharacters }}
+        <button class="controls-post-button">Post!</button>
+      </div>
     </div>
   </BaseModal>
 </template>
@@ -61,8 +64,11 @@
     FloatingMenu,
   } from '@tiptap/vue-3';
 
+  import { Markdown } from 'tiptap-markdown';
   import { reactive } from 'vue';
+  import { computed } from 'vue';
 
+  import { useInstanceInfo } from '../../graphql/instance-info';
   import BaseModal from './BaseModal.vue';
 
   defineProps<{
@@ -70,9 +76,17 @@
   }>();
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [Markdown, StarterKit],
   });
   const tippyOptions = reactive({ duration: 200 });
+
+  const instanceData = useInstanceInfo();
+  const remainingCharacters = computed(() => {
+    if (instanceData.value) {
+      const markdownText = editor.value?.storage.markdown.getMarkdown();
+      return instanceData.value.characterLimit - markdownText.length;
+    }
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -80,8 +94,10 @@
     width: 500px;
     max-width: 90vw;
     height: fit-content;
-
     border: 1px solid white;
+
+    padding: 0 1em;
+    margin-bottom: 1em;
   }
 
   .controls {

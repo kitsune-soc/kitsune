@@ -15,6 +15,7 @@ impl InstanceQuery {
         let url_service = &state.service().url;
         let captcha = state.service().captcha.backend.clone().map(Into::into);
 
+        let character_limit = instance_service.character_limit();
         let description = instance_service.description().into();
         let domain = url_service.webfinger_domain().into();
         let local_post_count = instance_service.local_post_count().await?;
@@ -24,6 +25,7 @@ impl InstanceQuery {
 
         Ok(Instance {
             captcha,
+            character_limit,
             description,
             domain,
             local_post_count,
