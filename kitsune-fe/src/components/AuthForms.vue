@@ -52,7 +52,7 @@
       />
     </FormKit>
 
-    <BaseModal :closed="!modalData.show" :title="modalData.title">
+    <BaseModal v-model="modalData.show" :title="modalData.title">
       <!-- This is returned from the backend and created from an error type, and only "enhanced" with HTML newlines by us -->
       <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="modalData.content" />

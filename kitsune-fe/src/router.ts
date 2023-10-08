@@ -47,10 +47,12 @@ const routes = [
   {
     path: '/posts/:id',
     component: () => import('./views/PostPage.vue'),
+    meta: { title: 'Thread view' },
   },
   {
     path: '/:catchAll(.*)',
     component: () => import('./views/NotFound.vue'),
+    meta: { title: '404 Not found' },
   },
 ];
 

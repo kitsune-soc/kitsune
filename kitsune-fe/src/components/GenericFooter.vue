@@ -1,7 +1,10 @@
 <template>
   <footer>
     <div class="footer">
+      <LanguageSelector />
+
       <span>Kitsune v{{ instanceData?.version }}</span>
+
       <a target="_blank" href="https://github.com/kitsune-soc/kitsune">
         Source code
       </a>
@@ -11,6 +14,7 @@
 
 <script setup lang="ts">
   import { useInstanceInfo } from '../graphql/instance-info';
+  import LanguageSelector from './LanguageSelector.vue';
 
   const instanceData = useInstanceInfo();
 </script>

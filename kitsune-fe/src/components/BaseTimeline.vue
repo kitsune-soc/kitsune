@@ -1,6 +1,8 @@
 <template>
   <fieldset class="timeline" ref="scroller">
-    <legend>INCOMING TRANSMISSIONS</legend>
+    <legend class="timeline-legend">
+      {{ $t('messages.timeline.title') }}
+    </legend>
     <DynamicScroller class="scroller" :items="posts" :min-item-size="50">
       <template
         v-slot="{
@@ -39,6 +41,7 @@
   import { useInfiniteScroll } from '@vueuse/core';
 
   import { ref } from 'vue';
+  import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 
   import Post, { Post as PostType } from './Post.vue';
 
@@ -47,7 +50,7 @@
   const scroller = ref<HTMLElement>();
   useInfiniteScroll(
     scroller,
-    () => {
+    async () => {
       console.log('hmm');
     },
     { distance: 3 },
@@ -59,9 +62,13 @@
     margin: auto;
     border-color: grey;
 
-    max-height: 80vh;
+    max-height: 82vh;
     max-width: 100ch;
     overflow-y: scroll;
+
+    &-legend {
+      text-transform: uppercase;
+    }
   }
 
   .post-container * {

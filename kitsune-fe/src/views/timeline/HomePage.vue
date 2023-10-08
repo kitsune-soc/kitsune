@@ -9,7 +9,5 @@
   import { getHome } from '../../graphql/timeline';
 
   const data = getHome();
-  const processedData = computed(() =>
-    data.value ? data.value.homeTimeline.nodes : [],
-  );
+  const processedData = computed(() => data.value?.homeTimeline.nodes ?? []);
 </script>

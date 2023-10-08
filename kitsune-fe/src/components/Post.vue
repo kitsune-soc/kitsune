@@ -6,30 +6,42 @@
         :src="profilePictureUrl"
         :alt="`${account.username}'s profile picture`"
       />
+
       <div class="account-info-names">
         <strong class="account-info-names-displayname">
-          {{ account.displayName ? account.displayName : account.username }}
+          {{ account.displayName ?? account.username }}
         </strong>
         <span class="account-info-names-username">
           @{{ account.username }}
         </span>
       </div>
     </a>
+
     <p v-if="subject">
-      <strong><span v-html="subject" /></strong>
+      <strong>
+        <!-- Cleaned on the backend -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <span v-html="subject" />
+      </strong>
     </p>
+
+    <!-- Cleaned on the backend -->
+    <!-- eslint-disable-next-line vue/no-v-html -->
     <span class="post-content" v-html="content" />
+
     <div class="post-attachments">
       <div v-for="attachment in attachments" :title="attachment.description!">
         <audio
           v-if="attachment.contentType.startsWith('audio')"
           :src="attachment.url"
         />
+
         <video
           v-else-if="attachment.contentType.startsWith('video')"
           :src="attachment.url"
           controls
         />
+
         <img v-else :src="attachment.url" :alt="attachment.description!" />
       </div>
     </div>
@@ -64,10 +76,8 @@
   };
 
   const props = defineProps<Post>();
-  const profilePictureUrl = computed(() =>
-    props.account.avatar
-      ? props.account.avatar.url
-      : DEFAULT_PROFILE_PICTURE_URL,
+  const profilePictureUrl = computed(
+    () => props.account.avatar?.url ?? DEFAULT_PROFILE_PICTURE_URL,
   );
 </script>
 

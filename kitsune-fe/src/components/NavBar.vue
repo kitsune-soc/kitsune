@@ -5,23 +5,31 @@
         <NavBarLink :to="route" :icon="details.icon" :detail="details.detail" />
       </template>
     </div>
+
     <div class="nav-bar-profile">
       <div class="nav-bar-element profile-menu-button">
         <img :src="DEFAULT_PROFILE_PICTURE_URL" />
       </div>
+
       <div class="nav-bar-element">
         <font-awesome-icon
+          @click="showPostModal = true"
           class="icon create-status"
           icon="fa-pen-to-square fa-solid"
         />
       </div>
     </div>
   </nav>
+
+  <NewPostModal v-model="showPostModal" />
 </template>
 
 <script setup lang="ts">
+  import { ref } from 'vue';
+
   import { DEFAULT_PROFILE_PICTURE_URL } from '../consts';
   import NavBarLink from './NavBarLink.vue';
+  import NewPostModal from './modal/NewPostModal.vue';
 
   type RouteInfo = {
     icon: string;
@@ -50,6 +58,8 @@
       detail: 'Federated',
     },
   };
+
+  const showPostModal = ref(false);
 </script>
 
 <style scoped lang="scss">
@@ -89,6 +99,7 @@
 
       .create-status {
         height: 25px;
+        cursor: pointer;
       }
 
       .profile-menu-button {
