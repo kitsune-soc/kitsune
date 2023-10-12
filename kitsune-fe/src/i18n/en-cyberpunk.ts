@@ -1,7 +1,6 @@
 export default {
   messages: {
     mainPage: {
-      whoAuthored: 'who broadcasted',
       aboutInstance: "Deets 'bout this megacorp",
     },
     newPost: {

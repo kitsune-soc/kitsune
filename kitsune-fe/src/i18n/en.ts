@@ -1,8 +1,6 @@
 export default {
   messages: {
     mainPage: {
-      isHomeTo: 'is home to',
-      whoAuthored: 'who authored',
       aboutInstance: 'About this instance',
     },
     newPost: {
