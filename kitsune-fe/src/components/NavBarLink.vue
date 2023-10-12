@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { GlitchedElement } from 'vue-powerglitch';
+  import GlitchedElement from './GlitchedElement.vue';
 
   defineProps<{
     class?: string;

@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { GlitchedElement } from 'vue-powerglitch';
+  import GlitchedElement from '../components/GlitchedElement.vue';
 </script>
 
 <style scoped lang="scss">
