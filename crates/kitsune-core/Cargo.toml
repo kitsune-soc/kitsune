@@ -68,7 +68,7 @@ speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 thiserror = "1.0.49"
 time = "0.3.29"
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
+tokio = { version = "1.33.0", features = ["macros", "rt"] }
 toml = { version = "0.8.2", default-features = false, features = ["parse"] }
 tracing = "0.1.37"
 typed-builder = "0.16.2"

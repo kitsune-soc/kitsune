@@ -31,4 +31,4 @@ tower-http = { version = "0.4.4", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
+tokio = { version = "1.33.0", features = ["macros", "rt"] }

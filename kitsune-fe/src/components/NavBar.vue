@@ -13,9 +13,9 @@
 
       <div class="nav-bar-element">
         <font-awesome-icon
-          @click="showPostModal = true"
           class="icon create-status"
           icon="fa-pen-to-square fa-solid"
+          @click="showPostModal = true"
         />
       </div>
     </div>
@@ -69,18 +69,18 @@
   @use '../styles/mixins' as *;
 
   .nav-bar {
+    display: flex;
     position: fixed;
     top: 0;
-    left: 0;
     right: 0;
-    background-color: $dark2;
-    padding: 0 25px;
-    padding-top: 5px;
-    margin-bottom: 100px;
-    display: flex;
+    left: 0;
     justify-content: space-between;
     align-items: center;
     z-index: 999;
+    margin-bottom: 100px;
+    background-color: $dark2;
+    padding: 0 25px;
+    padding-top: 5px;
 
     @include only-on-mobile {
       padding: 0;
@@ -100,14 +100,14 @@
       gap: 10px;
 
       .create-status {
-        height: 25px;
         cursor: pointer;
+        height: 25px;
       }
 
       .profile-menu-button {
-        border-radius: 4px;
         display: flex;
         align-items: center;
+        border-radius: 4px;
 
         img {
           height: 30px;

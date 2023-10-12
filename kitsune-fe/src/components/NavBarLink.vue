@@ -28,14 +28,14 @@
 
   .nav-bar-link {
     display: inline-block;
-    padding: 15px;
-    color: $shade1dark;
 
     cursor: pointer;
-    user-select: none;
 
     border-bottom: 4px solid;
     border-color: transparent;
+    padding: 15px;
+    color: $shade1dark;
+    user-select: none;
 
     &:hover {
       color: white;
@@ -56,9 +56,9 @@
     }
 
     &.router-link-active {
-      color: $shade2light;
-      border-image-slice: 1;
       border-image-source: linear-gradient(to left, $shade2light, $shade2dark);
+      border-image-slice: 1;
+      color: $shade2light;
     }
   }
 </style>

@@ -3,7 +3,10 @@
   "importOrder": ["^\\w", "^[./|~/]"],
   "importOrderSeparation": true,
   "importOrderParserPlugins": ["typescript"],
-  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-css-order"
+  ],
   "semi": true,
   "singleQuote": true,
   "vueIndentScriptAndStyle": true

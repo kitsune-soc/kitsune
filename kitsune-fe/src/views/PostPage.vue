@@ -23,7 +23,7 @@
 
 <style lang="scss" scoped>
   .post-view {
-    max-width: 100ch;
     margin: auto;
+    max-width: 100ch;
   }
 </style>

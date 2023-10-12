@@ -77,7 +77,7 @@
   @use '../styles/colours' as *;
 
   #mcaptcha__widget-container {
-    height: 80px;
     border: 1px solid $shade1dark;
+    height: 80px;
   }
 </style>

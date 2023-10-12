@@ -1,5 +1,9 @@
 export default {
   messages: {
+    mainPage: {
+      whoAuthored: 'who broadcasted',
+      aboutInstance: "Deets 'bout this megacorp",
+    },
     newPost: {
       title: 'New Transmission',
     },
@@ -10,5 +14,10 @@ export default {
     timeline: {
       title: 'Incoming Transmissions',
     },
+  },
+  stats: {
+    instance: 'megacorp | megacorps',
+    post: 'transmission | transmissions',
+    user: 'choom | chooms',
   },
 };

@@ -1,20 +1,20 @@
 <template>
   <BaseModal
     :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
     :title="$t('messages.newPost.title')"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <BubbleMenu v-if="editor" :editor="editor" :tippy-options="tippyOptions">
       <button
-        @click="editor.chain().focus().toggleBold().run()"
         :class="{ 'is-active': editor.isActive('bold') }"
+        @click="editor.chain().focus().toggleBold().run()"
       >
         Bold
       </button>
 
       <button
-        @click="editor.chain().focus().toggleCodeBlock().run()"
         :class="{ 'is-active': editor.isActive('codeBlock') }"
+        @click="editor.chain().focus().toggleCodeBlock().run()"
       >
         Code block
       </button>
@@ -70,6 +70,9 @@
   import { useInstanceInfo } from '../../graphql/instance-info';
   import BaseModal from './BaseModal.vue';
 
+  defineEmits<{
+    (event: 'update:modelValue', modelValue: boolean): void;
+  }>();
   defineProps<{
     modelValue: boolean;
   }>();
@@ -90,13 +93,13 @@
 
 <style lang="scss" scoped>
   .editor {
-    width: 500px;
-    max-width: 90vw;
-    height: fit-content;
+    margin-bottom: 1em;
     border: 1px solid white;
 
     padding: 0 1em;
-    margin-bottom: 1em;
+    width: 500px;
+    max-width: 90vw;
+    height: fit-content;
   }
 
   .controls {

@@ -30,7 +30,11 @@
     <span class="post-content" v-html="content" />
 
     <div class="post-attachments">
-      <div v-for="attachment in attachments" :title="attachment.description!">
+      <div
+        v-for="attachment in attachments"
+        :key="attachment.url"
+        :title="attachment.description!"
+      >
         <audio
           v-if="attachment.contentType.startsWith('audio')"
           :src="attachment.url"
@@ -94,17 +98,17 @@
   .post {
     border: 1px solid white;
     border-radius: 3px;
-    padding: 1em;
 
     background-color: $dark2;
+    padding: 1em;
 
     & .account-info {
       display: flex;
       align-items: center;
       gap: 0.5em;
-      line-height: 100%;
 
       width: fit-content;
+      line-height: 100%;
 
       &-profile-picture {
         width: 3em;

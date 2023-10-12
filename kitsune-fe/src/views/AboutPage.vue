@@ -30,8 +30,8 @@
   }
 
   .about-page {
-    max-width: 80ch;
     margin: auto;
+    max-width: 80ch;
 
     & .title {
       text-align: center;

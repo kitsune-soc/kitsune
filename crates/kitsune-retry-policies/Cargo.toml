@@ -9,4 +9,4 @@ futures-retry-policies = { version = "0.3.1", features = [
     "tokio",
     "tracing",
 ] }
-retry-policies = "0.2.0"
+retry-policies = "0.2.1"

@@ -1,11 +1,11 @@
 <template>
-  <fieldset class="timeline" ref="scroller">
+  <fieldset ref="scroller" class="timeline">
     <legend class="timeline-legend">
       {{ $t('messages.timeline.title') }}
     </legend>
     <DynamicScroller class="scroller" :items="posts" :min-item-size="50">
       <template
-        v-slot="{
+        #default="{
           item,
           index,
           active,
@@ -62,9 +62,9 @@
   .timeline {
     margin: auto;
     border-color: grey;
+    max-width: 100ch;
 
     max-height: 82vh;
-    max-width: 100ch;
     overflow-y: scroll;
 
     &-legend {
