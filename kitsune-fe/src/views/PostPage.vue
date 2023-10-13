@@ -18,7 +18,7 @@
   import { getPostById } from '../graphql/post';
 
   const route = useRoute();
-  const postData = getPostById(<string>route.params.id);
+  const postData = getPostById(route.params.id as string);
 </script>
 
 <style lang="scss" scoped>

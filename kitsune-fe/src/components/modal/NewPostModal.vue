@@ -87,6 +87,8 @@
     if (instanceData.value) {
       const markdownText = editor.value?.storage.markdown.getMarkdown();
       return instanceData.value.characterLimit - markdownText.length;
+    } else {
+      return 0;
     }
   });
 </script>
