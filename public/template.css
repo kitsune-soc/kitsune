@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap");
-
 :root {
   --dark1: #0f1026;
   --dark2: #051c30;
@@ -11,7 +9,7 @@
 }
 
 * {
-  font-family: Play;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 a {
