@@ -21,7 +21,6 @@ mod graphql;
 mod handler;
 mod middleware;
 mod openapi;
-mod page;
 #[cfg(feature = "mastodon-api")]
 mod pagination;
 mod responder;
