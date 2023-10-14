@@ -15,7 +15,6 @@ use tower_http::{
 };
 use utoipa_swagger_ui::SwaggerUi;
 
-mod cond;
 #[cfg(feature = "graphql-api")]
 mod graphql;
 mod handler;
