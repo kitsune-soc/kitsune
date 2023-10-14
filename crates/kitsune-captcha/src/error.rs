@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use strum_macros::{Display, EnumString};
+use strum::{Display, EnumString};
 use thiserror::Error;
 
 #[derive(Debug, PartialEq, Display, Serialize, Deserialize, EnumString, Error)]
