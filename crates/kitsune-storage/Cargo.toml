@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 async-trait = "0.1.73"
-aws-sdk-s3 = "0.31.2"
+aws-sdk-s3 = "0.33.0"
 aws-smithy-http = "0.56.1"
 bytes = "1.5.0"
 enum_dispatch = "0.3.12"
@@ -14,7 +14,7 @@ http = "0.2.9"
 http-body = "0.4.5"
 pin-project-lite = "0.2.13"
 sync_wrapper = "0.1.2"
-tokio = { version = "1.32.0", features = ["fs", "io-util"] }
+tokio = { version = "1.33.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.9", features = ["io"] }
 
 [dev-dependencies]
@@ -22,4 +22,4 @@ aws-credential-types = { version = "0.56.1", features = [
     "hardcoded-credentials",
 ] }
 tempfile = "3.8.0"
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
+tokio = { version = "1.33.0", features = ["macros", "rt"] }

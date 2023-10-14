@@ -19,8 +19,8 @@ hyper-rustls = { version = "0.24.1", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-type = { path = "../kitsune-type" }
 pin-project-lite = "0.2.13"
-serde = "1.0.188"
-simd-json = "0.11.1"
+serde = "1.0.189"
+simd-json = "0.12.0"
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.4", features = [
     "decompression-full",
@@ -30,4 +30,4 @@ tower-http = { version = "0.4.4", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.32.0", features = ["macros", "rt"] }
+tokio = { version = "1.33.0", features = ["macros", "rt"] }
