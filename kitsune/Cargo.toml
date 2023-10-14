@@ -7,7 +7,7 @@ homepage = "https://joinkitsune.org"
 build = "build.rs"
 
 [dependencies]
-athena = { version = "0.0.1-pre.3", path = "../lib/athena" }
+athena = { path = "../lib/athena" }
 argon2 = { version = "0.5.2", features = ["std"] }
 askama = { version = "0.12.1", features = [
     "with-axum",
@@ -48,7 +48,7 @@ kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
-kitsune-language = { path = "../crates/kitsune-language", default-features = false }
+kitsune-language = { path = "../crates/kitsune-language" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
