@@ -5,7 +5,7 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-diesel = { version = "2.1.2", features = ["uuid"] }
+diesel = { version = "2.1.3", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = [
     "async-connection-wrapper",
     "deadpool",
@@ -17,12 +17,12 @@ diesel_migrations = "2.1.0"
 iso8601-timestamp = { version = "0.2.12", features = ["diesel-pg"] }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
-num-derive = "0.4.0"
-num-traits = "0.2.16"
-serde = { version = "1.0.188", features = ["derive"] }
-simd-json = "0.11.1"
+num-derive = "0.4.1"
+num-traits = "0.2.17"
+serde = { version = "1.0.189", features = ["derive"] }
+simd-json = "0.12.0"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.49"
-tokio = { version = "1.32.0", features = ["rt"] }
+tokio = { version = "1.33.0", features = ["rt"] }
 tracing-log = "0.1.3"
 typed-builder = "0.16.2"
