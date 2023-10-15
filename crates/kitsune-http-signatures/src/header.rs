@@ -3,6 +3,7 @@ use derive_builder::Builder;
 use http::{header::DATE, request::Parts};
 use std::{
     cmp::min,
+    fmt::Write,
     time::{Duration, SystemTime, SystemTimeError},
 };
 use time::{format_description::well_known::Rfc2822, OffsetDateTime};
@@ -130,19 +131,23 @@ impl TryFrom<SignatureHeader<'_>> for String {
         );
 
         if let Some(algorithm) = value.algorithm {
-            signature_header.push_str(",algorithm=\"");
-            signature_header.push_str(algorithm);
-            signature_header.push('"');
+            let _ = write!(signature_header, ",algorithm=\"{algorithm}\"");
         }
 
         if let Some(created) = value.created {
-            signature_header.push_str(",created=");
-            signature_header.push_str(&created.to_unix_timestamp()?.to_string());
+            let _ = write!(
+                signature_header,
+                ",created={}",
+                created.to_unix_timestamp()?
+            );
         }
 
         if let Some(expires) = value.expires {
-            signature_header.push_str(",expires=");
-            signature_header.push_str(&expires.to_unix_timestamp()?.to_string());
+            let _ = write!(
+                signature_header,
+                ",expires={}",
+                expires.to_unix_timestamp()?
+            );
         }
 
         Ok(signature_header)
