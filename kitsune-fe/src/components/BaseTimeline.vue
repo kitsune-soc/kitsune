@@ -19,7 +19,7 @@
           class="post-container"
           :item="item"
           :active="active"
-          :size-dependencies="[item.subject, item.content]"
+          :size-dependencies="[item.subject, item.content, item.attachments]"
           :data-index="index"
         >
           <Post
@@ -46,16 +46,17 @@
 
   import Post, { Post as PostType } from './Post.vue';
 
-  defineProps<{ posts: PostType[] }>();
+  const props = defineProps<{
+    posts: PostType[];
+    loadMore: () => Promise<void>;
+  }>();
 
   const scroller = ref<HTMLElement>();
-  useInfiniteScroll(
-    scroller,
-    async () => {
-      console.log('hmm');
-    },
-    { distance: 3 },
-  );
+  useInfiniteScroll(scroller, async () => {
+    if (props.posts.length !== 0) {
+      await props.loadMore();
+    }
+  });
 </script>
 
 <style lang="scss" scoped>
