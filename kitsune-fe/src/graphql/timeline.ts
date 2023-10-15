@@ -37,7 +37,7 @@ function getHome(after: Ref<string>) {
       }
     `),
     variables: {
-      after: after as unknown as string,
+      after: after as unknown as string, // Weird cast to allow reactivity
     },
   });
 

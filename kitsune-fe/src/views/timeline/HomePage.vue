@@ -15,9 +15,7 @@
 
   const homeTimelineQuery = getHome(lastPostId);
   watch(homeTimelineQuery, (newTimelineQuery) => {
-    (newTimelineQuery?.homeTimeline.nodes ?? []).forEach((post) =>
-      posts.value.push(post),
-    );
+    posts.value = newTimelineQuery?.homeTimeline.nodes ?? [];
   });
 
   async function loadMore(): Promise<void> {

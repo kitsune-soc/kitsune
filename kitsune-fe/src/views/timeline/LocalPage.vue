@@ -15,9 +15,7 @@
 
   const localTimelineQuery = getPublic(lastPostId, true);
   watch(localTimelineQuery, (newTimelineQuery) => {
-    (newTimelineQuery?.publicTimeline.nodes ?? []).forEach((post) =>
-      posts.value.push(post),
-    );
+    posts.value = newTimelineQuery?.publicTimeline.nodes ?? [];
   });
 
   async function loadMore(): Promise<void> {
