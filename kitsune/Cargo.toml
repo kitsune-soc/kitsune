@@ -13,7 +13,7 @@ askama = { version = "0.12.1", features = [
     "with-axum",
 ], default-features = false }
 askama_axum = "0.3.0"
-async-trait = "0.1.73"
+async-trait = "0.1.74"
 axum = { version = "0.6.20", features = ["headers", "macros", "multipart"] }
 axum-extra = { version = "0.8.0", features = [
     "cookie",
