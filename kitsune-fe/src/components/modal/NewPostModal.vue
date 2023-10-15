@@ -42,14 +42,14 @@
       </button>
     </FloatingMenu>
 
-    <EditorContent class="editor" :editor="editor" />
+    <EditorContent :editor="editor" />
 
-    <div class="controls">
-      <div class="controls-modifiers">lmao</div>
+    <div class="post-modal-controls">
+      <div class="post-modal-controls-modifiers">lmao</div>
 
-      <div class="controls-post">
+      <div class="post-modal-controls-post">
         {{ remainingCharacters }}
-        <button class="controls-post-button">Post!</button>
+        <button class="post-modal-controls-post-button">Post!</button>
       </div>
     </div>
   </BaseModal>
@@ -79,6 +79,11 @@
 
   const editor = useEditor({
     extensions: [Markdown, StarterKit],
+    editorProps: {
+      attributes: {
+        class: 'post-modal-editor',
+      },
+    },
   });
   const tippyOptions = reactive({ duration: 200 });
 
@@ -93,19 +98,26 @@
   });
 </script>
 
-<style lang="scss" scoped>
-  .editor {
-    margin-bottom: 1em;
-    border: 1px solid white;
+<style lang="scss">
+  .post-modal {
+    &-editor {
+      margin-bottom: 1em;
+      border: 1px solid white;
 
-    padding: 0 1em;
-    width: 500px;
-    max-width: 90vw;
-    height: fit-content;
-  }
+      padding: 0 1em;
+      width: 700px;
+      max-width: 90vw;
+      height: fit-content;
+      min-height: 250px;
 
-  .controls {
-    display: flex;
-    justify-content: space-between;
+      &:focus {
+        outline: none;
+      }
+    }
+
+    &-controls {
+      display: flex;
+      justify-content: space-between;
+    }
   }
 </style>

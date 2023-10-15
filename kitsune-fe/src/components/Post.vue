@@ -38,6 +38,7 @@
         <audio
           v-if="attachment.contentType.startsWith('audio')"
           :src="attachment.url"
+          controls
         />
 
         <video
