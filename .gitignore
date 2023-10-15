@@ -1,4 +1,6 @@
+# Rust target directories
 target
+target-analyzer
 
 # Redis dump
 /dump.rdb
