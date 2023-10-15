@@ -5,5 +5,11 @@
     "rust-analyzer.showUnlinkedFileNotification": false,
     "rust-analyzer.cargo.features": [
         "oidc"
-    ]
+    ],
+    "rust-analyzer.check.extraArgs": [
+        "--target-dir=target-analyzer"
+    ],
+    "rust-analyzer.server.extraEnv": {
+        "CARGO_TARGET_DIR": "target-analyzer"
+    }
 }
