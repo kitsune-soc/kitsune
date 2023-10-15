@@ -5,21 +5,16 @@ edition.workspace = true
 
 [dependencies]
 async-trait = "0.1.73"
-aws-sdk-s3 = "0.33.0"
-aws-smithy-http = "0.56.1"
 bytes = "1.5.0"
 enum_dispatch = "0.3.12"
 futures-util = "0.3.28"
 http = "0.2.9"
-http-body = "0.4.5"
-pin-project-lite = "0.2.13"
-sync_wrapper = "0.1.2"
+hyper = { version = "0.14.27", features = ["stream"] }
+kitsune-http-client = { path = "../kitsune-http-client" }
+rusty-s3 = { version = "0.5.0", default-features = false }
 tokio = { version = "1.33.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.9", features = ["io"] }
 
 [dev-dependencies]
-aws-credential-types = { version = "0.56.1", features = [
-    "hardcoded-credentials",
-] }
 tempfile = "3.8.0"
 tokio = { version = "1.33.0", features = ["macros", "rt"] }
