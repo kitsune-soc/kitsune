@@ -3,6 +3,7 @@ use super::{
     job::{Enqueue, JobService},
     notification::NotificationService,
     url::UrlService,
+    LimitContext,
 };
 use crate::{
     error::{ApiError, Error, Result},
@@ -20,8 +21,8 @@ use crate::{
 };
 use async_stream::try_stream;
 use diesel::{
-    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, OptionalExtension, QueryDsl,
-    SelectableHelper,
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
+    QueryDsl, SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
@@ -29,6 +30,7 @@ use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
+        account::Account,
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
@@ -251,6 +253,44 @@ pub struct UnrepostPost {
 
     /// ID of the post that is supposed to be unreposted
     post_id: Uuid,
+}
+
+#[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(LimitContext as ctx))]
+pub struct GetAccountsInteractingWithPost {
+    /// ID of the account whose posts are getting fetched
+    #[garde(skip)]
+    post_id: Uuid,
+
+    /// ID of the account that is requesting the posts
+    #[builder(default)]
+    #[garde(skip)]
+    fetching_account_id: Option<Uuid>,
+
+    /// Limit of returned posts
+    #[garde(range(max = ctx.limit))]
+    limit: usize,
+
+    /// Smallest ID, return results starting from this ID
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    #[garde(skip)]
+    min_id: Option<Uuid>,
+
+    /// Smallest ID, return highest results
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    #[garde(skip)]
+    since_id: Option<Uuid>,
+
+    /// Largest ID
+    ///
+    /// Used for pagination
+    #[builder(default)]
+    #[garde(skip)]
+    max_id: Option<Uuid>,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -899,6 +939,99 @@ impl PostService {
         }
 
         Ok(post)
+    }
+
+    /// Get accounts that favourited a post
+    ///
+    /// Does checks whether the user has access to the post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
+    pub async fn favourited_by(
+        &self,
+        get_favourites: GetAccountsInteractingWithPost,
+    ) -> Result<impl Stream<Item = Result<Account>> + '_> {
+        get_favourites.validate(&LimitContext::default())?;
+
+        let mut query = posts_favourites::table
+            .inner_join(accounts::table.on(posts_favourites::account_id.eq(accounts::id)))
+            .filter(posts_favourites::post_id.eq(get_favourites.post_id))
+            .select(Account::as_select())
+            .order(accounts::id.desc())
+            .limit(get_favourites.limit as i64)
+            .into_boxed();
+
+        if let Some(max_id) = get_favourites.max_id {
+            query = query.filter(posts_favourites::id.lt(max_id));
+        }
+        if let Some(since_id) = get_favourites.since_id {
+            query = query.filter(posts_favourites::id.gt(since_id));
+        }
+        if let Some(min_id) = get_favourites.min_id {
+            query = query
+                .filter(posts_favourites::id.gt(min_id))
+                .order(posts_favourites::id.asc());
+        }
+
+        self.db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+                }
+                .scoped()
+            })
+            .await
+            .map_err(Error::from)
+    }
+
+    /// Get accounts that reblogged a post
+    ///
+    /// Does checks whether the user has access to the post
+    ///
+    /// # Panics
+    ///
+    /// This should never panic. If it does, please open an issue.
+    pub async fn reblogged_by(
+        &self,
+        get_reblogs: GetAccountsInteractingWithPost,
+    ) -> Result<impl Stream<Item = Result<Account>> + '_> {
+        get_reblogs.validate(&LimitContext::default())?;
+
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(get_reblogs.fetching_account_id)
+            .build();
+
+        let mut query = posts::table
+            .add_post_permission_check(permission_check)
+            .filter(posts::reposted_post_id.eq(get_reblogs.post_id))
+            .into_boxed();
+
+        if let Some(max_id) = get_reblogs.max_id {
+            query = query.filter(posts::id.lt(max_id));
+        }
+        if let Some(since_id) = get_reblogs.since_id {
+            query = query.filter(posts::id.gt(since_id));
+        }
+        if let Some(min_id) = get_reblogs.min_id {
+            query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
+        }
+
+        let query = query
+            .inner_join(accounts::table.on(accounts::id.eq(posts::account_id)))
+            .select(Account::as_select())
+            .order(accounts::id.desc())
+            .limit(get_reblogs.limit as i64);
+
+        self.db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+                }
+                .scoped()
+            })
+            .await
+            .map_err(Error::from)
     }
 
     /// Get a post by its ID

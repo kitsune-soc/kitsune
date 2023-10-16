@@ -22,7 +22,7 @@ pub async fn json_to_urlencoded(req: Request<Body>, next: Next<Body>) -> Respons
     };
     let (parts, body) = req.into_parts();
 
-    let json_value = match hyper::body::to_bytes(body)
+    let json_value = match hyper::body::aggregate(body)
         .await
         .map(|bytes| simd_json::from_reader::<_, OwnedValue>(bytes.reader()))
     {

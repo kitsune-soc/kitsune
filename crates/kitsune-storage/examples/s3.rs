@@ -1,8 +1,7 @@
-use aws_credential_types::Credentials;
-use aws_sdk_s3::{config::Region, Config};
 use bytes::{BufMut, BytesMut};
 use futures_util::{future, stream, StreamExt, TryStreamExt};
 use kitsune_storage::{s3::Storage, StorageBackend};
+use rusty_s3::{Bucket, Credentials, UrlStyle};
 use std::{env, str};
 
 const TEST_DATA: &str = r#"
@@ -65,14 +64,15 @@ async fn main() {
     let endpoint_url = env::var("ENDPOINT_URL").unwrap();
     let region = env::var("REGION").unwrap();
 
-    let credentials = Credentials::from_keys(access_key, secret_access_key, None);
-    let config = Config::builder()
-        .region(Region::new(region))
-        .force_path_style(true)
-        .credentials_provider(credentials)
-        .endpoint_url(endpoint_url)
-        .build();
-    let backend = Storage::new(bucket_name, config);
+    let credentials = Credentials::new(access_key, secret_access_key);
+    let bucket = Bucket::new(
+        endpoint_url.parse().unwrap(),
+        UrlStyle::VirtualHost,
+        bucket_name,
+        region,
+    )
+    .unwrap();
+    let backend = Storage::new(bucket, credentials);
 
     let operation = env::args().nth(1).unwrap();
 

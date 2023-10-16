@@ -43,7 +43,7 @@ use scoped_futures::ScopedFutureExt;
 use serde::{de::DeserializeOwned, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::str::FromStr;
+use std::{fmt::Write, str::FromStr};
 
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {
@@ -103,8 +103,7 @@ impl IntoMastodon for DbAccount {
 
         let mut acct = self.username.clone();
         if !self.local {
-            acct.push('@');
-            acct.push_str(&self.domain);
+            let _ = write!(acct, "@{}", self.domain);
         }
 
         let avatar = if let Some(avatar_id) = self.avatar_id {
