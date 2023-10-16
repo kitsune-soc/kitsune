@@ -55,8 +55,9 @@ pub struct Update {
 #[derive(Builder, Validate)]
 #[builder(pattern = "owned")]
 pub struct Upload<S> {
+    #[builder(default, setter(strip_option))]
     #[garde(skip)]
-    account_id: Uuid,
+    account_id: Option<Uuid>,
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[builder(default, setter(strip_option))]
@@ -224,7 +225,7 @@ impl AttachmentService {
                 diesel::insert_into(media_attachments::table)
                     .values(NewMediaAttachment {
                         id: Uuid::now_v7(),
-                        account_id: upload.account_id,
+                        account_id: Some(upload.account_id),
                         content_type: upload.content_type.as_str(),
                         description: upload.description.as_deref(),
                         blurhash: None,
@@ -319,12 +320,12 @@ mod test {
                 .content_type(String::from("image/jpeg"))
                 .path(String::from("test.jpeg"))
                 .stream(stream::once(future::ok(jpeg.encoder().bytes())))
-                .account_id(account_id).build().unwrap();
+                .account_id(Some(account_id)).build().unwrap();
             attachment_service.upload(upload).await.unwrap();
 
             let attachment = MediaAttachment {
                 id: Uuid::now_v7(),
-                account_id,
+                account_id: Some(account_id),
                 content_type: String::from("image/jpeg"),
                 description: None,
                 blurhash: None,

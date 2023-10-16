@@ -2,7 +2,8 @@ use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
-    schema::{accounts, posts, users},
+    model::custom_emoji::CustomEmoji,
+    schema::{accounts, custom_emojis, posts, users},
     PgPool,
 };
 use scoped_futures::ScopedFutureExt;

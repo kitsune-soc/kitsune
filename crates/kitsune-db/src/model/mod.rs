@@ -1,4 +1,5 @@
 pub mod account;
+pub mod custom_emoji;
 pub mod favourite;
 pub mod follower;
 pub mod job_context;

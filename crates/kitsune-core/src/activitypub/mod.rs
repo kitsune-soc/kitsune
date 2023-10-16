@@ -10,11 +10,12 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::CustomEmoji,
         media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
         mention::NewMention,
         post::{FullPostChangeset, NewPost, Post, PostConflictChangeset, Visibility},
     },
-    schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
+    schema::{custom_emojis, media_attachments, posts, posts_media_attachments, posts_mentions},
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -63,6 +64,103 @@ async fn handle_mentions(
     Ok(())
 }
 
+async fn handle_custom_emojis(
+    db_conn: &mut AsyncPgConnection,
+    author: &Account,
+    post_id: Uuid,
+    mentions: &[Tag],
+) -> Result<()> {
+    let emoji_iter = mentions
+        .iter()
+        .filter(|mention| mention.r#type == TagType::Emoji);
+
+    let emoji_count = emoji_iter.clone().count();
+    if emoji_count == 0 {
+        return Ok(());
+    }
+
+    let attachment_ids: Vec<Uuid> = (0..emoji_count).map(|_| Uuid::now_v7()).collect();
+    let insert_data = emoji_iter
+        .cloned()
+        .zip(attachment_ids.iter().copied())
+        .filter_map(|(emoji, attachment_id)| {
+            let icon = emoji.icon?;
+            let content_type = icon
+                .media_type
+                .as_deref()
+                .or_else(|| mime_guess::from_path(&icon.url).first_raw())?;
+
+            let media_attachment = NewMediaAttachment {
+                id: attachment_id,
+                account_id: Some(author.id),
+                content_type,
+                description: None,
+                blurhash: None,
+                file_path: None,
+                remote_url: Some(icon.url.as_str()),
+            };
+
+            let custom_emoji = CustomEmoji {};
+            Some(NewMediaAttachment {
+                id: attachment_id,
+                account_id: Some(author.id),
+                content_type,
+                description: None,
+                blurhash: None,
+                file_path: None,
+                remote_url: Some(icon.url.as_str()),
+            })
+        })
+        .collect::<Vec<NewMediaAttachment<'_>>>();
+
+    let a = diesel::insert_into(media_attachments::table)
+        .values(
+            emoji_iter
+                .cloned()
+                .zip(attachment_ids.iter().copied())
+                .filter_map(|(emoji, attachment_id)| {
+                    let icon = emoji.icon?;
+                    let content_type = icon
+                        .media_type
+                        .as_deref()
+                        .or_else(|| mime_guess::from_path(&icon.url).first_raw())?;
+
+                    Some(NewMediaAttachment {
+                        id: attachment_id,
+                        account_id: Some(author.id),
+                        content_type,
+                        description: None,
+                        blurhash: None,
+                        file_path: None,
+                        remote_url: Some(icon.url.as_str()),
+                    })
+                })
+                .collect::<Vec<NewMediaAttachment<'_>>>(),
+        )
+        .returning(media_attachments::id)
+        .load(db_conn)
+        .await
+        .map_err(Error::from)?;
+
+    a[0];
+
+    diesel::insert_into(custom_emojis::table)
+        .values(
+            emoji_iter
+                .map(|emoji| NewMention {
+                    post_id,
+                    account_id: author.id,
+                    mention_text: mention.name.as_str(),
+                })
+                .collect::<Vec<NewMention<'_>>>(),
+        )
+        .on_conflict_do_nothing()
+        .execute(db_conn)
+        .await?;
+
+    Ok(())
+}
+
 /// Process a bunch of ActivityPub attachments
 ///
 /// # Returns
@@ -91,7 +189,7 @@ pub async fn process_attachments(
 
                     Some(NewMediaAttachment {
                         id: attachment_id,
-                        account_id: author.id,
+                        account_id: Some(author.id),
                         content_type,
                         description: attachment.name.as_deref(),
                         blurhash: attachment.blurhash.as_deref(),
