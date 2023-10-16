@@ -1,4 +1,4 @@
-use crate::http::handler::{nodeinfo, oauth, well_known};
+use crate::http::handler::{nodeinfo, well_known};
 use kitsune_type::{
     mastodon as mastodon_type, nodeinfo as nodeinfo_type, webfinger as webfinger_type,
 };
@@ -77,7 +77,6 @@ struct TimestampPolyfill(String);
     modifiers(&SecurityAddon),
     paths(
         nodeinfo::two_one::get,
-        oauth::token::post,
         well_known::nodeinfo::get,
         well_known::webfinger::get,
     ),
