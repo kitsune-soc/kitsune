@@ -1,4 +1,4 @@
-use crate::http::handler::{nodeinfo, oauth, well_known};
+use crate::http::handler::{nodeinfo, well_known};
 use kitsune_type::{
     mastodon as mastodon_type, nodeinfo as nodeinfo_type, webfinger as webfinger_type,
 };
