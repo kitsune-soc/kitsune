@@ -77,7 +77,6 @@ struct TimestampPolyfill(String);
     modifiers(&SecurityAddon),
     paths(
         nodeinfo::two_one::get,
-        oauth::token::post,
         well_known::nodeinfo::get,
         well_known::webfinger::get,
     ),
