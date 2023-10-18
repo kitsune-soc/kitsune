@@ -8,7 +8,6 @@
 #![deny(missing_docs)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
-use derive_builder::Builder;
 use http::{
     header::{HeaderName, InvalidHeaderName},
     request::Parts,
@@ -24,6 +23,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::sync::oneshot;
+use typed_builder::TypedBuilder;
 
 pub use crate::error::Error;
 pub use ring;
@@ -109,8 +109,7 @@ impl SigningKey for RsaKeyPair {
 /// Cryptographic key
 ///
 /// Depending on the context its used in, it either represents a private or a public key
-#[derive(Builder, Clone)]
-#[builder(pattern = "owned")]
+#[derive(Clone, TypedBuilder)]
 pub struct PrivateKey<'a, K>
 where
     K: SigningKey,
@@ -120,16 +119,6 @@ where
 
     /// Signing key
     key: K,
-}
-
-impl<'a, K> PrivateKey<'a, K>
-where
-    K: SigningKey,
-{
-    /// Return a builder of the private key
-    pub fn builder() -> PrivateKeyBuilder<'a, K> {
-        PrivateKeyBuilder::default()
-    }
 }
 
 struct SignatureString<'a> {
@@ -204,7 +193,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 }
 
 /// HTTP signer
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct HttpSigner {
     /// Include the creation timestamp into the signing header
     #[builder(default)]
@@ -216,11 +205,6 @@ pub struct HttpSigner {
 }
 
 impl HttpSigner {
-    /// Return a builder for the HTTP signer
-    pub fn builder() -> HttpSignerBuilder {
-        HttpSignerBuilder::default()
-    }
-
     /// Sign an HTTP request
     pub async fn sign<K>(
         &self,
@@ -272,18 +256,18 @@ impl HttpSigner {
 
 impl Default for HttpSigner {
     fn default() -> Self {
-        Self::builder().build().unwrap()
+        Self::builder().build()
     }
 }
 
 /// HTTP verifier
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct HttpVerifier {
     /// Check whether the signature is expired
     ///
     /// This just does a basic check if the `(expires)` header exists.
     /// If you want a more aggressive check, use `enforce_expiration`
-    #[builder(default = "true")]
+    #[builder(default = true)]
     check_expiration: bool,
 
     /// Enforce the signature not being older than this specified duration
@@ -292,16 +276,11 @@ pub struct HttpVerifier {
     /// - If the signature contains an `(expires)` header, we enforce the shorter one
     ///
     /// Defaults to 5 minutes
-    #[builder(default = "Some(Duration::from_secs(5 * 60))")]
+    #[builder(default = Some(Duration::from_secs(5 * 60)))]
     enforce_expiration: Option<Duration>,
 }
 
 impl HttpVerifier {
-    /// Return a builder for the HTTP verifier
-    pub fn builder() -> HttpVerifierBuilder {
-        HttpVerifierBuilder::default()
-    }
-
     /// Verify an HTTP signature
     ///
     /// `key_fn` is a function that obtains a public key (in its DER representation) based in its key ID
@@ -359,6 +338,6 @@ impl HttpVerifier {
 
 impl Default for HttpVerifier {
     fn default() -> Self {
-        Self::builder().build().unwrap()
+        Self::builder().build()
     }
 }

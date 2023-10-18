@@ -61,8 +61,7 @@ impl Deliverer {
         let private_key = PrivateKey::builder()
             .key_id(&account.public_key_id)
             .key(RsaKeyPair::from_pkcs8(pkcs8_document.as_bytes())?)
-            .build()
-            .unwrap();
+            .build();
 
         let response = self.client.execute_signed(request, private_key).await?;
         debug!(status_code = %response.status(), "successfully executed http request");
