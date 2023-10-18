@@ -287,7 +287,6 @@ impl Client {
             .include_creation_timestamp(true)
             .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds
             .build()
-            .unwrap()
             .sign(
                 &parts,
                 vec![

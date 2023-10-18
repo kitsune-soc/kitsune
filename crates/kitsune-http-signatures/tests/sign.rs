@@ -14,11 +14,10 @@ async fn sign_some() {
     let private_key = PrivateKey::builder()
         .key_id("Test")
         .key(private_key)
-        .build()
-        .unwrap();
+        .build();
 
     let mut parts = get_parts();
-    let signer = HttpSigner::builder().build().unwrap();
+    let signer = HttpSigner::default();
     let (name, value) = signer
         .sign(
             &parts,
@@ -39,10 +38,7 @@ async fn sign_some() {
 
     parts.headers.insert(name, value);
 
-    let verifier = HttpVerifier::builder()
-        .enforce_expiration(None)
-        .build()
-        .unwrap();
+    let verifier = HttpVerifier::builder().enforce_expiration(None).build();
     verifier
         .verify(&parts, |key_id| async move {
             assert_eq!(key_id, "Test");

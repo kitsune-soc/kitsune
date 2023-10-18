@@ -16,10 +16,7 @@ async fn all_headers() {
         ),
     );
     let public_key = self::data::get_public_key();
-    let signer = HttpVerifier::builder()
-        .check_expiration(false)
-        .build()
-        .unwrap();
+    let signer = HttpVerifier::builder().check_expiration(false).build();
 
     signer
         .verify(&parts, move |key_id| async move {

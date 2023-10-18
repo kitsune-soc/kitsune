@@ -42,3 +42,4 @@ version = "0.0.1-pre.3"
 
 [patch.crates-io]
 redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }
+typed-builder = { git = "https://github.com/idanarye/rust-typed-builder.git", rev = "fd1bd8336aeb0dc334060635e2a6a1d8dc329e3c" }
