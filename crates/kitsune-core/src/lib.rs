@@ -94,7 +94,6 @@ where
                 .redis_conn(pool.clone())
                 .ttl(Duration::from_secs(60)) // TODO: Parameterise this
                 .build()
-                .expect("[Bug] Failed to build the Redis cache")
                 .into()
         }
     };

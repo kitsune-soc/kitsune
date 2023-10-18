@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 ahash = "0.8.3"
-async-trait = "0.1.73"
+async-trait = "0.1.74"
 futures-util = "0.3.28"
 kitsune-retry-policies = { path = "../kitsune-retry-policies" }
 pin-project-lite = "0.2.13"
