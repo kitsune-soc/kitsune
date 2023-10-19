@@ -23,7 +23,11 @@ serde = "1.0.189"
 simd-json = "0.12.0"
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.4", features = [
-    "decompression-full",
+    #"decompression-full",
+    "decompression-br",
+    "decompression-deflate",
+    "decompression-gzip",
+
     "follow-redirect",
     "map-response-body",
     "timeout",
