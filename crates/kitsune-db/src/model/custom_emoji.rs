@@ -8,8 +8,9 @@ use crate::schema::custom_emojis;
 #[diesel(table_name = custom_emojis)]
 pub struct CustomEmoji {
     pub id: Uuid,
-    pub remote_id: Option<String>,
     pub shortcode: String,
+    pub domain: Option<String>,
+    pub remote_id: Option<String>,
     pub media_attachment_id: Uuid,
-    pub category: Option<String>,
+    pub global: bool,
 }

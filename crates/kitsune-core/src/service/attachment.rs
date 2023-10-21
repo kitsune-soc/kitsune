@@ -225,8 +225,8 @@ impl AttachmentService {
                 diesel::insert_into(media_attachments::table)
                     .values(NewMediaAttachment {
                         id: Uuid::now_v7(),
-                        account_id: Some(upload.account_id),
                         content_type: upload.content_type.as_str(),
+                        account_id: upload.account_id,
                         description: upload.description.as_deref(),
                         blurhash: None,
                         file_path: Some(upload.path.as_str()),
@@ -320,7 +320,7 @@ mod test {
                 .content_type(String::from("image/jpeg"))
                 .path(String::from("test.jpeg"))
                 .stream(stream::once(future::ok(jpeg.encoder().bytes())))
-                .account_id(Some(account_id)).build().unwrap();
+                .account_id(account_id).build().unwrap();
             attachment_service.upload(upload).await.unwrap();
 
             let attachment = MediaAttachment {

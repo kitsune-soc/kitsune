@@ -210,6 +210,7 @@ pub enum TagType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Tag {
+    pub id: Option<String>,
     pub r#type: TagType,
     pub name: String,
     pub href: Option<String>,

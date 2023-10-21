@@ -131,6 +131,7 @@ impl IntoObject for Post {
         for (mention, mentioned) in mentions {
             to.push(mentioned.url.clone());
             tag.push(Tag {
+                id: None,
                 r#type: TagType::Mention,
                 name: mention.mention_text,
                 href: Some(mentioned.url),

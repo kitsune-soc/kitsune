@@ -1,8 +1,9 @@
 use crate::{
     consts::MAX_EMOJI_SHORTCODE_LENGTH,
-    error::{Error, Result},
+    error::{BoxError, Error, Result},
 };
 
+use bytes::Bytes;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
@@ -34,7 +35,7 @@ pub struct EmojiUpload<S> {
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[garde(length(max = MAX_EMOJI_SHORTCODE_LENGTH))]
-    shortcode: Option<String>,
+    shortcode: String,
     #[garde(skip)]
     stream: S,
 }
@@ -53,16 +54,44 @@ impl CustomEmojiService {
             .into_boxed();
         self.db_pool
             .with_connection(|db_conn| {
-                async move {
+                async move { 
                     Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
                 }.scoped()
             })
-            .await
-            .map_err(Error::from)
+            .await.map_err(Error::from)
     }
 
-    pub async fn add_emoji<S>(&self, upload: EmojiUpload<S>) -> Result<CustomEmoji> {
-        upload.validate(&())?;
-        Upload::builder().self.attachment_service.upload()
+    pub async fn add_emoji<S>(&self, emoji_upload: EmojiUpload<S>) -> Result<CustomEmoji>
+    where
+        S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
+    {
+        emoji_upload.validate(&())?;
+
+        let attachment_upload = Upload::builder()
+            .content_type(emoji_upload.content_type)
+            .stream(emoji_upload.stream)
+            .build()
+            .unwrap();
+
+        let attachment = self.attachment_service.upload(attachment_upload).await?;
+
+        let custom_emoji = self
+            .db_pool
+            .with_connection(|db_conn| {
+                diesel::insert_into(custom_emojis::table)
+                    .values(CustomEmoji {
+                        id: Uuid::now_v7(),
+                        remote_id: None,
+                        shortcode: emoji_upload.shortcode,
+                        domain: None,
+                        media_attachment_id: attachment.id,
+                        global: false,
+                    })
+                    .get_result(db_conn)
+                    .scoped()
+            })
+            .await?;
+
+        Ok(custom_emoji)
     }
 }

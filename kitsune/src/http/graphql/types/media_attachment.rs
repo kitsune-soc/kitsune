@@ -44,7 +44,7 @@ impl From<DbMediaAttachment> for MediaAttachment {
     fn from(value: DbMediaAttachment) -> Self {
         Self {
             id: value.id,
-            account_id: value.account_id,
+            account_id: value.account_id.unwrap(),
             content_type: value.content_type,
             description: value.description,
             blurhash: value.blurhash,

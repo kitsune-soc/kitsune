@@ -1,6 +1,7 @@
 use crate::{
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
+    try_join,
     util::timestamp_to_uuid,
 };
 use diesel::{ExpressionMethods, SelectableHelper};
@@ -27,6 +28,7 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::borrow::Cow;
 use typed_builder::TypedBuilder;
+use url::{Host, Url};
 
 pub mod deliverer;
 pub mod fetcher;
@@ -64,15 +66,8 @@ async fn handle_mentions(
     Ok(())
 }
 
-async fn handle_custom_emojis(
-    db_conn: &mut AsyncPgConnection,
-    author: &Account,
-    post_id: Uuid,
-    mentions: &[Tag],
-) -> Result<()> {
-    let emoji_iter = mentions
-        .iter()
-        .filter(|mention| mention.r#type == TagType::Emoji);
+async fn handle_custom_emojis(db_conn: &mut AsyncPgConnection, tags: &[Tag]) -> Result<()> {
+    let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
 
     let emoji_count = emoji_iter.clone().count();
     if emoji_count == 0 {
@@ -80,83 +75,67 @@ async fn handle_custom_emojis(
     }
 
     let attachment_ids: Vec<Uuid> = (0..emoji_count).map(|_| Uuid::now_v7()).collect();
-    let insert_data = emoji_iter
-        .cloned()
-        .zip(attachment_ids.iter().copied())
-        .filter_map(|(emoji, attachment_id)| {
-            let icon = emoji.icon?;
-            let content_type = icon
-                .media_type
-                .as_deref()
-                .or_else(|| mime_guess::from_path(&icon.url).first_raw())?;
+    let entities =
+        emoji_iter
+            .zip(attachment_ids.iter().copied())
+            .filter_map(|(emoji, attachment_id)| {
+                if let (Some(icon), Some(remote_id)) = (&emoji.icon, &emoji.id) {
+                    let emoji_name = emoji.name.clone();
+                    let name_pure = emoji.name.replace(":", "");
+                    let shortcode_domain = match name_pure.split_once('@') {
+                        Some((name, domain)) => {
+                            let parsed = Host::parse(&domain).ok()?.to_string();
+                            (name, parsed)
+                        }
+                        None => {
+                            let parsed = Url::parse(&remote_id).ok()?;
+                            (emoji_name.as_str(), parsed.host_str()?.to_string())
+                        }
+                    };
 
-            let media_attachment = NewMediaAttachment {
-                id: attachment_id,
-                account_id: Some(author.id),
-                content_type,
-                description: None,
-                blurhash: None,
-                file_path: None,
-                remote_url: Some(icon.url.as_str()),
-            };
+                    let (shortcode, domain) = shortcode_domain;
 
-            let custom_emoji = CustomEmoji {};
-            Some(NewMediaAttachment {
-                id: attachment_id,
-                account_id: Some(author.id),
-                content_type,
-                description: None,
-                blurhash: None,
-                file_path: None,
-                remote_url: Some(icon.url.as_str()),
-            })
-        })
-        .collect::<Vec<NewMediaAttachment<'_>>>();
-
-    let a = diesel::insert_into(media_attachments::table)
-        .values(
-            emoji_iter
-                .cloned()
-                .zip(attachment_ids.iter().copied())
-                .filter_map(|(emoji, attachment_id)| {
-                    let icon = emoji.icon?;
                     let content_type = icon
                         .media_type
                         .as_deref()
                         .or_else(|| mime_guess::from_path(&icon.url).first_raw())?;
+                    Some((
+                        NewMediaAttachment {
+                            id: attachment_id,
+                            account_id: None,
+                            content_type,
+                            description: None,
+                            blurhash: None,
+                            file_path: None,
+                            remote_url: Some(&icon.url),
+                        },
+                        CustomEmoji {
+                            id: Uuid::now_v7(),
+                            remote_id: Some(remote_id.clone()),
+                            shortcode: shortcode.to_string(),
+                            domain: Some(domain.to_string()),
+                            media_attachment_id: attachment_id,
+                            global: false,
+                        },
+                    ))
+                } else {
+                    None
+                }
+            });
 
-                    Some(NewMediaAttachment {
-                        id: attachment_id,
-                        account_id: Some(author.id),
-                        content_type,
-                        description: None,
-                        blurhash: None,
-                        file_path: None,
-                        remote_url: Some(icon.url.as_str()),
-                    })
-                })
-                .collect::<Vec<NewMediaAttachment<'_>>>(),
-        )
-        .returning(media_attachments::id)
-        .load(db_conn)
-        .await
-        .map_err(Error::from)?;
+    let (attachment_data, emoji_data): (Vec<_>, Vec<_>) = entities.unzip();
 
-    a[0];
-
-    diesel::insert_into(custom_emojis::table)
-        .values(
-            emoji_iter
-                .map(|emoji| NewMention {
-                    post_id,
-                    account_id: author.id,
-                    mention_text: mention.name.as_str(),
-                })
-                .collect::<Vec<NewMention<'_>>>(),
-        )
+    let attachment_fut = diesel::insert_into(media_attachments::table)
+        .values(attachment_data)
         .on_conflict_do_nothing()
-        .execute(db_conn)
-        .await?;
+        .execute(db_conn);
+
+    let emoji_fut = diesel::insert_into(custom_emojis::table)
+        .values(emoji_data)
+        .on_conflict_do_nothing()
+        .execute(db_conn);
+
+    try_join!(attachment_fut, emoji_fut)?;
 
     Ok(())
 }
@@ -360,6 +339,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
                     .await?;
 
                 handle_mentions(tx, &user, new_post.id, &object.tag).await?;
+                handle_custom_emojis(tx, &object.tag).await?;
 
                 Ok::<_, Error>(new_post)
             }
