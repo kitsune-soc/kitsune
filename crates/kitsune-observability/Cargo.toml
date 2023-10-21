@@ -6,6 +6,7 @@ version.workspace = true
 [dependencies]
 eyre = "0.6.8"
 kitsune-config = { path = "../kitsune-config" }
+kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "0.21.1"
 metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "7c3176266c215bb9a7cbc31b3c32f75a22824928" }
 metrics-tracing-context = "0.14.0"

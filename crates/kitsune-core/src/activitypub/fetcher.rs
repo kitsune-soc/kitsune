@@ -324,7 +324,6 @@ mod test {
     use super::MAX_FETCH_DEPTH;
     use crate::{
         activitypub::Fetcher,
-        config::FederationFilterConfiguration,
         error::{ApiError, Error},
         service::federation_filter::FederationFilterService,
         webfinger::Webfinger,
@@ -335,6 +334,7 @@ mod test {
     use hyper::{Body, Request, Response, StatusCode, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
+    use kitsune_config::FederationFilterConfiguration;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;

@@ -118,6 +118,12 @@ pub struct MeiliSearchConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct OpenTelemetryConfiguration {
+    pub http_endpoint: String,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "type")]
 pub enum SearchConfiguration {
     Meilisearch(MeiliSearchConfiguration),
@@ -179,6 +185,7 @@ pub struct Configuration {
     pub instance: InstanceConfiguration,
     pub job_queue: JobQueueConfiguration,
     pub messaging: MessagingConfiguration,
+    pub opentelemetry: Option<OpenTelemetryConfiguration>,
     pub server: ServerConfiguration,
     pub search: SearchConfiguration,
     pub storage: StorageConfiguration,

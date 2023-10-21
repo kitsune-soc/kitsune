@@ -2,9 +2,9 @@
 extern crate tracing;
 
 use athena::JobQueue;
+use kitsune_config::JobQueueConfiguration;
 use kitsune_core::{
     activitypub::Deliverer,
-    config::JobQueueConfiguration,
     job::{JobRunnerContext, KitsuneContextRepo},
     state::State as CoreState,
 };

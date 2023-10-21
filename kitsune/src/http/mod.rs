@@ -4,7 +4,7 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
-use kitsune_core::config::ServerConfiguration;
+use kitsune_config::ServerConfiguration;
 use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,

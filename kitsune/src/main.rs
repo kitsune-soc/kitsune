@@ -5,17 +5,14 @@ use clap::Parser;
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
 use kitsune::consts::STARTUP_FIGLET;
-use kitsune_core::{config::Configuration, consts::VERSION};
+use kitsune_config::Configuration;
+use kitsune_core::consts::VERSION;
 use std::{
     borrow::Cow,
     env, future,
     panic::{self, PanicInfo},
     path::PathBuf,
 };
-use tracing::level_filters::LevelFilter;
-use tracing_error::ErrorLayer;
-use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer, Registry};
 use url::Url;
 
 #[global_allocator]
@@ -86,7 +83,7 @@ async fn boot() -> eyre::Result<()> {
 
     let args = Args::parse();
     let config = Configuration::load(args.config).await?;
-    initialise_logging(&config)?;
+    kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
     let conn = kitsune_db::connect(
         &config.database.url,
