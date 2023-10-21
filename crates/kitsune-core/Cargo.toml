@@ -10,7 +10,9 @@ async-recursion = "1.0.5"
 async-stream = "0.3.5"
 async-trait = "0.1.74"
 athena = { path = "../../lib/athena" }
-autometrics = { version = "0.6.0", default-features = false }
+autometrics = { version = "0.6.0", default-features = false, features = [
+    "metrics",
+] }
 base64-simd = "0.8.0"
 bytes = "1.5.0"
 const_format = "0.2.32"
@@ -34,6 +36,7 @@ img-parts = "0.3.0"
 iso8601-timestamp = "0.2.12"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
+kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-email = { path = "../kitsune-email" }
 kitsune-embed = { path = "../kitsune-embed" }
@@ -75,7 +78,6 @@ zxcvbn = { version = "2.2.2", default-features = false }
 default = []
 mastodon-api = []
 meilisearch = ["kitsune-search/meilisearch"]
-metrics = ["autometrics/metrics"]
 
 [build-dependencies]
 vergen = { version = "8.2.5", features = ["build", "git", "gitcl"] }

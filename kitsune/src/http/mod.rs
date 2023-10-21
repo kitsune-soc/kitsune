@@ -71,14 +71,6 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
             ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
 
-    #[cfg(feature = "metrics")]
-    {
-        use axum_prometheus::PrometheusMetricLayer;
-
-        // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
-        router = router.layer(PrometheusMetricLayer::new());
-    }
-
     router
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())

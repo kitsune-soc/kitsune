@@ -7,7 +7,6 @@
     forbidden_lint_groups
 )]
 
-#[cfg(feature = "metrics")]
 #[macro_use]
 extern crate metrics;
 
