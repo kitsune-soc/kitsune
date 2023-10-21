@@ -139,7 +139,6 @@ pub struct ServerConfiguration {
     pub media_proxy_enabled: bool,
     pub oidc: Option<OidcConfiguration>,
     pub port: u16,
-    pub prometheus_port: u16,
     pub request_timeout_secs: u64,
 }
 

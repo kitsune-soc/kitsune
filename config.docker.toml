@@ -27,7 +27,6 @@ frontend-dir = "./kitsune-fe/dist"
 max-upload-size = 5242880          # 5MB
 media-proxy-enabled = false
 port = 5000
-prometheus-port = 9000
 request-timeout-secs = 60
 
 [search]
