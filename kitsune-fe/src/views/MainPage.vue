@@ -9,39 +9,56 @@
           </svg>
         </h2>
 
-        <p>
+        <div>
           <span class="stat-highlight">
             {{ instanceInfo?.name }}
           </span>
-          is home to
-          <span class="stat-highlight">
-            {{ instanceInfo?.userCount }}
-          </span>
-          users who authored
-          <span class="stat-highlight">
-            {{ instanceInfo?.localPostCount }}
-          </span>
-          posts!
-        </p>
+          {{ $t('stats.title') }}:
+          <ul>
+            <li>
+              <span class="stat-highlight">
+                {{ instanceInfo?.userCount }}
+              </span>
+              {{ $tc('stats.user', instanceInfo?.userCount ?? 0) }}
+            </li>
+            <li>
+              <span class="stat-highlight">
+                {{ instanceInfo?.localPostCount }}
+              </span>
+              {{ $tc('stats.post', instanceInfo?.localPostCount ?? 0) }}
+            </li>
+          </ul>
+        </div>
 
         <strong class="about-link">
-          <router-link to="/about">About this instance</router-link>
+          <router-link to="/about">
+            {{ $t('messages.mainPage.aboutInstance') }}
+          </router-link>
         </strong>
       </div>
 
       <AuthForms />
     </div>
-
-    <GenericFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-  import AuthForms from '../components/AuthForms.vue';
-  import GenericFooter from '../components/GenericFooter.vue';
-  import { useInstanceInfo } from '../graphql/instance-info';
+  import { onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
 
+  import AuthForms from '../components/AuthForms.vue';
+  import { useInstanceInfo } from '../graphql/instance-info';
+  import { useAuthStore } from '../store/auth';
+
+  const authStore = useAuthStore();
   const instanceInfo = useInstanceInfo();
+
+  onMounted(async () => {
+    if (authStore.isAuthenticated()) {
+      const router = useRouter();
+      router.replace('/timeline/home');
+    }
+  });
 </script>
 
 <style scoped lang="scss">
@@ -51,16 +68,16 @@
     &-container {
       display: flex;
       align-items: center;
-      height: 80vh;
-      width: 95vw;
       margin: 0 auto;
       padding: 0 4vw;
+      width: 95vw;
+      height: 80vh;
 
       @media only screen and (max-width: 1023px) {
         flex-direction: column;
-        height: auto;
         justify-content: center;
         padding: 3vh 4vw;
+        height: auto;
       }
     }
 
@@ -68,42 +85,43 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 1vh 2vw;
       width: 60%;
       height: auto;
-      padding: 1vh 2vw;
 
       @media only screen and (max-width: 1367px) {
         width: 55%;
       }
 
       @media only screen and (max-width: 1023px) {
-        width: 75%;
         margin-bottom: 4vh;
+        width: 75%;
         text-align: center;
       }
 
       & .stat-highlight {
+        display: inline;
         color: $shade1dark;
       }
 
       &-header {
-        font-size: 42px;
-        font-weight: bold;
         color: $shade2light;
+        font-weight: bold;
+        font-size: 42px;
 
         &-logo {
-          color: $shade2light;
           width: 500px;
           max-width: 100%;
+          color: $shade2light;
         }
       }
 
       &-description,
       &-more {
+        margin: 10px 0;
         width: fit-content;
         font-size: 18px;
         line-height: 143%;
-        margin: 10px 0;
       }
     }
   }

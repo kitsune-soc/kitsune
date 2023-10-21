@@ -1,5 +1,8 @@
+@use './breakpoints' as *;
+@use 'sass:map';
+
 @mixin only-on-mobile {
-  @media only screen and (max-width: 850px) {
+  @media only screen and (max-width: map.get($breakpoints, md)) {
     @content;
   }
 }

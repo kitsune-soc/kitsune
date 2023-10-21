@@ -4,12 +4,16 @@
     :to="to"
     draggable="false"
   >
-    <font-awesome-icon class="icon" :icon="icon" />
-    <span v-if="detail" class="detail">{{ detail }}</span>
+    <GlitchedElement :options="{ playMode: 'hover' }">
+      <font-awesome-icon class="icon" :icon="icon" />
+      <span v-if="detail" class="detail">{{ detail }}</span>
+    </GlitchedElement>
   </router-link>
 </template>
 
 <script lang="ts" setup>
+  import GlitchedElement from './GlitchedElement.vue';
+
   defineProps<{
     class?: string;
     to: string;
@@ -24,14 +28,14 @@
 
   .nav-bar-link {
     display: inline-block;
-    padding: 15px;
-    color: $shade1dark;
 
     cursor: pointer;
-    user-select: none;
 
     border-bottom: 4px solid;
     border-color: transparent;
+    padding: 15px;
+    color: $shade1dark;
+    user-select: none;
 
     &:hover {
       color: white;
@@ -52,9 +56,9 @@
     }
 
     &.router-link-active {
-      color: $shade2light;
-      border-image-slice: 1;
       border-image-source: linear-gradient(to left, $shade2light, $shade2dark);
+      border-image-slice: 1;
+      color: $shade2light;
     }
   }
 </style>

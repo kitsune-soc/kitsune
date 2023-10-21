@@ -2,18 +2,19 @@
 @use 'fonts' as *;
 
 * {
-  font-family: BlockZone;
+  // font-family: BlockZone;
   box-sizing: inherit;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 :root {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+  background-color: $dark1;
+  color: white;
 
   color-scheme: light dark;
-  color: white;
-  background-color: $dark1;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
 
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
@@ -24,8 +25,8 @@
 }
 
 a {
-  font-weight: 500;
   color: $shade2light;
+  font-weight: 500;
   text-decoration: inherit;
 }
 
