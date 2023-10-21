@@ -68,7 +68,6 @@ speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.50"
 time = "0.3.30"
 tokio = { version = "1.33.0", features = ["macros", "rt"] }
-toml = { version = "0.8.2", default-features = false, features = ["parse"] }
 tracing = "0.1.40"
 typed-builder = "0.18.0"
 url = "2.4.1"

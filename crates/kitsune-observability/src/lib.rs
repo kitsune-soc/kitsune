@@ -1,4 +1,6 @@
+use async_trait::async_trait;
 use eyre::Context;
+use hyper::body::Body;
 use kitsune_config::Configuration;
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
@@ -8,8 +10,9 @@ use opentelemetry::{
     runtime::Tokio,
     trace::{noop::NoopTracer, Tracer},
 };
+use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::WithExportConfig;
-use std::env;
+use std::{env, fmt};
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
 use tracing_subscriber::{
@@ -17,6 +20,33 @@ use tracing_subscriber::{
     layer::SubscriberExt,
     Layer as _, Registry,
 };
+
+#[derive(Clone)]
+struct HttpClientAdapter {
+    inner: kitsune_http_client::Client,
+}
+
+impl fmt::Debug for HttpClientAdapter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "HttpClientAdapter")
+    }
+}
+
+#[async_trait]
+impl HttpClient for HttpClientAdapter {
+    async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Bytes>, HttpError> {
+        let (parts, body) = request.into_parts();
+        let body = Body::from(body);
+        let request = Request::from_parts(parts, body);
+
+        let response = self.inner.execute(request).await?.into_inner();
+
+        let (parts, body) = response.into_parts();
+        let body = hyper::body::to_bytes(body).await?;
+
+        Ok(Response::from_parts(parts, body))
+    }
+}
 
 fn initialise_logging<T>(tracer: T) -> eyre::Result<()>
 where
@@ -50,12 +80,17 @@ fn initialise_metrics(meter: Meter) -> eyre::Result<()> {
 
 pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Result<()> {
     if let Some(ref opentelemetry_config) = config.opentelemetry {
+        let http_client = HttpClientAdapter {
+            inner: kitsune_http_client::Client::default(),
+        };
+
         let tracer = opentelemetry_otlp::new_pipeline()
             .tracing()
             .with_exporter(
                 opentelemetry_otlp::new_exporter()
                     .http()
-                    .with_endpoint(opentelemetry_config.http_endpoint.as_str()),
+                    .with_endpoint(opentelemetry_config.http_endpoint.as_str())
+                    .with_http_client(http_client.clone()),
             )
             .install_batch(Tokio)?;
 
@@ -66,7 +101,8 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Resul
             .with_exporter(
                 opentelemetry_otlp::new_exporter()
                     .http()
-                    .with_endpoint(opentelemetry_config.http_endpoint.as_str()),
+                    .with_endpoint(opentelemetry_config.http_endpoint.as_str())
+                    .with_http_client(http_client.clone()),
             )
             .build()?;
 

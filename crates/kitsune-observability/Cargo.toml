@@ -4,20 +4,23 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+async-trait = "0.1.74"
 eyre = "0.6.8"
+hyper = { version = "0.14.27", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "0.21.1"
 metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "7c3176266c215bb9a7cbc31b3c32f75a22824928" }
 metrics-tracing-context = "0.14.0"
 metrics-util = "0.15.1"
+opentelemetry = { version = "0.20.0", default-features = false, features = [
+    "rt-tokio",
+    "trace",
+] }
+opentelemetry-http = "0.9.0"
 opentelemetry-otlp = { version = "0.13.0", default-features = false, features = [
     "http-proto",
     "metrics",
-    "trace",
-] }
-opentelemetry = { version = "0.20.0", default-features = false, features = [
-    "rt-tokio",
     "trace",
 ] }
 tracing = "0.1.40"

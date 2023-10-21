@@ -8,4 +8,4 @@ eyre = "0.6.8"
 serde = { version = "1.0.189", features = ["derive"] }
 smol_str = { version = "0.2.0", features = ["serde"] }
 tokio = { version = "1.33.0", features = ["fs"] }
-toml = "0.8.2"
+toml = { version = "0.8.2", default-features = false, features = ["parse"] }

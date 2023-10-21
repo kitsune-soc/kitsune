@@ -336,6 +336,12 @@ pub struct Response {
 }
 
 impl Response {
+    /// Convert the response into its inner `hyper` representation
+    #[must_use]
+    pub fn into_inner(self) -> HyperResponse<BoxBody<Bytes, BoxError>> {
+        self.inner
+    }
+
     /// Read the body into a `Bytes`
     ///
     /// # Errors
