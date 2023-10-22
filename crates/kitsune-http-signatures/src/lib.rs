@@ -98,7 +98,7 @@ impl SigningKey for Ed25519KeyPair {
 
 impl SigningKey for RsaKeyPair {
     fn sign(&self, msg: &[u8]) -> Vec<u8> {
-        let mut signature = vec![0; self.public_modulus_len()];
+        let mut signature = vec![0; self.public().modulus_len()];
         self.sign(&RSA_PKCS1_SHA256, &SystemRandom::new(), msg, &mut signature)
             .unwrap();
 
