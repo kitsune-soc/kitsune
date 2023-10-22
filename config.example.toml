@@ -1,18 +1,121 @@
+# Configuration for Kitsune
+#
+# This is where you enter pretty much all configuration essential to running a Kitsune service
+
+# Cache configuration
+#
+# Kitsune offers the following caching solutions:
+# - "none": Caching is fully disabled
+# - "in-memory": Information is cached in an in-memory caching solution
+# - "redis": Information is cached inside a Redis instance
+#
+# The cache solution is switched by setting the "type" parameter to the above values
+#
+# Redis requires additional parameters:
+# - "url": URL of the Redis instance Kitsune is supposed to connect to
 [cache]
 type = "in-memory"
 
+# Captcha configuration
+#
+# To mitigate spam, Kitsune offers the option to require a captcha on sign-up
+#
+# We offer support for the following captcha services:
+# - "hcaptcha": The widely known and used hCaptcha service
+# - "mcaptcha": The lesser known self-hostable captcha service. 
+#               It operates on proof-of-work, so it's not *really* a captcha but can mitigate serious spam attacks.
+#
+#[captcha]
+#type = ""
+#
+# hCaptcha configuration:
+#verify-url = ""
+#site-key = ""
+#secret-key = ""
+#
+# mCaptcha configuration:
+#widget-link = ""
+#site-key = ""
+#secret-key = ""
+#verify-url = ""
+
+# Database configuration
+#
+# Kitsune uses a PostgreSQL database to store its data
 [database]
+# Database URL
+#
+# This URL has to contain all the information necessary to connect to the database
+# i.e. username, password, host, port, database name, etc.
 url = "postgres://localhost/kitsune"
+# Max connections
+#
+# This is the maximum size of the database connection pool
+# Increase this if you notice that a lot of time is spent on waiting for connections
 max-connections = 20
 
+# Email configuration
+#
+# If this configuration is present, Kitsune will require accounts to be confirmed via a link sent to the user's inbox
+#
+#[email]
+#from-address = ""
+#host = ""
+#username = ""
+#password = ""
+#starttls = false # Usually servers support TLS natively. However, if they only support STARTTLS set this to "true" and Kitsune will attempt to use STARTTLS
+
+# Embed configuration
+#
+# Kitsune can fetch oembed data and show it on your posts
+# For this we need a small external service that fetches the pages, parses them open, and gives us the data we need
+#
+# We use Lantern Chat's `embed-service` microservice for this purpose: <https://github.com/Lantern-chat/embed-service/>
+#
+#[embed]
+#service-url = ""
+
+# Instance configuration
+#
+# These are all the values you can use to customize your instance
+# Stuff like the name of your server, description, character limit, configuration, etc.
 [instance]
+# Name of your instance
+#
+# This name is shown on the front page, in Mastodon clients, and will show up on statistics scrapers
 name = "Kitsune"
+# Description of your instance
+#
+# This is an extended description of your instance, allowing you to describe the audience,
+# and rules of your instance.
+#
+# While not guaranteed for other clients, the Kitsune frontend will interpret this as raw HTML.
 description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
+# Character limit of your instance
+#
+# This is the maximum length of posts that can be posted on your instance
+# On Mastodon it's 500, on most other implementations it's freely configurable
 character-limit = 5000
+# Registrations open
+#
+# This signals to clients whether your registrations are currently open or not.
+# It will also hard-enforce the closed signups inside of Kitsune, returning an error when a signup is attempted.
 registrations-open = true
 
+# Federation filters
+#
+# Federation filters are used to limit the federation to other instances.
+# You can use this to block possible bad actors from interacting with your instance.
+#
+# The filters have two general modi:
+# - "deny": The domains inside of the "domains" variable are not allowed to interact with your instance
+# - "allow": *Only* the domains inside the "domains" variable are allowed to interact with your instance
+#
+# Choose the modus you want to use for your community.
 [instance.federation-filter]
 type = "deny"
+# This list accepts wildcards (and general `glob` syntax. Reference: https://en.wikipedia.org/wiki/Glob_(programming)#Syntax)
+# You can use this to deny access from entire domains or even entire TLDs
 domains = []
 
 [job-queue]
@@ -22,11 +125,55 @@ num-workers = 20
 [messaging]
 type = "in-process"
 
+# OIDC configuration
+#
+# Kitsune can use an OIDC service to manage logins
+# This is useful if Kitsune is ran as part of a larger network of services
+#
+#[oidc]
+#server-url = ""
+#client-id = ""
+#client-secret = ""
+
+# OpenTelemetry configuration
+#
+# Kitsune supports exporting traces and metrics via the OpenTelemetry Protocol (OTLP, for short)
+# It's by now the de-facto standard wire protocol for exporting telemetry data
+#
+# As of now, you can only export all data to a single endpoint.
+# This configuration might become more granular in the future.
+#
+# We only export data via HTTP, but we considered potentially switching this to gRPC.
+#
+#[opentelemetry]
+#http-endpoint = "http://localhost:4318"
+
+# Server configuration
+#
+# This configuration changes the general behaviour that you'd mostly attribute to the underlying HTTP server
 [server]
+# Path the frontend you want to use is located at
+# Note: This path is not canonicalized and does not support Unix shortcuts such as the tilde (~)
 frontend-dir = "./kitsune-fe/dist"
-max-upload-size = 5242880          # 5MB
+# Maximum upload size
+#
+# This is the limit of data that the HTTP server accepts before it returns an HTTP 413 error
+# The unit is bytes
+max-upload-size = 5242880 # 5MB
+# Enable the media proxy
+#
+# The media proxy will relay all of the media streams through the backend, enabling two important properties:
+# - IP masking: Remote servers will never receive the IP addresses of you users
+# - Caching: You can cache remote content via your reverse proxy, lowering the load on the remote server
 media-proxy-enabled = false
+# Port on which Kitsune will listen
+#
+# This is the port you'd use in your reverse proxy configuration
+# You shouldn't run Kitsune without a reverse proxy
 port = 5000
+# Time until the request is aborted and the client receives a 408 HTTP error message
+#
+# The unit of this setting is seconds
 request-timeout-secs = 60
 
 [search]
