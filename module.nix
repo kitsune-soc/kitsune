@@ -172,10 +172,6 @@ in
                     type = types.port;
                     default = 5000;
                   };
-                  prometheus-port = mkOption {
-                    type = types.port;
-                    default = 9000;
-                  };
                   request-timeout-secs = mkOption {
                     type = types.ints.positive;
                     default = 60;

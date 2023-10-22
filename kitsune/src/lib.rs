@@ -7,7 +7,6 @@
     forbidden_lint_groups
 )]
 
-#[cfg(feature = "metrics")]
 #[macro_use]
 extern crate metrics;
 
@@ -27,7 +26,8 @@ use self::{
     state::{SessionConfig, Zustand},
 };
 use athena::JobQueue;
-use kitsune_core::{config::Configuration, job::KitsuneContextRepo};
+use kitsune_config::Configuration;
+use kitsune_core::job::KitsuneContextRepo;
 use kitsune_db::PgPool;
 use oauth2::OAuthEndpoint;
 
@@ -35,7 +35,8 @@ use oauth2::OAuthEndpoint;
 use {
     self::oidc::{async_client, OidcService},
     futures_util::future::OptionFuture,
-    kitsune_core::{config::OidcConfiguration, service::url::UrlService},
+    kitsune_config::OidcConfiguration,
+    kitsune_core::service::url::UrlService,
     openidconnect::{
         core::{CoreClient, CoreProviderMetadata},
         ClientId, ClientSecret, IssuerUrl, RedirectUrl,

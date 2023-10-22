@@ -36,12 +36,9 @@ http = "0.2.9"
 human-panic = "1.2.1"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.12"
-mimalloc = "0.1.39"
-mime = "0.3.17"
-mime_guess = { version = "2.0.4", default-features = false }
-pkcs8 = "0.10.2"
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
+kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
@@ -49,9 +46,15 @@ kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-language = { path = "../crates/kitsune-language" }
+kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
+metrics = "0.21.1"
+mimalloc = "0.1.39"
+mime = "0.3.17"
+mime_guess = { version = "2.0.4", default-features = false }
+pkcs8 = "0.10.2"
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.3.0"
@@ -74,8 +77,6 @@ tower-http = { version = "0.4.4", features = [
     "trace",
 ] }
 tracing = "0.1.40"
-tracing-error = "0.2.0"
-tracing-subscriber = "0.3.17"
 typed-builder = "0.18.0"
 url = "2.4.1"
 utoipa = { version = "4.0.0", features = ["axum_extras", "uuid"] }
@@ -94,13 +95,6 @@ async-graphql = { version = "6.0.9", default-features = false, features = [
 ], optional = true }
 async-graphql-axum = { version = "6.0.9", optional = true }
 
-# "metrics" feature
-axum-prometheus = { version = "0.4.0", optional = true }
-metrics = { version = "0.21.1", optional = true }
-metrics-exporter-prometheus = { version = "0.12.1", optional = true }
-metrics-tracing-context = { version = "0.14.0", optional = true }
-metrics-util = { version = "0.15.1", optional = true }
-
 # "oidc" feature
 openidconnect = { version = "3.4.0", default-features = false, optional = true }
 
@@ -111,7 +105,7 @@ serial_test = "2.0.0"
 tower = "0.4.13"
 
 [features]
-default = ["graphql-api", "mastodon-api", "metrics"]
+default = ["graphql-api", "mastodon-api"]
 graphql-api = [
     "dep:async-graphql",
     "dep:async-graphql-axum",
@@ -119,12 +113,4 @@ graphql-api = [
 ]
 mastodon-api = ["kitsune-core/mastodon-api"]
 meilisearch = ["kitsune-core/meilisearch"]
-metrics = [
-    "kitsune-core/metrics",
-    "dep:axum-prometheus",
-    "dep:metrics",
-    "dep:metrics-exporter-prometheus",
-    "dep:metrics-tracing-context",
-    "dep:metrics-util",
-]
 oidc = ["dep:openidconnect"]

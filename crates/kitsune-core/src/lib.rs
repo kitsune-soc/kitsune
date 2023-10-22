@@ -14,7 +14,6 @@ extern crate tracing;
 
 pub mod activitypub;
 pub mod blocking;
-pub mod config;
 pub mod consts;
 pub mod error;
 pub mod event;
@@ -29,10 +28,6 @@ pub mod webfinger;
 
 use self::{
     activitypub::Fetcher,
-    config::{
-        CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
-        MessagingConfiguration, SearchConfiguration, StorageConfiguration,
-    },
     job::KitsuneContextRepo,
     resolve::PostResolver,
     service::{
@@ -48,6 +43,10 @@ use athena::JobQueue;
 use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, Captcha};
+use kitsune_config::{
+    CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
+    MessagingConfiguration, SearchConfiguration, StorageConfiguration,
+};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},

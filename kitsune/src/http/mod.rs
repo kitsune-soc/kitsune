@@ -4,7 +4,7 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
-use kitsune_core::config::ServerConfiguration;
+use kitsune_config::ServerConfiguration;
 use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,
@@ -70,14 +70,6 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
         .fallback_service(
             ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
-
-    #[cfg(feature = "metrics")]
-    {
-        use axum_prometheus::PrometheusMetricLayer;
-
-        // Even though this explicity has "prometheus" in the name, it just emits regular `metrics` calls
-        router = router.layer(PrometheusMetricLayer::new());
-    }
 
     router
         .layer(CatchPanicLayer::new())
