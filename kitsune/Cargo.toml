@@ -36,6 +36,7 @@ http = "0.2.9"
 human-panic = "1.2.1"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 iso8601-timestamp = "0.2.12"
+kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-config = { path = "../crates/kitsune-config" }

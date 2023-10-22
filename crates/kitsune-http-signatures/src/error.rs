@@ -5,12 +5,14 @@ use http::header::{InvalidHeaderName, InvalidHeaderValue, ToStrError};
 use ring::error::Unspecified;
 use std::{num::ParseIntError, time::SystemTimeError};
 use thiserror::Error;
-use tokio::sync::oneshot::error::RecvError;
 
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Base64(#[from] base64_simd::Error),
+
+    #[error(transparent)]
+    Blocking(#[from] kitsune_blocking::Error),
 
     #[error("Signature is expired")]
     ExpiredSignature,
@@ -35,9 +37,6 @@ pub enum Error {
 
     #[error("Invalid signature header")]
     InvalidSignatureHeader,
-
-    #[error(transparent)]
-    OneshotRecv(#[from] RecvError),
 
     #[error(transparent)]
     ParseInt(#[from] ParseIntError),

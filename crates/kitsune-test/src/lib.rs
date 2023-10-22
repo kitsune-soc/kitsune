@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_panics_doc, forbidden_lint_groups)]
+
 use self::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;

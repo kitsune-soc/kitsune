@@ -6,13 +6,11 @@
 
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
-use http::{
-    header::{HeaderName, InvalidHeaderName},
-    request::Parts,
-    HeaderValue,
-};
+use http::{header::HeaderName, request::Parts, HeaderValue};
 use ring::{
     rand::SystemRandom,
     signature::{EcdsaKeyPair, Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_SHA256},
@@ -22,7 +20,6 @@ use std::{
     future::Future,
     time::{Duration, SystemTime},
 };
-use tokio::sync::oneshot;
 use typed_builder::TypedBuilder;
 
 pub use crate::error::Error;
@@ -54,14 +51,13 @@ pub enum SignatureComponent<'a> {
 }
 
 impl<'a> SignatureComponent<'a> {
-    fn parse(raw: &'a str) -> Result<Self, InvalidHeaderName> {
-        let component = match raw {
+    fn from_str(raw: &'a str) -> Self {
+        match raw {
             "(request-target)" => Self::RequestTarget,
             "(created)" => Self::Created,
             "(expires)" => Self::Expires,
             header => Self::Header(header),
-        };
-        Ok(component)
+        }
     }
 
     fn as_str(&self) -> &str {
@@ -168,8 +164,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
                             "(request-target): {} {}",
                             value.parts.method.as_str().to_lowercase(),
                             uri.path_and_query()
-                                .map(|path| path.as_str())
-                                .unwrap_or_else(|| uri.path())
+                                .map_or_else(|| uri.path(), |path| path.as_str())
                         )
                     }
                     SignatureComponent::Header(header_name) => {
@@ -229,13 +224,9 @@ impl HttpSigner {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        let (sender, receiver) = oneshot::channel();
-        rayon::spawn(move || {
-            sender
-                .send(key.key.sign(stringified_signature_string.as_bytes()))
-                .ok();
-        });
-        let signature = receiver.await?;
+        let signature =
+            kitsune_blocking::crypto(move || key.key.sign(stringified_signature_string.as_bytes()))
+                .await?;
 
         let signature_header = SignatureHeader {
             key_id: key.key_id,
@@ -321,16 +312,13 @@ impl HttpVerifier {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        let (sender, receiver) = oneshot::channel();
-        rayon::spawn(move || {
-            sender
-                .send(public_key.verify(
-                    stringified_signature_string.as_bytes(),
-                    &signature_header.signature,
-                ))
-                .ok();
-        });
-        receiver.await??;
+        kitsune_blocking::crypto(move || {
+            public_key.verify(
+                stringified_signature_string.as_bytes(),
+                &signature_header.signature,
+            )
+        })
+        .await??;
 
         Ok(())
     }

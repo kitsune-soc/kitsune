@@ -13,7 +13,6 @@
 extern crate tracing;
 
 pub mod activitypub;
-pub mod blocking;
 pub mod consts;
 pub mod error;
 pub mod event;

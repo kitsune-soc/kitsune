@@ -1,3 +1,6 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+
 use futures_retry_policies::{retry_policies::RetryPolicies, tracing::Traced};
 use retry_policies::{policies::ExponentialBackoff, Jitter};
 use std::{
@@ -37,6 +40,7 @@ where
     }
 }
 
+#[must_use]
 pub fn futures_backoff_policy<Res>() -> impl futures_retry_policies::RetryPolicy<Res>
 where
     Res: Debug,
@@ -44,6 +48,7 @@ where
     Traced(NeverRetry(RetryPolicies::new(backoff_policy())))
 }
 
+#[must_use]
 pub fn backoff_policy() -> impl retry_policies::RetryPolicy {
     ExponentialBackoff::builder()
         .jitter(Jitter::Bounded)

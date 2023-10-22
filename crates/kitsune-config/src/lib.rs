@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, forbidden_lint_groups)]
+
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use std::{num::NonZeroUsize, path::Path};

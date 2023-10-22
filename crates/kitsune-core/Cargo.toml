@@ -34,6 +34,7 @@ hex-simd = "0.8.0"
 http = "0.2.9"
 img-parts = "0.3.0"
 iso8601-timestamp = "0.2.12"
+kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
 kitsune-config = { path = "../kitsune-config" }
@@ -56,7 +57,6 @@ pulldown-cmark = { version = "0.9.3", default-features = false, features = [
     "simd",
 ] }
 rand = "0.8.5"
-rayon = "1.8.0"
 rsa = "0.9.2"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"

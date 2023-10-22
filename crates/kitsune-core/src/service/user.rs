@@ -152,7 +152,7 @@ impl UserService {
         }
 
         let hashed_password_fut = OptionFuture::from(register.password.map(|password| {
-            crate::blocking::cpu(move || {
+            kitsune_blocking::crypto(move || {
                 let salt = SaltString::generate(rand::thread_rng());
                 let argon2 = Argon2::default();
 
@@ -162,7 +162,7 @@ impl UserService {
             })
         }));
         let private_key_fut =
-            crate::blocking::cpu(|| RsaPrivateKey::new(&mut rand::thread_rng(), 4096));
+            kitsune_blocking::crypto(|| RsaPrivateKey::new(&mut rand::thread_rng(), 4096));
 
         let (hashed_password, private_key) = tokio::join!(hashed_password_fut, private_key_fut);
         let hashed_password = hashed_password.transpose()?.transpose()?;
