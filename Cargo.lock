@@ -2751,6 +2751,7 @@ dependencies = [
  "human-panic",
  "hyper",
  "iso8601-timestamp",
+ "kitsune-blocking",
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
@@ -2795,6 +2796,17 @@ dependencies = [
  "url",
  "utoipa",
  "utoipa-swagger-ui",
+]
+
+[[package]]
+name = "kitsune-blocking"
+version = "0.0.1-pre.3"
+dependencies = [
+ "once_cell",
+ "rayon",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -2886,6 +2898,7 @@ dependencies = [
  "hyper",
  "img-parts",
  "iso8601-timestamp",
+ "kitsune-blocking",
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
@@ -2908,7 +2921,6 @@ dependencies = [
  "pretty_assertions",
  "pulldown-cmark",
  "rand",
- "rayon",
  "redis",
  "rsa",
  "rusty-s3",
@@ -2940,6 +2952,7 @@ dependencies = [
  "diesel_full_text_search",
  "diesel_migrations",
  "iso8601-timestamp",
+ "kitsune-blocking",
  "kitsune-language",
  "kitsune-type",
  "num-derive",
@@ -2948,7 +2961,6 @@ dependencies = [
  "simd-json",
  "speedy-uuid",
  "thiserror",
- "tokio",
  "tracing-log",
  "typed-builder",
 ]
@@ -3010,9 +3022,9 @@ dependencies = [
  "base64-simd",
  "derive_builder",
  "http",
+ "kitsune-blocking",
  "pem",
  "pkcs8",
- "rayon",
  "ring 0.17.5",
  "thiserror",
  "time",

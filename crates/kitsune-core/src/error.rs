@@ -2,7 +2,6 @@ use std::error::Error as ErrorTrait;
 
 use kitsune_http_signatures::ring;
 use thiserror::Error;
-use tokio::sync::oneshot;
 
 pub type BoxError = Box<dyn ErrorTrait + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -62,6 +61,9 @@ pub enum UploadError {
 pub enum Error {
     #[error(transparent)]
     Api(#[from] ApiError),
+
+    #[error(transparent)]
+    Blocking(#[from] kitsune_blocking::Error),
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
@@ -128,9 +130,6 @@ pub enum Error {
 
     #[error(transparent)]
     Storage(kitsune_storage::BoxError),
-
-    #[error(transparent)]
-    TokioOneshot(#[from] oneshot::error::RecvError),
 
     #[error(transparent)]
     Upload(#[from] UploadError),

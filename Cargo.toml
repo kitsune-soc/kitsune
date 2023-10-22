@@ -12,6 +12,7 @@ strip = true
 [workspace]
 exclude = ["xtask"]
 members = [
+    "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
     "crates/kitsune-config",

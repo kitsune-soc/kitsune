@@ -38,6 +38,9 @@ impl StdError for IsoCodeConversionError {}
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
+    Blocking(#[from] kitsune_blocking::Error),
+
+    #[error(transparent)]
     Diesel(#[from] diesel::result::Error),
 
     #[error(transparent)]
@@ -48,7 +51,4 @@ pub enum Error {
 
     #[error(transparent)]
     Pool(#[from] PoolError),
-
-    #[error(transparent)]
-    TokioJoin(#[from] tokio::task::JoinError),
 }

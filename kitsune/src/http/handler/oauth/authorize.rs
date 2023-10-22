@@ -145,7 +145,7 @@ pub async fn post(
         )));
     }
 
-    let is_valid = kitsune_core::blocking::cpu(move || {
+    let is_valid = kitsune_blocking::crypto(move || {
         let password_hash = PasswordHash::new(user.password.as_ref().unwrap())?;
         let argon2 = Argon2::default();
 
