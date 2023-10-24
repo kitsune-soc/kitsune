@@ -12,7 +12,7 @@ strip = true
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
-lto = "thin"
+#lto = "thin"
 
 [workspace]
 exclude = ["xtask"]
