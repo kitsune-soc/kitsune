@@ -108,7 +108,6 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Resul
 
         let trace_exporter = build_exporter!(
             SpanExporterBuilder:
-
             opentelemetry_config.tracing_transport,
             &http_client,
             opentelemetry_config.tracing_endpoint.as_str(),
@@ -123,7 +122,6 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Resul
 
         let metrics_exporter = build_exporter!(
             MetricsExporterBuilder:
-
             opentelemetry_config.metrics_transport,
             &http_client,
             opentelemetry_config.tracing_endpoint.as_str(),
