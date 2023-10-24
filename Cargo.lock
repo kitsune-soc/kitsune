@@ -435,7 +435,7 @@ dependencies = [
 
 [[package]]
 name = "athena"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.5",
  "async-trait",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "argon2",
  "askama",
@@ -2810,7 +2810,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-blocking"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "once_cell",
  "rayon",
@@ -2821,7 +2821,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cache"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
  "deadpool-redis",
@@ -2838,7 +2838,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-captcha"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
  "enum_dispatch",
@@ -2854,7 +2854,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cli"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "clap",
  "color-eyre",
@@ -2872,7 +2872,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-config"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "eyre",
  "serde",
@@ -2883,7 +2883,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-core"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "ammonia",
  "argon2",
@@ -2955,7 +2955,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-db"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -2977,7 +2977,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-email"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "askama",
  "askama_axum",
@@ -2989,7 +2989,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-embed"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3007,7 +3007,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-client"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "bytes",
  "futures-core",
@@ -3027,7 +3027,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-signatures"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "base64-simd",
  "derive_builder",
@@ -3044,7 +3044,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-job-runner"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "athena",
  "clap",
@@ -3063,7 +3063,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-language"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3075,7 +3075,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-messaging"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.5",
  "async-trait",
@@ -3092,7 +3092,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-observability"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
  "eyre",
@@ -3114,7 +3114,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-retry-policies"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "futures-retry-policies",
  "retry-policies",
@@ -3122,7 +3122,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
  "diesel",
@@ -3142,7 +3142,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-storage"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3159,7 +3159,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-test"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "deadpool-redis",
  "diesel",
@@ -3173,7 +3173,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-type"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "iso8601-timestamp",
  "pretty_assertions",
@@ -4458,7 +4458,7 @@ checksum = "b559898e0b4931ed2d3b959ab0c2da4d99cc644c4b0b1a35b4d344027f474023"
 
 [[package]]
 name = "post-process"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "criterion",
  "futures",
@@ -5560,7 +5560,7 @@ dependencies = [
 
 [[package]]
 name = "speedy-uuid"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 dependencies = [
  "async-graphql",
  "diesel",

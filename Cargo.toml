@@ -46,7 +46,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
