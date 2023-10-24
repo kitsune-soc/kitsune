@@ -19,8 +19,11 @@ opentelemetry = { version = "0.20.0", default-features = false, features = [
 ] }
 opentelemetry-http = "0.9.0"
 opentelemetry-otlp = { version = "0.13.0", default-features = false, features = [
+    "grpc-tonic",
     "http-proto",
     "metrics",
+    "tls",
+    "tls-roots",
     "trace",
 ] }
 tracing = "0.1.40"

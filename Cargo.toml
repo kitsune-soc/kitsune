@@ -46,12 +46,5 @@ version = "0.0.1-pre.3"
 [patch.crates-io]
 # Patch `isolang` for quicker compiles
 isolang = { git = "https://github.com/humenda/isolang-rs.git", rev = "f015b8cce82b6168303c84543fdd25f57005141c" }
-
-# Patch the opentelemetry crate versions to get rid of a few tonic dependencies
-opentelemetry_api = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "41e8d63652b323866c03981b4b2ca62b9b8d6d44" }
-opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "41e8d63652b323866c03981b4b2ca62b9b8d6d44" }
-opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "41e8d63652b323866c03981b4b2ca62b9b8d6d44" }
-opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "41e8d63652b323866c03981b4b2ca62b9b8d6d44" }
-
 # Patch `redis` for up-to-date `ahash`
 redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }
