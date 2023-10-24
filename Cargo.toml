@@ -50,6 +50,8 @@ version = "0.0.1-pre.3"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
+# Enable all features
+all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.4.0-prerelease.3"
 # CI backends to support
