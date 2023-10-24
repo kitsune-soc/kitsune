@@ -143,10 +143,11 @@ type = "in-process"
 # As of now, you can only export all data to a single endpoint.
 # This configuration might become more granular in the future.
 #
-# We only export data via HTTP, but we considered potentially switching this to gRPC.
-#
 #[opentelemetry]
-#http-endpoint = "http://localhost:4318"
+#metrics-transport = "http" # "grpc" or "http"
+#metrics-endpoint = "http://localhost:4317"
+#tracing-transport = "http" # "grpc" or "http"
+#tracing-endpoint = "http://localhost:4317"
 
 # Server configuration
 #

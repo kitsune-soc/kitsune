@@ -5,7 +5,7 @@
 use async_trait::async_trait;
 use eyre::Context;
 use hyper::body::Body;
-use kitsune_config::Configuration;
+use kitsune_config::{Configuration, OpenTelemetryTransport};
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -15,7 +15,7 @@ use opentelemetry::{
     trace::{noop::NoopTracer, Tracer},
 };
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{MetricsExporterBuilder, SpanExporterBuilder, WithExportConfig};
 use std::{env, fmt};
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
@@ -50,6 +50,24 @@ impl HttpClient for HttpClientAdapter {
 
         Ok(Response::from_parts(parts, body))
     }
+}
+
+macro_rules! build_exporter {
+    ($exporter_type:ty : $transport:expr, $http_client:expr, $endpoint:expr $(,)?) => {{
+        let exporter: $exporter_type = match $transport {
+            OpenTelemetryTransport::Grpc => opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint($endpoint)
+                .into(),
+            OpenTelemetryTransport::Http => opentelemetry_otlp::new_exporter()
+                .http()
+                .with_endpoint($endpoint)
+                .with_http_client($http_client.clone())
+                .into(),
+        };
+
+        exporter
+    }};
 }
 
 fn initialise_logging<T>(tracer: T) -> eyre::Result<()>
@@ -88,26 +106,30 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Resul
             inner: kitsune_http_client::Client::default(),
         };
 
+        let trace_exporter = build_exporter!(
+            SpanExporterBuilder:
+            opentelemetry_config.tracing_transport,
+            &http_client,
+            opentelemetry_config.tracing_endpoint.as_str(),
+        );
+
         let tracer = opentelemetry_otlp::new_pipeline()
             .tracing()
-            .with_exporter(
-                opentelemetry_otlp::new_exporter()
-                    .http()
-                    .with_endpoint(opentelemetry_config.http_endpoint.as_str())
-                    .with_http_client(http_client.clone()),
-            )
+            .with_exporter(trace_exporter)
             .install_batch(Tokio)?;
 
         initialise_logging(tracer)?;
 
+        let metrics_exporter = build_exporter!(
+            MetricsExporterBuilder:
+            opentelemetry_config.metrics_transport,
+            &http_client,
+            opentelemetry_config.tracing_endpoint.as_str(),
+        );
+
         let meter_provider = opentelemetry_otlp::new_pipeline()
             .metrics(Tokio)
-            .with_exporter(
-                opentelemetry_otlp::new_exporter()
-                    .http()
-                    .with_endpoint(opentelemetry_config.http_endpoint.as_str())
-                    .with_http_client(http_client.clone()),
-            )
+            .with_exporter(metrics_exporter)
             .build()?;
 
         initialise_metrics(meter_provider.meter(app_name))?;

@@ -121,10 +121,20 @@ pub struct MeiliSearchConfiguration {
     pub api_key: SmolStr,
 }
 
+#[derive(Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OpenTelemetryTransport {
+    Grpc,
+    Http,
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct OpenTelemetryConfiguration {
-    pub http_endpoint: String,
+    pub metrics_transport: OpenTelemetryTransport,
+    pub metrics_endpoint: SmolStr,
+    pub tracing_transport: OpenTelemetryTransport,
+    pub tracing_endpoint: SmolStr,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
