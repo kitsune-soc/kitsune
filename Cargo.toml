@@ -52,6 +52,8 @@ version = "0.0.1-pre.4"
 [workspace.metadata.dist]
 # Enable all features
 all-features = true
+# Allow own modification (temporary)
+allow-dirty = ["ci"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.4.0-prerelease.3"
 # CI backends to support
