@@ -71,6 +71,9 @@ targets = [
 #pr-run-mode = "plan"
 pr-run-mode = "upload"
 
+[workspace.metadata.dist.dependencies.apt]
+libssl-dev = "*"
+
 [patch.crates-io]
 # Patch `isolang` for quicker compiles
 isolang = { git = "https://github.com/humenda/isolang-rs.git", rev = "f015b8cce82b6168303c84543fdd25f57005141c" }
