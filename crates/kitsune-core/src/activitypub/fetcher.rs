@@ -105,7 +105,7 @@ impl Fetcher {
 
         if content_type
             != Some("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"")
-            || content_type != Some("application/activity+json")
+            && content_type != Some("application/activity+json")
         {
             return Err(ApiError::BadRequest.into());
         }
