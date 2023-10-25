@@ -12,7 +12,7 @@ use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use http::HeaderValue;
+use http::{header::CONTENT_TYPE, HeaderValue};
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
@@ -25,8 +25,12 @@ use kitsune_db::{
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
 use kitsune_search::{SearchBackend, SearchService};
-use kitsune_type::ap::{actor::Actor, Object};
+use kitsune_type::{
+    ap::{actor::Actor, Object},
+    jsonld::RdfNode,
+};
 use scoped_futures::ScopedFutureExt;
+use serde::de::DeserializeOwned;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -88,6 +92,27 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
+    async fn fetch_ap_resource<T>(&self, url: &str) -> Result<T>
+    where
+        T: DeserializeOwned + RdfNode,
+    {
+        let response = self.client.get(url).await?;
+        let content_type = response
+            .headers()
+            .get(CONTENT_TYPE)
+            .map(HeaderValue::to_str)
+            .transpose()?;
+
+        if content_type
+            != Some("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"")
+            || content_type != Some("application/activity+json")
+        {
+            return Err(ApiError::BadRequest.into());
+        }
+
+        Ok(response.jsonld().await?)
+    }
+
     /// Fetch an ActivityPub actor
     ///
     /// # Panics
@@ -127,7 +152,7 @@ impl Fetcher {
             return Err(ApiError::Unauthorised.into());
         }
 
-        let mut actor: Actor = self.client.get(url.as_str()).await?.jsonld().await?;
+        let mut actor: Actor = self.fetch_ap_resource(url.as_str()).await?;
 
         let mut domain = url.host_str().unwrap();
         let domain_buf;
@@ -292,7 +317,7 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let object: Object = self.client.get(url.as_str()).await?.jsonld().await?;
+        let object: Object = self.fetch_ap_resource(url.as_str()).await?;
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)

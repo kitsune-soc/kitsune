@@ -2925,6 +2925,7 @@ dependencies = [
  "kitsune-type",
  "mime",
  "mime_guess",
+ "once_cell",
  "password-hash",
  "pkcs8",
  "post-process",
