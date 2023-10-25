@@ -754,6 +754,39 @@ mod test {
 
     #[tokio::test]
     #[serial_test::serial]
+    async fn check_ap_content_type() {
+        database_test(|db_pool| async move {
+            let client = service_fn(|_: Request<_>| async {
+                Ok::<_, Infallible>(Response::new(Body::empty()))
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            assert!(matches!(
+                fetcher.fetch_object("https://example.com/fakeobject").await,
+                Err(Error::Api(ApiError::BadRequest))
+            ));
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
     async fn federation_allow() {
         database_test(|db_pool| async move {
             let builder = Fetcher::builder()
