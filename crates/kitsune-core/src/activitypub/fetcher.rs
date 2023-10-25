@@ -853,22 +853,31 @@ mod test {
     }
 
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+        macro_rules! build_ap_response {
+            ($body:expr) => {
+                Response::builder()
+                    .header("Content-Type", "application/activity+json")
+                    .body(Body::from($body))
+                    .unwrap()
+            };
+        }
+
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
                 let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response!(body))
             }
             "/@0x0/109501674056556919" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501674056556919.json"
                 );
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response!(body))
             }
             "/users/0x0/statuses/109501659207519785" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
                 );
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response!(body))
             }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
                 let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
