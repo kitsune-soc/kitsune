@@ -96,7 +96,7 @@ mod test {
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
-    use kitsune_test::{database_test, redis_test};
+    use kitsune_test::{build_ap_response, database_test, redis_test};
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use std::sync::Arc;
@@ -117,7 +117,7 @@ mod test {
                         }
                         "/users/0x0" => {
                             let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                            Ok::<_, Infallible>(build_ap_response!(body))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),
                     }

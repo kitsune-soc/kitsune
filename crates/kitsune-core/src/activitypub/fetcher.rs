@@ -363,7 +363,7 @@ mod test {
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
-    use kitsune_test::database_test;
+    use kitsune_test::{build_ap_response, database_test};
     use kitsune_type::{
         ap::{
             actor::{Actor, ActorType, PublicKey},
@@ -612,6 +612,7 @@ mod test {
             let client = service_fn(move |req: Request<_>| {
                 let count = request_counter.fetch_add(1, Ordering::SeqCst);
                 assert!(MAX_FETCH_DEPTH * 3 >= count);
+
                 async move {
                     let author_id = "https://example.com/users/1".to_owned();
                     let author = Actor {
@@ -658,11 +659,14 @@ mod test {
                             to: vec![PUBLIC_IDENTIFIER.into()],
                             cc: Vec::new(),
                         };
+
                         let body = simd_json::to_string(&note).unwrap();
-                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+
+                        Ok::<_, Infallible>(build_ap_response!(body))
                     } else if req.uri().path_and_query().unwrap() == Uri::try_from(&author.id).unwrap().path_and_query().unwrap() {
                         let body = simd_json::to_string(&author).unwrap();
-                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+
+                        Ok::<_, Infallible>(build_ap_response!(body))
                     } else {
                         handle(req).await
                     }
@@ -886,15 +890,6 @@ mod test {
     }
 
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
-        macro_rules! build_ap_response {
-            ($body:expr) => {
-                Response::builder()
-                    .header("Content-Type", "application/activity+json")
-                    .body(Body::from($body))
-                    .unwrap()
-            };
-        }
-
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
                 let body = include_str!("../../../../test-fixtures/0x0_actor.json");

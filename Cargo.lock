@@ -40,9 +40,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.5"
+version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd7d5a2cecb58716e47d67d5703a249964b14c7be1ec3cad3affc295b2d1c35d"
+checksum = "91429305e9f0a25f6205c5b8e0d2db09e0708a7a6df0f42212bb56c32c8ac97a"
 dependencies = [
  "cfg-if",
  "getrandom",
@@ -437,7 +437,7 @@ dependencies = [
 name = "athena"
 version = "0.0.1-pre.4"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "async-trait",
  "deadpool-redis",
  "either",
@@ -819,9 +819,9 @@ checksum = "7f30e7476521f6f8af1a1c4c0b8cc94f0bee37d91763d0ca2665f299b6cd8aec"
 
 [[package]]
 name = "bytecount"
-version = "0.6.6"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d56f99948f5dd725fb7e351c80765ae80044f243169e141188a874105da83e9e"
+checksum = "e1e5f035d16fc623ae5f74981db80a439803888314e3a555fd6f04acd51a3205"
 
 [[package]]
 name = "byteorder"
@@ -2281,7 +2281,7 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
 ]
 
 [[package]]
@@ -2290,7 +2290,7 @@ version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f93e7192158dbcda357bdec5fb5788eebf8bbac027f3f33e719d29135ae84156"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "allocator-api2",
 ]
 
@@ -3077,7 +3077,7 @@ dependencies = [
 name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "async-trait",
  "futures-util",
  "kitsune-retry-policies",
@@ -3165,6 +3165,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "futures-util",
+ "http",
  "kitsune-db",
  "pin-project-lite",
  "redis",
@@ -3195,9 +3196,9 @@ dependencies = [
 
 [[package]]
 name = "lettre"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d47084ad58f99c26816d174702f60e873f861fcef3f9bd6075b4ad2dd72d07d5"
+checksum = "a466bc111374ccf4d90877dba636924a2185e67e5be4b35d32043199365097b2"
 dependencies = [
  "async-trait",
  "base64 0.21.5",
@@ -3535,7 +3536,7 @@ version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde3af1a009ed76a778cb84fdef9e7dbbdf5775ae3e4cc1f434a6a307f6f76c5"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "metrics-macros",
  "portable-atomic",
 ]
@@ -4736,7 +4737,7 @@ name = "redis"
 version = "0.23.3"
 source = "git+https://github.com/aumetra/redis-rs.git?rev=3c4ee09d432a69e1d87d66dcba14c519467c9b81#3c4ee09d432a69e1d87d66dcba14c519467c9b81"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "arc-swap",
  "async-trait",
  "bytes",
@@ -5121,7 +5122,7 @@ version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c95a930e03325234c18c7071fd2b60118307e025d6fff3e12745ffbf63a3d29c"
 dependencies = [
- "ahash 0.8.5",
+ "ahash 0.8.6",
  "cssparser",
  "ego-tree",
  "html5ever",
@@ -5976,9 +5977,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.9"
+version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d68074620f57a0b21594d9735eb2e98ab38b17f80d3fcb189fca266771ca60d"
+checksum = "5419f34732d9eb6ee4c3578b7989078579b7f039cbbb9ca2c4da015749371e15"
 dependencies = [
  "bytes",
  "futures-core",
@@ -6846,18 +6847,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.7.12"
+version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8db0ac2df3d060f81ec0380ccc5b71c2a7c092cfced671feeee1320e95559c87"
+checksum = "81ba595b9f2772fbee2312de30eeb80ec773b4cb2f1e8098db024afadda6c06f"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.7.12"
+version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b6093bc6d5265ff40b479c834cdd25d8e20784781a2a29a8106327393d0a9ff"
+checksum = "772666c41fb6dceaf520b564b962d738a8e1a83b41bd48945f50837aed78bb1d"
 dependencies = [
  "proc-macro2",
  "quote",

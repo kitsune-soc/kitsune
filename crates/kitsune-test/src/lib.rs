@@ -11,7 +11,20 @@ use std::{env, error::Error, panic};
 
 mod catch_panic;
 
+#[doc(hidden)]
+pub use http;
+
 type BoxError = Box<dyn Error + Send + Sync>;
+
+#[macro_export]
+macro_rules! build_ap_response {
+    ($body:expr) => {
+        $crate::http::Response::builder()
+            .header("Content-Type", "application/activity+json")
+            .body(Body::from($body))
+            .unwrap()
+    };
+}
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where
