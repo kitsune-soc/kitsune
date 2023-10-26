@@ -783,7 +783,9 @@ mod test {
                 .build();
 
             assert!(matches!(
-                fetcher.fetch_object("https://example.com/fakeobject").await,
+                fetcher
+                    .fetch_object("https://corteximplant.com/users/0x0")
+                    .await,
                 Err(Error::Api(ApiError::BadRequest))
             ));
         })
