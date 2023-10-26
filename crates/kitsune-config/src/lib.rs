@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, forbidden_lint_groups)]
+
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use std::{num::NonZeroUsize, path::Path};
@@ -117,6 +121,22 @@ pub struct MeiliSearchConfiguration {
     pub api_key: SmolStr,
 }
 
+#[derive(Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OpenTelemetryTransport {
+    Grpc,
+    Http,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct OpenTelemetryConfiguration {
+    pub metrics_transport: OpenTelemetryTransport,
+    pub metrics_endpoint: SmolStr,
+    pub tracing_transport: OpenTelemetryTransport,
+    pub tracing_endpoint: SmolStr,
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "type")]
 pub enum SearchConfiguration {
@@ -133,7 +153,6 @@ pub struct ServerConfiguration {
     pub media_proxy_enabled: bool,
     pub oidc: Option<OidcConfiguration>,
     pub port: u16,
-    pub prometheus_port: u16,
     pub request_timeout_secs: u64,
 }
 
@@ -179,6 +198,7 @@ pub struct Configuration {
     pub instance: InstanceConfiguration,
     pub job_queue: JobQueueConfiguration,
     pub messaging: MessagingConfiguration,
+    pub opentelemetry: Option<OpenTelemetryConfiguration>,
     pub server: ServerConfiguration,
     pub search: SearchConfiguration,
     pub storage: StorageConfiguration,

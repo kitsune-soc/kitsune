@@ -87,6 +87,7 @@ export type CaptchaInfo = {
 export type Instance = {
   __typename?: 'Instance';
   captcha?: Maybe<CaptchaInfo>;
+  characterLimit: Scalars['Int']['output'];
   description: Scalars['String']['output'];
   domain: Scalars['String']['output'];
   localPostCount: Scalars['Int']['output'];
@@ -270,6 +271,7 @@ export type GetInstanceInfoQuery = {
   __typename?: 'RootQuery';
   instance: {
     __typename?: 'Instance';
+    characterLimit: number;
     description: string;
     domain: string;
     localPostCount: number;
@@ -282,6 +284,109 @@ export type GetInstanceInfoQuery = {
       backend: CaptchaBackend;
       key: string;
     } | null;
+  };
+};
+
+export type GetPostByIdQueryVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+export type GetPostByIdQuery = {
+  __typename?: 'RootQuery';
+  getPostById: {
+    __typename?: 'Post';
+    id: any;
+    subject?: string | null;
+    content: string;
+    account: {
+      __typename?: 'Account';
+      id: any;
+      displayName?: string | null;
+      username: string;
+      url: string;
+      avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
+    };
+    attachments: Array<{
+      __typename?: 'MediaAttachment';
+      contentType: string;
+      description?: string | null;
+      url: string;
+    }>;
+  };
+};
+
+export type GetHomeTimelineQueryVariables = Exact<{
+  after: Scalars['String']['input'];
+}>;
+
+export type GetHomeTimelineQuery = {
+  __typename?: 'RootQuery';
+  homeTimeline: {
+    __typename?: 'PostConnection';
+    nodes: Array<{
+      __typename?: 'Post';
+      id: any;
+      subject?: string | null;
+      content: string;
+      url: string;
+      account: {
+        __typename?: 'Account';
+        id: any;
+        displayName?: string | null;
+        username: string;
+        url: string;
+        avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
+      };
+      attachments: Array<{
+        __typename?: 'MediaAttachment';
+        contentType: string;
+        description?: string | null;
+        url: string;
+      }>;
+    }>;
+    pageInfo: {
+      __typename?: 'PageInfo';
+      startCursor?: string | null;
+      endCursor?: string | null;
+    };
+  };
+};
+
+export type GetPublicTimelineQueryVariables = Exact<{
+  after: Scalars['String']['input'];
+  onlyLocal: Scalars['Boolean']['input'];
+}>;
+
+export type GetPublicTimelineQuery = {
+  __typename?: 'RootQuery';
+  publicTimeline: {
+    __typename?: 'PostConnection';
+    nodes: Array<{
+      __typename?: 'Post';
+      id: any;
+      subject?: string | null;
+      content: string;
+      url: string;
+      account: {
+        __typename?: 'Account';
+        id: any;
+        displayName?: string | null;
+        username: string;
+        url: string;
+        avatar?: { __typename?: 'MediaAttachment'; url: string } | null;
+      };
+      attachments: Array<{
+        __typename?: 'MediaAttachment';
+        contentType: string;
+        description?: string | null;
+        url: string;
+      }>;
+    }>;
+    pageInfo: {
+      __typename?: 'PageInfo';
+      startCursor?: string | null;
+      endCursor?: string | null;
+    };
   };
 };
 
@@ -430,19 +535,6 @@ export const GetInstanceInfoDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'domain' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'localPostCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'registrationsOpen' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'userCount' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'captcha' },
@@ -457,6 +549,23 @@ export const GetInstanceInfoDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'characterLimit' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'domain' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'localPostCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'registrationsOpen' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'version' } },
               ],
             },
           },
@@ -467,6 +576,455 @@ export const GetInstanceInfoDocument = {
 } as unknown as DocumentNode<
   GetInstanceInfoQuery,
   GetInstanceInfoQueryVariables
+>;
+export const GetPostByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPostById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getPostById' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'subject' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'account' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'displayName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'username' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'avatar' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attachments' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'contentType' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPostByIdQuery, GetPostByIdQueryVariables>;
+export const GetHomeTimelineDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getHomeTimeline' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'homeTimeline' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'after' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'after' },
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: 'Directive',
+                name: { kind: 'Name', value: '_relayPagination' },
+                arguments: [
+                  {
+                    kind: 'Argument',
+                    name: { kind: 'Name', value: 'mergeMode' },
+                    value: {
+                      kind: 'StringValue',
+                      value: 'after',
+                      block: false,
+                    },
+                  },
+                ],
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodes' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'subject' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'account' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatar' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'url' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'displayName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'username' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'attachments' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'contentType' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pageInfo' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'startCursor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endCursor' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetHomeTimelineQuery,
+  GetHomeTimelineQueryVariables
+>;
+export const GetPublicTimelineDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPublicTimeline' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'onlyLocal' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'publicTimeline' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'after' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'after' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'onlyLocal' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'onlyLocal' },
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: 'Directive',
+                name: { kind: 'Name', value: '_relayPagination' },
+                arguments: [
+                  {
+                    kind: 'Argument',
+                    name: { kind: 'Name', value: 'mergeMode' },
+                    value: {
+                      kind: 'StringValue',
+                      value: 'after',
+                      block: false,
+                    },
+                  },
+                ],
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodes' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'subject' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'account' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatar' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'url' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'displayName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'username' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'attachments' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'contentType' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'url' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'pageInfo' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'startCursor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endCursor' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPublicTimelineQuery,
+  GetPublicTimelineQueryVariables
 >;
 export const RegisterOauthApplicationDocument = {
   kind: 'Document',

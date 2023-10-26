@@ -39,7 +39,7 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
     LogTracer::init().ok();
 
-    tokio::task::spawn_blocking({
+    kitsune_blocking::io({
         let conn_str = conn_str.to_string();
 
         move || {

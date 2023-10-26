@@ -52,7 +52,7 @@
       />
     </FormKit>
 
-    <BaseModal :closed="!modalData.show" :title="modalData.title">
+    <BaseModal v-model="modalData.show" :title="modalData.title">
       <!-- This is returned from the backend and created from an error type, and only "enhanced" with HTML newlines by us -->
       <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="modalData.content" />
@@ -67,13 +67,16 @@
 <script setup lang="ts">
   import { useMutation } from '@urql/vue';
 
-  import { reactive } from 'vue';
+  import { defineAsyncComponent, reactive } from 'vue';
 
   import { useInstanceInfo } from '../graphql/instance-info';
   import { graphql } from '../graphql/types';
   import { authorizationUrl } from '../lib/oauth2';
-  import BaseModal from './BaseModal.vue';
-  import CaptchaComponent from './CaptchaComponent.vue';
+  import BaseModal from './modal/BaseModal.vue';
+
+  const CaptchaComponent = defineAsyncComponent(
+    () => import('./CaptchaComponent.vue'),
+  );
 
   const modalData = reactive({
     show: false,
@@ -158,15 +161,15 @@
   }
 
   .formkit-form {
-    background-color: $dark2;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 90%;
     margin: 0 auto;
-    padding: 3vh;
-    border-radius: 5px;
     border: 0.2px solid $shade1dark;
+    border-radius: 5px;
+    background-color: $dark2;
+    padding: 3vh;
+    width: 90%;
   }
 
   .formkit-wrapper {
@@ -174,14 +177,14 @@
   }
 
   .formkit-input[type='submit'] {
-    border: 0;
-    background-color: $shade1dark;
-    border-radius: 5px;
-    padding: 10px;
-    font-size: 16px;
-    width: 100px;
-    cursor: pointer;
     transition: 0.5s;
+    cursor: pointer;
+    border: 0;
+    border-radius: 5px;
+    background-color: $shade1dark;
+    padding: 10px;
+    width: 100px;
+    font-size: 16px;
 
     &:hover {
       background-color: $shade2dark;
@@ -189,13 +192,13 @@
   }
 
   .formkit-input:not([type='submit']) {
-    width: 100%;
     border: 0.5px solid $shade1dark;
-    background-color: $dark1;
     border-radius: 2px;
-    font-size: 20px;
-    color: white;
+    background-color: $dark1;
     padding: 5px;
+    width: 100%;
+    color: white;
+    font-size: 20px;
   }
 
   .forms {
@@ -203,9 +206,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-end;
-    width: 40%;
-    padding: 1vw;
     gap: 20px;
+    padding: 1vw;
+    width: 40%;
 
     @media only screen and (max-width: 1367px) {
       align-items: center;
@@ -218,13 +221,13 @@
   }
 
   .formkit-messages {
+    padding-left: 0;
     color: red;
     list-style: none;
-    padding-left: 0;
   }
 
   .formkit-label {
-    text-transform: uppercase;
     margin-bottom: 5px;
+    text-transform: uppercase;
   }
 </style>

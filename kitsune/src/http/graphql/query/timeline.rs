@@ -34,7 +34,7 @@ impl TimelineQuery {
                 let get_home = GetHome::builder()
                     .fetching_account_id(ctx.user_data()?.account.id)
                     .max_id(after)
-                    .min_id(before);
+                    .since_id(before);
                 let get_home = if let Some(first) = first {
                     get_home.limit(first).build()
                 } else {
@@ -76,7 +76,7 @@ impl TimelineQuery {
             |after, before, first, _last| async move {
                 let get_public = GetPublic::builder()
                     .max_id(after)
-                    .min_id(before)
+                    .since_id(before)
                     .only_local(only_local);
                 let get_public = if let Some(first) = first {
                     get_public.limit(first).build()

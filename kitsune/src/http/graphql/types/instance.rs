@@ -30,6 +30,8 @@ impl From<kitsune_captcha::Captcha> for CaptchaInfo {
 
 #[derive(SimpleObject)]
 pub struct Instance {
+    pub captcha: Option<CaptchaInfo>,
+    pub character_limit: usize,
     pub description: String,
     pub domain: String,
     pub local_post_count: u64,
@@ -37,5 +39,4 @@ pub struct Instance {
     pub registrations_open: bool,
     pub user_count: u64,
     pub version: &'static str,
-    pub captcha: Option<CaptchaInfo>,
 }

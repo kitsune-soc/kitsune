@@ -9,7 +9,7 @@ ignored = ["askama_axum"] # See reason below.
 [dependencies]
 askama = "0.12.1"
 askama_axum = "0.3.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
-lettre = { version = "0.10.4", default-features = false, features = [
+lettre = { version = "0.11.0", default-features = false, features = [
     "builder",
     "hostname",
     "pool",
@@ -23,5 +23,5 @@ mrml = { version = "2.0.0-rc4", default-features = false, features = [
     "parse",
     "render",
 ] }
-thiserror = "1.0.49"
-typed-builder = "0.16.2"
+thiserror = "1.0.50"
+typed-builder = "0.18.0"

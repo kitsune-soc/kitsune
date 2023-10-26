@@ -1,6 +1,7 @@
 use clap::Parser;
 use color_eyre::eyre;
-use kitsune_core::{config::Configuration, consts::VERSION};
+use kitsune_config::Configuration;
+use kitsune_core::consts::VERSION;
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -23,6 +24,8 @@ async fn main() -> eyre::Result<()> {
     let args = Args::parse();
     let raw_config = fs::read_to_string(args.config).await?;
     let config: Configuration = toml::from_str(&raw_config)?;
+
+    kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
     let db_pool = kitsune_db::connect(
         &config.database.url,

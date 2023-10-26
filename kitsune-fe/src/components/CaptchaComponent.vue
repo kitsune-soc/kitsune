@@ -7,7 +7,7 @@
   />
 
   <vue-hcaptcha
-    v-if="backend == CaptchaBackend.HCaptcha"
+    v-if="backend === CaptchaBackend.HCaptcha"
     :sitekey="sitekey"
     @verify="onVerify"
     @expired="onExpire"
@@ -58,7 +58,7 @@
   }
 
   onMounted(async () => {
-    if (props.backend == CaptchaBackend.MCaptcha) {
+    if (props.backend === CaptchaBackend.MCaptcha) {
       const config = {
         widgetLink: new URL(props.sitekey),
       };
@@ -77,7 +77,7 @@
   @use '../styles/colours' as *;
 
   #mcaptcha__widget-container {
-    height: 80px;
     border: 1px solid $shade1dark;
+    height: 80px;
   }
 </style>

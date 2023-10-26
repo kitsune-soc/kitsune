@@ -1,17 +1,16 @@
 use super::{CacheBackend, CacheResult};
 use async_trait::async_trait;
-use derive_builder::Builder;
 use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
+use typed_builder::TypedBuilder;
 
-#[derive(Builder)]
-#[builder(pattern = "owned")]
+#[derive(TypedBuilder)]
 pub struct Redis<K, V>
 where
     K: ?Sized,
 {
-    #[builder(default = "\"DEFAULT-REDIS-CACHER\".into()")]
+    #[builder(default = "DEFAULT-REDIS-CACHER".into())]
     namespace: String,
     #[builder(setter(into))]
     prefix: String,
@@ -19,9 +18,9 @@ where
     ttl: Duration,
 
     // Type phantom data
-    #[builder(setter(skip))]
+    #[builder(default, setter(skip))]
     _key: PhantomData<K>,
-    #[builder(setter(skip))]
+    #[builder(default, setter(skip))]
     _value: PhantomData<V>,
 }
 
@@ -39,12 +38,6 @@ where
             .prefix(prefix)
             .ttl(ttl)
             .build()
-            .unwrap()
-    }
-
-    #[must_use]
-    pub fn builder() -> RedisBuilder<K, V> {
-        RedisBuilder::default()
     }
 
     fn compute_key(&self, key: impl Display) -> String {

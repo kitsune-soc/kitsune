@@ -1,21 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "../base.html" %}
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/public/template.css">
-  <title>OAuth Login</title>
-</head>
+{% block title %}
+  OAuth Login
+{% endblock %}
 
-<body>
+{% block body %}
   <p class="header">Kitsune</p>
+
   {% for (_level, msg) in flash_messages %}
-  <div class="message">
-    {{ msg }}
-  </div>
+    <div class="message">
+      {{ msg }}
+    </div>
   {% endfor %}
+
   <form method="post">
     <div>
       <label class="label" for="username">Username</label><br />
@@ -25,6 +22,4 @@
     </div>
     <input class="formButton" type="submit" value="Submit" />
   </form>
-</body>
-
-</html>
+{% endblock %}

@@ -6,14 +6,11 @@
 
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
-use derive_builder::Builder;
-use http::{
-    header::{HeaderName, InvalidHeaderName},
-    request::Parts,
-    HeaderValue,
-};
+use http::{header::HeaderName, request::Parts, HeaderValue};
 use ring::{
     rand::SystemRandom,
     signature::{EcdsaKeyPair, Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_SHA256},
@@ -23,7 +20,7 @@ use std::{
     future::Future,
     time::{Duration, SystemTime},
 };
-use tokio::sync::oneshot;
+use typed_builder::TypedBuilder;
 
 pub use crate::error::Error;
 pub use ring;
@@ -54,14 +51,13 @@ pub enum SignatureComponent<'a> {
 }
 
 impl<'a> SignatureComponent<'a> {
-    fn parse(raw: &'a str) -> Result<Self, InvalidHeaderName> {
-        let component = match raw {
+    fn from_str(raw: &'a str) -> Self {
+        match raw {
             "(request-target)" => Self::RequestTarget,
             "(created)" => Self::Created,
             "(expires)" => Self::Expires,
             header => Self::Header(header),
-        };
-        Ok(component)
+        }
     }
 
     fn as_str(&self) -> &str {
@@ -109,8 +105,7 @@ impl SigningKey for RsaKeyPair {
 /// Cryptographic key
 ///
 /// Depending on the context its used in, it either represents a private or a public key
-#[derive(Builder, Clone)]
-#[builder(pattern = "owned")]
+#[derive(Clone, TypedBuilder)]
 pub struct PrivateKey<'a, K>
 where
     K: SigningKey,
@@ -120,16 +115,6 @@ where
 
     /// Signing key
     key: K,
-}
-
-impl<'a, K> PrivateKey<'a, K>
-where
-    K: SigningKey,
-{
-    /// Return a builder of the private key
-    pub fn builder() -> PrivateKeyBuilder<'a, K> {
-        PrivateKeyBuilder::default()
-    }
 }
 
 struct SignatureString<'a> {
@@ -179,8 +164,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
                             "(request-target): {} {}",
                             value.parts.method.as_str().to_lowercase(),
                             uri.path_and_query()
-                                .map(|path| path.as_str())
-                                .unwrap_or_else(|| uri.path())
+                                .map_or_else(|| uri.path(), |path| path.as_str())
                         )
                     }
                     SignatureComponent::Header(header_name) => {
@@ -204,7 +188,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
 }
 
 /// HTTP signer
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct HttpSigner {
     /// Include the creation timestamp into the signing header
     #[builder(default)]
@@ -216,11 +200,6 @@ pub struct HttpSigner {
 }
 
 impl HttpSigner {
-    /// Return a builder for the HTTP signer
-    pub fn builder() -> HttpSignerBuilder {
-        HttpSignerBuilder::default()
-    }
-
     /// Sign an HTTP request
     pub async fn sign<K>(
         &self,
@@ -245,13 +224,9 @@ impl HttpSigner {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        let (sender, receiver) = oneshot::channel();
-        rayon::spawn(move || {
-            sender
-                .send(key.key.sign(stringified_signature_string.as_bytes()))
-                .ok();
-        });
-        let signature = receiver.await?;
+        let signature =
+            kitsune_blocking::crypto(move || key.key.sign(stringified_signature_string.as_bytes()))
+                .await?;
 
         let signature_header = SignatureHeader {
             key_id: key.key_id,
@@ -272,18 +247,18 @@ impl HttpSigner {
 
 impl Default for HttpSigner {
     fn default() -> Self {
-        Self::builder().build().unwrap()
+        Self::builder().build()
     }
 }
 
 /// HTTP verifier
-#[derive(Builder, Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct HttpVerifier {
     /// Check whether the signature is expired
     ///
     /// This just does a basic check if the `(expires)` header exists.
     /// If you want a more aggressive check, use `enforce_expiration`
-    #[builder(default = "true")]
+    #[builder(default = true)]
     check_expiration: bool,
 
     /// Enforce the signature not being older than this specified duration
@@ -292,16 +267,11 @@ pub struct HttpVerifier {
     /// - If the signature contains an `(expires)` header, we enforce the shorter one
     ///
     /// Defaults to 5 minutes
-    #[builder(default = "Some(Duration::from_secs(5 * 60))")]
+    #[builder(default = Some(Duration::from_secs(5 * 60)))]
     enforce_expiration: Option<Duration>,
 }
 
 impl HttpVerifier {
-    /// Return a builder for the HTTP verifier
-    pub fn builder() -> HttpVerifierBuilder {
-        HttpVerifierBuilder::default()
-    }
-
     /// Verify an HTTP signature
     ///
     /// `key_fn` is a function that obtains a public key (in its DER representation) based in its key ID
@@ -342,16 +312,13 @@ impl HttpVerifier {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        let (sender, receiver) = oneshot::channel();
-        rayon::spawn(move || {
-            sender
-                .send(public_key.verify(
-                    stringified_signature_string.as_bytes(),
-                    &signature_header.signature,
-                ))
-                .ok();
-        });
-        receiver.await??;
+        kitsune_blocking::crypto(move || {
+            public_key.verify(
+                stringified_signature_string.as_bytes(),
+                &signature_header.signature,
+            )
+        })
+        .await??;
 
         Ok(())
     }
@@ -359,6 +326,6 @@ impl HttpVerifier {
 
 impl Default for HttpVerifier {
     fn default() -> Self {
-        Self::builder().build().unwrap()
+        Self::builder().build()
     }
 }

@@ -40,8 +40,8 @@ impl<'a> SignatureHeader<'a> {
                 "headers" => {
                     let components = value
                         .split_whitespace()
-                        .map(SignatureComponent::parse)
-                        .collect::<Result<Vec<_>, _>>()?;
+                        .map(SignatureComponent::from_str)
+                        .collect::<Vec<_>>();
 
                     builder.signature_components(components)
                 }

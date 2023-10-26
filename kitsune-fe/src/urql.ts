@@ -1,10 +1,9 @@
 import {
-  Client,
-  Exchange,
-  cacheExchange,
-  fetchExchange,
-  mapExchange,
-} from '@urql/vue';
+  Directive,
+  cacheExchange as createCacheExchange,
+} from '@urql/exchange-graphcache';
+import { relayPagination } from '@urql/exchange-graphcache/extras';
+import { Client, Exchange, fetchExchange, mapExchange } from '@urql/vue';
 
 import { merge } from 'lodash';
 
@@ -27,6 +26,12 @@ const authExchange: Exchange = mapExchange({
     }
 
     return operation;
+  },
+});
+
+const cacheExchange: Exchange = createCacheExchange({
+  directives: {
+    relayPagination: <Directive>relayPagination,
   },
 });
 

@@ -15,6 +15,9 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 #[non_exhaustive]
 pub enum Error {
     #[error(transparent)]
+    Blocking(#[from] kitsune_blocking::Error),
+
+    #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]

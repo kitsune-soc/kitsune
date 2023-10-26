@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-ahash = "0.8.3"
-async-trait = "0.1.73"
+ahash = "0.8.5"
+async-trait = "0.1.74"
 futures-util = "0.3.28"
 kitsune-retry-policies = { path = "../kitsune-retry-policies" }
 pin-project-lite = "0.2.13"
@@ -18,4 +18,4 @@ serde = "1.0.189"
 simd-json = "0.12.0"
 tokio = { version = "1.33.0", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
-tracing = "0.1.39"
+tracing = "0.1.40"

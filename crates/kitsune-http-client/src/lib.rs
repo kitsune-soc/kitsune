@@ -287,7 +287,6 @@ impl Client {
             .include_creation_timestamp(true)
             .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds
             .build()
-            .unwrap()
             .sign(
                 &parts,
                 vec![
@@ -337,6 +336,12 @@ pub struct Response {
 }
 
 impl Response {
+    /// Convert the response into its inner `hyper` representation
+    #[must_use]
+    pub fn into_inner(self) -> HyperResponse<BoxBody<Bytes, BoxError>> {
+        self.inner
+    }
+
     /// Read the body into a `Bytes`
     ///
     /// # Errors

@@ -9,11 +9,18 @@ codegen-units = 1
 lto = true
 strip = true
 
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+#lto = "thin"
+
 [workspace]
 exclude = ["xtask"]
 members = [
+    "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
+    "crates/kitsune-config",
     "crates/kitsune-core",
     "crates/kitsune-db",
     "crates/kitsune-email",
@@ -22,6 +29,7 @@ members = [
     "crates/kitsune-http-signatures",
     "crates/kitsune-language",
     "crates/kitsune-messaging",
+    "crates/kitsune-observability",
     "crates/kitsune-retry-policies",
     "crates/kitsune-search",
     "crates/kitsune-storage",
@@ -38,7 +46,35 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.0.1-pre.3"
+version = "0.0.1-pre.4"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# Enable all features
+all-features = true
+# Allow own modification (temporary)
+allow-dirty = ["ci"]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.4.0-prerelease.3"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = [
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+
+[workspace.metadata.dist.dependencies.apt]
+libssl-dev = "*"
 
 [patch.crates-io]
+# Patch `isolang` for quicker compiles
+isolang = { git = "https://github.com/humenda/isolang-rs.git", rev = "f015b8cce82b6168303c84543fdd25f57005141c" }
+# Patch `redis` for up-to-date `ahash`
 redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }

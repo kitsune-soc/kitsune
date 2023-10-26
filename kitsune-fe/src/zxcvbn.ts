@@ -7,7 +7,7 @@ import { merge } from 'lodash';
 let message: string | undefined;
 
 export const zxcvbnValidationMessage = () => {
-  return message ? message : '';
+  return message || '';
 };
 
 export const zxcvbnRule: FormKitValidationRule = merge(
