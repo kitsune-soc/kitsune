@@ -354,7 +354,7 @@ mod test {
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use http::uri::PathAndQuery;
+    use http::{header::CONTENT_TYPE, uri::PathAndQuery};
     use hyper::{Body, Request, Response, StatusCode, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
@@ -759,8 +759,10 @@ mod test {
     #[serial_test::serial]
     async fn check_ap_content_type() {
         database_test(|db_pool| async move {
-            let client = service_fn(|_: Request<_>| async {
-                Ok::<_, Infallible>(Response::new(Body::empty()))
+            let client = service_fn(|req: Request<_>| async {
+                let mut res = handle(req).await.unwrap();
+                res.headers_mut().remove(CONTENT_TYPE);
+                Ok::<_, Infallible>(res)
             });
             let client = Client::builder().service(client);
 
