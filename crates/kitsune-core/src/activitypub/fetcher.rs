@@ -100,12 +100,11 @@ impl Fetcher {
         let content_type = response
             .headers()
             .get(CONTENT_TYPE)
-            .map(HeaderValue::to_str)
-            .transpose()?;
+            .map(HeaderValue::as_bytes);
 
         if content_type
-            != Some("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"")
-            && content_type != Some("application/activity+json")
+            != Some(b"application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"")
+            && content_type != Some(b"application/activity+json")
         {
             return Err(ApiError::BadRequest.into());
         }
