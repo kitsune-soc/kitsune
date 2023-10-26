@@ -117,7 +117,7 @@ mod test {
                         }
                         "/users/0x0" => {
                             let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                            Ok::<_, Infallible>(build_ap_response!(body))
+                            Ok::<_, Infallible>(build_ap_response(body))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),
                     }

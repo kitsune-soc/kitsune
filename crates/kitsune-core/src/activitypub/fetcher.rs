@@ -662,11 +662,11 @@ mod test {
 
                         let body = simd_json::to_string(&note).unwrap();
 
-                        Ok::<_, Infallible>(build_ap_response!(body))
+                        Ok::<_, Infallible>(build_ap_response(body))
                     } else if req.uri().path_and_query().unwrap() == Uri::try_from(&author.id).unwrap().path_and_query().unwrap() {
                         let body = simd_json::to_string(&author).unwrap();
 
-                        Ok::<_, Infallible>(build_ap_response!(body))
+                        Ok::<_, Infallible>(build_ap_response(body))
                     } else {
                         handle(req).await
                     }
@@ -893,19 +893,19 @@ mod test {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
                 let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                Ok::<_, Infallible>(build_ap_response!(body))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/@0x0/109501674056556919" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501674056556919.json"
                 );
-                Ok::<_, Infallible>(build_ap_response!(body))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/users/0x0/statuses/109501659207519785" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
                 );
-                Ok::<_, Infallible>(build_ap_response!(body))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
                 let body = include_str!("../../../../test-fixtures/0x0_jrd.json");

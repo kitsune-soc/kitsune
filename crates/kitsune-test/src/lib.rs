@@ -5,27 +5,23 @@
 use self::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
+use http::header::CONTENT_TYPE;
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
 
 mod catch_panic;
 
-#[doc(hidden)]
-pub use http;
-#[doc(hidden)]
-pub use hyper;
-
 type BoxError = Box<dyn Error + Send + Sync>;
 
-#[macro_export]
-macro_rules! build_ap_response {
-    ($body:expr) => {
-        $crate::http::Response::builder()
-            .header("Content-Type", "application/activity+json")
-            .body($crate::hyper::Body::from($body))
-            .unwrap()
-    };
+pub fn build_ap_response<B>(body: B) -> http::Response<hyper::Body>
+where
+    hyper::Body: From<B>,
+{
+    http::Response::builder()
+        .header(CONTENT_TYPE, "application/activity+json")
+        .body(body.into())
+        .unwrap()
 }
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
