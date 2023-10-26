@@ -13,6 +13,8 @@ mod catch_panic;
 
 #[doc(hidden)]
 pub use http;
+#[doc(hidden)]
+pub use hyper;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
@@ -21,7 +23,7 @@ macro_rules! build_ap_response {
     ($body:expr) => {
         $crate::http::Response::builder()
             .header("Content-Type", "application/activity+json")
-            .body(Body::from($body))
+            .body($crate::hyper::Body::from($body))
             .unwrap()
     };
 }
