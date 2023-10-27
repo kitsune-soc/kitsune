@@ -3,6 +3,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use atoi::FromRadix10;
 use core::fmt;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
@@ -11,13 +12,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub enum Error {
     /// Number parsing error
-    Lexical(lexical::Error),
-}
-
-impl From<lexical::Error> for Error {
-    fn from(value: lexical::Error) -> Self {
-        Self::Lexical(value)
-    }
+    NumberParse,
 }
 
 impl fmt::Display for Error {
@@ -61,7 +56,10 @@ pub fn process<T>(masto_id: T) -> Result<Uuid, Error>
 where
     T: AsRef<[u8]>,
 {
-    lexical::parse(masto_id)
-        .map(process_u64)
-        .map_err(Error::from)
+    let (result, index) = u64::from_radix_10(masto_id.as_ref());
+    if index == 0 {
+        return Err(Error::NumberParse);
+    }
+
+    Ok(process_u64(result))
 }
