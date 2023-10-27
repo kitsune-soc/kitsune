@@ -107,22 +107,26 @@ impl Fetcher {
             return Err(ApiError::BadRequest.into());
         };
 
-        let is_json_ld_activitystreams = content_type
-            .essence_str()
-            .eq_ignore_ascii_case("application/ld+json")
-            && content_type
-                .get_param("profile")
-                .map_or(false, |profile_name| {
-                    profile_name
-                        .as_str()
-                        .eq_ignore_ascii_case("https://www.w3.org/ns/activitystreams")
-                });
+        let is_json_ld_activitystreams = || {
+            content_type
+                .essence_str()
+                .eq_ignore_ascii_case("application/ld+json")
+                && content_type
+                    .get_param("profile")
+                    .map_or(false, |profile_name| {
+                        profile_name
+                            .as_str()
+                            .eq_ignore_ascii_case("https://www.w3.org/ns/activitystreams")
+                    })
+        };
 
-        let is_activity_json = content_type
-            .essence_str()
-            .eq_ignore_ascii_case("application/activity+json");
+        let is_activity_json = || {
+            content_type
+                .essence_str()
+                .eq_ignore_ascii_case("application/activity+json")
+        };
 
-        if !is_json_ld_activitystreams && !is_activity_json {
+        if !is_json_ld_activitystreams() && !is_activity_json() {
             return Err(ApiError::BadRequest.into());
         }
 
