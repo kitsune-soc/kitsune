@@ -12,7 +12,8 @@ use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use http::{header::CONTENT_TYPE, HeaderValue};
+use headers::{ContentType, HeaderMapExt};
+use http::HeaderValue;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
@@ -29,6 +30,7 @@ use kitsune_type::{
     ap::{actor::Actor, Object},
     jsonld::RdfNode,
 };
+use mime::Mime;
 use scoped_futures::ScopedFutureExt;
 use serde::de::DeserializeOwned;
 use typed_builder::TypedBuilder;
@@ -97,15 +99,30 @@ impl Fetcher {
         T: DeserializeOwned + RdfNode,
     {
         let response = self.client.get(url).await?;
-        let content_type = response
+        let Some(content_type) = response
             .headers()
-            .get(CONTENT_TYPE)
-            .map(HeaderValue::as_bytes);
+            .typed_get::<ContentType>()
+            .map(Mime::from)
+        else {
+            return Err(ApiError::BadRequest.into());
+        };
 
-        if content_type
-            != Some(b"application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"")
-            && content_type != Some(b"application/activity+json")
-        {
+        let is_json_ld_activitystreams = content_type
+            .essence_str()
+            .eq_ignore_ascii_case("application/ld+json")
+            && content_type
+                .get_param("profile")
+                .map_or(false, |profile_name| {
+                    profile_name
+                        .as_str()
+                        .eq_ignore_ascii_case("https://www.w3.org/ns/activitystreams")
+                });
+
+        let is_activity_json = content_type
+            .essence_str()
+            .eq_ignore_ascii_case("application/activity+json");
+
+        if !is_json_ld_activitystreams && !is_activity_json {
             return Err(ApiError::BadRequest.into());
         }
 

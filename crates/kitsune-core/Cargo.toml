@@ -30,6 +30,7 @@ garde = { version = "0.16.0", default-features = false, features = [
     "serde",
 ] }
 globset = "0.4.13"
+headers = "0.3.9"
 hex-simd = "0.8.0"
 http = "0.2.9"
 img-parts = "0.3.0"

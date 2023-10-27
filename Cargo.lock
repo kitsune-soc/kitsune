@@ -2903,6 +2903,7 @@ dependencies = [
  "futures-util",
  "garde",
  "globset",
+ "headers",
  "hex-simd",
  "http",
  "hyper",
