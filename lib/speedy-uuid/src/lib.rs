@@ -112,6 +112,49 @@ impl FromStr for Uuid {
     }
 }
 
+#[cfg(feature = "async-graphql")]
+mod async_graphql_impl {
+    use super::Uuid;
+    use async_graphql::{
+        connection::CursorType, InputValueError, InputValueResult, Scalar, ScalarType, Value,
+    };
+    use std::str::FromStr;
+
+    impl CursorType for Uuid {
+        type Error = crate::Error;
+
+        fn decode_cursor(s: &str) -> Result<Self, Self::Error> {
+            s.parse()
+        }
+
+        fn encode_cursor(&self) -> String {
+            self.to_string()
+        }
+    }
+
+    /// A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+    /// Strings within GraphQL. UUIDs are used to assign unique identifiers to
+    /// entities without requiring a central allocating authority.
+    ///
+    /// # References
+    ///
+    /// * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+    /// * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+    #[Scalar(name = "UUID", specified_by_url = "http://tools.ietf.org/html/rfc4122")]
+    impl ScalarType for Uuid {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            match value {
+                Value::String(s) => Ok(Uuid::from_str(&s)?),
+                _ => Err(InputValueError::expected_type(value)),
+            }
+        }
+
+        fn to_value(&self) -> Value {
+            Value::String(self.to_string())
+        }
+    }
+}
+
 #[cfg(feature = "diesel")]
 mod diesel_impl {
     use crate::Uuid;
@@ -259,48 +302,5 @@ mod test {
     fn parse_1() {
         let uuid = Uuid::from_str(UUID_1).unwrap();
         assert_eq!(UUID_1, uuid.to_string());
-    }
-}
-
-#[cfg(feature = "async-graphql")]
-mod async_graphql_impl {
-    use super::Uuid;
-    use async_graphql::{
-        connection::CursorType, InputValueError, InputValueResult, Scalar, ScalarType, Value,
-    };
-    use std::str::FromStr;
-
-    impl CursorType for Uuid {
-        type Error = crate::Error;
-
-        fn decode_cursor(s: &str) -> Result<Self, Self::Error> {
-            s.parse()
-        }
-
-        fn encode_cursor(&self) -> String {
-            self.to_string()
-        }
-    }
-
-    /// A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
-    /// Strings within GraphQL. UUIDs are used to assign unique identifiers to
-    /// entities without requiring a central allocating authority.
-    ///
-    /// # References
-    ///
-    /// * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
-    /// * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
-    #[Scalar(name = "UUID", specified_by_url = "http://tools.ietf.org/html/rfc4122")]
-    impl ScalarType for Uuid {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            match value {
-                Value::String(s) => Ok(Uuid::from_str(&s)?),
-                _ => Err(InputValueError::expected_type(value)),
-            }
-        }
-
-        fn to_value(&self) -> Value {
-            Value::String(self.to_string())
-        }
     }
 }
