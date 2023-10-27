@@ -2,7 +2,7 @@ use core::convert::Infallible;
 use hyper::Response;
 use hyper::{Body, Request};
 use kitsune_http_client::Client;
-use simd_json::{OwnedValue, ValueAccess};
+use simd_json::{base::ValueAsScalar, OwnedValue};
 use tower::service_fn;
 
 #[tokio::test]

@@ -39,6 +39,7 @@ members = [
     "kitsune-cli",
     "kitsune-job-runner",
     "lib/athena",
+    "lib/masto-id-convert",
     "lib/post-process",
     "lib/speedy-uuid",
 ]
