@@ -7,7 +7,7 @@ version.workspace = true
 deadpool-redis = "0.13.0"
 diesel = "2.1.3"
 diesel-async = "0.4.1"
-futures-util = "0.3.28"
+futures-util = "0.3.29"
 http = "0.2.9"
 hyper = "0.14.27"
 kitsune-db = { path = "../kitsune-db" }

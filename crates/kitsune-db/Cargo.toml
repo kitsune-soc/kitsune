@@ -20,9 +20,9 @@ kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.1"
 num-traits = "0.2.17"
-serde = { version = "1.0.189", features = ["derive"] }
-simd-json = "0.12.0"
+serde = { version = "1.0.190", features = ["derive"] }
+simd-json = "0.13.3"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.50"
-tracing-log = "0.1.4"
+tracing-log = "0.2.0"
 typed-builder = "0.18.0"
