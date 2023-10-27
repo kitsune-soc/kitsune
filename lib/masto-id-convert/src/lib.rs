@@ -7,40 +7,16 @@ use core::fmt;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
 
-macro_rules! impl_from {
-    (
-        $(#[$top_annotation:meta])*
-        $vb:vis enum $name:ident {
-        $(
-            $(#[$branch_annotation:meta])*
-            $branch_name:ident ($from_type:ty)
-        ),+
-        $(,)*
-    }) => {
-        $(#[$top_annotation])*
-        $vb enum $name {
-            $(
-                $(#[$branch_annotation])*
-                $branch_name($from_type),
-            )*
-        }
-
-        $(
-            impl From<$from_type> for $name {
-                fn from(val: $from_type) -> Self {
-                    Self::$branch_name(val)
-                }
-            }
-        )*
-    };
+/// Combined error type
+#[derive(Debug)]
+pub enum Error {
+    /// Number parsing error
+    Lexical(lexical::Error),
 }
 
-impl_from! {
-    /// Combined error type
-    #[derive(Debug)]
-    pub enum Error {
-        /// Number parsing error
-        Lexical(lexical::Error),
+impl From<lexical::Error> for Error {
+    fn from(value: lexical::Error) -> Self {
+        Self::Lexical(value)
     }
 }
 
