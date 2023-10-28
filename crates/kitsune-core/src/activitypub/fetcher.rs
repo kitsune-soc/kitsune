@@ -25,7 +25,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
-use kitsune_search::{Search, SearchBackend};
+use kitsune_search::SearchBackend;
 use kitsune_type::{
     ap::{actor::Actor, Object},
     jsonld::RdfNode,
@@ -85,7 +85,7 @@ pub struct Fetcher {
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
-    search_service: Search,
+    search_backend: kitsune_search::Search,
     webfinger: Webfinger,
 
     // Caches
@@ -292,7 +292,7 @@ impl Fetcher {
             })
             .await?;
 
-        self.search_service
+        self.search_backend
             .add_to_index(account.clone().into())
             .await?;
 
@@ -346,7 +346,7 @@ impl Fetcher {
             .embed_client(self.embed_client.as_ref())
             .fetcher(self)
             .object(Box::new(object))
-            .search_service(&self.search_service)
+            .search_backend(&self.search_backend)
             .build();
         let post = process_new_object(process_data).await?;
 
@@ -419,7 +419,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -482,7 +482,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -559,7 +559,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -593,7 +593,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -705,7 +705,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -732,7 +732,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()));
 
@@ -798,7 +798,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))
@@ -827,7 +827,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()));
 
@@ -894,7 +894,7 @@ mod test {
                     })
                     .unwrap(),
                 )
-                .search_service(NoopSearchService)
+                .search_backend(NoopSearchService)
                 .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
                 .post_cache(Arc::new(NoopCache.into()))
                 .user_cache(Arc::new(NoopCache.into()))

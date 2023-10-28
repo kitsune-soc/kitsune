@@ -136,7 +136,7 @@ mod test {
                         })
                         .unwrap(),
                     )
-                    .search_service(NoopSearchService)
+                    .search_backend(NoopSearchService)
                     .webfinger(webfinger.clone())
                     .post_cache(Arc::new(NoopCache.into()))
                     .user_cache(Arc::new(NoopCache.into()))

@@ -28,6 +28,11 @@ pub struct SearchService {
 }
 
 impl SearchService {
+    #[must_use]
+    pub fn backend(&self) -> &kitsune_search::Search {
+        &self.search_backend
+    }
+
     pub async fn search(&self, search: Search<'_>) -> Result<Vec<SearchResult>> {
         search.validate(&())?;
 

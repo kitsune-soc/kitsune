@@ -7,14 +7,13 @@ use kitsune_core::{
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        notification::NotificationService, post::PostService, timeline::TimelineService,
-        url::UrlService, user::UserService,
+        notification::NotificationService, post::PostService, search::SearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     state::{EventEmitter, Service as CoreServiceState, State as CoreState},
 };
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_search::Search;
 
 #[cfg(feature = "mastodon-api")]
 use kitsune_core::mapping::MastodonMapper;
@@ -60,7 +59,7 @@ impl_from_ref! {
         JobService => |input: &Zustand| input.core.service.job.clone(),
         NotificationService => |input: &Zustand| input.core.service.notification.clone(),
         PostService => |input: &Zustand| input.core.service.post.clone(),
-        Search => |input: &Zustand| input.core.service.search.clone(),
+        SearchService => |input: &Zustand| input.core.service.search.clone(),
         InstanceService => |input: &Zustand| input.core.service.instance.clone(),
         TimelineService => |input: &Zustand| input.core.service.timeline.clone(),
         UrlService => |input: &Zustand| input.core.service.url.clone(),

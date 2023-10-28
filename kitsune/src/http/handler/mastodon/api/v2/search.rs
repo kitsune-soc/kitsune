@@ -9,18 +9,20 @@ use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_core::{consts::API_MAX_LIMIT, error::Error as CoreError};
+use kitsune_core::{
+    consts::API_MAX_LIMIT,
+    service::search::{Search, SearchService},
+};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
 };
-use kitsune_search::{Search, SearchBackend, SearchIndex};
+use kitsune_search::SearchIndex;
 use kitsune_type::mastodon::SearchResult;
 use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use std::cmp::min;
-use url::Url;
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Deserialize, ToSchema)]
@@ -60,7 +62,7 @@ struct SearchQuery {
 )]
 async fn get(
     State(state): State<Zustand>,
-    State(search): State<Search>,
+    State(search_service): State<SearchService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Either<Json<SearchResult>, StatusCode>> {
@@ -76,81 +78,56 @@ async fn get(
         vec![SearchIndex::Account, SearchIndex::Post]
     };
 
+    let search = Search::builder()
+        .indices(&indices)
+        .max_id(query.max_id)
+        .max_results(min(query.limit, API_MAX_LIMIT as u64))
+        .min_id(query.min_id)
+        .offset(query.offset)
+        .query(&query.query)
+        .build();
+    let results = search_service.search(search).await?;
     // TODO: Find a way to pipeline
     let mut search_result = SearchResult::default();
-    for index in indices {
-        let results = search
-            .search(
-                index,
-                &query.query,
-                min(query.limit, API_MAX_LIMIT as u64),
-                query.offset,
-                query.min_id,
-                query.max_id,
-            )
-            .await
-            .map_err(CoreError::from)?;
 
-        for result in results {
-            search_result = state
-                .db_pool()
-                .with_connection(|db_conn| {
-                    async {
-                        match index {
-                            SearchIndex::Account => {
-                                let account = accounts::table
-                                    .find(result.id)
-                                    .select(Account::as_select())
-                                    .get_result::<Account>(db_conn)
-                                    .await?;
+    for result in results {
+        search_result = state
+            .db_pool()
+            .with_connection(|db_conn| {
+                async {
+                    match result.index {
+                        SearchIndex::Account => {
+                            let account = accounts::table
+                                .find(result.id)
+                                .select(Account::as_select())
+                                .get_result::<Account>(db_conn)
+                                .await?;
 
-                                search_result
-                                    .accounts
-                                    .push(state.mastodon_mapper().map(account).await?);
-                            }
-                            SearchIndex::Post => {
-                                let post = posts::table
-                                    .find(result.id)
-                                    .select(Post::as_select())
-                                    .get_result::<Post>(db_conn)
-                                    .await?;
-
-                                search_result
-                                    .statuses
-                                    .push(state.mastodon_mapper().map(post).await?);
-                            }
+                            search_result
+                                .accounts
+                                .push(state.mastodon_mapper().map(account).await?);
                         }
+                        SearchIndex::Post => {
+                            let post = posts::table
+                                .find(result.id)
+                                .select(Post::as_select())
+                                .get_result::<Post>(db_conn)
+                                .await?;
 
-                        Ok::<_, Error>(search_result)
+                            search_result.statuses.push(
+                                state
+                                    .mastodon_mapper()
+                                    .map((&user_data.account, post))
+                                    .await?,
+                            );
+                        }
                     }
-                    .scoped()
-                })
-                .await?;
-        }
-    }
 
-    if Url::parse(&query.query).is_ok() {
-        match state
-            .fetcher()
-            .fetch_actor(query.query.as_str().into())
-            .await
-        {
-            Ok(account) => search_result
-                .accounts
-                .insert(0, state.mastodon_mapper().map(account).await?),
-            Err(error) => debug!(?error, "couldn't fetch actor via url"),
-        }
-
-        match state.fetcher().fetch_object(query.query.as_str()).await {
-            Ok(post) => search_result.statuses.insert(
-                0,
-                state
-                    .mastodon_mapper()
-                    .map((&user_data.account, post))
-                    .await?,
-            ),
-            Err(error) => debug!(?error, "couldn't fetch object via url"),
-        }
+                    Ok::<_, Error>(search_result)
+                }
+                .scoped()
+            })
+            .await?;
     }
 
     Ok(Either::E1(Json(search_result)))

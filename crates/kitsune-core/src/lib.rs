@@ -59,6 +59,7 @@ use kitsune_search::{NoopSearchService, Search, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use rusty_s3::{Bucket as S3Bucket, Credentials as S3Credentials};
 use serde::{de::DeserializeOwned, Serialize};
+use service::search::SearchService;
 use std::{
     fmt::Display,
     str::FromStr,
@@ -216,7 +217,7 @@ pub async fn prepare_state(
     let messaging_hub = prepare_messaging(config).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 
-    let search_service = prepare_search(&config.search, &db_pool).await?;
+    let search_backend = prepare_search(&config.search, &db_pool).await?;
 
     let embed_client = config.embed.as_ref().map(|embed_config| {
         EmbedClient::builder()
@@ -237,8 +238,13 @@ pub async fn prepare_state(
         .federation_filter(federation_filter_service.clone())
         .post_cache(prepare_cache(config, "ACTIVITYPUB-POST"))
         .webfinger(webfinger.clone())
-        .search_service(search_service.clone())
+        .search_backend(search_backend.clone())
         .user_cache(prepare_cache(config, "ACTIVITYPUB-USER"))
+        .build();
+
+    let search_service = SearchService::builder()
+        .fetcher(fetcher.clone())
+        .search_backend(search_backend.clone())
         .build();
 
     let job_service = JobService::builder().job_queue(job_queue).build();
@@ -296,7 +302,7 @@ pub async fn prepare_state(
         .instance_service(instance_service.clone())
         .job_service(job_service.clone())
         .post_resolver(post_resolver)
-        .search_service(search_service.clone())
+        .search_backend(search_backend)
         .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
         .build();
