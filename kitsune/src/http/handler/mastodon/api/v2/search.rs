@@ -8,6 +8,7 @@ use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use futures_util::stream::{FuturesUnordered, TryStreamExt};
 use http::StatusCode;
 use kitsune_core::{
     consts::API_MAX_LIMIT,
@@ -88,7 +89,42 @@ async fn get(
         .build();
     let results = search_service.search(search).await?;
     // TODO: Find a way to pipeline
-    let mut search_result = SearchResult::default();
+
+    state
+        .db_pool()
+        .with_connection(|db_conn| {
+            async move {
+                let mut search_result = SearchResult::default();
+
+                results
+                    .iter()
+                    .map(|result| async {
+                        match result.index {
+                            SearchIndex::Account => Either::E1(
+                                accounts::table
+                                    .find(result.id)
+                                    .select(Account::as_select())
+                                    .get_result::<Account>(db_conn)
+                                    .await,
+                            ),
+                            SearchIndex::Post => Either::E2(
+                                posts::table
+                                    .find(result.id)
+                                    .select(Post::as_select())
+                                    .get_result::<Post>(db_conn)
+                                    .await,
+                            ),
+                        }
+                    })
+                    .collect::<FuturesUnordered<_>>()
+                    .try_collect::<Vec<Either<Account, Post>>>()
+                    .await?;
+
+                Ok(search_result)
+            }
+            .scoped()
+        })
+        .await;
 
     for result in results {
         search_result = state
