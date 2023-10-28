@@ -113,10 +113,11 @@ impl Fetcher {
                 .eq_ignore_ascii_case("application/ld+json")
                 && content_type
                     .get_param("profile")
-                    .map_or(false, |profile_name| {
-                        profile_name
+                    .map_or(false, |profile_urls| {
+                        profile_urls
                             .as_str()
-                            .eq_ignore_ascii_case("https://www.w3.org/ns/activitystreams")
+                            .split_whitespace()
+                            .any(|url| url == "https://www.w3.org/ns/activitystreams")
                     })
         };
 
