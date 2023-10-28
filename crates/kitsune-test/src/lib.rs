@@ -5,6 +5,7 @@
 use self::catch_panic::CatchPanic;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
+use http::header::CONTENT_TYPE;
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
@@ -12,6 +13,16 @@ use std::{env, error::Error, panic};
 mod catch_panic;
 
 type BoxError = Box<dyn Error + Send + Sync>;
+
+pub fn build_ap_response<B>(body: B) -> http::Response<hyper::Body>
+where
+    hyper::Body: From<B>,
+{
+    http::Response::builder()
+        .header(CONTENT_TYPE, "application/activity+json")
+        .body(body.into())
+        .unwrap()
+}
 
 pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where

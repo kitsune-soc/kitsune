@@ -12,6 +12,7 @@ use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
@@ -25,8 +26,13 @@ use kitsune_db::{
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
 use kitsune_search::{SearchBackend, SearchService};
-use kitsune_type::ap::{actor::Actor, Object};
+use kitsune_type::{
+    ap::{actor::Actor, Object},
+    jsonld::RdfNode,
+};
+use mime::Mime;
 use scoped_futures::ScopedFutureExt;
+use serde::de::DeserializeOwned;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -88,6 +94,46 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
+    async fn fetch_ap_resource<T>(&self, url: &str) -> Result<T>
+    where
+        T: DeserializeOwned + RdfNode,
+    {
+        let response = self.client.get(url).await?;
+        let Some(content_type) = response
+            .headers()
+            .typed_get::<ContentType>()
+            .map(Mime::from)
+        else {
+            return Err(ApiError::BadRequest.into());
+        };
+
+        let is_json_ld_activitystreams = || {
+            content_type
+                .essence_str()
+                .eq_ignore_ascii_case("application/ld+json")
+                && content_type
+                    .get_param("profile")
+                    .map_or(false, |profile_urls| {
+                        profile_urls
+                            .as_str()
+                            .split_whitespace()
+                            .any(|url| url == "https://www.w3.org/ns/activitystreams")
+                    })
+        };
+
+        let is_activity_json = || {
+            content_type
+                .essence_str()
+                .eq_ignore_ascii_case("application/activity+json")
+        };
+
+        if !is_json_ld_activitystreams() && !is_activity_json() {
+            return Err(ApiError::BadRequest.into());
+        }
+
+        Ok(response.jsonld().await?)
+    }
+
     /// Fetch an ActivityPub actor
     ///
     /// # Panics
@@ -127,7 +173,7 @@ impl Fetcher {
             return Err(ApiError::Unauthorised.into());
         }
 
-        let mut actor: Actor = self.client.get(url.as_str()).await?.jsonld().await?;
+        let mut actor: Actor = self.fetch_ap_resource(url.as_str()).await?;
 
         let mut domain = url.host_str().unwrap();
         let domain_buf;
@@ -292,7 +338,7 @@ impl Fetcher {
         }
 
         let url = Url::parse(url)?;
-        let object: Object = self.client.get(url.as_str()).await?.jsonld().await?;
+        let object: Object = self.fetch_ap_resource(url.as_str()).await?;
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
@@ -330,7 +376,7 @@ mod test {
     };
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use http::uri::PathAndQuery;
+    use http::{header::CONTENT_TYPE, uri::PathAndQuery};
     use hyper::{Body, Request, Response, StatusCode, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
@@ -338,7 +384,7 @@ mod test {
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
-    use kitsune_test::database_test;
+    use kitsune_test::{build_ap_response, database_test};
     use kitsune_type::{
         ap::{
             actor::{Actor, ActorType, PublicKey},
@@ -587,6 +633,7 @@ mod test {
             let client = service_fn(move |req: Request<_>| {
                 let count = request_counter.fetch_add(1, Ordering::SeqCst);
                 assert!(MAX_FETCH_DEPTH * 3 >= count);
+
                 async move {
                     let author_id = "https://example.com/users/1".to_owned();
                     let author = Actor {
@@ -633,11 +680,14 @@ mod test {
                             to: vec![PUBLIC_IDENTIFIER.into()],
                             cc: Vec::new(),
                         };
+
                         let body = simd_json::to_string(&note).unwrap();
-                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+
+                        Ok::<_, Infallible>(build_ap_response(body))
                     } else if req.uri().path_and_query().unwrap() == Uri::try_from(&author.id).unwrap().path_and_query().unwrap() {
                         let body = simd_json::to_string(&author).unwrap();
-                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+
+                        Ok::<_, Infallible>(build_ap_response(body))
                     } else {
                         handle(req).await
                     }
@@ -723,6 +773,43 @@ mod test {
                 .fetch_object("https://example.com/@0x0/109501674056556919")
                 .await
                 .unwrap_err();
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn check_ap_content_type() {
+        database_test(|db_pool| async move {
+            let client = service_fn(|req: Request<_>| async {
+                let mut res = handle(req).await.unwrap();
+                res.headers_mut().remove(CONTENT_TYPE);
+                Ok::<_, Infallible>(res)
+            });
+            let client = Client::builder().service(client);
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool)
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_service(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            assert!(matches!(
+                fetcher
+                    .fetch_object("https://corteximplant.com/users/0x0")
+                    .await,
+                Err(Error::Api(ApiError::BadRequest))
+            ));
         })
         .await;
     }
@@ -831,19 +918,19 @@ mod test {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
                 let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/@0x0/109501674056556919" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501674056556919.json"
                 );
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/users/0x0/statuses/109501659207519785" => {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
                 );
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(build_ap_response(body))
             }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
                 let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
