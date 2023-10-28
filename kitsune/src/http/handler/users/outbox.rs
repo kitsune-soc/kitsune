@@ -2,7 +2,6 @@ use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_core::{
     mapping::IntoActivity,
@@ -42,6 +41,8 @@ pub async fn get(
     let account = state
         .db_pool()
         .with_connection(|db_conn| {
+            use diesel_async::RunQueryDsl;
+
             accounts::table
                 .find(account_id)
                 .filter(accounts::local.eq(true))
@@ -72,7 +73,7 @@ pub async fn get(
         let id = format!("{}{original_uri}", url_service.base_url());
         let prev = format!(
             "{base_url}?page=true&min_id={}",
-            posts.get(0).map_or(Uuid::max(), |post| post.id)
+            posts.first().map_or(Uuid::max(), |post| post.id)
         );
         let next = format!(
             "{base_url}?page=true&max_id={}",
@@ -96,6 +97,8 @@ pub async fn get(
         let public_post_count = state
             .db_pool()
             .with_connection(|db_conn| {
+                use diesel_async::RunQueryDsl;
+
                 Post::belonging_to(&account)
                     .add_post_permission_check(PermissionCheck::default())
                     .count()
