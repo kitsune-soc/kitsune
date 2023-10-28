@@ -14,7 +14,7 @@ use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
 };
-use kitsune_search::{SearchBackend, SearchIndex, SearchService};
+use kitsune_search::{Search, SearchBackend, SearchIndex};
 use kitsune_type::mastodon::SearchResult;
 use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
@@ -60,7 +60,7 @@ struct SearchQuery {
 )]
 async fn get(
     State(state): State<Zustand>,
-    State(search): State<SearchService>,
+    State(search): State<Search>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
 ) -> Result<Either<Json<SearchResult>, StatusCode>> {
@@ -82,7 +82,7 @@ async fn get(
         let results = search
             .search(
                 index,
-                query.query.clone(),
+                &query.query,
                 min(query.limit, API_MAX_LIMIT as u64),
                 query.offset,
                 query.min_id,

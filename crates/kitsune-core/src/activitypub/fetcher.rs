@@ -25,7 +25,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::{Search, SearchBackend};
 use kitsune_type::{
     ap::{actor::Actor, Object},
     jsonld::RdfNode,
@@ -85,7 +85,7 @@ pub struct Fetcher {
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
-    search_service: SearchService,
+    search_service: Search,
     webfinger: Webfinger,
 
     // Caches

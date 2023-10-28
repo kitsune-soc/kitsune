@@ -47,7 +47,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::{Search, SearchBackend};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -300,7 +300,7 @@ pub struct PostService {
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
-    search_service: SearchService,
+    search_service: Search,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }

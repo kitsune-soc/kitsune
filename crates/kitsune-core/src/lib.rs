@@ -55,7 +55,7 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_search::{NoopSearchService, SearchService, SqlSearchService};
+use kitsune_search::{NoopSearchService, Search, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
 use rusty_s3::{Bucket as S3Bucket, Credentials as S3Credentials};
 use serde::{de::DeserializeOwned, Serialize};
@@ -187,7 +187,7 @@ async fn prepare_messaging(config: &Configuration) -> eyre::Result<MessagingHub>
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_pool: &PgPool,
-) -> eyre::Result<SearchService> {
+) -> eyre::Result<Search> {
     let service = match search_config {
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]

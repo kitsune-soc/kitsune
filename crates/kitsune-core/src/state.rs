@@ -11,7 +11,7 @@ use crate::{
 };
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_search::SearchService;
+use kitsune_search::Search;
 
 /// Emitter collection
 ///
@@ -37,7 +37,7 @@ pub struct Service {
     pub notification: NotificationService,
     pub post: PostService,
     pub instance: InstanceService,
-    pub search: SearchService,
+    pub search: Search,
     pub timeline: TimelineService,
     pub url: UrlService,
     pub user: UserService,
