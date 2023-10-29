@@ -141,7 +141,7 @@ async fn preprocess_object(
         embed_client,
         mut object,
         fetcher,
-        search_backend: search_service,
+        search_backend,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
@@ -200,7 +200,7 @@ async fn preprocess_object(
         content_lang,
         db_pool,
         object,
-        search_backend: search_service,
+        search_backend,
     })
 }
 
@@ -214,7 +214,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         content_lang,
         db_pool,
         object,
-        search_backend: search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -270,7 +270,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.add_to_index(post.clone().into()).await?;
+        search_backend.add_to_index(post.clone().into()).await?;
     }
 
     Ok(post)
@@ -286,7 +286,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         content_lang,
         db_pool,
         object,
-        search_backend: search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -336,7 +336,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.update_in_index(post.clone().into()).await?;
+        search_backend.update_in_index(post.clone().into()).await?;
     }
 
     Ok(post)
