@@ -1,4 +1,4 @@
-use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
 use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
 use serde::Deserialize;
@@ -103,7 +103,7 @@ impl SearchBackend for MeiliSearchService {
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
+    ) -> Result<Vec<SearchResultReference>> {
         let min_timestamp = min_id.map_or(u64::MIN, |id| {
             let (created_at_secs, _) = id.get_timestamp().unwrap().to_unix();
             created_at_secs
@@ -129,7 +129,7 @@ impl SearchBackend for MeiliSearchService {
         Ok(results
             .hits
             .into_iter()
-            .map(|item| SearchResult {
+            .map(|item| SearchResultReference {
                 index,
                 id: item.result.id,
             })

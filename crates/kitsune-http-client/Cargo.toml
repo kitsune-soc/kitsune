@@ -20,7 +20,7 @@ kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-type = { path = "../kitsune-type" }
 pin-project-lite = "0.2.13"
 serde = "1.0.190"
-simd-json = "0.13.3"
+simd-json = "0.13.4"
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.4", features = [
     # Explicitly exclude `zstd`

@@ -243,6 +243,7 @@ pub async fn prepare_state(
         .build();
 
     let search_service = SearchService::builder()
+        .db_pool(db_pool.clone())
         .fetcher(fetcher.clone())
         .search_backend(search_backend.clone())
         .build();

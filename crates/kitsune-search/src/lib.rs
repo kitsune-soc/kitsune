@@ -106,14 +106,14 @@ impl From<DbPost> for SearchItem {
     }
 }
 
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SearchIndex {
     Account,
     Post,
 }
 
 #[derive(Clone, Copy)]
-pub struct SearchResult {
+pub struct SearchResultReference {
     pub index: SearchIndex,
     pub id: Uuid,
 }
@@ -141,7 +141,7 @@ pub trait SearchBackend: Send + Sync {
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>>;
+    ) -> Result<Vec<SearchResultReference>>;
 
     async fn update_in_index(&self, item: SearchItem) -> Result<()>;
 }
@@ -174,7 +174,7 @@ impl SearchBackend for NoopSearchService {
         _offset: u64,
         _min_id: Option<Uuid>,
         _max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
+    ) -> Result<Vec<SearchResultReference>> {
         Ok(Vec::new())
     }
 

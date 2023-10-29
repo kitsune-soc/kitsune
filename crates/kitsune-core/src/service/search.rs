@@ -1,14 +1,29 @@
 use crate::{activitypub::Fetcher, consts::API_MAX_LIMIT, error::Result};
+use ahash::AHashSet;
+use diesel::{QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
+use futures_util::{stream::FuturesUnordered, FutureExt, TryFutureExt, TryStreamExt};
 use garde::Validate;
-use kitsune_search::{SearchBackend, SearchIndex, SearchResult};
+use kitsune_db::{
+    model::{account::Account, post::Post},
+    schema::{accounts, posts},
+    PgPool,
+};
+use kitsune_search::{SearchBackend, SearchIndex};
+use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 use url::Url;
 
+pub enum SearchResult {
+    Account(Account),
+    Post(Post),
+}
+
 #[derive(TypedBuilder, Validate)]
 pub struct Search<'a> {
     #[garde(skip)]
-    indices: &'a [SearchIndex],
+    indices: AHashSet<SearchIndex>,
     #[garde(skip)]
     query: &'a str,
     #[garde(range(max = API_MAX_LIMIT as u64))]
@@ -23,6 +38,7 @@ pub struct Search<'a> {
 
 #[derive(Clone, TypedBuilder)]
 pub struct SearchService {
+    db_pool: PgPool,
     fetcher: Fetcher,
     search_backend: kitsune_search::Search,
 }
@@ -42,36 +58,59 @@ impl SearchService {
 
         if let Ok(searched_url) = Url::parse(search.query) {
             match self.fetcher.fetch_actor(searched_url.as_str().into()).await {
-                Ok(account) => results.push(SearchResult {
-                    index: SearchIndex::Account,
-                    id: account.id,
-                }),
+                Ok(account) => results.push(SearchResult::Account(account)),
                 Err(error) => debug!(?error, "couldn't fetch actor via url"),
             }
 
             match self.fetcher.fetch_object(searched_url.as_str()).await {
-                Ok(post) => results.push(SearchResult {
-                    index: SearchIndex::Post,
-                    id: post.id,
-                }),
+                Ok(post) => results.push(SearchResult::Post(post)),
                 Err(error) => debug!(?error, "couldn't fetch object via url"),
             }
         }
 
-        for index in search.indices {
-            results.extend(
-                self.search_backend
-                    .search(
-                        *index,
-                        search.query,
-                        search.max_results,
-                        search.offset,
-                        search.min_id,
-                        search.max_id,
-                    )
-                    .await?,
-            );
-        }
+        let result_references = search
+            .indices
+            .into_iter()
+            .map(|index| {
+                self.search_backend.search(
+                    index,
+                    search.query,
+                    search.max_results,
+                    search.offset,
+                    search.min_id,
+                    search.max_id,
+                )
+            })
+            .collect::<FuturesUnordered<_>>()
+            .try_concat()
+            .await?;
+
+        let search_backend_results = self
+            .db_pool
+            .with_connection(|db_conn| {
+                result_references
+                    .iter()
+                    .map(|result| match result.index {
+                        SearchIndex::Account => accounts::table
+                            .find(result.id)
+                            .select(Account::as_select())
+                            .get_result::<Account>(db_conn)
+                            .map_ok(SearchResult::Account)
+                            .left_future(),
+                        SearchIndex::Post => posts::table
+                            .find(result.id)
+                            .select(Post::as_select())
+                            .get_result::<Post>(db_conn)
+                            .map_ok(SearchResult::Post)
+                            .right_future(),
+                    })
+                    .collect::<FuturesUnordered<_>>()
+                    .try_collect::<Vec<SearchResult>>()
+                    .scoped()
+            })
+            .await?;
+
+        results.extend(search_backend_results);
 
         Ok(results)
     }
