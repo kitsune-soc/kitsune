@@ -264,6 +264,7 @@ impl AccountService {
                     .receiving_account_id(account.id)
                     .follow(follower.id)
             };
+
             self.db_pool
                 .with_connection(|mut db_conn| {
                     diesel::insert_into(notifications::table)
@@ -274,6 +275,7 @@ impl AccountService {
                 })
                 .await?;
         }
+
         if !account.local {
             self.job_service
                 .enqueue(Enqueue::builder().job(DeliverFollow { follow_id }).build())
