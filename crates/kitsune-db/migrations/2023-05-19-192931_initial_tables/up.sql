@@ -88,7 +88,7 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     -- UNIQUE constraints
-    UNIQUE (username, domain),
+    UNIQUE (LOWER(username), domain),
     UNIQUE (confirmation_token),
 
     -- Foreign key constraints

@@ -2,9 +2,12 @@ use crate::Result;
 use clap::{Args, Subcommand, ValueEnum};
 use diesel::{BelongingToDsl, BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use kitsune_db::model::{
-    user::User,
-    user_role::{NewUserRole, Role as DbRole, UserRole},
+use kitsune_db::{
+    function::lower,
+    model::{
+        user::User,
+        user_role::{NewUserRole, Role as DbRole, UserRole},
+    },
 };
 use speedy_uuid::Uuid;
 
@@ -77,7 +80,7 @@ async fn list_roles(db_conn: &mut AsyncPgConnection, username_str: &str) -> Resu
     use kitsune_db::schema::users;
 
     let user: User = users::table
-        .filter(users::username.eq(username_str))
+        .filter(lower(users::username).eq(lower(username_str)))
         .first(db_conn)
         .await?;
 
@@ -101,7 +104,7 @@ async fn remove_role(
     use kitsune_db::schema::{users, users_roles};
 
     let user = users::table
-        .filter(users::username.eq(username_str))
+        .filter(lower(users::username).eq(lower(username_str)))
         .first::<User>(db_conn)
         .await?;
 
