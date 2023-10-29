@@ -19,8 +19,11 @@ thiserror = "1.0.50"
 tracing = "0.1.40"
 
 # "meilisearch" feature
+isahc = { version = "1.7.2", default-features = false, features = [
+    "static-ssl",
+], optional = true }
 meilisearch-sdk = { version = "0.24.2", optional = true }
 
 [features]
 default = []
-meilisearch = ["dep:meilisearch-sdk"]
+meilisearch = ["dep:isahc", "dep:meilisearch-sdk"]
