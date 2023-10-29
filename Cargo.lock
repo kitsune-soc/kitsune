@@ -2782,6 +2782,7 @@ dependencies = [
  "kitsune-job-runner",
  "kitsune-language",
  "kitsune-observability",
+ "kitsune-oidc",
  "kitsune-search",
  "kitsune-storage",
  "kitsune-test",
@@ -3121,6 +3122,28 @@ dependencies = [
  "tracing-error",
  "tracing-opentelemetry",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kitsune-oidc"
+version = "0.0.1-pre.4"
+dependencies = [
+ "async-trait",
+ "deadpool-redis",
+ "enum_dispatch",
+ "http",
+ "hyper",
+ "kitsune-http-client",
+ "moka",
+ "once_cell",
+ "openidconnect",
+ "redis",
+ "serde",
+ "simd-json",
+ "speedy-uuid",
+ "thiserror",
+ "typed-builder",
+ "url",
 ]
 
 [[package]]

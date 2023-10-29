@@ -97,6 +97,7 @@ async-graphql = { version = "6.0.9", default-features = false, features = [
 async-graphql-axum = { version = "6.0.9", optional = true }
 
 # "oidc" feature
+kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 openidconnect = { version = "3.4.0", default-features = false, optional = true }
 
 [dev-dependencies]
@@ -114,4 +115,4 @@ graphql-api = [
 ]
 mastodon-api = ["kitsune-core/mastodon-api"]
 meilisearch = ["kitsune-core/meilisearch"]
-oidc = ["dep:openidconnect"]
+oidc = ["dep:kitsune-oidc", "dep:openidconnect"]

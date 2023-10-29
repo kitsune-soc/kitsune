@@ -17,19 +17,16 @@ pub mod consts;
 pub mod error;
 pub mod http;
 pub mod oauth2;
-#[cfg(feature = "oidc")]
-pub mod oidc;
 pub mod state;
 
 use self::{
-    oauth2::OAuth2Service,
+    oauth2::{OAuth2Service, OAuthEndpoint},
     state::{SessionConfig, Zustand},
 };
 use athena::JobQueue;
 use kitsune_config::Configuration;
 use kitsune_core::job::KitsuneContextRepo;
 use kitsune_db::PgPool;
-use oauth2::OAuthEndpoint;
 
 #[cfg(feature = "oidc")]
 use {
