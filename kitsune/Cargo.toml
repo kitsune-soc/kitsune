@@ -100,6 +100,7 @@ kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 
 [dev-dependencies]
 deadpool-redis = "0.13.0"
+kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"

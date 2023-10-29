@@ -2778,6 +2778,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-job-runner",
  "kitsune-language",
