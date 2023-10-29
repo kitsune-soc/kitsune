@@ -1,4 +1,4 @@
-use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
@@ -44,13 +44,13 @@ impl SearchBackend for SearchService {
     async fn search(
         &self,
         index: SearchIndex,
-        query: String,
+        query: &str,
         max_results: u64,
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
-        let query_lang = kitsune_language::detect_language(DetectionBackend::default(), &query);
+    ) -> Result<Vec<SearchResultReference>> {
+        let query_lang = kitsune_language::detect_language(DetectionBackend::default(), query);
         let query_fn_call = websearch_to_tsquery_with_search_config(
             iso_code_to_language(LanguageIsoCode::from(query_lang)),
             &query,
@@ -79,7 +79,7 @@ impl SearchBackend for SearchService {
                                 .select(accounts::id)
                                 .load_stream(db_conn)
                                 .await?
-                                .map_ok(|id| SearchResult { id })
+                                .map_ok(|id| SearchResultReference { index, id })
                                 .try_collect()
                                 .await
                         }
@@ -115,7 +115,7 @@ impl SearchBackend for SearchService {
                                 .select(posts::id)
                                 .load_stream(db_conn)
                                 .await?
-                                .map_ok(|id| SearchResult { id })
+                                .map_ok(|id| SearchResultReference { index, id })
                                 .try_collect()
                                 .await
                         }

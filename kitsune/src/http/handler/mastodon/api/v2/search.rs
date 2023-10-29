@@ -1,26 +1,22 @@
 use crate::{
     consts::default_limit,
-    error::{Error, Result},
+    error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
-use diesel::{QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use kitsune_core::{consts::API_MAX_LIMIT, error::Error as CoreError};
-use kitsune_db::{
-    model::{account::Account, post::Post},
-    schema::{accounts, posts},
+use kitsune_core::{
+    consts::API_MAX_LIMIT,
+    mapping::MastodonMapper,
+    service::search::{Search, SearchResult, SearchService},
 };
-use kitsune_search::{SearchBackend, SearchIndex, SearchService};
-use kitsune_type::mastodon::SearchResult;
-use scoped_futures::ScopedFutureExt;
+use kitsune_search::SearchIndex;
+use kitsune_type::mastodon::SearchResult as MastodonSearchResult;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use std::cmp::min;
-use url::Url;
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Deserialize, ToSchema)]
@@ -59,11 +55,11 @@ struct SearchQuery {
     ),
 )]
 async fn get(
-    State(state): State<Zustand>,
-    State(search): State<SearchService>,
+    State(search_service): State<SearchService>,
+    State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Query(query): Query<SearchQuery>,
-) -> Result<Either<Json<SearchResult>, StatusCode>> {
+) -> Result<Either<Json<MastodonSearchResult>, StatusCode>> {
     let indices = if let Some(r#type) = query.r#type {
         let index = match r#type {
             SearchType::Accounts => SearchIndex::Account,
@@ -76,80 +72,25 @@ async fn get(
         vec![SearchIndex::Account, SearchIndex::Post]
     };
 
-    // TODO: Find a way to pipeline
-    let mut search_result = SearchResult::default();
-    for index in indices {
-        let results = search
-            .search(
-                index,
-                query.query.clone(),
-                min(query.limit, API_MAX_LIMIT as u64),
-                query.offset,
-                query.min_id,
-                query.max_id,
-            )
-            .await
-            .map_err(CoreError::from)?;
+    let search = Search::builder()
+        .indices(indices.into_iter().collect())
+        .max_id(query.max_id)
+        .max_results(min(query.limit, API_MAX_LIMIT as u64))
+        .min_id(query.min_id)
+        .offset(query.offset)
+        .query(&query.query)
+        .build();
+    let results = search_service.search(search).await?;
 
-        for result in results {
-            search_result = state
-                .db_pool()
-                .with_connection(|db_conn| {
-                    async {
-                        match index {
-                            SearchIndex::Account => {
-                                let account = accounts::table
-                                    .find(result.id)
-                                    .select(Account::as_select())
-                                    .get_result::<Account>(db_conn)
-                                    .await?;
-
-                                search_result
-                                    .accounts
-                                    .push(state.mastodon_mapper().map(account).await?);
-                            }
-                            SearchIndex::Post => {
-                                let post = posts::table
-                                    .find(result.id)
-                                    .select(Post::as_select())
-                                    .get_result::<Post>(db_conn)
-                                    .await?;
-
-                                search_result
-                                    .statuses
-                                    .push(state.mastodon_mapper().map(post).await?);
-                            }
-                        }
-
-                        Ok::<_, Error>(search_result)
-                    }
-                    .scoped()
-                })
-                .await?;
-        }
-    }
-
-    if Url::parse(&query.query).is_ok() {
-        match state
-            .fetcher()
-            .fetch_actor(query.query.as_str().into())
-            .await
-        {
-            Ok(account) => search_result
+    let mut search_result = MastodonSearchResult::default();
+    for result in results {
+        match result {
+            SearchResult::Account(account) => search_result
                 .accounts
-                .insert(0, state.mastodon_mapper().map(account).await?),
-            Err(error) => debug!(?error, "couldn't fetch actor via url"),
-        }
-
-        match state.fetcher().fetch_object(query.query.as_str()).await {
-            Ok(post) => search_result.statuses.insert(
-                0,
-                state
-                    .mastodon_mapper()
-                    .map((&user_data.account, post))
-                    .await?,
-            ),
-            Err(error) => debug!(?error, "couldn't fetch object via url"),
+                .push(mastodon_mapper.map(account).await?),
+            SearchResult::Post(post) => search_result
+                .statuses
+                .push(mastodon_mapper.map((&user_data.account, post)).await?),
         }
     }
 

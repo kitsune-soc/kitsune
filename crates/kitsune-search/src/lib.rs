@@ -26,7 +26,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
-pub enum SearchService {
+pub enum Search {
     #[cfg(feature = "meilisearch")]
     Meilisearch(MeiliSearchService),
     Noop(NoopSearchService),
@@ -106,14 +106,15 @@ impl From<DbPost> for SearchItem {
     }
 }
 
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SearchIndex {
     Account,
     Post,
 }
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct SearchResult {
+#[derive(Clone, Copy)]
+pub struct SearchResultReference {
+    pub index: SearchIndex,
     pub id: Uuid,
 }
 
@@ -135,12 +136,12 @@ pub trait SearchBackend: Send + Sync {
     async fn search(
         &self,
         index: SearchIndex,
-        query: String,
+        query: &str,
         max_results: u64,
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>>;
+    ) -> Result<Vec<SearchResultReference>>;
 
     async fn update_in_index(&self, item: SearchItem) -> Result<()>;
 }
@@ -168,12 +169,12 @@ impl SearchBackend for NoopSearchService {
     async fn search(
         &self,
         _index: SearchIndex,
-        _query: String,
+        _query: &str,
         _max_results: u64,
         _offset: u64,
         _min_id: Option<Uuid>,
         _max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
+    ) -> Result<Vec<SearchResultReference>> {
         Ok(Vec::new())
     }
 

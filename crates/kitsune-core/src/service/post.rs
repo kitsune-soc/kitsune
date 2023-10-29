@@ -47,7 +47,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::SearchBackend;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -300,7 +300,7 @@ pub struct PostService {
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
-    search_service: SearchService,
+    search_backend: kitsune_search::Search,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }
@@ -502,7 +502,7 @@ impl PostService {
             .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
+            self.search_backend
                 .add_to_index(post.clone().into())
                 .await?;
         }
@@ -548,7 +548,7 @@ impl PostService {
             .await
             .map_err(Error::Event)?;
 
-        self.search_service.remove_from_index(&post.into()).await?;
+        self.search_backend.remove_from_index(&post.into()).await?;
 
         Ok(())
     }
@@ -653,7 +653,7 @@ impl PostService {
             .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
+            self.search_backend
                 .update_in_index(post.clone().into())
                 .await?;
         }

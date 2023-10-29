@@ -5,13 +5,12 @@ use crate::{
         account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
         mailing::MailingService, notification::NotificationService, post::PostService,
-        timeline::TimelineService, url::UrlService, user::UserService,
+        search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_search::SearchService;
 
 /// Emitter collection
 ///
