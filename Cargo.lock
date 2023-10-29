@@ -2777,7 +2777,6 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
- "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-job-runner",
  "kitsune-language",
@@ -2791,7 +2790,6 @@ dependencies = [
  "mimalloc",
  "mime",
  "mime_guess",
- "openidconnect",
  "oxide-auth",
  "oxide-auth-async",
  "oxide-auth-axum",
@@ -4516,9 +4514,9 @@ dependencies = [
 
 [[package]]
 name = "portable-atomic"
-version = "1.5.0"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b559898e0b4931ed2d3b959ab0c2da4d99cc644c4b0b1a35b4d344027f474023"
+checksum = "3bccab0e7fd7cc19f820a1c8c91720af652d0c88dc9664dd72aef2614f04af3b"
 
 [[package]]
 name = "post-process"
@@ -5190,9 +5188,9 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scraper"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3693f9a0203d49a7ba8f38aa915316b3d535c1862d03dae7009cb71a3408b36a"
+checksum = "585480e3719b311b78a573db1c9d9c4c1f8010c2dee4cc59c2efe58ea4dbc3e1"
 dependencies = [
  "ahash 0.8.6",
  "cssparser",

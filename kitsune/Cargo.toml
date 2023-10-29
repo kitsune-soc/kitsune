@@ -43,7 +43,6 @@ kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
-kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-language = { path = "../crates/kitsune-language" }
@@ -98,7 +97,6 @@ async-graphql-axum = { version = "6.0.9", optional = true }
 
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
-openidconnect = { version = "3.4.0", default-features = false, optional = true }
 
 [dev-dependencies]
 kitsune-test = { path = "../crates/kitsune-test" }
@@ -115,4 +113,4 @@ graphql-api = [
 ]
 mastodon-api = ["kitsune-core/mastodon-api"]
 meilisearch = ["kitsune-core/meilisearch"]
-oidc = ["dep:kitsune-oidc", "dep:openidconnect"]
+oidc = ["dep:kitsune-oidc"]
