@@ -69,10 +69,7 @@ targets = [
     "x86_64-pc-windows-msvc",
 ]
 # Publish jobs to run in CI
-pr-run-mode = "plan"
-
-[workspace.metadata.dist.dependencies.apt]
-libssl-dev = "*"
+pr-run-mode = "upload"
 
 [patch.crates-io]
 # Patch `isolang` for quicker compiles
