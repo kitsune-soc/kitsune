@@ -55,6 +55,7 @@ pub async fn get(
         user
     } else {
         let register = Register::builder()
+            .force_registration()
             .email(user_info.email)
             .username(user_info.username)
             .oidc_id(user_info.subject)

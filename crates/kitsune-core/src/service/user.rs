@@ -94,6 +94,11 @@ pub struct Register {
     #[builder(default)]
     #[garde(skip)]
     captcha_token: Option<String>,
+
+    /// Force the registration to succeed, regardless of closed registrations
+    #[builder(setter(strip_bool))]
+    #[garde(skip)]
+    force_registration: bool,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -137,7 +142,7 @@ impl UserService {
     }
 
     pub async fn register(&self, register: Register) -> Result<User> {
-        if !self.registrations_open {
+        if !self.registrations_open && !register.force_registration {
             return Err(ApiError::RegistrationsClosed.into());
         }
 
