@@ -4,11 +4,15 @@ use crate::{
 };
 
 use bytes::Bytes;
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
-use kitsune_db::{model::custom_emoji::CustomEmoji, schema::custom_emojis, PgPool};
+use kitsune_db::{
+    model::custom_emoji::CustomEmoji,
+    schema::{custom_emojis, media_attachments},
+    PgPool,
+};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -30,6 +34,13 @@ fn is_allowed_filetype(value: &str, _ctx: &()) -> garde::Result {
     Ok(())
 }
 
+#[derive(TypedBuilder)]
+pub struct GetEmoji<'a> {
+    shortcode: &'a str,
+    #[builder(default)]
+    domain: Option<&'a str>,
+}
+
 #[derive(TypedBuilder, Validate)]
 pub struct EmojiUpload<S> {
     #[garde(custom(is_allowed_filetype))]
@@ -47,18 +58,37 @@ pub struct CustomEmojiService {
 }
 
 impl CustomEmojiService {
-    pub async fn get_emojis(&self) -> Result<impl Stream<Item = Result<CustomEmoji>> + '_> {
+    pub async fn get(&self, get_emoji: GetEmoji<'_>) -> Result<Option<CustomEmoji>> {
+        let mut query = custom_emojis::table
+            .filter(custom_emojis::shortcode.eq(get_emoji.shortcode))
+            .inner_join(media_attachments::table)
+            .select(CustomEmoji::as_select())
+            .into_boxed();
+
+        if let Some(domain) = get_emoji.domain {
+            query = query.filter(custom_emojis::domain.eq(domain));
+        }
+
+        self.db_pool
+            .with_connection(|db_conn| {
+                async move { query.first(db_conn).await.optional() }.scoped()
+            })
+            .await
+            .map_err(Error::from)
+    }
+
+    pub async fn get_all(&self) -> Result<impl Stream<Item = Result<CustomEmoji>> + '_> {
         let query = custom_emojis::table
             .select(CustomEmoji::as_select())
             .order(custom_emojis::id.desc())
             .into_boxed();
         self.db_pool
             .with_connection(|db_conn| {
-                async move { 
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }.scoped()
+                async move { Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from)) }
+                    .scoped()
             })
-            .await.map_err(Error::from)
+            .await
+            .map_err(Error::from)
     }
 
     pub async fn add_emoji<S>(&self, emoji_upload: EmojiUpload<S>) -> Result<CustomEmoji>
@@ -85,7 +115,7 @@ impl CustomEmojiService {
                         shortcode: emoji_upload.shortcode,
                         domain: None,
                         media_attachment_id: attachment.id,
-                        global: false,
+                        endorsed: false,
                     })
                     .get_result(db_conn)
                     .scoped()

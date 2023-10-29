@@ -17,16 +17,19 @@ use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
+        custom_emoji::CustomEmoji,
+        media_attachment::{MediaAttachment, NewMediaAttachment},
         post::Post,
     },
-    schema::{accounts, posts},
+    schema::{accounts, custom_emojis, media_attachments, posts},
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
 use kitsune_search::{SearchBackend, SearchService};
-use kitsune_type::ap::{actor::Actor, Object};
+use kitsune_type::ap::{actor::Actor, EmojiObject, Object};
 use scoped_futures::ScopedFutureExt;
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -251,6 +254,86 @@ impl Fetcher {
             .await?;
 
         Ok(account)
+    }
+
+    pub async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji> {
+        let existing_emoji = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    custom_emojis::table
+                        .filter(custom_emojis::remote_id.eq(url))
+                        .select(CustomEmoji::as_select())
+                        .first(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
+            })
+            .await?;
+
+        if let Some(emoji) = existing_emoji {
+            return Ok(emoji);
+        }
+
+        let mut url = Url::parse(url)?;
+        if !self.federation_filter.is_url_allowed(&url)? {
+            return Err(ApiError::Unauthorised.into());
+        }
+
+        let emoji: EmojiObject = self.client.get(url.as_str()).await?.jsonld().await?;
+
+        let mut domain = url.host_str().unwrap();
+
+        if emoji.id != url.as_str() {
+            url = Url::parse(&emoji.id)?;
+            domain = url.host_str().unwrap();
+        }
+
+        let content_type = emoji
+            .icon
+            .media_type
+            .as_deref()
+            .or_else(|| mime_guess::from_path(&emoji.icon.url).first_raw())
+            .unwrap();
+
+        let name_pure = emoji.name.replace(':', "");
+
+        let emoji: CustomEmoji = self
+            .db_pool
+            .with_transaction(|tx| {
+                async move {
+                    let media_attachment = diesel::insert_into(media_attachments::table)
+                        .values(NewMediaAttachment {
+                            id: Uuid::now_v7(),
+                            account_id: None,
+                            content_type,
+                            description: None,
+                            blurhash: None,
+                            file_path: None,
+                            remote_url: Some(&emoji.icon.url),
+                        })
+                        .returning(MediaAttachment::as_returning())
+                        .get_result::<MediaAttachment>(tx)
+                        .await?;
+                    let emoji = diesel::insert_into(custom_emojis::table)
+                        .values(CustomEmoji {
+                            id: Uuid::now_v7(),
+                            remote_id: Some(emoji.id),
+                            shortcode: name_pure.to_string(),
+                            domain: Some(domain.to_string()),
+                            media_attachment_id: media_attachment.id,
+                            endorsed: false,
+                        })
+                        .returning(CustomEmoji::as_returning())
+                        .get_result::<CustomEmoji>(tx)
+                        .await?;
+                    Ok::<_, Error>(emoji)
+                }
+                .scope_boxed()
+            })
+            .await?;
+        Ok(emoji)
     }
 
     #[async_recursion]

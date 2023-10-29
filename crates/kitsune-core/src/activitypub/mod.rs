@@ -1,22 +1,24 @@
 use crate::{
     error::{ApiError, Error, Result},
     sanitize::CleanHtmlExt,
-    try_join,
     util::timestamp_to_uuid,
 };
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::future::join_all;
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
-        custom_emoji::CustomEmoji,
+        custom_emoji::PostCustomEmoji,
         media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
         mention::NewMention,
         post::{FullPostChangeset, NewPost, Post, PostConflictChangeset, Visibility},
     },
-    schema::{custom_emojis, media_attachments, posts, posts_media_attachments, posts_mentions},
+    schema::{
+        media_attachments, posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
+    },
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -28,7 +30,6 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::borrow::Cow;
 use typed_builder::TypedBuilder;
-use url::{Host, Url};
 
 pub mod deliverer;
 pub mod fetcher;
@@ -66,7 +67,12 @@ async fn handle_mentions(
     Ok(())
 }
 
-async fn handle_custom_emojis(db_conn: &mut AsyncPgConnection, tags: &[Tag]) -> Result<()> {
+async fn handle_custom_emojis(
+    db_conn: &mut AsyncPgConnection,
+    post_id: Uuid,
+    fetcher: &Fetcher,
+    tags: &[Tag],
+) -> Result<()> {
     let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
 
     let emoji_count = emoji_iter.clone().count();
@@ -74,68 +80,29 @@ async fn handle_custom_emojis(db_conn: &mut AsyncPgConnection, tags: &[Tag]) -> 
         return Ok(());
     }
 
-    let attachment_ids: Vec<Uuid> = (0..emoji_count).map(|_| Uuid::now_v7()).collect();
-    let entities =
-        emoji_iter
-            .zip(attachment_ids.iter().copied())
-            .filter_map(|(emoji, attachment_id)| {
-                if let (Some(icon), Some(remote_id)) = (&emoji.icon, &emoji.id) {
-                    let emoji_name = emoji.name.clone();
-                    let name_pure = emoji.name.replace(":", "");
-                    let shortcode_domain = match name_pure.split_once('@') {
-                        Some((name, domain)) => {
-                            let parsed = Host::parse(&domain).ok()?.to_string();
-                            (name, parsed)
-                        }
-                        None => {
-                            let parsed = Url::parse(&remote_id).ok()?;
-                            (emoji_name.as_str(), parsed.host_str()?.to_string())
-                        }
-                    };
+    let futures = emoji_iter.filter_map(|emoji| {
+        emoji
+            .id
+            .as_ref()
+            .map(|remote_id| fetcher.fetch_emoji(remote_id))
+    });
 
-                    let (shortcode, domain) = shortcode_domain;
+    let emojis = join_all(futures)
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?
+        .iter()
+        .map(|emoji| PostCustomEmoji {
+            post_id,
+            custom_emoji_id: emoji.id,
+        })
+        .collect::<Vec<_>>();
 
-                    let content_type = icon
-                        .media_type
-                        .as_deref()
-                        .or_else(|| mime_guess::from_path(&icon.url).first_raw())?;
-                    Some((
-                        NewMediaAttachment {
-                            id: attachment_id,
-                            account_id: None,
-                            content_type,
-                            description: None,
-                            blurhash: None,
-                            file_path: None,
-                            remote_url: Some(&icon.url),
-                        },
-                        CustomEmoji {
-                            id: Uuid::now_v7(),
-                            remote_id: Some(remote_id.clone()),
-                            shortcode: shortcode.to_string(),
-                            domain: Some(domain.to_string()),
-                            media_attachment_id: attachment_id,
-                            global: false,
-                        },
-                    ))
-                } else {
-                    None
-                }
-            });
-
-    let (attachment_data, emoji_data): (Vec<_>, Vec<_>) = entities.unzip();
-
-    let attachment_fut = diesel::insert_into(media_attachments::table)
-        .values(attachment_data)
+    diesel::insert_into(posts_custom_emojis::table)
+        .values(emojis)
         .on_conflict_do_nothing()
-        .execute(db_conn);
-
-    let emoji_fut = diesel::insert_into(custom_emojis::table)
-        .values(emoji_data)
-        .on_conflict_do_nothing()
-        .execute(db_conn);
-
-    try_join!(attachment_fut, emoji_fut)?;
+        .execute(db_conn)
+        .await?;
 
     Ok(())
 }
@@ -206,6 +173,7 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
+    fetcher: &'a Fetcher,
     search_service: &'a SearchService,
 }
 
@@ -277,6 +245,7 @@ async fn preprocess_object(
         content_lang,
         db_pool,
         object,
+        fetcher,
         search_service,
     })
 }
@@ -291,6 +260,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         content_lang,
         db_pool,
         object,
+        fetcher,
         search_service,
     } = preprocess_object(process_data).await?;
 
@@ -339,7 +309,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
                     .await?;
 
                 handle_mentions(tx, &user, new_post.id, &object.tag).await?;
-                handle_custom_emojis(tx, &object.tag).await?;
+                handle_custom_emojis(tx, new_post.id, fetcher, &object.tag).await?;
 
                 Ok::<_, Error>(new_post)
             }
@@ -364,6 +334,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         content_lang,
         db_pool,
         object,
+        fetcher: _,
         search_service,
     } = preprocess_object(process_data).await?;
 

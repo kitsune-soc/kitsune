@@ -185,6 +185,18 @@ pub struct Object {
     pub cc: Vec<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EmojiObject {
+    #[serde(default, rename = "@context")]
+    pub context: OwnedValue,
+    pub id: String,
+    pub r#type: ObjectType,
+    pub name: String,
+    pub updated: Timestamp,
+    pub icon: MediaAttachment,
+}
+
 impl Object {
     pub fn attributed_to(&self) -> Option<&str> {
         match self.attributed_to {
@@ -196,6 +208,12 @@ impl Object {
 }
 
 impl RdfNode for Object {
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
+    }
+}
+
+impl RdfNode for EmojiObject {
     fn id(&self) -> Option<&str> {
         Some(&self.id)
     }

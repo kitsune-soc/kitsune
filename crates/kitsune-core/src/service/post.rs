@@ -432,7 +432,7 @@ impl PostService {
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
         );
 
-        let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
+        let resolved = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {
             embed_client
                 .fetch_embed_for_fragment(&content)
@@ -482,8 +482,13 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
-                        .await?;
+                    Self::process_mentions(
+                        tx,
+                        post.account_id,
+                        post.id,
+                        resolved.mentioned_accounts,
+                    )
+                    .await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
                     NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
@@ -594,7 +599,7 @@ impl PostService {
         let (mentioned_account_ids, content) = match content.as_ref() {
             Some(content) => {
                 let resolved = self.post_resolver.resolve(content).await?;
-                (resolved.0, Some(resolved.1))
+                (resolved.mentioned_accounts, Some(resolved.content))
             }
             None => (Vec::new(), None),
         };

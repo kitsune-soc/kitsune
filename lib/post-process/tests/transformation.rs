@@ -14,7 +14,8 @@ fn link_transformation() {
                     Cow::Borrowed("href"),
                     Cow::Owned(format!("https://example.com/emote/{}", emote.shortcode)),
                 )],
-                content: Box::new(Element::Emote(emote)),
+                content: Some(Box::new(Element::Emote(emote))),
+                void: false,
             }),
             Element::Hashtag(hashtag) => Element::Html(Html {
                 tag: Cow::Borrowed("a"),
@@ -22,7 +23,8 @@ fn link_transformation() {
                     Cow::Borrowed("href"),
                     Cow::Owned(format!("https://example.com/hashtag/{}", hashtag.content)),
                 )],
-                content: Box::new(Element::Hashtag(hashtag)),
+                content: Some(Box::new(Element::Hashtag(hashtag))),
+                void: false,
             }),
             Element::Mention(mention) => Element::Html(Html {
                 tag: Cow::Borrowed("a"),
@@ -34,7 +36,8 @@ fn link_transformation() {
                         mention.domain.as_deref().unwrap_or_default()
                     )),
                 )],
-                content: Box::new(Element::Mention(mention)),
+                content: Some(Box::new(Element::Mention(mention))),
+                void: false,
             }),
             elem => elem,
         };

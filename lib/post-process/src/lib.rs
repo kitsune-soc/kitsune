@@ -240,7 +240,10 @@ pub struct Html<'a> {
     pub attributes: Vec<(Cow<'a, str>, Cow<'a, str>)>,
 
     /// Tag contents
-    pub content: Box<Element<'a>>,
+    pub content: Option<Box<Element<'a>>>,
+
+    /// Does this tag have content and a closing tag?
+    pub void: bool,
 }
 
 impl Render for Html<'_> {
@@ -251,9 +254,12 @@ impl Render for Html<'_> {
         }
         let _ = out.write_char('>');
 
-        self.content.render(out);
-
-        let _ = write!(out, "</{}>", self.tag);
+        if !self.void {
+            if let Some(content) = self.content.as_ref() {
+                content.render(out);
+            }
+            let _ = write!(out, "</{}>", self.tag);
+        }
     }
 }
 

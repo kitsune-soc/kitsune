@@ -117,10 +117,10 @@ impl AttachmentService {
     pub async fn get_url(&self, id: Uuid) -> Result<String> {
         let media_attachment = self.get_by_id(id).await?;
         if self.media_proxy_enabled || media_attachment.file_path.is_some() {
-            return Ok(self.url_service.media_url(id));
+            return Ok(self.url_service.media_url(media_attachment.id));
         }
 
-        Ok(media_attachment.remote_url.unwrap())
+        Ok(media_attachment.remote_url.as_ref().unwrap().to_string())
     }
 
     /// Return a stream that yields the file's contents

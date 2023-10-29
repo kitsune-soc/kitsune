@@ -294,6 +294,8 @@ pub async fn prepare_state(
 
     let post_resolver = PostResolver::builder()
         .account(account_service.clone())
+        .attachment(attachment_service.clone())
+        .custom_emoji(custom_emoji_service.clone())
         .build();
 
     let post_service = PostService::builder()
