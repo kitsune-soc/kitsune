@@ -2,7 +2,9 @@ use openidconnect::{Nonce, PkceCodeVerifier};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-mod storage;
+pub use self::store::{Store, StoreBackend};
+
+pub mod store;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct OAuth2LoginState {

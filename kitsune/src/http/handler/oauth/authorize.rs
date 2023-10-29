@@ -27,9 +27,9 @@ use speedy_uuid::Uuid;
 
 #[cfg(feature = "oidc")]
 use {
-    crate::oidc::OidcService,
     axum::extract::Query,
     kitsune_db::{model::oauth2, schema::oauth2_applications},
+    kitsune_oidc::OidcService,
 };
 
 #[cfg(feature = "oidc")]

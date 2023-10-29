@@ -1,6 +1,6 @@
 use openidconnect::{
-    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
-    StandardErrorResponse,
+    core::CoreErrorResponseType, ClaimsVerificationError, DiscoveryError, RequestTokenError,
+    SigningError, StandardErrorResponse,
 };
 use thiserror::Error;
 
@@ -10,6 +10,15 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub enum Error {
     #[error(transparent)]
     ClaimsVerification(#[from] ClaimsVerificationError),
+
+    #[error(transparent)]
+    CreateRedisPool(#[from] deadpool_redis::CreatePoolError),
+
+    #[error(transparent)]
+    Discovery(#[from] DiscoveryError<kitsune_http_client::Error>),
+
+    #[error(transparent)]
+    JsonParse(#[from] simd_json::Error),
 
     #[error("Missing Email address")]
     MissingEmail,
@@ -27,6 +36,12 @@ pub enum Error {
     MissingUsername,
 
     #[error(transparent)]
+    Redis(#[from] redis::RedisError),
+
+    #[error(transparent)]
+    RedisPool(#[from] deadpool_redis::PoolError),
+
+    #[error(transparent)]
     RequestToken(
         #[from]
         RequestTokenError<
@@ -40,4 +55,7 @@ pub enum Error {
 
     #[error("Unknown CSRF token")]
     UnknownCsrfToken,
+
+    #[error(transparent)]
+    UrlParse(#[from] url::ParseError),
 }

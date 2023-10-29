@@ -3133,6 +3133,7 @@ dependencies = [
  "enum_dispatch",
  "http",
  "hyper",
+ "kitsune-config",
  "kitsune-http-client",
  "moka",
  "once_cell",
@@ -3142,7 +3143,6 @@ dependencies = [
  "simd-json",
  "speedy-uuid",
  "thiserror",
- "typed-builder",
  "url",
 ]
 

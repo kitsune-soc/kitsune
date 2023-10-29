@@ -1,20 +1,27 @@
 use crate::{
-    error::{Error, Result},
-    state::{LoginState, OAuth2LoginState},
+    error::Result,
+    state::{
+        store::{InMemory as InMemoryStore, Redis as RedisStore},
+        LoginState, OAuth2LoginState, Store,
+    },
 };
+use kitsune_config::{OidcConfiguration, OidcStoreConfiguration};
 use openidconnect::{
-    core::{CoreAuthenticationFlow, CoreClient},
-    AccessTokenHash, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, PkceCodeChallenge,
-    Scope, TokenResponse,
+    core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
+    AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
+    OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
 };
 use speedy_uuid::Uuid;
-use typed_builder::TypedBuilder;
 use url::Url;
+
+pub use self::error::Error;
 
 mod error;
 mod state;
 
 pub mod http;
+
+const LOGIN_STATE_STORE_SIZE: u64 = 100;
 
 #[derive(Debug)]
 pub struct OAuth2Info {
@@ -31,13 +38,43 @@ pub struct UserInfo {
     pub oauth2: OAuth2Info,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone)]
 pub struct OidcService {
     client: CoreClient,
-    login_state: ArcCache<String, LoginState>,
+    login_state_store: self::state::StoreBackend,
 }
 
 impl OidcService {
+    pub async fn initialise(config: &OidcConfiguration, redirect_uri: String) -> Result<Self> {
+        let provider_metadata = CoreProviderMetadata::discover_async(
+            IssuerUrl::new(config.server_url.to_string())?,
+            self::http::async_client,
+        )
+        .await?;
+
+        let client = CoreClient::from_provider_metadata(
+            provider_metadata,
+            ClientId::new(config.client_id.to_string()),
+            Some(ClientSecret::new(config.client_secret.to_string())),
+        )
+        .set_redirect_uri(RedirectUrl::new(redirect_uri)?);
+
+        let login_state_store = match config.store {
+            OidcStoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
+            OidcStoreConfiguration::Redis(ref redis_config) => {
+                let config = deadpool_redis::Config::from_url(redis_config.url.clone());
+                let pool = config.create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
+                RedisStore::new(pool).into()
+            }
+        };
+
+        Ok(Self {
+            client,
+            login_state_store,
+        })
+    }
+
     pub async fn authorisation_url(
         &self,
         oauth2_application_id: Uuid,
@@ -66,8 +103,8 @@ impl OidcService {
                 state: oauth2_state,
             },
         };
-        self.login_state
-            .set(csrf_token.secret(), &verification_data)
+        self.login_state_store
+            .set(csrf_token.secret(), verification_data)
             .await?;
 
         Ok(auth_url)
@@ -82,12 +119,7 @@ impl OidcService {
             nonce,
             oauth2,
             pkce_verifier,
-        } = self
-            .login_state
-            .get(&state)
-            .await?
-            .ok_or(Error::UnknownCsrfToken)?;
-        self.login_state.delete(&state).await?;
+        } = self.login_state_store.get_and_remove(&state).await?;
 
         let token_response = self
             .client

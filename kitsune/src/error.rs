@@ -43,7 +43,7 @@ pub enum Error {
 
     #[cfg(feature = "oidc")]
     #[error(transparent)]
-    Oidc(#[from] OidcError),
+    Oidc(#[from] kitsune_oidc::Error),
 
     #[error(transparent)]
     ParseBool(#[from] ParseBoolError),

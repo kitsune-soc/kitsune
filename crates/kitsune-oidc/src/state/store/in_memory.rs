@@ -1,10 +1,11 @@
-use super::Storage;
+use super::Store;
 use crate::{
     error::{Error, Result},
     state::LoginState,
 };
 use moka::sync::Cache;
 
+#[derive(Clone)]
 pub struct InMemory {
     inner: Cache<String, LoginState>,
 }
@@ -17,7 +18,7 @@ impl InMemory {
     }
 }
 
-impl Storage for InMemory {
+impl Store for InMemory {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
         self.inner.remove(key).ok_or(Error::MissingLoginState)
     }

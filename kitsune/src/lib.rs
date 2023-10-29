@@ -29,40 +29,7 @@ use kitsune_core::job::KitsuneContextRepo;
 use kitsune_db::PgPool;
 
 #[cfg(feature = "oidc")]
-use {
-    self::oidc::{async_client, OidcService},
-    futures_util::future::OptionFuture,
-    kitsune_config::OidcConfiguration,
-    kitsune_core::service::url::UrlService,
-    openidconnect::{
-        core::{CoreClient, CoreProviderMetadata},
-        ClientId, ClientSecret, IssuerUrl, RedirectUrl,
-    },
-};
-
-#[cfg(feature = "oidc")]
-async fn prepare_oidc_client(
-    oidc_config: &OidcConfiguration,
-    url_service: &UrlService,
-) -> eyre::Result<CoreClient> {
-    use eyre::Context;
-
-    let provider_metadata = CoreProviderMetadata::discover_async(
-        IssuerUrl::new(oidc_config.server_url.to_string()).context("Invalid OIDC issuer URL")?,
-        async_client,
-    )
-    .await
-    .context("Couldn't discover the OIDC provider metadata")?;
-
-    let client = CoreClient::from_provider_metadata(
-        provider_metadata,
-        ClientId::new(oidc_config.client_id.to_string()),
-        Some(ClientSecret::new(oidc_config.client_secret.to_string())),
-    )
-    .set_redirect_uri(RedirectUrl::new(url_service.oidc_redirect_uri())?);
-
-    Ok(client)
-}
+use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
 
 pub async fn initialise_state(
     config: &Configuration,
@@ -72,13 +39,8 @@ pub async fn initialise_state(
     let core_state = kitsune_core::prepare_state(config, conn.clone(), job_queue).await?;
 
     #[cfg(feature = "oidc")]
-    let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| async {
-        let service = OidcService::builder()
-            .client(prepare_oidc_client(oidc_config, &core_state.service.url).await?)
-            .login_state(kitsune_core::prepare_cache(config, "OIDC-LOGIN-STATE")) // TODO: REPLACE THIS WITH A BETTER ALTERNATIVE TO JUST ABUSING A CACHE
-            .build();
-
-        Ok::<_, eyre::Report>(service)
+    let oidc_service = OptionFuture::from(config.server.oidc.as_ref().map(|oidc_config| {
+        OidcService::initialise(oidc_config, core_state.service.url.oidc_redirect_uri())
     }))
     .await
     .transpose()?;
