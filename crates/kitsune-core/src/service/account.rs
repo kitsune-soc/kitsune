@@ -29,6 +29,7 @@ use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
+    function::lower,
     model::{
         account::{Account, UpdateAccount},
         follower::Follow as DbFollow,
@@ -301,8 +302,8 @@ impl AccountService {
                     async move {
                         accounts::table
                             .filter(
-                                accounts::username
-                                    .eq(get_user.username)
+                                lower(accounts::username)
+                                    .eq(lower(get_user.username))
                                     .and(accounts::domain.eq(domain)),
                             )
                             .select(Account::as_select())
@@ -343,8 +344,8 @@ impl AccountService {
                     async move {
                         accounts::table
                             .filter(
-                                accounts::username
-                                    .eq(get_user.username)
+                                lower(accounts::username)
+                                    .eq(lower(get_user.username))
                                     .and(accounts::local.eq(true)),
                             )
                             .select(Account::as_select())
@@ -674,6 +675,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(ref mut note) = update.note {
             note.clean_html();
             changeset = UpdateAccount {
@@ -681,6 +683,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(avatar) = update.avatar {
             let media_attachment = self.attachment_service.upload(avatar).await?;
             changeset = UpdateAccount {
@@ -688,6 +691,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(header) = update.header {
             let media_attachment = self.attachment_service.upload(header).await?;
             changeset = UpdateAccount {
@@ -695,6 +699,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(locked) = update.locked {
             changeset = UpdateAccount {
                 locked: Some(locked),

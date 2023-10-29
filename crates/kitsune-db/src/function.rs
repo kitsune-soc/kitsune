@@ -17,6 +17,11 @@ sql_function! {
 }
 
 sql_function! {
+    /// Convert text to lowercase
+    fn lower(string: Text) -> Text;
+}
+
+sql_function! {
     /// Return the current date with the timezone
     fn now() -> Timestamptz;
 }

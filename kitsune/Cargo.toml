@@ -100,6 +100,7 @@ async-graphql-axum = { version = "6.0.9", optional = true }
 openidconnect = { version = "3.4.0", default-features = false, optional = true }
 
 [dev-dependencies]
+deadpool-redis = "0.13.0"
 kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"

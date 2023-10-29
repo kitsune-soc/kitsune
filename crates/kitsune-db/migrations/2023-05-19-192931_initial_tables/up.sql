@@ -33,7 +33,7 @@ CREATE TABLE accounts (
     ) STORED NOT NULL,
 
     -- UNIQUE constraints
-    UNIQUE (username, domain)
+    UNIQUE (LOWER(username), domain)
 );
 
 CREATE TABLE accounts_follows (

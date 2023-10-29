@@ -2760,6 +2760,7 @@ dependencies = [
  "clap",
  "color-eyre",
  "const-oid",
+ "deadpool-redis",
  "der",
  "diesel",
  "diesel-async",
