@@ -40,7 +40,7 @@ pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-    FormOrJson(follow_body): FormOrJson<FollowBody>,
+    follow_body: Option<FormOrJson<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
         return Err(ApiError::BadRequest.into());
@@ -50,7 +50,9 @@ pub async fn post(
         .account_id(id)
         .follower_id(user_data.account.id)
         .build();
-    let follow_accounts = account_service.follow(follow, follow_body.notify).await?;
+    let follow_accounts = account_service
+        .follow(follow, follow_body.map_or(false, |body| body.0.notify))
+        .await?;
 
     Ok(Json(
         mastodon_mapper
