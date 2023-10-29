@@ -6,7 +6,6 @@ use openidconnect::{HttpRequest, HttpResponse};
 
 static HTTP_CLIENT: Lazy<HttpClient> = Lazy::new(HttpClient::default);
 
-#[allow(clippy::missing_panics_doc)]
 pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, kitsune_http_client::Error> {
     let mut request = Request::builder().method(req.method).uri(req.url.as_str());
     *request.headers_mut().unwrap() = req.headers;

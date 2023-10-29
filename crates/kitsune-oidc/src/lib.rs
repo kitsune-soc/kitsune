@@ -1,3 +1,12 @@
+#![forbid(rust_2018_idioms, unsafe_code)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    forbidden_lint_groups
+)]
+
 use crate::{
     error::Result,
     state::{
