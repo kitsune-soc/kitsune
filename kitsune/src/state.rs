@@ -19,7 +19,7 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_core::mapping::MastodonMapper;
 
 #[cfg(feature = "oidc")]
-use crate::oidc::OidcService;
+use kitsune_oidc::OidcService;
 
 #[macro_export]
 macro_rules! impl_from_ref {
