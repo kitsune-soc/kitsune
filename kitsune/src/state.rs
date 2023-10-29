@@ -7,14 +7,13 @@ use kitsune_core::{
     service::{
         account::AccountService, attachment::AttachmentService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        notification::NotificationService, post::PostService, timeline::TimelineService,
-        url::UrlService, user::UserService,
+        notification::NotificationService, post::PostService, search::SearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     state::{EventEmitter, Service as CoreServiceState, State as CoreState},
 };
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_search::SearchService;
 
 #[cfg(feature = "mastodon-api")]
 use kitsune_core::mapping::MastodonMapper;

@@ -1,8 +1,14 @@
-use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResult};
+use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
 use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
+use serde::Deserialize;
 use speedy_uuid::Uuid;
 use strum::IntoEnumIterator;
+
+#[derive(Deserialize)]
+struct MeilisearchResult {
+    id: Uuid,
+}
 
 #[derive(Clone)]
 pub struct MeiliSearchService {
@@ -92,12 +98,12 @@ impl SearchBackend for MeiliSearchService {
     async fn search(
         &self,
         index: SearchIndex,
-        query: String,
+        query: &str,
         max_results: u64,
         offset: u64,
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
-    ) -> Result<Vec<SearchResult>> {
+    ) -> Result<Vec<SearchResultReference>> {
         let min_timestamp = min_id.map_or(u64::MIN, |id| {
             let (created_at_secs, _) = id.get_timestamp().unwrap().to_unix();
             created_at_secs
@@ -112,15 +118,22 @@ impl SearchBackend for MeiliSearchService {
         let results = self
             .get_index(index)
             .search()
-            .with_query(&query)
+            .with_query(query)
             .with_filter(&filter)
             .with_sort(&["id:desc"])
             .with_offset(offset as usize)
             .with_limit(max_results as usize)
-            .execute::<SearchResult>()
+            .execute::<MeilisearchResult>()
             .await?;
 
-        Ok(results.hits.into_iter().map(|item| item.result).collect())
+        Ok(results
+            .hits
+            .into_iter()
+            .map(|item| SearchResultReference {
+                index,
+                id: item.result.id,
+            })
+            .collect())
     }
 
     #[instrument(skip_all)]

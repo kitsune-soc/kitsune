@@ -87,7 +87,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
             .embed_client(state.embed_client())
             .fetcher(state.fetcher())
             .object(Box::new(object))
-            .search_service(&state.service().search)
+            .search_backend(state.service().search.backend())
             .build();
         let new_post = process_new_object(process_data).await?;
 
@@ -315,7 +315,7 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
             .embed_client(state.embed_client())
             .fetcher(state.fetcher())
             .object(Box::new(object))
-            .search_service(&state.service().search)
+            .search_backend(state.service().search.backend())
             .build();
         let modified_post = update_object(process_data).await?;
 

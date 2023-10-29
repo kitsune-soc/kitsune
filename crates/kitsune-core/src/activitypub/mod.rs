@@ -19,7 +19,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::{Search, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
@@ -117,7 +117,7 @@ pub struct ProcessNewObject<'a> {
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
     fetcher: &'a Fetcher,
-    search_service: &'a SearchService,
+    search_backend: &'a Search,
 }
 
 #[derive(TypedBuilder)]
@@ -129,7 +129,7 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    search_service: &'a SearchService,
+    search_backend: &'a Search,
 }
 
 #[allow(clippy::missing_panics_doc)]
@@ -141,7 +141,7 @@ async fn preprocess_object(
         embed_client,
         mut object,
         fetcher,
-        search_service,
+        search_backend,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
@@ -200,7 +200,7 @@ async fn preprocess_object(
         content_lang,
         db_pool,
         object,
-        search_service,
+        search_backend,
     })
 }
 
@@ -214,7 +214,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         content_lang,
         db_pool,
         object,
-        search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -270,7 +270,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.add_to_index(post.clone().into()).await?;
+        search_backend.add_to_index(post.clone().into()).await?;
     }
 
     Ok(post)
@@ -286,7 +286,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         content_lang,
         db_pool,
         object,
-        search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -336,7 +336,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.update_in_index(post.clone().into()).await?;
+        search_backend.update_in_index(post.clone().into()).await?;
     }
 
     Ok(post)
