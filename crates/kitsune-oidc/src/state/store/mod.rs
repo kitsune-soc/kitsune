@@ -1,5 +1,6 @@
 use super::LoginState;
 use crate::error::Result;
+use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 
 pub use self::{in_memory::InMemory, redis::Redis};
@@ -14,6 +15,7 @@ pub enum StoreBackend {
     Redis(redis::Redis),
 }
 
+#[async_trait]
 #[enum_dispatch]
 pub trait Store {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState>;
