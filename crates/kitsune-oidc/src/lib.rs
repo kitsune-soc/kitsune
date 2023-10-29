@@ -45,6 +45,7 @@ pub struct OidcService {
 }
 
 impl OidcService {
+    #[inline]
     pub async fn initialise(config: &OidcConfiguration, redirect_uri: String) -> Result<Self> {
         let provider_metadata = CoreProviderMetadata::discover_async(
             IssuerUrl::new(config.server_url.to_string())?,
