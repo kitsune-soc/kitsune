@@ -29,7 +29,6 @@ use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    function::lower,
     model::{
         account::{Account, UpdateAccount},
         follower::Follow as DbFollow,
@@ -302,8 +301,8 @@ impl AccountService {
                     async move {
                         accounts::table
                             .filter(
-                                lower(accounts::username)
-                                    .eq(lower(get_user.username))
+                                accounts::username
+                                    .eq(get_user.username)
                                     .and(accounts::domain.eq(domain)),
                             )
                             .select(Account::as_select())
@@ -344,8 +343,8 @@ impl AccountService {
                     async move {
                         accounts::table
                             .filter(
-                                lower(accounts::username)
-                                    .eq(lower(get_user.username))
+                                accounts::username
+                                    .eq(get_user.username)
                                     .and(accounts::local.eq(true)),
                             )
                             .select(Account::as_select())

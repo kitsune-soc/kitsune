@@ -18,7 +18,7 @@ use axum_extra::{
 use axum_flash::{Flash, IncomingFlashes};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{function::lower, model::user::User, schema::users, PgPool};
+use kitsune_db::{model::user::User, schema::users, PgPool};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use scoped_futures::ScopedFutureExt;
@@ -122,7 +122,7 @@ pub async fn post(
         .with_connection(|db_conn| {
             async move {
                 users::table
-                    .filter(lower(users::username).eq(lower(form.username)))
+                    .filter(users::username.eq(form.username))
                     .first::<User>(db_conn)
                     .await
                     .optional()
