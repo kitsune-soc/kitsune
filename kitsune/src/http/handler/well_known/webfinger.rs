@@ -37,20 +37,18 @@ async fn get(
         return Ok(Either::E2(StatusCode::BAD_REQUEST));
     };
 
-    let subject = if instance == url_service.webfinger_domain() {
-        query.resource.clone()
-    } else if instance == url_service.domain() {
-        // Canonicalize the domain
-        url_service.acct_uri(username)
-    } else {
-        return Ok(Either::E2(StatusCode::NOT_FOUND));
-    };
-
     let get_user = GetUser::builder().username(username).build();
     let Some(account) = account_service.get(get_user).await? else {
         return Ok(Either::E2(StatusCode::NOT_FOUND));
     };
     let account_url = url_service.user_url(account.id);
+
+    let subject = if instance == url_service.webfinger_domain() || instance == url_service.domain()
+    {
+        url_service.acct_uri(&account.username)
+    } else {
+        return Ok(Either::E2(StatusCode::NOT_FOUND));
+    };
 
     Ok(Either::E1(Json(Resource {
         subject,
