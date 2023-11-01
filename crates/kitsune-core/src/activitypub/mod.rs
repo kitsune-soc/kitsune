@@ -23,7 +23,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::{Search, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
@@ -80,7 +80,7 @@ async fn handle_custom_emojis(
         return Ok(());
     }
 
-    let futures = emoji_iter.filter_map(|emoji| {
+    let futures = emoji_iter.clone().filter_map(|emoji| {
         emoji
             .id
             .as_ref()
@@ -92,9 +92,11 @@ async fn handle_custom_emojis(
         .into_iter()
         .collect::<Result<Vec<_>, _>>()?
         .iter()
-        .map(|emoji| PostCustomEmoji {
+        .zip(emoji_iter)
+        .map(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
             post_id,
-            custom_emoji_id: emoji.id,
+            custom_emoji_id: resolved_emoji.id,
+            emoji_text: emoji_tag.name.to_string(),
         })
         .collect::<Vec<_>>();
 
@@ -161,7 +163,7 @@ pub struct ProcessNewObject<'a> {
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
     fetcher: &'a Fetcher,
-    search_service: &'a SearchService,
+    search_backend: &'a Search,
 }
 
 #[derive(TypedBuilder)]
@@ -174,7 +176,7 @@ struct PreprocessedObject<'a> {
     db_pool: &'a PgPool,
     object: Box<Object>,
     fetcher: &'a Fetcher,
-    search_service: &'a SearchService,
+    search_backend: &'a Search,
 }
 
 #[allow(clippy::missing_panics_doc)]
@@ -186,7 +188,7 @@ async fn preprocess_object(
         embed_client,
         mut object,
         fetcher,
-        search_service,
+        search_backend,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
@@ -246,7 +248,7 @@ async fn preprocess_object(
         db_pool,
         object,
         fetcher,
-        search_service,
+        search_backend,
     })
 }
 
@@ -261,7 +263,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         db_pool,
         object,
         fetcher,
-        search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -318,7 +320,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.add_to_index(post.clone().into()).await?;
+        search_backend.add_to_index(post.clone().into()).await?;
     }
 
     Ok(post)
@@ -335,7 +337,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         db_pool,
         object,
         fetcher: _,
-        search_service,
+        search_backend,
     } = preprocess_object(process_data).await?;
 
     let post = db_pool
@@ -385,7 +387,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         .await?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-        search_service.update_in_index(post.clone().into()).await?;
+        search_backend.update_in_index(post.clone().into()).await?;
     }
 
     Ok(post)

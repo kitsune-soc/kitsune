@@ -2,7 +2,7 @@ CREATE TABLE custom_emojis (
     id UUID PRIMARY KEY,
     shortcode TEXT NOT NULL,
     domain TEXT,
-    remote_id TEXT UNIQUE NULLS NOT DISTINCT,
+    remote_id TEXT NOT NULL UNIQUE,
     media_attachment_id UUID NOT NULL,
     endorsed BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -16,6 +16,7 @@ CREATE TABLE custom_emojis (
 CREATE TABLE posts_custom_emojis (
     post_id UUID NOT NULL,
     custom_emoji_id UUID NOT NULL,
+    emoji_text TEXT NOT NULL,
     PRIMARY KEY (post_id, custom_emoji_id),
 
     -- Foreign key constraints

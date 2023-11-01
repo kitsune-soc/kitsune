@@ -39,7 +39,7 @@ pub struct MCaptchaConfiguration {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", tag = "type")]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum CaptchaConfiguration {
     HCaptcha(HCaptchaConfiguration),
     MCaptcha(MCaptchaConfiguration),
@@ -95,7 +95,21 @@ pub struct JobQueueConfiguration {
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
+pub struct OidcRedisStoreConfiguration {
+    pub url: SmolStr,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case", tag = "type")]
+pub enum OidcStoreConfiguration {
+    InMemory,
+    Redis(OidcRedisStoreConfiguration),
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct OidcConfiguration {
+    pub store: OidcStoreConfiguration,
     pub server_url: SmolStr,
     pub client_id: SmolStr,
     pub client_secret: SmolStr,

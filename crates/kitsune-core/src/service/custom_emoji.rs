@@ -17,7 +17,10 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
-use super::attachment::{AttachmentService, Upload};
+use super::{
+    attachment::{AttachmentService, Upload},
+    url::UrlService,
+};
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE];
 
@@ -55,6 +58,7 @@ pub struct EmojiUpload<S> {
 pub struct CustomEmojiService {
     attachment_service: AttachmentService,
     db_pool: PgPool,
+    url_service: UrlService,
 }
 
 impl CustomEmojiService {
@@ -105,13 +109,16 @@ impl CustomEmojiService {
 
         let attachment = self.attachment_service.upload(attachment_upload).await?;
 
+        let id = Uuid::now_v7();
+        let remote_id = self.url_service.custom_emoji_url(id);
+
         let custom_emoji = self
             .db_pool
             .with_connection(|db_conn| {
                 diesel::insert_into(custom_emojis::table)
                     .values(CustomEmoji {
-                        id: Uuid::now_v7(),
-                        remote_id: None,
+                        id,
+                        remote_id,
                         shortcode: emoji_upload.shortcode,
                         domain: None,
                         media_attachment_id: attachment.id,

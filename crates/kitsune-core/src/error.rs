@@ -99,6 +99,9 @@ pub enum Error {
     HttpClient(#[from] kitsune_http_client::Error),
 
     #[error(transparent)]
+    HttpHeaderToStr(#[from] http::header::ToStrError),
+
+    #[error(transparent)]
     JobQueue(#[from] athena::Error),
 
     #[error(transparent)]

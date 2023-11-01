@@ -12,7 +12,7 @@ pub struct CustomEmoji {
     pub id: Uuid,
     pub shortcode: String,
     pub domain: Option<String>,
-    pub remote_id: Option<String>,
+    pub remote_id: String,
     pub media_attachment_id: Uuid,
     pub endorsed: bool,
 }
@@ -35,4 +35,5 @@ pub struct CustomEmojiConflictChangeset {
 pub struct PostCustomEmoji {
     pub post_id: Uuid,
     pub custom_emoji_id: Uuid,
+    pub emoji_text: String,
 }

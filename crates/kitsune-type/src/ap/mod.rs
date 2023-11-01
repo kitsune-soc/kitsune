@@ -191,7 +191,6 @@ pub struct EmojiObject {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
-    pub r#type: ObjectType,
     pub name: String,
     pub updated: Timestamp,
     pub icon: MediaAttachment,

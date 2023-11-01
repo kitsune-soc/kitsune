@@ -1,31 +1,36 @@
-use crate::error::{OidcError, Result};
-use http::Request;
-use hyper::Body;
-use kitsune_cache::{ArcCache, CacheBackend};
-use kitsune_http_client::{Client, Error};
-use openidconnect::{
-    core::{CoreAuthenticationFlow, CoreClient},
-    AccessTokenHash, AuthorizationCode, CsrfToken, HttpRequest, HttpResponse, Nonce,
-    OAuth2TokenResponse, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse,
+#![forbid(rust_2018_idioms, unsafe_code)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    forbidden_lint_groups
+)]
+
+use crate::{
+    error::Result,
+    state::{
+        store::{InMemory as InMemoryStore, Redis as RedisStore},
+        LoginState, OAuth2LoginState, Store,
+    },
 };
-use serde::{Deserialize, Serialize};
+use kitsune_config::{OidcConfiguration, OidcStoreConfiguration};
+use openidconnect::{
+    core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
+    AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
+    OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
+};
 use speedy_uuid::Uuid;
-use typed_builder::TypedBuilder;
 use url::Url;
 
-#[allow(clippy::missing_panics_doc)]
-pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, Error> {
-    let mut request = Request::builder().method(req.method).uri(req.url.as_str());
-    *request.headers_mut().unwrap() = req.headers;
-    let request = request.body(Body::from(req.body)).unwrap();
-    let response = Client::default().execute(request).await?;
+pub use self::error::Error;
 
-    Ok(HttpResponse {
-        status_code: response.status(),
-        headers: response.headers().clone(),
-        body: response.bytes().await?.to_vec(),
-    })
-}
+mod error;
+mod state;
+
+pub mod http;
+
+const LOGIN_STATE_STORE_SIZE: u64 = 100;
 
 #[derive(Debug)]
 pub struct OAuth2Info {
@@ -42,37 +47,44 @@ pub struct UserInfo {
     pub oauth2: OAuth2Info,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-pub struct OAuth2LoginState {
-    application_id: Uuid,
-    scope: String,
-    state: Option<String>,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct LoginState {
-    nonce: Nonce,
-    pkce_verifier: PkceCodeVerifier,
-    oauth2: OAuth2LoginState,
-}
-
-impl Clone for LoginState {
-    fn clone(&self) -> Self {
-        Self {
-            nonce: self.nonce.clone(),
-            pkce_verifier: PkceCodeVerifier::new(self.pkce_verifier.secret().clone()),
-            oauth2: self.oauth2.clone(),
-        }
-    }
-}
-
-#[derive(Clone, TypedBuilder)]
+#[derive(Clone)]
 pub struct OidcService {
     client: CoreClient,
-    login_state: ArcCache<String, LoginState>,
+    login_state_store: self::state::StoreBackend,
 }
 
 impl OidcService {
+    #[inline]
+    pub async fn initialise(config: &OidcConfiguration, redirect_uri: String) -> Result<Self> {
+        let provider_metadata = CoreProviderMetadata::discover_async(
+            IssuerUrl::new(config.server_url.to_string())?,
+            self::http::async_client,
+        )
+        .await?;
+
+        let client = CoreClient::from_provider_metadata(
+            provider_metadata,
+            ClientId::new(config.client_id.to_string()),
+            Some(ClientSecret::new(config.client_secret.to_string())),
+        )
+        .set_redirect_uri(RedirectUrl::new(redirect_uri)?);
+
+        let login_state_store = match config.store {
+            OidcStoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
+            OidcStoreConfiguration::Redis(ref redis_config) => {
+                let config = deadpool_redis::Config::from_url(redis_config.url.clone());
+                let pool = config.create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
+                RedisStore::new(pool).into()
+            }
+        };
+
+        Ok(Self {
+            client,
+            login_state_store,
+        })
+    }
+
     pub async fn authorisation_url(
         &self,
         oauth2_application_id: Uuid,
@@ -101,8 +113,8 @@ impl OidcService {
                 state: oauth2_state,
             },
         };
-        self.login_state
-            .set(csrf_token.secret(), &verification_data)
+        self.login_state_store
+            .set(csrf_token.secret(), verification_data)
             .await?;
 
         Ok(auth_url)
@@ -112,26 +124,21 @@ impl OidcService {
         &self,
         state: String,
         authorization_code: String,
-    ) -> Result<UserInfo, OidcError> {
+    ) -> Result<UserInfo> {
         let LoginState {
             nonce,
             oauth2,
             pkce_verifier,
-        } = self
-            .login_state
-            .get(&state)
-            .await?
-            .ok_or(OidcError::UnknownCsrfToken)?;
-        self.login_state.delete(&state).await?;
+        } = self.login_state_store.get_and_remove(&state).await?;
 
         let token_response = self
             .client
             .exchange_code(AuthorizationCode::new(authorization_code))
             .set_pkce_verifier(pkce_verifier)
-            .request_async(async_client)
+            .request_async(self::http::async_client)
             .await?;
 
-        let id_token = token_response.id_token().ok_or(OidcError::MissingIdToken)?;
+        let id_token = token_response.id_token().ok_or(Error::MissingIdToken)?;
         let claims = id_token.claims(&self.client.id_token_verifier(), &nonce)?;
 
         if let Some(expected_hash) = claims.access_token_hash() {
@@ -141,7 +148,7 @@ impl OidcService {
             )?;
 
             if actual_hash != *expected_hash {
-                return Err(OidcError::MismatchingHash);
+                return Err(Error::MismatchingHash);
             }
         }
 
@@ -149,9 +156,9 @@ impl OidcService {
             subject: claims.subject().to_string(),
             username: claims
                 .preferred_username()
-                .ok_or(OidcError::MissingUsername)?
+                .ok_or(Error::MissingUsername)?
                 .to_string(),
-            email: claims.email().ok_or(OidcError::MissingEmail)?.to_string(),
+            email: claims.email().ok_or(Error::MissingEmail)?.to_string(),
             oauth2: OAuth2Info {
                 application_id: oauth2.application_id,
                 scope: oauth2.scope,

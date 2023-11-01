@@ -1,7 +1,6 @@
 use crate::{
     error::{OAuth2Error, Result},
     oauth2::{AuthorisationCode, OAuth2Service},
-    oidc::OidcService,
 };
 use axum::{
     extract::{Query, State},
@@ -17,6 +16,7 @@ use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
 };
+use kitsune_oidc::OidcService;
 use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 
@@ -55,6 +55,7 @@ pub async fn get(
         user
     } else {
         let register = Register::builder()
+            .force_registration()
             .email(user_info.email)
             .username(user_info.username)
             .oidc_id(user_info.subject)

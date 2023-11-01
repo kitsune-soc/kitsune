@@ -43,7 +43,7 @@ pub enum Error {
 
     #[cfg(feature = "oidc")]
     #[error(transparent)]
-    Oidc(#[from] OidcError),
+    Oidc(#[from] kitsune_oidc::Error),
 
     #[error(transparent)]
     ParseBool(#[from] ParseBoolError),
@@ -86,49 +86,6 @@ pub enum OAuth2Error {
 
     #[error(transparent)]
     Web(#[from] oxide_auth_axum::WebError),
-}
-
-#[cfg(feature = "oidc")]
-use openidconnect::{
-    core::CoreErrorResponseType, ClaimsVerificationError, RequestTokenError, SigningError,
-    StandardErrorResponse,
-};
-
-#[cfg(feature = "oidc")]
-#[derive(Debug, Error)]
-pub enum OidcError {
-    #[error(transparent)]
-    ClaimsVerification(#[from] ClaimsVerificationError),
-
-    #[error(transparent)]
-    LoginState(#[from] kitsune_cache::Error),
-
-    #[error("Missing Email address")]
-    MissingEmail,
-
-    #[error("Mismatching hash")]
-    MismatchingHash,
-
-    #[error("Missing ID token")]
-    MissingIdToken,
-
-    #[error("Missing username")]
-    MissingUsername,
-
-    #[error(transparent)]
-    RequestToken(
-        #[from]
-        RequestTokenError<
-            kitsune_http_client::Error,
-            StandardErrorResponse<CoreErrorResponseType>,
-        >,
-    ),
-
-    #[error(transparent)]
-    Signing(#[from] SigningError),
-
-    #[error("Unknown CSRF token")]
-    UnknownCsrfToken,
 }
 
 impl From<ApiError> for Error {

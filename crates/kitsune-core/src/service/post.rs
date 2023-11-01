@@ -31,6 +31,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::PostCustomEmoji,
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
@@ -40,14 +41,15 @@ use kitsune_db::{
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        accounts, accounts_preferences, media_attachments, notifications, posts, posts_favourites,
-        posts_media_attachments, posts_mentions, users_roles,
+        accounts, accounts_preferences, media_attachments, notifications, posts,
+        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
+        users_roles,
     },
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{SearchBackend, SearchService};
+use kitsune_search::SearchBackend;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -300,7 +302,7 @@ pub struct PostService {
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
-    search_service: SearchService,
+    search_backend: kitsune_search::Search,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }
@@ -402,6 +404,33 @@ impl PostService {
         Ok(())
     }
 
+    async fn process_custom_emojis(
+        conn: &mut AsyncPgConnection,
+        post_id: Uuid,
+        custom_emojis: Vec<(Uuid, String)>,
+    ) -> Result<()> {
+        if custom_emojis.is_empty() {
+            return Ok(());
+        }
+
+        diesel::insert_into(posts_custom_emojis::table)
+            .values(
+                custom_emojis
+                    .iter()
+                    .map(|(emoji_id, emoji_text)| PostCustomEmoji {
+                        post_id,
+                        custom_emoji_id: *emoji_id,
+                        emoji_text: emoji_text.to_string(),
+                    })
+                    .collect::<Vec<PostCustomEmoji>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Create a new post and deliver it to the followers
     ///
     /// # Panics
@@ -489,6 +518,7 @@ impl PostService {
                         resolved.mentioned_accounts,
                     )
                     .await?;
+                    Self::process_custom_emojis(tx, post.id, resolved.custom_emojis).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
                     NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
@@ -507,7 +537,7 @@ impl PostService {
             .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
+            self.search_backend
                 .add_to_index(post.clone().into())
                 .await?;
         }
@@ -553,7 +583,7 @@ impl PostService {
             .await
             .map_err(Error::Event)?;
 
-        self.search_service.remove_from_index(&post.into()).await?;
+        self.search_backend.remove_from_index(&post.into()).await?;
 
         Ok(())
     }
@@ -658,7 +688,7 @@ impl PostService {
             .await?;
 
         if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
-            self.search_service
+            self.search_backend
                 .update_in_index(post.clone().into())
                 .await?;
         }

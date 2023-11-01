@@ -30,6 +30,7 @@ members = [
     "crates/kitsune-language",
     "crates/kitsune-messaging",
     "crates/kitsune-observability",
+    "crates/kitsune-oidc",
     "crates/kitsune-retry-policies",
     "crates/kitsune-search",
     "crates/kitsune-storage",
@@ -39,6 +40,7 @@ members = [
     "kitsune-cli",
     "kitsune-job-runner",
     "lib/athena",
+    "lib/masto-id-convert",
     "lib/post-process",
     "lib/speedy-uuid",
 ]
@@ -64,14 +66,11 @@ installers = ["shell", "powershell"]
 targets = [
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
-    "x86_64-unknown-linux-gnu",
+    "x86_64-unknown-linux-musl",
     "x86_64-pc-windows-msvc",
 ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
-
-[workspace.metadata.dist.dependencies.apt]
-libssl-dev = "*"
 
 [patch.crates-io]
 # Patch `isolang` for quicker compiles

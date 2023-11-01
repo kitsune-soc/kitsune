@@ -11,7 +11,7 @@ use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
 use scoped_futures::ScopedFutureExt;
-use simd_json::{Builder, OwnedValue};
+use simd_json::{OwnedValue, ValueBuilder};
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(

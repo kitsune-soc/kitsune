@@ -20,7 +20,7 @@ pub struct PostResolver {
 
 pub struct ResolvedPost {
     pub mentioned_accounts: Vec<(Uuid, String)>,
-    pub custom_emojis: Vec<Uuid>,
+    pub custom_emojis: Vec<(Uuid, String)>,
     pub content: String,
 }
 
@@ -29,7 +29,7 @@ impl PostResolver {
         &self,
         element: Element<'a>,
         mentioned_accounts: mpsc::Sender<(Uuid, String)>,
-        custom_emojis: mpsc::Sender<Uuid>,
+        custom_emojis: mpsc::Sender<(Uuid, String)>,
     ) -> Result<Element<'a>, BoxError> {
         let element = match element {
             Element::Mention(mention) => {
@@ -69,7 +69,9 @@ impl PostResolver {
                     .build();
 
                 if let Some(emoji) = self.custom_emoji.get(get_emoji).await? {
-                    let _ = custom_emojis.send(emoji.id);
+                    let mut emoji_text = String::new();
+                    Element::Emote(emote.clone()).render(&mut emoji_text);
+                    let _ = custom_emojis.send((emoji.id, emoji_text));
                     Element::Html(Html {
                         tag: Cow::Borrowed("img"),
                         attributes: vec![
@@ -149,7 +151,7 @@ mod test {
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
-    use kitsune_test::{database_test, redis_test};
+    use kitsune_test::{build_ap_response, database_test, redis_test};
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use std::sync::Arc;
@@ -160,7 +162,7 @@ mod test {
     async fn parse_post() {
         redis_test(|redis_pool| async move {
             database_test(|db_pool| async move {
-                let post = "Hello @0x0@corteximplant.com! How are you doing? :blobhaj: :blobhaj@example.com:";
+                let post = "Hello @0x0@corteximplant.com! How are you doing? :blobhaj_happy: :blobhaj_sad@example.com:";
 
                 let client = service_fn(|req: Request<_>| async move {
                     match req.uri().path_and_query().unwrap().as_str() {
@@ -170,7 +172,7 @@ mod test {
                         }
                         "/users/0x0" => {
                             let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                            Ok::<_, Infallible>(build_ap_response(body))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),
                     }
@@ -189,7 +191,7 @@ mod test {
                         })
                         .unwrap(),
                     )
-                    .search_service(NoopSearchService)
+                    .search_backend(NoopSearchService)
                     .webfinger(webfinger.clone())
                     .post_cache(Arc::new(NoopCache.into()))
                     .user_cache(Arc::new(NoopCache.into()))
@@ -228,6 +230,7 @@ mod test {
                 let custom_emoji_service = CustomEmojiService::builder()
                     .attachment_service(attachment_service.clone())
                     .db_pool(db_pool.clone())
+                    .url_service(url_service.clone())
                     .build();
 
                 let emoji_ids = (Uuid::now_v7(), Uuid::now_v7());
@@ -249,9 +252,9 @@ mod test {
                             let emoji_fut = diesel::insert_into(custom_emojis::table)
                                 .values(CustomEmoji {
                                     id: emoji_ids.0,
-                                    shortcode: String::from("blobhaj"),
+                                    shortcode: String::from("blobhaj_happy"),
                                     domain: None,
-                                    remote_id: None,
+                                    remote_id: String::from("https://local.domain/emoji/blobhaj_happy"),
                                     media_attachment_id: media_attachment_ids.0,
                                     endorsed: false 
                                 })
@@ -279,9 +282,9 @@ mod test {
                             let emoji_fut = diesel::insert_into(custom_emojis::table)
                                 .values(CustomEmoji {
                                     id: emoji_ids.1,
-                                    shortcode: String::from("blobhaj"),
+                                    shortcode: String::from("blobhaj_sad"),
                                     domain: Some(String::from("example.com")),
-                                    remote_id: Some(String::from("https://example.com/emojis/1")),
+                                    remote_id: String::from("https://example.com/emojis/1"),
                                     media_attachment_id: media_attachment_ids.1,
                                     endorsed: false 
                                 })
@@ -303,7 +306,7 @@ mod test {
                     .await
                     .expect("Failed to resolve the post");
 
-                assert_eq!(resolved.content, format!("Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj\"> <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj\">", media_attachment_ids.0, media_attachment_ids.1));
+                assert_eq!(resolved.content, format!("Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_happy\"> <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_sad\">", media_attachment_ids.0, media_attachment_ids.1));
                 assert_eq!(resolved.mentioned_accounts.len(), 1);
                 assert_eq!(resolved.custom_emojis.len(), 2);
 
@@ -326,8 +329,8 @@ mod test {
                     "https://corteximplant.com/users/0x0"
                 );
 
-                assert_eq!(resolved.custom_emojis[0], emoji_ids.1);
-                assert_eq!(resolved.custom_emojis[1], emoji_ids.0);
+                assert_eq!(resolved.custom_emojis[0], (emoji_ids.1, String::from(":blobhaj_sad@example.com:")));
+                assert_eq!(resolved.custom_emojis[1], (emoji_ids.0, String::from(":blobhaj_happy:")));
             }).await;
         }).await;
     }

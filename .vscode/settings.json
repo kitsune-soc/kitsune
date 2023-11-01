@@ -4,6 +4,7 @@
     "editor.formatOnSave": true,
     "rust-analyzer.showUnlinkedFileNotification": false,
     "rust-analyzer.cargo.features": [
+        "meilisearch",
         "oidc"
     ],
     "rust-analyzer.check.extraArgs": [

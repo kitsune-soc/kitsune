@@ -28,7 +28,6 @@ impl<K, V> Redis<K, V>
 where
     K: ?Sized,
 {
-    #[allow(clippy::missing_panics_doc)] // All invariants covered. Won't panic.
     pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
     where
         P: Into<String>,
