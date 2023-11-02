@@ -497,7 +497,7 @@ impl PostService {
                             in_reply_to_id,
                             reposted_post_id: None,
                             subject: subject.as_deref(),
-                            content: content.as_str(),
+                            content: resolved.content.as_str(),
                             content_source: content_source.as_str(),
                             content_lang: content_lang.into(),
                             link_preview_url: link_preview_url.as_deref(),

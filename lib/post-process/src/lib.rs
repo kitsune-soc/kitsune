@@ -211,7 +211,12 @@ pub struct Emote<'a> {
 impl Render for Emote<'_> {
     fn render(&self, out: &mut impl fmt::Write) {
         let _ = match &self.domain {
-            Some(domain) => write!(out, ":{}@{}:", self.shortcode, domain),
+            Some(domain) => write!(
+                out,
+                ":{}__{}:",
+                self.shortcode,
+                domain.replace(".", "_").replace("-", "_")
+            ),
             None => write!(out, ":{}:", self.shortcode),
         };
     }
@@ -240,10 +245,7 @@ pub struct Html<'a> {
     pub attributes: Vec<(Cow<'a, str>, Cow<'a, str>)>,
 
     /// Tag contents
-    pub content: Option<Box<Element<'a>>>,
-
-    /// Does this tag have content and a closing tag?
-    pub void: bool,
+    pub content: Box<Element<'a>>,
 }
 
 impl Render for Html<'_> {
@@ -253,13 +255,8 @@ impl Render for Html<'_> {
             let _ = write!(out, " {name}=\"{value}\"");
         }
         let _ = out.write_char('>');
-
-        if !self.void {
-            if let Some(content) = self.content.as_ref() {
-                content.render(out);
-            }
-            let _ = write!(out, "</{}>", self.tag);
-        }
+        self.content.render(out);
+        let _ = write!(out, "</{}>", self.tag);
     }
 }
 

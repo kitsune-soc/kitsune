@@ -2,7 +2,6 @@ use crate::{
     error::{Error, Result},
     service::{
         account::{AccountService, GetUser},
-        attachment::AttachmentService,
         custom_emoji::{CustomEmojiService, GetEmoji},
     },
 };
@@ -14,7 +13,6 @@ use typed_builder::TypedBuilder;
 #[derive(Clone, TypedBuilder)]
 pub struct PostResolver {
     account: AccountService,
-    attachment: AttachmentService,
     custom_emoji: CustomEmojiService,
 }
 
@@ -49,8 +47,7 @@ impl PostResolver {
                             (Cow::Borrowed("class"), Cow::Borrowed("mention")),
                             (Cow::Borrowed("href"), Cow::Owned(account.url)),
                         ],
-                        content: Some(Box::new(Element::Mention(mention))),
-                        void: false
+                        content: Box::new(Element::Mention(mention)),
                     })
                 } else {
                     Element::Mention(mention)
@@ -59,8 +56,7 @@ impl PostResolver {
             Element::Link(link) => Element::Html(Html {
                 tag: Cow::Borrowed("a"),
                 attributes: vec![(Cow::Borrowed("href"), link.content.clone())],
-                content: Some(Box::new(Element::Link(link))),
-                void: false
+                content: Box::new(Element::Link(link)),
             }),
             Element::Emote(emote) => {
                 let get_emoji = GetEmoji::builder()
@@ -72,24 +68,10 @@ impl PostResolver {
                     let mut emoji_text = String::new();
                     Element::Emote(emote.clone()).render(&mut emoji_text);
                     let _ = custom_emojis.send((emoji.id, emoji_text));
-                    Element::Html(Html {
-                        tag: Cow::Borrowed("img"),
-                        attributes: vec![
-                            (Cow::Borrowed("class"), Cow::Borrowed("emoji")),
-                            (
-                                Cow::Borrowed("src"),
-                                Cow::Owned(
-                                    self.attachment.get_url(emoji.media_attachment_id).await?,
-                                ),
-                            ),
-                            (Cow::Borrowed("alt"), emote.shortcode)
-                        ],
-                        content: None,
-                        void: true
-                    })
-                } else {
-                    Element::Emote(emote)
-                }
+                    
+                } 
+                Element::Emote(emote)
+                
             }
             elem => elem,
         };
@@ -298,7 +280,6 @@ mod test {
                 let post_resolver = PostResolver::builder()
                     .account(account_service)
                     .custom_emoji(custom_emoji_service)
-                    .attachment(attachment_service)
                     .build();
 
                 let resolved = post_resolver
@@ -306,7 +287,7 @@ mod test {
                     .await
                     .expect("Failed to resolve the post");
 
-                assert_eq!(resolved.content, format!("Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_happy\"> <img class=\"emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_sad\">", media_attachment_ids.0, media_attachment_ids.1));
+                assert_eq!(resolved.content, format!("Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? <img class=\"custom-emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_happy\"> <img class=\"custom-emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_sad\">", media_attachment_ids.0, media_attachment_ids.1));
                 assert_eq!(resolved.mentioned_accounts.len(), 1);
                 assert_eq!(resolved.custom_emojis.len(), 2);
 

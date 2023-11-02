@@ -5,17 +5,18 @@ use crate::{
     util::BaseToCc,
 };
 use async_trait::async_trait;
-use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
+use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::{CustomEmoji, PostCustomEmoji},
         media_attachment::{MediaAttachment as DbMediaAttachment, PostMediaAttachment},
         mention::Mention,
         post::Post,
     },
-    schema::{accounts, media_attachments, posts},
+    schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
 };
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
@@ -71,7 +72,7 @@ impl IntoObject for Post {
             return Err(ApiError::NotFound.into());
         }
 
-        let (account, in_reply_to, mentions, attachment_stream) = state
+        let (account, in_reply_to, mentions, emojis, attachment_stream) = state
             .db_pool
             .with_connection(|db_conn| {
                 async {
@@ -94,6 +95,17 @@ impl IntoObject for Post {
                         .select((Mention::as_select(), Account::as_select()))
                         .load::<(Mention, Account)>(db_conn);
 
+                    let custom_emojis_fut = custom_emojis::table
+                        .inner_join(posts_custom_emojis::table)
+                        .inner_join(media_attachments::table)
+                        .filter(posts_custom_emojis::post_id.eq(self.id))
+                        .select((
+                            CustomEmoji::as_select(),
+                            PostCustomEmoji::as_select(),
+                            DbMediaAttachment::as_select(),
+                        ))
+                        .load::<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>(db_conn);
+
                     let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
                         .inner_join(media_attachments::table)
                         .select(DbMediaAttachment::as_select())
@@ -103,6 +115,7 @@ impl IntoObject for Post {
                         account_fut,
                         in_reply_to_fut,
                         mentions_fut,
+                        custom_emojis_fut,
                         attachment_stream_fut
                     )
                 }
@@ -138,6 +151,22 @@ impl IntoObject for Post {
                 icon: None,
             });
         }
+        for (custom_emoji, post_emoji, attachment) in emojis {
+            tag.push(Tag {
+                id: Some(custom_emoji.remote_id),
+                r#type: TagType::Emoji,
+                name: post_emoji.emoji_text,
+                href: None,
+                icon: Some(MediaAttachment {
+                    r#type: MediaAttachmentType::Image,
+                    name: None,
+                    media_type: Some(attachment.content_type),
+                    blurhash: None,
+                    url: attachment.remote_url.unwrap(),
+                }),
+            });
+        }
+
         let account_url = state.service.url.user_url(account.id);
 
         Ok(Object {
