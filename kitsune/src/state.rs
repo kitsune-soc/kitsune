@@ -5,7 +5,7 @@ use kitsune_core::{
     activitypub::Fetcher,
     event::PostEventEmitter,
     service::{
-        account::AccountService, attachment::AttachmentService,
+        account::AccountService, attachment::AttachmentService, custom_emoji::CustomEmojiService,
         federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
         notification::NotificationService, post::PostService, search::SearchService,
         timeline::TimelineService, url::UrlService, user::UserService,
@@ -55,6 +55,7 @@ impl_from_ref! {
     [
         AccountService => |input: &Zustand| input.core.service.account.clone(),
         AttachmentService => |input: &Zustand| input.core.service.attachment.clone(),
+        CustomEmojiService => |input: &Zustand| input.core.service.custom_emoji.clone(),
         FederationFilterService => |input: &Zustand| input.core.service.federation_filter.clone(),
         JobService => |input: &Zustand| input.core.service.job.clone(),
         NotificationService => |input: &Zustand| input.core.service.notification.clone(),

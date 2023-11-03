@@ -215,7 +215,7 @@ impl Render for Emote<'_> {
                 out,
                 ":{}__{}:",
                 self.shortcode,
-                domain.replace(".", "_").replace("-", "_")
+                domain.replace(['.', '-'], "_")
             ),
             None => write!(out, ":{}:", self.shortcode),
         };

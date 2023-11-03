@@ -4,13 +4,17 @@ use crate::{
 };
 
 use bytes::Bytes;
-use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
+    OptionalExtension, QueryDsl, SelectableHelper,
+};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::custom_emoji::CustomEmoji,
-    schema::{custom_emojis, media_attachments},
+    schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
     PgPool,
 };
 use scoped_futures::ScopedFutureExt;
@@ -44,11 +48,20 @@ pub struct GetEmoji<'a> {
     domain: Option<&'a str>,
 }
 
+#[derive(TypedBuilder)]
+pub struct GetEmojiList {
+    #[builder(default)]
+    fetching_account_id: Option<Uuid>,
+    #[builder(default = 5000)]
+    limit: i64,
+}
+
 #[derive(TypedBuilder, Validate)]
 pub struct EmojiUpload<S> {
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[garde(length(max = MAX_EMOJI_SHORTCODE_LENGTH))]
+    #[garde(pattern("^([a-zA-Z0-9]_?)*[a-zA-Z0-9]$"))]
     shortcode: String,
     #[garde(skip)]
     stream: S,
@@ -81,11 +94,34 @@ impl CustomEmojiService {
             .map_err(Error::from)
     }
 
-    pub async fn get_all(&self) -> Result<impl Stream<Item = Result<CustomEmoji>> + '_> {
+    pub async fn get_list(
+        &self,
+        get_emoji_list: GetEmojiList,
+    ) -> Result<impl Stream<Item = Result<(CustomEmoji, Option<Timestamp>)>> + '_> {
         let query = custom_emojis::table
-            .select(CustomEmoji::as_select())
-            .order(custom_emojis::id.desc())
+            .left_join(
+                posts_custom_emojis::table.inner_join(
+                    posts::table.on(posts::account_id
+                        .nullable()
+                        .eq(get_emoji_list.fetching_account_id)),
+                ),
+            )
+            .filter(
+                posts::account_id.is_null().or(posts::account_id
+                    .nullable()
+                    .eq(get_emoji_list.fetching_account_id)),
+            )
+            .filter(
+                custom_emojis::endorsed
+                    .eq(true)
+                    .or(custom_emojis::domain.is_null())
+                    .or(posts::created_at.is_not_null()),
+            )
+            .distinct_on(custom_emojis::id)
+            .select((CustomEmoji::as_select(), posts::created_at.nullable()))
+            .limit(get_emoji_list.limit)
             .into_boxed();
+
         self.db_pool
             .with_connection(|db_conn| {
                 async move { Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from)) }

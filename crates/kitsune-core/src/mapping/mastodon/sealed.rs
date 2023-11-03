@@ -10,9 +10,11 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account as DbAccount,
+        custom_emoji::CustomEmoji as DbCustomEmoji,
         favourite::Favourite as DbFavourite,
         follower::Follow,
         link_preview::LinkPreview,
@@ -36,7 +38,7 @@ use kitsune_type::mastodon::{
     preview_card::PreviewType,
     relationship::Relationship,
     status::{Mention, StatusSource},
-    Account, MediaAttachment, Notification, PreviewCard, Status,
+    Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
@@ -586,6 +588,36 @@ impl IntoMastodon for DbNotification {
             created_at: notification.created_at,
             account: account.into_mastodon(state).await?,
             status,
+        })
+    }
+}
+
+#[async_trait]
+impl IntoMastodon for (DbCustomEmoji, Option<Timestamp>) {
+    type Output = CustomEmoji;
+
+    fn id(&self) -> Option<Uuid> {
+        None
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let shortcode = self.0.shortcode;
+        let url = state.url_service.custom_emoji_url(self.0.id);
+        let category = if self.1.is_some() {
+            Some(String::from("recently used"))
+        } else if self.0.endorsed {
+            Some(String::from("endorsed"))
+        } else if self.0.domain.is_none() {
+            Some(String::from("local"))
+        } else {
+            Some(self.0.domain.unwrap())
+        };
+        Ok(CustomEmoji {
+            shortcode,
+            url: url.clone(),
+            static_url: url,
+            visible_in_picker: true,
+            category,
         })
     }
 }

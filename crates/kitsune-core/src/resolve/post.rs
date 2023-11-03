@@ -68,10 +68,8 @@ impl PostResolver {
                     let mut emoji_text = String::new();
                     Element::Emote(emote.clone()).render(&mut emoji_text);
                     let _ = custom_emojis.send((emoji.id, emoji_text));
-                    
-                } 
+                }
                 Element::Emote(emote)
-                
             }
             elem => elem,
         };
@@ -119,23 +117,29 @@ mod test {
             custom_emoji::CustomEmojiService, federation_filter::FederationFilterService,
             job::JobService, url::UrlService,
         },
-        webfinger::Webfinger, try_join,
+        try_join,
+        webfinger::Webfinger,
     };
     use athena::JobQueue;
-    use speedy_uuid::Uuid;
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
     use kitsune_config::FederationFilterConfiguration;
-    use kitsune_db::{model::{account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment}, schema::{accounts, custom_emojis, media_attachments}};
+    use kitsune_db::{
+        model::{
+            account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment,
+        },
+        schema::{accounts, custom_emojis, media_attachments},
+    };
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use kitsune_test::{build_ap_response, database_test, redis_test};
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
+    use speedy_uuid::Uuid;
     use std::sync::Arc;
     use tower::service_fn;
 
@@ -238,7 +242,7 @@ mod test {
                                     domain: None,
                                     remote_id: String::from("https://local.domain/emoji/blobhaj_happy"),
                                     media_attachment_id: media_attachment_ids.0,
-                                    endorsed: false 
+                                    endorsed: false,
                                 })
                                 .execute(db_conn);
                             try_join!(media_fut, emoji_fut)
@@ -246,7 +250,7 @@ mod test {
                     })
                     .await
                     .expect("Failed to insert the local emoji");
-                
+
                 db_pool
                     .with_connection(|db_conn| {
                         async {
@@ -268,7 +272,7 @@ mod test {
                                     domain: Some(String::from("example.com")),
                                     remote_id: String::from("https://example.com/emojis/1"),
                                     media_attachment_id: media_attachment_ids.1,
-                                    endorsed: false 
+                                    endorsed: false,
                                 })
                                 .execute(db_conn);
                             try_join!(media_fut, emoji_fut)

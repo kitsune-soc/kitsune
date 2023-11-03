@@ -3,6 +3,7 @@ use speedy_uuid::Uuid;
 use utoipa::ToSchema;
 
 pub mod account;
+pub mod custom_emoji;
 pub mod instance;
 pub mod media_attachment;
 pub mod notification;
@@ -12,6 +13,7 @@ pub mod search;
 pub mod status;
 
 pub use self::account::Account;
+pub use self::custom_emoji::CustomEmoji;
 pub use self::instance::Instance;
 pub use self::media_attachment::MediaAttachment;
 pub use self::notification::Notification;
