@@ -291,7 +291,7 @@ mod test {
                     .await
                     .expect("Failed to resolve the post");
 
-                assert_eq!(resolved.content, format!("Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? <img class=\"custom-emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_happy\"> <img class=\"custom-emoji\" src=\"http://example.com/media/{}\" alt=\"blobhaj_sad\">", media_attachment_ids.0, media_attachment_ids.1));
+                assert_eq!(resolved.content, "Hello <a class=\"mention\" href=\"https://corteximplant.com/users/0x0\">@0x0@corteximplant.com</a>! How are you doing? :blobhaj_happy: :blobhaj_sad__example_com:");
                 assert_eq!(resolved.mentioned_accounts.len(), 1);
                 assert_eq!(resolved.custom_emojis.len(), 2);
 

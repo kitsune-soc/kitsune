@@ -14,7 +14,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account as DbAccount,
-        custom_emoji::CustomEmoji as DbCustomEmoji,
+        custom_emoji::{CustomEmoji as DbCustomEmoji, PostCustomEmoji as DbPostCustomEmoji},
         favourite::Favourite as DbFavourite,
         follower::Follow,
         link_preview::LinkPreview,
@@ -26,7 +26,8 @@ use kitsune_db::{
         post::{Post as DbPost, PostSource},
     },
     schema::{
-        accounts, accounts_follows, media_attachments, notifications, posts, posts_favourites,
+        accounts, accounts_follows, custom_emojis, media_attachments, notifications, posts,
+        posts_favourites,
     },
     PgPool,
 };
@@ -335,7 +336,14 @@ impl IntoMastodon for DbPost {
 
     #[allow(clippy::too_many_lines)]
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (account, reblog_count, favourites_count, media_attachments, mentions_stream) = state
+        let (
+            account,
+            reblog_count,
+            favourites_count,
+            media_attachments,
+            mentions_stream,
+            custom_emojis_stream,
+        ) = state
             .db_pool
             .with_connection(|db_conn| {
                 async {
@@ -373,12 +381,19 @@ impl IntoMastodon for DbPost {
                         .load_stream::<DbMention>(db_conn)
                         .map_err(Error::from);
 
+                    let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
+                        .inner_join(custom_emojis::table.inner_join(media_attachments::table))
+                        .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
+                        .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
+                        .map_err(Error::from);
+
                     try_join!(
                         account_fut,
                         reblog_count_fut,
                         favourites_count_fut,
                         media_attachments_fut,
                         mentions_stream_fut,
+                        custom_emojis_stream_fut
                     )
                 }
                 .scoped()
@@ -401,6 +416,12 @@ impl IntoMastodon for DbPost {
         let mentions = mentions_stream
             .map_err(Error::from)
             .and_then(|mention| mention.into_mastodon(state))
+            .try_collect()
+            .await?;
+
+        let emojis = custom_emojis_stream
+            .map_err(Error::from)
+            .and_then(|(emoji, attachment)| (emoji, attachment, None).into_mastodon(state))
             .try_collect()
             .await?;
 
@@ -449,6 +470,7 @@ impl IntoMastodon for DbPost {
             account,
             media_attachments,
             mentions,
+            emojis,
             reblog,
             favourited: false,
             reblogged: false,
