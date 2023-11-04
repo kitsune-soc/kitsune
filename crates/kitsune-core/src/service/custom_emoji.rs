@@ -13,7 +13,7 @@ use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::custom_emoji::CustomEmoji,
+    model::{custom_emoji::CustomEmoji, media_attachment::MediaAttachment},
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
     PgPool,
 };
@@ -97,7 +97,8 @@ impl CustomEmojiService {
     pub async fn get_list(
         &self,
         get_emoji_list: GetEmojiList,
-    ) -> Result<impl Stream<Item = Result<(CustomEmoji, Option<Timestamp>)>> + '_> {
+    ) -> Result<impl Stream<Item = Result<(CustomEmoji, MediaAttachment, Option<Timestamp>)>> + '_>
+    {
         let query = custom_emojis::table
             .left_join(
                 posts_custom_emojis::table.inner_join(
@@ -106,6 +107,7 @@ impl CustomEmojiService {
                         .eq(get_emoji_list.fetching_account_id)),
                 ),
             )
+            .inner_join(media_attachments::table)
             .filter(
                 posts::account_id.is_null().or(posts::account_id
                     .nullable()
@@ -118,7 +120,11 @@ impl CustomEmojiService {
                     .or(posts::created_at.is_not_null()),
             )
             .distinct_on(custom_emojis::id)
-            .select((CustomEmoji::as_select(), posts::created_at.nullable()))
+            .select((
+                CustomEmoji::as_select(),
+                MediaAttachment::as_select(),
+                posts::created_at.nullable(),
+            ))
             .limit(get_emoji_list.limit)
             .into_boxed();
 

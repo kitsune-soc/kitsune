@@ -593,17 +593,21 @@ impl IntoMastodon for DbNotification {
 }
 
 #[async_trait]
-impl IntoMastodon for (DbCustomEmoji, Option<Timestamp>) {
+impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
     type Output = CustomEmoji;
 
     fn id(&self) -> Option<Uuid> {
-        None
+        Some(self.0.id)
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let shortcode = self.0.shortcode;
-        let url = state.url_service.custom_emoji_url(self.0.id);
-        let category = if self.1.is_some() {
+        let shortcode = if let Some(ref domain) = self.0.domain {
+            format!(":{}@{}:", self.0.shortcode, domain)
+        } else {
+            format!(":{}:", self.0.shortcode)
+        };
+        let url = state.url_service.media_url(self.1.id);
+        let category = if self.2.is_some() {
             Some(String::from("recently used"))
         } else if self.0.endorsed {
             Some(String::from("endorsed"))
