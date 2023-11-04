@@ -73,7 +73,7 @@ fn is_strong_password(value: &Option<String>, _context: &()) -> garde::Result {
 #[derive(Clone, TypedBuilder, Validate)]
 pub struct Register {
     /// Username of the new user
-    #[garde(length(min = 1, max = 64), pattern(r"[\w\.]+"))]
+    #[garde(length(min = 1, max = 64), pattern(r"[\p{L}\p{N}\.]+"))]
     username: String,
 
     /// Email address of the new user
