@@ -60,6 +60,40 @@ impl IntoObject for DbMediaAttachment {
     }
 }
 
+fn build_post_tags(
+    mentions: Vec<(Mention, Account)>,
+    to: &mut Vec<String>,
+    emojis: Vec<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>,
+) -> Vec<Tag> {
+    let mut tag = Vec::new();
+    for (mention, mentioned) in mentions {
+        to.push(mentioned.url.clone());
+        tag.push(Tag {
+            id: None,
+            r#type: TagType::Mention,
+            name: mention.mention_text,
+            href: Some(mentioned.url),
+            icon: None,
+        });
+    }
+    for (custom_emoji, post_emoji, attachment) in emojis {
+        tag.push(Tag {
+            id: Some(custom_emoji.remote_id),
+            r#type: TagType::Emoji,
+            name: post_emoji.emoji_text,
+            href: None,
+            icon: Some(MediaAttachment {
+                r#type: MediaAttachmentType::Image,
+                name: None,
+                media_type: Some(attachment.content_type),
+                blurhash: None,
+                url: attachment.remote_url.unwrap(),
+            }),
+        });
+    }
+    tag
+}
+
 #[async_trait]
 impl IntoObject for Post {
     type Output = Object;
@@ -139,33 +173,8 @@ impl IntoObject for Post {
             .try_collect()
             .await?;
 
-        let mut tag = Vec::new();
         let (mut to, cc) = self.visibility.base_to_cc(state, &account);
-        for (mention, mentioned) in mentions {
-            to.push(mentioned.url.clone());
-            tag.push(Tag {
-                id: None,
-                r#type: TagType::Mention,
-                name: mention.mention_text,
-                href: Some(mentioned.url),
-                icon: None,
-            });
-        }
-        for (custom_emoji, post_emoji, attachment) in emojis {
-            tag.push(Tag {
-                id: Some(custom_emoji.remote_id),
-                r#type: TagType::Emoji,
-                name: post_emoji.emoji_text,
-                href: None,
-                icon: Some(MediaAttachment {
-                    r#type: MediaAttachmentType::Image,
-                    name: None,
-                    media_type: Some(attachment.content_type),
-                    blurhash: None,
-                    url: attachment.remote_url.unwrap(),
-                }),
-            });
-        }
+        let tag = build_post_tags(mentions, &mut to, emojis);
 
         let account_url = state.service.url.user_url(account.id);
 

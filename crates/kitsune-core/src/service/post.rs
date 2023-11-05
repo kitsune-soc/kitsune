@@ -436,6 +436,7 @@ impl PostService {
     /// # Panics
     ///
     /// This should never ever panic. If it does, create a bug report.
+    #[allow(clippy::too_many_lines)]
     pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
         create_post.validate(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
@@ -626,12 +627,16 @@ impl PostService {
                 .map(|c| kitsune_language::detect_language(DetectionBackend::default(), c)),
         };
 
-        let (mentioned_account_ids, content) = match content.as_ref() {
+        let (mentioned_account_ids, custom_emojis, content) = match content.as_ref() {
             Some(content) => {
                 let resolved = self.post_resolver.resolve(content).await?;
-                (resolved.mentioned_accounts, Some(resolved.content))
+                (
+                    resolved.mentioned_accounts,
+                    resolved.custom_emojis,
+                    Some(resolved.content),
+                )
             }
-            None => (Vec::new(), None),
+            None => (Vec::new(), Vec::new(), None),
         };
 
         let link_preview_url = if let (Some(embed_client), Some(content)) =
@@ -666,6 +671,7 @@ impl PostService {
 
                     Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
                         .await?;
+                    Self::process_custom_emojis(tx, post.id, custom_emojis).await?;
                     Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
                     NotificationService::notify_on_update_post(tx, post.account_id, post.id)
                         .await?;

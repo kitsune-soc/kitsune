@@ -465,7 +465,10 @@ mod test {
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_config::FederationFilterConfiguration;
-    use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_db::{
+        model::{account::Account, media_attachment::MediaAttachment},
+        schema::{accounts, media_attachments},
+    };
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_test::{build_ap_response, database_test};
@@ -998,6 +1001,55 @@ mod test {
         .await;
     }
 
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn fetch_emoji() {
+        database_test(|db_pool| async move {
+            let client = Client::builder().service(service_fn(handle));
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool.clone())
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_backend(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            let emoji = fetcher
+                .fetch_emoji("https://corteximplant.com/emojis/7952")
+                .await
+                .expect("Fetch emoji");
+            assert_eq!(emoji.shortcode, "Blobhaj");
+            assert_eq!(emoji.domain, Some(String::from("corteximplant.com")));
+
+            let media_attachment = db_pool
+                .with_connection(|db_conn| {
+                    media_attachments::table
+                        .find(emoji.media_attachment_id)
+                        .select(MediaAttachment::as_select())
+                        .get_result::<MediaAttachment>(db_conn)
+                        .scoped()
+                })
+                .await
+                .expect("Get media attachment");
+
+            assert_eq!(
+                media_attachment.remote_url,
+                Some(String::from(
+                    "https://corteximplant.com/system/custom_emojis/images/000/007/952/original/33b7f12bd094b815.png"
+                )));
+        })
+        .await;
+    }
+
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
@@ -1014,6 +1066,11 @@ mod test {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
                 );
+                Ok::<_, Infallible>(build_ap_response(body))
+            }
+            "/emojis/7952" => {
+                let body =
+                    include_str!("../../../../test-fixtures/corteximplant.com_emoji_7952.json");
                 Ok::<_, Infallible>(build_ap_response(body))
             }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
