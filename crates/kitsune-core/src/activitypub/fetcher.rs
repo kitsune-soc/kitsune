@@ -179,7 +179,7 @@ impl Fetcher {
 
         let mut actor: Actor = self.fetch_ap_resource(url.as_str()).await?;
 
-        let mut domain = url.host_str().unwrap();
+        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
         let domain_buf;
         let fetch_webfinger = opts
             .acct
@@ -206,7 +206,7 @@ impl Fetcher {
         };
         if !used_webfinger && actor.id != url.as_str() {
             url = Url::parse(&actor.id)?;
-            domain = url.host_str().unwrap();
+            domain = url.host_str().ok_or(ApiError::MissingHost)?;
         }
 
         actor.clean_html();
@@ -330,11 +330,11 @@ impl Fetcher {
 
         let emoji: EmojiObject = self.client.get(url.as_str()).await?.jsonld().await?;
 
-        let mut domain = url.host_str().unwrap();
+        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
 
         if emoji.id != url.as_str() {
             url = Url::parse(&emoji.id)?;
-            domain = url.host_str().unwrap();
+            domain = url.host_str().ok_or(ApiError::MissingHost)?;
         }
 
         let content_type = emoji
@@ -342,7 +342,7 @@ impl Fetcher {
             .media_type
             .as_deref()
             .or_else(|| mime_guess::from_path(&emoji.icon.url).first_raw())
-            .unwrap();
+            .ok_or(ApiError::UnsupportedMediaType)?;
 
         let name_pure = emoji.name.replace(':', "");
 

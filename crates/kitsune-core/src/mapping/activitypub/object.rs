@@ -77,19 +77,21 @@ fn build_post_tags(
         });
     }
     for (custom_emoji, post_emoji, attachment) in emojis {
-        tag.push(Tag {
-            id: Some(custom_emoji.remote_id),
-            r#type: TagType::Emoji,
-            name: post_emoji.emoji_text,
-            href: None,
-            icon: Some(MediaAttachment {
-                r#type: MediaAttachmentType::Image,
-                name: None,
-                media_type: Some(attachment.content_type),
-                blurhash: None,
-                url: attachment.remote_url.unwrap(),
-            }),
-        });
+        if let Some(attachment_url) = attachment.remote_url {
+            tag.push(Tag {
+                id: Some(custom_emoji.remote_id),
+                r#type: TagType::Emoji,
+                name: post_emoji.emoji_text,
+                href: None,
+                icon: Some(MediaAttachment {
+                    r#type: MediaAttachmentType::Image,
+                    name: None,
+                    media_type: Some(attachment.content_type),
+                    blurhash: None,
+                    url: attachment_url,
+                }),
+            });
+        }
     }
     tag
 }
