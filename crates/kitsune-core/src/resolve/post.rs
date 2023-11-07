@@ -125,6 +125,7 @@ mod test {
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
     use hyper::{Body, Request, Response};
+    use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_config::FederationFilterConfiguration;
     use kitsune_db::{
@@ -243,6 +244,8 @@ mod test {
                                     remote_id: String::from("https://local.domain/emoji/blobhaj_happy"),
                                     media_attachment_id: media_attachment_ids.0,
                                     endorsed: false,
+                                    created_at: Timestamp::now_utc(),
+                                    updated_at: Timestamp::now_utc()
                                 })
                                 .execute(db_conn);
                             try_join!(media_fut, emoji_fut)
@@ -273,6 +276,8 @@ mod test {
                                     remote_id: String::from("https://example.com/emojis/1"),
                                     media_attachment_id: media_attachment_ids.1,
                                     endorsed: false,
+                                    created_at: Timestamp::now_utc(),
+                                    updated_at: Timestamp::now_utc(),
                                 })
                                 .execute(db_conn);
                             try_join!(media_fut, emoji_fut)

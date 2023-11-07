@@ -1,6 +1,7 @@
 use super::post::Post;
 use crate::schema::posts_custom_emojis;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -15,6 +16,8 @@ pub struct CustomEmoji {
     pub remote_id: String,
     pub media_attachment_id: Uuid,
     pub endorsed: bool,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 #[derive(AsChangeset)]

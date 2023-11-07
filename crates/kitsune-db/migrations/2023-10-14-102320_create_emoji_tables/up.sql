@@ -6,6 +6,9 @@ CREATE TABLE custom_emojis (
     media_attachment_id UUID NOT NULL,
     endorsed BOOLEAN NOT NULL DEFAULT FALSE,
 
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
     -- UNIQUE constraints
     UNIQUE (shortcode, domain),
     

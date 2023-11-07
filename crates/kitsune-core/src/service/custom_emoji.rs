@@ -94,6 +94,18 @@ impl CustomEmojiService {
             .map_err(Error::from)
     }
 
+    pub async fn get_by_id(&self, id: Uuid) -> Result<CustomEmoji> {
+        let query = custom_emojis::table
+            .find(id)
+            .select(CustomEmoji::as_select())
+            .into_boxed();
+
+        self.db_pool
+            .with_connection(|db_conn| async move { query.get_result(db_conn).await }.scoped())
+            .await
+            .map_err(Error::from)
+    }
+
     pub async fn get_list(
         &self,
         get_emoji_list: GetEmojiList,
@@ -165,6 +177,8 @@ impl CustomEmojiService {
                         domain: None,
                         media_attachment_id: attachment.id,
                         endorsed: false,
+                        created_at: Timestamp::now_utc(),
+                        updated_at: Timestamp::now_utc(),
                     })
                     .get_result(db_conn)
                     .scoped()

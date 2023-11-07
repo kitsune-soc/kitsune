@@ -14,6 +14,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
+use iso8601_timestamp::Timestamp;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
@@ -30,7 +31,7 @@ use kitsune_http_client::Client;
 
 use kitsune_search::SearchBackend;
 use kitsune_type::{
-    ap::{actor::Actor, EmojiObject, Object},
+    ap::{actor::Actor, emoji::Emoji, Object},
     jsonld::RdfNode,
 };
 use mime::Mime;
@@ -328,7 +329,7 @@ impl Fetcher {
             return Err(ApiError::Unauthorised.into());
         }
 
-        let emoji: EmojiObject = self.client.get(url.as_str()).await?.jsonld().await?;
+        let emoji: Emoji = self.client.get(url.as_str()).await?.jsonld().await?;
 
         let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
 
@@ -371,6 +372,8 @@ impl Fetcher {
                             domain: Some(domain.to_string()),
                             media_attachment_id: media_attachment.id,
                             endorsed: false,
+                            created_at: Timestamp::now_utc(),
+                            updated_at: Timestamp::now_utc(),
                         })
                         .returning(CustomEmoji::as_returning())
                         .get_result::<CustomEmoji>(tx)

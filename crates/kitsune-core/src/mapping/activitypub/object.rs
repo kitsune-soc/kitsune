@@ -21,6 +21,7 @@ use kitsune_db::{
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
+    emoji::Emoji,
     object::{MediaAttachment, MediaAttachmentType},
     AttributedToField, Object, ObjectType, Tag, TagType,
 };
@@ -262,6 +263,43 @@ impl IntoObject for Account {
                 public_key_pem: self.public_key,
             },
             published: self.created_at,
+        })
+    }
+}
+
+#[async_trait]
+impl IntoObject for CustomEmoji {
+    type Output = Emoji;
+
+    async fn into_object(self, state: &State) -> Result<Self::Output> {
+        // Officially we don't have any info about remote emojis as we're not the origin
+        // Let's pretend we're not home and do not answer
+        let name = match self.domain {
+            None => Ok::<String, ApiError>(format!(":{}:", self.shortcode)),
+            Some(_) => Err(ApiError::NotFound),
+        }?;
+        let icon = state
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    media_attachments::table
+                        .find(self.media_attachment_id)
+                        .get_result::<DbMediaAttachment>(db_conn)
+                        .map_err(Error::from)
+                        .and_then(|media_attachment| media_attachment.into_object(state))
+                        .await
+                }
+                .scoped()
+            })
+            .await?;
+
+        Ok(Emoji {
+            context: ap_context(),
+            id: self.remote_id,
+            r#type: String::from("Emoji"),
+            name,
+            icon,
+            updated: self.updated_at,
         })
     }
 }

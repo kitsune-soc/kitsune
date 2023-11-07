@@ -1,5 +1,5 @@
 use self::{
-    handler::{confirm_account, media, nodeinfo, oauth, posts, users, well_known},
+    handler::{confirm_account, custom_emojis, media, nodeinfo, oauth, posts, users, well_known},
     openapi::api_docs,
 };
 use crate::state::Zustand;
@@ -39,6 +39,7 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
     #[allow(unused_mut)]
     let mut router = Router::new()
         .nest("/confirm-account", confirm_account::routes())
+        .nest("/emojis", custom_emojis::routes())
         .nest("/media", media::routes())
         .nest("/nodeinfo", nodeinfo::routes())
         .nest(

@@ -34,7 +34,7 @@ impl UrlService {
 
     #[must_use]
     pub fn custom_emoji_url(&self, custom_emoji_id: Uuid) -> String {
-        format!("{}/custom-emojis/{}", self.base_url(), custom_emoji_id)
+        format!("{}/emojis/{}", self.base_url(), custom_emoji_id)
     }
 
     #[must_use]
