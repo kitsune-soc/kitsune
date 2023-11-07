@@ -19,7 +19,7 @@ openidconnect = { version = "3.4.0", default-features = false, features = [
     "accept-string-booleans",
 ] }
 redis = "0.23.3"
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 simd-json = "0.13.4"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 thiserror = "1.0.50"

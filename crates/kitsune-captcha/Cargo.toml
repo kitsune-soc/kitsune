@@ -8,7 +8,7 @@ async-trait = "0.1.74"
 enum_dispatch = "0.3.12"
 http = "0.2.9"
 kitsune-http-client = { path = "../kitsune-http-client" }
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.4"
 strum = { version = "0.25.0", features = ["derive"] }
