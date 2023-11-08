@@ -1,6 +1,9 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 
+#[macro_use]
+extern crate tracing;
+
 use clap::Parser;
 use color_eyre::{config::HookBuilder, Help};
 use eyre::Context;
@@ -97,7 +100,15 @@ async fn boot() -> eyre::Result<()> {
         .context("Failed to connect to the Redis instance for the job scheduler")?;
     let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
 
-    tokio::spawn(kitsune::http::run(state.clone(), config.server.clone()));
+    tokio::spawn({
+        let server_fut = kitsune::http::run(state.clone(), config.server.clone());
+
+        async move {
+            if let Err(error) = server_fut.await {
+                error!(?error, "failed to run http server");
+            }
+        }
+    });
     tokio::spawn(kitsune_job_runner::run_dispatcher(
         job_queue,
         state.core.clone(),
