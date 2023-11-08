@@ -1,4 +1,4 @@
-use http::{header::InvalidHeaderValue, HeaderName, HeaderValue, Request, Response};
+use http::{header::InvalidHeaderValue, HeaderName, HeaderValue, Response};
 use itertools::Itertools;
 use pin_project_lite::pin_project;
 use std::{
@@ -71,11 +71,11 @@ impl<S> XClacksOverheadService<S> {
     }
 }
 
-impl<S, B> Service<Request<B>> for XClacksOverheadService<S>
+impl<S, Request, ResBody> Service<Request> for XClacksOverheadService<S>
 where
-    S: Service<Request<B>, Response = Response<B>>,
+    S: Service<Request, Response = Response<ResBody>>,
 {
-    type Response = Response<B>;
+    type Response = Response<ResBody>;
     type Error = S::Error;
     type Future = XClacksOverheadFuture<S::Future>;
 
@@ -83,7 +83,7 @@ where
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<B>) -> Self::Future {
+    fn call(&mut self, req: Request) -> Self::Future {
         XClacksOverheadFuture {
             future: self.inner.call(req),
             names: Arc::clone(&self.names),
