@@ -4,7 +4,6 @@
 #[macro_use]
 extern crate tracing;
 
-use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc};
@@ -32,7 +31,6 @@ where
     Redis(RedisCache<K, V>),
 }
 
-#[async_trait]
 #[enum_dispatch]
 pub trait CacheBackend<K, V>: Send + Sync
 where
@@ -46,7 +44,6 @@ where
 #[derive(Clone)]
 pub struct NoopCache;
 
-#[async_trait]
 impl<K, V> CacheBackend<K, V> for NoopCache
 where
     K: Send + Sync + ?Sized,

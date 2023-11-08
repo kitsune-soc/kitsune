@@ -3,7 +3,6 @@ use crate::{
     service::{attachment::AttachmentService, url::UrlService},
     try_join,
 };
-use async_trait::async_trait;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
     OptionalExtension, QueryDsl, SelectableHelper,
@@ -53,7 +52,6 @@ pub struct MapperState<'a> {
     pub url_service: &'a UrlService,
 }
 
-#[async_trait]
 pub trait IntoMastodon {
     /// Mastodon API entity that gets returned
     type Output: Clone + DeserializeOwned + Serialize;
@@ -67,7 +65,6 @@ pub trait IntoMastodon {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output>;
 }
 
-#[async_trait]
 impl IntoMastodon for DbAccount {
     type Output = Account;
 
@@ -151,7 +148,6 @@ impl IntoMastodon for DbAccount {
 ///
 /// - Left: Requestor of the relationship
 /// - Right: Target of the relationship
-#[async_trait]
 impl IntoMastodon for (&DbAccount, &DbAccount) {
     type Output = Relationship;
 
@@ -214,7 +210,6 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbMention {
     type Output = Mention;
 
@@ -249,7 +244,6 @@ impl IntoMastodon for DbMention {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbMediaAttachment {
     type Output = MediaAttachment;
 
@@ -280,7 +274,6 @@ impl IntoMastodon for DbMediaAttachment {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for (&DbAccount, DbPost) {
     type Output = Status;
 
@@ -323,7 +316,6 @@ impl IntoMastodon for (&DbAccount, DbPost) {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbPost {
     type Output = Status;
 
@@ -455,7 +447,6 @@ impl IntoMastodon for DbPost {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for LinkPreview<Embed> {
     type Output = PreviewCard;
 
@@ -534,7 +525,6 @@ impl IntoMastodon for LinkPreview<Embed> {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for PostSource {
     type Output = StatusSource;
 
@@ -551,7 +541,6 @@ impl IntoMastodon for PostSource {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbNotification {
     type Output = Notification;
 

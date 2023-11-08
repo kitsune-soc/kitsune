@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-async-trait = "0.1.74"
 enum_dispatch = "0.3.12"
 http = "0.2.9"
 kitsune-http-client = { path = "../kitsune-http-client" }

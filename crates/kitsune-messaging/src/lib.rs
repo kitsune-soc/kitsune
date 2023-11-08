@@ -10,7 +10,6 @@
 #[macro_use]
 extern crate tracing;
 
-use async_trait::async_trait;
 use futures_util::{stream::BoxStream, Stream};
 use pin_project_lite::pin_project;
 use serde::{de::DeserializeOwned, Serialize};
@@ -40,7 +39,6 @@ pub mod tokio_broadcast;
 ///
 /// The trait is designed to be object-safe since it's internally stored inside an `Arc`
 /// and supposed to be type-erased for ease of testing.
-#[async_trait]
 pub trait MessagingBackend {
     /// Enqueue a new message onto the backend
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()>;

@@ -3,7 +3,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(forbidden_lint_groups)]
 
-use async_trait::async_trait;
 use bytes::Bytes;
 use enum_dispatch::enum_dispatch;
 use futures_util::{stream::BoxStream, Stream};
@@ -19,7 +18,6 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
-#[async_trait]
 #[enum_dispatch]
 pub trait StorageBackend: Clone + Send + Sync {
     /// Delete something from the object storage

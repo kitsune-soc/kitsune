@@ -3,7 +3,6 @@
 //!
 
 use crate::{Result, StorageBackend};
-use async_trait::async_trait;
 use bytes::Bytes;
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use http::Request;
@@ -99,7 +98,6 @@ impl Storage {
     }
 }
 
-#[async_trait]
 impl StorageBackend for Storage {
     async fn delete(&self, path: &str) -> Result<()> {
         self.client.delete_object(path).await

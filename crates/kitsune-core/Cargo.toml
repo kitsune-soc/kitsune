@@ -9,7 +9,6 @@ ammonia = "3.3.0"
 argon2 = "0.5.2"
 async-recursion = "1.0.5"
 async-stream = "0.3.5"
-async-trait = "0.1.74"
 athena = { path = "../../lib/athena" }
 autometrics = { version = "0.6.0", default-features = false, features = [
     "metrics",

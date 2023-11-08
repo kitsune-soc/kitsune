@@ -3,7 +3,6 @@
 //!
 
 use crate::{Result, StorageBackend};
-use async_trait::async_trait;
 use bytes::Bytes;
 use futures_util::{pin_mut, stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use std::path::PathBuf;
@@ -29,7 +28,6 @@ impl Storage {
     }
 }
 
-#[async_trait]
 impl StorageBackend for Storage {
     async fn delete(&self, path: &str) -> Result<()> {
         fs::remove_file(self.storage_dir.join(path)).await?;

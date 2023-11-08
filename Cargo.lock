@@ -438,7 +438,6 @@ name = "athena"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "deadpool-redis",
  "either",
  "futures-util",
@@ -2840,7 +2839,6 @@ dependencies = [
 name = "kitsune-cache"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "moka",
@@ -2857,7 +2855,6 @@ dependencies = [
 name = "kitsune-captcha"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "enum_dispatch",
  "http",
  "kitsune-http-client",
@@ -2907,7 +2904,6 @@ dependencies = [
  "argon2",
  "async-recursion",
  "async-stream",
- "async-trait",
  "athena",
  "autometrics",
  "base64-simd",
@@ -3097,7 +3093,6 @@ name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "futures-util",
  "kitsune-retry-policies",
  "pin-project-lite",
@@ -3136,7 +3131,6 @@ dependencies = [
 name = "kitsune-oidc"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "http",
@@ -3166,7 +3160,6 @@ dependencies = [
 name = "kitsune-search"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
@@ -3187,7 +3180,6 @@ dependencies = [
 name = "kitsune-storage"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "bytes",
  "enum_dispatch",
  "futures-util",

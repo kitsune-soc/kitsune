@@ -4,7 +4,6 @@
 
 use crate::{util::TransparentDebug, MessagingBackend, Result};
 use ahash::AHashMap;
-use async_trait::async_trait;
 use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
 use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
 use redis::{
@@ -148,7 +147,6 @@ impl RedisMessagingBackend {
     }
 }
 
-#[async_trait]
 impl MessagingBackend for RedisMessagingBackend {
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()> {
         self.pub_connection

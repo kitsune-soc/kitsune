@@ -4,7 +4,6 @@
 #![allow(forbidden_lint_groups)]
 
 use self::error::CaptchaVerification;
-use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 
 pub mod error;
@@ -27,7 +26,6 @@ pub enum ChallengeStatus {
 }
 
 /// Trait abstraction over captcha backends
-#[async_trait]
 #[enum_dispatch]
 pub trait CaptchaBackend: Clone + Send + Sync {
     /// Verify the token provided in the registration form

@@ -7,7 +7,6 @@ use self::{
     mailing::confirmation::SendConfirmationMail,
 };
 use crate::{activitypub::Deliverer, error::Result, state::State};
-use async_trait::async_trait;
 use athena::{JobContextRepository, Runnable};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -77,7 +76,6 @@ impl_from! {
     }
 }
 
-#[async_trait]
 impl Runnable for Job {
     type Context = JobRunnerContext;
     type Error = eyre::Report;
@@ -110,7 +108,6 @@ impl KitsuneContextRepo {
     }
 }
 
-#[async_trait]
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
     type Error = eyre::Report;

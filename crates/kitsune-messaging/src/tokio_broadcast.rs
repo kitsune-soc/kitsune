@@ -3,7 +3,6 @@
 //!
 
 use crate::{MessagingBackend, Result};
-use async_trait::async_trait;
 use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
 use std::{collections::HashMap, sync::RwLock};
 use tokio::sync::broadcast;
@@ -24,7 +23,6 @@ impl Default for TokioBroadcastMessagingBackend {
     }
 }
 
-#[async_trait]
 impl MessagingBackend for TokioBroadcastMessagingBackend {
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()> {
         let guard = self.registry.read().unwrap();

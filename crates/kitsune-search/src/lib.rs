@@ -5,7 +5,6 @@
 #[macro_use]
 extern crate tracing;
 
-use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
 use serde::{Deserialize, Serialize};
@@ -118,7 +117,6 @@ pub struct SearchResultReference {
     pub id: Uuid,
 }
 
-#[async_trait]
 #[enum_dispatch]
 pub trait SearchBackend: Send + Sync {
     /// Add an item to the index
@@ -152,7 +150,6 @@ pub trait SearchBackend: Send + Sync {
 #[derive(Clone)]
 pub struct NoopSearchService;
 
-#[async_trait]
 impl SearchBackend for NoopSearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())

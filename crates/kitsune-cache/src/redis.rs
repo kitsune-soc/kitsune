@@ -1,5 +1,4 @@
 use super::{CacheBackend, CacheResult};
-use async_trait::async_trait;
 use redis::AsyncCommands;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
@@ -44,7 +43,6 @@ where
     }
 }
 
-#[async_trait]
 impl<K, V> CacheBackend<K, V> for Redis<K, V>
 where
     K: Display + Send + Sync + ?Sized,
