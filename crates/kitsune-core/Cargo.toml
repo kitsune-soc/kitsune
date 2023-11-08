@@ -62,7 +62,7 @@ rand = "0.8.5"
 rsa = "0.9.3"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 sha2 = "0.10.8"
 simd-json = "0.13.4"
 smol_str = "0.2.0"
@@ -84,7 +84,7 @@ mastodon-api = []
 meilisearch = ["kitsune-search/meilisearch"]
 
 [build-dependencies]
-vergen = { version = "8.2.5", features = ["build", "git", "gitcl"] }
+vergen = { version = "8.2.6", features = ["build", "git", "gitcl"] }
 
 [dev-dependencies]
 hyper = "0.14.27"

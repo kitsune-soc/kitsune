@@ -77,3 +77,5 @@ pr-run-mode = "plan"
 isolang = { git = "https://github.com/humenda/isolang-rs.git", rev = "f015b8cce82b6168303c84543fdd25f57005141c" }
 # Patch `redis` for up-to-date `ahash`
 redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }
+# Patch `tracing-opentelemetry` for up-to-date `opentelemetry`
+tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "2156c236db4c488eb6fce08bdd710dde290f5f52" }
