@@ -319,7 +319,7 @@ mod test {
                     "https://corteximplant.com/users/0x0"
                 );
 
-                assert_eq!(resolved.custom_emojis[0], (emoji_ids.1, String::from(":blobhaj_sad@example.com:")));
+                assert_eq!(resolved.custom_emojis[0], (emoji_ids.1, String::from(":blobhaj_sad__example_com:")));
                 assert_eq!(resolved.custom_emojis[1], (emoji_ids.0, String::from(":blobhaj_happy:")));
             }).await;
         }).await;

@@ -1076,6 +1076,11 @@ mod test {
                     include_str!("../../../../test-fixtures/corteximplant.com_emoji_7952.json");
                 Ok::<_, Infallible>(build_ap_response(body))
             }
+            "/emojis/8933" => {
+                let body =
+                    include_str!("../../../../test-fixtures/corteximplant.com_emoji_8933.json");
+                Ok::<_, Infallible>(build_ap_response(body))
+            }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
                 let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
                 Ok::<_, Infallible>(Response::new(Body::from(body)))
