@@ -153,6 +153,9 @@ type = "in-process"
 #
 # This configuration changes the general behaviour that you'd mostly attribute to the underlying HTTP server
 [server]
+# Values for the `X-Clacks-Overhead` header
+# You can use this as a sort of silent memorial
+# clacks-overhead = ["Natalie Nguyen", "John \"Soap\" MacTavish"]
 # Path the frontend you want to use is located at
 # Note: This path is not canonicalized and does not support Unix shortcuts such as the tilde (~)
 frontend-dir = "./kitsune-fe/dist"
