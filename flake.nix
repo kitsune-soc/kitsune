@@ -25,8 +25,8 @@
             inherit overlays system;
           };
           rustPlatform = pkgs.makeRustPlatform {
-            cargo = pkgs.rust-bin.stable.latest.minimal;
-            rustc = pkgs.rust-bin.stable.latest.minimal;
+            cargo = pkgs.rust-bin.nightly.latest.minimal;
+            rustc = pkgs.rust-bin.nightly.latest.minimal;
           };
           baseDependencies = with pkgs; [
             openssl
@@ -125,7 +125,7 @@
                   packages = with pkgs; [
                     cargo-insta
                     diesel-cli
-                    rust-bin.stable.latest.default
+                    rust-bin.nightly.latest.default
                   ]
                   ++
                   baseDependencies;
