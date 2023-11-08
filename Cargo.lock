@@ -3093,6 +3093,7 @@ name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
+ "enum_dispatch",
  "futures-util",
  "kitsune-retry-policies",
  "pin-project-lite",

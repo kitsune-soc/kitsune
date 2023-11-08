@@ -186,7 +186,7 @@ impl AttachmentService {
         upload.validate(&())?;
 
         // remove exif info from image uploads
-        let upload_stream = if is_image_type_with_supported_metadata(&upload.content_type) {
+        if is_image_type_with_supported_metadata(&upload.content_type) {
             let stream = upload.stream;
             pin_mut!(stream);
 
@@ -212,11 +212,11 @@ impl AttachmentService {
 
             self.storage_backend
                 .put(&upload.path, stream::once(async { Ok(final_bytes) }))
+                .await
         } else {
-            self.storage_backend.put(&upload.path, upload.stream)
-        };
-
-        upload_stream.await.map_err(Error::Storage)?;
+            self.storage_backend.put(&upload.path, upload.stream).await
+        }
+        .map_err(Error::Storage)?;
 
         let media_attachment = self
             .db_pool

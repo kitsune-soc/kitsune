@@ -10,6 +10,7 @@
 #[macro_use]
 extern crate tracing;
 
+use enum_dispatch::enum_dispatch;
 use futures_util::{stream::BoxStream, Stream};
 use pin_project_lite::pin_project;
 use serde::{de::DeserializeOwned, Serialize};
@@ -32,6 +33,16 @@ mod util;
 pub mod redis;
 pub mod tokio_broadcast;
 
+/// Enum dispatch over all supported backends
+#[enum_dispatch(MessagingBackend)]
+pub enum AnyMessagingBackend {
+    /// Redis backend
+    Redis(redis::RedisMessagingBackend),
+
+    /// Tokio broadcast backend
+    Tokio(tokio_broadcast::TokioBroadcastMessagingBackend),
+}
+
 /// Messaging backend
 ///
 /// This is the trait that lets the message hub create emitters and consumers.
@@ -39,6 +50,7 @@ pub mod tokio_broadcast;
 ///
 /// The trait is designed to be object-safe since it's internally stored inside an `Arc`
 /// and supposed to be type-erased for ease of testing.
+#[enum_dispatch]
 pub trait MessagingBackend {
     /// Enqueue a new message onto the backend
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()>;
@@ -53,7 +65,7 @@ pub trait MessagingBackend {
 pin_project! {
     /// Consumer of messages
     pub struct MessageConsumer<M> {
-        backend: Arc<dyn MessagingBackend + Send + Sync>,
+        backend: Arc<AnyMessagingBackend>,
         channel_name: String,
         #[pin]
         inner: BoxStream<'static, Result<Vec<u8>>>,
@@ -132,7 +144,7 @@ where
 /// This is cheaply clonable. Interally it is a string for the channel name and an `Arc` referencing the backend.
 #[derive(Clone)]
 pub struct MessageEmitter<M> {
-    backend: Arc<dyn MessagingBackend + Send + Sync>,
+    backend: Arc<AnyMessagingBackend>,
     channel_name: String,
     _ty: PhantomData<M>,
 }
@@ -175,17 +187,17 @@ where
 ///
 /// For example, the Redis backend, when connected to the same Redis server, will connect channels with the same name across two different instances.
 pub struct MessagingHub {
-    backend: Arc<dyn MessagingBackend + Send + Sync>,
+    backend: Arc<AnyMessagingBackend>,
 }
 
 impl MessagingHub {
     /// Create a new messaging hub
     pub fn new<B>(backend: B) -> Self
     where
-        B: MessagingBackend + Send + Sync + 'static,
+        B: Into<AnyMessagingBackend>,
     {
         Self {
-            backend: Arc::new(backend),
+            backend: Arc::new(backend.into()),
         }
     }
 
