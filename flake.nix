@@ -131,8 +131,6 @@
                   baseDependencies;
 
                   enterShell = ''
-                    source ./.devshell_prompt.sh
-
                     export PG_HOST=127.0.0.1
                     export PG_PORT=5432
                     [ -z "$DATABASE_URL" ] && export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
@@ -157,9 +155,6 @@
                 nodejs
                 yarn
               ];
-              shellHook = ''
-                source ./.devshell_prompt.sh
-              '';
             };
           };
         }
