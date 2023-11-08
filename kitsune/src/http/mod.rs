@@ -4,6 +4,7 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
+use eyre::Context;
 use kitsune_config::ServerConfiguration;
 use std::time::Duration;
 use tower_http::{
@@ -13,6 +14,7 @@ use tower_http::{
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
+use tower_x_clacks_overhead::XClacksOverheadLayer;
 use utoipa_swagger_ui::SwaggerUi;
 
 #[cfg(feature = "graphql-api")]
@@ -27,7 +29,7 @@ mod util;
 
 pub mod extractor;
 
-pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Router {
+pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> eyre::Result<Router> {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.to_string();
@@ -72,7 +74,15 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
             ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
         );
 
-    router
+    if !server_config.clacks_overhead.is_empty() {
+        let clacks_overhead_layer =
+            XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
+                .context("Invalid clacks overhead values")?;
+
+        router = router.layer(clacks_overhead_layer);
+    }
+
+    Ok(router
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
@@ -80,14 +90,15 @@ pub fn create_router(state: Zustand, server_config: &ServerConfiguration) -> Rou
             server_config.request_timeout_secs,
         )))
         .layer(TraceLayer::new_for_http())
-        .with_state(state)
+        .with_state(state))
 }
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: ServerConfiguration) {
-    let router = create_router(state, &server_config);
+pub async fn run(state: Zustand, server_config: ServerConfiguration) -> eyre::Result<()> {
+    let router = create_router(state, &server_config)?;
     axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())
-        .await
-        .unwrap();
+        .await?;
+
+    Ok(())
 }
