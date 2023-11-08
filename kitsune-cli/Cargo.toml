@@ -12,10 +12,10 @@ diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-db = { path = "../crates/kitsune-db" }
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 tokio = { version = "1.33.0", features = ["full"] }
 tracing-subscriber = "0.3.17"
 
 [build-dependencies]
-vergen = { version = "8.2.5", features = ["build", "git", "gitcl"] }
+vergen = { version = "8.2.6", features = ["build", "git", "gitcl"] }

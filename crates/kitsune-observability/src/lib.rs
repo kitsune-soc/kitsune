@@ -11,11 +11,11 @@ use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
 use opentelemetry::{
     metrics::{noop::NoopMeterProvider, Meter, MeterProvider},
-    runtime::Tokio,
     trace::{noop::NoopTracer, Tracer},
 };
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::{MetricsExporterBuilder, SpanExporterBuilder, WithExportConfig};
+use opentelemetry_sdk::runtime::Tokio;
 use std::{env, fmt};
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};

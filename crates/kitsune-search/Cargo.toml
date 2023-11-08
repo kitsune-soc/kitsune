@@ -15,7 +15,7 @@ enum_dispatch = "0.3.12"
 futures-util = "0.3.29"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-language = { path = "../kitsune-language" }
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive"] }
 thiserror = "1.0.50"
@@ -25,7 +25,7 @@ tracing = "0.1.40"
 isahc = { version = "1.7.2", default-features = false, features = [
     "static-ssl",
 ], optional = true }
-meilisearch-sdk = { version = "0.24.2", optional = true }
+meilisearch-sdk = { version = "0.24.3", optional = true }
 
 [features]
 default = []
