@@ -15,11 +15,11 @@ static HEADER_NAME: HeaderName = HeaderName::from_static("x-clacks-overhead");
 #[inline]
 fn build_names_value<'a, I>(names: I) -> Result<Arc<HeaderValue>, InvalidHeaderValue>
 where
-    I: Iterator<Item = &'a str>,
+    I: IntoIterator<Item = &'a str>,
 {
     let names = format!(
         "GNU {}",
-        Itertools::intersperse(names, ", ").collect::<String>()
+        Itertools::intersperse(names.into_iter(), ", ").collect::<String>()
     )
     .parse()?;
 
@@ -62,7 +62,7 @@ pub struct XClacksOverheadService<S> {
 impl<S> XClacksOverheadService<S> {
     pub fn new<'a, I>(inner: S, names: I) -> Result<Self, InvalidHeaderValue>
     where
-        I: Iterator<Item = &'a str>,
+        I: IntoIterator<Item = &'a str>,
     {
         Ok(Self {
             inner,
@@ -99,7 +99,7 @@ pub struct XClacksOverheadLayer {
 impl XClacksOverheadLayer {
     pub fn new<'a, I>(names: I) -> Result<Self, InvalidHeaderValue>
     where
-        I: Iterator<Item = &'a str>,
+        I: IntoIterator<Item = &'a str>,
     {
         Ok(Self {
             names: build_names_value(names)?,
@@ -115,5 +115,37 @@ impl<S> Layer<S> for XClacksOverheadLayer {
             inner,
             names: Arc::clone(&self.names),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{XClacksOverheadLayer, HEADER_NAME};
+    use http::{Request, Response};
+    use std::convert::Infallible;
+    use tower::{service_fn, ServiceExt};
+    use tower_layer::Layer;
+    use tower_service::Service;
+
+    #[test]
+    fn add_header() {
+        let mut service = XClacksOverheadLayer::new(["Johnny"])
+            .unwrap()
+            .layer(service_fn(|_req: Request<()>| async move {
+                Ok::<_, Infallible>(Response::new(()))
+            }));
+
+        let response = futures::executor::block_on(async move {
+            service
+                .ready()
+                .await
+                .unwrap()
+                .call(Request::new(()))
+                .await
+                .unwrap()
+        });
+
+        let clacks_overhead = response.headers().get(&HEADER_NAME).unwrap();
+        assert_eq!(clacks_overhead.as_bytes(), b"GNU Johnny");
     }
 }
