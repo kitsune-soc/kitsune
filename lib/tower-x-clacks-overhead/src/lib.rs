@@ -12,6 +12,20 @@ use tower_service::Service;
 
 static HEADER_NAME: HeaderName = HeaderName::from_static("x-clacks-overhead");
 
+#[inline]
+fn build_names_value<'a, I>(names: I) -> Result<Arc<HeaderValue>, InvalidHeaderValue>
+where
+    I: Iterator<Item = &'a str>,
+{
+    let names = format!(
+        "GNU {}",
+        Itertools::intersperse(names, ", ").collect::<String>()
+    )
+    .parse()?;
+
+    Ok(Arc::new(names))
+}
+
 pin_project! {
     pub struct XClacksOverheadFuture<F> {
         #[pin]
@@ -50,15 +64,9 @@ impl<S> XClacksOverheadService<S> {
     where
         I: Iterator<Item = &'a str>,
     {
-        let names = format!(
-            "GNU {}",
-            Itertools::intersperse(names, ", ").collect::<String>()
-        )
-        .parse()?;
-
         Ok(Self {
             inner,
-            names: Arc::new(names),
+            names: build_names_value(names)?,
         })
     }
 }
@@ -93,14 +101,8 @@ impl XClacksOverheadLayer {
     where
         I: Iterator<Item = &'a str>,
     {
-        let names = format!(
-            "GNU {}",
-            Itertools::intersperse(names, ", ").collect::<String>()
-        )
-        .parse()?;
-
         Ok(Self {
-            names: Arc::new(names),
+            names: build_names_value(names)?,
         })
     }
 }
