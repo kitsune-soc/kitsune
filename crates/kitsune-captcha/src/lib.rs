@@ -27,6 +27,7 @@ pub enum ChallengeStatus {
 
 /// Trait abstraction over captcha backends
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait CaptchaBackend: Clone + Send + Sync {
     /// Verify the token provided in the registration form
     async fn verify(&self, token: &str) -> Result<ChallengeStatus>;

@@ -51,6 +51,7 @@ pub enum AnyMessagingBackend {
 /// The trait is designed to be object-safe since it's internally stored inside an `Arc`
 /// and supposed to be type-erased for ease of testing.
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait MessagingBackend {
     /// Enqueue a new message onto the backend
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()>;

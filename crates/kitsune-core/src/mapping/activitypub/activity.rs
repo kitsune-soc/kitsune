@@ -9,13 +9,17 @@ use kitsune_db::{
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use scoped_futures::ScopedFutureExt;
+use std::future::Future;
 
 pub trait IntoActivity {
     type Output;
     type NegateOutput;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output>;
-    async fn into_negate_activity(self, state: &State) -> Result<Self::NegateOutput>;
+    fn into_activity(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
+    fn into_negate_activity(
+        self,
+        state: &State,
+    ) -> impl Future<Output = Result<Self::NegateOutput>> + Send;
 }
 
 impl IntoActivity for Account {

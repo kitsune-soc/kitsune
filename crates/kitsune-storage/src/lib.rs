@@ -19,6 +19,7 @@ pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait StorageBackend: Clone + Send + Sync {
     /// Delete something from the object storage
     async fn delete(&self, path: &str) -> Result<()>;

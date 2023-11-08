@@ -118,6 +118,7 @@ pub struct SearchResultReference {
 }
 
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait SearchBackend: Send + Sync {
     /// Add an item to the index
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;

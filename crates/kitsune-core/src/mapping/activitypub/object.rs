@@ -24,12 +24,12 @@ use kitsune_type::ap::{
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
-use std::str::FromStr;
+use std::{future::Future, str::FromStr};
 
 pub trait IntoObject {
     type Output;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output>;
+    fn into_object(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
 }
 
 impl IntoObject for DbMediaAttachment {

@@ -32,6 +32,7 @@ where
 }
 
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait CacheBackend<K, V>: Send + Sync
 where
     K: ?Sized,
