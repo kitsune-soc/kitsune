@@ -1,0 +1,6 @@
+[package]
+name = "kitsune-util"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]

@@ -4,7 +4,7 @@
 
 use crate::{Result, StorageBackend};
 use bytes::Bytes;
-use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt};
 use http::Request;
 use hyper::Body;
 use kitsune_http_client::Client as HttpClient;
@@ -103,7 +103,7 @@ impl StorageBackend for Storage {
         self.client.delete_object(path).await
     }
 
-    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
+    async fn get(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
         let stream = self.client.get_object(path).await?.boxed();
         Ok(stream)
     }

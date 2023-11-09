@@ -4,7 +4,7 @@
 
 use crate::{Result, StorageBackend};
 use bytes::Bytes;
-use futures_util::{pin_mut, stream::BoxStream, Stream, StreamExt, TryStreamExt};
+use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use tokio::{
     fs::{self, File},
@@ -34,9 +34,9 @@ impl StorageBackend for Storage {
         Ok(())
     }
 
-    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
+    async fn get(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
         let file = File::open(self.storage_dir.join(path)).await?;
-        Ok(ReaderStream::new(file).map_err(Into::into).boxed())
+        Ok(ReaderStream::new(file).map_err(Into::into))
     }
 
     async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>

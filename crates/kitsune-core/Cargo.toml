@@ -49,6 +49,7 @@ kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
 kitsune-type = { path = "../kitsune-type" }
+kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 password-hash = { version = "0.5.0", features = ["std"] }

@@ -130,7 +130,8 @@ impl AttachmentService {
     pub async fn stream_file(
         &self,
         media_attachment: &MediaAttachment,
-    ) -> Result<impl Stream<Item = Result<Bytes>>> {
+    ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+        // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self
                 .storage_backend
@@ -138,7 +139,7 @@ impl AttachmentService {
                 .await
                 .map_err(Error::Storage)?;
 
-            Ok(stream.map_err(Error::Storage).left_stream())
+            Ok(stream.map_err(Error::Storage).boxed())
         } else if self.media_proxy_enabled {
             Ok(self
                 .client
@@ -146,7 +147,7 @@ impl AttachmentService {
                 .await?
                 .stream()
                 .map_err(Into::into)
-                .right_stream())
+                .boxed())
         } else {
             Err(ApiError::NotFound.into())
         }

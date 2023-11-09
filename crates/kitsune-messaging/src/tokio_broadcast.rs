@@ -3,7 +3,7 @@
 //!
 
 use crate::{MessagingBackend, Result};
-use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt};
 use std::{collections::HashMap, sync::RwLock};
 use tokio::sync::broadcast;
 use tokio_stream::wrappers::BroadcastStream;
@@ -36,7 +36,7 @@ impl MessagingBackend for TokioBroadcastMessagingBackend {
     async fn message_stream(
         &self,
         channel_name: String,
-    ) -> Result<BoxStream<'static, Result<Vec<u8>>>> {
+    ) -> Result<impl Stream<Item = Result<Vec<u8>>> + 'static> {
         let guard = self.registry.read().unwrap();
         let receiver = if let Some(sender) = guard.get(&channel_name) {
             sender.subscribe()

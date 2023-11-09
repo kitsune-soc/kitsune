@@ -2929,6 +2929,7 @@ dependencies = [
  "kitsune-storage",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-util",
  "mime",
  "mime_guess",
  "password-hash",
@@ -3084,9 +3085,9 @@ name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "enum_dispatch",
  "futures-util",
  "kitsune-retry-policies",
+ "kitsune-util",
  "pin-project-lite",
  "redis",
  "serde",
@@ -3173,11 +3174,11 @@ name = "kitsune-storage"
 version = "0.0.1-pre.4"
 dependencies = [
  "bytes",
- "enum_dispatch",
  "futures-util",
  "http",
  "hyper",
  "kitsune-http-client",
+ "kitsune-util",
  "rusty-s3",
  "tempfile",
  "tokio",
@@ -3212,6 +3213,10 @@ dependencies = [
  "speedy-uuid",
  "utoipa",
 ]
+
+[[package]]
+name = "kitsune-util"
+version = "0.0.1-pre.4"
 
 [[package]]
 name = "lazy_static"

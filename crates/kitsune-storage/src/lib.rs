@@ -4,9 +4,9 @@
 #![allow(forbidden_lint_groups)]
 
 use bytes::Bytes;
-use enum_dispatch::enum_dispatch;
-use futures_util::{stream::BoxStream, Stream};
-use std::error::Error;
+use futures_util::{Stream, StreamExt};
+use kitsune_util::impl_from;
+use std::{error::Error, future::Future};
 
 pub mod fs;
 pub mod s3;
@@ -18,28 +18,56 @@ pub type BoxError = Box<dyn Error + Send + Sync>;
 pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
-#[enum_dispatch]
-#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait StorageBackend: Clone + Send + Sync {
     /// Delete something from the object storage
-    async fn delete(&self, path: &str) -> Result<()>;
+    fn delete(&self, path: &str) -> impl Future<Output = Result<()>>;
 
     /// Stream something from the object storage
-    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>>;
+    fn get(
+        &self,
+        path: &str,
+    ) -> impl Future<Output = Result<impl Stream<Item = Result<Bytes>> + 'static>>;
 
     /// Stream something onto the object storage
-    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    fn put<T>(&self, path: &str, input_stream: T) -> impl Future<Output = Result<()>>
     where
         T: Stream<Item = Result<Bytes>> + Send + 'static;
 }
 
-#[derive(Clone)]
-#[enum_dispatch(StorageBackend)]
-/// Combined storage enum for enum dispatch
-pub enum AnyStorageBackend {
-    /// File system-backed storage
-    Fs(fs::Storage),
+impl_from! {
+    #[derive(Clone)]
+    /// Combined storage enum for enum dispatch
+    pub enum AnyStorageBackend {
+        /// File system-backed storage
+        Fs(fs::Storage),
 
-    /// S3-backed storage
-    S3(s3::Storage),
+        /// S3-backed storage
+        S3(s3::Storage),
+    }
+}
+
+impl StorageBackend for AnyStorageBackend {
+    async fn delete(&self, path: &str) -> Result<()> {
+        match self {
+            Self::Fs(fs) => fs.delete(path).await,
+            Self::S3(s3) => s3.delete(path).await,
+        }
+    }
+
+    async fn get(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+        match self {
+            Self::Fs(fs) => fs.get(path).await.map(StreamExt::left_stream),
+            Self::S3(s3) => s3.get(path).await.map(StreamExt::right_stream),
+        }
+    }
+
+    async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
+    where
+        T: Stream<Item = Result<Bytes>> + Send + 'static,
+    {
+        match self {
+            Self::Fs(fs) => fs.put(path, input_stream).await,
+            Self::S3(s3) => s3.put(path, input_stream).await,
+        }
+    }
 }

@@ -10,12 +10,13 @@
 #[macro_use]
 extern crate tracing;
 
-use enum_dispatch::enum_dispatch;
-use futures_util::{stream::BoxStream, Stream};
+use futures_util::{stream::BoxStream, Stream, StreamExt};
+use kitsune_util::impl_from;
 use pin_project_lite::pin_project;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     error::Error,
+    future::Future,
     marker::PhantomData,
     pin::Pin,
     sync::Arc,
@@ -33,14 +34,40 @@ mod util;
 pub mod redis;
 pub mod tokio_broadcast;
 
-/// Enum dispatch over all supported backends
-#[enum_dispatch(MessagingBackend)]
-pub enum AnyMessagingBackend {
-    /// Redis backend
-    Redis(redis::RedisMessagingBackend),
+impl_from! {
+    /// Enum dispatch over all supported backends
+    pub enum AnyMessagingBackend {
+        /// Redis backend
+        Redis(redis::RedisMessagingBackend),
 
-    /// Tokio broadcast backend
-    Tokio(tokio_broadcast::TokioBroadcastMessagingBackend),
+        /// Tokio broadcast backend
+        Tokio(tokio_broadcast::TokioBroadcastMessagingBackend),
+    }
+}
+
+impl MessagingBackend for AnyMessagingBackend {
+    async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()> {
+        match self {
+            Self::Redis(redis) => redis.enqueue(channel_name, message).await,
+            Self::Tokio(tokio) => tokio.enqueue(channel_name, message).await,
+        }
+    }
+
+    async fn message_stream(
+        &self,
+        channel_name: String,
+    ) -> Result<impl Stream<Item = Result<Vec<u8>>> + 'static> {
+        match self {
+            Self::Redis(redis) => redis
+                .message_stream(channel_name)
+                .await
+                .map(StreamExt::left_stream),
+            Self::Tokio(tokio) => tokio
+                .message_stream(channel_name)
+                .await
+                .map(StreamExt::right_stream),
+        }
+    }
 }
 
 /// Messaging backend
@@ -50,17 +77,15 @@ pub enum AnyMessagingBackend {
 ///
 /// The trait is designed to be object-safe since it's internally stored inside an `Arc`
 /// and supposed to be type-erased for ease of testing.
-#[enum_dispatch]
-#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait MessagingBackend {
     /// Enqueue a new message onto the backend
-    async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()>;
+    fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> impl Future<Output = Result<()>>;
 
     /// Open a new stream of messages from the backend
-    async fn message_stream(
+    fn message_stream(
         &self,
         channel_name: String,
-    ) -> Result<BoxStream<'static, Result<Vec<u8>>>>;
+    ) -> impl Future<Output = Result<impl Stream<Item = Result<Vec<u8>>> + 'static>>;
 }
 
 pin_project! {
@@ -116,7 +141,8 @@ where
         self.inner = self
             .backend
             .message_stream(self.channel_name.clone())
-            .await?;
+            .await?
+            .boxed();
 
         Ok(())
     }
@@ -211,7 +237,11 @@ impl MessagingHub {
     where
         M: DeserializeOwned + Serialize,
     {
-        let message_stream = self.backend.message_stream(channel_name.clone()).await?;
+        let message_stream = self
+            .backend
+            .message_stream(channel_name.clone())
+            .await?
+            .boxed();
 
         Ok(MessageConsumer {
             backend: self.backend.clone(),
