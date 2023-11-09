@@ -70,15 +70,20 @@ impl Registrar for OAuthRegistrar {
             .into();
 
         let scope = if let Some(scope) = scope {
-            let valid_scopes: Vec<&str> = scope
+            let mut valid_scopes = scope
                 .iter()
                 .filter(|scope| OAuthScope::from_str(scope).is_ok())
-                .collect();
+                .peekable();
 
-            if valid_scopes.is_empty() {
+            // Default to read scope if no scopes are defined
+            if valid_scopes.peek().is_none() {
                 OAuthScope::Read.as_ref().parse().unwrap()
             } else {
-                valid_scopes.join(" ").parse().unwrap()
+                valid_scopes
+                    .intersperse(" ")
+                    .collect::<String>()
+                    .parse()
+                    .unwrap()
             }
         } else {
             OAuthScope::Read.as_ref().parse().unwrap()
