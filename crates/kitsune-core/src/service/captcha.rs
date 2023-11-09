@@ -1,11 +1,11 @@
 use crate::error::Result;
-use kitsune_captcha::{Captcha, CaptchaBackend, ChallengeStatus};
+use kitsune_captcha::{AnyCaptcha, CaptchaBackend, ChallengeStatus};
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
 pub struct CaptchaService {
     #[builder(setter(into))]
-    pub backend: Option<Captcha>,
+    pub backend: Option<AnyCaptcha>,
 }
 
 impl CaptchaService {

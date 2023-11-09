@@ -36,7 +36,7 @@ pub trait StorageBackend: Clone + Send + Sync {
 #[derive(Clone)]
 #[enum_dispatch(StorageBackend)]
 /// Combined storage enum for enum dispatch
-pub enum Storage {
+pub enum AnyStorageBackend {
     /// File system-backed storage
     Fs(fs::Storage),
 

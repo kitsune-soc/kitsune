@@ -16,7 +16,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_http_client::Client;
-use kitsune_storage::{BoxError, Storage, StorageBackend};
+use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -89,7 +89,7 @@ pub struct AttachmentService {
     db_pool: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
-    storage_backend: Storage,
+    storage_backend: AnyStorageBackend,
     url_service: UrlService,
 }
 

@@ -85,7 +85,7 @@ pub struct Fetcher {
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
-    search_backend: kitsune_search::Search,
+    search_backend: kitsune_search::AnySearchBackend,
     webfinger: Webfinger,
 
     // Caches

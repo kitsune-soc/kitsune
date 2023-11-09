@@ -40,12 +40,12 @@ pub struct Search<'a> {
 pub struct SearchService {
     db_pool: PgPool,
     fetcher: Fetcher,
-    search_backend: kitsune_search::Search,
+    search_backend: kitsune_search::AnySearchBackend,
 }
 
 impl SearchService {
     #[must_use]
-    pub fn backend(&self) -> &kitsune_search::Search {
+    pub fn backend(&self) -> &kitsune_search::AnySearchBackend {
         &self.search_backend
     }
 

@@ -13,14 +13,14 @@ pub enum CaptchaBackend {
     MCaptcha,
 }
 
-impl From<kitsune_captcha::Captcha> for CaptchaInfo {
-    fn from(e: kitsune_captcha::Captcha) -> Self {
+impl From<kitsune_captcha::AnyCaptcha> for CaptchaInfo {
+    fn from(e: kitsune_captcha::AnyCaptcha) -> Self {
         match e {
-            kitsune_captcha::Captcha::HCaptcha(config) => Self {
+            kitsune_captcha::AnyCaptcha::HCaptcha(config) => Self {
                 backend: CaptchaBackend::HCaptcha,
                 key: config.site_key,
             },
-            kitsune_captcha::Captcha::MCaptcha(config) => Self {
+            kitsune_captcha::AnyCaptcha::MCaptcha(config) => Self {
                 backend: CaptchaBackend::MCaptcha,
                 key: config.widget_link,
             },

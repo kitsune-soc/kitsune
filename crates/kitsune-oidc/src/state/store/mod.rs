@@ -9,7 +9,7 @@ pub mod redis;
 
 #[derive(Clone)]
 #[enum_dispatch(Store)]
-pub enum StoreBackend {
+pub enum AnyStore {
     InMemory(in_memory::InMemory),
     Redis(redis::Redis),
 }

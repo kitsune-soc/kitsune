@@ -25,7 +25,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
-pub enum Search {
+pub enum AnySearchBackend {
     #[cfg(feature = "meilisearch")]
     Meilisearch(MeiliSearchService),
     Noop(NoopSearchService),

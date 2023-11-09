@@ -36,7 +36,7 @@ pub trait CaptchaBackend: Clone + Send + Sync {
 #[derive(Clone)]
 #[enum_dispatch(CaptchaBackend)]
 /// Combined captcha enum for enum dispatch
-pub enum Captcha {
+pub enum AnyCaptcha {
     /// hCaptcha
     HCaptcha(hcaptcha::Captcha),
 

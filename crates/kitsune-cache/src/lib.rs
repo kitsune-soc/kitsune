@@ -18,10 +18,10 @@ mod redis;
 
 type CacheResult<T, E = Error> = Result<T, E>;
 
-pub type ArcCache<K, V> = Arc<Cache<K, V>>;
+pub type ArcCache<K, V> = Arc<AnyCache<K, V>>;
 
 #[enum_dispatch(CacheBackend<K, V>)]
-pub enum Cache<K, V>
+pub enum AnyCache<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,

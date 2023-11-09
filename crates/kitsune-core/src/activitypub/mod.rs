@@ -19,7 +19,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{Search, SearchBackend};
+use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
@@ -117,7 +117,7 @@ pub struct ProcessNewObject<'a> {
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
     fetcher: &'a Fetcher,
-    search_backend: &'a Search,
+    search_backend: &'a AnySearchBackend,
 }
 
 #[derive(TypedBuilder)]
@@ -129,7 +129,7 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    search_backend: &'a Search,
+    search_backend: &'a AnySearchBackend,
 }
 
 #[allow(clippy::missing_panics_doc)]
