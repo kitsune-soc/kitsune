@@ -2,7 +2,7 @@ use openidconnect::{Nonce, PkceCodeVerifier};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-pub use self::store::{Store, StoreBackend};
+pub use self::store::{AnyStore, Store};
 
 pub mod store;
 

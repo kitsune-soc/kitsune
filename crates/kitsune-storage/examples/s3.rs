@@ -1,5 +1,5 @@
 use bytes::{BufMut, BytesMut};
-use futures_util::{future, stream, StreamExt, TryStreamExt};
+use futures_util::{future, stream, TryStreamExt};
 use kitsune_storage::{s3::Storage, StorageBackend};
 use rusty_s3::{Bucket, Credentials, UrlStyle};
 use std::{env, str};
@@ -95,7 +95,7 @@ async fn main() {
         "put" => backend
             .put(
                 "very-important.txt",
-                stream::once(future::ok(TEST_DATA.into())).boxed(),
+                stream::once(future::ok(TEST_DATA.into())),
             )
             .await
             .unwrap(),

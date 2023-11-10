@@ -438,7 +438,6 @@ name = "athena"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "deadpool-redis",
  "either",
  "futures-util",
@@ -2192,9 +2191,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.10"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be4136b2a15dd319360be1c07d9933517ccf0be8f16bf62a3bee4f0d618df427"
+checksum = "fe9006bed769170c11f845cf00c7c1e9092aeb3f268e007c3e760ac68008070f"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -2810,6 +2809,7 @@ dependencies = [
  "tokio-util",
  "tower",
  "tower-http",
+ "tower-x-clacks-overhead",
  "tracing",
  "typed-builder",
  "url",
@@ -2832,7 +2832,6 @@ dependencies = [
 name = "kitsune-cache"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "moka",
@@ -2849,7 +2848,6 @@ dependencies = [
 name = "kitsune-captcha"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "enum_dispatch",
  "http",
  "kitsune-http-client",
@@ -2899,7 +2897,6 @@ dependencies = [
  "argon2",
  "async-recursion",
  "async-stream",
- "async-trait",
  "athena",
  "autometrics",
  "base64-simd",
@@ -2934,6 +2931,7 @@ dependencies = [
  "kitsune-storage",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-util",
  "mime",
  "mime_guess",
  "password-hash",
@@ -3089,9 +3087,9 @@ name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "futures-util",
  "kitsune-retry-policies",
+ "kitsune-util",
  "pin-project-lite",
  "redis",
  "serde",
@@ -3128,7 +3126,6 @@ dependencies = [
 name = "kitsune-oidc"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "http",
@@ -3158,7 +3155,6 @@ dependencies = [
 name = "kitsune-search"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
@@ -3179,13 +3175,12 @@ dependencies = [
 name = "kitsune-storage"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "bytes",
- "enum_dispatch",
  "futures-util",
  "http",
  "hyper",
  "kitsune-http-client",
+ "kitsune-util",
  "rusty-s3",
  "tempfile",
  "tokio",
@@ -3220,6 +3215,10 @@ dependencies = [
  "speedy-uuid",
  "utoipa",
 ]
+
+[[package]]
+name = "kitsune-util"
+version = "0.0.1-pre.4"
 
 [[package]]
 name = "lazy_static"
@@ -3408,9 +3407,9 @@ dependencies = [
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da2479e8c062e40bf0066ffa0bc823de0a9368974af99c9f6df941d2c231e03f"
+checksum = "969488b55f8ac402214f3f5fd243ebb7206cf82de60d3172994707a4bcc2b829"
 
 [[package]]
 name = "lock_api"
@@ -6205,6 +6204,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
+name = "tower-x-clacks-overhead"
+version = "0.0.1-pre.4"
+dependencies = [
+ "futures",
+ "http",
+ "pin-project-lite",
+ "tower",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
 name = "tracing"
 version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6283,8 +6294,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.21.0"
-source = "git+https://github.com/tokio-rs/tracing-opentelemetry.git?rev=2156c236db4c488eb6fce08bdd710dde290f5f52#2156c236db4c488eb6fce08bdd710dde290f5f52"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c67ac25c5407e7b961fafc6f7e9aa5958fd297aada2d20fa2ae1737357e55596"
 dependencies = [
  "js-sys",
  "once_cell",

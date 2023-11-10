@@ -1,5 +1,4 @@
 use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
-use async_trait::async_trait;
 use http::Request;
 use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
@@ -34,7 +33,6 @@ struct HCaptchaResponse {
     error_codes: Option<Vec<CaptchaVerification>>, // optional: any error codes
 }
 
-#[async_trait]
 impl CaptchaBackend for Captcha {
     async fn verify(&self, token: &str) -> Result<ChallengeStatus> {
         let body = Body::builder()

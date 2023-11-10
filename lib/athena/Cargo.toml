@@ -6,7 +6,6 @@ license = "MIT"
 
 [dependencies]
 ahash = "0.8.6"
-async-trait = "0.1.74"
 deadpool-redis = "0.13.0"
 either = { version = "1.9.0", default-features = false }
 futures-util = { version = "0.3.29", default-features = false }

@@ -50,7 +50,7 @@ pub struct UserInfo {
 #[derive(Clone)]
 pub struct OidcService {
     client: CoreClient,
-    login_state_store: self::state::StoreBackend,
+    login_state_store: self::state::AnyStore,
 }
 
 impl OidcService {

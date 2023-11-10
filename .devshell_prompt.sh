@@ -1,4 +1,0 @@
-export BOLD="\[\033[1m\]"
-export RESET="\[\033[0m\]"
-export FLAMING_KITSUNE_COLOR="\[\033[38;5;208m\]"
-export PS1="$BOLD~狐~$FLAMING_KITSUNE_COLOR$PS1$RESET"

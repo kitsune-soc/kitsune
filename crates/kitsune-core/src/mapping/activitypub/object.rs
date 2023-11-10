@@ -4,7 +4,6 @@ use crate::{
     try_join,
     util::BaseToCc,
 };
-use async_trait::async_trait;
 use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
@@ -25,16 +24,14 @@ use kitsune_type::ap::{
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
-use std::str::FromStr;
+use std::{future::Future, str::FromStr};
 
-#[async_trait]
 pub trait IntoObject {
     type Output;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output>;
+    fn into_object(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
 }
 
-#[async_trait]
 impl IntoObject for DbMediaAttachment {
     type Output = MediaAttachment;
 
@@ -59,7 +56,6 @@ impl IntoObject for DbMediaAttachment {
     }
 }
 
-#[async_trait]
 impl IntoObject for Post {
     type Output = Object;
 
@@ -159,7 +155,6 @@ impl IntoObject for Post {
     }
 }
 
-#[async_trait]
 impl IntoObject for Account {
     type Output = Actor;
 

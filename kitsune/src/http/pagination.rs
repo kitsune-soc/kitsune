@@ -1,10 +1,9 @@
-use std::fmt::Display;
-
 use axum::{
     response::{IntoResponseParts, ResponseParts},
     Json,
 };
 use http::{Error as HttpError, HeaderValue};
+use std::{borrow::Cow, fmt::Display};
 
 use crate::error::Error;
 
@@ -27,9 +26,9 @@ where
         let value = self
             .0
             .into_iter()
-            .map(|(key, value)| format!("<{value}>; rel=\"{key}\""))
-            .collect::<Vec<String>>()
-            .join(", ");
+            .map(|(key, value)| Cow::Owned(format!("<{value}>; rel=\"{key}\"")))
+            .intersperse(Cow::Borrowed(", "))
+            .collect::<String>();
 
         res.headers_mut().insert(
             "Link",

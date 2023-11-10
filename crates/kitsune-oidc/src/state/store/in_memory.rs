@@ -3,7 +3,6 @@ use crate::{
     error::{Error, Result},
     state::LoginState,
 };
-use async_trait::async_trait;
 use moka::sync::Cache;
 
 #[derive(Clone)]
@@ -19,7 +18,6 @@ impl InMemory {
     }
 }
 
-#[async_trait]
 impl Store for InMemory {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
         self.inner.remove(key).ok_or(Error::MissingLoginState)

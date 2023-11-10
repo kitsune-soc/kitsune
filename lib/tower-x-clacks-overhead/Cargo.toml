@@ -1,0 +1,16 @@
+[package]
+name = "tower-x-clacks-overhead"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+http = "0.2.9"
+pin-project-lite = "0.2.13"
+tower-layer = "0.3.2"
+tower-service = "0.3.2"
+
+[dev-dependencies]
+futures = { version = "0.3.29", default-features = false, features = [
+    "executor",
+] }
+tower = { version = "0.4.13", default-features = false, features = ["util"] }

@@ -16,7 +16,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_http_client::Client;
-use kitsune_storage::{BoxError, Storage, StorageBackend};
+use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -89,7 +89,7 @@ pub struct AttachmentService {
     db_pool: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
-    storage_backend: Storage,
+    storage_backend: AnyStorageBackend,
     url_service: UrlService,
 }
 
@@ -130,7 +130,8 @@ impl AttachmentService {
     pub async fn stream_file(
         &self,
         media_attachment: &MediaAttachment,
-    ) -> Result<impl Stream<Item = Result<Bytes>>> {
+    ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+        // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self
                 .storage_backend
@@ -138,7 +139,7 @@ impl AttachmentService {
                 .await
                 .map_err(Error::Storage)?;
 
-            Ok(stream.map_err(Error::Storage).left_stream())
+            Ok(stream.map_err(Error::Storage).boxed())
         } else if self.media_proxy_enabled {
             Ok(self
                 .client
@@ -146,7 +147,7 @@ impl AttachmentService {
                 .await?
                 .stream()
                 .map_err(Into::into)
-                .right_stream())
+                .boxed())
         } else {
             Err(ApiError::NotFound.into())
         }
@@ -186,7 +187,7 @@ impl AttachmentService {
         upload.validate(&())?;
 
         // remove exif info from image uploads
-        let upload_stream = if is_image_type_with_supported_metadata(&upload.content_type) {
+        if is_image_type_with_supported_metadata(&upload.content_type) {
             let stream = upload.stream;
             pin_mut!(stream);
 
@@ -212,11 +213,11 @@ impl AttachmentService {
 
             self.storage_backend
                 .put(&upload.path, stream::once(async { Ok(final_bytes) }))
+                .await
         } else {
-            self.storage_backend.put(&upload.path, upload.stream)
-        };
-
-        upload_stream.await.map_err(Error::Storage)?;
+            self.storage_backend.put(&upload.path, upload.stream).await
+        }
+        .map_err(Error::Storage)?;
 
         let media_attachment = self
             .db_pool

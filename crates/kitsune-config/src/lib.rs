@@ -162,6 +162,8 @@ pub enum SearchConfiguration {
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ServerConfiguration {
+    #[serde(default)]
+    pub clacks_overhead: Vec<SmolStr>,
     pub frontend_dir: SmolStr,
     pub max_upload_size: usize,
     pub media_proxy_enabled: bool,

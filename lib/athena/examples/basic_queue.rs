@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use athena::{JobContextRepository, JobDetails, JobQueue, Runnable};
 use deadpool_redis::{Config, Runtime};
 use futures_util::{
@@ -20,7 +19,6 @@ use tokio::task::JoinSet;
 #[derive(Clone)]
 struct JobCtx;
 
-#[async_trait]
 impl Runnable for JobCtx {
     type Context = ();
     type Error = io::Error;
@@ -34,7 +32,6 @@ impl Runnable for JobCtx {
 
 struct ContextRepo;
 
-#[async_trait]
 impl JobContextRepository for ContextRepo {
     type JobContext = JobCtx;
     type Error = io::Error;

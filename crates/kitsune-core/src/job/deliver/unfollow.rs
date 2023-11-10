@@ -1,5 +1,4 @@
 use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
-use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -16,7 +15,6 @@ pub struct DeliverUnfollow {
     pub follow_id: Uuid,
 }
 
-#[async_trait]
 impl Runnable for DeliverUnfollow {
     type Context = JobRunnerContext;
     type Error = eyre::Report;
