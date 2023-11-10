@@ -73,7 +73,7 @@ fn is_strong_password(value: &Option<String>, _context: &()) -> garde::Result {
 #[derive(Clone, TypedBuilder, Validate)]
 pub struct Register {
     /// Username of the new user
-    #[garde(length(min = 1, max = 64), pattern(r"[\p{L}\p{N}\.]+"))]
+    #[garde(length(min = 1, max = 64), pattern(r"^[\p{L}\p{N}\.]+$"))]
     username: String,
 
     /// Email address of the new user
@@ -259,5 +259,51 @@ impl UserService {
     #[must_use]
     pub fn registrations_open(&self) -> bool {
         self.registrations_open
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Register;
+    use garde::Validate;
+
+    #[test]
+    fn alphanumeric_username() {
+        let valid_usernames = [
+            "aumetra",
+            "AUMETRA",
+            "aum3tr4",
+            "äumäträ",
+            "아우멭라",
+            "あうめtら",
+        ];
+
+        for username in valid_usernames {
+            let register = Register::builder()
+                .email("whatever@kitsune.example".into())
+                .password("verysecurepassword123".into())
+                .username(username.into())
+                .build();
+
+            assert!(
+                register.validate(&()).is_ok(),
+                "{username} is considered invalid",
+            );
+        }
+
+        let invalid_usernames = [",,,", "🎃spooky", "weewoo 🚨"];
+
+        for username in invalid_usernames {
+            let register = Register::builder()
+                .email("whatever@kitsune.example".into())
+                .password("verysecurepassword123".into())
+                .username(username.into())
+                .build();
+
+            assert!(
+                register.validate(&()).is_err(),
+                "{username} is considered valid",
+            );
+        }
     }
 }
