@@ -6,14 +6,14 @@ edition.workspace = true
 [dependencies]
 bytes = "1.5.0"
 futures-util = "0.3.29"
-http = "0.2.9"
+http = "0.2.10"
 hyper = { version = "0.14.27", features = ["stream"] }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-util = { path = "../kitsune-util" }
 rusty-s3 = { version = "0.5.0", default-features = false }
-tokio = { version = "1.33.0", features = ["fs", "io-util"] }
+tokio = { version = "1.34.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.10", features = ["io"] }
 
 [dev-dependencies]
 tempfile = "3.8.1"
-tokio = { version = "1.33.0", features = ["macros", "rt"] }
+tokio = { version = "1.34.0", features = ["macros", "rt"] }
