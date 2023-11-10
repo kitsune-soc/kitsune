@@ -180,6 +180,7 @@ impl Fetcher {
         let fetch_webfinger = opts
             .acct
             .map_or(true, |acct| acct != (&actor.preferred_username, domain));
+
         let used_webfinger = if fetch_webfinger {
             match self
                 .webfinger

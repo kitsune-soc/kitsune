@@ -22,7 +22,7 @@ pub mod state;
 
 use self::{
     oauth2::{OAuth2Service, OAuthEndpoint},
-    state::{SessionConfig, Zustand},
+    state::{SessionConfig, Zustand, ZustandInner},
 };
 use athena::JobQueue;
 use kitsune_config::Configuration;
@@ -51,12 +51,13 @@ pub async fn initialise_state(
         .url_service(core_state.service.url.clone())
         .build();
 
-    Ok(Zustand {
+    Ok(ZustandInner {
         core: core_state,
         oauth2: oauth2_service,
         oauth_endpoint: OAuthEndpoint::from(conn),
         #[cfg(feature = "oidc")]
         oidc: oidc_service,
         session_config: SessionConfig::generate(),
-    })
+    }
+    .into())
 }
