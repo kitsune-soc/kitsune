@@ -5,6 +5,7 @@ use crate::{
 };
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::FutureExt;
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -215,7 +216,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         db_pool,
         object,
         search_backend,
-    } = preprocess_object(process_data).await?;
+    } = preprocess_object(process_data).boxed().await?;
 
     let post = db_pool
         .with_transaction(|tx| {
