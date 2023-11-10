@@ -153,7 +153,7 @@ async fn preprocess_object(
             return Err(ApiError::BadRequest.into());
         }
 
-        CowBox::owned(fetcher.fetch_actor(attributed_to.into()).await?)
+        CowBox::boxed(fetcher.fetch_actor(attributed_to.into()).await?)
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();

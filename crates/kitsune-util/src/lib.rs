@@ -5,7 +5,7 @@ mod macros;
 #[derive(Clone, Debug)]
 pub enum CowBox<'a, T> {
     Borrowed(&'a T),
-    Owned(Box<T>),
+    Boxed(Box<T>),
 }
 
 impl<'a, T> CowBox<'a, T> {
@@ -15,8 +15,8 @@ impl<'a, T> CowBox<'a, T> {
     }
 
     #[inline]
-    pub fn owned(value: T) -> Self {
-        Self::Owned(Box::new(value))
+    pub fn boxed(value: T) -> Self {
+        Self::Boxed(Box::new(value))
     }
 }
 
@@ -26,7 +26,7 @@ impl<'a, T> Deref for CowBox<'a, T> {
     fn deref(&self) -> &Self::Target {
         match self {
             Self::Borrowed(borrow) => borrow,
-            Self::Owned(ref owned) => owned,
+            Self::Boxed(ref owned) => owned,
         }
     }
 }
