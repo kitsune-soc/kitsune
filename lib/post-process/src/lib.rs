@@ -42,13 +42,8 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
 }
 
 #[inline]
-fn emoji_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Option<&'a str>)> {
-    if !enforce_prefix(lexer) || !enforce_postfix(lexer) {
-        return None;
-    }
-
-    let slice = lexer.slice();
-    let slice = slice.trim_matches(':');
+fn emoji_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> (&'a str, Option<&'a str>) {
+    let slice = lexer.slice().trim_matches(':');
 
     let emoji_data = if let Some((shortcode, domain)) = slice.split_once('@') {
         (shortcode, Some(domain))
@@ -56,7 +51,7 @@ fn emoji_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Optio
         (slice, None)
     };
 
-    Some(emoji_data)
+    emoji_data
 }
 
 #[inline]

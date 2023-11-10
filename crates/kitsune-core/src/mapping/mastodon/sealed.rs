@@ -623,20 +623,21 @@ impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let shortcode = if let Some(ref domain) = self.0.domain {
-            format!(":{}@{}:", self.0.shortcode, domain)
+        let (emoji, attachment, last_used) = self;
+        let shortcode = if let Some(ref domain) = emoji.domain {
+            format!(":{}@{}:", emoji.shortcode, domain)
         } else {
-            format!(":{}:", self.0.shortcode)
+            format!(":{}:", emoji.shortcode)
         };
-        let url = state.url_service.media_url(self.1.id);
-        let category = if self.2.is_some() {
+        let url = state.url_service.media_url(attachment.id);
+        let category = if last_used.is_some() {
             Some(String::from("recently used"))
-        } else if self.0.endorsed {
+        } else if emoji.endorsed {
             Some(String::from("endorsed"))
-        } else if self.0.domain.is_none() {
+        } else if emoji.domain.is_none() {
             Some(String::from("local"))
         } else {
-            Some(self.0.domain.unwrap())
+            Some(emoji.domain.unwrap())
         };
         Ok(CustomEmoji {
             shortcode,

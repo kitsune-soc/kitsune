@@ -97,8 +97,7 @@ impl CustomEmojiService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<CustomEmoji> {
         let query = custom_emojis::table
             .find(id)
-            .select(CustomEmoji::as_select())
-            .into_boxed();
+            .select(CustomEmoji::as_select());
 
         self.db_pool
             .with_connection(|db_conn| async move { query.get_result(db_conn).await }.scoped())
@@ -137,8 +136,7 @@ impl CustomEmojiService {
                 MediaAttachment::as_select(),
                 posts::created_at.nullable(),
             ))
-            .limit(get_emoji_list.limit)
-            .into_boxed();
+            .limit(get_emoji_list.limit);
 
         self.db_pool
             .with_connection(|db_conn| {

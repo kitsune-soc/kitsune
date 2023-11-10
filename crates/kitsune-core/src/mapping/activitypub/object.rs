@@ -275,21 +275,18 @@ impl IntoObject for CustomEmoji {
         // Officially we don't have any info about remote emojis as we're not the origin
         // Let's pretend we're not home and do not answer
         let name = match self.domain {
-            None => Ok::<String, ApiError>(format!(":{}:", self.shortcode)),
+            None => Ok(format!(":{}:", self.shortcode)),
             Some(_) => Err(ApiError::NotFound),
         }?;
         let icon = state
             .db_pool
             .with_connection(|db_conn| {
-                async move {
-                    media_attachments::table
-                        .find(self.media_attachment_id)
-                        .get_result::<DbMediaAttachment>(db_conn)
-                        .map_err(Error::from)
-                        .and_then(|media_attachment| media_attachment.into_object(state))
-                        .await
-                }
-                .scoped()
+                media_attachments::table
+                    .find(self.media_attachment_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|media_attachment| media_attachment.into_object(state))
+                    .scoped()
             })
             .await?;
 

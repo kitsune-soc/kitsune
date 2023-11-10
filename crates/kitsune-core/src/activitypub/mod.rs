@@ -5,7 +5,7 @@ use crate::{
 };
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::future::join_all;
+use futures_util::{future::try_join_all, TryFutureExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -81,24 +81,19 @@ async fn handle_custom_emojis(
     }
 
     let futures = emoji_iter.clone().filter_map(|emoji| {
-        emoji
-            .id
-            .as_ref()
-            .map(|remote_id| fetcher.fetch_emoji(remote_id))
+        let remote_id = emoji.id.as_ref()?;
+        Some(fetcher.fetch_emoji(remote_id).map_ok(move |f| (f, emoji)))
     });
 
-    let emojis = join_all(futures)
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
+    let emojis = try_join_all(futures)
+        .await?
         .iter()
-        .zip(emoji_iter)
         .map(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
             post_id,
             custom_emoji_id: resolved_emoji.id,
             emoji_text: emoji_tag.name.to_string(),
         })
-        .collect::<Vec<_>>();
+        .collect::<Vec<PostCustomEmoji>>();
 
     diesel::insert_into(posts_custom_emojis::table)
         .values(emojis)
