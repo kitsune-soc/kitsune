@@ -4,6 +4,7 @@
 //! Only supports asymmetric signing schemes (aka. no HMAC and such)
 //!
 
+#![feature(iter_intersperse)]
 #![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
 #![warn(clippy::all, clippy::pedantic)]

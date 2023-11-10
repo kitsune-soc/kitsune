@@ -1,0 +1,4 @@
+[toolchain]
+channel = "nightly"
+components = ["clippy", "rustfmt"]
+profile = "default"

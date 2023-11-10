@@ -3,7 +3,6 @@ use crate::{
     job::{JobRunnerContext, Runnable},
     try_join,
 };
-use async_trait::async_trait;
 use diesel::{
     ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
     SelectableHelper,
@@ -24,7 +23,6 @@ pub struct DeliverReject {
     pub follow_id: Uuid,
 }
 
-#[async_trait]
 impl Runnable for DeliverReject {
     type Context = JobRunnerContext;
     type Error = eyre::Report;

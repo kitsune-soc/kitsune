@@ -5,6 +5,7 @@ use crate::{
 };
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::FutureExt;
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -19,12 +20,12 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
-use kitsune_search::{Search, SearchBackend};
+use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
+use kitsune_util::CowBox;
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
-use std::borrow::Cow;
 use typed_builder::TypedBuilder;
 
 pub mod deliverer;
@@ -117,19 +118,19 @@ pub struct ProcessNewObject<'a> {
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
     fetcher: &'a Fetcher,
-    search_backend: &'a Search,
+    search_backend: &'a AnySearchBackend,
 }
 
 #[derive(TypedBuilder)]
 struct PreprocessedObject<'a> {
-    user: Cow<'a, Account>,
+    user: CowBox<'a, Account>,
     visibility: Visibility,
     in_reply_to_id: Option<Uuid>,
     link_preview_url: Option<String>,
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    search_backend: &'a Search,
+    search_backend: &'a AnySearchBackend,
 }
 
 #[allow(clippy::missing_panics_doc)]
@@ -146,13 +147,13 @@ async fn preprocess_object(
 ) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
     let user = if let Some(author) = author {
-        Cow::Borrowed(author)
+        CowBox::borrowed(author)
     } else {
         if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
             return Err(ApiError::BadRequest.into());
         }
 
-        Cow::Owned(fetcher.fetch_actor(attributed_to.into()).await?)
+        CowBox::boxed(fetcher.fetch_actor(attributed_to.into()).await?)
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
@@ -215,7 +216,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         db_pool,
         object,
         search_backend,
-    } = preprocess_object(process_data).await?;
+    } = preprocess_object(process_data).boxed().await?;
 
     let post = db_pool
         .with_transaction(|tx| {

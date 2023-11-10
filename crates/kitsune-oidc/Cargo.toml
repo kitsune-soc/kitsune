@@ -4,7 +4,6 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1.74"
 deadpool-redis = "0.13.0"
 enum_dispatch = "0.3.12"
 http = "0.2.9"

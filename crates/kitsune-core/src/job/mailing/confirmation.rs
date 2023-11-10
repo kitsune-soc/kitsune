@@ -1,5 +1,4 @@
 use crate::job::JobRunnerContext;
-use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -13,7 +12,6 @@ pub struct SendConfirmationMail {
     pub user_id: Uuid,
 }
 
-#[async_trait]
 impl Runnable for SendConfirmationMail {
     type Context = JobRunnerContext;
     type Error = eyre::Report;

@@ -14,8 +14,7 @@
 extern crate tracing;
 
 use self::error::{BoxError, Result};
-use async_trait::async_trait;
-use futures_util::Stream;
+use futures_util::{Future, Stream};
 use speedy_uuid::Uuid;
 
 pub use self::{
@@ -27,7 +26,6 @@ mod error;
 mod macros;
 mod queue;
 
-#[async_trait]
 pub trait Runnable {
     /// User-defined context that is getting passed to the job when run
     ///
@@ -37,10 +35,9 @@ pub trait Runnable {
     type Error: Into<BoxError> + Send;
 
     /// Run the job
-    async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error>;
+    fn run(&self, ctx: &Self::Context) -> impl Future<Output = Result<(), Self::Error>> + Send;
 }
 
-#[async_trait]
 pub trait JobContextRepository {
     /// Some job context
     ///
@@ -53,19 +50,22 @@ pub trait JobContextRepository {
     ///
     /// The stream has to return `([Job ID], [Job context])`, this gives you the advantage that the order isn't enforced.
     /// You can return them as you find them
-    async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
+    fn fetch_context<I>(
+        &self,
+        job_ids: I,
+    ) -> impl Future<Output = Result<Self::Stream, Self::Error>> + Send
     where
         I: Iterator<Item = Uuid> + Send + 'static;
 
     /// Remove job context from the database
-    async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error>;
+    fn remove_context(&self, job_id: Uuid) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
     /// Store job context into the database
     ///
     /// Make sure the job can be efficiently found via the job ID (such as using the job ID as the primary key of a database table)
-    async fn store_context(
+    fn store_context(
         &self,
         job_id: Uuid,
         context: Self::JobContext,
-    ) -> Result<(), Self::Error>;
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 }

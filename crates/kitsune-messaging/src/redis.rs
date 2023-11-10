@@ -4,8 +4,7 @@
 
 use crate::{util::TransparentDebug, MessagingBackend, Result};
 use ahash::AHashMap;
-use async_trait::async_trait;
-use futures_util::{future, stream::BoxStream, StreamExt, TryStreamExt};
+use futures_util::{future, Stream, StreamExt, TryStreamExt};
 use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
 use redis::{
     aio::{ConnectionManager, PubSub},
@@ -148,7 +147,6 @@ impl RedisMessagingBackend {
     }
 }
 
-#[async_trait]
 impl MessagingBackend for RedisMessagingBackend {
     async fn enqueue(&self, channel_name: &str, message: Vec<u8>) -> Result<()> {
         self.pub_connection
@@ -161,7 +159,7 @@ impl MessagingBackend for RedisMessagingBackend {
     async fn message_stream(
         &self,
         channel_name: String,
-    ) -> Result<BoxStream<'static, Result<Vec<u8>>>> {
+    ) -> Result<impl Stream<Item = Result<Vec<u8>>> + 'static> {
         let (sender, receiver) = oneshot::channel();
         self.sub_actor
             .send(RegistrationMessage {
@@ -171,8 +169,6 @@ impl MessagingBackend for RedisMessagingBackend {
             .await?;
         let broadcast_receiver = receiver.await?;
 
-        Ok(BroadcastStream::new(broadcast_receiver)
-            .map_err(Into::into)
-            .boxed())
+        Ok(BroadcastStream::new(broadcast_receiver).map_err(Into::into))
     }
 }

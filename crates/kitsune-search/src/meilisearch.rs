@@ -1,5 +1,4 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
-use async_trait::async_trait;
 use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -50,7 +49,6 @@ impl MeiliSearchService {
     }
 }
 
-#[async_trait]
 impl SearchBackend for MeiliSearchService {
     #[instrument(skip_all)]
     async fn add_to_index(&self, item: SearchItem) -> Result<()> {

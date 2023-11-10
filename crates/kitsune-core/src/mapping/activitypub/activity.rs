@@ -1,6 +1,5 @@
 use super::IntoObject;
 use crate::{error::Result, state::State, try_join};
-use async_trait::async_trait;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -10,17 +9,19 @@ use kitsune_db::{
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use scoped_futures::ScopedFutureExt;
+use std::future::Future;
 
-#[async_trait]
 pub trait IntoActivity {
     type Output;
     type NegateOutput;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output>;
-    async fn into_negate_activity(self, state: &State) -> Result<Self::NegateOutput>;
+    fn into_activity(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
+    fn into_negate_activity(
+        self,
+        state: &State,
+    ) -> impl Future<Output = Result<Self::NegateOutput>> + Send;
 }
 
-#[async_trait]
 impl IntoActivity for Account {
     type Output = Activity;
     type NegateOutput = Activity;
@@ -43,7 +44,6 @@ impl IntoActivity for Account {
     }
 }
 
-#[async_trait]
 impl IntoActivity for Favourite {
     type Output = Activity;
     type NegateOutput = Activity;
@@ -102,7 +102,6 @@ impl IntoActivity for Favourite {
     }
 }
 
-#[async_trait]
 impl IntoActivity for Follow {
     type Output = Activity;
     type NegateOutput = Activity;
@@ -161,7 +160,6 @@ impl IntoActivity for Follow {
     }
 }
 
-#[async_trait]
 impl IntoActivity for Post {
     type Output = Activity;
     type NegateOutput = Activity;

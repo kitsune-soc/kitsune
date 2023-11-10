@@ -41,7 +41,7 @@ use self::{
 use athena::JobQueue;
 use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, Captcha};
+use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, AnyCaptcha};
 use kitsune_config::{
     CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
     MessagingConfiguration, SearchConfiguration, StorageConfiguration,
@@ -55,8 +55,8 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_search::{NoopSearchService, Search, SqlSearchService};
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, Storage};
+use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
+use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
 use rusty_s3::{Bucket as S3Bucket, Credentials as S3Credentials};
 use serde::{de::DeserializeOwned, Serialize};
 use service::search::SearchService;
@@ -100,7 +100,7 @@ where
     Arc::new(cache)
 }
 
-fn prepare_captcha(config: &CaptchaConfiguration) -> Captcha {
+fn prepare_captcha(config: &CaptchaConfiguration) -> AnyCaptcha {
     match config {
         CaptchaConfiguration::HCaptcha(config) => HCaptcha::builder()
             .verify_url(config.verify_url.to_string())
@@ -118,7 +118,7 @@ fn prepare_captcha(config: &CaptchaConfiguration) -> Captcha {
     }
 }
 
-fn prepare_storage(config: &Configuration) -> eyre::Result<Storage> {
+fn prepare_storage(config: &Configuration) -> eyre::Result<AnyStorageBackend> {
     let storage = match config.storage {
         StorageConfiguration::Fs(ref fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
@@ -188,7 +188,7 @@ async fn prepare_messaging(config: &Configuration) -> eyre::Result<MessagingHub>
 async fn prepare_search(
     search_config: &SearchConfiguration,
     db_pool: &PgPool,
-) -> eyre::Result<Search> {
+) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
         SearchConfiguration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]

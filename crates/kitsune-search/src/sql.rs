@@ -1,5 +1,4 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
-use async_trait::async_trait;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
@@ -26,7 +25,6 @@ impl SearchService {
     }
 }
 
-#[async_trait]
 impl SearchBackend for SearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())

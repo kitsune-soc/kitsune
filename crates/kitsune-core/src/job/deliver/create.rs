@@ -3,7 +3,6 @@ use crate::{
     mapping::IntoActivity,
     resolve::InboxResolver,
 };
-use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -21,7 +20,6 @@ pub struct DeliverCreate {
     pub post_id: Uuid,
 }
 
-#[async_trait]
 impl Runnable for DeliverCreate {
     type Context = JobRunnerContext;
     type Error = eyre::Report;

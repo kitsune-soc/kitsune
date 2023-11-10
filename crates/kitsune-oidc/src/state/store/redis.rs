@@ -1,6 +1,5 @@
 use super::Store;
 use crate::{error::Result, state::LoginState};
-use async_trait::async_trait;
 use redis::AsyncCommands;
 
 const REDIS_PREFIX: &str = "OIDC-LOGIN-STATE";
@@ -21,7 +20,6 @@ impl Redis {
     }
 }
 
-#[async_trait]
 impl Store for Redis {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
         let mut conn = self.pool.get().await?;
