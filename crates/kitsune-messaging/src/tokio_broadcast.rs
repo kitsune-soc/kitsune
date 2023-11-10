@@ -3,7 +3,7 @@
 //!
 
 use crate::{MessagingBackend, Result};
-use futures_util::{Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, TryStreamExt};
 use std::{collections::HashMap, sync::RwLock};
 use tokio::sync::broadcast;
 use tokio_stream::wrappers::BroadcastStream;
@@ -49,6 +49,6 @@ impl MessagingBackend for TokioBroadcastMessagingBackend {
             receiver
         };
 
-        Ok(BroadcastStream::new(receiver).map_err(Into::into).boxed())
+        Ok(BroadcastStream::new(receiver).map_err(Into::into))
     }
 }

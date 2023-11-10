@@ -58,7 +58,7 @@ impl StorageBackend for Storage {
 mod test {
     use crate::{fs::Storage, StorageBackend};
     use bytes::{BufMut, BytesMut};
-    use futures_util::{future, stream, StreamExt, TryStreamExt};
+    use futures_util::{future, stream, TryStreamExt};
     use std::str;
     use tempfile::TempDir;
 
@@ -105,10 +105,7 @@ mod test {
         let storage = Storage::new(temp_dir.path().to_owned());
 
         storage
-            .put(
-                "hello-world",
-                stream::once(future::ok(TEST_TEXT.into())).boxed(),
-            )
+            .put("hello-world", stream::once(future::ok(TEST_TEXT.into())))
             .await
             .unwrap();
 
