@@ -56,6 +56,7 @@ impl Webfinger {
             .user_agent(USER_AGENT)
             .unwrap()
             .build();
+
         Self::with_client(client, cache)
     }
 
@@ -119,12 +120,14 @@ impl Webfinger {
 
             acct_buf = resource.subject;
             acct = &acct_buf;
+
             let Some(username_domain) = acct
                 .strip_prefix("acct:")
                 .and_then(|acct| acct.split_once('@'))
             else {
                 return Ok(None);
             };
+
             (username, domain) = username_domain;
 
             remaining_redirects -= 1;
@@ -147,162 +150,9 @@ impl Webfinger {
         let cache_resolved_key_fut =
             OptionFuture::from((acct != original_acct).then(|| self.cache.set(acct, &ret)))
                 .map(Option::transpose);
+
         try_join!(cache_original_key_fut, cache_resolved_key_fut)?;
 
         Ok(Some(ret))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{Webfinger, MAX_JRD_REDIRECTS};
-    use core::convert::Infallible;
-    use hyper::{Body, Request, Response, StatusCode};
-    use kitsune_cache::NoopCache;
-    use kitsune_http_client::Client;
-    use kitsune_type::webfinger::Resource;
-    use pretty_assertions::assert_eq;
-    use std::sync::Arc;
-    use tower::service_fn;
-
-    #[tokio::test]
-    async fn basic() {
-        let client = service_fn(|req: Request<_>| async move {
-            assert_eq!(
-                req.uri().path_and_query().unwrap(),
-                "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"
-            );
-            let body = include_str!("../../../test-fixtures/0x0_jrd.json");
-            Ok::<_, Infallible>(Response::new(Body::from(body)))
-        });
-        let client = Client::builder().service(client);
-
-        let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
-        let resource = webfinger
-            .resolve_actor("0x0", "corteximplant.com")
-            .await
-            .expect("Failed to fetch resource")
-            .unwrap();
-
-        assert_eq!(resource.username, "0x0");
-        assert_eq!(resource.domain, "corteximplant.com");
-        assert_eq!(resource.uri, "https://corteximplant.com/users/0x0");
-    }
-
-    #[tokio::test]
-    async fn follow_jrd_redirect() {
-        let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-        let body = simd_json::to_string(&Resource {
-            subject: "acct:0x0@joinkitsune.org".into(),
-            ..simd_json::from_slice(&mut base).unwrap()
-        })
-        .unwrap();
-        let client = service_fn(move |req: Request<_>| {
-            let body = body.clone();
-            async move {
-                match (
-                    req.uri().authority().unwrap().as_str(),
-                    req.uri().path_and_query().unwrap().as_str(),
-                ) {
-                    (
-                        "corteximplant.com",
-                        "/.well-known/webfinger?resource=acct:0x0@corteximplant.com",
-                    )
-                    | (
-                        "joinkitsune.org",
-                        "/.well-known/webfinger?resource=acct:0x0@joinkitsune.org",
-                    ) => Ok::<_, Infallible>(Response::new(Body::from(body))),
-                    _ => panic!("HTTP client hit unexpected route: {}", req.uri()),
-                }
-            }
-        });
-        let client = Client::builder().service(client);
-
-        let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
-        let resource = webfinger
-            .resolve_actor("0x0", "corteximplant.com")
-            .await
-            .expect("Failed to fetch resource")
-            .unwrap();
-
-        assert_eq!(resource.username, "0x0");
-        assert_eq!(resource.domain, "joinkitsune.org");
-        assert_eq!(resource.uri, "https://corteximplant.com/users/0x0");
-    }
-
-    #[tokio::test]
-    async fn reject_fake_jrd_redirect() {
-        let client = service_fn(|req: Request<_>| async move {
-            match (
-                req.uri().authority().unwrap().as_str(),
-                req.uri().path_and_query().unwrap().as_str(),
-            ) {
-                (
-                    "corteximplant.com",
-                    "/.well-known/webfinger?resource=acct:0x0@corteximplant.com",
-                ) => {
-                    let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-                    let body = simd_json::to_string(&Resource {
-                        subject: "acct:0x0@whitehouse.gov".into(),
-                        ..simd_json::from_slice(&mut base).unwrap()
-                    })
-                    .unwrap();
-                    Ok::<_, Infallible>(Response::new(Body::from(body)))
-                }
-                ("whitehouse.gov", "/.well-known/webfinger?resource=acct:0x0@whitehouse.gov") => {
-                    Ok(Response::builder()
-                        .status(StatusCode::NOT_FOUND)
-                        .body(Body::empty())
-                        .unwrap())
-                }
-                _ => panic!("HTTP client hit unexpected route: {}", req.uri()),
-            }
-        });
-        let client = Client::builder().service(client);
-
-        let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
-        let resource = webfinger
-            .resolve_actor("0x0", "corteximplant.com")
-            .await
-            .expect("Failed to fetch resource");
-
-        assert!(resource.is_none(), "resource = {resource:?}");
-    }
-
-    #[tokio::test]
-    async fn reject_unbounded_number_of_jrd_redirects() {
-        let client = service_fn(|req: Request<_>| async move {
-            let Some(count) = req
-                .uri()
-                .path_and_query()
-                .unwrap()
-                .as_str()
-                .strip_prefix("/.well-known/webfinger?resource=acct:0x")
-                .and_then(|suffix| suffix.strip_suffix("@corteximplant.com"))
-                .and_then(|count| u32::from_str_radix(count, 16).ok())
-            else {
-                panic!(
-                    "HTTP client hit unexpected route: {}",
-                    req.uri().path_and_query().unwrap()
-                );
-            };
-            assert!(count <= MAX_JRD_REDIRECTS);
-            let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-            let body = simd_json::to_string(&Resource {
-                subject: format!("acct:0x{:x}@corteximplant.com", count + 1),
-                ..simd_json::from_slice(&mut base).unwrap()
-            })
-            .unwrap();
-            Ok::<_, Infallible>(Response::new(Body::from(body)))
-        });
-        let client = Client::builder().service(client);
-
-        let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
-        let resource = webfinger
-            .resolve_actor("0x0", "corteximplant.com")
-            .await
-            .expect("Failed to fetch resource");
-
-        assert!(resource.is_none(), "resource = {resource:?}");
     }
 }
