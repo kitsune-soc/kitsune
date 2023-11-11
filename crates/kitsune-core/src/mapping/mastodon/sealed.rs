@@ -1,7 +1,6 @@
 use crate::{
     error::{Error, Result},
     service::{attachment::AttachmentService, url::UrlService},
-    try_join,
 };
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
@@ -40,6 +39,7 @@ use kitsune_type::mastodon::{
     status::{Mention, StatusSource},
     Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
 };
+use kitsune_util::try_join;
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
 use serde::{de::DeserializeOwned, Serialize};

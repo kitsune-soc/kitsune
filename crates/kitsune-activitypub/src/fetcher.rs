@@ -3,7 +3,6 @@ use crate::{
     activitypub::{process_new_object, ProcessNewObject},
     consts::USER_AGENT,
     error::{ApiError, Error, Result},
-    sanitize::CleanHtmlExt,
     service::federation_filter::FederationFilterService,
     util::timestamp_to_uuid,
     webfinger::Webfinger,
@@ -28,12 +27,12 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
-
 use kitsune_search::SearchBackend;
 use kitsune_type::{
     ap::{actor::Actor, emoji::Emoji, Object},
     jsonld::RdfNode,
 };
+use kitsune_util::sanitize::CleanHtmlExt;
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
 use serde::de::DeserializeOwned;

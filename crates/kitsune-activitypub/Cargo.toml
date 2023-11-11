@@ -1,0 +1,41 @@
+[package]
+name = "kitsune-activitypub"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+async-recursion = "1.0.5"
+autometrics = { version = "0.6.0", default-features = false }
+base64-simd = { version = "0.8.0", features = ["unstable"] }
+diesel = "2.1.3"
+diesel-async = "0.4.1"
+futures-util = "0.3.29"
+headers = "0.3.9"
+http = "0.2.10"
+iso8601-timestamp = "0.2.12"
+kitsune-cache = { path = "../kitsune-cache" }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-embed = { path = "../kitsune-embed" }
+kitsune-http-client = { path = "../kitsune-http-client" }
+kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-language = { path = "../kitsune-language" }
+kitsune-search = { path = "../kitsune-search" }
+kitsune-type = { path = "../kitsune-type" }
+kitsune-util = { path = "../kitsune-util" }
+mime = "0.3.17"
+mime_guess = { version = "2.0.4", default-features = false }
+pulldown-cmark = { version = "0.9.3", default-features = false, features = [
+    "simd",
+] }
+rsa = "0.9.3"
+scoped-futures = "0.1.3"
+serde = "1.0.192"
+sha2 = "0.10.8"
+simd-json = { version = "0.13.4", features = ["hints"] }
+speedy-uuid = { path = "../../lib/speedy-uuid" }
+tracing = "0.1.40"
+typed-builder = "0.18.0"
+url = "2.4.1"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+sha2 = { version = "0.10.8", features = ["asm"] }

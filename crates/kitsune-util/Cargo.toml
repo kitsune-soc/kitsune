@@ -4,3 +4,5 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+ammonia = "3.3.0"
+kitsune-type = { path = "../kitsune-type" }

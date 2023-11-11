@@ -494,7 +494,6 @@ dependencies = [
  "autometrics-macros",
  "cfg_aliases",
  "linkme",
- "metrics",
  "once_cell",
  "spez",
  "thiserror",
@@ -2818,6 +2817,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-activitypub"
+version = "0.0.1-pre.4"
+dependencies = [
+ "async-recursion",
+ "autometrics",
+ "base64-simd",
+ "diesel",
+ "diesel-async",
+ "futures-util",
+ "headers",
+ "http",
+ "iso8601-timestamp",
+ "kitsune-cache",
+ "kitsune-db",
+ "kitsune-embed",
+ "kitsune-http-client",
+ "kitsune-http-signatures",
+ "kitsune-language",
+ "kitsune-search",
+ "kitsune-type",
+ "kitsune-util",
+ "mime",
+ "mime_guess",
+ "pulldown-cmark",
+ "rsa",
+ "scoped-futures",
+ "serde",
+ "sha2",
+ "simd-json",
+ "speedy-uuid",
+ "tracing",
+ "typed-builder",
+ "url",
+]
+
+[[package]]
 name = "kitsune-blocking"
 version = "0.0.1-pre.4"
 dependencies = [
@@ -2893,12 +2928,9 @@ name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "ammonia",
  "argon2",
- "async-recursion",
  "async-stream",
  "athena",
- "autometrics",
  "base64-simd",
  "bytes",
  "const_format",
@@ -2910,7 +2942,6 @@ dependencies = [
  "futures-util",
  "garde",
  "globset",
- "headers",
  "hex-simd",
  "http",
  "hyper",
@@ -2933,7 +2964,6 @@ dependencies = [
  "kitsune-type",
  "kitsune-util",
  "mime",
- "mime_guess",
  "password-hash",
  "pkcs8",
  "post-process",
@@ -2946,7 +2976,6 @@ dependencies = [
  "scoped-futures",
  "serde",
  "serial_test",
- "sha2",
  "simd-json",
  "smol_str",
  "speedy-uuid",
@@ -3222,6 +3251,31 @@ dependencies = [
 [[package]]
 name = "kitsune-util"
 version = "0.0.1-pre.4"
+dependencies = [
+ "ammonia",
+ "kitsune-type",
+]
+
+[[package]]
+name = "kitsune-webfinger"
+version = "0.0.1-pre.4"
+dependencies = [
+ "autometrics",
+ "deadpool-redis",
+ "futures-util",
+ "http",
+ "hyper",
+ "kitsune-cache",
+ "kitsune-http-client",
+ "kitsune-type",
+ "kitsune-util",
+ "pretty_assertions",
+ "serde",
+ "simd-json",
+ "tokio",
+ "tower",
+ "tracing",
+]
 
 [[package]]
 name = "lazy_static"

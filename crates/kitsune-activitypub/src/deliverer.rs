@@ -12,6 +12,7 @@ use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::SecretDocument;
 use sha2::{Digest, Sha256};
+use std::pin::pin;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -85,9 +86,7 @@ impl Deliverer {
         S: Stream<Item = Result<Vec<String>, E>>,
         Error: From<E>,
     {
-        tokio::pin!(inbox_stream);
-
-        while let Some(inbox_chunk) = inbox_stream.next().await.transpose()? {
+        while let Some(inbox_chunk) = pin!(inbox_stream).next().await.transpose()? {
             let mut concurrent_resolver: FuturesUnordered<_> = inbox_chunk
                 .iter()
                 .map(|inbox| self.deliver(inbox, account, user, activity))

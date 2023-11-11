@@ -1,4 +1,7 @@
-use crate::{consts::USER_AGENT, error::Result, try_join};
+#[macro_use]
+extern crate tracing;
+
+use crate::{consts::USER_AGENT, error::Result};
 use autometrics::autometrics;
 use core::ptr;
 use futures_util::future::{FutureExt, OptionFuture};
@@ -6,6 +9,7 @@ use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
+use kitsune_util::try_join;
 use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Duration};
 

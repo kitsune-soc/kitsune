@@ -1,4 +1,4 @@
-use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
+use crate::{job::JobRunnerContext, mapping::IntoActivity};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -6,6 +6,7 @@ use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
 };
+use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;

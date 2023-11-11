@@ -1,0 +1,21 @@
+[package]
+name = "kitsune-webfinger"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+autometrics = { version = "0.6.0", default-features = false }
+deadpool-redis = "0.13.0"
+futures-util = "0.3.29"
+http = "0.2.10"
+hyper = "0.14.27"
+kitsune-cache = { path = "../kitsune-cache" }
+kitsune-http-client = { path = "../kitsune-http-client" }
+kitsune-type = { path = "../kitsune-type" }
+kitsune-util = { path = "../kitsune-util" }
+pretty_assertions = "1.4.0"
+serde = { version = "1.0.192", features = ["derive"] }
+simd-json = { version = "0.13.4", features = ["hints"] }
+tokio = { version = "1.34.0", features = ["macros"] }
+tower = { version = "0.4.13", default-features = false, features = ["util"] }
+tracing = "0.1.40"

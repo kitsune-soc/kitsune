@@ -16,7 +16,6 @@ use crate::{
         update::{DeliverUpdate, UpdateEntity},
     },
     resolve::PostResolver,
-    sanitize::CleanHtmlExt,
     util::process_markdown,
 };
 use async_stream::try_stream;
@@ -50,6 +49,7 @@ use kitsune_db::{
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::SearchBackend;
+use kitsune_util::sanitize::CleanHtmlExt;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;

@@ -1,6 +1,11 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+
+#[macro_use]
+extern crate tracing;
+
 use crate::{
     error::{ApiError, Error, Result},
-    sanitize::CleanHtmlExt,
     util::timestamp_to_uuid,
 };
 use diesel::{ExpressionMethods, SelectableHelper};
@@ -25,6 +30,7 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
+use kitsune_util::sanitize::CleanHtmlExt;
 use kitsune_util::CowBox;
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;

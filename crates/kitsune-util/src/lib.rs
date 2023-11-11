@@ -1,5 +1,7 @@
 use std::ops::Deref;
 
+pub mod sanitize;
+
 mod macros;
 
 #[derive(Clone, Debug)]

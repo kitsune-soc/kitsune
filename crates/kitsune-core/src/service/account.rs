@@ -14,8 +14,6 @@ use crate::{
         unfollow::DeliverUnfollow,
         update::{DeliverUpdate, UpdateEntity},
     },
-    sanitize::CleanHtmlExt,
-    try_join,
     webfinger::Webfinger,
 };
 use bytes::Bytes;
@@ -41,6 +39,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     PgPool,
 };
+use kitsune_util::{sanitize::CleanHtmlExt, try_join};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;

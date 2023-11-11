@@ -1,7 +1,6 @@
 use crate::{
     error::Result,
     job::{JobRunnerContext, Runnable},
-    try_join,
 };
 use diesel::{
     ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
@@ -14,6 +13,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, users},
 };
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;

@@ -1,6 +1,3 @@
-[profile.dev.package]
-backtrace = { opt-level = 3 }
-num-bigint-dig = { opt-level = 3 }
 
 [profile.release]
 codegen-units = 1
@@ -15,6 +12,7 @@ inherits = "release"
 [workspace]
 exclude = ["xtask"]
 members = [
+    "crates/kitsune-activitypub",
     "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
@@ -35,6 +33,7 @@ members = [
     "crates/kitsune-test",
     "crates/kitsune-type",
     "crates/kitsune-util",
+    "crates/kitsune-webfinger",
     "kitsune",
     "kitsune-cli",
     "kitsune-job-runner",

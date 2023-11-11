@@ -117,7 +117,6 @@ mod test {
             custom_emoji::CustomEmojiService, federation_filter::FederationFilterService,
             job::JobService, url::UrlService,
         },
-        try_join,
         webfinger::Webfinger,
     };
     use athena::JobQueue;
@@ -138,6 +137,7 @@ mod test {
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use kitsune_test::{build_ap_response, database_test, redis_test};
+    use kitsune_util::try_join;
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
