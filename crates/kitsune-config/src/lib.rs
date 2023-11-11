@@ -2,10 +2,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc, forbidden_lint_groups)]
 
-use serde::{Deserialize, Serialize};
-use std::path::Path;
-use tokio::fs;
-
 pub mod cache;
 pub mod captcha;
 pub mod database;
@@ -20,6 +16,10 @@ pub mod search;
 pub mod server;
 pub mod storage;
 pub mod url;
+
+use serde::{Deserialize, Serialize};
+use std::path::Path;
+use tokio::fs;
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
