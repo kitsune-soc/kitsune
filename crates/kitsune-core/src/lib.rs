@@ -311,6 +311,7 @@ pub async fn prepare_state(
     let timeline_service = TimelineService::builder().db_pool(db_pool.clone()).build();
 
     let user_service = UserService::builder()
+        .allow_non_ascii_usernames(config.instance.allow_non_ascii_usernames)
         .captcha_service(captcha_service.clone())
         .db_pool(db_pool.clone())
         .job_service(job_service.clone())

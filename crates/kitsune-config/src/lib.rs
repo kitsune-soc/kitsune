@@ -78,6 +78,7 @@ pub enum FederationFilterConfiguration {
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct InstanceConfiguration {
+    pub allow_non_ascii_usernames: bool,
     pub name: SmolStr,
     pub description: SmolStr,
     pub webfinger_domain: Option<SmolStr>,
