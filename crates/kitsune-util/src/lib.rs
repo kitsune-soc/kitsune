@@ -1,5 +1,8 @@
 use std::ops::Deref;
 
+#[doc(hidden)]
+pub use tokio;
+
 pub mod sanitize;
 
 mod macros;

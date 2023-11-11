@@ -57,7 +57,7 @@ macro_rules! try_join {
             fut
         }
 
-        ::tokio::try_join!(
+        $crate::tokio::try_join!(
             $( assert_send($try_future) ),+
         )
     }};

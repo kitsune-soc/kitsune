@@ -28,10 +28,6 @@ pub struct Deliverer {
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    ///
-    /// # Panics
-    ///
-    /// - Panics in case the inbox URL isn't actually a valid URL
     #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
     #[autometrics(track_concurrency)]
     pub async fn deliver(

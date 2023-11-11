@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Duration};
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
+
 /// Intended to allow up to one canonicalisation on the originating server, one cross-origin
 /// canonicalisation and one more canonicalisation on the destination server,
 /// e.g. `acct:a@example.com -> acct:A@example.com -> acct:A@example.net -> a@example.net`
