@@ -37,8 +37,16 @@ use zxcvbn::zxcvbn;
 
 const MIN_PASSWORD_STRENGTH: u8 = 3;
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_strong_password(value: &Option<String>, _context: &()) -> garde::Result {
+#[inline]
+fn additional_username_check(value: &str, ctx: &RegisterContext) -> garde::Result {
+    if ctx.allow_non_ascii {
+        return Ok(());
+    }
+
+    garde::rules::ascii::apply(&value, ())
+}
+
+fn is_strong_password<T>(value: &Option<String>, _context: &T) -> garde::Result {
     let Some(ref value) = value else {
         return Ok(());
     };
@@ -70,10 +78,19 @@ fn is_strong_password(value: &Option<String>, _context: &()) -> garde::Result {
     Ok(())
 }
 
+pub struct RegisterContext {
+    allow_non_ascii: bool,
+}
+
 #[derive(Clone, TypedBuilder, Validate)]
+#[garde(context(RegisterContext))]
 pub struct Register {
     /// Username of the new user
-    #[garde(length(min = 1, max = 64), pattern(r"^[\p{L}\p{N}\.]+$"))]
+    #[garde(
+        custom(additional_username_check),
+        length(min = 1, max = 64),
+        pattern(r"^[\p{L}\p{N}\.]+$")
+    )]
     username: String,
 
     /// Email address of the new user
@@ -103,6 +120,7 @@ pub struct Register {
 
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
+    allow_non_ascii_usernames: bool,
     db_pool: PgPool,
     job_service: JobService,
     registrations_open: bool,
@@ -141,12 +159,15 @@ impl UserService {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {
             return Err(ApiError::RegistrationsClosed.into());
         }
 
-        register.validate(&())?;
+        register.validate(&RegisterContext {
+            allow_non_ascii: self.allow_non_ascii_usernames,
+        })?;
 
         if self.captcha_service.enabled() {
             let token = register.captcha_token.ok_or(ApiError::InvalidCaptcha)?;
@@ -265,6 +286,7 @@ impl UserService {
 #[cfg(test)]
 mod test {
     use super::Register;
+    use crate::service::user::RegisterContext;
     use garde::Validate;
 
     #[test]
@@ -286,7 +308,11 @@ mod test {
                 .build();
 
             assert!(
-                register.validate(&()).is_ok(),
+                register
+                    .validate(&RegisterContext {
+                        allow_non_ascii: true
+                    })
+                    .is_ok(),
                 "{username} is considered invalid",
             );
         }
@@ -301,9 +327,28 @@ mod test {
                 .build();
 
             assert!(
-                register.validate(&()).is_err(),
+                register
+                    .validate(&RegisterContext {
+                        allow_non_ascii: true,
+                    })
+                    .is_err(),
                 "{username} is considered valid",
             );
         }
+    }
+
+    #[test]
+    fn deny_non_ascii() {
+        let register = Register::builder()
+            .email("whatever@kitsune.example".into())
+            .password("verysecurepassword123".into())
+            .username("äumeträ".into())
+            .build();
+
+        assert!(register
+            .validate(&RegisterContext {
+                allow_non_ascii: false
+            })
+            .is_err());
     }
 }
