@@ -5,7 +5,7 @@
 use async_trait::async_trait;
 use eyre::Context;
 use hyper::body::Body;
-use kitsune_config::{Configuration, OpenTelemetryTransport};
+use kitsune_config::{open_telemetry::Transport, Configuration};
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
@@ -55,11 +55,11 @@ impl HttpClient for HttpClientAdapter {
 macro_rules! build_exporter {
     ($exporter_type:ty : $transport:expr, $http_client:expr, $endpoint:expr $(,)?) => {{
         let exporter: $exporter_type = match $transport {
-            OpenTelemetryTransport::Grpc => opentelemetry_otlp::new_exporter()
+            Transport::Grpc => opentelemetry_otlp::new_exporter()
                 .tonic()
                 .with_endpoint($endpoint)
                 .into(),
-            OpenTelemetryTransport::Http => opentelemetry_otlp::new_exporter()
+            Transport::Http => opentelemetry_otlp::new_exporter()
                 .http()
                 .with_endpoint($endpoint)
                 .with_http_client($http_client.clone())

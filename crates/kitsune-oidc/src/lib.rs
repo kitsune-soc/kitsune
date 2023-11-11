@@ -14,7 +14,7 @@ use crate::{
         LoginState, OAuth2LoginState, Store,
     },
 };
-use kitsune_config::{OidcConfiguration, OidcStoreConfiguration};
+use kitsune_config::oidc::{Configuration, StoreConfiguration};
 use openidconnect::{
     core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
     AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
@@ -55,7 +55,7 @@ pub struct OidcService {
 
 impl OidcService {
     #[inline]
-    pub async fn initialise(config: &OidcConfiguration, redirect_uri: String) -> Result<Self> {
+    pub async fn initialise(config: &Configuration, redirect_uri: String) -> Result<Self> {
         let provider_metadata = CoreProviderMetadata::discover_async(
             IssuerUrl::new(config.server_url.to_string())?,
             self::http::async_client,
@@ -70,8 +70,8 @@ impl OidcService {
         .set_redirect_uri(RedirectUrl::new(redirect_uri)?);
 
         let login_state_store = match config.store {
-            OidcStoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
-            OidcStoreConfiguration::Redis(ref redis_config) => {
+            StoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
+            StoreConfiguration::Redis(ref redis_config) => {
                 let config = deadpool_redis::Config::from_url(redis_config.url.clone());
                 let pool = config.create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
 

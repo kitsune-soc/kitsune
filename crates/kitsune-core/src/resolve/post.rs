@@ -91,7 +91,7 @@ mod test {
     use diesel_async::RunQueryDsl;
     use hyper::{Body, Request, Response};
     use kitsune_cache::NoopCache;
-    use kitsune_config::FederationFilterConfiguration;
+    use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_db::{model::account::Account, schema::accounts};
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;

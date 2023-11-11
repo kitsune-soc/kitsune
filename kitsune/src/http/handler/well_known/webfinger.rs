@@ -79,7 +79,7 @@ mod tests {
     use http::{Request, Response, StatusCode};
     use hyper::Body;
     use kitsune_cache::NoopCache;
-    use kitsune_config::FederationFilterConfiguration;
+    use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_core::{
         activitypub::Fetcher,
         job::KitsuneContextRepo,

@@ -2,7 +2,7 @@
 extern crate tracing;
 
 use athena::JobQueue;
-use kitsune_config::JobQueueConfiguration;
+use kitsune_config::job_queue::Configuration;
 use kitsune_core::{
     activitypub::Deliverer,
     job::{JobRunnerContext, KitsuneContextRepo},
@@ -17,7 +17,7 @@ const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 
 pub fn prepare_job_queue(
     db_pool: PgPool,
-    config: &JobQueueConfiguration,
+    config: &Configuration,
 ) -> Result<JobQueue<KitsuneContextRepo>, deadpool_redis::CreatePoolError> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
     let redis_pool = deadpool_redis::Config::from_url(config.redis_url.as_str())

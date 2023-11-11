@@ -42,10 +42,7 @@ use athena::JobQueue;
 use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, AnyCaptcha};
-use kitsune_config::{
-    CacheConfiguration, CaptchaConfiguration, Configuration, EmailConfiguration,
-    MessagingConfiguration, SearchConfiguration, StorageConfiguration,
-};
+use kitsune_config::{cache, captcha, email, messaging, search, storage, Configuration};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
@@ -76,9 +73,9 @@ where
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     let cache = match config.cache {
-        CacheConfiguration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
-        CacheConfiguration::None => NoopCache.into(),
-        CacheConfiguration::Redis(ref redis_config) => {
+        cache::Configuration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
+        cache::Configuration::None => NoopCache.into(),
+        cache::Configuration::Redis(ref redis_config) => {
             static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
 
             let pool = REDIS_POOL.get_or_init(|| {
@@ -100,15 +97,15 @@ where
     Arc::new(cache)
 }
 
-fn prepare_captcha(config: &CaptchaConfiguration) -> AnyCaptcha {
+fn prepare_captcha(config: &captcha::Configuration) -> AnyCaptcha {
     match config {
-        CaptchaConfiguration::HCaptcha(config) => HCaptcha::builder()
+        captcha::Configuration::HCaptcha(config) => HCaptcha::builder()
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
             .secret_key(config.secret_key.to_string())
             .build()
             .into(),
-        CaptchaConfiguration::MCaptcha(config) => MCaptcha::builder()
+        captcha::Configuration::MCaptcha(config) => MCaptcha::builder()
             .widget_link(config.widget_link.to_string())
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
@@ -120,10 +117,10 @@ fn prepare_captcha(config: &CaptchaConfiguration) -> AnyCaptcha {
 
 fn prepare_storage(config: &Configuration) -> eyre::Result<AnyStorageBackend> {
     let storage = match config.storage {
-        StorageConfiguration::Fs(ref fs_config) => {
+        storage::Configuration::Fs(ref fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
-        StorageConfiguration::S3(ref s3_config) => {
+        storage::Configuration::S3(ref s3_config) => {
             let path_style = if s3_config.force_path_style {
                 rusty_s3::UrlStyle::Path
             } else {
@@ -149,7 +146,7 @@ fn prepare_storage(config: &Configuration) -> eyre::Result<AnyStorageBackend> {
 }
 
 fn prepare_mail_sender(
-    config: &EmailConfiguration,
+    config: &email::Configuration,
 ) -> eyre::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
     let transport_builder = if config.starttls {
         AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())?
@@ -169,10 +166,10 @@ fn prepare_mail_sender(
 
 async fn prepare_messaging(config: &Configuration) -> eyre::Result<MessagingHub> {
     let backend = match config.messaging {
-        MessagingConfiguration::InProcess => {
+        messaging::Configuration::InProcess => {
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
         }
-        MessagingConfiguration::Redis(ref redis_config) => {
+        messaging::Configuration::Redis(ref redis_config) => {
             let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
                 .await
                 .context("Failed to initialise Redis messaging backend")?;
@@ -186,11 +183,11 @@ async fn prepare_messaging(config: &Configuration) -> eyre::Result<MessagingHub>
 
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 async fn prepare_search(
-    search_config: &SearchConfiguration,
+    search_config: &search::Configuration,
     db_pool: &PgPool,
 ) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
-        SearchConfiguration::Meilisearch(_config) => {
+        search::Configuration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]
             panic!("Server compiled without Meilisearch compatibility");
 
@@ -201,8 +198,8 @@ async fn prepare_search(
                 .context("Failed to connect to Meilisearch")?
                 .into()
         }
-        SearchConfiguration::Sql => SqlSearchService::new(db_pool.clone()).into(),
-        SearchConfiguration::None => NoopSearchService.into(),
+        search::Configuration::Sql => SqlSearchService::new(db_pool.clone()).into(),
+        search::Configuration::None => NoopSearchService.into(),
     };
 
     Ok(service)
