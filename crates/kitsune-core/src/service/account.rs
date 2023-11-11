@@ -674,6 +674,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(ref mut note) = update.note {
             note.clean_html();
             changeset = UpdateAccount {
@@ -681,6 +682,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(avatar) = update.avatar {
             let media_attachment = self.attachment_service.upload(avatar).await?;
             changeset = UpdateAccount {
@@ -688,6 +690,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(header) = update.header {
             let media_attachment = self.attachment_service.upload(header).await?;
             changeset = UpdateAccount {
@@ -695,6 +698,7 @@ impl AccountService {
                 ..changeset
             };
         }
+
         if let Some(locked) = update.locked {
             changeset = UpdateAccount {
                 locked: Some(locked),

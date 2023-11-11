@@ -438,7 +438,6 @@ name = "athena"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "deadpool-redis",
  "either",
  "futures-util",
@@ -812,9 +811,9 @@ dependencies = [
 
 [[package]]
 name = "bstr"
-version = "1.7.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c79ad7fb2dd38f3dabd76b09c6a5a20c038fc0213ef1e9afd30eb777f120f019"
+checksum = "542f33a8835a0884b006a0c3df3dadd99c0c3f296ed26c2fdc8028e01ad6230c"
 dependencies = [
  "memchr",
  "serde",
@@ -1207,7 +1206,7 @@ dependencies = [
  "criterion-plot",
  "futures",
  "is-terminal",
- "itertools 0.10.5",
+ "itertools",
  "num-traits 0.2.17",
  "once_cell",
  "oorandom",
@@ -1227,7 +1226,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
  "cast",
- "itertools 0.10.5",
+ "itertools",
 ]
 
 [[package]]
@@ -1954,9 +1953,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a481586acf778f1b1455424c343f71124b048ffa5f4fc3f8f6ae9dc432dcb3c7"
+checksum = "f69037fe1b785e84986b4f2cbcf647381876a00671d25ceef715d7812dd7e1dd"
 
 [[package]]
 name = "finl_unicode"
@@ -2399,9 +2398,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd6effc99afb63425aff9b05836f029929e345a6148a14b7ecd5ab67af944482"
+checksum = "f95b9abcae896730d42b78e09c155ed4ddf82c07b4de772c64aee5b2d8b7c150"
 dependencies = [
  "bytes",
  "fnv",
@@ -2714,15 +2713,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2768,6 +2758,7 @@ dependencies = [
  "clap",
  "color-eyre",
  "const-oid",
+ "deadpool-redis",
  "der",
  "diesel",
  "diesel-async",
@@ -2785,6 +2776,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-job-runner",
  "kitsune-language",
@@ -2840,7 +2832,6 @@ dependencies = [
 name = "kitsune-cache"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "moka",
@@ -2857,7 +2848,6 @@ dependencies = [
 name = "kitsune-captcha"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "enum_dispatch",
  "http",
  "kitsune-http-client",
@@ -2907,7 +2897,6 @@ dependencies = [
  "argon2",
  "async-recursion",
  "async-stream",
- "async-trait",
  "athena",
  "autometrics",
  "base64-simd",
@@ -2942,6 +2931,7 @@ dependencies = [
  "kitsune-storage",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-util",
  "mime",
  "mime_guess",
  "password-hash",
@@ -2983,13 +2973,16 @@ dependencies = [
  "iso8601-timestamp",
  "kitsune-blocking",
  "kitsune-language",
+ "kitsune-test",
  "kitsune-type",
  "num-derive",
  "num-traits 0.2.17",
  "serde",
+ "serial_test",
  "simd-json",
  "speedy-uuid",
  "thiserror",
+ "tokio",
  "tracing-log 0.2.0",
  "typed-builder",
 ]
@@ -3097,9 +3090,9 @@ name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
- "async-trait",
  "futures-util",
  "kitsune-retry-policies",
+ "kitsune-util",
  "pin-project-lite",
  "redis",
  "serde",
@@ -3136,7 +3129,6 @@ dependencies = [
 name = "kitsune-oidc"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "deadpool-redis",
  "enum_dispatch",
  "http",
@@ -3166,7 +3158,6 @@ dependencies = [
 name = "kitsune-search"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
@@ -3187,13 +3178,12 @@ dependencies = [
 name = "kitsune-storage"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-trait",
  "bytes",
- "enum_dispatch",
  "futures-util",
  "http",
  "hyper",
  "kitsune-http-client",
+ "kitsune-util",
  "rusty-s3",
  "tempfile",
  "tokio",
@@ -3228,6 +3218,10 @@ dependencies = [
  "speedy-uuid",
  "utoipa",
 ]
+
+[[package]]
+name = "kitsune-util"
+version = "0.0.1-pre.4"
 
 [[package]]
 name = "lazy_static"
@@ -3998,7 +3992,7 @@ dependencies = [
  "ed25519-dalek",
  "hmac",
  "http",
- "itertools 0.10.5",
+ "itertools",
  "log",
  "oauth2",
  "p256",
@@ -4680,7 +4674,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -5119,9 +5113,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pemfile"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d3987094b1d07b653b7dfdc3f70ce9a1da9c51ac18c1b06b662e4f9a0e9f4b2"
+checksum = "1c74cae0a4cf6ccbbf5f359f08efdf8ee7e1dc532573bf0db71968cb56b1448c"
 dependencies = [
  "base64 0.21.5",
 ]
@@ -5606,9 +5600,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.11.1"
+version = "1.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
+checksum = "4dccd0940a2dcdf68d092b8cbab7dc0ad8fa938bf95787e1b916b0e3d0e8e970"
 
 [[package]]
 name = "smol_str"
@@ -5937,9 +5931,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.33.0"
+version = "1.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f38200e3ef7995e5ef13baec2f432a6da0aa9ac495b2c0e8f3b7eec2c92d653"
+checksum = "d0c014766411e834f7af5b8f4cf46257aab4036ca95e9d2c144a10f59ad6f5b9"
 dependencies = [
  "backtrace",
  "bytes",
@@ -5966,9 +5960,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.1.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
+checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6218,7 +6212,6 @@ version = "0.0.1-pre.4"
 dependencies = [
  "futures",
  "http",
- "itertools 0.11.0",
  "pin-project-lite",
  "tower",
  "tower-layer",
@@ -6997,7 +6990,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "103fa851fff70ea29af380e87c25c48ff7faac5c530c70bd0e65366d4e0c94e4"
 dependencies = [
  "fancy-regex",
- "itertools 0.10.5",
+ "itertools",
  "js-sys",
  "lazy_static",
  "quick-error",

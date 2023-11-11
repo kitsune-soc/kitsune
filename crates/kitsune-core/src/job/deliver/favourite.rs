@@ -1,5 +1,4 @@
 use crate::{job::JobRunnerContext, mapping::IntoActivity, try_join};
-use async_trait::async_trait;
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -16,7 +15,6 @@ pub struct DeliverFavourite {
     pub favourite_id: Uuid,
 }
 
-#[async_trait]
 impl Runnable for DeliverFavourite {
     type Context = JobRunnerContext;
     type Error = eyre::Report;

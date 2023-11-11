@@ -122,8 +122,8 @@ impl TryFrom<SignatureHeader<'_>> for String {
             .signature_components
             .iter()
             .map(SignatureComponent::as_str)
-            .collect::<Vec<_>>()
-            .join(" ");
+            .intersperse(" ")
+            .collect::<String>();
 
         let mut signature_header = format!(
             "keyId=\"{}\",signature=\"{signature}\",headers=\"{headers}\"",

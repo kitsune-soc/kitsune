@@ -4,7 +4,6 @@
 #[macro_use]
 extern crate tracing;
 
-use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc};
@@ -19,10 +18,10 @@ mod redis;
 
 type CacheResult<T, E = Error> = Result<T, E>;
 
-pub type ArcCache<K, V> = Arc<Cache<K, V>>;
+pub type ArcCache<K, V> = Arc<AnyCache<K, V>>;
 
 #[enum_dispatch(CacheBackend<K, V>)]
-pub enum Cache<K, V>
+pub enum AnyCache<K, V>
 where
     K: Display + Send + Sync + ?Sized,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
@@ -32,8 +31,8 @@ where
     Redis(RedisCache<K, V>),
 }
 
-#[async_trait]
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait CacheBackend<K, V>: Send + Sync
 where
     K: ?Sized,
@@ -46,7 +45,6 @@ where
 #[derive(Clone)]
 pub struct NoopCache;
 
-#[async_trait]
 impl<K, V> CacheBackend<K, V> for NoopCache
 where
     K: Send + Sync + ?Sized,

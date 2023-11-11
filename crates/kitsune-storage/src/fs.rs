@@ -3,9 +3,8 @@
 //!
 
 use crate::{Result, StorageBackend};
-use async_trait::async_trait;
 use bytes::Bytes;
-use futures_util::{pin_mut, stream::BoxStream, Stream, StreamExt, TryStreamExt};
+use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use tokio::{
     fs::{self, File},
@@ -29,16 +28,15 @@ impl Storage {
     }
 }
 
-#[async_trait]
 impl StorageBackend for Storage {
     async fn delete(&self, path: &str) -> Result<()> {
         fs::remove_file(self.storage_dir.join(path)).await?;
         Ok(())
     }
 
-    async fn get(&self, path: &str) -> Result<BoxStream<'static, Result<Bytes>>> {
+    async fn get(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
         let file = File::open(self.storage_dir.join(path)).await?;
-        Ok(ReaderStream::new(file).map_err(Into::into).boxed())
+        Ok(ReaderStream::new(file).map_err(Into::into))
     }
 
     async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
@@ -60,7 +58,7 @@ impl StorageBackend for Storage {
 mod test {
     use crate::{fs::Storage, StorageBackend};
     use bytes::{BufMut, BytesMut};
-    use futures_util::{future, stream, StreamExt, TryStreamExt};
+    use futures_util::{future, stream, TryStreamExt};
     use std::str;
     use tempfile::TempDir;
 
@@ -107,10 +105,7 @@ mod test {
         let storage = Storage::new(temp_dir.path().to_owned());
 
         storage
-            .put(
-                "hello-world",
-                stream::once(future::ok(TEST_TEXT.into())).boxed(),
-            )
+            .put("hello-world", stream::once(future::ok(TEST_TEXT.into())))
             .await
             .unwrap();
 

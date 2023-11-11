@@ -80,6 +80,13 @@ max-connections = 20
 # These are all the values you can use to customize your instance
 # Stuff like the name of your server, description, character limit, configuration, etc.
 [instance]
+# Allow users to create accounts with non-ASCII usernames
+#
+# These usernames can, for example, contains Hangul, umlauts, etc.
+# We use a technique to prevent some impersonation cases by making Kitsune consider, for example, "a" and "ä" as the same character
+#
+# This is set to "false" by default since we are not quite sure yet how this interacts with other software
+allow-non-ascii-usernames = false
 # Name of your instance
 #
 # This name is shown on the front page, in Mastodon clients, and will show up on statistics scrapers

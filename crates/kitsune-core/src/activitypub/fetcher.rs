@@ -90,7 +90,7 @@ pub struct Fetcher {
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilterService,
     #[builder(setter(into))]
-    search_backend: kitsune_search::Search,
+    search_backend: kitsune_search::AnySearchBackend,
     webfinger: Webfinger,
 
     // Caches
@@ -185,6 +185,7 @@ impl Fetcher {
         let fetch_webfinger = opts
             .acct
             .map_or(true, |acct| acct != (&actor.preferred_username, domain));
+
         let used_webfinger = if fetch_webfinger {
             match self
                 .webfinger
@@ -467,7 +468,7 @@ mod test {
     use hyper::{Body, Request, Response, StatusCode, Uri};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
-    use kitsune_config::FederationFilterConfiguration;
+    use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_db::{
         model::{account::Account, media_attachment::MediaAttachment},
         schema::{accounts, media_attachments},

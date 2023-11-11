@@ -3,7 +3,6 @@ use crate::{
     service::{attachment::AttachmentService, url::UrlService},
     try_join,
 };
-use async_trait::async_trait;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
     OptionalExtension, QueryDsl, SelectableHelper,
@@ -46,7 +45,7 @@ use scoped_futures::ScopedFutureExt;
 use serde::{de::DeserializeOwned, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{fmt::Write, str::FromStr};
+use std::{fmt::Write, future::Future, str::FromStr};
 
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {
@@ -56,7 +55,6 @@ pub struct MapperState<'a> {
     pub url_service: &'a UrlService,
 }
 
-#[async_trait]
 pub trait IntoMastodon {
     /// Mastodon API entity that gets returned
     type Output: Clone + DeserializeOwned + Serialize;
@@ -67,10 +65,12 @@ pub trait IntoMastodon {
     fn id(&self) -> Option<Uuid>;
 
     /// Map something to its Mastodon API equivalent
-    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output>;
+    fn into_mastodon(
+        self,
+        state: MapperState<'_>,
+    ) -> impl Future<Output = Result<Self::Output>> + Send;
 }
 
-#[async_trait]
 impl IntoMastodon for DbAccount {
     type Output = Account;
 
@@ -154,7 +154,6 @@ impl IntoMastodon for DbAccount {
 ///
 /// - Left: Requestor of the relationship
 /// - Right: Target of the relationship
-#[async_trait]
 impl IntoMastodon for (&DbAccount, &DbAccount) {
     type Output = Relationship;
 
@@ -217,7 +216,6 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbMention {
     type Output = Mention;
 
@@ -252,7 +250,6 @@ impl IntoMastodon for DbMention {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbMediaAttachment {
     type Output = MediaAttachment;
 
@@ -283,7 +280,6 @@ impl IntoMastodon for DbMediaAttachment {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for (&DbAccount, DbPost) {
     type Output = Status;
 
@@ -326,7 +322,6 @@ impl IntoMastodon for (&DbAccount, DbPost) {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbPost {
     type Output = Status;
 
@@ -335,151 +330,156 @@ impl IntoMastodon for DbPost {
     }
 
     #[allow(clippy::too_many_lines)]
-    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (
-            account,
-            reblog_count,
-            favourites_count,
-            media_attachments,
-            mentions_stream,
-            custom_emojis_stream,
-        ) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    let account_fut = accounts::table
-                        .find(self.account_id)
-                        .select(DbAccount::as_select())
-                        .get_result::<DbAccount>(db_conn)
-                        .map_err(Error::from)
-                        .and_then(|db_account| db_account.into_mastodon(state));
+    fn into_mastodon(
+        self,
+        state: MapperState<'_>,
+    ) -> impl Future<Output = Result<Self::Output>> + Send {
+        async move {
+            let (
+                account,
+                reblog_count,
+                favourites_count,
+                media_attachments,
+                mentions_stream,
+                custom_emojis_stream,
+            ) = state
+                .db_pool
+                .with_connection(|db_conn| {
+                    async {
+                        let account_fut = accounts::table
+                            .find(self.account_id)
+                            .select(DbAccount::as_select())
+                            .get_result::<DbAccount>(db_conn)
+                            .map_err(Error::from)
+                            .and_then(|db_account| db_account.into_mastodon(state));
 
-                    let reblog_count_fut = posts::table
-                        .filter(posts::reposted_post_id.eq(self.id))
-                        .count()
-                        .get_result::<i64>(db_conn)
-                        .map_err(Error::from);
+                        let reblog_count_fut = posts::table
+                            .filter(posts::reposted_post_id.eq(self.id))
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .map_err(Error::from);
 
-                    let favourites_count_fut = DbFavourite::belonging_to(&self)
-                        .count()
-                        .get_result::<i64>(db_conn)
-                        .map_err(Error::from);
+                        let favourites_count_fut = DbFavourite::belonging_to(&self)
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .map_err(Error::from);
 
-                    let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-                        .inner_join(media_attachments::table)
-                        .select(DbMediaAttachment::as_select())
-                        .load_stream::<DbMediaAttachment>(db_conn)
-                        .map_err(Error::from)
-                        .and_then(|attachment_stream| {
-                            attachment_stream
-                                .map_err(Error::from)
-                                .and_then(|attachment| attachment.into_mastodon(state))
-                                .try_collect()
-                        });
+                        let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
+                            .inner_join(media_attachments::table)
+                            .select(DbMediaAttachment::as_select())
+                            .load_stream::<DbMediaAttachment>(db_conn)
+                            .map_err(Error::from)
+                            .and_then(|attachment_stream| {
+                                attachment_stream
+                                    .map_err(Error::from)
+                                    .and_then(|attachment| attachment.into_mastodon(state))
+                                    .try_collect()
+                            });
 
-                    let mentions_stream_fut = DbMention::belonging_to(&self)
-                        .load_stream::<DbMention>(db_conn)
-                        .map_err(Error::from);
+                        let mentions_stream_fut = DbMention::belonging_to(&self)
+                            .load_stream::<DbMention>(db_conn)
+                            .map_err(Error::from);
 
-                    let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
-                        .inner_join(custom_emojis::table.inner_join(media_attachments::table))
-                        .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
-                        .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
-                        .map_err(Error::from);
+                        let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
+                            .inner_join(custom_emojis::table.inner_join(media_attachments::table))
+                            .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
+                            .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
+                            .map_err(Error::from);
 
-                    try_join!(
-                        account_fut,
-                        reblog_count_fut,
-                        favourites_count_fut,
-                        media_attachments_fut,
-                        mentions_stream_fut,
-                        custom_emojis_stream_fut
-                    )
-                }
-                .scoped()
-            })
-            .await?;
+                        try_join!(
+                            account_fut,
+                            reblog_count_fut,
+                            favourites_count_fut,
+                            media_attachments_fut,
+                            mentions_stream_fut,
+                            custom_emojis_stream_fut
+                        )
+                    }
+                    .scoped()
+                })
+                .await?;
 
-        let link_preview = OptionFuture::from(
-            self.link_preview_url
-                .as_ref()
-                .and_then(|url| state.embed_client.map(|client| client.fetch_embed(url))),
-        )
-        .await
-        .transpose()?;
+            let link_preview = OptionFuture::from(
+                self.link_preview_url
+                    .as_ref()
+                    .and_then(|url| state.embed_client.map(|client| client.fetch_embed(url))),
+            )
+            .await
+            .transpose()?;
 
-        let preview_card =
-            OptionFuture::from(link_preview.map(|preview| preview.into_mastodon(state)))
-                .await
-                .transpose()?;
-
-        let mentions = mentions_stream
-            .map_err(Error::from)
-            .and_then(|mention| mention.into_mastodon(state))
-            .try_collect()
-            .await?;
-
-        let emojis = custom_emojis_stream
-            .map_err(Error::from)
-            .and_then(|(emoji, attachment)| (emoji, attachment, None).into_mastodon(state))
-            .try_collect()
-            .await?;
-
-        let reblog = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    OptionFuture::from(
-                        OptionFuture::from(self.reposted_post_id.map(|id| {
-                            posts::table
-                                .find(id)
-                                .select(DbPost::as_select())
-                                .get_result::<DbPost>(db_conn)
-                                .map(OptionalExtension::optional)
-                        }))
-                        .await
-                        .transpose()?
-                        .flatten()
-                        .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
-                    )
+            let preview_card =
+                OptionFuture::from(link_preview.map(|preview| preview.into_mastodon(state)))
                     .await
-                    .transpose()
-                }
-                .scoped()
+                    .transpose()?;
+
+            let mentions = mentions_stream
+                .map_err(Error::from)
+                .and_then(|mention| mention.into_mastodon(state))
+                .try_collect()
+                .await?;
+
+            let emojis = custom_emojis_stream
+                .map_err(Error::from)
+                .and_then(|(emoji, attachment)| (emoji, attachment, None).into_mastodon(state))
+                .try_collect()
+                .await?;
+
+            let reblog = state
+                .db_pool
+                .with_connection(|db_conn| {
+                    async {
+                        OptionFuture::from(
+                            OptionFuture::from(self.reposted_post_id.map(|id| {
+                                posts::table
+                                    .find(id)
+                                    .select(DbPost::as_select())
+                                    .get_result::<DbPost>(db_conn)
+                                    .map(OptionalExtension::optional)
+                            }))
+                            .await
+                            .transpose()?
+                            .flatten()
+                            .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
+                        )
+                        .await
+                        .transpose()
+                    }
+                    .scoped()
+                })
+                .await?
+                .map(Box::new);
+
+            let language = self.content_lang.to_639_1().map(str::to_string);
+
+            Ok(Status {
+                id: self.id,
+                created_at: self.created_at,
+                in_reply_to_account_id: None,
+                in_reply_to_id: self.in_reply_to_id,
+                sensitive: self.is_sensitive,
+                spoiler_text: self.subject,
+                visibility: self.visibility.into(),
+                language,
+                uri: self.url.clone(),
+                url: self.url,
+                replies_count: 0,
+                favourites_count: favourites_count as u64,
+                reblogs_count: reblog_count as u64,
+                content: self.content,
+                account,
+                media_attachments,
+                mentions,
+                emojis,
+                reblog,
+                favourited: false,
+                reblogged: false,
+                card: preview_card,
             })
-            .await?
-            .map(Box::new);
-
-        let language = self.content_lang.to_639_1().map(str::to_string);
-
-        Ok(Status {
-            id: self.id,
-            created_at: self.created_at,
-            in_reply_to_account_id: None,
-            in_reply_to_id: self.in_reply_to_id,
-            sensitive: self.is_sensitive,
-            spoiler_text: self.subject,
-            visibility: self.visibility.into(),
-            language,
-            uri: self.url.clone(),
-            url: self.url,
-            replies_count: 0,
-            favourites_count: favourites_count as u64,
-            reblogs_count: reblog_count as u64,
-            content: self.content,
-            account,
-            media_attachments,
-            mentions,
-            emojis,
-            reblog,
-            favourited: false,
-            reblogged: false,
-            card: preview_card,
-        })
+        }
+        .boxed()
     }
 }
 
-#[async_trait]
 impl IntoMastodon for LinkPreview<Embed> {
     type Output = PreviewCard;
 
@@ -558,7 +558,6 @@ impl IntoMastodon for LinkPreview<Embed> {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for PostSource {
     type Output = StatusSource;
 
@@ -575,7 +574,6 @@ impl IntoMastodon for PostSource {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for DbNotification {
     type Output = Notification;
 
@@ -614,7 +612,6 @@ impl IntoMastodon for DbNotification {
     }
 }
 
-#[async_trait]
 impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
     type Output = CustomEmoji;
 

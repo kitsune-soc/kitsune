@@ -1,5 +1,4 @@
 use crate::{CacheBackend, CacheResult};
-use async_trait::async_trait;
 use moka::sync::Cache;
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
@@ -30,7 +29,6 @@ where
     }
 }
 
-#[async_trait]
 impl<K, V> CacheBackend<K, V> for InMemory<K, V>
 where
     K: Display + Send + Sync + ?Sized,

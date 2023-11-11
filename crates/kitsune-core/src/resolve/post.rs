@@ -127,7 +127,7 @@ mod test {
     use hyper::{Body, Request, Response};
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
-    use kitsune_config::FederationFilterConfiguration;
+    use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_db::{
         model::{
             account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment,

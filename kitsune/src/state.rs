@@ -1,5 +1,4 @@
 use crate::oauth2::{OAuth2Service, OAuthEndpoint};
-use axum::extract::FromRef;
 use axum_extra::extract::cookie;
 use kitsune_core::{
     activitypub::Fetcher,
@@ -14,6 +13,7 @@ use kitsune_core::{
 };
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
+use std::{ops::Deref, sync::Arc};
 
 #[cfg(feature = "mastodon-api")]
 use kitsune_core::mapping::MastodonMapper;
@@ -109,14 +109,48 @@ impl_from_ref! {
     ]
 }
 
-#[derive(Clone, FromRef)]
-pub struct Zustand {
+impl_from_ref! {
+    Zustand;
+    [
+        CoreState => |input: &Zustand| input.core.clone(),
+        OAuth2Service => |input: &Zustand| input.oauth2.clone(),
+        OAuthEndpoint => |input: &Zustand| input.oauth_endpoint.clone(),
+        SessionConfig => |input: &Zustand| input.session_config.clone()
+    ]
+}
+
+#[cfg(feature = "oidc")]
+impl_from_ref! {
+    Zustand;
+    [
+        Option<OidcService> => |input: &Zustand| input.oidc.clone()
+    ]
+}
+
+pub struct ZustandInner {
     pub core: CoreState,
     pub oauth2: OAuth2Service,
     pub oauth_endpoint: OAuthEndpoint,
     #[cfg(feature = "oidc")]
     pub oidc: Option<OidcService>,
     pub session_config: SessionConfig,
+}
+
+#[derive(Clone)]
+pub struct Zustand(Arc<ZustandInner>);
+
+impl Deref for Zustand {
+    type Target = ZustandInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<ZustandInner> for Zustand {
+    fn from(value: ZustandInner) -> Self {
+        Self(Arc::new(value))
+    }
 }
 
 impl Zustand {

@@ -302,7 +302,7 @@ pub struct PostService {
     instance_service: InstanceService,
     job_service: JobService,
     post_resolver: PostResolver,
-    search_backend: kitsune_search::Search,
+    search_backend: kitsune_search::AnySearchBackend,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }

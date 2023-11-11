@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
 use std::{
+    pin::pin,
     str::FromStr,
     sync::Arc,
     time::{Duration, SystemTime},
@@ -345,7 +346,7 @@ where
 
             join_set.spawn(async move {
                 let job_data = &job_data[&job_id];
-                let mut run_fut = job_ctx.run(&run_ctx);
+                let mut run_fut = pin!(job_ctx.run(&run_ctx));
 
                 let tick_period = MIN_IDLE_TIME - Duration::from_secs(2 * 60);
                 let mut tick_interval =

@@ -5,7 +5,6 @@
 #[macro_use]
 extern crate tracing;
 
-use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
 use serde::{Deserialize, Serialize};
@@ -26,7 +25,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
-pub enum Search {
+pub enum AnySearchBackend {
     #[cfg(feature = "meilisearch")]
     Meilisearch(MeiliSearchService),
     Noop(NoopSearchService),
@@ -118,8 +117,8 @@ pub struct SearchResultReference {
     pub id: Uuid,
 }
 
-#[async_trait]
 #[enum_dispatch]
+#[allow(async_fn_in_trait)] // Because of `enum_dispatch`
 pub trait SearchBackend: Send + Sync {
     /// Add an item to the index
     async fn add_to_index(&self, item: SearchItem) -> Result<()>;
@@ -152,7 +151,6 @@ pub trait SearchBackend: Send + Sync {
 #[derive(Clone)]
 pub struct NoopSearchService;
 
-#[async_trait]
 impl SearchBackend for NoopSearchService {
     async fn add_to_index(&self, _item: SearchItem) -> Result<()> {
         Ok(())

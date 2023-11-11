@@ -7,7 +7,6 @@ use self::{
     mailing::confirmation::SendConfirmationMail,
 };
 use crate::{activitypub::Deliverer, error::Result, state::State};
-use async_trait::async_trait;
 use athena::{JobContextRepository, Runnable};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -18,6 +17,7 @@ use kitsune_db::{
     schema::job_context,
     PgPool,
 };
+use kitsune_util::impl_from;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -27,34 +27,6 @@ pub mod deliver;
 pub mod mailing;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
-
-macro_rules! impl_from {
-    (
-        $(#[$top_annotation:meta])*
-        $vb:vis enum $name:ident {
-        $(
-            $(#[$branch_annotation:meta])*
-            $branch_name:ident ($from_type:ty)
-        ),+
-        $(,)*
-    }) => {
-        $(#[$top_annotation])*
-        $vb enum $name {
-            $(
-                $(#[$branch_annotation])*
-                $branch_name($from_type),
-            )*
-        }
-
-        $(
-            impl From<$from_type> for $name {
-                fn from(val: $from_type) -> Self {
-                    Self::$branch_name(val)
-                }
-            }
-        )*
-    };
-}
 
 pub struct JobRunnerContext {
     pub deliverer: Deliverer,
@@ -77,7 +49,6 @@ impl_from! {
     }
 }
 
-#[async_trait]
 impl Runnable for Job {
     type Context = JobRunnerContext;
     type Error = eyre::Report;
@@ -110,7 +81,6 @@ impl KitsuneContextRepo {
     }
 }
 
-#[async_trait]
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
     type Error = eyre::Report;
