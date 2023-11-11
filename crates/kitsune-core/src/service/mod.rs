@@ -3,6 +3,7 @@ use crate::consts::API_MAX_LIMIT;
 pub mod account;
 pub mod attachment;
 pub mod captcha;
+pub mod custom_emoji;
 pub mod federation_filter;
 pub mod instance;
 pub mod job;

@@ -12,6 +12,7 @@ pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Publi
 
 pub mod actor;
 pub mod collection;
+pub mod emoji;
 pub mod helper;
 pub mod object;
 
@@ -210,6 +211,7 @@ pub enum TagType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Tag {
+    pub id: Option<String>,
     pub r#type: TagType,
     pub name: String,
     pub href: Option<String>,

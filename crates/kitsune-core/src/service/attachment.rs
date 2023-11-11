@@ -54,8 +54,9 @@ pub struct Update {
 #[derive(Builder, Validate)]
 #[builder(pattern = "owned")]
 pub struct Upload<S> {
+    #[builder(default, setter(strip_option))]
     #[garde(skip)]
-    account_id: Uuid,
+    account_id: Option<Uuid>,
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[builder(default, setter(strip_option))]
@@ -115,10 +116,10 @@ impl AttachmentService {
     pub async fn get_url(&self, id: Uuid) -> Result<String> {
         let media_attachment = self.get_by_id(id).await?;
         if self.media_proxy_enabled || media_attachment.file_path.is_some() {
-            return Ok(self.url_service.media_url(id));
+            return Ok(self.url_service.media_url(media_attachment.id));
         }
 
-        Ok(media_attachment.remote_url.unwrap())
+        Ok(media_attachment.remote_url.as_ref().unwrap().to_string())
     }
 
     /// Return a stream that yields the file's contents
@@ -224,8 +225,8 @@ impl AttachmentService {
                 diesel::insert_into(media_attachments::table)
                     .values(NewMediaAttachment {
                         id: Uuid::now_v7(),
-                        account_id: upload.account_id,
                         content_type: upload.content_type.as_str(),
+                        account_id: upload.account_id,
                         description: upload.description.as_deref(),
                         blurhash: None,
                         file_path: Some(upload.path.as_str()),
@@ -324,7 +325,7 @@ mod test {
 
             let attachment = MediaAttachment {
                 id: Uuid::now_v7(),
-                account_id,
+                account_id: Some(account_id),
                 content_type: String::from("image/jpeg"),
                 description: None,
                 blurhash: None,

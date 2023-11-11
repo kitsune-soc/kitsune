@@ -12,7 +12,7 @@ fn link_transformation() {
                 tag: Cow::Borrowed("a"),
                 attributes: vec![(
                     Cow::Borrowed("href"),
-                    Cow::Owned(format!("https://example.com/emote/{}", emote.content)),
+                    Cow::Owned(format!("https://example.com/emote/{}", emote.shortcode)),
                 )],
                 content: Box::new(Element::Emote(emote)),
             }),

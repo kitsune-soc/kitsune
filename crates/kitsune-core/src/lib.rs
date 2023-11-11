@@ -56,7 +56,9 @@ use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
 use rusty_s3::{Bucket as S3Bucket, Credentials as S3Credentials};
 use serde::{de::DeserializeOwned, Serialize};
+use service::custom_emoji::CustomEmojiService;
 use service::search::SearchService;
+
 use std::{
     fmt::Display,
     str::FromStr,
@@ -272,6 +274,12 @@ pub async fn prepare_state(
     let captcha_backend = config.captcha.as_ref().map(prepare_captcha);
     let captcha_service = CaptchaService::builder().backend(captcha_backend).build();
 
+    let custom_emoji_service = CustomEmojiService::builder()
+        .attachment_service(attachment_service.clone())
+        .db_pool(db_pool.clone())
+        .url_service(url_service.clone())
+        .build();
+
     let instance_service = InstanceService::builder()
         .db_pool(db_pool.clone())
         .name(config.instance.name.as_str())
@@ -292,6 +300,7 @@ pub async fn prepare_state(
 
     let post_resolver = PostResolver::builder()
         .account(account_service.clone())
+        .custom_emoji(custom_emoji_service.clone())
         .build();
 
     let post_service = PostService::builder()
@@ -344,6 +353,7 @@ pub async fn prepare_state(
         service: Service {
             account: account_service,
             captcha: captcha_service,
+            custom_emoji: custom_emoji_service,
             federation_filter: federation_filter_service,
             instance: instance_service,
             job: job_service,

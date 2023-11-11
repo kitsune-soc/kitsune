@@ -42,6 +42,19 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
 }
 
 #[inline]
+fn emoji_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> (&'a str, Option<&'a str>) {
+    let slice = lexer.slice().trim_matches(':');
+
+    let emoji_data = if let Some((shortcode, domain)) = slice.split_once('@') {
+        (shortcode, Some(domain))
+    } else {
+        (slice, None)
+    };
+
+    emoji_data
+}
+
+#[inline]
 fn mention_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Option<&'a str>)> {
     if !enforce_prefix(lexer) || !enforce_postfix(lexer) {
         return None;
@@ -61,11 +74,8 @@ fn mention_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> Option<(&'a str, Opt
 
 #[derive(Debug, Logos, PartialEq)]
 pub enum PostElement<'a> {
-    #[regex(
-        r":[\w\d-]+:",
-        |lexer| lexer.slice().trim_matches(':'),
-    )]
-    Emote(&'a str),
+    #[regex(r":[\w\d_-]+(@[\w\-_]+\.[\.\w]+)?:", emoji_split)]
+    Emote((&'a str, Option<&'a str>)),
 
     #[regex(
         r"#[\w_-]+",
@@ -150,8 +160,9 @@ impl<'a> Element<'a> {
     ) -> impl Iterator<Item = (Element<'a>, Span)> {
         pairs.map(|(item, span)| {
             let element = match item {
-                PostElement::Emote(name) => Self::Emote(Emote {
-                    content: Cow::Borrowed(name),
+                PostElement::Emote((name, domain)) => Self::Emote(Emote {
+                    shortcode: Cow::Borrowed(name),
+                    domain: domain.map(Cow::Borrowed),
                 }),
                 PostElement::Hashtag(content) => Self::Hashtag(Hashtag {
                     content: Cow::Borrowed(content),
@@ -187,12 +198,22 @@ impl Render for Element<'_> {
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Emote<'a> {
     /// Name of an emote
-    pub content: Cow<'a, str>,
+    pub shortcode: Cow<'a, str>,
+    /// Domain
+    pub domain: Option<Cow<'a, str>>,
 }
 
 impl Render for Emote<'_> {
     fn render(&self, out: &mut impl fmt::Write) {
-        let _ = write!(out, ":{}:", self.content);
+        let _ = match &self.domain {
+            Some(domain) => write!(
+                out,
+                ":{}__{}:",
+                self.shortcode,
+                domain.replace(['.', '-'], "_")
+            ),
+            None => write!(out, ":{}:", self.shortcode),
+        };
     }
 }
 
@@ -229,9 +250,7 @@ impl Render for Html<'_> {
             let _ = write!(out, " {name}=\"{value}\"");
         }
         let _ = out.write_char('>');
-
         self.content.render(out);
-
         let _ = write!(out, "</{}>", self.tag);
     }
 }

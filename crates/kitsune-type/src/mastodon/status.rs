@@ -1,4 +1,4 @@
-use super::{Account, MediaAttachment, PreviewCard};
+use super::{Account, CustomEmoji, MediaAttachment, PreviewCard};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -49,6 +49,7 @@ pub struct Status {
     pub account: Account,
     pub media_attachments: Vec<MediaAttachment>,
     pub mentions: Vec<Mention>,
+    pub emojis: Vec<CustomEmoji>,
     pub reblog: Option<Box<Status>>,
     pub favourited: bool,
     pub reblogged: bool,

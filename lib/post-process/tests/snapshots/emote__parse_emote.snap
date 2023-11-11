@@ -6,14 +6,20 @@ input_file: lib/post-process/tests/input/emote/full_post_1
 [
     (
         Emote(
-            "blobfoxcoffee",
+            (
+                "blobfoxcoffee",
+                None,
+            ),
         ),
         6..21,
         ":blobfoxcoffee:",
     ),
     (
         Emote(
-            "blobcatpeek",
+            (
+                "blobcatpeek",
+                None,
+            ),
         ),
         40..53,
         ":blobcatpeek:",

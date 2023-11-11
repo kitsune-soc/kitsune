@@ -20,6 +20,9 @@ pub enum ApiError {
     #[error("Invalid captcha")]
     InvalidCaptcha,
 
+    #[error("Missing host")]
+    MissingHost,
+
     #[error("Not found")]
     NotFound,
 

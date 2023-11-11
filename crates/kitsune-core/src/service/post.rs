@@ -31,6 +31,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::PostCustomEmoji,
         favourite::{Favourite, NewFavourite},
         media_attachment::NewPostMediaAttachment,
         mention::NewMention,
@@ -40,8 +41,9 @@ use kitsune_db::{
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
-        accounts, accounts_preferences, media_attachments, notifications, posts, posts_favourites,
-        posts_media_attachments, posts_mentions, users_roles,
+        accounts, accounts_preferences, media_attachments, notifications, posts,
+        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
+        users_roles,
     },
     PgPool,
 };
@@ -402,11 +404,39 @@ impl PostService {
         Ok(())
     }
 
+    async fn process_custom_emojis(
+        conn: &mut AsyncPgConnection,
+        post_id: Uuid,
+        custom_emojis: Vec<(Uuid, String)>,
+    ) -> Result<()> {
+        if custom_emojis.is_empty() {
+            return Ok(());
+        }
+
+        diesel::insert_into(posts_custom_emojis::table)
+            .values(
+                custom_emojis
+                    .iter()
+                    .map(|(emoji_id, emoji_text)| PostCustomEmoji {
+                        post_id,
+                        custom_emoji_id: *emoji_id,
+                        emoji_text: emoji_text.to_string(),
+                    })
+                    .collect::<Vec<PostCustomEmoji>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Create a new post and deliver it to the followers
     ///
     /// # Panics
     ///
     /// This should never ever panic. If it does, create a bug report.
+    #[allow(clippy::too_many_lines)]
     pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
         create_post.validate(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
@@ -432,7 +462,7 @@ impl PostService {
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
         );
 
-        let (mentioned_account_ids, content) = self.post_resolver.resolve(&content).await?;
+        let resolved = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {
             embed_client
                 .fetch_embed_for_fragment(&content)
@@ -468,7 +498,7 @@ impl PostService {
                             in_reply_to_id,
                             reposted_post_id: None,
                             subject: subject.as_deref(),
-                            content: content.as_str(),
+                            content: resolved.content.as_str(),
                             content_source: content_source.as_str(),
                             content_lang: content_lang.into(),
                             link_preview_url: link_preview_url.as_deref(),
@@ -482,8 +512,14 @@ impl PostService {
                         .get_result(tx)
                         .await?;
 
-                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
-                        .await?;
+                    Self::process_mentions(
+                        tx,
+                        post.account_id,
+                        post.id,
+                        resolved.mentioned_accounts,
+                    )
+                    .await?;
+                    Self::process_custom_emojis(tx, post.id, resolved.custom_emojis).await?;
                     Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
                     NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
@@ -591,12 +627,16 @@ impl PostService {
                 .map(|c| kitsune_language::detect_language(DetectionBackend::default(), c)),
         };
 
-        let (mentioned_account_ids, content) = match content.as_ref() {
+        let (mentioned_account_ids, custom_emojis, content) = match content.as_ref() {
             Some(content) => {
                 let resolved = self.post_resolver.resolve(content).await?;
-                (resolved.0, Some(resolved.1))
+                (
+                    resolved.mentioned_accounts,
+                    resolved.custom_emojis,
+                    Some(resolved.content),
+                )
             }
-            None => (Vec::new(), None),
+            None => (Vec::new(), Vec::new(), None),
         };
 
         let link_preview_url = if let (Some(embed_client), Some(content)) =
@@ -631,6 +671,7 @@ impl PostService {
 
                     Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
                         .await?;
+                    Self::process_custom_emojis(tx, post.id, custom_emojis).await?;
                     Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
                     NotificationService::notify_on_update_post(tx, post.account_id, post.id)
                         .await?;

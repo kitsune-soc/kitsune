@@ -9,7 +9,7 @@ use speedy_uuid::Uuid;
 #[diesel(belongs_to(Account), table_name = media_attachments)]
 pub struct MediaAttachment {
     pub id: Uuid,
-    pub account_id: Uuid,
+    pub account_id: Option<Uuid>,
     pub content_type: String,
     pub description: Option<String>,
     pub blurhash: Option<String>,
@@ -29,7 +29,7 @@ pub struct UpdateMediaAttachment<'a> {
 #[diesel(table_name = media_attachments)]
 pub struct NewMediaAttachment<'a> {
     pub id: Uuid,
-    pub account_id: Uuid,
+    pub account_id: Option<Uuid>,
     pub content_type: &'a str,
     pub description: Option<&'a str>,
     pub blurhash: Option<&'a str>,

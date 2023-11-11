@@ -3,9 +3,10 @@ use crate::{
     event::PostEventEmitter,
     service::{
         account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
-        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        mailing::MailingService, notification::NotificationService, post::PostService,
-        search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
+        custom_emoji::CustomEmojiService, federation_filter::FederationFilterService,
+        instance::InstanceService, job::JobService, mailing::MailingService,
+        notification::NotificationService, post::PostService, search::SearchService,
+        timeline::TimelineService, url::UrlService, user::UserService,
     },
     webfinger::Webfinger,
 };
@@ -30,6 +31,7 @@ pub struct Service {
     pub account: AccountService,
     pub attachment: AttachmentService,
     pub captcha: CaptchaService,
+    pub custom_emoji: CustomEmojiService,
     pub federation_filter: FederationFilterService,
     pub job: JobService,
     pub mailing: MailingService,

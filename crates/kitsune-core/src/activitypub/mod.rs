@@ -5,17 +5,20 @@ use crate::{
 };
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::FutureExt;
+use futures_util::{future::try_join_all, FutureExt, TryFutureExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::PostCustomEmoji,
         media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
         mention::NewMention,
         post::{FullPostChangeset, NewPost, Post, PostConflictChangeset, Visibility},
     },
-    schema::{media_attachments, posts, posts_media_attachments, posts_mentions},
+    schema::{
+        media_attachments, posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
+    },
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -64,6 +67,43 @@ async fn handle_mentions(
     Ok(())
 }
 
+async fn handle_custom_emojis(
+    db_conn: &mut AsyncPgConnection,
+    post_id: Uuid,
+    fetcher: &Fetcher,
+    tags: &[Tag],
+) -> Result<()> {
+    let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
+
+    let emoji_count = emoji_iter.clone().count();
+    if emoji_count == 0 {
+        return Ok(());
+    }
+
+    let futures = emoji_iter.clone().filter_map(|emoji| {
+        let remote_id = emoji.id.as_ref()?;
+        Some(fetcher.fetch_emoji(remote_id).map_ok(move |f| (f, emoji)))
+    });
+
+    let emojis = try_join_all(futures)
+        .await?
+        .iter()
+        .map(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
+            post_id,
+            custom_emoji_id: resolved_emoji.id,
+            emoji_text: emoji_tag.name.to_string(),
+        })
+        .collect::<Vec<PostCustomEmoji>>();
+
+    diesel::insert_into(posts_custom_emojis::table)
+        .values(emojis)
+        .on_conflict_do_nothing()
+        .execute(db_conn)
+        .await?;
+
+    Ok(())
+}
+
 /// Process a bunch of ActivityPub attachments
 ///
 /// # Returns
@@ -92,7 +132,7 @@ pub async fn process_attachments(
 
                     Some(NewMediaAttachment {
                         id: attachment_id,
-                        account_id: author.id,
+                        account_id: Some(author.id),
                         content_type,
                         description: attachment.name.as_deref(),
                         blurhash: attachment.blurhash.as_deref(),
@@ -130,6 +170,7 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
+    fetcher: &'a Fetcher,
     search_backend: &'a AnySearchBackend,
 }
 
@@ -201,6 +242,7 @@ async fn preprocess_object(
         content_lang,
         db_pool,
         object,
+        fetcher,
         search_backend,
     })
 }
@@ -215,6 +257,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         content_lang,
         db_pool,
         object,
+        fetcher,
         search_backend,
     } = preprocess_object(process_data).boxed().await?;
 
@@ -263,6 +306,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
                     .await?;
 
                 handle_mentions(tx, &user, new_post.id, &object.tag).await?;
+                handle_custom_emojis(tx, new_post.id, fetcher, &object.tag).await?;
 
                 Ok::<_, Error>(new_post)
             }
@@ -287,6 +331,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         content_lang,
         db_pool,
         object,
+        fetcher: _,
         search_backend,
     } = preprocess_object(process_data).await?;
 

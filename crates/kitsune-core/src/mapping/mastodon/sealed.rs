@@ -9,9 +9,11 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{
         account::Account as DbAccount,
+        custom_emoji::{CustomEmoji as DbCustomEmoji, PostCustomEmoji as DbPostCustomEmoji},
         favourite::Favourite as DbFavourite,
         follower::Follow,
         link_preview::LinkPreview,
@@ -23,7 +25,8 @@ use kitsune_db::{
         post::{Post as DbPost, PostSource},
     },
     schema::{
-        accounts, accounts_follows, media_attachments, notifications, posts, posts_favourites,
+        accounts, accounts_follows, custom_emojis, media_attachments, notifications, posts,
+        posts_favourites,
     },
     PgPool,
 };
@@ -35,7 +38,7 @@ use kitsune_type::mastodon::{
     preview_card::PreviewType,
     relationship::Relationship,
     status::{Mention, StatusSource},
-    Account, MediaAttachment, Notification, PreviewCard, Status,
+    Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
@@ -332,56 +335,69 @@ impl IntoMastodon for DbPost {
         state: MapperState<'_>,
     ) -> impl Future<Output = Result<Self::Output>> + Send {
         async move {
-            let (account, reblog_count, favourites_count, media_attachments, mentions_stream) =
-                state
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        async {
-                            let account_fut = accounts::table
-                                .find(self.account_id)
-                                .select(DbAccount::as_select())
-                                .get_result::<DbAccount>(db_conn)
-                                .map_err(Error::from)
-                                .and_then(|db_account| db_account.into_mastodon(state));
+            let (
+                account,
+                reblog_count,
+                favourites_count,
+                media_attachments,
+                mentions_stream,
+                custom_emojis_stream,
+            ) = state
+                .db_pool
+                .with_connection(|db_conn| {
+                    async {
+                        let account_fut = accounts::table
+                            .find(self.account_id)
+                            .select(DbAccount::as_select())
+                            .get_result::<DbAccount>(db_conn)
+                            .map_err(Error::from)
+                            .and_then(|db_account| db_account.into_mastodon(state));
 
-                            let reblog_count_fut = posts::table
-                                .filter(posts::reposted_post_id.eq(self.id))
-                                .count()
-                                .get_result::<i64>(db_conn)
-                                .map_err(Error::from);
+                        let reblog_count_fut = posts::table
+                            .filter(posts::reposted_post_id.eq(self.id))
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .map_err(Error::from);
 
-                            let favourites_count_fut = DbFavourite::belonging_to(&self)
-                                .count()
-                                .get_result::<i64>(db_conn)
-                                .map_err(Error::from);
+                        let favourites_count_fut = DbFavourite::belonging_to(&self)
+                            .count()
+                            .get_result::<i64>(db_conn)
+                            .map_err(Error::from);
 
-                            let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-                                .inner_join(media_attachments::table)
-                                .select(DbMediaAttachment::as_select())
-                                .load_stream::<DbMediaAttachment>(db_conn)
-                                .map_err(Error::from)
-                                .and_then(|attachment_stream| {
-                                    attachment_stream
-                                        .map_err(Error::from)
-                                        .and_then(|attachment| attachment.into_mastodon(state))
-                                        .try_collect()
-                                });
+                        let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
+                            .inner_join(media_attachments::table)
+                            .select(DbMediaAttachment::as_select())
+                            .load_stream::<DbMediaAttachment>(db_conn)
+                            .map_err(Error::from)
+                            .and_then(|attachment_stream| {
+                                attachment_stream
+                                    .map_err(Error::from)
+                                    .and_then(|attachment| attachment.into_mastodon(state))
+                                    .try_collect()
+                            });
 
-                            let mentions_stream_fut = DbMention::belonging_to(&self)
-                                .load_stream::<DbMention>(db_conn)
-                                .map_err(Error::from);
+                        let mentions_stream_fut = DbMention::belonging_to(&self)
+                            .load_stream::<DbMention>(db_conn)
+                            .map_err(Error::from);
 
-                            try_join!(
-                                account_fut,
-                                reblog_count_fut,
-                                favourites_count_fut,
-                                media_attachments_fut,
-                                mentions_stream_fut,
-                            )
-                        }
-                        .scoped()
-                    })
-                    .await?;
+                        let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
+                            .inner_join(custom_emojis::table.inner_join(media_attachments::table))
+                            .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
+                            .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
+                            .map_err(Error::from);
+
+                        try_join!(
+                            account_fut,
+                            reblog_count_fut,
+                            favourites_count_fut,
+                            media_attachments_fut,
+                            mentions_stream_fut,
+                            custom_emojis_stream_fut
+                        )
+                    }
+                    .scoped()
+                })
+                .await?;
 
             let link_preview = OptionFuture::from(
                 self.link_preview_url
@@ -399,6 +415,12 @@ impl IntoMastodon for DbPost {
             let mentions = mentions_stream
                 .map_err(Error::from)
                 .and_then(|mention| mention.into_mastodon(state))
+                .try_collect()
+                .await?;
+
+            let emojis = custom_emojis_stream
+                .map_err(Error::from)
+                .and_then(|(emoji, attachment)| (emoji, attachment, None).into_mastodon(state))
                 .try_collect()
                 .await?;
 
@@ -447,6 +469,7 @@ impl IntoMastodon for DbPost {
                 account,
                 media_attachments,
                 mentions,
+                emojis,
                 reblog,
                 favourited: false,
                 reblogged: false,
@@ -585,6 +608,40 @@ impl IntoMastodon for DbNotification {
             created_at: notification.created_at,
             account: account.into_mastodon(state).await?,
             status,
+        })
+    }
+}
+
+impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
+    type Output = CustomEmoji;
+
+    fn id(&self) -> Option<Uuid> {
+        Some(self.0.id)
+    }
+
+    async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
+        let (emoji, attachment, last_used) = self;
+        let shortcode = if let Some(ref domain) = emoji.domain {
+            format!(":{}@{}:", emoji.shortcode, domain)
+        } else {
+            format!(":{}:", emoji.shortcode)
+        };
+        let url = state.url_service.media_url(attachment.id);
+        let category = if last_used.is_some() {
+            Some(String::from("recently used"))
+        } else if emoji.endorsed {
+            Some(String::from("endorsed"))
+        } else if emoji.domain.is_none() {
+            Some(String::from("local"))
+        } else {
+            Some(emoji.domain.unwrap())
+        };
+        Ok(CustomEmoji {
+            shortcode,
+            url: url.clone(),
+            static_url: url,
+            visible_in_picker: true,
+            category,
         })
     }
 }

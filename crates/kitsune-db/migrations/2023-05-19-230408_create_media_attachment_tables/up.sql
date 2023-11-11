@@ -1,6 +1,6 @@
 CREATE TABLE media_attachments (
     id UUID PRIMARY KEY,
-    account_id UUID NOT NULL,
+    account_id UUID,
     content_type TEXT NOT NULL,
     description TEXT,
     blurhash TEXT,

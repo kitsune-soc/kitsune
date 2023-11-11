@@ -14,25 +14,30 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
+use iso8601_timestamp::Timestamp;
 use kitsune_cache::{ArcCache, CacheBackend};
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
+        custom_emoji::CustomEmoji,
+        media_attachment::{MediaAttachment, NewMediaAttachment},
         post::Post,
     },
-    schema::{accounts, posts},
+    schema::{accounts, custom_emojis, media_attachments, posts},
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_http_client::Client;
+
 use kitsune_search::SearchBackend;
 use kitsune_type::{
-    ap::{actor::Actor, Object},
+    ap::{actor::Actor, emoji::Emoji, Object},
     jsonld::RdfNode,
 };
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
 use serde::de::DeserializeOwned;
+use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -175,7 +180,7 @@ impl Fetcher {
 
         let mut actor: Actor = self.fetch_ap_resource(url.as_str()).await?;
 
-        let mut domain = url.host_str().unwrap();
+        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
         let domain_buf;
         let fetch_webfinger = opts
             .acct
@@ -203,7 +208,7 @@ impl Fetcher {
         };
         if !used_webfinger && actor.id != url.as_str() {
             url = Url::parse(&actor.id)?;
-            domain = url.host_str().unwrap();
+            domain = url.host_str().ok_or(ApiError::MissingHost)?;
         }
 
         actor.clean_html();
@@ -300,6 +305,88 @@ impl Fetcher {
         Ok(account)
     }
 
+    pub async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji> {
+        let existing_emoji = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    custom_emojis::table
+                        .filter(custom_emojis::remote_id.eq(url))
+                        .select(CustomEmoji::as_select())
+                        .first(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
+            })
+            .await?;
+
+        if let Some(emoji) = existing_emoji {
+            return Ok(emoji);
+        }
+
+        let mut url = Url::parse(url)?;
+        if !self.federation_filter.is_url_allowed(&url)? {
+            return Err(ApiError::Unauthorised.into());
+        }
+
+        let emoji: Emoji = self.client.get(url.as_str()).await?.jsonld().await?;
+
+        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
+
+        if emoji.id != url.as_str() {
+            url = Url::parse(&emoji.id)?;
+            domain = url.host_str().ok_or(ApiError::MissingHost)?;
+        }
+
+        let content_type = emoji
+            .icon
+            .media_type
+            .as_deref()
+            .or_else(|| mime_guess::from_path(&emoji.icon.url).first_raw())
+            .ok_or(ApiError::UnsupportedMediaType)?;
+
+        let name_pure = emoji.name.replace(':', "");
+
+        let emoji: CustomEmoji = self
+            .db_pool
+            .with_transaction(|tx| {
+                async move {
+                    let media_attachment = diesel::insert_into(media_attachments::table)
+                        .values(NewMediaAttachment {
+                            id: Uuid::now_v7(),
+                            account_id: None,
+                            content_type,
+                            description: None,
+                            blurhash: None,
+                            file_path: None,
+                            remote_url: Some(&emoji.icon.url),
+                        })
+                        .returning(MediaAttachment::as_returning())
+                        .get_result::<MediaAttachment>(tx)
+                        .await?;
+                    let emoji = diesel::insert_into(custom_emojis::table)
+                        .values(CustomEmoji {
+                            id: Uuid::now_v7(),
+                            remote_id: emoji.id,
+                            shortcode: name_pure.to_string(),
+                            domain: Some(domain.to_string()),
+                            media_attachment_id: media_attachment.id,
+                            endorsed: false,
+                            created_at: Timestamp::now_utc(),
+                            updated_at: Timestamp::now_utc(),
+                        })
+                        .returning(CustomEmoji::as_returning())
+                        .get_result::<CustomEmoji>(tx)
+                        .await?;
+                    Ok::<_, Error>(emoji)
+                }
+                .scope_boxed()
+            })
+            .await?;
+        Ok(emoji)
+    }
+
     #[async_recursion]
     pub(super) async fn fetch_object_inner(
         &self,
@@ -382,7 +469,10 @@ mod test {
     use iso8601_timestamp::Timestamp;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
-    use kitsune_db::{model::account::Account, schema::accounts};
+    use kitsune_db::{
+        model::{account::Account, media_attachment::MediaAttachment},
+        schema::{accounts, media_attachments},
+    };
     use kitsune_http_client::Client;
     use kitsune_search::NoopSearchService;
     use kitsune_test::{build_ap_response, database_test};
@@ -915,6 +1005,55 @@ mod test {
         .await;
     }
 
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn fetch_emoji() {
+        database_test(|db_pool| async move {
+            let client = Client::builder().service(service_fn(handle));
+
+            let fetcher = Fetcher::builder()
+                .client(client.clone())
+                .db_pool(db_pool.clone())
+                .embed_client(None)
+                .federation_filter(
+                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        domains: Vec::new(),
+                    })
+                    .unwrap(),
+                )
+                .search_backend(NoopSearchService)
+                .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .post_cache(Arc::new(NoopCache.into()))
+                .user_cache(Arc::new(NoopCache.into()))
+                .build();
+
+            let emoji = fetcher
+                .fetch_emoji("https://corteximplant.com/emojis/7952")
+                .await
+                .expect("Fetch emoji");
+            assert_eq!(emoji.shortcode, "Blobhaj");
+            assert_eq!(emoji.domain, Some(String::from("corteximplant.com")));
+
+            let media_attachment = db_pool
+                .with_connection(|db_conn| {
+                    media_attachments::table
+                        .find(emoji.media_attachment_id)
+                        .select(MediaAttachment::as_select())
+                        .get_result::<MediaAttachment>(db_conn)
+                        .scoped()
+                })
+                .await
+                .expect("Get media attachment");
+
+            assert_eq!(
+                media_attachment.remote_url,
+                Some(String::from(
+                    "https://corteximplant.com/system/custom_emojis/images/000/007/952/original/33b7f12bd094b815.png"
+                )));
+        })
+        .await;
+    }
+
     async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         match req.uri().path_and_query().unwrap().as_str() {
             "/users/0x0" => {
@@ -931,6 +1070,16 @@ mod test {
                 let body = include_str!(
                     "../../../../test-fixtures/corteximplant.com_109501659207519785.json"
                 );
+                Ok::<_, Infallible>(build_ap_response(body))
+            }
+            "/emojis/7952" => {
+                let body =
+                    include_str!("../../../../test-fixtures/corteximplant.com_emoji_7952.json");
+                Ok::<_, Infallible>(build_ap_response(body))
+            }
+            "/emojis/8933" => {
+                let body =
+                    include_str!("../../../../test-fixtures/corteximplant.com_emoji_8933.json");
                 Ok::<_, Infallible>(build_ap_response(body))
             }
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {

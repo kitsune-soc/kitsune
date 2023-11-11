@@ -1,4 +1,5 @@
 pub mod confirm_account;
+pub mod custom_emojis;
 #[cfg(feature = "mastodon-api")]
 pub mod mastodon;
 pub mod media;

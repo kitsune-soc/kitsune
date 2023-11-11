@@ -4,21 +4,23 @@ use crate::{
     try_join,
     util::BaseToCc,
 };
-use diesel::{BelongingToDsl, QueryDsl, SelectableHelper};
+use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_db::{
     model::{
         account::Account,
+        custom_emoji::{CustomEmoji, PostCustomEmoji},
         media_attachment::{MediaAttachment as DbMediaAttachment, PostMediaAttachment},
         mention::Mention,
         post::Post,
     },
-    schema::{accounts, media_attachments, posts},
+    schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
 };
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
+    emoji::Emoji,
     object::{MediaAttachment, MediaAttachmentType},
     AttributedToField, Object, ObjectType, Tag, TagType,
 };
@@ -56,6 +58,42 @@ impl IntoObject for DbMediaAttachment {
     }
 }
 
+fn build_post_tags(
+    mentions: Vec<(Mention, Account)>,
+    to: &mut Vec<String>,
+    emojis: Vec<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>,
+) -> Vec<Tag> {
+    let mut tag = Vec::new();
+    for (mention, mentioned) in mentions {
+        to.push(mentioned.url.clone());
+        tag.push(Tag {
+            id: None,
+            r#type: TagType::Mention,
+            name: mention.mention_text,
+            href: Some(mentioned.url),
+            icon: None,
+        });
+    }
+    for (custom_emoji, post_emoji, attachment) in emojis {
+        if let Some(attachment_url) = attachment.remote_url {
+            tag.push(Tag {
+                id: Some(custom_emoji.remote_id),
+                r#type: TagType::Emoji,
+                name: post_emoji.emoji_text,
+                href: None,
+                icon: Some(MediaAttachment {
+                    r#type: MediaAttachmentType::Image,
+                    name: None,
+                    media_type: Some(attachment.content_type),
+                    blurhash: None,
+                    url: attachment_url,
+                }),
+            });
+        }
+    }
+    tag
+}
+
 impl IntoObject for Post {
     type Output = Object;
 
@@ -67,7 +105,7 @@ impl IntoObject for Post {
             return Err(ApiError::NotFound.into());
         }
 
-        let (account, in_reply_to, mentions, attachment_stream) = state
+        let (account, in_reply_to, mentions, emojis, attachment_stream) = state
             .db_pool
             .with_connection(|db_conn| {
                 async {
@@ -90,6 +128,17 @@ impl IntoObject for Post {
                         .select((Mention::as_select(), Account::as_select()))
                         .load::<(Mention, Account)>(db_conn);
 
+                    let custom_emojis_fut = custom_emojis::table
+                        .inner_join(posts_custom_emojis::table)
+                        .inner_join(media_attachments::table)
+                        .filter(posts_custom_emojis::post_id.eq(self.id))
+                        .select((
+                            CustomEmoji::as_select(),
+                            PostCustomEmoji::as_select(),
+                            DbMediaAttachment::as_select(),
+                        ))
+                        .load::<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>(db_conn);
+
                     let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
                         .inner_join(media_attachments::table)
                         .select(DbMediaAttachment::as_select())
@@ -99,6 +148,7 @@ impl IntoObject for Post {
                         account_fut,
                         in_reply_to_fut,
                         mentions_fut,
+                        custom_emojis_fut,
                         attachment_stream_fut
                     )
                 }
@@ -122,17 +172,9 @@ impl IntoObject for Post {
             .try_collect()
             .await?;
 
-        let mut tag = Vec::new();
         let (mut to, cc) = self.visibility.base_to_cc(state, &account);
-        for (mention, mentioned) in mentions {
-            to.push(mentioned.url.clone());
-            tag.push(Tag {
-                r#type: TagType::Mention,
-                name: mention.mention_text,
-                href: Some(mentioned.url),
-                icon: None,
-            });
-        }
+        let tag = build_post_tags(mentions, &mut to, emojis);
+
         let account_url = state.service.url.user_url(account.id);
 
         Ok(Object {
@@ -216,6 +258,39 @@ impl IntoObject for Account {
                 public_key_pem: self.public_key,
             },
             published: self.created_at,
+        })
+    }
+}
+
+impl IntoObject for CustomEmoji {
+    type Output = Emoji;
+
+    async fn into_object(self, state: &State) -> Result<Self::Output> {
+        // Officially we don't have any info about remote emojis as we're not the origin
+        // Let's pretend we're not home and do not answer
+        let name = match self.domain {
+            None => Ok(format!(":{}:", self.shortcode)),
+            Some(_) => Err(ApiError::NotFound),
+        }?;
+        let icon = state
+            .db_pool
+            .with_connection(|db_conn| {
+                media_attachments::table
+                    .find(self.media_attachment_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|media_attachment| media_attachment.into_object(state))
+                    .scoped()
+            })
+            .await?;
+
+        Ok(Emoji {
+            context: ap_context(),
+            id: self.remote_id,
+            r#type: String::from("Emoji"),
+            name,
+            icon,
+            updated: self.updated_at,
         })
     }
 }
