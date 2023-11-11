@@ -38,7 +38,7 @@ use zxcvbn::zxcvbn;
 const MIN_PASSWORD_STRENGTH: u8 = 3;
 
 #[inline]
-fn additional_username_check(value: &str, ctx: &RegisterContext) -> garde::Result {
+fn conditional_ascii_check(value: &str, ctx: &RegisterContext) -> garde::Result {
     if ctx.allow_non_ascii {
         return Ok(());
     }
@@ -87,7 +87,7 @@ pub struct RegisterContext {
 pub struct Register {
     /// Username of the new user
     #[garde(
-        custom(additional_username_check),
+        custom(conditional_ascii_check),
         length(min = 1, max = 64),
         pattern(r"^[\p{L}\p{N}\.]+$")
     )]
