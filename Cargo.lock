@@ -3280,6 +3280,7 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "simd-json",
+ "thiserror",
  "tokio",
  "tower",
  "tracing",
