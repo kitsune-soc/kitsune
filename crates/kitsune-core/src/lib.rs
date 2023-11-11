@@ -28,8 +28,9 @@ use self::{
     resolve::PostResolver,
     service::{
         account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
-        federation_filter::FederationFilterService, instance::InstanceService, job::JobService,
-        mailing::MailingService, notification::NotificationService, post::PostService,
+        custom_emoji::CustomEmojiService, federation_filter::FederationFilterService,
+        instance::InstanceService, job::JobService, mailing::MailingService,
+        notification::NotificationService, post::PostService, search::SearchService,
         timeline::TimelineService, url::UrlService, user::UserService,
     },
     state::{EventEmitter, Service, State},
@@ -53,8 +54,6 @@ use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
 use rusty_s3::{Bucket as S3Bucket, Credentials as S3Credentials};
 use serde::{de::DeserializeOwned, Serialize};
-use service::custom_emoji::CustomEmojiService;
-use service::search::SearchService;
 
 use std::{
     fmt::Display,
