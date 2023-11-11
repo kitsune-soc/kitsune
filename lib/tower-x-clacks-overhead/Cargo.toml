@@ -4,7 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-http = "0.2.9"
+http = "0.2.10"
 pin-project-lite = "0.2.13"
 tower-layer = "0.3.2"
 tower-service = "0.3.2"

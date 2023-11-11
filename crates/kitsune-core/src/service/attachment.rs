@@ -350,7 +350,7 @@ mod test {
     }
 
     async fn handle(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
-        Ok::<_, Infallible>(Response::new(Body::from("")))
+        Ok::<_, Infallible>(Response::new(Body::empty()))
     }
 
     async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {

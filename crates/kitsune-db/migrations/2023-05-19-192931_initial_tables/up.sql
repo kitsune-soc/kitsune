@@ -1,8 +1,15 @@
+CREATE COLLATION ignore_accent_case (
+    provider = icu,
+    deterministic = false,
+    locale = 'und-u-ks-level1'
+);
+
 CREATE TABLE accounts (
     id UUID PRIMARY KEY,
     display_name TEXT,
     note TEXT,
-    username TEXT NOT NULL,
+    -- Use special collation to ignore case and accent differences
+    username TEXT NOT NULL COLLATE ignore_accent_case, 
     locked BOOLEAN NOT NULL,
     local BOOLEAN NOT NULL,
     domain TEXT NOT NULL,
@@ -74,7 +81,8 @@ CREATE TABLE users (
     id UUID PRIMARY KEY,
     account_id UUID NOT NULL UNIQUE,
     oidc_id TEXT UNIQUE,
-    username TEXT NOT NULL,
+    -- Use special collation to ignore case and accent differences
+    username TEXT NOT NULL COLLATE ignore_accent_case,
     email TEXT NOT NULL UNIQUE,
     password TEXT UNIQUE,
     domain TEXT NOT NULL,
