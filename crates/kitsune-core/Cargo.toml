@@ -8,7 +8,6 @@ ahash = "0.8.6"
 argon2 = "0.5.2"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
-base64-simd = { version = "0.8.0", features = ["unstable"] }
 bytes = "1.5.0"
 deadpool-redis = "0.13.0"
 derive_builder = "0.12.0"

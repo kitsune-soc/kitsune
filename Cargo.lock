@@ -2948,7 +2948,6 @@ dependencies = [
  "argon2",
  "async-stream",
  "athena",
- "base64-simd",
  "bytes",
  "deadpool-redis",
  "derive_builder",

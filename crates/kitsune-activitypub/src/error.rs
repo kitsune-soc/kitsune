@@ -1,6 +1,8 @@
 use std::convert::Infallible;
 
 use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
+use kitsune_http_signatures::ring;
+use rsa::pkcs8::der;
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -17,10 +19,16 @@ pub enum Error {
     DatabasePool(#[from] DatabasePoolError),
 
     #[error(transparent)]
+    Der(#[from] der::Error),
+
+    #[error(transparent)]
     Diesel(#[from] diesel::result::Error),
 
     #[error(transparent)]
     Embed(#[from] kitsune_embed::Error),
+
+    #[error(transparent)]
+    Http(#[from] http::Error),
 
     #[error(transparent)]
     HttpClient(#[from] kitsune_http_client::Error),
@@ -34,11 +42,17 @@ pub enum Error {
     #[error(transparent)]
     InvalidUri(#[from] http::uri::InvalidUri),
 
+    #[error(transparent)]
+    KeyRejected(#[from] ring::error::KeyRejected),
+
     #[error("Missing host")]
     MissingHost,
 
     #[error(transparent)]
     Search(#[from] kitsune_search::Error),
+
+    #[error(transparent)]
+    SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
