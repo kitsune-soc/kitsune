@@ -1,0 +1,11 @@
+[package]
+name = "kitsune-federation-filter"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+globset = "0.4.13"
+kitsune-config = { path = "../kitsune-config" }
+kitsune-type = { path = "../kitsune-type" }
+thiserror = "1.0.50"
+url = "2.4.1"

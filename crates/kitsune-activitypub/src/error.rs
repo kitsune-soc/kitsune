@@ -28,6 +28,9 @@ pub enum Error {
     Embed(#[from] kitsune_embed::Error),
 
     #[error(transparent)]
+    FederationFilter(#[from] kitsune_federation_filter::error::Error),
+
+    #[error(transparent)]
     Http(#[from] http::Error),
 
     #[error(transparent)]

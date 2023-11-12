@@ -2835,6 +2835,7 @@ dependencies = [
  "kitsune-consts",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-federation-filter",
  "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-language",
@@ -3059,6 +3060,17 @@ dependencies = [
  "smol_str",
  "thiserror",
  "typed-builder",
+]
+
+[[package]]
+name = "kitsune-federation-filter"
+version = "0.0.1-pre.4"
+dependencies = [
+ "globset",
+ "kitsune-config",
+ "kitsune-type",
+ "thiserror",
+ "url",
 ]
 
 [[package]]

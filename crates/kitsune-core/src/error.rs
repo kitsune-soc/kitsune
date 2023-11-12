@@ -40,18 +40,6 @@ pub enum ApiError {
 }
 
 #[derive(Debug, Error)]
-pub enum FederationFilterError {
-    #[error(transparent)]
-    Glob(#[from] globset::Error),
-
-    #[error("Host missing from URL")]
-    HostMissing,
-
-    #[error(transparent)]
-    UrlParse(#[from] url::ParseError),
-}
-
-#[derive(Debug, Error)]
 pub enum UploadError {
     #[error(transparent)]
     ImageProcessingError(#[from] img_parts::Error),
@@ -91,9 +79,6 @@ pub enum Error {
 
     #[error(transparent)]
     Event(kitsune_messaging::BoxError),
-
-    #[error(transparent)]
-    FederationFilter(#[from] FederationFilterError),
 
     #[error(transparent)]
     Http(#[from] http::Error),

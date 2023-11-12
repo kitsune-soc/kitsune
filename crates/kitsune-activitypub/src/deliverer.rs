@@ -1,12 +1,10 @@
-use crate::{
-    error::{Error, Result},
-    service::federation_filter::FederationFilterService,
-};
+use crate::error::{Error, Result};
 use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
 use kitsune_consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
+use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
@@ -23,7 +21,7 @@ use url::Url;
 pub struct Deliverer {
     #[builder(default = Client::builder().user_agent(USER_AGENT).unwrap().build())]
     client: Client,
-    federation_filter: FederationFilterService,
+    federation_filter: FederationFilter,
 }
 
 impl Deliverer {

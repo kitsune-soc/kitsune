@@ -1,9 +1,11 @@
-use crate::error::FederationFilterError;
+use crate::error::{Error, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_type::ap::{actor::Actor, Activity, Object};
 use std::sync::Arc;
 use url::Url;
+
+pub mod error;
 
 pub trait Entity {
     fn id(&self) -> &str;
@@ -28,26 +30,22 @@ impl Entity for Object {
 }
 
 #[derive(Clone, Copy)]
-enum FederationFilter {
+enum FilterMode {
     Allow,
     Deny,
 }
 
 #[derive(Clone)]
-pub struct FederationFilterService {
+pub struct FederationFilter {
     domains: Arc<GlobSet>,
-    filter: FederationFilter,
+    filter: FilterMode,
 }
 
-impl FederationFilterService {
-    pub fn new(config: &FederationFilterConfiguration) -> Result<Self, FederationFilterError> {
+impl FederationFilter {
+    pub fn new(config: &FederationFilterConfiguration) -> Result<Self> {
         let (filter, globs) = match config {
-            FederationFilterConfiguration::Allow { ref domains } => {
-                (FederationFilter::Allow, domains)
-            }
-            FederationFilterConfiguration::Deny { ref domains } => {
-                (FederationFilter::Deny, domains)
-            }
+            FederationFilterConfiguration::Allow { ref domains } => (FilterMode::Allow, domains),
+            FederationFilterConfiguration::Deny { ref domains } => (FilterMode::Deny, domains),
         };
 
         let mut globset = GlobSetBuilder::new();
@@ -59,17 +57,17 @@ impl FederationFilterService {
         Ok(Self { domains, filter })
     }
 
-    pub fn is_url_allowed(&self, url: &Url) -> Result<bool, FederationFilterError> {
-        let host = url.host_str().ok_or(FederationFilterError::HostMissing)?;
+    pub fn is_url_allowed(&self, url: &Url) -> Result<bool> {
+        let host = url.host_str().ok_or(Error::HostMissing)?;
 
         let allowed = match self.filter {
-            FederationFilter::Allow { .. } => self.domains.is_match(host),
-            FederationFilter::Deny { .. } => !self.domains.is_match(host),
+            FilterMode::Allow { .. } => self.domains.is_match(host),
+            FilterMode::Deny { .. } => !self.domains.is_match(host),
         };
         Ok(allowed)
     }
 
-    pub fn is_entity_allowed<T>(&self, entity: &T) -> Result<bool, FederationFilterError>
+    pub fn is_entity_allowed<T>(&self, entity: &T) -> Result<bool>
     where
         T: Entity,
     {

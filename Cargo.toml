@@ -25,6 +25,7 @@ members = [
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",
+    "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
     "crates/kitsune-http-signatures",
     "crates/kitsune-language",
