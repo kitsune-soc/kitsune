@@ -14,13 +14,14 @@ extern crate tracing;
 
 pub mod error;
 pub mod event;
-pub mod job;
-pub mod mapping;
-pub mod resolve;
-pub mod service;
-pub mod state;
-pub mod util;
+//pub mod mapping;
+//pub mod resolve;
+//pub mod service;
+//pub mod state;
+pub mod traits;
+//pub mod util;
 
+/*
 use self::{
     activitypub::Fetcher,
     job::KitsuneContextRepo,
@@ -364,3 +365,5 @@ pub async fn prepare_state(
         webfinger,
     })
 }
+
+*/

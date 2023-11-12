@@ -3,8 +3,9 @@ use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
 use kitsune_consts::USER_AGENT;
+use kitsune_core::traits::{AccountFetchOptions, Fetcher as FetcherTrait};
 use kitsune_db::{
-    model::{account::Account, post::Post},
+    model::{account::Account, custom_emoji::CustomEmoji, post::Post},
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -22,31 +23,6 @@ pub use self::object::MAX_FETCH_DEPTH;
 mod actor;
 mod emoji;
 mod object;
-
-#[derive(Clone, Debug, TypedBuilder)]
-/// Options passed to the fetcher
-pub struct FetchOptions<'a> {
-    /// Prefetched WebFinger `acct` URI
-    #[builder(default, setter(strip_option))]
-    acct: Option<(&'a str, &'a str)>,
-
-    /// Refetch the ActivityPub entity
-    ///
-    /// This is mainly used to refresh possibly stale actors
-    ///
-    /// Default: false
-    #[builder(default = false)]
-    refetch: bool,
-
-    /// URL of the ActivityPub entity
-    url: &'a str,
-}
-
-impl<'a> From<&'a str> for FetchOptions<'a> {
-    fn from(value: &'a str) -> Self {
-        Self::builder().url(value).build()
-    }
-}
 
 #[derive(Clone, TypedBuilder)]
 pub struct Fetcher {
@@ -122,5 +98,21 @@ impl Fetcher {
         }
 
         Ok(response.jsonld().await?)
+    }
+}
+
+impl FetcherTrait for Fetcher {
+    type Error = Error;
+
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Account, Self::Error> {
+        self.fetch_actor(opts).await
+    }
+
+    async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji, Self::Error> {
+        self.fetch_emoji(url).await
+    }
+
+    async fn fetch_post(&self, url: &str) -> Result<Post, Self::Error> {
+        self.fetch_object(url).await
     }
 }

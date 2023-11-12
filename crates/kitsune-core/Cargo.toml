@@ -22,7 +22,6 @@ garde = { version = "0.16.2", default-features = false, features = [
     "regex",
     "serde",
 ] }
-globset = "0.4.13"
 hex-simd = { version = "0.8.0", features = ["unstable"] }
 http = "0.2.10"
 img-parts = "0.3.0"

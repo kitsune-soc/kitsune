@@ -1,5 +1,6 @@
 use hyper::{Body, Request, Response};
 use kitsune_cache::NoopCache;
+use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
@@ -20,7 +21,7 @@ async fn basic() {
 
     let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
     let resource = webfinger
-        .resolve_actor("0x0", "corteximplant.com")
+        .resolve_account("0x0", "corteximplant.com")
         .await
         .expect("Failed to fetch resource")
         .unwrap();

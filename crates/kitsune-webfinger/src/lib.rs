@@ -1,16 +1,16 @@
 #[macro_use]
 extern crate tracing;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use autometrics::autometrics;
 use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_consts::USER_AGENT;
+use kitsune_core::traits::{AccountResource, Resolver};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
-use serde::{Deserialize, Serialize};
 use std::{ptr, sync::Arc, time::Duration};
 
 pub mod error;
@@ -24,20 +24,8 @@ pub const MAX_JRD_REDIRECTS: u32 = 3;
 
 #[derive(Clone)]
 pub struct Webfinger {
-    cache: ArcCache<str, ActorResource>,
+    cache: ArcCache<str, AccountResource>,
     client: Client,
-}
-
-#[allow(clippy::doc_markdown)] // "WebFinger" here isn't referring to the item name
-/// Description of an ActivityPub actor resolved via WebFinger
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ActorResource {
-    /// The `self` link (the actor's URI)
-    pub uri: String,
-    /// The username part of the canonical `acct:` URI
-    pub username: String,
-    /// The host component of the canonical `acct:` URI
-    pub domain: String,
 }
 
 impl Webfinger {
@@ -52,7 +40,7 @@ impl Webfinger {
 impl Webfinger {
     #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
     #[must_use]
-    pub fn new(cache: ArcCache<str, ActorResource>) -> Self {
+    pub fn new(cache: ArcCache<str, AccountResource>) -> Self {
         let client = Client::builder()
             .default_header("Accept", HeaderValue::from_static("application/jrd+json"))
             .unwrap()
@@ -64,9 +52,13 @@ impl Webfinger {
     }
 
     #[must_use]
-    pub fn with_client(client: Client, cache: ArcCache<str, ActorResource>) -> Self {
+    pub fn with_client(client: Client, cache: ArcCache<str, AccountResource>) -> Self {
         Self { cache, client }
     }
+}
+
+impl Resolver for Webfinger {
+    type Error = Error;
 
     /// Resolves the `acct:{username}@{domain}` URI via WebFinger to get the object ID and the
     /// canonical `acct:` URI of an ActivityPub actor
@@ -76,11 +68,11 @@ impl Webfinger {
     /// which the caller should check by themselves before trusting the result.
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn resolve_actor(
+    async fn resolve_account(
         &self,
         username: &str,
         domain: &str,
-    ) -> Result<Option<ActorResource>> {
+    ) -> Result<Option<AccountResource>, Self::Error> {
         // XXX: Assigning the arguments to local bindings because the `#[instrument]` attribute
         // desugars to an `async move {}` block, inside which mutating the function arguments would
         // upset the borrowck
@@ -143,7 +135,7 @@ impl Webfinger {
             return Ok(None);
         };
 
-        let ret = ActorResource {
+        let ret = AccountResource {
             username: username.to_owned(),
             domain: domain.to_owned(),
             uri,

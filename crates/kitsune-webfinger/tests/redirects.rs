@@ -1,5 +1,6 @@
 use hyper::{Body, Request, Response, StatusCode};
 use kitsune_cache::NoopCache;
+use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_webfinger::{Webfinger, MAX_JRD_REDIRECTS};
@@ -15,6 +16,7 @@ async fn follow_jrd_redirect() {
         ..simd_json::from_slice(&mut base).unwrap()
     })
     .unwrap();
+
     let client = service_fn(move |req: Request<_>| {
         let body = body.clone();
         async move {
@@ -33,11 +35,12 @@ async fn follow_jrd_redirect() {
             }
         }
     });
+
     let client = Client::builder().service(client);
 
     let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
     let resource = webfinger
-        .resolve_actor("0x0", "corteximplant.com")
+        .resolve_account("0x0", "corteximplant.com")
         .await
         .expect("Failed to fetch resource")
         .unwrap();
@@ -76,7 +79,7 @@ async fn reject_fake_jrd_redirect() {
 
     let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
     let resource = webfinger
-        .resolve_actor("0x0", "corteximplant.com")
+        .resolve_account("0x0", "corteximplant.com")
         .await
         .expect("Failed to fetch resource");
 

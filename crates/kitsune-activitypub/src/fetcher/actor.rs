@@ -1,4 +1,4 @@
-use super::{FetchOptions, Fetcher};
+use super::Fetcher;
 use crate::{
     error::{Error, Result},
     process_attachments,
@@ -7,6 +7,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
+use kitsune_core::traits::{AccountFetchOptions, Resolver};
 use kitsune_db::{
     model::account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
     schema::accounts,
@@ -25,7 +26,7 @@ impl Fetcher {
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_actor(&self, opts: FetchOptions<'_>) -> Result<Account> {
+    pub async fn fetch_actor(&self, opts: AccountFetchOptions<'_>) -> Result<Account> {
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
             if let Some(user) = self.user_cache.get(opts.url).await? {
@@ -64,7 +65,7 @@ impl Fetcher {
         let used_webfinger = if fetch_webfinger {
             match self
                 .webfinger
-                .resolve_actor(&actor.preferred_username, domain)
+                .resolve_account(&actor.preferred_username, domain)
                 .await?
             {
                 Some(resource) if resource.uri == actor.id => {
