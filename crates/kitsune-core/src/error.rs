@@ -1,9 +1,8 @@
-use std::error::Error as ErrorTrait;
-
 use kitsune_http_signatures::ring;
+use std::error::Error as StdError;
 use thiserror::Error;
 
-pub type BoxError = Box<dyn ErrorTrait + Send + Sync>;
+pub type BoxError = Box<dyn StdError + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]

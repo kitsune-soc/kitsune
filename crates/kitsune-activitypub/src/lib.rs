@@ -37,6 +37,7 @@ use typed_builder::TypedBuilder;
 pub mod deliverer;
 pub mod error;
 pub mod fetcher;
+pub mod inbox_resolver;
 
 pub use self::{deliverer::Deliverer, fetcher::Fetcher};
 

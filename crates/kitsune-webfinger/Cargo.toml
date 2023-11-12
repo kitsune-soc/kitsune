@@ -14,7 +14,6 @@ kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
-serde = { version = "1.0.192", features = ["derive"] }
 thiserror = "1.0.50"
 tracing = "0.1.40"
 

@@ -116,7 +116,7 @@ async fn reject_unbounded_number_of_jrd_redirects() {
 
     let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
     let resource = webfinger
-        .resolve_actor("0x0", "corteximplant.com")
+        .resolve_account("0x0", "corteximplant.com")
         .await
         .expect("Failed to fetch resource");
 
