@@ -1,5 +1,5 @@
 use super::url::UrlService;
-use crate::error::{ApiError, Error, Result, UploadError};
+use crate::error::{Error, Result, UploadError};
 use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};

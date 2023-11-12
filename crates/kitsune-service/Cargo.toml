@@ -33,6 +33,7 @@ kitsune-email = { path = "../kitsune-email" }
 kitsune-embed = { path = "../kitsune-embed" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-language = { path = "../kitsune-language" }
 kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
@@ -40,6 +41,7 @@ kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 password-hash = "0.5.0"
 pkcs8 = "0.10.2"
+post-process = { path = "../../lib/post-process" }
 rand = "0.8.5"
 rsa = "0.9.3"
 scoped-futures = "0.1.3"
@@ -60,7 +62,9 @@ meilisearch = ["kitsune-search/meilisearch"]
 eyre = "0.6.8"
 hex-simd = { version = "0.8.0", features = ["unstable"] }
 hyper = "0.14.27"
+kitsune-config = { path = "../kitsune-config" }
 kitsune-test = { path = "../kitsune-test" }
+pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tempfile = "3.8.1"
 tower = { version = "0.4.13", default-features = false, features = ["util"] }

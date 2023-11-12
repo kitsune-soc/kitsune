@@ -5,7 +5,6 @@ use super::{
     LimitContext,
 };
 use crate::{
-    activitypub::fetcher::{FetchOptions, Fetcher},
     error::{Error, Result},
     job::deliver::{
         accept::DeliverAccept,
@@ -14,7 +13,6 @@ use crate::{
         unfollow::DeliverUnfollow,
         update::{DeliverUpdate, UpdateEntity},
     },
-    webfinger::Webfinger,
 };
 use bytes::Bytes;
 use derive_builder::Builder;
@@ -26,6 +24,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher, Resolver};
 use kitsune_db::{
     model::{
         account::{Account, UpdateAccount},
@@ -182,16 +181,24 @@ impl<A, H> Update<A, H> {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct AccountService {
+pub struct AccountService<F, R>
+where
+    F: Fetcher,
+    R: Resolver,
+{
     attachment_service: AttachmentService,
     db_pool: PgPool,
-    fetcher: Fetcher,
+    fetcher: F,
     job_service: JobService,
+    resolver: R,
     url_service: UrlService,
-    webfinger: Webfinger,
 }
 
-impl AccountService {
+impl<F, R> AccountService<F, R>
+where
+    F: Fetcher,
+    R: Resolver,
+{
     /// Follow an account
     ///
     /// # Returns
@@ -320,22 +327,23 @@ impl AccountService {
             }
 
             let Some(webfinger_actor) = self
-                .webfinger
-                .resolve_actor(get_user.username, domain)
-                .await?
+                .resolver
+                .resolve_account(get_user.username, domain)
+                .await
+                .map_err(|err| Error::Resolver(err.into()))?
             else {
                 return Ok(None);
             };
 
-            let opts = FetchOptions::builder()
+            let opts = AccountFetchOptions::builder()
                 .acct((&webfinger_actor.username, &webfinger_actor.domain))
                 .url(&webfinger_actor.uri)
                 .build();
             self.fetcher
-                .fetch_actor(opts)
+                .fetch_account(opts)
                 .await
                 .map(Some)
-                .map_err(Error::from)
+                .map_err(|err| Error::Fetcher(err.into()))
         } else {
             self.db_pool
                 .with_connection(|db_conn| {

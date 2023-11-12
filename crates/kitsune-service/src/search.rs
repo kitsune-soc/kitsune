@@ -1,10 +1,11 @@
-use crate::{activitypub::Fetcher, error::Result};
+use crate::error::Result;
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::FuturesUnordered, FutureExt, TryFutureExt, TryStreamExt};
 use garde::Validate;
 use kitsune_consts::API_MAX_LIMIT;
+use kitsune_core::traits::Fetcher;
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -38,13 +39,19 @@ pub struct Search<'a> {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct SearchService {
+pub struct SearchService<F>
+where
+    F: Fetcher,
+{
     db_pool: PgPool,
-    fetcher: Fetcher,
+    fetcher: F,
     search_backend: kitsune_search::AnySearchBackend,
 }
 
-impl SearchService {
+impl<F> SearchService<F>
+where
+    F: Fetcher,
+{
     #[must_use]
     pub fn backend(&self) -> &kitsune_search::AnySearchBackend {
         &self.search_backend
@@ -58,14 +65,24 @@ impl SearchService {
         // TODO: Add Webfinger-based handle resolver
 
         if let Ok(searched_url) = Url::parse(search.query) {
-            match self.fetcher.fetch_actor(searched_url.as_str().into()).await {
+            match self
+                .fetcher
+                .fetch_account(searched_url.as_str().into())
+                .await
+            {
                 Ok(account) => results.push(SearchResult::Account(account)),
-                Err(error) => debug!(?error, "couldn't fetch actor via url"),
+                Err(error) => {
+                    let error = error.into();
+                    debug!(?error, "couldn't fetch actor via url");
+                }
             }
 
-            match self.fetcher.fetch_object(searched_url.as_str()).await {
+            match self.fetcher.fetch_post(searched_url.as_str()).await {
                 Ok(post) => results.push(SearchResult::Post(post)),
-                Err(error) => debug!(?error, "couldn't fetch object via url"),
+                Err(error) => {
+                    let error = error.into();
+                    debug!(?error, "couldn't fetch object via url");
+                }
             }
         }
 

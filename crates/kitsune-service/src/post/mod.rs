@@ -1,3 +1,4 @@
+use self::resolver::PostResolver;
 use super::{
     instance::InstanceService,
     job::{Enqueue, JobService},
@@ -6,7 +7,7 @@ use super::{
     LimitContext,
 };
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
     job::deliver::{
         create::DeliverCreate,
@@ -15,7 +16,6 @@ use crate::{
         unfavourite::DeliverUnfavourite,
         update::{DeliverUpdate, UpdateEntity},
     },
-    resolve::PostResolver,
     util::process_markdown,
 };
 use async_stream::try_stream;
@@ -53,6 +53,8 @@ use kitsune_util::sanitize::CleanHtmlExt;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
+
+mod resolver;
 
 macro_rules! min_character_limit {
     ($self:ident) => {{
@@ -1251,7 +1253,7 @@ impl PostService {
 
 #[cfg(test)]
 mod test {
-    use crate::service::post::{CreatePost, PostValidationContext, UpdatePost};
+    use crate::post::{CreatePost, PostValidationContext, UpdatePost};
     use garde::Validate;
     use speedy_uuid::Uuid;
 

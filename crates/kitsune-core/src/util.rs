@@ -1,20 +1,8 @@
 use crate::state::State;
-use hex_simd::{AsOut, AsciiCase};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
 use pulldown_cmark::{html, Options, Parser};
-
-const TOKEN_LENGTH: usize = 32;
-
-#[inline]
-#[must_use]
-pub fn generate_secret() -> String {
-    let token_data: [u8; TOKEN_LENGTH] = rand::random();
-    let mut buf = [0_u8; TOKEN_LENGTH * 2];
-    (*hex_simd::encode_as_str(&token_data, buf.as_mut_slice().as_out(), AsciiCase::Lower))
-        .to_string()
-}
 
 #[inline]
 #[must_use]

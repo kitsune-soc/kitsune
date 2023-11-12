@@ -4,9 +4,8 @@ use super::{
     url::UrlService,
 };
 use crate::{
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     job::mailing::confirmation::SendConfirmationMail,
-    util::generate_secret,
 };
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
@@ -24,7 +23,7 @@ use kitsune_db::{
     schema::{accounts, accounts_preferences, users},
     PgPool,
 };
-use kitsune_util::try_join;
+use kitsune_util::{generate_secret, try_join};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,

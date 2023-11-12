@@ -17,9 +17,6 @@ pub enum UploadError {
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
-    Api(#[from] ApiError),
-
-    #[error(transparent)]
     Blocking(#[from] kitsune_blocking::Error),
 
     #[error(transparent)]
@@ -47,6 +44,9 @@ pub enum Error {
     Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]
+    Fetcher(BoxError),
+
+    #[error(transparent)]
     Http(#[from] http::Error),
 
     #[error(transparent)]
@@ -72,6 +72,9 @@ pub enum Error {
 
     #[error(transparent)]
     PostProcessing(post_process::BoxError),
+
+    #[error(transparent)]
+    Resolver(BoxError),
 
     #[error(transparent)]
     Rsa(#[from] rsa::Error),
