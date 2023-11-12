@@ -33,6 +33,7 @@ serde = "1.0.192"
 sha2 = "0.10.8"
 simd-json = { version = "0.13.4", features = ["hints"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
+thiserror = "1.0.50"
 tracing = "0.1.40"
 typed-builder = "0.18.0"
 url = "2.4.1"

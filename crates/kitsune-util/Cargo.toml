@@ -5,5 +5,7 @@ version.workspace = true
 
 [dependencies]
 ammonia = "3.3.0"
+iso8601-timestamp = "0.2.12"
 kitsune-type = { path = "../kitsune-type" }
+speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.34.0", features = ["macros"] }

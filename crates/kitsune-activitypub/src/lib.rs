@@ -4,10 +4,7 @@
 #[macro_use]
 extern crate tracing;
 
-use crate::{
-    error::{ApiError, Error, Result},
-    util::timestamp_to_uuid,
-};
+use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{future::try_join_all, FutureExt, TryFutureExt};
@@ -30,14 +27,14 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
-use kitsune_util::sanitize::CleanHtmlExt;
-use kitsune_util::CowBox;
+use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt, CowBox};
 use pulldown_cmark::{html, Options, Parser};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 pub mod deliverer;
+pub mod error;
 pub mod fetcher;
 
 pub use self::{deliverer::Deliverer, fetcher::Fetcher};
@@ -192,12 +189,12 @@ async fn preprocess_object(
         search_backend,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
-    let attributed_to = object.attributed_to().ok_or(ApiError::BadRequest)?;
+    let attributed_to = object.attributed_to().ok_or(Error::InvalidDocument)?;
     let user = if let Some(author) = author {
         CowBox::borrowed(author)
     } else {
         if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
-            return Err(ApiError::BadRequest.into());
+            return Err(Error::InvalidDocument.into());
         }
 
         CowBox::boxed(fetcher.fetch_actor(attributed_to.into()).await?)

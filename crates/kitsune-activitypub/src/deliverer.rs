@@ -82,7 +82,9 @@ impl Deliverer {
         S: Stream<Item = Result<Vec<String>, E>>,
         Error: From<E>,
     {
-        while let Some(inbox_chunk) = pin!(inbox_stream).next().await.transpose()? {
+        let mut inbox_stream = pin!(inbox_stream);
+
+        while let Some(inbox_chunk) = inbox_stream.next().await.transpose()? {
             let mut concurrent_resolver: FuturesUnordered<_> = inbox_chunk
                 .iter()
                 .map(|inbox| self.deliver(inbox, account, user, activity))

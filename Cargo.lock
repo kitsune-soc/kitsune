@@ -2852,6 +2852,7 @@ dependencies = [
  "sha2",
  "simd-json",
  "speedy-uuid",
+ "thiserror",
  "tokio",
  "tower",
  "tracing",
@@ -3260,7 +3261,9 @@ name = "kitsune-util"
 version = "0.0.1-pre.4"
 dependencies = [
  "ammonia",
+ "iso8601-timestamp",
  "kitsune-type",
+ "speedy-uuid",
  "tokio",
 ]
 

@@ -3,6 +3,7 @@ use std::ops::Deref;
 #[doc(hidden)]
 pub use tokio;
 
+pub mod convert;
 pub mod sanitize;
 
 mod macros;

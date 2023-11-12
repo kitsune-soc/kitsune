@@ -1,9 +1,8 @@
 use crate::{
     consts::USER_AGENT,
-    error::{ApiError, Error, Result},
+    error::{Error, Result},
     process_attachments, process_new_object,
     service::federation_filter::FederationFilterService,
-    util::timestamp_to_uuid,
     webfinger::Webfinger,
     ProcessNewObject,
 };
@@ -32,7 +31,7 @@ use kitsune_type::{
     ap::{actor::Actor, emoji::Emoji, Object},
     jsonld::RdfNode,
 };
-use kitsune_util::sanitize::CleanHtmlExt;
+use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;
 use serde::de::DeserializeOwned;
@@ -98,17 +97,24 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    async fn fetch_ap_resource<T>(&self, url: &str) -> Result<T>
+    async fn fetch_ap_resource<U, T>(&self, url: U) -> Result<T>
     where
+        U: TryInto<Url>,
+        Error: From<<U as TryInto<Url>>::Error>,
         T: DeserializeOwned + RdfNode,
     {
-        let response = self.client.get(url).await?;
+        let url = url.try_into()?;
+        if !self.federation_filter.is_url_allowed(&url)? {
+            return Err(Error::BlockedInstance);
+        }
+
+        let response = self.client.get(url.as_str()).await?;
         let Some(content_type) = response
             .headers()
             .typed_get::<ContentType>()
             .map(Mime::from)
         else {
-            return Err(ApiError::BadRequest.into());
+            return Err(Error::InvalidResponse);
         };
 
         let is_json_ld_activitystreams = || {
@@ -132,7 +138,7 @@ impl Fetcher {
         };
 
         if !is_json_ld_activitystreams() && !is_activity_json() {
-            return Err(ApiError::BadRequest.into());
+            return Err(Error::InvalidResponse.into());
         }
 
         Ok(response.jsonld().await?)
@@ -173,13 +179,9 @@ impl Fetcher {
         }
 
         let mut url = Url::parse(opts.url)?;
-        if !self.federation_filter.is_url_allowed(&url)? {
-            return Err(ApiError::Unauthorised.into());
-        }
+        let mut actor: Actor = self.fetch_ap_resource(url).await?;
 
-        let mut actor: Actor = self.fetch_ap_resource(url.as_str()).await?;
-
-        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
+        let mut domain = url.host_str().ok_or(Error::MissingHost)?;
         let domain_buf;
         let fetch_webfinger = opts
             .acct
@@ -207,7 +209,7 @@ impl Fetcher {
         };
         if !used_webfinger && actor.id != url.as_str() {
             url = Url::parse(&actor.id)?;
-            domain = url.host_str().ok_or(ApiError::MissingHost)?;
+            domain = url.host_str().ok_or(Error::MissingHost)?;
         }
 
         actor.clean_html();
@@ -272,6 +274,7 @@ impl Fetcher {
                             ..update_changeset
                         };
                     }
+
                     if let Some(header_id) = header_id {
                         update_changeset = UpdateAccountMedia {
                             header_id: Some(header_id),
@@ -279,7 +282,7 @@ impl Fetcher {
                         };
                     }
 
-                    Ok::<_, Error>(match update_changeset {
+                    let account = match update_changeset {
                         UpdateAccountMedia {
                             avatar_id: None,
                             header_id: None,
@@ -291,7 +294,9 @@ impl Fetcher {
                                 .get_result(tx)
                                 .await?
                         }
-                    })
+                    };
+
+                    Ok::<_, Error>(account)
                 }
                 .scope_boxed()
             })
@@ -325,17 +330,13 @@ impl Fetcher {
         }
 
         let mut url = Url::parse(url)?;
-        if !self.federation_filter.is_url_allowed(&url)? {
-            return Err(ApiError::Unauthorised.into());
-        }
+        let emoji: Emoji = self.fetch_ap_resource(url.clone()).await?;
 
-        let emoji: Emoji = self.client.get(url.as_str()).await?.jsonld().await?;
-
-        let mut domain = url.host_str().ok_or(ApiError::MissingHost)?;
+        let mut domain = url.host_str().ok_or(Error::MissingHost)?;
 
         if emoji.id != url.as_str() {
             url = Url::parse(&emoji.id)?;
-            domain = url.host_str().ok_or(ApiError::MissingHost)?;
+            domain = url.host_str().ok_or(Error::MissingHost)?;
         }
 
         let content_type = emoji
@@ -343,7 +344,7 @@ impl Fetcher {
             .media_type
             .as_deref()
             .or_else(|| mime_guess::from_path(&emoji.icon.url).first_raw())
-            .ok_or(ApiError::UnsupportedMediaType)?;
+            .ok_or(Error::InvalidDocument)?;
 
         let name_pure = emoji.name.replace(':', "");
 
@@ -396,10 +397,6 @@ impl Fetcher {
             return Ok(None);
         }
 
-        if !self.federation_filter.is_url_allowed(&Url::parse(url)?)? {
-            return Err(ApiError::Unauthorised.into());
-        }
-
         if let Some(post) = self.post_cache.get(url).await? {
             return Ok(Some(post));
         }
@@ -424,8 +421,7 @@ impl Fetcher {
             return Ok(Some(post));
         }
 
-        let url = Url::parse(url)?;
-        let object: Object = self.fetch_ap_resource(url.as_str()).await?;
+        let object: Object = self.fetch_ap_resource(url).await?;
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
