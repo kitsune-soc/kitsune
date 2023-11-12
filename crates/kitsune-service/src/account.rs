@@ -55,7 +55,7 @@ pub struct GetUser<'a> {
     #[builder(default)]
     domain: Option<&'a str>,
     #[builder(default = true)]
-    use_webfinger: bool,
+    use_resolver: bool,
 }
 
 impl<'a> From<&'a str> for GetUser<'a> {
@@ -322,7 +322,7 @@ where
 
             if let Some(account) = account {
                 return Ok(Some(account));
-            } else if !get_user.use_webfinger {
+            } else if !get_user.use_resolver {
                 return Ok(None);
             }
 

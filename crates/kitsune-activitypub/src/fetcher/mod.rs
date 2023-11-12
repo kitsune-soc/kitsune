@@ -45,7 +45,7 @@ pub struct Fetcher {
     federation_filter: FederationFilter,
     #[builder(setter(into))]
     search_backend: kitsune_search::AnySearchBackend,
-    webfinger: Webfinger,
+    resolver: Webfinger,
 
     // Caches
     post_cache: ArcCache<str, Post>,

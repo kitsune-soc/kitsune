@@ -58,13 +58,13 @@ impl Fetcher {
 
         let mut domain = url.host_str().ok_or(Error::MissingHost)?;
         let domain_buf;
-        let fetch_webfinger = opts
+        let try_resolver = opts
             .acct
             .map_or(true, |acct| acct != (&actor.preferred_username, domain));
 
-        let used_webfinger = if fetch_webfinger {
+        let used_resolver = if try_resolver {
             match self
-                .webfinger
+                .resolver
                 .resolve_account(&actor.preferred_username, domain)
                 .await?
             {
@@ -82,7 +82,8 @@ impl Fetcher {
         } else {
             false
         };
-        if !used_webfinger && actor.id != url.as_str() {
+
+        if !used_resolver && actor.id != url.as_str() {
             url = Url::parse(&actor.id)?;
             domain = url.host_str().ok_or(Error::MissingHost)?;
         }
