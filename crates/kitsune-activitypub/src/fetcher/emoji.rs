@@ -16,7 +16,7 @@ use speedy_uuid::Uuid;
 use url::Url;
 
 impl Fetcher {
-    pub async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji> {
+    pub(crate) async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji> {
         let existing_emoji = self
             .db_pool
             .with_connection(|db_conn| {

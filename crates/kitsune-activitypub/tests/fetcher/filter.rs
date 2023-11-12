@@ -3,6 +3,7 @@ use hyper::{Body, Request, Response};
 use kitsune_activitypub::{error::Error, Fetcher};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -42,12 +43,12 @@ async fn federation_allow() {
             .build();
 
         assert!(matches!(
-            fetcher.fetch_object("https://example.com/fakeobject").await,
+            fetcher.fetch_post("https://example.com/fakeobject").await,
             Err(Error::BlockedInstance)
         ));
         assert!(matches!(
             fetcher
-                .fetch_object("https://other.badstuff.com/otherfake")
+                .fetch_post("https://other.badstuff.com/otherfake")
                 .await,
             Err(Error::BlockedInstance)
         ));
@@ -61,7 +62,7 @@ async fn federation_allow() {
 
         assert!(matches!(
             fetcher
-                .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+                .fetch_post("https://corteximplant.com/@0x0/109501674056556919")
                 .await,
             Ok(..)
         ));
@@ -98,12 +99,12 @@ async fn federation_deny() {
             .build();
 
         assert!(matches!(
-            fetcher.fetch_object("https://example.com/fakeobject").await,
+            fetcher.fetch_post("https://example.com/fakeobject").await,
             Err(Error::BlockedInstance)
         ));
         assert!(matches!(
             fetcher
-                .fetch_object("https://other.badstuff.com/otherfake")
+                .fetch_post("https://other.badstuff.com/otherfake")
                 .await,
             Err(Error::BlockedInstance)
         ));

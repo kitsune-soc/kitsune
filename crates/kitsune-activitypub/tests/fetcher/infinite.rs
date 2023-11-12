@@ -4,6 +4,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_activitypub::{fetcher::MAX_FETCH_DEPTH, Fetcher};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -109,7 +110,7 @@ async fn fetch_infinitely_long_reply_chain() {
                 .build();
 
             assert!(fetcher
-                .fetch_object("https://example.com/notes/0")
+                .fetch_post("https://example.com/notes/0")
                 .await
                 .is_ok());
         })

@@ -4,6 +4,7 @@ use hyper::Request;
 use kitsune_activitypub::{error::Error, Fetcher};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -43,7 +44,7 @@ async fn check_ap_id_authority() {
         // The mock HTTP client ensures that the fetcher doesn't access the correct server
         // so this should return error
         let _ = fetcher
-            .fetch_actor("https://example.com/users/0x0".into())
+            .fetch_account("https://example.com/users/0x0".into())
             .await
             .unwrap_err();
 
@@ -63,7 +64,7 @@ async fn check_ap_id_authority() {
             .build();
 
         let _ = fetcher
-            .fetch_object("https://example.com/@0x0/109501674056556919")
+            .fetch_post("https://example.com/@0x0/109501674056556919")
             .await
             .unwrap_err();
     })
@@ -99,7 +100,7 @@ async fn check_ap_content_type() {
 
         assert!(matches!(
             fetcher
-                .fetch_object("https://corteximplant.com/users/0x0")
+                .fetch_post("https://corteximplant.com/users/0x0")
                 .await,
             Err(Error::InvalidResponse)
         ));

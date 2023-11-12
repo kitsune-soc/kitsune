@@ -67,7 +67,7 @@ impl Fetcher {
 
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_object(&self, url: &str) -> Result<Post> {
+    pub(crate) async fn fetch_object(&self, url: &str) -> Result<Post> {
         self.fetch_object_inner(url, 0)
             .await
             .transpose()

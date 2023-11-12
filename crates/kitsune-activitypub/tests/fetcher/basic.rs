@@ -4,6 +4,7 @@ use diesel_async::RunQueryDsl;
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_core::traits::Fetcher as _;
 use kitsune_db::{
     model::{account::Account, media_attachment::MediaAttachment},
     schema::{accounts, media_attachments},
@@ -41,7 +42,7 @@ async fn fetch_actor() {
             .build();
 
         let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0".into())
+            .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
             .expect("Fetch actor");
 
@@ -130,7 +131,7 @@ async fn fetch_note() {
             .build();
 
         let note = fetcher
-            .fetch_object("https://corteximplant.com/@0x0/109501674056556919")
+            .fetch_post("https://corteximplant.com/@0x0/109501674056556919")
             .await
             .expect("Fetch note");
         assert_eq!(

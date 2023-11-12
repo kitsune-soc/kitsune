@@ -26,7 +26,7 @@ impl Fetcher {
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub async fn fetch_actor(&self, opts: AccountFetchOptions<'_>) -> Result<Account> {
+    pub(crate) async fn fetch_actor(&self, opts: AccountFetchOptions<'_>) -> Result<Account> {
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
             if let Some(user) = self.user_cache.get(opts.url).await? {

@@ -3,6 +3,7 @@ use hyper::{Body, Request, Response};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -61,7 +62,7 @@ async fn fetch_actor_with_custom_acct() {
             .build();
 
         let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0".into())
+            .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
             .expect("Fetch actor");
 
@@ -138,7 +139,7 @@ async fn ignore_fake_webfinger_acct() {
             .build();
 
         let user = fetcher
-            .fetch_actor("https://corteximplant.com/users/0x0".into())
+            .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
             .expect("Fetch actor");
 
