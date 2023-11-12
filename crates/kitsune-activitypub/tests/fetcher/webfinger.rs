@@ -1,8 +1,23 @@
+use super::handle::handle;
+use hyper::{Body, Request, Response};
+use kitsune_activitypub::Fetcher;
+use kitsune_cache::NoopCache;
+use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_federation_filter::FederationFilter;
+use kitsune_http_client::Client;
+use kitsune_search::NoopSearchService;
+use kitsune_test::database_test;
+use kitsune_type::webfinger::{Link, Resource};
+use kitsune_webfinger::Webfinger;
+use pretty_assertions::assert_eq;
+use std::{convert::Infallible, sync::Arc};
+use tower::service_fn;
+
 #[tokio::test]
 #[serial_test::serial]
 async fn fetch_actor_with_custom_acct() {
     database_test(|db_pool| async move {
-        let mut jrd_base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
+        let mut jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json").to_owned();
         let jrd_body = simd_json::to_string(&Resource {
             subject: "acct:0x0@joinkitsune.org".into(),
             ..simd_json::from_slice(&mut jrd_base).unwrap()
@@ -34,7 +49,7 @@ async fn fetch_actor_with_custom_acct() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
@@ -111,7 +126,7 @@ async fn ignore_fake_webfinger_acct() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),

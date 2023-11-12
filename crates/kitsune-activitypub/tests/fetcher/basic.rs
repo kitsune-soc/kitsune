@@ -1,44 +1,22 @@
-use self::handle::handle;
-use super::MAX_FETCH_DEPTH;
-use crate::{
-    error::{ApiError, Error},
-    service::federation_filter::FederationFilterService,
-    webfinger::Webfinger,
-    Fetcher,
-};
+use super::handle::handle;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use http::{header::CONTENT_TYPE, uri::PathAndQuery};
-use hyper::{Body, Request, Response, StatusCode, Uri};
-use iso8601_timestamp::Timestamp;
+use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_db::{
     model::{account::Account, media_attachment::MediaAttachment},
     schema::{accounts, media_attachments},
 };
+use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::{build_ap_response, database_test};
-use kitsune_type::{
-    ap::{
-        actor::{Actor, ActorType, PublicKey},
-        ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
-    },
-    webfinger::{Link, Resource},
-};
+use kitsune_test::database_test;
+use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
 use scoped_futures::ScopedFutureExt;
-use std::{
-    convert::Infallible,
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc,
-    },
-};
+use std::sync::Arc;
 use tower::service_fn;
-
-mod handle;
 
 #[tokio::test]
 #[serial_test::serial]
@@ -51,7 +29,7 @@ async fn fetch_actor() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
@@ -89,7 +67,7 @@ async fn fetch_emoji() {
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
@@ -140,7 +118,7 @@ async fn fetch_note() {
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),

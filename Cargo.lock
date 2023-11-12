@@ -2843,6 +2843,7 @@ dependencies = [
  "kitsune-test",
  "kitsune-type",
  "kitsune-util",
+ "kitsune-webfinger",
  "mime",
  "mime_guess",
  "pretty_assertions",

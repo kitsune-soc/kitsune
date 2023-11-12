@@ -53,7 +53,7 @@ impl Fetcher {
         }
 
         let mut url = Url::parse(opts.url)?;
-        let mut actor: Actor = self.fetch_ap_resource(url).await?;
+        let mut actor: Actor = self.fetch_ap_resource(url.clone()).await?;
 
         let mut domain = url.host_str().ok_or(Error::MissingHost)?;
         let domain_buf;

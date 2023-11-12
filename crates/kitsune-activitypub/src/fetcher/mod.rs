@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    webfinger::Webfinger,
-};
+use crate::error::{Error, Result};
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
@@ -14,10 +11,13 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
+use kitsune_webfinger::Webfinger;
 use mime::Mime;
 use serde::de::DeserializeOwned;
 use typed_builder::TypedBuilder;
 use url::Url;
+
+pub use self::object::MAX_FETCH_DEPTH;
 
 mod actor;
 mod emoji;
@@ -118,7 +118,7 @@ impl Fetcher {
         };
 
         if !is_json_ld_activitystreams() && !is_activity_json() {
-            return Err(Error::InvalidResponse.into());
+            return Err(Error::InvalidResponse);
         }
 
         Ok(response.jsonld().await?)

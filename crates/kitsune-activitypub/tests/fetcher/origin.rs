@@ -1,3 +1,17 @@
+use super::handle::handle;
+use http::{header::CONTENT_TYPE, uri::PathAndQuery};
+use hyper::Request;
+use kitsune_activitypub::{error::Error, Fetcher};
+use kitsune_cache::NoopCache;
+use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_federation_filter::FederationFilter;
+use kitsune_http_client::Client;
+use kitsune_search::NoopSearchService;
+use kitsune_test::database_test;
+use kitsune_webfinger::Webfinger;
+use std::{convert::Infallible, sync::Arc};
+use tower::service_fn;
+
 #[tokio::test]
 #[serial_test::serial]
 async fn check_ap_id_authority() {
@@ -6,7 +20,7 @@ async fn check_ap_id_authority() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
@@ -72,7 +86,7 @@ async fn check_ap_content_type() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
@@ -87,7 +101,7 @@ async fn check_ap_content_type() {
             fetcher
                 .fetch_object("https://corteximplant.com/users/0x0")
                 .await,
-            Err(Error::Api(ApiError::BadRequest))
+            Err(Error::InvalidResponse)
         ));
     })
     .await;

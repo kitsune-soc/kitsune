@@ -1,3 +1,16 @@
+use super::handle::handle;
+use hyper::{Body, Request, Response};
+use kitsune_activitypub::{error::Error, Fetcher};
+use kitsune_cache::NoopCache;
+use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_federation_filter::FederationFilter;
+use kitsune_http_client::Client;
+use kitsune_search::NoopSearchService;
+use kitsune_test::database_test;
+use kitsune_webfinger::Webfinger;
+use std::{convert::Infallible, sync::Arc};
+use tower::service_fn;
+
 #[tokio::test]
 #[serial_test::serial]
 async fn federation_allow() {
@@ -6,7 +19,7 @@ async fn federation_allow() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Allow {
+                FederationFilter::new(&FederationFilterConfiguration::Allow {
                     domains: vec!["corteximplant.com".into()],
                 })
                 .unwrap(),
@@ -30,13 +43,13 @@ async fn federation_allow() {
 
         assert!(matches!(
             fetcher.fetch_object("https://example.com/fakeobject").await,
-            Err(Error::Api(ApiError::Unauthorised))
+            Err(Error::BlockedInstance)
         ));
         assert!(matches!(
             fetcher
                 .fetch_object("https://other.badstuff.com/otherfake")
                 .await,
-            Err(Error::Api(ApiError::Unauthorised))
+            Err(Error::BlockedInstance)
         ));
 
         let client = Client::builder().service(service_fn(handle));
@@ -73,7 +86,7 @@ async fn federation_deny() {
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: vec!["example.com".into(), "*.badstuff.com".into()],
                 })
                 .unwrap(),
@@ -86,13 +99,13 @@ async fn federation_deny() {
 
         assert!(matches!(
             fetcher.fetch_object("https://example.com/fakeobject").await,
-            Err(Error::Api(ApiError::Unauthorised))
+            Err(Error::BlockedInstance)
         ));
         assert!(matches!(
             fetcher
                 .fetch_object("https://other.badstuff.com/otherfake")
                 .await,
-            Err(Error::Api(ApiError::Unauthorised))
+            Err(Error::BlockedInstance)
         ));
     })
     .await;

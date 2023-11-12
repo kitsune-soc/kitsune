@@ -59,10 +59,13 @@ pub enum Error {
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
+
+    #[error(transparent)]
+    Webfinger(#[from] kitsune_webfinger::error::Error),
 }
 
 impl From<Infallible> for Error {
-    fn from(value: Infallible) -> Self {
+    fn from(_: Infallible) -> Self {
         unreachable!();
     }
 }

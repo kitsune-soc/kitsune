@@ -1,5 +1,6 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
 
 #[macro_use]
 extern crate tracing;
@@ -194,7 +195,7 @@ async fn preprocess_object(
         CowBox::borrowed(author)
     } else {
         if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
-            return Err(Error::InvalidDocument.into());
+            return Err(Error::InvalidDocument);
         }
 
         CowBox::boxed(fetcher.fetch_actor(attributed_to.into()).await?)

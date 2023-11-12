@@ -1,3 +1,27 @@
+use super::handle::handle;
+use hyper::{Request, Uri};
+use iso8601_timestamp::Timestamp;
+use kitsune_activitypub::{fetcher::MAX_FETCH_DEPTH, Fetcher};
+use kitsune_cache::NoopCache;
+use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_federation_filter::FederationFilter;
+use kitsune_http_client::Client;
+use kitsune_search::NoopSearchService;
+use kitsune_test::{build_ap_response, database_test};
+use kitsune_type::ap::{
+    actor::{Actor, ActorType, PublicKey},
+    ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+};
+use kitsune_webfinger::Webfinger;
+use std::{
+    convert::Infallible,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
+};
+use tower::service_fn;
+
 #[tokio::test]
 #[serial_test::serial]
 async fn fetch_infinitely_long_reply_chain() {
@@ -73,7 +97,7 @@ async fn fetch_infinitely_long_reply_chain() {
                 .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
-                    FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                    FederationFilter::new(&FederationFilterConfiguration::Deny {
                         domains: Vec::new(),
                     })
                     .unwrap(),
