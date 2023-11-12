@@ -1,9 +1,10 @@
-use crate::{activitypub::Fetcher, consts::API_MAX_LIMIT, error::Result};
+use crate::{activitypub::Fetcher, error::Result};
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::FuturesUnordered, FutureExt, TryFutureExt, TryStreamExt};
 use garde::Validate;
+use kitsune_consts::API_MAX_LIMIT;
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},

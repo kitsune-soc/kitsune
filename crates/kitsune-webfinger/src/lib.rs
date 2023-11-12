@@ -1,11 +1,12 @@
 #[macro_use]
 extern crate tracing;
 
-use crate::{consts::USER_AGENT, error::Result};
+use crate::error::Result;
 use autometrics::autometrics;
 use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
+use kitsune_consts::USER_AGENT;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
@@ -19,7 +20,7 @@ const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
 /// Intended to allow up to one canonicalisation on the originating server, one cross-origin
 /// canonicalisation and one more canonicalisation on the destination server,
 /// e.g. `acct:a@example.com -> acct:A@example.com -> acct:A@example.net -> a@example.net`
-const MAX_JRD_REDIRECTS: u32 = 3;
+pub const MAX_JRD_REDIRECTS: u32 = 3;
 
 #[derive(Clone)]
 pub struct Webfinger {

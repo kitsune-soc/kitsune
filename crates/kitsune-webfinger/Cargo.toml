@@ -9,6 +9,7 @@ deadpool-redis = "0.13.0"
 futures-util = "0.3.29"
 http = "0.2.10"
 kitsune-cache = { path = "../kitsune-cache" }
+kitsune-consts = { path = "../kitsune-consts" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }

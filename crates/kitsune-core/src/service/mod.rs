@@ -1,4 +1,4 @@
-use crate::consts::API_MAX_LIMIT;
+use kitsune_consts::API_MAX_LIMIT;
 
 pub mod account;
 pub mod attachment;

@@ -283,6 +283,7 @@ impl Client {
     {
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
+
         let (name, value) = HttpSigner::builder()
             .include_creation_timestamp(true)
             .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds

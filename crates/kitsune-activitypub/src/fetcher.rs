@@ -1,5 +1,4 @@
 use crate::{
-    consts::USER_AGENT,
     error::{Error, Result},
     process_attachments, process_new_object,
     service::federation_filter::FederationFilterService,
@@ -14,6 +13,7 @@ use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use iso8601_timestamp::Timestamp;
 use kitsune_cache::{ArcCache, CacheBackend};
+use kitsune_consts::USER_AGENT;
 use kitsune_db::{
     model::{
         account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},

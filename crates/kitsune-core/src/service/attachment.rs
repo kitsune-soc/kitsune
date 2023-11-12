@@ -1,8 +1,5 @@
 use super::url::UrlService;
-use crate::{
-    consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT},
-    error::{ApiError, Error, Result, UploadError},
-};
+use crate::error::{ApiError, Error, Result, UploadError};
 use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
@@ -10,6 +7,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::{pin_mut, stream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
+use kitsune_consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,

@@ -2832,6 +2832,7 @@ dependencies = [
  "iso8601-timestamp",
  "kitsune-cache",
  "kitsune-config",
+ "kitsune-consts",
  "kitsune-db",
  "kitsune-embed",
  "kitsune-http-client",
@@ -2932,6 +2933,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-consts"
+version = "0.0.1-pre.4"
+dependencies = [
+ "const_format",
+ "vergen",
+]
+
+[[package]]
 name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
@@ -2941,7 +2950,6 @@ dependencies = [
  "athena",
  "base64-simd",
  "bytes",
- "const_format",
  "deadpool-redis",
  "derive_builder",
  "diesel",
@@ -2959,6 +2967,7 @@ dependencies = [
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
+ "kitsune-consts",
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
@@ -2995,7 +3004,6 @@ dependencies = [
  "tracing",
  "typed-builder",
  "url",
- "vergen",
  "zxcvbn",
 ]
 
@@ -3277,6 +3285,7 @@ dependencies = [
  "http",
  "hyper",
  "kitsune-cache",
+ "kitsune-consts",
  "kitsune-http-client",
  "kitsune-type",
  "kitsune-util",

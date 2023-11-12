@@ -20,6 +20,7 @@ members = [
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
     "crates/kitsune-config",
+    "crates/kitsune-consts",
     "crates/kitsune-core",
     "crates/kitsune-db",
     "crates/kitsune-email",

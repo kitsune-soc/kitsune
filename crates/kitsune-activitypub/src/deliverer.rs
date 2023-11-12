@@ -1,11 +1,11 @@
 use crate::{
-    consts::USER_AGENT,
     error::{Error, Result},
     service::federation_filter::FederationFilterService,
 };
 use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
+use kitsune_consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_http_client::Client;
 use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};

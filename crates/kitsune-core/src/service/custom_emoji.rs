@@ -1,8 +1,4 @@
-use crate::{
-    consts::MAX_EMOJI_SHORTCODE_LENGTH,
-    error::{BoxError, Error, Result},
-};
-
+use crate::error::{BoxError, Error, Result};
 use bytes::Bytes;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
@@ -12,6 +8,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
+use kitsune_consts::MAX_EMOJI_SHORTCODE_LENGTH;
 use kitsune_db::{
     model::{custom_emoji::CustomEmoji, media_attachment::MediaAttachment},
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
