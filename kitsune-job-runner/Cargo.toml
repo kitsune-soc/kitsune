@@ -5,7 +5,7 @@ version.workspace = true
 
 [dependencies]
 athena = { path = "../lib/athena" }
-clap = { version = "4.4.7", features = ["derive"] }
+clap = { version = "4.4.8", features = ["derive"] }
 color-eyre = "0.6.2"
 deadpool-redis = "0.13.0"
 kitsune-config = { path = "../crates/kitsune-config" }
