@@ -1,8 +1,7 @@
-use std::convert::Infallible;
-
 use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
 use kitsune_http_signatures::ring;
 use rsa::pkcs8::der;
+use std::convert::Infallible;
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

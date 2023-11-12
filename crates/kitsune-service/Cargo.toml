@@ -1,0 +1,53 @@
+[package]
+name = "kitsune-service"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+ahash = "0.8.6"
+argon2 = "0.5.2"
+async-stream = "0.3.5"
+athena = { path = "../../lib/athena" }
+bytes = "1.5.0"
+derive_builder = "0.12.0"
+diesel = "2.1.3"
+diesel-async = "0.4.1"
+futures-util = "0.3.29"
+garde = { version = "0.16.2", default-features = false, features = [
+    "derive",
+    "email",
+    "email-idna",
+    "regex",
+    "serde",
+] }
+http = "0.2.10"
+img-parts = "0.3.0"
+iso8601-timestamp = "0.2.12"
+kitsune-blocking = { path = "../kitsune-blocking" }
+kitsune-cache = { path = "../kitsune-cache" }
+kitsune-captcha = { path = "../kitsune-captcha" }
+kitsune-consts = { path = "../kitsune-consts" }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-email = { path = "../kitsune-email" }
+kitsune-embed = { path = "../kitsune-embed" }
+kitsune-http-client = { path = "../kitsune-http-client" }
+kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-messaging = { path = "../kitsune-messaging" }
+kitsune-search = { path = "../kitsune-search" }
+kitsune-storage = { path = "../kitsune-storage" }
+kitsune-util = { path = "../kitsune-util" }
+mime = "0.3.17"
+password-hash = "0.5.0"
+pkcs8 = "0.10.2"
+rsa = "0.9.3"
+scoped-futures = "0.1.3"
+simd-json = "0.13.4"
+smol_str = "0.2.0"
+speedy-uuid = { path = "../../lib/speedy-uuid" }
+thiserror = "1.0.50"
+typed-builder = "0.18.0"
+url = "2.4.1"
+zxcvbn = { version = "2.2.2", default-features = false }
+
+[features]
+meilisearch = ["kitsune-search/meilisearch"]
