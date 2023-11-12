@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tracing;
+
 use kitsune_consts::API_MAX_LIMIT;
 
 pub mod account;

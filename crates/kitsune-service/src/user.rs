@@ -285,8 +285,7 @@ impl UserService {
 
 #[cfg(test)]
 mod test {
-    use super::Register;
-    use crate::service::user::RegisterContext;
+    use super::{Register, RegisterContext};
     use garde::Validate;
 
     #[test]

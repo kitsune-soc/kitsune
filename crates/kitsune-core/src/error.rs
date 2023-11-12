@@ -2,7 +2,7 @@ use std::error::Error as StdError;
 use thiserror::Error;
 
 pub type BoxError = Box<dyn StdError + Send + Sync>;
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+//pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
 pub enum ApiError {

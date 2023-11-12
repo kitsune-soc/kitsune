@@ -241,8 +241,11 @@ impl AttachmentService {
 
 #[cfg(test)]
 mod test {
-    use std::convert::Infallible;
-
+    use crate::{
+        attachment::{AttachmentService, Upload},
+        error::Error,
+        url::UrlService,
+    };
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
@@ -265,16 +268,9 @@ mod test {
     use kitsune_test::database_test;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
+    use std::convert::Infallible;
     use tempfile::TempDir;
     use tower::service_fn;
-
-    use crate::{
-        error::Error,
-        service::{
-            attachment::{AttachmentService, Upload},
-            url::UrlService,
-        },
-    };
 
     #[tokio::test]
     #[serial_test::serial]
