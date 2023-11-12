@@ -7,7 +7,7 @@ use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_consts::USER_AGENT;
-use kitsune_core::traits::{AccountResource, Resolver};
+use kitsune_core::traits::{resolver::AccountResource, Resolver};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;

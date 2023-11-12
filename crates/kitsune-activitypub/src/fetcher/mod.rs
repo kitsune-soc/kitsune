@@ -3,7 +3,7 @@ use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
 use kitsune_consts::USER_AGENT;
-use kitsune_core::traits::{AccountFetchOptions, Fetcher as FetcherTrait};
+use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait};
 use kitsune_db::{
     model::{account::Account, custom_emoji::CustomEmoji, post::Post},
     PgPool,

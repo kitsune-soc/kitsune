@@ -7,7 +7,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
-use kitsune_core::traits::{AccountFetchOptions, Resolver};
+use kitsune_core::traits::{fetcher::AccountFetchOptions, Resolver};
 use kitsune_db::{
     model::account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
     schema::accounts,
