@@ -3,7 +3,7 @@ use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
 use kitsune_consts::USER_AGENT;
-use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait};
+use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait, Resolver};
 use kitsune_db::{
     model::{account::Account, custom_emoji::CustomEmoji, post::Post},
     PgPool,
@@ -12,7 +12,6 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
-use kitsune_webfinger::Webfinger;
 use mime::Mime;
 use serde::de::DeserializeOwned;
 use typed_builder::TypedBuilder;
@@ -25,7 +24,10 @@ mod emoji;
 mod object;
 
 #[derive(Clone, TypedBuilder)]
-pub struct Fetcher {
+pub struct Fetcher<R>
+where
+    R: Resolver,
+{
     #[builder(default =
         Client::builder()
             .default_header(
@@ -45,14 +47,17 @@ pub struct Fetcher {
     federation_filter: FederationFilter,
     #[builder(setter(into))]
     search_backend: kitsune_search::AnySearchBackend,
-    resolver: Webfinger,
+    resolver: R,
 
     // Caches
     post_cache: ArcCache<str, Post>,
     user_cache: ArcCache<str, Account>,
 }
 
-impl Fetcher {
+impl<R> Fetcher<R>
+where
+    R: Resolver,
+{
     async fn fetch_ap_resource<U, T>(&self, url: U) -> Result<T>
     where
         U: TryInto<Url>,
@@ -101,7 +106,10 @@ impl Fetcher {
     }
 }
 
-impl FetcherTrait for Fetcher {
+impl<R> FetcherTrait for Fetcher<R>
+where
+    R: Resolver,
+{
     type Error = Error;
 
     async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Account, Self::Error> {

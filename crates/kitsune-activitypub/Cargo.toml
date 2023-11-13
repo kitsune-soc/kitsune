@@ -25,7 +25,6 @@ kitsune-language = { path = "../kitsune-language" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
-kitsune-webfinger = { path = "../kitsune-webfinger" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [
@@ -49,6 +48,7 @@ sha2 = { version = "0.10.8", features = ["asm"] }
 hyper = "0.14.27"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-test = { path = "../kitsune-test" }
+kitsune-webfinger = { path = "../kitsune-webfinger" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tokio = { version = "1.34.0", features = ["macros"] }

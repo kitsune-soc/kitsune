@@ -5,6 +5,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
+use kitsune_core::traits::Resolver;
 use kitsune_db::{model::post::Post, schema::posts};
 use kitsune_type::ap::Object;
 use scoped_futures::ScopedFutureExt;
@@ -13,7 +14,10 @@ use scoped_futures::ScopedFutureExt;
 // Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
 pub const MAX_FETCH_DEPTH: u32 = 30;
 
-impl Fetcher {
+impl<R> Fetcher<R>
+where
+    R: Resolver,
+{
     #[async_recursion]
     pub(crate) async fn fetch_object_inner(
         &self,

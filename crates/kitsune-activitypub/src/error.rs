@@ -1,4 +1,5 @@
 use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
+use kitsune_core::error::BoxError;
 use kitsune_http_signatures::ring;
 use rsa::pkcs8::der;
 use std::convert::Infallible;
@@ -51,6 +52,9 @@ pub enum Error {
     MissingHost,
 
     #[error(transparent)]
+    Resolver(BoxError),
+
+    #[error(transparent)]
     Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
@@ -58,9 +62,6 @@ pub enum Error {
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
-
-    #[error(transparent)]
-    Webfinger(#[from] kitsune_webfinger::error::Error),
 }
 
 impl From<Infallible> for Error {

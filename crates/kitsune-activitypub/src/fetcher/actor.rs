@@ -18,7 +18,10 @@ use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
 use scoped_futures::ScopedFutureExt;
 use url::Url;
 
-impl Fetcher {
+impl<R> Fetcher<R>
+where
+    R: Resolver,
+{
     /// Fetch an ActivityPub actor
     ///
     /// # Panics
@@ -66,7 +69,8 @@ impl Fetcher {
             match self
                 .resolver
                 .resolve_account(&actor.preferred_username, domain)
-                .await?
+                .await
+                .map_err(|err| Error::Resolver(err.into()))?
             {
                 Some(resource) if resource.uri == actor.id => {
                     actor.preferred_username = resource.username;

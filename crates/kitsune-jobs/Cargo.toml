@@ -3,21 +3,19 @@ name = "kitsune-jobs"
 edition.workspace = true
 version.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-athena = { version = "0.0.1-pre.4", path = "../../lib/athena" }
+athena = { path = "../../lib/athena" }
 diesel = "2.1.3"
 diesel-async = "0.4.1"
 eyre = "0.6.8"
 futures-util = "0.3.29"
 iso8601-timestamp = "0.2.12"
-kitsune-db = { version = "0.0.1-pre.4", path = "../kitsune-db" }
-kitsune-type = { version = "0.0.1-pre.4", path = "../kitsune-type" }
-kitsune-util = { version = "0.0.1-pre.4", path = "../kitsune-util" }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-type = { path = "../kitsune-type" }
+kitsune-util = { path = "../kitsune-util" }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.192", features = ["derive"] }
-speedy-uuid = { version = "0.0.1-pre.4", path = "../../lib/speedy-uuid" }
+speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.50"
 tracing = "0.1.40"
 typed-builder = "0.18.0"

@@ -11,6 +11,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{future::try_join_all, FutureExt, TryFutureExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::traits::Resolver;
 use kitsune_db::{
     model::{
         account::Account,
@@ -39,7 +40,7 @@ pub mod error;
 pub mod fetcher;
 pub mod inbox_resolver;
 
-pub use self::{deliverer::Deliverer, fetcher::Fetcher};
+pub use self::{deliverer::Deliverer, fetcher::Fetcher, inbox_resolver::InboxResolver};
 
 async fn handle_mentions(
     db_conn: &mut AsyncPgConnection,
@@ -72,12 +73,15 @@ async fn handle_mentions(
     Ok(())
 }
 
-async fn handle_custom_emojis(
+async fn handle_custom_emojis<R>(
     db_conn: &mut AsyncPgConnection,
     post_id: Uuid,
-    fetcher: &Fetcher,
+    fetcher: &Fetcher<R>,
     tags: &[Tag],
-) -> Result<()> {
+) -> Result<()>
+where
+    R: Resolver,
+{
     let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
 
     let emoji_count = emoji_iter.clone().count();
@@ -154,7 +158,10 @@ pub async fn process_attachments(
 }
 
 #[derive(TypedBuilder)]
-pub struct ProcessNewObject<'a> {
+pub struct ProcessNewObject<'a, R>
+where
+    R: Resolver,
+{
     #[builder(default, setter(into, strip_option))]
     author: Option<&'a Account>,
     #[builder(default = 0)]
@@ -162,12 +169,15 @@ pub struct ProcessNewObject<'a> {
     db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
-    fetcher: &'a Fetcher,
+    fetcher: &'a Fetcher<R>,
     search_backend: &'a AnySearchBackend,
 }
 
 #[derive(TypedBuilder)]
-struct PreprocessedObject<'a> {
+struct PreprocessedObject<'a, R>
+where
+    R: Resolver,
+{
     user: CowBox<'a, Account>,
     visibility: Visibility,
     in_reply_to_id: Option<Uuid>,
@@ -175,12 +185,12 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    fetcher: &'a Fetcher,
+    fetcher: &'a Fetcher<R>,
     search_backend: &'a AnySearchBackend,
 }
 
 #[allow(clippy::missing_panics_doc)]
-async fn preprocess_object(
+async fn preprocess_object<R>(
     ProcessNewObject {
         author,
         call_depth,
@@ -189,8 +199,11 @@ async fn preprocess_object(
         mut object,
         fetcher,
         search_backend,
-    }: ProcessNewObject<'_>,
-) -> Result<PreprocessedObject<'_>> {
+    }: ProcessNewObject<'_, R>,
+) -> Result<PreprocessedObject<'_, R>>
+where
+    R: Resolver,
+{
     let attributed_to = object.attributed_to().ok_or(Error::InvalidDocument)?;
     let user = if let Some(author) = author {
         CowBox::borrowed(author)
@@ -253,7 +266,10 @@ async fn preprocess_object(
 }
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
+pub async fn process_new_object<R>(process_data: ProcessNewObject<'_, R>) -> Result<Post>
+where
+    R: Resolver,
+{
     let PreprocessedObject {
         user,
         visibility,
@@ -327,7 +343,10 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
 }
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
+pub async fn update_object<R>(process_data: ProcessNewObject<'_, R>) -> Result<Post>
+where
+    R: Resolver,
+{
     let PreprocessedObject {
         user,
         visibility,
