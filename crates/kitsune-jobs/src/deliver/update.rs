@@ -1,7 +1,5 @@
 use crate::{
-    job::{JobRunnerContext, MAX_CONCURRENT_REQUESTS},
-    mapping::IntoActivity,
-    resolve::InboxResolver,
+    mapping::IntoActivity, resolve::InboxResolver, JobRunnerContext, MAX_CONCURRENT_REQUESTS,
 };
 use athena::Runnable;
 use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
@@ -33,11 +31,10 @@ impl Runnable for DeliverUpdate {
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let inbox_resolver = InboxResolver::new(ctx.state.db_pool.clone());
+        let inbox_resolver = InboxResolver::new(ctx.db_pool.clone());
         let (activity, account, user, inbox_stream) = match self.entity {
             UpdateEntity::Account => {
                 let account_user_data = ctx
-                    .state
                     .db_pool
                     .with_connection(|db_conn| {
                         async move {
@@ -67,7 +64,6 @@ impl Runnable for DeliverUpdate {
             }
             UpdateEntity::Status => {
                 let post_account_user_data = ctx
-                    .state
                     .db_pool
                     .with_connection(|db_conn| {
                         async move {

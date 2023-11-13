@@ -28,6 +28,7 @@ members = [
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
     "crates/kitsune-http-signatures",
+    "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-messaging",
     "crates/kitsune-observability",

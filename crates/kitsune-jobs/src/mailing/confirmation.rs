@@ -1,4 +1,4 @@
-use crate::job::JobRunnerContext;
+use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;

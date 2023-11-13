@@ -1,4 +1,4 @@
-use crate::{job::JobRunnerContext, mapping::IntoActivity};
+use crate::{mapping::IntoActivity, JobRunnerContext};
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -23,7 +23,6 @@ impl Runnable for DeliverFavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let (favourite, ((account, user), inbox_url)) = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 async move {

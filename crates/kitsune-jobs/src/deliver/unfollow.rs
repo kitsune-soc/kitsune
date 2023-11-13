@@ -1,4 +1,4 @@
-use crate::{job::JobRunnerContext, mapping::IntoActivity};
+use crate::{mapping::IntoActivity, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -12,18 +12,16 @@ use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct DeliverFollow {
+pub struct DeliverUnfollow {
     pub follow_id: Uuid,
 }
 
-impl Runnable for DeliverFollow {
+impl Runnable for DeliverUnfollow {
     type Context = JobRunnerContext;
     type Error = eyre::Report;
 
-    #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let follow = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 async move {
@@ -41,33 +39,43 @@ impl Runnable for DeliverFollow {
             return Ok(());
         };
 
-        let ((follower, follower_user), followed_inbox) = ctx
-            .state
+        let ((follower, follower_user), followed_account_inbox_url, _delete_result) = ctx
             .db_pool
             .with_connection(|db_conn| {
-                async move {
+                async {
                     let follower_info_fut = accounts::table
                         .find(follow.follower_id)
                         .inner_join(users::table)
                         .select(<(Account, User)>::as_select())
                         .get_result::<(Account, User)>(db_conn);
 
-                    let followed_inbox_fut = accounts::table
+                    let followed_account_inbox_url_fut = accounts::table
                         .find(follow.account_id)
                         .select(accounts::inbox_url)
                         .get_result::<Option<String>>(db_conn);
 
-                    try_join!(follower_info_fut, followed_inbox_fut)
+                    let delete_fut = diesel::delete(&follow).execute(db_conn);
+
+                    try_join!(
+                        follower_info_fut,
+                        followed_account_inbox_url_fut,
+                        delete_fut
+                    )
                 }
                 .scoped()
             })
             .await?;
 
-        if let Some(followed_inbox) = followed_inbox {
-            let follow_activity = follow.into_activity(&ctx.state).await?;
+        if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
+            let follow_activity = follow.into_negate_activity(&ctx.state).await?;
 
             ctx.deliverer
-                .deliver(&followed_inbox, &follower, &follower_user, &follow_activity)
+                .deliver(
+                    followed_account_inbox_url,
+                    &follower,
+                    &follower_user,
+                    &follow_activity,
+                )
                 .await?;
         }
 

@@ -1,3 +1,6 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+
 use const_format::concatcp;
 
 pub const API_MAX_LIMIT: usize = 40;

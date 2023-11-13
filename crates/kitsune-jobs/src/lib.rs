@@ -1,3 +1,10 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(forbidden_lint_groups)]
+
+#[macro_use]
+extern crate tracing;
+
 use self::{
     deliver::{
         accept::DeliverAccept, create::DeliverCreate, delete::DeliverDelete,
@@ -6,7 +13,7 @@ use self::{
     },
     mailing::confirmation::SendConfirmationMail,
 };
-use crate::{activitypub::Deliverer, error::Result, state::State};
+use crate::error::Result;
 use athena::{JobContextRepository, Runnable};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -24,13 +31,14 @@ use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 pub mod deliver;
+pub mod error;
 pub mod mailing;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
 pub struct JobRunnerContext {
-    pub deliverer: Deliverer,
-    pub state: State,
+    //pub deliverer: Deliverer,
+    pub db_pool: PgPool,
 }
 
 impl_from! {

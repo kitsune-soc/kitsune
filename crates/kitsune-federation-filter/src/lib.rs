@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
+
 use crate::error::{Error, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;

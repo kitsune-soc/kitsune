@@ -1,7 +1,4 @@
-use crate::{
-    error::Result,
-    job::{JobRunnerContext, Runnable},
-};
+use crate::{error::Result, JobRunnerContext, Runnable};
 use diesel::{
     ExpressionMethods, JoinOnDsl, NullableExpressionMethods, OptionalExtension, QueryDsl,
     SelectableHelper,
@@ -19,18 +16,17 @@ use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct DeliverReject {
+pub struct DeliverAccept {
     pub follow_id: Uuid,
 }
 
-impl Runnable for DeliverReject {
+impl Runnable for DeliverAccept {
     type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let follow = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 async move {
@@ -48,11 +44,10 @@ impl Runnable for DeliverReject {
             return Ok(());
         };
 
-        let (follower_inbox_url, (followed_account, followed_user), _delete_result) = ctx
-            .state
+        let (follower_inbox_url, (followed_account, followed_user)) = ctx
             .db_pool
             .with_connection(|db_conn| {
-                async {
+                async move {
                     let follower_inbox_url_fut = accounts::table
                         .find(follow.follower_id)
                         .select(accounts::inbox_url.assume_not_null())
@@ -64,9 +59,7 @@ impl Runnable for DeliverReject {
                         .select(<(Account, User)>::as_select())
                         .get_result::<(Account, User)>(db_conn);
 
-                    let delete_fut = diesel::delete(&follow).execute(db_conn);
-
-                    try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
+                    try_join!(follower_inbox_url_fut, followed_info_fut)
                 }
                 .scoped()
             })
@@ -79,10 +72,10 @@ impl Runnable for DeliverReject {
         // So we make an exception for this
         //
         // If someone has a better idea, please open an issue
-        let reject_activity = Activity {
+        let accept_activity = Activity {
             context: ap_context(),
-            id: format!("{}#reject", follow.url),
-            r#type: ActivityType::Reject,
+            id: format!("{}#accept", follow.url),
+            r#type: ActivityType::Accept,
             actor: StringOrObject::String(followed_account_url),
             object: ObjectField::Url(follow.url),
             published: Timestamp::now_utc(),
@@ -93,7 +86,7 @@ impl Runnable for DeliverReject {
                 &follower_inbox_url,
                 &followed_account,
                 &followed_user,
-                &reject_activity,
+                &accept_activity,
             )
             .await?;
 

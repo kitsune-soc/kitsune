@@ -1,3 +1,7 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::cast_sign_loss)]
+
 use hex_simd::{AsOut, AsciiCase};
 use std::ops::Deref;
 

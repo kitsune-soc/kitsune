@@ -1,4 +1,4 @@
-use crate::{job::JobRunnerContext, mapping::IntoActivity};
+use crate::{mapping::IntoActivity, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -23,7 +23,6 @@ impl Runnable for DeliverUnfavourite {
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let favourite = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 async move {
@@ -42,7 +41,6 @@ impl Runnable for DeliverUnfavourite {
         };
 
         let ((account, user), inbox_url) = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 async move {
@@ -72,8 +70,7 @@ impl Runnable for DeliverUnfavourite {
                 .await?;
         }
 
-        ctx.state
-            .db_pool
+        ctx.db_pool
             .with_connection(|db_conn| {
                 diesel::delete(posts_favourites::table.find(favourite_id))
                     .execute(db_conn)
