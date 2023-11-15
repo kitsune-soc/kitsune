@@ -152,6 +152,40 @@ impl Deliverer {
         Ok(())
     }
 
+    async fn favourite(&self, favourite: Favourite) -> Result<()> {
+        let ((account, user), inbox_url) = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    let account_user_fut = accounts::table
+                        .find(favourite.account_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result(db_conn);
+
+                    let inbox_url_fut = posts::table
+                        .find(favourite.post_id)
+                        .inner_join(accounts::table)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(db_conn);
+
+                    try_join!(account_user_fut, inbox_url_fut)
+                }
+                .scoped()
+            })
+            .await?;
+
+        if let Some(ref inbox_url) = inbox_url {
+            let activity = favourite.into_activity(&ctx.state).await?;
+
+            self.core
+                .deliver(inbox_url, &account, &user, &activity)
+                .await?;
+        }
+
+        Ok(())
+    }
+
     async fn follow(&self, follow: Follow) -> Result<()> {
         let ((follower, follower_user), followed_inbox) = self
             .db_pool
@@ -270,6 +304,44 @@ impl Deliverer {
 
         Ok(())
     }
+
+    async fn unfollow(&self, follow: Follow) -> Result<()> {
+        let ((follower, follower_user), followed_account_inbox_url) = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async {
+                    let follower_info_fut = accounts::table
+                        .find(follow.follower_id)
+                        .inner_join(users::table)
+                        .select(<(Account, User)>::as_select())
+                        .get_result::<(Account, User)>(db_conn);
+
+                    let followed_account_inbox_url_fut = accounts::table
+                        .find(follow.account_id)
+                        .select(accounts::inbox_url)
+                        .get_result::<Option<String>>(db_conn);
+
+                    try_join!(follower_info_fut, followed_account_inbox_url_fut)
+                }
+                .scoped()
+            })
+            .await?;
+
+        if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
+            let follow_activity = follow.into_negate_activity(&ctx.state).await?;
+
+            self.core
+                .deliver(
+                    followed_account_inbox_url,
+                    &follower,
+                    &follower_user,
+                    &follow_activity,
+                )
+                .await?;
+        }
+
+        Ok(())
+    }
 }
 
 impl DelivererTrait for Deliverer {
@@ -280,11 +352,12 @@ impl DelivererTrait for Deliverer {
             Action::AcceptFollow(follow) => self.accept_follow(follow).await,
             Action::Create(post) => self.create_or_repost(post).await,
             Action::Delete(post) => self.delete_or_unrepost(post).await,
-            Action::Favourite(_) => todo!(),
+            Action::Favourite(favourite) => self.favourite(favourite).await,
             Action::Follow(follow) => self.follow(follow).await,
             Action::RejectFollow(follow) => self.reject_follow(follow).await,
             Action::Repost(post) => self.create_or_repost(post).await,
             Action::Unfavourite(favourite) => self.unfavourite(favourite).await,
+            Action::Unfollow(follow) => self.unfollow(follow).await,
             Action::Unrepost(post) => self.delete_or_unrepost(post).await,
             Action::UpdateAccount(_) => todo!(),
             Action::UpdatePost(_) => todo!(),
