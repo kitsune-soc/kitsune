@@ -7,7 +7,7 @@ version.workspace = true
 autometrics = { version = "0.6.0", default-features = false }
 deadpool-redis = "0.13.0"
 futures-util = "0.3.29"
-http = "0.2.10"
+http = "0.2.11"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-consts = { path = "../kitsune-consts" }
 kitsune-core = { path = "../kitsune-core" }

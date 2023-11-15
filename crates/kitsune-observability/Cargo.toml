@@ -25,10 +25,10 @@ opentelemetry-otlp = { version = "0.14.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.21.0", default-features = false, features = [
+opentelemetry_sdk = { version = "0.21.1", default-features = false, features = [
     "rt-tokio",
 ] }
 tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-opentelemetry = { version = "0.22.0", default-features = false }
-tracing-subscriber = "0.3.17"
+tracing-subscriber = "0.3.18"
