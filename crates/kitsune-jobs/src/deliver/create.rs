@@ -15,7 +15,7 @@ pub struct DeliverCreate {
 }
 
 impl Runnable for DeliverCreate {
-    type Context = JobRunnerContext<impl Deliverer>;
+    type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]

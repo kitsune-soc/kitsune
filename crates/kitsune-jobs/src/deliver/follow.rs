@@ -14,7 +14,7 @@ pub struct DeliverFollow {
 }
 
 impl Runnable for DeliverFollow {
-    type Context = JobRunnerContext<impl Deliverer>;
+    type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

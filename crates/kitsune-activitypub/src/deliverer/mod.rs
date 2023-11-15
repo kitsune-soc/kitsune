@@ -7,7 +7,7 @@ use diesel::{
     SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
-use futures_util::TryStreamExt;
+use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
 use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{deliverer::Action, Deliverer as DelivererTrait};
 use kitsune_db::{
@@ -347,20 +347,23 @@ impl Deliverer {
 impl DelivererTrait for Deliverer {
     type Error = Error;
 
-    async fn deliver(&self, action: Action) -> Result<(), Self::Error> {
-        match action {
-            Action::AcceptFollow(follow) => self.accept_follow(follow).await,
-            Action::Create(post) => self.create_or_repost(post).await,
-            Action::Delete(post) => self.delete_or_unrepost(post).await,
-            Action::Favourite(favourite) => self.favourite(favourite).await,
-            Action::Follow(follow) => self.follow(follow).await,
-            Action::RejectFollow(follow) => self.reject_follow(follow).await,
-            Action::Repost(post) => self.create_or_repost(post).await,
-            Action::Unfavourite(favourite) => self.unfavourite(favourite).await,
-            Action::Unfollow(follow) => self.unfollow(follow).await,
-            Action::Unrepost(post) => self.delete_or_unrepost(post).await,
-            Action::UpdateAccount(_) => todo!(),
-            Action::UpdatePost(_) => todo!(),
+    fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>> {
+        async move {
+            match action {
+                Action::AcceptFollow(follow) => self.accept_follow(follow).await,
+                Action::Create(post) => self.create_or_repost(post).await,
+                Action::Delete(post) => self.delete_or_unrepost(post).await,
+                Action::Favourite(favourite) => self.favourite(favourite).await,
+                Action::Follow(follow) => self.follow(follow).await,
+                Action::RejectFollow(follow) => self.reject_follow(follow).await,
+                Action::Repost(post) => self.create_or_repost(post).await,
+                Action::Unfavourite(favourite) => self.unfavourite(favourite).await,
+                Action::Unfollow(follow) => self.unfollow(follow).await,
+                Action::Unrepost(post) => self.delete_or_unrepost(post).await,
+                Action::UpdateAccount(_) => todo!(),
+                Action::UpdatePost(_) => todo!(),
+            }
         }
+        .boxed()
     }
 }

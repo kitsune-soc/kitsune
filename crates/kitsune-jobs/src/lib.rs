@@ -1,4 +1,3 @@
-#![feature(impl_trait_in_assoc_type)]
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(forbidden_lint_groups)]
@@ -20,7 +19,7 @@ use derive_more::From;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
-use kitsune_core::traits::Deliverer;
+use kitsune_core::{error::BoxError, traits::Deliverer};
 use kitsune_db::{
     json::Json,
     model::job_context::{JobContext, NewJobContext},
@@ -38,11 +37,8 @@ pub mod mailing;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
-pub struct JobRunnerContext<D>
-where
-    D: Deliverer,
-{
-    pub deliverer: D,
+pub struct JobRunnerContext {
+    pub deliverer: Box<dyn Deliverer<Error = BoxError>>,
     pub db_pool: PgPool,
 }
 
@@ -61,7 +57,7 @@ pub enum Job {
 }
 
 impl Runnable for Job {
-    type Context = JobRunnerContext<impl Deliverer>;
+    type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

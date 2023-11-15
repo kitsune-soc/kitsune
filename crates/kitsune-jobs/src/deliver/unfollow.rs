@@ -14,7 +14,7 @@ pub struct DeliverUnfollow {
 }
 
 impl Runnable for DeliverUnfollow {
-    type Context = JobRunnerContext<impl Deliverer>;
+    type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

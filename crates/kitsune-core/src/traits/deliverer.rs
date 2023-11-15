@@ -1,7 +1,7 @@
 use crate::error::BoxError;
+use futures_util::{future::BoxFuture, FutureExt};
 use kitsune_db::model::{account::Account, favourite::Favourite, follower::Follow, post::Post};
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Action {
@@ -22,7 +22,7 @@ pub enum Action {
 pub trait Deliverer: Send + Sync + 'static {
     type Error: Into<BoxError>;
 
-    fn deliver(&self, action: Action) -> impl Future<Output = Result<(), Self::Error>> + Send;
+    fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>>;
 }
 
 impl<T> Deliverer for [T]
@@ -31,14 +31,17 @@ where
 {
     type Error = BoxError;
 
-    async fn deliver(&self, action: Action) -> Result<(), Self::Error> {
-        for deliverer in self {
-            deliverer
-                .deliver(action.clone())
-                .await
-                .map_err(Into::into)?;
-        }
+    fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>> {
+        async move {
+            for deliverer in self {
+                deliverer
+                    .deliver(action.clone())
+                    .await
+                    .map_err(Into::into)?;
+            }
 
-        Ok(())
+            Ok(())
+        }
+        .boxed()
     }
 }

@@ -16,7 +16,7 @@ pub struct DeliverReject {
 }
 
 impl Runnable for DeliverReject {
-    type Context = JobRunnerContext<impl Deliverer>;
+    type Context = JobRunnerContext;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
