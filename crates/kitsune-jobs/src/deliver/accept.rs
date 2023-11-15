@@ -5,6 +5,7 @@ use diesel::{
 };
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
@@ -20,8 +21,8 @@ pub struct DeliverAccept {
     pub follow_id: Uuid,
 }
 
-impl<D> Runnable for DeliverAccept {
-    type Context = JobRunnerContext<D>;
+impl Runnable for DeliverAccept {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

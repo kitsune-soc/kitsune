@@ -2,6 +2,7 @@ use crate::{mapping::IntoActivity, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     model::{account::Account, follower::Follow, user::User},
     schema::{accounts, accounts_follows, users},
@@ -16,8 +17,8 @@ pub struct DeliverFollow {
     pub follow_id: Uuid,
 }
 
-impl<D> Runnable for DeliverFollow {
-    type Context = JobRunnerContext<D>;
+impl Runnable for DeliverFollow {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

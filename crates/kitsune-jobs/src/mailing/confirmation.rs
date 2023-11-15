@@ -2,6 +2,7 @@ use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{model::user::User, schema::users};
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
@@ -12,8 +13,8 @@ pub struct SendConfirmationMail {
     pub user_id: Uuid,
 }
 
-impl<D> Runnable for SendConfirmationMail {
-    type Context = JobRunnerContext<D>;
+impl Runnable for SendConfirmationMail {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

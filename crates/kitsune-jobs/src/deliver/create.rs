@@ -5,6 +5,7 @@ use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     model::{account::Account, post::Post, user::User},
     schema::{accounts, posts, users},
@@ -18,8 +19,8 @@ pub struct DeliverCreate {
     pub post_id: Uuid,
 }
 
-impl<D> Runnable for DeliverCreate {
-    type Context = JobRunnerContext<D>;
+impl Runnable for DeliverCreate {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]

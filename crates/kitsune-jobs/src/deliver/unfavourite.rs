@@ -2,6 +2,7 @@ use crate::{mapping::IntoActivity, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, user::User},
     schema::{accounts, posts, posts_favourites, users},
@@ -16,8 +17,8 @@ pub struct DeliverUnfavourite {
     pub favourite_id: Uuid,
 }
 
-impl<D> Runnable for DeliverUnfavourite {
-    type Context = JobRunnerContext<D>;
+impl Runnable for DeliverUnfavourite {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]

@@ -1,3 +1,4 @@
+#![feature(impl_trait_in_assoc_type)]
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(forbidden_lint_groups)]
@@ -29,7 +30,6 @@ use kitsune_db::{
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use std::marker::PhantomData;
 use typed_builder::TypedBuilder;
 
 pub mod deliver;
@@ -47,7 +47,7 @@ where
 }
 
 #[derive(Debug, Deserialize, From, Serialize)]
-pub enum Job<D> {
+pub enum Job {
     DeliverAccept(DeliverAccept),
     DeliverCreate(DeliverCreate),
     DeliverDelete(DeliverDelete),
@@ -58,15 +58,10 @@ pub enum Job<D> {
     DeliverUnfollow(DeliverUnfollow),
     DeliverUpdate(DeliverUpdate),
     SendConfirmationMail(SendConfirmationMail),
-
-    #[allow(non_camel_case_types)]
-    #[from(ignore)]
-    #[serde(skip)]
-    __IgnoreThisCase_OnlyGenericsStuff(PhantomData<D>), // `PhantomData` since we don't want to inflate the size of this enum
 }
 
-impl<D> Runnable for Job<D> {
-    type Context = JobRunnerContext<D>;
+impl Runnable for Job {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
@@ -81,33 +76,24 @@ impl<D> Runnable for Job<D> {
             Self::DeliverUnfollow(job) => job.run(ctx).await,
             Self::DeliverUpdate(job) => job.run(ctx).await,
             Self::SendConfirmationMail(job) => job.run(ctx).await,
-            Self::__IgnoreThisCase_OnlyGenericsStuff(..) => unreachable!(),
         }
     }
 }
 
 #[derive(TypedBuilder)]
-pub struct KitsuneContextRepo<D> {
+pub struct KitsuneContextRepo {
     db_pool: PgPool,
-
-    __ignore_this__generic_deliverer: PhantomData<D>,
 }
 
-impl<D> KitsuneContextRepo<D> {
+impl KitsuneContextRepo {
     #[must_use]
     pub fn new(db_pool: PgPool) -> Self {
-        Self {
-            db_pool,
-            __ignore_this__generic_deliverer: PhantomData,
-        }
+        Self { db_pool }
     }
 }
 
-impl<D> JobContextRepository for KitsuneContextRepo<D>
-where
-    D: Deliverer,
-{
-    type JobContext = Job<D>;
+impl JobContextRepository for KitsuneContextRepo {
+    type JobContext = Job;
     type Error = eyre::Report;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
@@ -120,7 +106,7 @@ where
             .with_connection(|conn| {
                 job_context::table
                     .filter(job_context::id.eq_any(job_ids))
-                    .load_stream::<JobContext<Job<D>>>(conn)
+                    .load_stream::<JobContext<Job>>(conn)
                     .scoped()
             })
             .await?;

@@ -5,6 +5,7 @@ use athena::Runnable;
 use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{StreamExt, TryStreamExt};
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     model::{account::Account, post::Post, user::User},
     schema::{accounts, posts, users},
@@ -26,8 +27,8 @@ pub struct DeliverUpdate {
     pub id: Uuid,
 }
 
-impl<D> Runnable for DeliverUpdate {
-    type Context = JobRunnerContext<D>;
+impl Runnable for DeliverUpdate {
+    type Context = JobRunnerContext<impl Deliverer>;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
