@@ -1,15 +1,18 @@
 use crate::error::BoxError;
-use kitsune_db::model::{account::Account, post::Post};
+use kitsune_db::model::{account::Account, favourite::Favourite, follower::Follow, post::Post};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Action {
+    AcceptFollow(Follow),
     Create(Post),
     Delete(Post),
     Favourite(Post),
+    Follow(Follow),
+    RejectFollow(Follow),
     Repost(Post),
-    Unfavourite(Post),
+    Unfavourite(Favourite),
     Unrepost(Post),
     UpdateAccount(Account),
     UpdatePost(Post),

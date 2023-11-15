@@ -1,13 +1,9 @@
-use crate::{mapping::IntoActivity, JobRunnerContext};
+use crate::{error::Error, JobRunnerContext};
 use athena::Runnable;
-use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
+use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::traits::Deliverer;
-use kitsune_db::{
-    model::{account::Account, favourite::Favourite, user::User},
-    schema::{accounts, posts, posts_favourites, users},
-};
-use kitsune_util::try_join;
+use kitsune_core::traits::{deliverer::Action, Deliverer};
+use kitsune_db::{model::favourite::Favourite, schema::posts_favourites};
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -41,39 +37,14 @@ impl Runnable for DeliverUnfavourite {
             return Ok(());
         };
 
-        let ((account, user), inbox_url) = ctx
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_user_fut = accounts::table
-                        .find(favourite.account_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result(db_conn);
-
-                    let inbox_url_fut = posts::table
-                        .find(favourite.post_id)
-                        .inner_join(accounts::table)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
-
-                    try_join!(account_user_fut, inbox_url_fut)
-                }
-                .scoped()
-            })
-            .await?;
-
-        let favourite_id = favourite.id;
-        if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_negate_activity(&ctx.state).await?;
-            ctx.deliverer
-                .deliver(inbox_url, &account, &user, &activity)
-                .await?;
-        }
+        ctx.deliverer
+            .deliver(Action::Unfavourite(favourite))
+            .await
+            .map_err(|err| Error::Delivery(err.into()))?;
 
         ctx.db_pool
             .with_connection(|db_conn| {
-                diesel::delete(posts_favourites::table.find(favourite_id))
+                diesel::delete(posts_favourites::table.find(self.favourite_id))
                     .execute(db_conn)
                     .scoped()
             })

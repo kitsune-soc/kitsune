@@ -1,13 +1,9 @@
-use crate::{mapping::IntoActivity, JobRunnerContext};
+use crate::{error::Error, JobRunnerContext};
 use athena::Runnable;
-use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
+use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::traits::Deliverer;
-use kitsune_db::{
-    model::{account::Account, follower::Follow, user::User},
-    schema::{accounts, accounts_follows, users},
-};
-use kitsune_util::try_join;
+use kitsune_core::traits::{deliverer::Action, Deliverer};
+use kitsune_db::{model::follower::Follow, schema::accounts_follows};
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -41,34 +37,10 @@ impl Runnable for DeliverFollow {
             return Ok(());
         };
 
-        let ((follower, follower_user), followed_inbox) = ctx
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let follower_info_fut = accounts::table
-                        .find(follow.follower_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn);
-
-                    let followed_inbox_fut = accounts::table
-                        .find(follow.account_id)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
-
-                    try_join!(follower_info_fut, followed_inbox_fut)
-                }
-                .scoped()
-            })
-            .await?;
-
-        if let Some(followed_inbox) = followed_inbox {
-            let follow_activity = follow.into_activity(&ctx.state).await?;
-
-            ctx.deliverer
-                .deliver(&followed_inbox, &follower, &follower_user, &follow_activity)
-                .await?;
-        }
+        ctx.deliverer
+            .deliver(Action::Follow(follow))
+            .await
+            .map_err(|err| Error::Delivery(err.into()))?;
 
         Ok(())
     }
