@@ -342,6 +342,82 @@ impl Deliverer {
 
         Ok(())
     }
+
+    async fn update_account(&self, account: Account) -> Result<()> {
+        let user = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    users::table
+                        .filter(users::account_id.eq(account.id))
+                        .select(User::as_select())
+                        .get_result(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
+            })
+            .await?;
+
+        let Some(user) = user else {
+            return Ok(());
+        };
+
+        let activity = account.clone().into_activity(&ctx.state).await?;
+        let inbox_stream = self
+            .inbox_resolver
+            .resolve_followers(&account)
+            .await?
+            .try_chunks(MAX_CONCURRENT_REQUESTS)
+            .map_err(|err| err.1);
+
+        self.core
+            .deliver_many(&account, &user, &activity, inbox_stream)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn update_post(&self, post: Post) -> Result<()> {
+        let post_account_user_data = self
+            .db_pool
+            .with_connection(|db_conn| {
+                async move {
+                    posts::table
+                        .find(post.id)
+                        .inner_join(accounts::table)
+                        .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                        .select(<(Account, User)>::as_select())
+                        .get_result(db_conn)
+                        .await
+                        .optional()
+                }
+                .scoped()
+            })
+            .await?;
+
+        let Some((account, user)) = post_account_user_data else {
+            return Ok(());
+        };
+
+        let inbox_stream = self
+            .inbox_resolver
+            .resolve(&post)
+            .await?
+            .try_chunks(MAX_CONCURRENT_REQUESTS)
+            .map_err(|err| err.1);
+
+        let mut activity = post.into_activity(&ctx.state).await?;
+
+        // Patch in the update
+        activity.r#type = ActivityType::Update;
+
+        self.core
+            .deliver_many(&account, &user, &activity, inbox_stream)
+            .await?;
+
+        Ok(())
+    }
 }
 
 impl DelivererTrait for Deliverer {
@@ -360,8 +436,8 @@ impl DelivererTrait for Deliverer {
                 Action::Unfavourite(favourite) => self.unfavourite(favourite).await,
                 Action::Unfollow(follow) => self.unfollow(follow).await,
                 Action::Unrepost(post) => self.delete_or_unrepost(post).await,
-                Action::UpdateAccount(_) => todo!(),
-                Action::UpdatePost(_) => todo!(),
+                Action::UpdateAccount(account) => self.update_account(account).await,
+                Action::UpdatePost(post) => self.update_post(post).await,
             }
         }
         .boxed()

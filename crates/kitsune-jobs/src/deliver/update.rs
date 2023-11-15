@@ -1,16 +1,13 @@
-use crate::{
-    mapping::IntoActivity, resolve::InboxResolver, JobRunnerContext, MAX_CONCURRENT_REQUESTS,
-};
+use crate::{error::Error, JobRunnerContext};
 use athena::Runnable;
-use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, SelectableHelper};
+use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::{StreamExt, TryStreamExt};
-use kitsune_core::traits::Deliverer;
+use futures_util::TryStreamExt;
+use kitsune_core::traits::{deliverer::Action, Deliverer};
 use kitsune_db::{
-    model::{account::Account, post::Post, user::User},
-    schema::{accounts, posts, users},
+    model::{account::Account, post::Post},
+    schema::{accounts, posts},
 };
-use kitsune_type::ap::ActivityType;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -32,17 +29,15 @@ impl Runnable for DeliverUpdate {
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let inbox_resolver = InboxResolver::new(ctx.db_pool.clone());
-        let (activity, account, user, inbox_stream) = match self.entity {
+        let action = match self.entity {
             UpdateEntity::Account => {
-                let account_user_data = ctx
+                let account = ctx
                     .db_pool
                     .with_connection(|db_conn| {
                         async move {
                             accounts::table
                                 .find(self.id)
-                                .inner_join(users::table)
-                                .select(<(Account, User)>::as_select())
+                                .select(Account::as_select())
                                 .get_result(db_conn)
                                 .await
                                 .optional()
@@ -51,28 +46,20 @@ impl Runnable for DeliverUpdate {
                     })
                     .await?;
 
-                let Some((account, user)) = account_user_data else {
+                let Some(account) = account else {
                     return Ok(());
                 };
-                let inbox_stream = inbox_resolver.resolve_followers(&account).await?;
 
-                (
-                    account.clone().into_activity(&ctx.state).await?,
-                    account,
-                    user,
-                    inbox_stream.left_stream(),
-                )
+                Action::UpdateAccount(account)
             }
             UpdateEntity::Status => {
-                let post_account_user_data = ctx
+                let post = ctx
                     .db_pool
                     .with_connection(|db_conn| {
                         async move {
                             posts::table
                                 .find(self.id)
-                                .inner_join(accounts::table)
-                                .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                                .select(<(Post, Account, User)>::as_select())
+                                .select(Post::as_select())
                                 .get_result(db_conn)
                                 .await
                                 .optional()
@@ -81,27 +68,18 @@ impl Runnable for DeliverUpdate {
                     })
                     .await?;
 
-                let Some((post, account, user)) = post_account_user_data else {
+                let Some(post) = post else {
                     return Ok(());
                 };
 
-                let inbox_stream = inbox_resolver.resolve(&post).await?;
-                let mut activity = post.into_activity(&ctx.state).await?;
-
-                // Patch in the update
-                activity.r#type = ActivityType::Update;
-
-                (activity, account, user, inbox_stream.right_stream())
+                Action::UpdatePost(post)
             }
         };
 
-        let inbox_stream = inbox_stream
-            .try_chunks(MAX_CONCURRENT_REQUESTS)
-            .map_err(|err| err.1);
-
         ctx.deliverer
-            .deliver_many(&account, &user, &activity, inbox_stream)
-            .await?;
+            .deliver(action)
+            .await
+            .map_err(|err| Error::Delivery(err.into()))?;
 
         Ok(())
     }

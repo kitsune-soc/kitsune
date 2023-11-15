@@ -25,7 +25,6 @@ impl Runnable for SendConfirmationMail {
         }
 
         let user = ctx
-            .state
             .db_pool
             .with_connection(|db_conn| {
                 users::table
