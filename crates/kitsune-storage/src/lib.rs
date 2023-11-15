@@ -4,8 +4,8 @@
 #![allow(forbidden_lint_groups)]
 
 use bytes::Bytes;
+use derive_more::From;
 use futures_util::{Stream, StreamExt};
-use kitsune_util::impl_from;
 use std::{error::Error, future::Future};
 
 pub mod fs;
@@ -34,16 +34,14 @@ pub trait StorageBackend: Clone + Send + Sync {
         T: Stream<Item = Result<Bytes>> + Send + 'static;
 }
 
-impl_from! {
-    #[derive(Clone)]
-    /// Combined storage enum for enum dispatch
-    pub enum AnyStorageBackend {
-        /// File system-backed storage
-        Fs(fs::Storage),
+#[derive(Clone, From)]
+/// Combined storage enum for enum dispatch
+pub enum AnyStorageBackend {
+    /// File system-backed storage
+    Fs(fs::Storage),
 
-        /// S3-backed storage
-        S3(s3::Storage),
-    }
+    /// S3-backed storage
+    S3(s3::Storage),
 }
 
 impl StorageBackend for AnyStorageBackend {

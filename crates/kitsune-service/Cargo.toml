@@ -33,6 +33,7 @@ kitsune-email = { path = "../kitsune-email" }
 kitsune-embed = { path = "../kitsune-embed" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
+kitsune-jobs = { path = "../kitsune-jobs" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search = { path = "../kitsune-search" }

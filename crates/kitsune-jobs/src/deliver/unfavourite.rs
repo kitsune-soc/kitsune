@@ -16,8 +16,8 @@ pub struct DeliverUnfavourite {
     pub favourite_id: Uuid,
 }
 
-impl Runnable for DeliverUnfavourite {
-    type Context = JobRunnerContext;
+impl<D> Runnable for DeliverUnfavourite {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]

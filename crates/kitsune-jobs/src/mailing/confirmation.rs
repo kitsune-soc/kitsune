@@ -12,8 +12,8 @@ pub struct SendConfirmationMail {
     pub user_id: Uuid,
 }
 
-impl Runnable for SendConfirmationMail {
-    type Context = JobRunnerContext;
+impl<D> Runnable for SendConfirmationMail {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

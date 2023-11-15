@@ -18,8 +18,8 @@ pub struct DeliverDelete {
     pub post_id: Uuid,
 }
 
-impl Runnable for DeliverDelete {
-    type Context = JobRunnerContext;
+impl<D> Runnable for DeliverDelete {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]

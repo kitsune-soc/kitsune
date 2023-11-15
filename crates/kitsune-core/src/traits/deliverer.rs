@@ -15,7 +15,7 @@ pub enum Action {
     UpdatePost(Post),
 }
 
-pub trait Deliverer: Send + Sync {
+pub trait Deliverer: Send + Sync + 'static {
     type Error: Into<BoxError>;
 
     fn deliver(&self, action: Action) -> impl Future<Output = Result<(), Self::Error>> + Send;

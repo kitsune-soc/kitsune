@@ -18,8 +18,8 @@ pub struct DeliverCreate {
     pub post_id: Uuid,
 }
 
-impl Runnable for DeliverCreate {
-    type Context = JobRunnerContext;
+impl<D> Runnable for DeliverCreate {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]

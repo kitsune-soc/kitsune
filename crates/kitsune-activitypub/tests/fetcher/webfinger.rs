@@ -56,7 +56,7 @@ async fn fetch_actor_with_custom_acct() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
             .build();
@@ -133,7 +133,7 @@ async fn ignore_fake_webfinger_acct() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
             .build();

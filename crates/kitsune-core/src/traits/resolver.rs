@@ -13,7 +13,7 @@ pub struct AccountResource {
     pub domain: String,
 }
 
-pub trait Resolver: Send + Sync {
+pub trait Resolver: Send + Sync + 'static {
     type Error: Into<BoxError>;
 
     fn resolve_account(

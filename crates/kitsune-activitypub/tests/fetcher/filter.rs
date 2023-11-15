@@ -39,7 +39,7 @@ async fn federation_allow() {
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .build();
 
         assert!(matches!(
@@ -57,7 +57,7 @@ async fn federation_allow() {
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .build();
 
         assert!(matches!(
@@ -93,7 +93,7 @@ async fn federation_deny() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
             .build();

@@ -16,8 +16,8 @@ pub struct DeliverUnfollow {
     pub follow_id: Uuid,
 }
 
-impl Runnable for DeliverUnfollow {
-    type Context = JobRunnerContext;
+impl<D> Runnable for DeliverUnfollow {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

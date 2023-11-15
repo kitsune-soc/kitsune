@@ -38,7 +38,7 @@ async fn check_ap_id_authority() {
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .build();
 
         // The mock HTTP client ensures that the fetcher doesn't access the correct server
@@ -60,7 +60,7 @@ async fn check_ap_id_authority() {
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .build();
 
         let _ = fetcher
@@ -93,7 +93,7 @@ async fn check_ap_content_type() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .webfinger(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
             .post_cache(Arc::new(NoopCache.into()))
             .user_cache(Arc::new(NoopCache.into()))
             .build();

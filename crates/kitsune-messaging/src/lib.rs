@@ -10,8 +10,8 @@
 #[macro_use]
 extern crate tracing;
 
+use derive_more::From;
 use futures_util::{stream::BoxStream, Stream, StreamExt};
-use kitsune_util::impl_from;
 use pin_project_lite::pin_project;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -34,15 +34,14 @@ mod util;
 pub mod redis;
 pub mod tokio_broadcast;
 
-impl_from! {
-    /// Enum dispatch over all supported backends
-    pub enum AnyMessagingBackend {
-        /// Redis backend
-        Redis(redis::RedisMessagingBackend),
+/// Enum dispatch over all supported backends
+#[derive(From)]
+pub enum AnyMessagingBackend {
+    /// Redis backend
+    Redis(redis::RedisMessagingBackend),
 
-        /// Tokio broadcast backend
-        Tokio(tokio_broadcast::TokioBroadcastMessagingBackend),
-    }
+    /// Tokio broadcast backend
+    Tokio(tokio_broadcast::TokioBroadcastMessagingBackend),
 }
 
 impl MessagingBackend for AnyMessagingBackend {

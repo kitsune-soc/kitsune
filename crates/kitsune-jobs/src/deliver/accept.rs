@@ -20,8 +20,8 @@ pub struct DeliverAccept {
     pub follow_id: Uuid,
 }
 
-impl Runnable for DeliverAccept {
-    type Context = JobRunnerContext;
+impl<D> Runnable for DeliverAccept {
+    type Context = JobRunnerContext<D>;
     type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]

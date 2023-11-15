@@ -28,7 +28,7 @@ impl<'a> From<&'a str> for AccountFetchOptions<'a> {
     }
 }
 
-pub trait Fetcher: Send + Sync {
+pub trait Fetcher: Send + Sync + 'static {
     type Error: Into<BoxError>;
 
     fn fetch_account(
