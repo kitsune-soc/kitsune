@@ -21,7 +21,7 @@ use scoped_futures::ScopedFutureExt;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
-mod core;
+pub mod core;
 
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
@@ -294,7 +294,6 @@ impl Deliverer {
             })
             .await?;
 
-        let favourite_id = favourite.id;
         if let Some(ref inbox_url) = inbox_url {
             let activity = favourite.into_negate_activity(&ctx.state).await?;
             self.core

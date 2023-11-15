@@ -9,13 +9,6 @@ use super::{
 use crate::{
     error::{Error, Result},
     event::{post::EventType, PostEvent, PostEventEmitter},
-    job::deliver::{
-        create::DeliverCreate,
-        delete::DeliverDelete,
-        favourite::DeliverFavourite,
-        unfavourite::DeliverUnfavourite,
-        update::{DeliverUpdate, UpdateEntity},
-    },
     util::process_markdown,
 };
 use async_stream::try_stream;
@@ -47,6 +40,13 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_jobs::deliver::{
+    create::DeliverCreate,
+    delete::DeliverDelete,
+    favourite::DeliverFavourite,
+    unfavourite::DeliverUnfavourite,
+    update::{DeliverUpdate, UpdateEntity},
+};
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::SearchBackend;
 use kitsune_util::sanitize::CleanHtmlExt;

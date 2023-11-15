@@ -23,6 +23,7 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-search = { path = "../kitsune-search" }
+kitsune-service = { path = "../kitsune-service" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"

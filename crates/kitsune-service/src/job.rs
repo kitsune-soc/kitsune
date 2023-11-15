@@ -1,9 +1,7 @@
-use crate::{
-    error::Result,
-    job::{Job, KitsuneContextRepo},
-};
+use crate::error::Result;
 use athena::{JobDetails, JobQueue};
 use iso8601_timestamp::Timestamp;
+use kitsune_jobs::{Job, KitsuneContextRepo};
 use typed_builder::TypedBuilder;
 
 #[derive(TypedBuilder)]

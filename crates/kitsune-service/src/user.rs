@@ -3,10 +3,7 @@ use super::{
     job::{Enqueue, JobService},
     url::UrlService,
 };
-use crate::{
-    error::{Error, Result},
-    job::mailing::confirmation::SendConfirmationMail,
-};
+use crate::error::{Error, Result};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -23,6 +20,7 @@ use kitsune_db::{
     schema::{accounts, accounts_preferences, users},
     PgPool,
 };
+use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_util::{generate_secret, try_join};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},

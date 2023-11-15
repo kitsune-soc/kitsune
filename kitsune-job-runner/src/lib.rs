@@ -3,12 +3,8 @@ extern crate tracing;
 
 use athena::JobQueue;
 use kitsune_config::job_queue::Configuration;
-use kitsune_core::{
-    activitypub::Deliverer,
-    job::{JobRunnerContext, KitsuneContextRepo},
-    state::State as CoreState,
-};
 use kitsune_db::PgPool;
+use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo};
 use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
 use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;

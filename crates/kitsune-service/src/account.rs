@@ -4,16 +4,7 @@ use super::{
     url::UrlService,
     LimitContext,
 };
-use crate::{
-    error::{Error, Result},
-    job::deliver::{
-        accept::DeliverAccept,
-        follow::DeliverFollow,
-        reject::DeliverReject,
-        unfollow::DeliverUnfollow,
-        update::{DeliverUpdate, UpdateEntity},
-    },
-};
+use crate::error::{Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{
@@ -37,6 +28,13 @@ use kitsune_db::{
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     PgPool,
+};
+use kitsune_jobs::deliver::{
+    accept::DeliverAccept,
+    follow::DeliverFollow,
+    reject::DeliverReject,
+    unfollow::DeliverUnfollow,
+    update::{DeliverUpdate, UpdateEntity},
 };
 use kitsune_util::{sanitize::CleanHtmlExt, try_join};
 use scoped_futures::ScopedFutureExt;
