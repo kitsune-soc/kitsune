@@ -3,6 +3,8 @@ name: Rust unused dependencies
 on:
   pull_request:
   push:
+    branches:
+      - main
     paths:
       - "**/Cargo.toml"
       - "**/Cargo.lock"

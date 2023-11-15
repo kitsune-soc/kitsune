@@ -8,7 +8,6 @@ ahash = "0.8.6"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.29"
 kitsune-retry-policies = { path = "../kitsune-retry-policies" }
-kitsune-util = { path = "../kitsune-util" }
 pin-project-lite = "0.2.13"
 redis = { version = "0.23.3", features = [
     "aio",
