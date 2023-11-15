@@ -2,16 +2,6 @@ use crate::state::State;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::model::{account::Account, oauth2::access_token::AccessToken, post::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
-use pulldown_cmark::{html, Options, Parser};
-
-#[inline]
-#[must_use]
-pub fn process_markdown(markdown: &str) -> String {
-    let parser = Parser::new_ext(markdown, Options::all());
-    let mut buf = String::new();
-    html::push_html(&mut buf, parser);
-    buf
-}
 
 pub trait AccessTokenTtl {
     fn ttl(&self) -> time::Duration;

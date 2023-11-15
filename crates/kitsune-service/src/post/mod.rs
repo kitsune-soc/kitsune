@@ -6,11 +6,7 @@ use super::{
     url::UrlService,
     LimitContext,
 };
-use crate::{
-    error::{Error, Result},
-    event::{post::EventType, PostEvent, PostEventEmitter},
-    util::process_markdown,
-};
+use crate::error::{Error, PostError, Result};
 use async_stream::try_stream;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
@@ -20,6 +16,10 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::{
+    event::{post::EventType, PostEvent, PostEventEmitter},
+    traits::{Fetcher, Resolver},
+};
 use kitsune_db::{
     model::{
         account::Account,
@@ -49,7 +49,7 @@ use kitsune_jobs::deliver::{
 };
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::SearchBackend;
-use kitsune_util::sanitize::CleanHtmlExt;
+use kitsune_util::{process, sanitize::CleanHtmlExt};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -298,18 +298,26 @@ pub struct GetAccountsInteractingWithPost {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct PostService {
+pub struct PostService<F, R>
+where
+    F: Fetcher,
+    R: Resolver,
+{
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     instance_service: InstanceService,
     job_service: JobService,
-    post_resolver: PostResolver,
+    post_resolver: PostResolver<F, R>,
     search_backend: kitsune_search::AnySearchBackend,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }
 
-impl PostService {
+impl<F, R> PostService<F, R>
+where
+    F: Fetcher,
+    R: Resolver,
+{
     async fn process_media_attachments(
         conn: &mut AsyncPgConnection,
         post_id: Uuid,
@@ -326,7 +334,7 @@ impl PostService {
             .await?
             != media_attachment_ids.len() as i64
         {
-            return Err(ApiError::BadRequest.into());
+            return Err(PostError::BadRequest.into());
         }
 
         diesel::insert_into(posts_media_attachments::table)
@@ -451,10 +459,11 @@ impl PostService {
 
         let content_source = create_post.content.clone();
         let mut content = if create_post.process_markdown {
-            process_markdown(&create_post.content)
+            process::markdown(&create_post.content)
         } else {
             create_post.content
         };
+
         content.clean_html();
 
         let detect_language =
@@ -611,7 +620,7 @@ impl PostService {
         });
 
         let mut content = if update_post.process_markdown {
-            update_post.content.as_ref().map(|s| process_markdown(s))
+            update_post.content.as_deref().map(process::markdown)
         } else {
             update_post.content.clone()
         };
@@ -1240,10 +1249,10 @@ impl PostService {
                     .await?;
 
                 if admin_role_count == 0 {
-                    return Err(ApiError::Unauthorised.into());
+                    return Err(PostError::Unauthorised.into());
                 }
             } else {
-                return Err(ApiError::Unauthorised.into());
+                return Err(PostError::Unauthorised.into());
             }
         }
 

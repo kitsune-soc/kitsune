@@ -29,8 +29,7 @@ use kitsune_embed::Client as EmbedClient;
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
-use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt, CowBox};
-use pulldown_cmark::{html, Options, Parser};
+use kitsune_util::{convert::timestamp_to_uuid, process, sanitize::CleanHtmlExt, CowBox};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -226,10 +225,7 @@ where
     };
 
     if object.media_type.as_deref() == Some("text/markdown") {
-        let parser = Parser::new_ext(&object.content, Options::all());
-        let mut buf = String::new();
-        html::push_html(&mut buf, parser);
-        object.content = buf;
+        object.content = process::markdown(&object.content);
     }
 
     let link_preview_url = if let Some(embed_client) = embed_client {

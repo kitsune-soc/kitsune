@@ -1,5 +1,5 @@
 use super::url::UrlService;
-use crate::error::{Error, Result, UploadError};
+use crate::error::{AttachmentError, Error, Result};
 use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
@@ -147,7 +147,7 @@ impl AttachmentService {
                 .map_err(Into::into)
                 .boxed())
         } else {
-            Err(ApiError::NotFound.into())
+            Err(AttachmentError::NotFound.into())
         }
     }
 
@@ -194,20 +194,20 @@ impl AttachmentService {
                 .next()
                 .await
                 .transpose()
-                .map_err(UploadError::StreamError)?
+                .map_err(AttachmentError::StreamError)?
             {
                 img_bytes.extend_from_slice(&chunk);
             }
 
             let img_bytes = img_bytes.freeze();
             let final_bytes = DynImage::from_bytes(img_bytes)
-                .map_err(UploadError::ImageProcessingError)?
+                .map_err(AttachmentError::ImageProcessingError)?
                 .ok_or(img_parts::Error::WrongSignature)
                 .map(|mut image| {
                     image.set_exif(None);
                     image.encoder().bytes()
                 })
-                .map_err(UploadError::ImageProcessingError)?;
+                .map_err(AttachmentError::ImageProcessingError)?;
 
             self.storage_backend
                 .put(&upload.path, stream::once(async { Ok(final_bytes) }))

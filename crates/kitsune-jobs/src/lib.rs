@@ -1,6 +1,6 @@
 #![forbid(rust_2018_idioms)]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(forbidden_lint_groups)]
+#![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
 
 #[macro_use]
 extern crate tracing;
@@ -34,8 +34,6 @@ use typed_builder::TypedBuilder;
 pub mod deliver;
 pub mod error;
 pub mod mailing;
-
-const MAX_CONCURRENT_REQUESTS: usize = 10;
 
 pub struct JobRunnerContext {
     pub deliverer: Box<dyn Deliverer<Error = BoxError>>,

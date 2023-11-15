@@ -12,7 +12,6 @@ eyre = "0.6.8"
 futures-util = "0.3.29"
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
-kitsune-type = { path = "../kitsune-type" }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.192", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }

@@ -117,9 +117,8 @@ where
 mod test {
     use super::PostResolver;
     use crate::{
-        account::AccountService, activitypub::Fetcher, attachment::AttachmentService,
-        custom_emoji::CustomEmojiService, federation_filter::FederationFilterService,
-        job::JobService, job::KitsuneContextRepo, url::UrlService, webfinger::Webfinger,
+        account::AccountService, attachment::AttachmentService, custom_emoji::CustomEmojiService,
+        job::JobService, url::UrlService,
     };
     use athena::JobQueue;
     use core::convert::Infallible;
@@ -127,6 +126,7 @@ mod test {
     use diesel_async::RunQueryDsl;
     use hyper::{Body, Request, Response};
     use iso8601_timestamp::Timestamp;
+    use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_db::{
@@ -135,11 +135,14 @@ mod test {
         },
         schema::{accounts, custom_emojis, media_attachments},
     };
+    use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
+    use kitsune_jobs::KitsuneContextRepo;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use kitsune_test::{build_ap_response, database_test, redis_test};
     use kitsune_util::try_join;
+    use kitsune_webfinger::Webfinger;
     use pretty_assertions::assert_eq;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
@@ -175,7 +178,7 @@ mod test {
                     .db_pool(db_pool.clone())
                     .embed_client(None)
                     .federation_filter(
-                        FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                        FederationFilter::new(&FederationFilterConfiguration::Deny {
                             domains: Vec::new(),
                         })
                         .unwrap(),

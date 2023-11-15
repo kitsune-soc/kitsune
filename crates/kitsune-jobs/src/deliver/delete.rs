@@ -2,8 +2,7 @@ use crate::{error::Error, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::TryStreamExt;
-use kitsune_core::traits::{deliverer::Action, Deliverer};
+use kitsune_core::traits::deliverer::Action;
 use kitsune_db::{model::post::Post, schema::posts};
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
@@ -42,7 +41,7 @@ impl Runnable for DeliverDelete {
         ctx.deliverer
             .deliver(Action::Delete(post))
             .await
-            .map_err(|err| Error::Delivery(err.into()))?;
+            .map_err(Error::Delivery)?;
 
         ctx.db_pool
             .with_connection(|db_conn| {

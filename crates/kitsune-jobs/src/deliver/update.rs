@@ -2,8 +2,7 @@ use crate::{error::Error, JobRunnerContext};
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::TryStreamExt;
-use kitsune_core::traits::{deliverer::Action, Deliverer};
+use kitsune_core::traits::deliverer::Action;
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -79,7 +78,7 @@ impl Runnable for DeliverUpdate {
         ctx.deliverer
             .deliver(action)
             .await
-            .map_err(|err| Error::Delivery(err.into()))?;
+            .map_err(Error::Delivery)?;
 
         Ok(())
     }

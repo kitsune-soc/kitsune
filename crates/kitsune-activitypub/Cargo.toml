@@ -28,9 +28,6 @@ kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
-pulldown-cmark = { version = "0.9.3", default-features = false, features = [
-    "simd",
-] }
 rsa = "0.9.3"
 scoped-futures = "0.1.3"
 serde = "1.0.192"

@@ -6,16 +6,40 @@ pub type BoxError = Box<dyn StdError + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
-pub enum UploadError {
+pub enum AttachmentError {
     #[error(transparent)]
     ImageProcessingError(#[from] img_parts::Error),
+
+    #[error("Not found")]
+    NotFound,
 
     #[error(transparent)]
     StreamError(#[from] BoxError),
 }
 
 #[derive(Debug, Error)]
+pub enum PostError {
+    #[error("Bad request")]
+    BadRequest,
+
+    #[error("Unauthorised")]
+    Unauthorised,
+}
+
+#[derive(Debug, Error)]
+pub enum UserError {
+    #[error("Invalid captcha")]
+    InvalidCaptcha,
+
+    #[error("Registrations closed")]
+    RegistrationsClosed,
+}
+
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error(transparent)]
+    Attachment(#[from] AttachmentError),
+
     #[error(transparent)]
     Blocking(#[from] kitsune_blocking::Error),
 
@@ -71,6 +95,9 @@ pub enum Error {
     Pkcs8(#[from] pkcs8::Error),
 
     #[error(transparent)]
+    Post(#[from] PostError),
+
+    #[error(transparent)]
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
@@ -92,13 +119,13 @@ pub enum Error {
     Storage(kitsune_storage::BoxError),
 
     #[error(transparent)]
-    Upload(#[from] UploadError),
-
-    #[error(transparent)]
     UriInvalid(#[from] http::uri::InvalidUri),
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
+
+    #[error(transparent)]
+    User(#[from] UserError),
 
     #[error(transparent)]
     Validate(#[from] garde::Report),

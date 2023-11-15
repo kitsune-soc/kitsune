@@ -3,7 +3,7 @@ use super::{
     job::{Enqueue, JobService},
     url::UrlService,
 };
-use crate::error::{Error, Result};
+use crate::error::{Error, Result, UserError};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -159,7 +159,7 @@ impl UserService {
     #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {
-            return Err(ApiError::RegistrationsClosed.into());
+            return Err(UserError::RegistrationsClosed.into());
         }
 
         register.validate(&RegisterContext {
@@ -167,10 +167,10 @@ impl UserService {
         })?;
 
         if self.captcha_service.enabled() {
-            let token = register.captcha_token.ok_or(ApiError::InvalidCaptcha)?;
+            let token = register.captcha_token.ok_or(UserError::InvalidCaptcha)?;
             let result = self.captcha_service.verify_token(&token).await?;
             if result != ChallengeStatus::Verified {
-                return Err(ApiError::InvalidCaptcha.into());
+                return Err(UserError::InvalidCaptcha.into());
             }
         }
 

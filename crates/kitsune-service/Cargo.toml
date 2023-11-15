@@ -40,7 +40,7 @@ kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
-password-hash = "0.5.0"
+password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"
 post-process = { path = "../../lib/post-process" }
 rand = "0.8.5"
@@ -63,8 +63,12 @@ meilisearch = ["kitsune-search/meilisearch"]
 eyre = "0.6.8"
 hex-simd = { version = "0.8.0", features = ["unstable"] }
 hyper = "0.14.27"
+kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-config = { path = "../kitsune-config" }
+kitsune-federation-filter = { path = "../kitsune-federation-filter" }
+kitsune-jobs = { path = "../kitsune-jobs" }
 kitsune-test = { path = "../kitsune-test" }
+kitsune-webfinger = { path = "../kitsune-webfinger" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tempfile = "3.8.1"

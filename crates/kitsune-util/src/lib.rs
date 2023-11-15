@@ -9,6 +9,7 @@ use std::ops::Deref;
 pub use tokio;
 
 pub mod convert;
+pub mod process;
 pub mod sanitize;
 
 mod macros;

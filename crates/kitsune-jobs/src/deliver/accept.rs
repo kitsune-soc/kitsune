@@ -4,7 +4,7 @@ use crate::{
 };
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::traits::{deliverer::Action, Deliverer};
+use kitsune_core::traits::deliverer::Action;
 use kitsune_db::{model::follower::Follow, schema::accounts_follows};
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
@@ -42,7 +42,7 @@ impl Runnable for DeliverAccept {
         ctx.deliverer
             .deliver(Action::AcceptFollow(follow))
             .await
-            .map_err(|err| Error::Delivery(err.into()))?;
+            .map_err(Error::Delivery)?;
 
         Ok(())
     }

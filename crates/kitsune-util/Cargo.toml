@@ -8,6 +8,9 @@ ammonia = "3.3.0"
 hex-simd = { version = "0.8.0", features = ["unstable"] }
 iso8601-timestamp = "0.2.12"
 kitsune-type = { path = "../kitsune-type" }
+pulldown-cmark = { version = "0.9.3", default-features = false, features = [
+    "simd",
+] }
 rand = "0.8.5"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.34.0", features = ["macros"] }
