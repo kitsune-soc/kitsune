@@ -8,7 +8,7 @@ on:
       - "**/Cargo.lock"
 
 jobs:
-  build:
+  check-unused-dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
