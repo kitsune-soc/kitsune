@@ -12,7 +12,7 @@ atoi = { version = "2.0.0", default-features = false }
 nanorand = { version = "0.7.0", default-features = false, features = [
     "wyrand",
 ] }
-uuid = { version = "1.5.0", default-features = false }
+uuid = { version = "1.6.0", default-features = false }
 
 [features]
 default = ["std"]
@@ -21,4 +21,4 @@ std = []
 [dev-dependencies]
 criterion = { version = "0.5.1", default-features = false }
 time = "0.3.30"
-uuid = { version = "1.5.0", features = ["v7"] }
+uuid = { version = "1.6.0", features = ["v7"] }

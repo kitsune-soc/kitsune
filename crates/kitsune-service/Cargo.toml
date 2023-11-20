@@ -60,7 +60,7 @@ zxcvbn = { version = "2.2.2", default-features = false }
 meilisearch = ["kitsune-search/meilisearch"]
 
 [dev-dependencies]
-eyre = "0.6.8"
+eyre = "0.6.9"
 hex-simd = { version = "0.8.0", features = ["unstable"] }
 hyper = "0.14.27"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
