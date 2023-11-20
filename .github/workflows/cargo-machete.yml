@@ -1,6 +1,7 @@
 name: Rust unused dependencies
 
 on:
+  merge_group:
   pull_request:
   push:
     paths:
