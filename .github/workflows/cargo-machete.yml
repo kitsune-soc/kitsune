@@ -1,6 +1,7 @@
 name: Rust unused dependencies
 
 on:
+  merge_group:
   pull_request:
   push:
     paths:
@@ -8,7 +9,7 @@ on:
       - "**/Cargo.lock"
 
 jobs:
-  build:
+  check-unused-dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
