@@ -26,7 +26,7 @@ kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
 simd-json = "0.13.4"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
@@ -35,7 +35,7 @@ time = "0.3.30"
 tokio = { version = "1.34.0", features = ["macros", "rt"] }
 tracing = "0.1.40"
 typed-builder = "0.18.0"
-url = "2.4.1"
+url = "2.5.0"
 
 [features]
 default = []

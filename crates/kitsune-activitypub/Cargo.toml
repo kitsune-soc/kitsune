@@ -28,16 +28,16 @@ kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
-rsa = "0.9.3"
+rsa = "0.9.4"
 scoped-futures = "0.1.3"
-serde = "1.0.192"
+serde = "1.0.193"
 sha2 = "0.10.8"
 simd-json = { version = "0.13.4", features = ["hints"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.50"
 tracing = "0.1.40"
 typed-builder = "0.18.0"
-url = "2.4.1"
+url = "2.5.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 sha2 = { version = "0.10.8", features = ["asm"] }
