@@ -6,9 +6,10 @@ To push the data to an endpoint, add the following to your configuration:
 
 ```toml
 [opentelemetry]
-http-endpoint = "[URL of your HTTP endpoint]"
+# Where Kitsune pushes metrics (eg. Prometheus)
+metrics-transport = "http" # "http" or "grpc"
+metrics-endpoint = "https://localhost:5050/metrics-endpoint"
+# Where Kitsune pushes traces (eg. Jaeger)
+tracing-transport = "http" # "http" or "grpc"
+tracing-endpoint = "https://localhost:5050/tracing-endpoint"
 ```
-
-This pushes both, metrics and traces, to the same endpoint
-
-> Note: We might change this in the future and allow to push metrics and traces to separate endpoints
