@@ -12,6 +12,7 @@
     },
     "project": {
         "name": "Kitsune",
+        "license": "MIT",
         "repository": "https://github.com/kitsune-soc/kitsune"
     },
     "styles": {

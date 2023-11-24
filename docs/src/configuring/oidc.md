@@ -13,6 +13,10 @@ Set this parameter to the following value:
 server-url = "[Issuer URL]"
 client-id = "[Kitsune's Client ID]"
 client-secret = "[Kitsune's Client Secret]"
+
+[server.oidc.store]
+type = "in-memory" # "in-memory" or "redis"
+#url = "redis://localhost" # If the configured type is "redis"
 ```
 
 ## Server URL
@@ -23,6 +27,17 @@ This is the URL of the issuer; this setting differs between OIDC solutions. Don'
 
 These values are created on the dashboard of the OIDC solution you are using. 
 Kitsune needs these to obtain an access token from the OIDC server to do introspection and obtain some information about the user.
+
+## Store
+
+The store is where the login state is stored in temporarily until the sign-in has completed.
+
+### Supported backends
+
+- `in-memory`: The state is stored in an in-memory LRU structure
+- `redis`: The state is stored in a Redis instance
+
+If you run multiple nodes, you should use Redis. Otherwise sign-ins can randomly fail.
 
 ## Kitsune-specific OIDC requirements
 

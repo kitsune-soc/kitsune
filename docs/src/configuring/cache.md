@@ -13,8 +13,6 @@ type = "none"
 This is the simplest of all caching modes. It just doesn't cache anything at all and utilises Kitsune's no-op cache. 
 Pretty much only desirable if you are debugging other caches for invalidation issues (or if you have *heavy* memory constraints and no way to get your hands on a Redis instance).
 
-**Note**: This setting is incompatible with the OIDC feature since the OIDC service uses a cache type under the hood to keep track of login states.
-
 ## In-Memory Cache
 
 ```toml
