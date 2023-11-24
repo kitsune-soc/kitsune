@@ -1,8 +1,5 @@
-use crate::{
-    error::{ApiError, Error, Result},
-    state::State,
-    util::BaseToCc,
-};
+use super::{util::BaseToCc, State};
+use crate::error::{Error, Result};
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
@@ -272,6 +269,7 @@ impl IntoObject for CustomEmoji {
             None => Ok(format!(":{}:", self.shortcode)),
             Some(_) => Err(ApiError::NotFound),
         }?;
+
         let icon = state
             .db_pool
             .with_connection(|db_conn| {

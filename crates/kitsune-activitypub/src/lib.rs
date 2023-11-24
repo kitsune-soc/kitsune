@@ -38,6 +38,7 @@ pub mod deliverer;
 pub mod error;
 pub mod fetcher;
 pub mod inbox_resolver;
+pub mod mapping;
 
 pub use self::{deliverer::Deliverer, fetcher::Fetcher, inbox_resolver::InboxResolver};
 

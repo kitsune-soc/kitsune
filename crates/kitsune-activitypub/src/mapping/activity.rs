@@ -1,5 +1,5 @@
-use super::IntoObject;
-use crate::{error::Result, state::State};
+use super::{IntoObject, State};
+use crate::error::Result;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;

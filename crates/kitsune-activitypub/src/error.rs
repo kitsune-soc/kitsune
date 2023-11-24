@@ -58,6 +58,9 @@ pub enum Error {
     Search(#[from] kitsune_search::Error),
 
     #[error(transparent)]
+    Service(#[from] kitsune_service::error::Error),
+
+    #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]

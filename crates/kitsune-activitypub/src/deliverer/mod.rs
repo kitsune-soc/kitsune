@@ -1,5 +1,6 @@
 use crate::{
     error::{Error, Result},
+    mapping::IntoActivity,
     InboxResolver,
 };
 use diesel::{
