@@ -23,10 +23,12 @@
 
     a:not(.button, .primary) {
         color: var(--shade1dark) !important;
+        text-shadow: 0 0 5px var(--shade1dark) !important;
     }
 
     a:hover:not(.button, .primary) {
         color: var(--shade1light) !important;
+        text-shadow: 0 0 5px var(--shade1light) !important;
     }
 
     h1, h2, h3, h4 {
@@ -35,15 +37,5 @@
 
     .title::after {
         background: var(--shade2light) !important;
-    }
-
-    a {
-        color: var(--shade1dark);
-        text-shadow: 0 0 5px var(--shade1dark);
-    }
-
-    a:hover {
-        color: var(--shade1light);
-        text-shadow: 0 0 5px var(--shade1light);
     }
 }
