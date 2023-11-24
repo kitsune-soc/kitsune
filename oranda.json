@@ -1,0 +1,17 @@
+{
+    "build": {
+        "dist_dir": "dist"
+    },
+    "components": {
+        "artifacts": {
+            "cargo_dist": true
+        }
+    },
+    "project": {
+        "name": "Kitsune",
+        "repository": "https://github.com/kitsune-soc/kitsune"
+    },
+    "styles": {
+        "theme": "hacker"
+    }
+}
