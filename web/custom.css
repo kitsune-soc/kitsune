@@ -37,23 +37,6 @@
         background: var(--shade2light) !important;
     }
 
-    html::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: repeating-linear-gradient(
-            0deg,
-            rgba(black, 0.15),
-            rgba(black, 0.15) 1px,
-            transparent 1px,
-            transparent 2px
-        ) !important;
-        pointer-events: none;
-    }
-
     a {
         color: var(--shade1dark);
         text-shadow: 0 0 5px var(--shade1dark);
