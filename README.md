@@ -1,6 +1,10 @@
 <div align="center">
 
+<div class="oranda-hide">
+
 # kitsune
+
+</div>
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kitsune-soc/kitsune/rust.yml?style=for-the-badge)
 [![dependency status](https://deps.rs/repo/github/kitsune-soc/kitsune/status.svg?style=for-the-badge)](https://deps.rs/repo/github/kitsune-soc/kitsune)

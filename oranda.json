@@ -1,0 +1,21 @@
+{
+    "build": {
+        "dist_dir": "dist"
+    },
+    "components": {
+        "artifacts": {
+            "cargo_dist": true
+        },
+        "changelog": {
+            "read_changelog_file": false
+        }
+    },
+    "project": {
+        "name": "Kitsune",
+        "license": "MIT",
+        "repository": "https://github.com/kitsune-soc/kitsune"
+    },
+    "styles": {
+        "theme": "hacker"
+    }
+}
