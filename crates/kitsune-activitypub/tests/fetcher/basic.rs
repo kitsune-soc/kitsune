@@ -37,14 +37,15 @@ async fn fetch_actor() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let user = fetcher
             .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
-            .expect("Fetch actor");
+            .expect("Fetch actor")
+            .unwrap();
 
         assert_eq!(user.username, "0x0");
         assert_eq!(user.domain, "corteximplant.com");
@@ -75,14 +76,15 @@ async fn fetch_emoji() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let emoji = fetcher
             .fetch_emoji("https://corteximplant.com/emojis/7952")
             .await
-            .expect("Fetch emoji");
+            .expect("Fetch emoji")
+            .unwrap();
 
         assert_eq!(emoji.shortcode, "Blobhaj");
         assert_eq!(emoji.domain, Some(String::from("corteximplant.com")));
@@ -126,14 +128,16 @@ async fn fetch_note() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let note = fetcher
             .fetch_post("https://corteximplant.com/@0x0/109501674056556919")
             .await
-            .expect("Fetch note");
+            .expect("Fetch note")
+            .unwrap();
+
         assert_eq!(
             note.url,
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"

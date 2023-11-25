@@ -57,14 +57,15 @@ async fn fetch_actor_with_custom_acct() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let user = fetcher
             .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
-            .expect("Fetch actor");
+            .expect("Fetch actor")
+            .unwrap();
 
         assert_eq!(user.username, "0x0");
         assert_eq!(user.domain, "joinkitsune.org");
@@ -134,14 +135,15 @@ async fn ignore_fake_webfinger_acct() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         let user = fetcher
             .fetch_account("https://corteximplant.com/users/0x0".into())
             .await
-            .expect("Fetch actor");
+            .expect("Fetch actor")
+            .unwrap();
 
         assert_eq!(user.username, "0x0");
         assert_eq!(user.domain, "corteximplant.com");

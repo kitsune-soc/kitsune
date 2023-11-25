@@ -26,8 +26,8 @@ async fn federation_allow() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()));
+            .account_cache(Arc::new(NoopCache.into()))
+            .post_cache(Arc::new(NoopCache.into()));
 
         let client = service_fn(
             #[allow(unreachable_code)] // https://github.com/rust-lang/rust/issues/67227
@@ -94,8 +94,8 @@ async fn federation_deny() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         assert!(matches!(

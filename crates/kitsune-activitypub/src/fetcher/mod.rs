@@ -50,8 +50,8 @@ where
     resolver: R,
 
     // Caches
+    account_cache: ArcCache<str, Account>,
     post_cache: ArcCache<str, Post>,
-    user_cache: ArcCache<str, Account>,
 }
 
 impl<R> Fetcher<R>

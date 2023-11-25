@@ -65,13 +65,13 @@ impl Fetcher for AnyFetcher {
 fn prepare_activitypub() -> (ActivityPubFetcher<Webfinger>, Arc<ActivityPubDeliverer>) {
     let webfinger = Webfinger::new();
     let fetcher = ActivityPubFetcher::builder()
+        .account_cache()
         .db_pool()
         .embed_client()
         .federation_filter()
         .post_cache()
         .resolver(webfinger)
         .search_backend()
-        .user_cache()
         .build();
 
     let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()

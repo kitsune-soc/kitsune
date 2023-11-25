@@ -27,8 +27,8 @@ async fn check_ap_id_authority() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()));
+            .account_cache(Arc::new(NoopCache.into()))
+            .post_cache(Arc::new(NoopCache.into()));
 
         let client = service_fn(|req: Request<_>| {
             assert_ne!(req.uri().host(), Some("corteximplant.com"));
@@ -94,8 +94,8 @@ async fn check_ap_content_type() {
             )
             .search_backend(NoopSearchService)
             .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
             .build();
 
         assert!(matches!(

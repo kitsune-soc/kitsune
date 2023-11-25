@@ -35,7 +35,7 @@ where
     ) -> Result<Option<Account>> {
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
-            if let Some(user) = self.user_cache.get(opts.url).await? {
+            if let Some(user) = self.account_cache.get(opts.url).await? {
                 return Ok(Some(user));
             }
 
