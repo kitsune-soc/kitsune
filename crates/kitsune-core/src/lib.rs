@@ -9,9 +9,6 @@
     forbidden_lint_groups
 )]
 
-#[macro_use]
-extern crate tracing;
-
 pub mod error;
 pub mod event;
 //pub mod mapping;

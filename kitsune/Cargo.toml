@@ -115,5 +115,5 @@ graphql-api = [
     "speedy-uuid/async-graphql",
 ]
 mastodon-api = ["kitsune-core/mastodon-api"]
-meilisearch = ["kitsune-core/meilisearch"]
+meilisearch = ["kitsune-search/meilisearch"]
 oidc = ["dep:kitsune-oidc"]

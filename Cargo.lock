@@ -3014,27 +3014,12 @@ dependencies = [
 name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
- "athena",
- "deadpool-redis",
- "eyre",
  "futures-util",
- "kitsune-cache",
- "kitsune-captcha",
- "kitsune-config",
  "kitsune-db",
- "kitsune-email",
- "kitsune-embed",
  "kitsune-messaging",
- "kitsune-search",
- "kitsune-storage",
- "rusty-s3",
  "serde",
  "speedy-uuid",
- "thiserror",
- "time",
- "tracing",
  "typed-builder",
- "url",
 ]
 
 [[package]]
