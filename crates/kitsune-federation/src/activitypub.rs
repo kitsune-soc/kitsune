@@ -34,6 +34,7 @@ pub struct PrepareFetcher {
     search_backend: AnySearchBackend,
 }
 
+#[inline]
 pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<ActivityPubDeliverer> {
     let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()
         .federation_filter(prepare.federation_filter)
@@ -53,6 +54,7 @@ pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<ActivityPubDel
         .build()
 }
 
+#[inline]
 pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> ActivityPubFetcher<Webfinger> {
     let webfinger = Webfinger::new(prepare.account_resource_cache);
 

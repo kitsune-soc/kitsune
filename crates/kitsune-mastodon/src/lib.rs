@@ -1,20 +1,23 @@
+#[macro_use]
+extern crate tracing;
+
 use self::sealed::{IntoMastodon, MapperState};
-use crate::{
-    error::Result,
-    event::{post::EventType, PostEventConsumer},
-    service::{attachment::AttachmentService, url::UrlService},
-};
+use crate::error::Result;
 use derive_builder::Builder;
 use futures_util::StreamExt;
 use kitsune_cache::{ArcCache, CacheBackend};
+use kitsune_core::event::{post::EventType, PostEventConsumer};
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
+use kitsune_service::{attachment::AttachmentService, url::UrlService};
 use serde::Deserialize;
 use simd_json::OwnedValue;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 mod sealed;
+
+pub mod error;
 
 pub trait MapperMarker: IntoMastodon {}
 

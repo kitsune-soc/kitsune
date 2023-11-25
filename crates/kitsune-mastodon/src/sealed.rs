@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    service::{attachment::AttachmentService, url::UrlService},
-};
+use crate::error::{Error, Result};
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
     OptionalExtension, QueryDsl, SelectableHelper,
@@ -31,6 +28,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
+use kitsune_service::{attachment::AttachmentService, url::UrlService};
 use kitsune_type::mastodon::{
     account::Source,
     media_attachment::MediaType,
@@ -621,12 +619,15 @@ impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let (emoji, attachment, last_used) = self;
+
         let shortcode = if let Some(ref domain) = emoji.domain {
             format!(":{}@{}:", emoji.shortcode, domain)
         } else {
             format!(":{}:", emoji.shortcode)
         };
+
         let url = state.url_service.media_url(attachment.id);
+
         let category = if last_used.is_some() {
             Some(String::from("recently used"))
         } else if emoji.endorsed {
@@ -636,6 +637,7 @@ impl IntoMastodon for (DbCustomEmoji, DbMediaAttachment, Option<Timestamp>) {
         } else {
             Some(emoji.domain.unwrap())
         };
+
         Ok(CustomEmoji {
             shortcode,
             url: url.clone(),

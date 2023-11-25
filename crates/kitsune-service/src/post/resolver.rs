@@ -215,8 +215,8 @@ mod test {
                     .db_pool(db_pool.clone())
                     .fetcher(fetcher)
                     .job_service(job_service)
+                    .resolver(webfinger)
                     .url_service(url_service.clone())
-                    .webfinger(webfinger)
                     .build();
 
                 let custom_emoji_service = CustomEmojiService::builder()
