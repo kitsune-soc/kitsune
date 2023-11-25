@@ -70,7 +70,8 @@ where
                 .fetch_account(searched_url.as_str().into())
                 .await
             {
-                Ok(account) => results.push(SearchResult::Account(account)),
+                Ok(Some(account)) => results.push(SearchResult::Account(account)),
+                Ok(None) => debug!("no account found"),
                 Err(error) => {
                     let error = error.into();
                     debug!(?error, "couldn't fetch actor via url");
@@ -78,7 +79,8 @@ where
             }
 
             match self.fetcher.fetch_post(searched_url.as_str()).await {
-                Ok(post) => results.push(SearchResult::Post(post)),
+                Ok(Some(post)) => results.push(SearchResult::Post(post)),
+                Ok(None) => debug!("no post found"),
                 Err(error) => {
                     let error = error.into();
                     debug!(?error, "couldn't fetch object via url");

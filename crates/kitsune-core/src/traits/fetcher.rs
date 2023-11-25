@@ -34,16 +34,55 @@ pub trait Fetcher: Send + Sync + 'static {
     fn fetch_account(
         &self,
         opts: AccountFetchOptions<'_>,
-    ) -> impl Future<Output = Result<Account, Self::Error>> + Send;
+    ) -> impl Future<Output = Result<Option<Account>, Self::Error>> + Send;
 
     fn fetch_emoji(
         &self,
         url: &str,
-    ) -> impl Future<Output = Result<CustomEmoji, Self::Error>> + Send;
+    ) -> impl Future<Output = Result<Option<CustomEmoji>, Self::Error>> + Send;
 
-    fn fetch_post(&self, url: &str) -> impl Future<Output = Result<Post, Self::Error>> + Send;
+    fn fetch_post(
+        &self,
+        url: &str,
+    ) -> impl Future<Output = Result<Option<Post>, Self::Error>> + Send;
 }
 
-// TODO: How can we implement this trait for an array?
-// Probably by changing the return type to a `Result<Option>` and then just fatally failing on actual errors
-// Would make the most sense.
+impl<T> Fetcher for [T]
+where
+    T: Fetcher,
+{
+    type Error = BoxError;
+
+    async fn fetch_account(
+        &self,
+        opts: AccountFetchOptions<'_>,
+    ) -> Result<Option<Account>, Self::Error> {
+        for fetcher in self {
+            if let Some(account) = fetcher.fetch_account(opts).await.map_err(Into::into)? {
+                return Ok(Some(account));
+            }
+        }
+
+        Ok(None)
+    }
+
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, Self::Error> {
+        for fetcher in self {
+            if let Some(emoji) = fetcher.fetch_emoji(url).await.map_err(Into::into)? {
+                return Ok(Some(emoji));
+            }
+        }
+
+        Ok(None)
+    }
+
+    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, Self::Error> {
+        for fetcher in self {
+            if let Some(post) = fetcher.fetch_post(url).await.map_err(Into::into)? {
+                return Ok(Some(post));
+            }
+        }
+
+        Ok(None)
+    }
+}

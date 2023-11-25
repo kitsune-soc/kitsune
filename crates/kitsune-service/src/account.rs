@@ -341,7 +341,6 @@ where
             self.fetcher
                 .fetch_account(opts)
                 .await
-                .map(Some)
                 .map_err(|err| Error::Fetcher(err.into()))
         } else {
             self.db_pool
