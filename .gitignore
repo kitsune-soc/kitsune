@@ -1,3 +1,7 @@
+# Documentation builds
+/dist
+/docs/book
+
 # Rust target directories
 target
 target-analyzer
