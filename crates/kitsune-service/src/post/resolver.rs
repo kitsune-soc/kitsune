@@ -185,8 +185,8 @@ mod test {
                     )
                     .resolver(webfinger.clone())
                     .search_backend(NoopSearchService)
+                    .account_cache(Arc::new(NoopCache.into()))
                     .post_cache(Arc::new(NoopCache.into()))
-                    .user_cache(Arc::new(NoopCache.into()))
                     .build();
 
                 let context_repo = KitsuneContextRepo::builder().db_pool(db_pool.clone()).build();
