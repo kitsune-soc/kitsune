@@ -20,7 +20,7 @@ impl<R> Fetcher<R>
 where
     R: Resolver,
 {
-    pub(crate) async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji> {
+    pub(crate) async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         let existing_emoji = self
             .db_pool
             .with_connection(|db_conn| {
@@ -37,11 +37,13 @@ where
             .await?;
 
         if let Some(emoji) = existing_emoji {
-            return Ok(emoji);
+            return Ok(Some(emoji));
         }
 
         let mut url = Url::parse(url)?;
-        let emoji: Emoji = self.fetch_ap_resource(url.clone()).await?;
+        let Some(emoji) = self.fetch_ap_resource::<_, Emoji>(url.clone()).await? else {
+            return Ok(None);
+        };
 
         let mut domain = url.host_str().ok_or(Error::MissingHost)?;
 
@@ -95,6 +97,7 @@ where
                 .scope_boxed()
             })
             .await?;
-        Ok(emoji)
+
+        Ok(Some(emoji))
     }
 }

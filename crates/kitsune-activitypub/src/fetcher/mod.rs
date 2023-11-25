@@ -58,7 +58,7 @@ impl<R> Fetcher<R>
 where
     R: Resolver,
 {
-    async fn fetch_ap_resource<U, T>(&self, url: U) -> Result<T>
+    async fn fetch_ap_resource<U, T>(&self, url: U) -> Result<Option<T>>
     where
         U: TryInto<Url>,
         Error: From<<U as TryInto<Url>>::Error>,
@@ -70,6 +70,11 @@ where
         }
 
         let response = self.client.get(url.as_str()).await?;
+
+        if !response.status().is_success() {
+            return Ok(None);
+        }
+
         let Some(content_type) = response
             .headers()
             .typed_get::<ContentType>()
@@ -102,7 +107,9 @@ where
             return Err(Error::InvalidResponse);
         }
 
-        Ok(response.jsonld().await?)
+        let response = response.jsonld().await?;
+
+        Ok(Some(response))
     }
 }
 
@@ -112,15 +119,18 @@ where
 {
     type Error = Error;
 
-    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Account, Self::Error> {
+    async fn fetch_account(
+        &self,
+        opts: AccountFetchOptions<'_>,
+    ) -> Result<Option<Account>, Self::Error> {
         self.fetch_actor(opts).await
     }
 
-    async fn fetch_emoji(&self, url: &str) -> Result<CustomEmoji, Self::Error> {
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, Self::Error> {
         self.fetch_emoji(url).await
     }
 
-    async fn fetch_post(&self, url: &str) -> Result<Post, Self::Error> {
+    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, Self::Error> {
         self.fetch_object(url).await
     }
 }

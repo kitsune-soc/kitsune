@@ -29,11 +29,14 @@ where
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub(crate) async fn fetch_actor(&self, opts: AccountFetchOptions<'_>) -> Result<Account> {
+    pub(crate) async fn fetch_actor(
+        &self,
+        opts: AccountFetchOptions<'_>,
+    ) -> Result<Option<Account>> {
         // Obviously we can't hit the cache nor the database if we wanna refetch the actor
         if !opts.refetch {
             if let Some(user) = self.user_cache.get(opts.url).await? {
-                return Ok(user);
+                return Ok(Some(user));
             }
 
             let user_data = self
@@ -52,12 +55,14 @@ where
                 .await?;
 
             if let Some(user) = user_data {
-                return Ok(user);
+                return Ok(Some(user));
             }
         }
 
         let mut url = Url::parse(opts.url)?;
-        let mut actor: Actor = self.fetch_ap_resource(url.clone()).await?;
+        let Some(mut actor) = self.fetch_ap_resource::<_, Actor>(url.clone()).await? else {
+            return Ok(None);
+        };
 
         let mut domain = url.host_str().ok_or(Error::MissingHost)?;
         let domain_buf;
@@ -186,6 +191,6 @@ where
             .add_to_index(account.clone().into())
             .await?;
 
-        Ok(account)
+        Ok(Some(account))
     }
 }

@@ -7,7 +7,6 @@ use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
 use kitsune_core::traits::Resolver;
 use kitsune_db::{model::post::Post, schema::posts};
-use kitsune_type::ap::Object;
 use scoped_futures::ScopedFutureExt;
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.
@@ -52,7 +51,9 @@ where
             return Ok(Some(post));
         }
 
-        let object: Object = self.fetch_ap_resource(url).await?;
+        let Some(object) = self.fetch_ap_resource(url).await? else {
+            return Ok(None);
+        };
 
         let process_data = ProcessNewObject::builder()
             .call_depth(call_depth)
@@ -71,10 +72,7 @@ where
 
     #[instrument(skip(self))]
     #[autometrics(track_concurrency)]
-    pub(crate) async fn fetch_object(&self, url: &str) -> Result<Post> {
-        self.fetch_object_inner(url, 0)
-            .await
-            .transpose()
-            .expect("[Bug] Highest level fetch returned a `None`")
+    pub(crate) async fn fetch_object(&self, url: &str) -> Result<Option<Post>> {
+        self.fetch_object_inner(url, 0).await
     }
 }

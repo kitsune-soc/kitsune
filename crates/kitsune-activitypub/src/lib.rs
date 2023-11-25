@@ -8,7 +8,7 @@ extern crate tracing;
 use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{future::try_join_all, FutureExt, TryFutureExt};
+use futures_util::{stream, FutureExt, StreamExt, TryStreamExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::Resolver;
@@ -89,20 +89,25 @@ where
         return Ok(());
     }
 
-    let futures = emoji_iter.clone().filter_map(|emoji| {
+    let futures = stream::iter(emoji_iter).filter_map(|emoji| async move {
         let remote_id = emoji.id.as_ref()?;
-        Some(fetcher.fetch_emoji(remote_id).map_ok(move |f| (f, emoji)))
+        let emoji = fetcher
+            .fetch_emoji(remote_id)
+            .await
+            .transpose()?
+            .map(move |f| (f, emoji));
+
+        Some(emoji)
     });
 
-    let emojis = try_join_all(futures)
-        .await?
-        .iter()
-        .map(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
+    let emojis = futures
+        .map_ok(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
             post_id,
             custom_emoji_id: resolved_emoji.id,
-            emoji_text: emoji_tag.name.to_string(),
+            emoji_text: emoji_tag.name.clone(),
         })
-        .collect::<Vec<PostCustomEmoji>>();
+        .try_collect::<Vec<PostCustomEmoji>>()
+        .await?;
 
     diesel::insert_into(posts_custom_emojis::table)
         .values(emojis)
@@ -212,7 +217,11 @@ where
             return Err(Error::InvalidDocument);
         }
 
-        CowBox::boxed(fetcher.fetch_actor(attributed_to.into()).await?)
+        let Some(author) = fetcher.fetch_actor(attributed_to.into()).await? else {
+            return Err(Error::NotFound);
+        };
+
+        CowBox::boxed(author)
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
