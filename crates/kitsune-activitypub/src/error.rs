@@ -74,8 +74,8 @@ pub enum Error {
 }
 
 impl From<Infallible> for Error {
-    fn from(_: Infallible) -> Self {
-        unreachable!();
+    fn from(err: Infallible) -> Self {
+        match err {}
     }
 }
 

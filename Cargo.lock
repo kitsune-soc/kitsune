@@ -3111,6 +3111,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-federation"
+version = "0.0.1-pre.4"
+dependencies = [
+ "derive_more 1.0.0-beta.6",
+ "futures-util",
+ "kitsune-activitypub",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-webfinger",
+]
+
+[[package]]
 name = "kitsune-federation-filter"
 version = "0.0.1-pre.4"
 dependencies = [

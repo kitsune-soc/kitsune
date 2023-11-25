@@ -3,7 +3,7 @@ use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post}
 use std::future::Future;
 use typed_builder::TypedBuilder;
 
-#[derive(Clone, Debug, TypedBuilder)]
+#[derive(Clone, Copy, Debug, TypedBuilder)]
 /// Options passed to the fetcher
 pub struct AccountFetchOptions<'a> {
     /// Prefetched WebFinger `acct` URI
@@ -43,3 +43,7 @@ pub trait Fetcher: Send + Sync + 'static {
 
     fn fetch_post(&self, url: &str) -> impl Future<Output = Result<Post, Self::Error>> + Send;
 }
+
+// TODO: How can we implement this trait for an array?
+// Probably by changing the return type to a `Result<Option>` and then just fatally failing on actual errors
+// Would make the most sense.

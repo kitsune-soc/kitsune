@@ -1,0 +1,12 @@
+[package]
+name = "kitsune-federation"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+derive_more = { version = "1.0.0-beta.6", features = ["from"] }
+futures-util = "0.3.29"
+kitsune-activitypub = { path = "../kitsune-activitypub" }
+kitsune-core = { path = "../kitsune-core" }
+kitsune-db = { path = "../kitsune-db" }
+kitsune-webfinger = { path = "../kitsune-webfinger" }

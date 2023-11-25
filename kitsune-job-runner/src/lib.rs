@@ -37,7 +37,11 @@ pub async fn run_dispatcher(
     let deliverer = Deliverer::builder()
         .federation_filter(state.service.federation_filter.clone())
         .build();
-    let ctx = Arc::new(JobRunnerContext { deliverer, state });
+
+    let ctx = Arc::new(JobRunnerContext {
+        db_pool: state.db_pool,
+        deliverer,
+    });
 
     let mut job_joinset = JoinSet::new();
     loop {

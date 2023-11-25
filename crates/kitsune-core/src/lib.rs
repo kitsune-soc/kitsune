@@ -15,10 +15,8 @@ extern crate tracing;
 pub mod error;
 pub mod event;
 //pub mod mapping;
-//pub mod resolve;
 //pub mod state;
 pub mod traits;
-//pub mod util;
 
 /*
 use self::{

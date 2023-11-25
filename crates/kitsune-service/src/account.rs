@@ -337,6 +337,7 @@ where
                 .acct((&webfinger_actor.username, &webfinger_actor.domain))
                 .url(&webfinger_actor.uri)
                 .build();
+
             self.fetcher
                 .fetch_account(opts)
                 .await
