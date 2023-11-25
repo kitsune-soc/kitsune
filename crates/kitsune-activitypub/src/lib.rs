@@ -40,7 +40,11 @@ pub mod fetcher;
 pub mod inbox_resolver;
 pub mod mapping;
 
-pub use self::{deliverer::Deliverer, fetcher::Fetcher, inbox_resolver::InboxResolver};
+pub use self::{
+    deliverer::{core::Deliverer as CoreDeliverer, Deliverer},
+    fetcher::Fetcher,
+    inbox_resolver::InboxResolver,
+};
 
 async fn handle_mentions(
     db_conn: &mut AsyncPgConnection,
