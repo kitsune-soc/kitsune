@@ -3117,9 +3117,15 @@ dependencies = [
  "derive_more 1.0.0-beta.6",
  "futures-util",
  "kitsune-activitypub",
+ "kitsune-cache",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-embed",
+ "kitsune-federation-filter",
+ "kitsune-search",
+ "kitsune-service",
  "kitsune-webfinger",
+ "typed-builder",
 ]
 
 [[package]]

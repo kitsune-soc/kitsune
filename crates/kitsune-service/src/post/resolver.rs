@@ -183,8 +183,8 @@ mod test {
                         })
                         .unwrap(),
                     )
+                    .resolver(webfinger.clone())
                     .search_backend(NoopSearchService)
-                    .webfinger(webfinger.clone())
                     .post_cache(Arc::new(NoopCache.into()))
                     .user_cache(Arc::new(NoopCache.into()))
                     .build();

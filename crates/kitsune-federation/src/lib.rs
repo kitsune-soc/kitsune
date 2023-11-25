@@ -1,9 +1,7 @@
+use self::activitypub::prepare_activitypub;
 use derive_more::From;
 use futures_util::{future::BoxFuture, FutureExt, TryFutureExt};
-use kitsune_activitypub::{
-    deliverer::Service as ActivityPubDelivererService, Deliverer as ActivityPubDeliverer,
-    Fetcher as ActivityPubFetcher, InboxResolver,
-};
+use kitsune_activitypub::{Deliverer as ActivityPubDeliverer, Fetcher as ActivityPubFetcher};
 use kitsune_core::{
     error::BoxError,
     traits::{deliverer, fetcher::AccountFetchOptions, Deliverer, Fetcher},
@@ -11,6 +9,11 @@ use kitsune_core::{
 use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post};
 use kitsune_webfinger::Webfinger;
 use std::sync::Arc;
+use typed_builder::TypedBuilder;
+
+mod activitypub;
+
+pub use self::activitypub::PrepareActivityPub;
 
 pub struct Federator {
     pub deliverer: Vec<AnyDeliverer>,
@@ -62,40 +65,13 @@ impl Fetcher for AnyFetcher {
     }
 }
 
-fn prepare_activitypub() -> (ActivityPubFetcher<Webfinger>, Arc<ActivityPubDeliverer>) {
-    let webfinger = Webfinger::new();
-    let fetcher = ActivityPubFetcher::builder()
-        .account_cache()
-        .db_pool()
-        .embed_client()
-        .federation_filter()
-        .post_cache()
-        .resolver(webfinger)
-        .search_backend()
-        .build();
-
-    let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()
-        .federation_filter()
-        .build();
-
-    let inbox_resolver = InboxResolver::new();
-    let service = ActivityPubDelivererService::builder()
-        .attachment()
-        .url()
-        .build();
-
-    let deliverer = ActivityPubDeliverer::builder()
-        .core(core_deliverer)
-        .db_pool()
-        .inbox_resolver(inbox_resolver)
-        .service(service)
-        .build();
-
-    (fetcher, deliverer)
+#[derive(TypedBuilder)]
+pub struct Prepare {
+    activitypub: PrepareActivityPub,
 }
 
-pub fn prepare_federator() -> Federator {
-    let (fetcher, deliverer) = prepare_activitypub();
+pub fn prepare_federator(prepare: Prepare) -> Federator {
+    let (fetcher, deliverer) = prepare_activitypub(prepare.activitypub);
 
     Federator {
         deliverer: vec![deliverer.into()],
