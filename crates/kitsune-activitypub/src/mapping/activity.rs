@@ -16,10 +16,10 @@ pub trait IntoActivity {
     type Output;
     type NegateOutput;
 
-    fn into_activity(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
+    fn into_activity(self, state: State<'_>) -> impl Future<Output = Result<Self::Output>> + Send;
     fn into_negate_activity(
         self,
-        state: &State,
+        state: State<'_>,
     ) -> impl Future<Output = Result<Self::NegateOutput>> + Send;
 }
 
@@ -27,7 +27,7 @@ impl IntoActivity for Account {
     type Output = Activity;
     type NegateOutput = Activity;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output> {
+    async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
         let account_url = state.service.url.user_url(self.id);
 
         Ok(Activity {
@@ -40,7 +40,7 @@ impl IntoActivity for Account {
         })
     }
 
-    async fn into_negate_activity(self, _state: &State) -> Result<Self::NegateOutput> {
+    async fn into_negate_activity(self, _state: State<'_>) -> Result<Self::NegateOutput> {
         todo!();
     }
 }
@@ -49,7 +49,7 @@ impl IntoActivity for Favourite {
     type Output = Activity;
     type NegateOutput = Activity;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output> {
+    async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
         let (account_url, post_url) = state
             .db_pool
             .with_connection(|db_conn| {
@@ -80,7 +80,7 @@ impl IntoActivity for Favourite {
         })
     }
 
-    async fn into_negate_activity(self, state: &State) -> Result<Self::NegateOutput> {
+    async fn into_negate_activity(self, state: State<'_>) -> Result<Self::NegateOutput> {
         let account_url = state
             .db_pool
             .with_connection(|db_conn| {
@@ -107,7 +107,7 @@ impl IntoActivity for Follow {
     type Output = Activity;
     type NegateOutput = Activity;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output> {
+    async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
         let (attributed_to, object) = state
             .db_pool
             .with_connection(|db_conn| {
@@ -138,7 +138,7 @@ impl IntoActivity for Follow {
         })
     }
 
-    async fn into_negate_activity(self, state: &State) -> Result<Self::NegateOutput> {
+    async fn into_negate_activity(self, state: State<'_>) -> Result<Self::NegateOutput> {
         let attributed_to = state
             .db_pool
             .with_connection(|db_conn| {
@@ -165,7 +165,7 @@ impl IntoActivity for Post {
     type Output = Activity;
     type NegateOutput = Activity;
 
-    async fn into_activity(self, state: &State) -> Result<Self::Output> {
+    async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
         let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
@@ -203,7 +203,7 @@ impl IntoActivity for Post {
         }
     }
 
-    async fn into_negate_activity(self, state: &State) -> Result<Self::NegateOutput> {
+    async fn into_negate_activity(self, state: State<'_>) -> Result<Self::NegateOutput> {
         let account_url = state.service.url.user_url(self.account_id);
 
         let activity = if self.reposted_post_id.is_some() {

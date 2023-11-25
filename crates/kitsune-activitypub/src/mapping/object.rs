@@ -28,20 +28,19 @@ use std::{future::Future, str::FromStr};
 pub trait IntoObject {
     type Output;
 
-    fn into_object(self, state: &State) -> impl Future<Output = Result<Self::Output>> + Send;
+    fn into_object(self, state: State<'_>) -> impl Future<Output = Result<Self::Output>> + Send;
 }
 
 impl IntoObject for DbMediaAttachment {
     type Output = MediaAttachment;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output> {
-        let mime =
-            Mime::from_str(&self.content_type).map_err(|_| ApiError::UnsupportedMediaType)?;
+    async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
+        let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
         let r#type = match mime.type_() {
             mime::AUDIO => MediaAttachmentType::Audio,
             mime::IMAGE => MediaAttachmentType::Image,
             mime::VIDEO => MediaAttachmentType::Video,
-            _ => return Err(ApiError::UnsupportedMediaType.into()),
+            _ => return Err(Error::UnsupportedMediaType),
         };
         let url = state.service.attachment.get_url(self.id).await?;
 
@@ -94,12 +93,12 @@ fn build_post_tags(
 impl IntoObject for Post {
     type Output = Object;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output> {
+    async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
         // Right now a repost can't have content
         // Therefore it's also not an object
         // We just return en error here
         if self.reposted_post_id.is_some() {
-            return Err(ApiError::NotFound.into());
+            return Err(Error::NotFound);
         }
 
         let (account, in_reply_to, mentions, emojis, attachment_stream) = state
@@ -197,7 +196,7 @@ impl IntoObject for Post {
 impl IntoObject for Account {
     type Output = Actor;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output> {
+    async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
         let (icon, image) = state
             .db_pool
             .with_connection(|db_conn| {
@@ -262,12 +261,12 @@ impl IntoObject for Account {
 impl IntoObject for CustomEmoji {
     type Output = Emoji;
 
-    async fn into_object(self, state: &State) -> Result<Self::Output> {
+    async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
         // Officially we don't have any info about remote emojis as we're not the origin
         // Let's pretend we're not home and do not answer
         let name = match self.domain {
             None => Ok(format!(":{}:", self.shortcode)),
-            Some(_) => Err(ApiError::NotFound),
+            Some(_) => Err(Error::NotFound),
         }?;
 
         let icon = state

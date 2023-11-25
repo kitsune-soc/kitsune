@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    mapping::IntoActivity,
+    mapping::{self, IntoActivity},
     InboxResolver,
 };
 use diesel::{
@@ -16,6 +16,7 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     PgPool,
 };
+use kitsune_service::{attachment::AttachmentService, url::UrlService};
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
 use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
@@ -27,14 +28,33 @@ pub mod core;
 const MAX_CONCURRENT_REQUESTS: usize = 10;
 
 #[derive(TypedBuilder)]
+pub struct Service {
+    attachment: AttachmentService,
+    url: UrlService,
+}
+
+#[derive(TypedBuilder)]
 #[builder(build_method(into = Arc<Deliverer>))]
 pub struct Deliverer {
     core: core::Deliverer,
     db_pool: PgPool,
     inbox_resolver: InboxResolver,
+    service: Service,
 }
 
 impl Deliverer {
+    fn mapping_state(&self) -> mapping::State<'_> {
+        let service = mapping::Service::builder()
+            .attachment(&self.service.attachment)
+            .url(&self.service.url)
+            .build();
+
+        mapping::State::builder()
+            .db_pool(&self.db_pool)
+            .service(service)
+            .build()
+    }
+
     async fn accept_follow(&self, follow: Follow) -> Result<()> {
         let (follower_inbox_url, (followed_account, followed_user)): (String, _) = self
             .db_pool
@@ -57,7 +77,7 @@ impl Deliverer {
             })
             .await?;
 
-        let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
+        let followed_account_url = self.service.url.user_url(followed_account.id);
 
         // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
         // But I'm not sure how I could encode these into the form of these two traits
@@ -105,7 +125,7 @@ impl Deliverer {
             .try_chunks(MAX_CONCURRENT_REQUESTS)
             .map_err(|err| err.1);
 
-        let activity = post.into_activity(&ctx.state).await?;
+        let activity = post.into_activity(self.mapping_state()).await?;
 
         // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
         self.core
@@ -143,7 +163,7 @@ impl Deliverer {
             .try_chunks(MAX_CONCURRENT_REQUESTS)
             .map_err(|err| err.1);
 
-        let delete_activity = post.into_negate_activity(&ctx.state).await?;
+        let delete_activity = post.into_negate_activity(self.mapping_state()).await?;
 
         // TODO: Should we deliver to the inboxes that are contained inside a `TryChunksError`?
         self.core
@@ -177,7 +197,7 @@ impl Deliverer {
             .await?;
 
         if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_activity(&ctx.state).await?;
+            let activity = favourite.into_activity(self.mapping_state()).await?;
 
             self.core
                 .deliver(inbox_url, &account, &user, &activity)
@@ -210,7 +230,7 @@ impl Deliverer {
             .await?;
 
         if let Some(followed_inbox) = followed_inbox {
-            let follow_activity = follow.into_activity(&ctx.state).await?;
+            let follow_activity = follow.into_activity(self.mapping_state()).await?;
 
             self.core
                 .deliver(&followed_inbox, &follower, &follower_user, &follow_activity)
@@ -244,7 +264,7 @@ impl Deliverer {
             })
             .await?;
 
-        let followed_account_url = ctx.state.service.url.user_url(followed_account.id);
+        let followed_account_url = self.service.url.user_url(followed_account.id);
 
         // Constructing this here is against our idea of the `IntoActivity` and `IntoObject` traits
         // But I'm not sure how I could encode these into the form of these two traits
@@ -296,7 +316,7 @@ impl Deliverer {
             .await?;
 
         if let Some(ref inbox_url) = inbox_url {
-            let activity = favourite.into_negate_activity(&ctx.state).await?;
+            let activity = favourite.into_negate_activity(self.mapping_state()).await?;
             self.core
                 .deliver(inbox_url, &account, &user, &activity)
                 .await?;
@@ -328,7 +348,7 @@ impl Deliverer {
             .await?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
-            let follow_activity = follow.into_negate_activity(&ctx.state).await?;
+            let follow_activity = follow.into_negate_activity(self.mapping_state()).await?;
 
             self.core
                 .deliver(
@@ -363,7 +383,7 @@ impl Deliverer {
             return Ok(());
         };
 
-        let activity = account.clone().into_activity(&ctx.state).await?;
+        let activity = account.clone().into_activity(self.mapping_state()).await?;
         let inbox_stream = self
             .inbox_resolver
             .resolve_followers(&account)
@@ -407,7 +427,7 @@ impl Deliverer {
             .try_chunks(MAX_CONCURRENT_REQUESTS)
             .map_err(|err| err.1);
 
-        let mut activity = post.into_activity(&ctx.state).await?;
+        let mut activity = post.into_activity(self.mapping_state()).await?;
 
         // Patch in the update
         activity.r#type = ActivityType::Update;

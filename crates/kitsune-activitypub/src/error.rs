@@ -51,6 +51,9 @@ pub enum Error {
     #[error("Missing host")]
     MissingHost,
 
+    #[error("Not found")]
+    NotFound,
+
     #[error(transparent)]
     Resolver(BoxError),
 
@@ -62,6 +65,9 @@ pub enum Error {
 
     #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
+
+    #[error("Unsupported media type")]
+    UnsupportedMediaType,
 
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),

@@ -10,14 +10,14 @@ mod util;
 pub use self::activity::IntoActivity;
 pub use self::object::IntoObject;
 
-#[derive(TypedBuilder)]
-pub struct Service {
-    attachment: AttachmentService,
-    url: UrlService,
+#[derive(Clone, Copy, TypedBuilder)]
+pub struct Service<'a> {
+    attachment: &'a AttachmentService,
+    url: &'a UrlService,
 }
 
-#[derive(TypedBuilder)]
-pub struct State {
-    db_pool: PgPool,
-    service: Service,
+#[derive(Clone, Copy, TypedBuilder)]
+pub struct State<'a> {
+    db_pool: &'a PgPool,
+    service: Service<'a>,
 }
