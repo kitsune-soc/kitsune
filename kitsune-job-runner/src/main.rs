@@ -1,7 +1,9 @@
 use clap::Parser;
 use color_eyre::eyre;
 use kitsune_config::Configuration;
-use kitsune_core::consts::VERSION;
+use kitsune_consts::VERSION;
+use kitsune_federation_filter::FederationFilter;
+use kitsune_job_runner::JobDispatcherState;
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -33,7 +35,14 @@ async fn main() -> eyre::Result<()> {
     )
     .await?;
     let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)?;
-    let state = kitsune_core::prepare_state(&config, db_pool, job_queue.clone()).await?;
+
+    let federation_filter = FederationFilter::new(&config.instance.federation_filter)?;
+    let state = JobDispatcherState::builder()
+        .attachment_service()
+        .db_pool(db_pool)
+        .federation_filter(federation_filter)
+        .url_service()
+        .build();
 
     kitsune_job_runner::run_dispatcher(job_queue, state, config.job_queue.num_workers.into()).await;
 

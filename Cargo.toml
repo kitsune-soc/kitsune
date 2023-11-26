@@ -78,7 +78,5 @@ targets = [
 pr-run-mode = "plan"
 
 [patch.crates-io]
-# Patch `isolang` for quicker compiles
-isolang = { git = "https://github.com/humenda/isolang-rs.git", rev = "f015b8cce82b6168303c84543fdd25f57005141c" }
 # Patch `redis` for up-to-date `ahash`
 redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }

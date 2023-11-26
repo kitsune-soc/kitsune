@@ -25,7 +25,7 @@ pub trait Deliverer: Send + Sync + 'static {
     fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>>;
 }
 
-impl<T> Deliverer for [T]
+impl<T> Deliverer for Vec<T>
 where
     T: Deliverer,
 {

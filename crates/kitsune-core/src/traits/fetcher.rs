@@ -47,7 +47,7 @@ pub trait Fetcher: Send + Sync + 'static {
     ) -> impl Future<Output = Result<Option<Post>, Self::Error>> + Send;
 }
 
-impl<T> Fetcher for [T]
+impl<T> Fetcher for Vec<T>
 where
     T: Fetcher,
 {
