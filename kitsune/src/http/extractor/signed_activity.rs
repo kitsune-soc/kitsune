@@ -14,7 +14,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
-use kitsune_core::{activitypub::fetcher::FetchOptions, error::ApiError};
+use kitsune_core::traits::fetcher::AccountFetchOptions;
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
     ring::signature::{
@@ -70,7 +70,10 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         if !verify_signature(&parts, state.db_pool(), Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
-            let opts = FetchOptions::builder().refetch(true).url(ap_id).build();
+            let opts = AccountFetchOptions::builder()
+                .refetch(true)
+                .url(ap_id)
+                .build();
             let remote_user = state
                 .fetcher()
                 .fetch_actor(opts)

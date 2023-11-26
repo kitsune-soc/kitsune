@@ -7,12 +7,10 @@ use crate::{
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
 use http::StatusCode;
-use kitsune_core::{
-    consts::API_MAX_LIMIT,
-    mapping::MastodonMapper,
-    service::search::{Search, SearchResult, SearchService},
-};
+use kitsune_consts::API_MAX_LIMIT;
+use kitsune_mastodon::MastodonMapper;
 use kitsune_search::SearchIndex;
+use kitsune_service::search::{Search, SearchResult, SearchService};
 use kitsune_type::mastodon::SearchResult as MastodonSearchResult;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

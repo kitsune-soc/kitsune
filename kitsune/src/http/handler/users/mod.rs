@@ -4,7 +4,8 @@ use axum::{
     routing::{self, post},
     Router,
 };
-use kitsune_core::{error::ApiError, mapping::IntoObject, service::account::AccountService};
+use kitsune_core::{error::ApiError, mapping::IntoObject};
+use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
 

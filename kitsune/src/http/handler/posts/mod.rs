@@ -1,6 +1,7 @@
 use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
-use kitsune_core::{mapping::IntoObject, service::post::PostService};
+use kitsune_core::mapping::IntoObject;
+use kitsune_service::post::PostService;
 use kitsune_type::ap::Object;
 use speedy_uuid::Uuid;
 

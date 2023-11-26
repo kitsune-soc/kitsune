@@ -11,12 +11,10 @@ use axum::{
     Json,
 };
 use futures_util::{FutureExt, TryStreamExt};
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::{
-        timeline::{GetPublic, TimelineService},
-        url::UrlService,
-    },
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::{
+    timeline::{GetPublic, TimelineService},
+    url::UrlService,
 };
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;

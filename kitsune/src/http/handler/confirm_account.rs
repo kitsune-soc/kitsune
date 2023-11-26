@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, State},
     routing, Router,
 };
-use kitsune_core::service::user::UserService;
+use kitsune_service::user::UserService;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

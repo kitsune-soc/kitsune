@@ -7,7 +7,7 @@ use async_graphql::{
     Context, Object, Result,
 };
 use futures_util::TryStreamExt;
-use kitsune_core::service::timeline::{GetHome, GetPublic};
+use kitsune_service::timeline::{GetHome, GetPublic};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]

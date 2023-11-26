@@ -10,7 +10,3 @@ kitsune-messaging = { path = "../kitsune-messaging" }
 serde = { version = "1.0.193", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 typed-builder = "0.18.0"
-
-[features]
-default = []
-mastodon-api = []

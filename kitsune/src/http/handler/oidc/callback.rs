@@ -8,15 +8,13 @@ use axum::{
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::{
-    error::ApiError,
-    service::user::{Register, UserService},
-};
+use kitsune_core::error::ApiError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
 };
 use kitsune_oidc::OidcService;
+use kitsune_service::user::{Register, UserService};
 use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 

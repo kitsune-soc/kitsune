@@ -26,8 +26,8 @@ use self::{
 };
 use athena::JobQueue;
 use kitsune_config::Configuration;
-use kitsune_core::job::KitsuneContextRepo;
 use kitsune_db::PgPool;
+use kitsune_jobs::KitsuneContextRepo;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};

@@ -3,7 +3,7 @@ use crate::http::graphql::ContextExt;
 use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
-use kitsune_core::service::attachment;
+use kitsune_service::attachment;
 use kitsune_storage::BoxError;
 use mime::Mime;
 use std::str::FromStr;

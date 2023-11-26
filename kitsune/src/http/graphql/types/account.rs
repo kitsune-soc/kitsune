@@ -7,13 +7,13 @@ use async_graphql::{
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
-use kitsune_core::service::account::GetPosts;
 use kitsune_db::{
     model::{
         account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
     },
     schema::media_attachments,
 };
+use kitsune_service::account::GetPosts;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;

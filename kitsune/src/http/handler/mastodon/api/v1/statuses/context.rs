@@ -5,7 +5,8 @@ use axum::{
     Json,
 };
 use futures_util::TryStreamExt;
-use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::post::PostService;
 use kitsune_type::mastodon::status::Context;
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;

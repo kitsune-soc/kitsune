@@ -1,9 +1,7 @@
 use crate::{error::Result, state::Zustand};
 use axum::{extract::State, routing, Json, Router};
-use kitsune_core::{
-    consts::VERSION,
-    service::{instance::InstanceService, url::UrlService},
-};
+use kitsune_consts::VERSION;
+use kitsune_service::{instance::InstanceService, url::UrlService};
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},
     Instance,

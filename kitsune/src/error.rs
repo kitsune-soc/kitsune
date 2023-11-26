@@ -5,7 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use http::StatusCode;
-use kitsune_core::error::{ApiError, Error as CoreError};
+use kitsune_service::error::{Error as ServiceError, PostError};
 use std::str::ParseBoolError;
 use thiserror::Error;
 
@@ -19,9 +19,6 @@ pub enum Error {
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
-
-    #[error(transparent)]
-    Core(#[from] CoreError),
 
     #[error(transparent)]
     Database(#[from] diesel::result::Error),
@@ -53,6 +50,9 @@ pub enum Error {
 
     #[error("Password mismatch")]
     PasswordMismatch,
+
+    #[error(transparent)]
+    Service(#[from] ServiceError),
 
     #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
@@ -88,12 +88,6 @@ pub enum OAuth2Error {
     Web(#[from] oxide_auth_axum::WebError),
 }
 
-impl From<ApiError> for Error {
-    fn from(value: ApiError) -> Self {
-        Self::Core(value.into())
-    }
-}
-
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
     E: Into<Error>,
@@ -118,19 +112,19 @@ impl IntoResponse for Error {
             Self::Database(diesel::result::Error::NotFound) => {
                 StatusCode::NOT_FOUND.into_response()
             }
-            Self::Core(CoreError::Validate(report)) => {
+            Self::Service(ServiceError::Validate(report)) => {
                 (StatusCode::BAD_REQUEST, Json(report)).into_response()
             }
-            err @ Self::Core(CoreError::Api(ApiError::NotFound)) => {
+            err @ Self::Service(ServiceError::NotFound) => {
                 (StatusCode::NOT_FOUND, err.to_string()).into_response()
             }
-            err @ Self::Core(CoreError::Api(ApiError::BadRequest)) => {
+            err @ Self::Service(ServiceError::Post(PostError::BadRequest)) => {
                 (StatusCode::BAD_REQUEST, err.to_string()).into_response()
             }
-            err @ Self::Core(CoreError::Api(ApiError::Unauthorised)) => {
+            err @ Self::Service(ServiceError::Post(PostError::Unauthorised)) => {
                 (StatusCode::UNAUTHORIZED, err.to_string()).into_response()
             }
-            err @ Self::Core(CoreError::Api(ApiError::UnsupportedMediaType)) => {
+            err @ Self::Service(_) => {
                 (StatusCode::UNSUPPORTED_MEDIA_TYPE, err.to_string()).into_response()
             }
             error => {

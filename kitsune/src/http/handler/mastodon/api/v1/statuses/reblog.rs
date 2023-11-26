@@ -7,10 +7,8 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::post::{PostService, RepostPost},
-};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::post::{PostService, RepostPost};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;

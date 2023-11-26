@@ -1,6 +1,7 @@
 use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{debug_handler, extract::Path, extract::State, routing, Router};
-use kitsune_core::{mapping::IntoObject, service::custom_emoji::CustomEmojiService};
+use kitsune_core::mapping::IntoObject;
+use kitsune_service::custom_emoji::CustomEmojiService;
 use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 

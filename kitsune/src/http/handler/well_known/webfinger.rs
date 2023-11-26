@@ -5,7 +5,7 @@ use axum::{
 };
 use axum_extra::either::Either;
 use http::StatusCode;
-use kitsune_core::service::{
+use kitsune_service::{
     account::{AccountService, GetUser},
     url::UrlService,
 };

@@ -7,7 +7,7 @@ use axum::{
     extract::{Path, State},
 };
 use http::StatusCode;
-use kitsune_core::service::notification::NotificationService;
+use kitsune_service::notification::NotificationService;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]

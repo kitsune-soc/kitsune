@@ -14,13 +14,11 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::{
-        notification::{GetNotifications, NotificationService},
-        url::UrlService,
-    },
+use kitsune_core::error::ApiError;
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::{
+    notification::{GetNotifications, NotificationService},
+    url::UrlService,
 };
 use kitsune_type::mastodon::{notification::NotificationType, Notification};
 use serde::Deserialize;

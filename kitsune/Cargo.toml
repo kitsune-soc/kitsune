@@ -40,16 +40,20 @@ kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-config = { path = "../crates/kitsune-config" }
+kitsune-consts = { path = "../crates/kitsune-consts" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
+kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-language = { path = "../crates/kitsune-language" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-search = { path = "../crates/kitsune-search" }
+kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
+kitsune-util = { path = "../crates/kitsune-util" }
 metrics = "0.21.1"
 mimalloc = "0.1.39"
 mime = "0.3.17"
@@ -96,6 +100,9 @@ async-graphql = { version = "6.0.11", default-features = false, features = [
 ], optional = true }
 async-graphql-axum = { version = "6.0.11", optional = true }
 
+# "mastodon-api" feature
+kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
+
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 
@@ -114,6 +121,6 @@ graphql-api = [
     "dep:async-graphql-axum",
     "speedy-uuid/async-graphql",
 ]
-mastodon-api = ["kitsune-core/mastodon-api"]
+mastodon-api = ["dep:kitsune-mastodon"]
 meilisearch = ["kitsune-search/meilisearch"]
 oidc = ["dep:kitsune-oidc"]

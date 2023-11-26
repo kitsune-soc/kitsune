@@ -13,12 +13,10 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::TryStreamExt;
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::{
-        post::{GetAccountsInteractingWithPost, PostService},
-        url::UrlService,
-    },
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::{
+    post::{GetAccountsInteractingWithPost, PostService},
+    url::UrlService,
 };
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;

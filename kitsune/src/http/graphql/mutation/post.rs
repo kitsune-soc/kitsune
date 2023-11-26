@@ -3,7 +3,7 @@ use crate::http::graphql::{
     ContextExt,
 };
 use async_graphql::{Context, Object, Result};
-use kitsune_core::service::post::{CreatePost, DeletePost};
+use kitsune_service::post::{CreatePost, DeletePost};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]

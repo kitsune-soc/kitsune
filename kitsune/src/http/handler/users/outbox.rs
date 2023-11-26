@@ -3,15 +3,13 @@ use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use futures_util::{stream, StreamExt, TryStreamExt};
-use kitsune_core::{
-    mapping::IntoActivity,
-    service::{account::GetPosts, url::UrlService},
-};
+use kitsune_core::mapping::IntoActivity;
 use kitsune_db::{
     model::{account::Account, post::Post},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
 };
+use kitsune_service::{account::GetPosts, url::UrlService};
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
