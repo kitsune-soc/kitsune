@@ -4,6 +4,7 @@ use kitsune_config::Configuration;
 use kitsune_consts::VERSION;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_job_runner::JobDispatcherState;
+use kitsune_service::{attachment::AttachmentService, url::UrlService};
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -36,12 +37,24 @@ async fn main() -> eyre::Result<()> {
     .await?;
     let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)?;
 
+    let url_service = UrlService::builder()
+        .domain(config.url.domain)
+        .scheme(config.url.scheme)
+        .webfinger_domain(config.instance.webfinger_domain)
+        .build();
+    let attachment_service = AttachmentService::builder()
+        .db_pool(db_pool.clone())
+        .media_proxy_enabled(config.server.media_proxy_enabled)
+        .storage_backend(kitsune_service::prepare::storage(&config.storage)?)
+        .url_service(url_service.clone())
+        .build();
     let federation_filter = FederationFilter::new(&config.instance.federation_filter)?;
+
     let state = JobDispatcherState::builder()
-        .attachment_service()
+        .attachment_service(attachment_service)
         .db_pool(db_pool)
         .federation_filter(federation_filter)
-        .url_service()
+        .url_service(url_service)
         .build();
 
     kitsune_job_runner::run_dispatcher(job_queue, state, config.job_queue.num_workers.into()).await;

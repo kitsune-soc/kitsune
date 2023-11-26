@@ -107,36 +107,6 @@ fn prepare_captcha(config: &captcha::Configuration) -> AnyCaptcha {
     }
 }
 
-fn prepare_storage(config: &Configuration) -> eyre::Result<AnyStorageBackend> {
-    let storage = match config.storage {
-        storage::Configuration::Fs(ref fs_config) => {
-            FsStorage::new(fs_config.upload_dir.as_str().into()).into()
-        }
-        storage::Configuration::S3(ref s3_config) => {
-            let path_style = if s3_config.force_path_style {
-                rusty_s3::UrlStyle::Path
-            } else {
-                rusty_s3::UrlStyle::VirtualHost
-            };
-
-            let s3_credentials = S3Credentials::new(
-                s3_config.access_key.as_str(),
-                s3_config.secret_access_key.as_str(),
-            );
-            let s3_bucket = S3Bucket::new(
-                s3_config.endpoint_url.parse()?,
-                path_style,
-                s3_config.bucket_name.to_string(),
-                s3_config.region.to_string(),
-            )?;
-
-            S3Storage::new(s3_bucket, s3_credentials).into()
-        }
-    };
-
-    Ok(storage)
-}
-
 fn prepare_mail_sender(
     config: &email::Configuration,
 ) -> eyre::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {

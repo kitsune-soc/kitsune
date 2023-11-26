@@ -23,6 +23,7 @@ pub mod job;
 pub mod mailing;
 pub mod notification;
 pub mod post;
+pub mod prepare;
 pub mod search;
 pub mod timeline;
 pub mod url;

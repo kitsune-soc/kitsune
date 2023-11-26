@@ -3365,6 +3365,7 @@ dependencies = [
  "pretty_assertions",
  "rand",
  "rsa",
+ "rusty-s3",
  "scoped-futures",
  "serial_test",
  "simd-json",
