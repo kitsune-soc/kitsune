@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     http::{
-        extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+        extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
     state::Zustand,
@@ -108,7 +108,7 @@ pub async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(attachment_id): Path<Uuid>,
-    FormOrJson(form): FormOrJson<UpdateAttachment>,
+    AgnosticForm(form): AgnosticForm<UpdateAttachment>,
 ) -> Result<Json<MediaAttachment>> {
     let update = Update::builder()
         .account_id(user_data.account.id)

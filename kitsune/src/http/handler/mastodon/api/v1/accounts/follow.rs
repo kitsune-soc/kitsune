@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
 };
 use axum::{
     debug_handler,
@@ -37,7 +37,7 @@ pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-    follow_body: Option<FormOrJson<FollowBody>>,
+    follow_body: Option<AgnosticForm<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
         return Err(ApiError::BadRequest.into());

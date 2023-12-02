@@ -1,7 +1,7 @@
 use crate::state::Zustand;
 use crate::{
     error::Result,
-    http::extractor::FormOrJson,
+    http::extractor::AgnosticForm,
     oauth2::{CreateApp, OAuth2Service},
 };
 use axum::{extract::State, routing, Json, Router};
@@ -25,7 +25,7 @@ pub struct AppForm {
 )]
 async fn post(
     State(oauth2): State<OAuth2Service>,
-    FormOrJson(form): FormOrJson<AppForm>,
+    AgnosticForm(form): AgnosticForm<AppForm>,
 ) -> Result<Json<App>> {
     let create_app = CreateApp::builder()
         .name(form.client_name)

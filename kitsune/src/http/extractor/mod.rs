@@ -23,10 +23,10 @@ mod auth;
 mod json;
 mod signed_activity;
 
-pub struct FormOrJson<T>(pub T);
+pub struct AgnosticForm<T>(pub T);
 
 #[async_trait]
-impl<S, T> FromRequest<S, Body> for FormOrJson<T>
+impl<S, T> FromRequest<S, Body> for AgnosticForm<T>
 where
     S: Send + Sync,
     T: DeserializeOwned + Send + 'static,

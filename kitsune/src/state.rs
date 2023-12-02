@@ -3,12 +3,13 @@ use axum_extra::extract::cookie;
 use kitsune_core::event::PostEventEmitter;
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
+use kitsune_federation::any::{AnyDeliverer, AnyFetcher};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_service::{
-    account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
-    custom_emoji::CustomEmojiService, instance::InstanceService, job::JobService,
-    mailing::MailingService, notification::NotificationService, post::PostService,
-    search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
+    attachment::AttachmentService, captcha::CaptchaService, custom_emoji::CustomEmojiService,
+    instance::InstanceService, job::JobService, mailing::MailingService,
+    notification::NotificationService, timeline::TimelineService, url::UrlService,
+    user::UserService,
 };
 use std::{ops::Deref, sync::Arc};
 
@@ -17,6 +18,11 @@ use kitsune_mastodon::MastodonMapper;
 
 #[cfg(feature = "oidc")]
 use kitsune_oidc::OidcService;
+
+pub type AccountService =
+    kitsune_service::account::AccountService<Vec<AnyFetcher>, Vec<AnyDeliverer>>;
+pub type PostService = kitsune_service::post::PostService<Vec<AnyFetcher>, Vec<AnyDeliverer>>;
+pub type SearchService = kitsune_service::search::SearchService<Vec<AnyFetcher>>;
 
 #[macro_export]
 macro_rules! impl_from_ref {
@@ -35,7 +41,7 @@ macro_rules! impl_from_ref {
 impl_from_ref! {
     Zustand;
     [
-        PgPool => |input: &Zustand| input.db_pool().clone()
+        PgPool => |input: &Zustand| input.db_pool.clone()
     ]
 }
 
@@ -72,7 +78,6 @@ impl_from_ref! {
     ]
 }
 
-#[derive(Clone)]
 pub struct SessionConfig {
     pub cookie_key: cookie::Key,
     pub flash_config: axum_flash::Config,
