@@ -7,6 +7,7 @@ use axum::{
     Form, RequestExt, TypedHeader,
 };
 use headers::ContentType;
+use http::StatusCode;
 use mime::Mime;
 use serde::de::DeserializeOwned;
 
@@ -41,20 +42,21 @@ where
             .extract_parts::<TypedHeader<ContentType>>()
             .await
             .map_err(IntoResponse::into_response)?;
+        let content_type = Mime::from(content_type);
 
-        let content = if Mime::from(content_type)
-            .as_ref()
-            .starts_with(mime::APPLICATION_WWW_FORM_URLENCODED.as_ref())
-        {
+        let content = if content_type.essence_str() == mime::APPLICATION_WWW_FORM_URLENCODED {
             Form::from_request(req, state)
                 .await
                 .map_err(IntoResponse::into_response)?
                 .0
-        } else {
+        } else if content_type.essence_str() == mime::APPLICATION_JSON {
             Json::from_request(req, state)
                 .await
                 .map_err(IntoResponse::into_response)?
                 .0
+        } else {
+            error!(%content_type, "Unknown content type");
+            return Err(StatusCode::UNPROCESSABLE_ENTITY.into_response());
         };
 
         Ok(Self(content))
