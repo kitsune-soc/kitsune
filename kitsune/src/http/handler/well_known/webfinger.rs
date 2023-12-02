@@ -1,14 +1,14 @@
-use crate::{error::Result, state::Zustand};
+use crate::{
+    error::Result,
+    state::{AccountService, Zustand},
+};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
 };
 use axum_extra::either::Either;
 use http::StatusCode;
-use kitsune_service::{
-    account::{AccountService, GetUser},
-    url::UrlService,
-};
+use kitsune_service::{account::GetUser, url::UrlService};
 use kitsune_type::webfinger::{Link, Resource};
 use serde::Deserialize;
 use utoipa::IntoParams;
