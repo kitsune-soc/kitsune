@@ -9,6 +9,7 @@ argon2 = "0.5.2"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
 bytes = "1.5.0"
+deadpool-redis = "0.13.0"
 derive_builder = "0.12.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
@@ -49,6 +50,7 @@ rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"
+serde = "1.0.193"
 simd-json = "0.13.4"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
