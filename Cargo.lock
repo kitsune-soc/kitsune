@@ -2762,6 +2762,7 @@ dependencies = [
 name = "kitsune"
 version = "0.0.1-pre.4"
 dependencies = [
+ "ahash 0.8.6",
  "argon2",
  "askama",
  "askama_axum",

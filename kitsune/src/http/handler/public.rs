@@ -1,3 +1,4 @@
+use ahash::AHashMap;
 use axum::{extract::Path, routing, Router, TypedHeader};
 use axum_extra::either::Either;
 use headers::ContentType;
@@ -5,10 +6,10 @@ use http::StatusCode;
 use include_dir::include_dir;
 use mime::Mime;
 use once_cell::sync::Lazy;
-use std::{collections::HashMap, path::Path as FsPath, sync::RwLock};
+use std::{path::Path as FsPath, sync::RwLock};
 
 static PUBLIC_DIR: include_dir::Dir<'_> = include_dir!("public");
-static PUBLIC_DIR_MIME_TYPE: Lazy<RwLock<HashMap<&'static FsPath, Mime>>> =
+static PUBLIC_DIR_MIME_TYPE: Lazy<RwLock<AHashMap<&'static FsPath, Mime>>> =
     Lazy::new(RwLock::default);
 
 #[allow(clippy::unused_async)]

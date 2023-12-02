@@ -7,6 +7,7 @@ homepage = "https://joinkitsune.org"
 build = "build.rs"
 
 [dependencies]
+ahash = "0.8.6"
 athena = { path = "../lib/athena" }
 argon2 = { version = "0.5.2", features = ["std"] }
 askama = { version = "0.12.1", features = [
