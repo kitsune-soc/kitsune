@@ -7,14 +7,14 @@ version.workspace = true
 ignored = ["isahc"] # To make `meilisearch` builds static
 
 [dependencies]
-diesel = "2.1.3"
+diesel = "2.1.4"
 diesel-async = "0.4.1"
 diesel_full_text_search = { version = "2.1.1", default-features = false }
 enum_dispatch = "0.3.12"
 futures-util = "0.3.29"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-language = { path = "../kitsune-language" }
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive"] }
 thiserror = "1.0.50"

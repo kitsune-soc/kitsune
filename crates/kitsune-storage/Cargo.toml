@@ -6,7 +6,7 @@ edition.workspace = true
 [dependencies]
 bytes = "1.5.0"
 futures-util = "0.3.29"
-http = "0.2.10"
+http = "0.2.11"
 hyper = { version = "0.14.27", features = ["stream"] }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-util = { path = "../kitsune-util" }

@@ -6,7 +6,7 @@ version.workspace = true
 [dependencies]
 deadpool-redis = "0.13.0"
 enum_dispatch = "0.3.12"
-http = "0.2.10"
+http = "0.2.11"
 hyper = "0.14.27"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
@@ -18,8 +18,8 @@ openidconnect = { version = "3.4.0", default-features = false, features = [
     "accept-string-booleans",
 ] }
 redis = "0.23.3"
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
 simd-json = "0.13.4"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 thiserror = "1.0.50"
-url = "2.4.1"
+url = "2.5.0"
