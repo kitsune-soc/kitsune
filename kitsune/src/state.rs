@@ -3,7 +3,7 @@ use axum_extra::extract::cookie;
 use kitsune_core::event::PostEventEmitter;
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_federation::any::{AnyDeliverer, AnyFetcher};
+use kitsune_federation::any::AnyFetcher;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_service::{
     attachment::AttachmentService, captcha::CaptchaService, custom_emoji::CustomEmojiService,
@@ -11,6 +11,7 @@ use kitsune_service::{
     notification::NotificationService, timeline::TimelineService, url::UrlService,
     user::UserService,
 };
+use kitsune_webfinger::Webfinger;
 use std::{ops::Deref, sync::Arc};
 
 #[cfg(feature = "mastodon-api")]
@@ -19,9 +20,8 @@ use kitsune_mastodon::MastodonMapper;
 #[cfg(feature = "oidc")]
 use kitsune_oidc::OidcService;
 
-pub type AccountService =
-    kitsune_service::account::AccountService<Vec<AnyFetcher>, Vec<AnyDeliverer>>;
-pub type PostService = kitsune_service::post::PostService<Vec<AnyFetcher>, Vec<AnyDeliverer>>;
+pub type AccountService = kitsune_service::account::AccountService<Vec<AnyFetcher>, Webfinger>;
+pub type PostService = kitsune_service::post::PostService<Vec<AnyFetcher>, Webfinger>;
 pub type SearchService = kitsune_service::search::SearchService<Vec<AnyFetcher>>;
 
 #[macro_export]

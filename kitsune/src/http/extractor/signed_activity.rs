@@ -14,7 +14,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
-use kitsune_core::traits::fetcher::AccountFetchOptions;
+use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
     ring::signature::{
@@ -112,7 +112,7 @@ async fn verify_signature(
             // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
             if let Some(expected_account) = expected_account {
                 if expected_account.url != remote_user.url {
-                    return Err(ApiError::Unauthorised.into());
+                    return Err(HttpError::Unauthorised.into());
                 }
             }
 

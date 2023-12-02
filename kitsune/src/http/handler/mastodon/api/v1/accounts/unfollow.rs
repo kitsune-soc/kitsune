@@ -1,17 +1,16 @@
 use crate::{
     error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
+    state::AccountService,
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::account::{AccountService, Unfollow},
-};
+use kitsune_core::error::HttpError;
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::Unfollow;
 use kitsune_type::mastodon::relationship::Relationship;
 use speedy_uuid::Uuid;
 
@@ -23,7 +22,7 @@ pub async fn post(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        return Err(ApiError::BadRequest.into());
+        return Err(HttpError::BadRequest.into());
     }
 
     let unfollow = Unfollow::builder()

@@ -4,16 +4,15 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
+    state::AccountService,
 };
 use axum::{
     extract::{Multipart, State},
     Json,
 };
+use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{
-    account::{AccountService, Update},
-    attachment::Upload,
-};
+use kitsune_service::{account::Update, attachment::Upload};
 use kitsune_type::mastodon::Account;
 
 #[utoipa::path(
@@ -44,7 +43,7 @@ pub async fn patch(
             "note" => update.note(field.text().await?),
             "avatar" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    return Err(ApiError::BadRequest.into());
+                    return Err(HttpError::BadRequest.into());
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -53,13 +52,13 @@ pub async fn patch(
                     .content_type(content_type)
                     .stream(stream)
                     .build()
-                    .map_err(|_| ApiError::BadRequest)?;
+                    .map_err(|_| HttpError::BadRequest)?;
 
                 update.avatar(upload)
             }
             "header" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    return Err(ApiError::BadRequest.into());
+                    return Err(HttpError::BadRequest.into());
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -68,7 +67,7 @@ pub async fn patch(
                     .content_type(content_type)
                     .stream(stream)
                     .build()
-                    .map_err(|_| ApiError::BadRequest)?;
+                    .map_err(|_| HttpError::BadRequest)?;
 
                 update.header(upload)
             }
@@ -77,7 +76,7 @@ pub async fn patch(
         };
     }
 
-    let update = update.build().map_err(|_| ApiError::BadRequest)?;
+    let update = update.build().map_err(|_| HttpError::BadRequest)?;
     let account = account_service.update(update).await?;
 
     Ok(Json(mastodon_mapper.map(account).await?))

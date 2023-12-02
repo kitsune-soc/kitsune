@@ -26,7 +26,7 @@ pub struct User {
 #[ComplexObject]
 impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
-        let db_pool = &ctx.state().db_pool();
+        let db_pool = &ctx.state().db_pool;
         db_pool
             .with_connection(|db_conn| {
                 async move {

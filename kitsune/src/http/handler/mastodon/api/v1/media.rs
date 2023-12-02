@@ -12,6 +12,7 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
+use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;
@@ -86,7 +87,7 @@ pub async fn post(
         }
     }
 
-    let upload = upload.build().map_err(|_| ApiError::BadRequest)?;
+    let upload = upload.build().map_err(|_| HttpError::BadRequest)?;
     let media_attachment = attachment_service.upload(upload).await?;
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
@@ -118,8 +119,8 @@ pub async fn put(
 
     attachment_service
         .update(update)
-        .and_then(|model| mastodon_mapper.map(model))
         .map_err(Error::from)
+        .and_then(|model| mastodon_mapper.map(model).map_err(Error::from))
         .map_ok(Json)
         .await
 }

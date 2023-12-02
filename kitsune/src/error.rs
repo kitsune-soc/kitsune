@@ -21,6 +21,9 @@ pub enum Error {
     Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
+    CoreHttp(#[from] kitsune_core::error::HttpError),
+
+    #[error(transparent)]
     Database(#[from] diesel::result::Error),
 
     #[error(transparent)]
@@ -31,6 +34,10 @@ pub enum Error {
 
     #[error(transparent)]
     Http(#[from] http::Error),
+
+    #[cfg(feature = "mastodon-api")]
+    #[error(transparent)]
+    Mastodon(#[from] kitsune_mastodon::error::Error),
 
     #[error(transparent)]
     Multipart(#[from] MultipartError),

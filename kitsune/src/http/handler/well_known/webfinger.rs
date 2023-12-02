@@ -78,27 +78,25 @@ mod tests {
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::{Request, Response, StatusCode};
     use hyper::Body;
+    use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
-    use kitsune_core::{
-        activitypub::Fetcher,
-        job::KitsuneContextRepo,
-        service::{
-            account::AccountService, attachment::AttachmentService,
-            federation_filter::FederationFilterService, job::JobService, url::UrlService,
-        },
-        webfinger::Webfinger,
-    };
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
         PgPool,
     };
+    use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
+    use kitsune_jobs::KitsuneContextRepo;
     use kitsune_search::NoopSearchService;
+    use kitsune_service::{
+        account::AccountService, attachment::AttachmentService, job::JobService, url::UrlService,
+    };
     use kitsune_storage::fs::Storage;
     use kitsune_test::{database_test, redis_test};
     use kitsune_type::webfinger::Link;
+    use kitsune_webfinger::Webfinger;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::{convert::Infallible, sync::Arc};
@@ -113,7 +111,7 @@ mod tests {
         db_pool: PgPool,
         redis_pool: deadpool_redis::Pool,
         url_service: UrlService,
-    ) -> AccountService {
+    ) -> AccountService<Fetcher<Webfinger>, Webfinger> {
         let temp_dir = TempDir::new().unwrap();
         let storage = Storage::new(temp_dir.path().to_owned());
         let client = Client::builder().service(service_fn(handle));
@@ -131,7 +129,7 @@ mod tests {
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),

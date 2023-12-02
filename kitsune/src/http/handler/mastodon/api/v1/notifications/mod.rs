@@ -1,6 +1,6 @@
 use crate::{
     consts::default_limit,
-    error::Result,
+    error::{Error, Result},
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
@@ -13,7 +13,8 @@ use axum::{
     routing, Json, Router,
 };
 use axum_extra::extract::Query;
-use futures_util::TryStreamExt;
+use futures_util::{TryFutureExt, TryStreamExt};
+use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::{
     notification::{GetNotifications, NotificationService},
@@ -86,7 +87,8 @@ pub async fn get(
     let notifications: Vec<Notification> = notification_service
         .get_notifications(get_notifications)
         .await?
-        .and_then(|notif| mastodon_mapper.map(notif))
+        .map_err(Error::from)
+        .and_then(|notif| mastodon_mapper.map(notif).map_err(Error::from))
         .try_collect()
         .await?;
 
@@ -121,7 +123,7 @@ pub async fn get_by_id(
     let notification = notification_service
         .get_notification_by_id(id, user_data.account.id)
         .await?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or(HttpError::NotFound)?;
 
     Ok(Json(mastodon_mapper.map(notification).await?))
 }

@@ -38,7 +38,7 @@ pub struct Account {
 #[ComplexObject]
 impl Account {
     pub async fn avatar(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let db_pool = &ctx.state().db_pool();
+        let db_pool = &ctx.state().db_pool;
 
         if let Some(avatar_id) = self.avatar_id {
             db_pool
@@ -61,7 +61,7 @@ impl Account {
     }
 
     pub async fn header(&self, ctx: &Context<'_>) -> Result<Option<MediaAttachment>> {
-        let db_pool = &ctx.state().db_pool();
+        let db_pool = &ctx.state().db_pool;
 
         if let Some(header_id) = self.header_id {
             db_pool
@@ -97,7 +97,7 @@ impl Account {
             first,
             last,
             |after, before, first, _last| async move {
-                let account_service = &ctx.state().service().account;
+                let account_service = &ctx.state().service.account;
                 let get_posts = GetPosts::builder()
                     .account_id(self.id)
                     .fetching_account_id(ctx.user_data().ok().map(|user_data| user_data.account.id))

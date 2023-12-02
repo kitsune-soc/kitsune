@@ -23,7 +23,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service().timeline;
+        let timeline_service = &ctx.state().service.timeline;
 
         connection::query(
             after,
@@ -66,7 +66,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service().timeline;
+        let timeline_service = &ctx.state().service.timeline;
 
         connection::query(
             after,

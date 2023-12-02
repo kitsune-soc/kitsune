@@ -8,6 +8,7 @@ use axum::{
     extract::{Path, State},
     Json,
 };
+use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::Follow;
 use kitsune_type::mastodon::relationship::Relationship;
@@ -41,7 +42,7 @@ pub async fn post(
     follow_body: Option<AgnosticForm<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        return Err(ApiError::BadRequest.into());
+        return Err(HttpError::BadRequest.into());
     }
 
     let follow = Follow::builder()

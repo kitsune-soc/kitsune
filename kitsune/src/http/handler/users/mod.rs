@@ -1,11 +1,14 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
+use crate::{
+    error::Result,
+    http::responder::ActivityPubJson,
+    state::{AccountService, Zustand},
+};
 use axum::{
     extract::{Path, State},
     routing::{self, post},
     Router,
 };
-use kitsune_core::{error::ApiError, mapping::IntoObject};
-use kitsune_service::account::AccountService;
+use kitsune_core::{error::HttpError, mapping::IntoObject};
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
 
@@ -22,7 +25,7 @@ async fn get(
     let account = account_service
         .get_by_id(account_id)
         .await?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or(HttpError::NotFound)?;
 
     Ok(ActivityPubJson(account.into_object(&state.core).await?))
 }

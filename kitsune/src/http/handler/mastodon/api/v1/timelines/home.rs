@@ -1,6 +1,6 @@
 use crate::{
     consts::default_limit,
-    error::Result,
+    error::{Error, Result},
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
@@ -10,7 +10,7 @@ use axum::{
     extract::{OriginalUri, Query, State},
     Json,
 };
-use futures_util::TryStreamExt;
+use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::{
     timeline::{GetHome, TimelineService},
@@ -60,7 +60,12 @@ pub async fn get(
     let mut statuses: Vec<Status> = timeline
         .get_home(get_home)
         .await?
-        .and_then(|post| mastodon_mapper.map((&user_data.account, post)))
+        .map_err(Error::from)
+        .and_then(|post| {
+            mastodon_mapper
+                .map((&user_data.account, post))
+                .map_err(Error::from)
+        })
         .try_collect()
         .await?;
 

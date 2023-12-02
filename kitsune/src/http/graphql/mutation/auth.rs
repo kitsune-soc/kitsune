@@ -44,7 +44,7 @@ impl AuthMutation {
             .password(password)
             .captcha_token(captcha_token)
             .build();
-        let new_user = state.service().user.register(register).await?;
+        let new_user = state.service.user.register(register).await?;
 
         Ok(new_user.into())
     }

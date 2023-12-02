@@ -11,9 +11,9 @@ impl InstanceQuery {
     #[allow(clippy::unused_async)]
     pub async fn instance(&self, ctx: &Context<'_>) -> Result<Instance> {
         let state = ctx.state();
-        let instance_service = &state.service().instance;
-        let url_service = &state.service().url;
-        let captcha = state.service().captcha.backend.clone().map(Into::into);
+        let instance_service = &state.service.instance;
+        let url_service = &state.service.url;
+        let captcha = state.service.captcha.backend.clone().map(Into::into);
 
         let character_limit = instance_service.character_limit();
         let description = instance_service.description().into();

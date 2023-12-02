@@ -1,10 +1,14 @@
-use crate::{error::Result, http::extractor::MastodonAuthExtractor, state::PostService};
+use crate::{
+    error::{Error, Result},
+    http::extractor::MastodonAuthExtractor,
+    state::PostService,
+};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use futures_util::TryStreamExt;
+use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::status::Context;
 use speedy_uuid::Uuid;
@@ -33,6 +37,7 @@ pub async fn get(
 
     let ancestors = post
         .get_ancestors(id, account_id)
+        .map_err(Error::from)
         .try_fold(VecDeque::new(), |mut acc, item| async {
             acc.push_front(mastodon_mapper.map(item).await?);
             Ok(acc)
@@ -41,7 +46,8 @@ pub async fn get(
 
     let descendants = post
         .get_descendants(id, account_id)
-        .and_then(|post| mastodon_mapper.map(post))
+        .map_err(Error::from)
+        .and_then(|post| mastodon_mapper.map(post).map_err(Error::from))
         .try_collect()
         .await?;
 

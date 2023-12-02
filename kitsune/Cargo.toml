@@ -58,6 +58,7 @@ kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
 kitsune-util = { path = "../crates/kitsune-util" }
+kitsune-webfinger = { path = "../crates/kitsune-webfinger" }
 metrics = "0.21.1"
 mimalloc = "0.1.39"
 mime = "0.3.17"
@@ -114,6 +115,7 @@ kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 
 [dev-dependencies]
 deadpool-redis = "0.13.0"
+kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"
