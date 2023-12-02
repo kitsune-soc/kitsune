@@ -3,12 +3,12 @@
 Kitsune is using the [TOML configuration format](https://toml.io) to configure the main application and the job runner.  
 The syntax itself is easy to grasp and is essentially and extended INI format.
 
-> The auxiliary services/CLI tools are using environment variables at the moment. 
+> The auxiliary services/CLI tools are using environment variables at the moment.
 > Note that this might change in the future.
 
 > Example configurations for external programs can be found in `kitsune/contrib`.
 
-> The example config for Kitsune can be found in the root directory titled "config.example.toml", move it wherever you like, and feel free to rename it. 
+> The example config for Kitsune can be found in the root directory titled "config.example.toml", move it wherever you like, and feel free to rename it.
 
 The simplest Kitsune configuration looks like this:
 
@@ -21,6 +21,7 @@ url = "postgres://localhost/kitsune"
 max-connections = 20
 
 [instance]
+allow-non-ascii-usernames = false
 name = "Kitsune"
 description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
 character-limit = 5000
@@ -61,7 +62,7 @@ To successfully deploy the application, make sure you **at least** change the fo
 - `domain`
 
   - Domain of your instance. Used to build the URLs of your activities.
-  - This is a *very important* setting and **cannot** be changed after the first setup.
+  - This is a _very important_ setting and **cannot** be changed after the first setup.
 
 - `database`
 

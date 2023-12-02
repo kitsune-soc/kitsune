@@ -4,7 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-globset = "0.4.13"
+globset = "0.4.14"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-type = { path = "../kitsune-type" }
 thiserror = "1.0.50"

@@ -17,8 +17,6 @@ Due to its decentralised nature, you can self-host Kitsune on your own hardware 
 
 Kitsune itself is pretty lightweight and should run even on a Raspberry Pi (even though we haven't tested that yet).
 
-**[Documentation](https://docs.joinkitsune.org)**
-
 ### Chat
 
 Both chat options are bridged. Feel free to join whichever you're more comfortable with:
