@@ -12,7 +12,6 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
-use kitsune_core::error::ApiError;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;

@@ -7,11 +7,8 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::account::{AccountService, Follow},
-};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

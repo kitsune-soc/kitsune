@@ -52,7 +52,6 @@ pub async fn initialise_state(
         .build();
 
     Ok(ZustandInner {
-        core: core_state,
         oauth2: oauth2_service,
         oauth_endpoint: OAuthEndpoint::from(conn),
         #[cfg(feature = "oidc")]

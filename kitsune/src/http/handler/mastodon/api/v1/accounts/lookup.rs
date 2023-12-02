@@ -4,11 +4,8 @@ use axum::{
     extract::{Query, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::account::{AccountService, GetUser},
-};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;
 use utoipa::IntoParams;

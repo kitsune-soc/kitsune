@@ -8,7 +8,6 @@ use axum::{
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::error::ApiError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,

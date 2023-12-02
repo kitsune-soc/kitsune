@@ -1005,6 +1005,7 @@ dependencies = [
  "anstyle",
  "clap_lex",
  "strsim",
+ "terminal_size",
 ]
 
 [[package]]
@@ -2844,6 +2845,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-federation-filter",
  "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-job-runner",
@@ -6086,6 +6088,16 @@ dependencies = [
  "futf",
  "mac",
  "utf-8",
+]
+
+[[package]]
+name = "terminal_size"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
+dependencies = [
+ "rustix",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

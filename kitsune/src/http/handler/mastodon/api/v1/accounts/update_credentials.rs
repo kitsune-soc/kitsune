@@ -9,13 +9,10 @@ use axum::{
     extract::{Multipart, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::{
-        account::{AccountService, Update},
-        attachment::Upload,
-    },
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::{
+    account::{AccountService, Update},
+    attachment::Upload,
 };
 use kitsune_type::mastodon::Account;
 
