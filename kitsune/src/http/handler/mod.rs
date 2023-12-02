@@ -8,5 +8,6 @@ pub mod oauth;
 #[cfg(feature = "oidc")]
 pub mod oidc;
 pub mod posts;
+pub mod public;
 pub mod users;
 pub mod well_known;

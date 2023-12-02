@@ -1,5 +1,7 @@
 use self::{
-    handler::{confirm_account, custom_emojis, media, nodeinfo, oauth, posts, users, well_known},
+    handler::{
+        confirm_account, custom_emojis, media, nodeinfo, oauth, posts, public, users, well_known,
+    },
     openapi::api_docs,
 };
 use crate::state::Zustand;
@@ -54,7 +56,7 @@ pub fn create_router(
         .nest("/posts", posts::routes())
         .nest("/users", users::routes())
         .nest("/.well-known", well_known::routes())
-        .nest_service("/public", ServeDir::new("public"));
+        .nest("/public", public::routes());
 
     #[cfg(feature = "oidc")]
     {
