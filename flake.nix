@@ -2,7 +2,7 @@
   inputs = {
     devenv = {
       inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:cachix/devenv/6a30b674fb5a54eff8c422cc7840257227e0ead2";
+      url = "github:cachix/devenv";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -81,6 +81,9 @@
           };
         in
         {
+          # Hack to make latest devenv work
+          devenv-up = self.devShells.${system}.default.config.procfileScript;
+
           formatter = pkgs.nixpkgs-fmt;
           packages = rec {
             default = main;

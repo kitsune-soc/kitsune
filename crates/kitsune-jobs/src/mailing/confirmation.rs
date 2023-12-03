@@ -17,7 +17,7 @@ impl Runnable for SendConfirmationMail {
     type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        /*let (mailing_service, user_service) = (&ctx.state.service.mailing, &ctx.state.service.user);
+        let (mailing_service, user_service) = (&ctx.service.mailing, &ctx.service.user);
 
         // If we don't have a mailer, just don't bother and mark the user as confirmed
         if !mailing_service.has_sender() {
@@ -35,7 +35,7 @@ impl Runnable for SendConfirmationMail {
             })
             .await?;
 
-        mailing_service.send_confirmation_email(&user).await?;*/
+        mailing_service.send_confirmation_email(&user).await?;
 
         Ok(())
     }

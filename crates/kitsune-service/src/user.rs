@@ -118,11 +118,11 @@ pub struct Register {
 #[derive(Clone, TypedBuilder)]
 pub struct UserService {
     allow_non_ascii_usernames: bool,
+    captcha_service: CaptchaService,
     db_pool: PgPool,
     job_service: JobService,
     registrations_open: bool,
     url_service: UrlService,
-    captcha_service: CaptchaService,
 }
 
 impl UserService {
