@@ -1,4 +1,3 @@
-use self::resolver::PostResolver;
 use super::{
     instance::InstanceService,
     job::{Enqueue, JobService},
@@ -16,10 +15,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::{
-    event::{post::EventType, PostEvent, PostEventEmitter},
-    traits::{Fetcher, Resolver},
-};
+use kitsune_core::event::{post::EventType, PostEvent, PostEventEmitter};
 use kitsune_db::{
     model::{
         account::Account,
@@ -55,6 +51,8 @@ use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 mod resolver;
+
+pub use self::resolver::PostResolver;
 
 macro_rules! min_character_limit {
     ($self:ident) => {{
@@ -298,26 +296,18 @@ pub struct GetAccountsInteractingWithPost {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct PostService<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
+pub struct PostService {
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     instance_service: InstanceService,
     job_service: JobService,
-    post_resolver: PostResolver<F, R>,
+    post_resolver: PostResolver,
     search_backend: kitsune_search::AnySearchBackend,
     status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }
 
-impl<F, R> PostService<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
+impl PostService {
     async fn process_media_attachments(
         conn: &mut AsyncPgConnection,
         post_id: Uuid,

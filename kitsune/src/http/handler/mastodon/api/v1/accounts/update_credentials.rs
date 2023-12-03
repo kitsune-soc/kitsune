@@ -4,7 +4,6 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
-    state::AccountService,
 };
 use axum::{
     extract::{Multipart, State},
@@ -12,7 +11,10 @@ use axum::{
 };
 use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{account::Update, attachment::Upload};
+use kitsune_service::{
+    account::{AccountService, Update},
+    attachment::Upload,
+};
 use kitsune_type::mastodon::Account;
 
 #[utoipa::path(

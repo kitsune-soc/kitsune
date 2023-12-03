@@ -1,14 +1,14 @@
-use crate::{
-    error::Result,
-    state::{AccountService, Zustand},
-};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
 };
 use axum_extra::either::Either;
 use http::StatusCode;
-use kitsune_service::{account::GetUser, url::UrlService};
+use kitsune_service::{
+    account::{AccountService, GetUser},
+    url::UrlService,
+};
 use kitsune_type::webfinger::{Link, Resource};
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -111,7 +111,7 @@ mod tests {
         db_pool: PgPool,
         redis_pool: deadpool_redis::Pool,
         url_service: UrlService,
-    ) -> AccountService<Fetcher<Webfinger>, Webfinger> {
+    ) -> AccountService {
         let temp_dir = TempDir::new().unwrap();
         let storage = Storage::new(temp_dir.path().to_owned());
         let client = Client::builder().service(service_fn(handle));

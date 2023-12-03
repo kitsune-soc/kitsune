@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+async-trait = "0.1.74"
 autometrics = { version = "0.6.0", default-features = false }
 deadpool-redis = "0.13.0"
 futures-util = "0.3.29"
@@ -14,7 +15,6 @@ kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
-thiserror = "1.0.50"
 tracing = "0.1.40"
 
 [dev-dependencies]

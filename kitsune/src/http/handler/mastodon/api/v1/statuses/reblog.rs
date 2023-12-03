@@ -1,7 +1,6 @@
 use crate::{
     error::Result,
     http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-    state::PostService,
 };
 use axum::{
     debug_handler,
@@ -9,7 +8,7 @@ use axum::{
     Json,
 };
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::post::RepostPost;
+use kitsune_service::post::{PostService, RepostPost};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;

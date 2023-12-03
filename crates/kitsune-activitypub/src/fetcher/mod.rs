@@ -1,9 +1,13 @@
 use crate::error::{Error, Result};
+use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
 use kitsune_consts::USER_AGENT;
-use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait, Resolver};
+use kitsune_core::{
+    error::BoxError,
+    traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait, Resolver},
+};
 use kitsune_db::{
     model::{account::Account, custom_emoji::CustomEmoji, post::Post},
     PgPool,
@@ -14,6 +18,7 @@ use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
 use mime::Mime;
 use serde::de::DeserializeOwned;
+use std::sync::Arc;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -23,11 +28,9 @@ mod actor;
 mod emoji;
 mod object;
 
-#[derive(Clone, TypedBuilder)]
-pub struct Fetcher<R>
-where
-    R: Resolver,
-{
+#[derive(TypedBuilder)]
+#[builder(build_method(into = Arc<Fetcher>))]
+pub struct Fetcher {
     #[builder(default =
         Client::builder()
             .default_header(
@@ -47,17 +50,14 @@ where
     federation_filter: FederationFilter,
     #[builder(setter(into))]
     search_backend: kitsune_search::AnySearchBackend,
-    resolver: R,
+    resolver: Arc<dyn Resolver>,
 
     // Caches
     account_cache: ArcCache<str, Account>,
     post_cache: ArcCache<str, Post>,
 }
 
-impl<R> Fetcher<R>
-where
-    R: Resolver,
-{
+impl Fetcher {
     async fn fetch_ap_resource<U, T>(&self, url: U) -> Result<Option<T>>
     where
         U: TryInto<Url>,
@@ -113,24 +113,24 @@ where
     }
 }
 
-impl<R> FetcherTrait for Fetcher<R>
-where
-    R: Resolver,
-{
-    type Error = Error;
+#[async_trait]
+impl FetcherTrait for Fetcher {
+    fn resolver(&self) -> Arc<dyn Resolver> {
+        Arc::new(self.resolver.clone())
+    }
 
     async fn fetch_account(
         &self,
         opts: AccountFetchOptions<'_>,
-    ) -> Result<Option<Account>, Self::Error> {
-        self.fetch_actor(opts).await
+    ) -> Result<Option<Account>, BoxError> {
+        Ok(self.fetch_actor(opts).await?)
     }
 
-    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, Self::Error> {
-        self.fetch_emoji(url).await
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError> {
+        Ok(self.fetch_emoji(url).await?)
     }
 
-    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, Self::Error> {
-        self.fetch_object(url).await
+    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, BoxError> {
+        Ok(self.fetch_object(url).await?)
     }
 }

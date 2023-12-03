@@ -3,7 +3,6 @@ use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::traits::Resolver;
 use kitsune_db::{
     model::{
         custom_emoji::CustomEmoji,
@@ -16,10 +15,7 @@ use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use url::Url;
 
-impl<R> Fetcher<R>
-where
-    R: Resolver,
-{
+impl Fetcher {
     pub(crate) async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         let existing_emoji = self
             .db_pool

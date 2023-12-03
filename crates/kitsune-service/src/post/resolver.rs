@@ -3,19 +3,14 @@ use crate::{
     custom_emoji::{CustomEmojiService, GetEmoji},
     error::{Error, Result},
 };
-use kitsune_core::traits::{Fetcher, Resolver};
 use post_process::{BoxError, Element, Html, Render};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, sync::mpsc};
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
-pub struct PostResolver<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
-    account: AccountService<F, R>,
+pub struct PostResolver {
+    account: AccountService,
     custom_emoji: CustomEmojiService,
 }
 
@@ -25,11 +20,7 @@ pub struct ResolvedPost {
     pub content: String,
 }
 
-impl<F, R> PostResolver<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
+impl PostResolver {
     async fn transform<'a>(
         &self,
         element: Element<'a>,
@@ -171,7 +162,7 @@ mod test {
                 });
                 let client = Client::builder().service(client);
 
-                let webfinger = Webfinger::with_client(client.clone(), Arc::new(NoopCache.into()));
+                let webfinger = Arc::new(Webfinger::with_client(client.clone(), Arc::new(NoopCache.into())));
 
                 let fetcher = Fetcher::builder()
                     .client(client)

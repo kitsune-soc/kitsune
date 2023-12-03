@@ -19,7 +19,7 @@ use derive_more::From;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
-use kitsune_core::{error::BoxError, traits::Deliverer};
+use kitsune_core::traits::Deliverer;
 use kitsune_db::{
     json::Json,
     model::job_context::{JobContext, NewJobContext},
@@ -36,7 +36,7 @@ pub mod error;
 pub mod mailing;
 
 pub struct JobRunnerContext {
-    pub deliverer: Box<dyn Deliverer<Error = BoxError>>,
+    pub deliverer: Box<dyn Deliverer>,
     pub db_pool: PgPool,
 }
 

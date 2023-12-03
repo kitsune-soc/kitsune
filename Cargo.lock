@@ -2920,6 +2920,7 @@ name = "kitsune-activitypub"
 version = "0.0.1-pre.4"
 dependencies = [
  "async-recursion",
+ "async-trait",
  "autometrics",
  "base64-simd",
  "diesel",
@@ -3046,7 +3047,7 @@ dependencies = [
 name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
- "futures-util",
+ "async-trait",
  "http",
  "kitsune-db",
  "kitsune-messaging",
@@ -3479,6 +3480,7 @@ dependencies = [
 name = "kitsune-webfinger"
 version = "0.0.1-pre.4"
 dependencies = [
+ "async-trait",
  "autometrics",
  "deadpool-redis",
  "futures-util",
@@ -3492,7 +3494,6 @@ dependencies = [
  "kitsune-util",
  "pretty_assertions",
  "simd-json",
- "thiserror",
  "tokio",
  "tower",
  "tracing",

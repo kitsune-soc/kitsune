@@ -1,4 +1,4 @@
-use crate::{error::Result, http::extractor::MastodonAuthExtractor, state::AccountService};
+use crate::{error::Result, http::extractor::MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Query, State},
@@ -6,7 +6,7 @@ use axum::{
 };
 use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::account::GetUser;
+use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;
 use utoipa::IntoParams;

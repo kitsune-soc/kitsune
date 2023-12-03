@@ -1,7 +1,8 @@
 use crate::error::BoxError;
-use futures_util::{future::BoxFuture, FutureExt};
+use async_trait::async_trait;
 use kitsune_db::model::{account::Account, favourite::Favourite, follower::Follow, post::Post};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Action {
@@ -19,29 +20,28 @@ pub enum Action {
     UpdatePost(Post),
 }
 
+#[async_trait]
 pub trait Deliverer: Send + Sync + 'static {
-    type Error: Into<BoxError>;
-
-    fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>>;
+    async fn deliver(&self, action: Action) -> Result<(), BoxError>;
 }
 
+#[async_trait]
+impl Deliverer for Arc<dyn Deliverer> {
+    async fn deliver(&self, action: Action) -> Result<(), BoxError> {
+        (**self).deliver(action).await
+    }
+}
+
+#[async_trait]
 impl<T> Deliverer for Vec<T>
 where
     T: Deliverer,
 {
-    type Error = BoxError;
-
-    fn deliver(&self, action: Action) -> BoxFuture<'_, Result<(), Self::Error>> {
-        async move {
-            for deliverer in self {
-                deliverer
-                    .deliver(action.clone())
-                    .await
-                    .map_err(Into::into)?;
-            }
-
-            Ok(())
+    async fn deliver(&self, action: Action) -> Result<(), BoxError> {
+        for deliverer in self {
+            deliverer.deliver(action.clone()).await?;
         }
-        .boxed()
+
+        Ok(())
     }
 }

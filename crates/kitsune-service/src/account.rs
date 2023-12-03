@@ -39,6 +39,7 @@ use kitsune_jobs::deliver::{
 use kitsune_util::{sanitize::CleanHtmlExt, try_join};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
+use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]
@@ -179,24 +180,16 @@ impl<A, H> Update<A, H> {
 }
 
 #[derive(Clone, TypedBuilder)]
-pub struct AccountService<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
+pub struct AccountService {
     attachment_service: AttachmentService,
     db_pool: PgPool,
-    fetcher: F,
+    fetcher: Arc<dyn Fetcher>,
     job_service: JobService,
-    resolver: R,
+    resolver: Arc<dyn Resolver>,
     url_service: UrlService,
 }
 
-impl<F, R> AccountService<F, R>
-where
-    F: Fetcher,
-    R: Resolver,
-{
+impl AccountService {
     /// Follow an account
     ///
     /// # Returns
@@ -328,7 +321,7 @@ where
                 .resolver
                 .resolve_account(get_user.username, domain)
                 .await
-                .map_err(|err| Error::Resolver(err.into()))?
+                .map_err(Error::Resolver)?
             else {
                 return Ok(None);
             };
@@ -341,7 +334,7 @@ where
             self.fetcher
                 .fetch_account(opts)
                 .await
-                .map_err(|err| Error::Fetcher(err.into()))
+                .map_err(Error::Fetcher)
         } else {
             self.db_pool
                 .with_connection(|db_conn| {

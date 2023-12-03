@@ -36,7 +36,10 @@ async fn fetch_actor() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(
+                client,
+                Arc::new(NoopCache.into()),
+            )))
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -75,7 +78,7 @@ async fn fetch_emoji() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))))
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -127,7 +130,10 @@ async fn fetch_note() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(
+                client,
+                Arc::new(NoopCache.into()),
+            )))
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

@@ -5,6 +5,7 @@ version.workspace = true
 
 [dependencies]
 async-recursion = "1.0.5"
+async-trait = "0.1.74"
 autometrics = { version = "0.6.0", default-features = false }
 base64-simd = { version = "0.8.0", features = ["unstable"] }
 diesel = "2.1.4"

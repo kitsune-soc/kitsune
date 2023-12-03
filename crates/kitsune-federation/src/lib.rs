@@ -1,12 +1,12 @@
-use self::any::{AnyDeliverer, AnyFetcher};
+use kitsune_core::traits::{Deliverer, Fetcher};
+use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
 pub mod activitypub;
-pub mod any;
 
 pub struct Federator {
-    pub deliverer: Vec<AnyDeliverer>,
-    pub fetcher: Vec<AnyFetcher>,
+    pub deliverer: Arc<dyn Deliverer>,
+    pub fetcher: Arc<dyn Fetcher>,
 }
 
 #[derive(TypedBuilder)]
@@ -26,15 +26,15 @@ pub struct Prepare {
 }
 
 #[inline]
-pub fn prepare_deliverer(prepare: PrepareDeliverer) -> Vec<AnyDeliverer> {
+pub fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer> {
     let deliverer = self::activitypub::prepare_deliverer(prepare.activitypub);
-    vec![deliverer.into()]
+    Arc::new(vec![deliverer])
 }
 
 #[inline]
-pub fn prepare_fetcher(prepare: PrepareFetcher) -> Vec<AnyFetcher> {
+pub fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
     let fetcher = self::activitypub::prepare_fetcher(prepare.activitypub);
-    vec![fetcher.into()]
+    Arc::new(vec![fetcher])
 }
 
 #[inline]

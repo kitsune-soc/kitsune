@@ -1,13 +1,11 @@
-use crate::{
-    error::Result,
-    state::{AccountService, Zustand},
-};
+use crate::{error::Result, state::Zustand};
 use axum::{
     extract::{Path, State},
     routing, Json, Router,
 };
 use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::AccountService;
 use kitsune_type::mastodon;
 use speedy_uuid::Uuid;
 

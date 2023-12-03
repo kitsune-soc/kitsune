@@ -4,19 +4,20 @@
 #[macro_use]
 extern crate tracing;
 
-use crate::error::{Error, Result};
+use async_trait::async_trait;
 use autometrics::autometrics;
 use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_consts::USER_AGENT;
-use kitsune_core::traits::{resolver::AccountResource, Resolver};
+use kitsune_core::{
+    error::BoxError,
+    traits::{resolver::AccountResource, Resolver},
+};
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
 use std::{ptr, sync::Arc, time::Duration};
-
-pub mod error;
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
 
@@ -60,9 +61,8 @@ impl Webfinger {
     }
 }
 
+#[async_trait]
 impl Resolver for Webfinger {
-    type Error = Error;
-
     /// Resolves the `acct:{username}@{domain}` URI via WebFinger to get the object ID and the
     /// canonical `acct:` URI of an ActivityPub actor
     ///
@@ -75,7 +75,7 @@ impl Resolver for Webfinger {
         &self,
         username: &str,
         domain: &str,
-    ) -> Result<Option<AccountResource>, Self::Error> {
+    ) -> Result<Option<AccountResource>, BoxError> {
         // XXX: Assigning the arguments to local bindings because the `#[instrument]` attribute
         // desugars to an `async move {}` block, inside which mutating the function arguments would
         // upset the borrowck

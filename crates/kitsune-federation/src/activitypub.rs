@@ -3,7 +3,7 @@ use kitsune_activitypub::{
     Fetcher as ActivityPubFetcher, InboxResolver,
 };
 use kitsune_cache::ArcCache;
-use kitsune_core::traits::resolver::AccountResource;
+use kitsune_core::traits::{resolver::AccountResource, Deliverer, Fetcher};
 use kitsune_db::{
     model::{account::Account, post::Post},
     PgPool,
@@ -35,7 +35,7 @@ pub struct PrepareFetcher {
 }
 
 #[inline]
-pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<ActivityPubDeliverer> {
+pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer> {
     let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()
         .federation_filter(prepare.federation_filter)
         .build();
@@ -55,7 +55,7 @@ pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<ActivityPubDel
 }
 
 #[inline]
-pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> ActivityPubFetcher<Webfinger> {
+pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
     let webfinger = Webfinger::new(prepare.account_resource_cache);
 
     ActivityPubFetcher::builder()
@@ -64,7 +64,7 @@ pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> ActivityPubFetcher<Web
         .embed_client(prepare.embed_client)
         .federation_filter(prepare.federation_filter.clone())
         .post_cache(prepare.post_cache)
-        .resolver(webfinger)
+        .resolver(Arc::new(webfinger))
         .search_backend(prepare.search_backend)
         .build()
 }

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::error::Result;
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
@@ -38,20 +40,14 @@ pub struct Search<'a> {
     max_id: Option<Uuid>,
 }
 
-#[derive(Clone, TypedBuilder)]
-pub struct SearchService<F>
-where
-    F: Fetcher,
-{
+#[derive(TypedBuilder)]
+pub struct SearchService {
     db_pool: PgPool,
-    fetcher: F,
+    fetcher: Arc<dyn Fetcher>,
     search_backend: kitsune_search::AnySearchBackend,
 }
 
-impl<F> SearchService<F>
-where
-    F: Fetcher,
-{
+impl SearchService {
     #[must_use]
     pub fn backend(&self) -> &kitsune_search::AnySearchBackend {
         &self.search_backend
@@ -73,7 +69,6 @@ where
                 Ok(Some(account)) => results.push(SearchResult::Account(account)),
                 Ok(None) => debug!("no account found"),
                 Err(error) => {
-                    let error = error.into();
                     debug!(?error, "couldn't fetch actor via url");
                 }
             }
@@ -82,7 +77,6 @@ where
                 Ok(Some(post)) => results.push(SearchResult::Post(post)),
                 Ok(None) => debug!("no post found"),
                 Err(error) => {
-                    let error = error.into();
                     debug!(?error, "couldn't fetch object via url");
                 }
             }

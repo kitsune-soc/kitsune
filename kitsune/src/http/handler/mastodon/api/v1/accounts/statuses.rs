@@ -5,7 +5,6 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::AccountService,
 };
 use axum::{
     extract::{OriginalUri, Path, Query, State},
@@ -13,7 +12,10 @@ use axum::{
 };
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{account::GetPosts, url::UrlService};
+use kitsune_service::{
+    account::{AccountService, GetPosts},
+    url::UrlService,
+};
 use kitsune_type::mastodon::Status;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

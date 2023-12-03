@@ -104,7 +104,7 @@ async fn fetch_infinitely_long_reply_chain() {
                     .unwrap(),
                 )
                 .search_backend(NoopSearchService)
-                .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+                .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))))
                 .account_cache(Arc::new(NoopCache.into()))
                 .post_cache(Arc::new(NoopCache.into()))
                 .build();

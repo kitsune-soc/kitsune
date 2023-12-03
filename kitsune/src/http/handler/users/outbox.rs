@@ -61,7 +61,7 @@ pub async fn get(
             .build();
 
         let posts: Vec<Post> = state
-            .service()
+            .service
             .account
             .get_posts(get_posts)
             .await?

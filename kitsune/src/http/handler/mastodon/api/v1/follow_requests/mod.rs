@@ -5,7 +5,7 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::{AccountService, Zustand},
+    state::Zustand,
 };
 use axum::{
     debug_handler,
@@ -15,7 +15,10 @@ use axum::{
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{account::GetFollowRequests, url::UrlService};
+use kitsune_service::{
+    account::{AccountService, GetFollowRequests},
+    url::UrlService,
+};
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

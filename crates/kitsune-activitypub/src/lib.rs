@@ -11,7 +11,6 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream, FutureExt, StreamExt, TryStreamExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::traits::Resolver;
 use kitsune_db::{
     model::{
         account::Account,
@@ -77,15 +76,12 @@ async fn handle_mentions(
     Ok(())
 }
 
-async fn handle_custom_emojis<R>(
+async fn handle_custom_emojis(
     db_conn: &mut AsyncPgConnection,
     post_id: Uuid,
-    fetcher: &Fetcher<R>,
+    fetcher: &Fetcher,
     tags: &[Tag],
-) -> Result<()>
-where
-    R: Resolver,
-{
+) -> Result<()> {
     let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
 
     let emoji_count = emoji_iter.clone().count();
@@ -167,10 +163,7 @@ pub async fn process_attachments(
 }
 
 #[derive(TypedBuilder)]
-pub struct ProcessNewObject<'a, R>
-where
-    R: Resolver,
-{
+pub struct ProcessNewObject<'a> {
     #[builder(default, setter(into, strip_option))]
     author: Option<&'a Account>,
     #[builder(default = 0)]
@@ -178,15 +171,12 @@ where
     db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
-    fetcher: &'a Fetcher<R>,
+    fetcher: &'a Fetcher,
     search_backend: &'a AnySearchBackend,
 }
 
 #[derive(TypedBuilder)]
-struct PreprocessedObject<'a, R>
-where
-    R: Resolver,
-{
+struct PreprocessedObject<'a> {
     user: CowBox<'a, Account>,
     visibility: Visibility,
     in_reply_to_id: Option<Uuid>,
@@ -194,12 +184,12 @@ where
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    fetcher: &'a Fetcher<R>,
+    fetcher: &'a Fetcher,
     search_backend: &'a AnySearchBackend,
 }
 
 #[allow(clippy::missing_panics_doc)]
-async fn preprocess_object<R>(
+async fn preprocess_object(
     ProcessNewObject {
         author,
         call_depth,
@@ -208,11 +198,8 @@ async fn preprocess_object<R>(
         mut object,
         fetcher,
         search_backend,
-    }: ProcessNewObject<'_, R>,
-) -> Result<PreprocessedObject<'_, R>>
-where
-    R: Resolver,
-{
+    }: ProcessNewObject<'_>,
+) -> Result<PreprocessedObject<'_>> {
     let attributed_to = object.attributed_to().ok_or(Error::InvalidDocument)?;
     let user = if let Some(author) = author {
         CowBox::borrowed(author)
@@ -276,10 +263,7 @@ where
 }
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn process_new_object<R>(process_data: ProcessNewObject<'_, R>) -> Result<Post>
-where
-    R: Resolver,
-{
+pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
     let PreprocessedObject {
         user,
         visibility,
@@ -353,10 +337,7 @@ where
 }
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn update_object<R>(process_data: ProcessNewObject<'_, R>) -> Result<Post>
-where
-    R: Resolver,
-{
+pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
     let PreprocessedObject {
         user,
         visibility,

@@ -39,25 +39,40 @@ async fn federation_allow() {
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(
+                client,
+                Arc::new(NoopCache.into()),
+            )))
             .build();
 
         assert!(matches!(
-            fetcher.fetch_post("https://example.com/fakeobject").await,
-            Err(Error::BlockedInstance)
+            *fetcher
+                .fetch_post("https://example.com/fakeobject")
+                .await
+                .unwrap_err()
+                .downcast_ref()
+                .unwrap(),
+            Error::BlockedInstance
         ));
+
         assert!(matches!(
-            fetcher
+            *fetcher
                 .fetch_post("https://other.badstuff.com/otherfake")
-                .await,
-            Err(Error::BlockedInstance)
+                .await
+                .unwrap_err()
+                .downcast_ref()
+                .unwrap(),
+            Error::BlockedInstance
         ));
 
         let client = Client::builder().service(service_fn(handle));
         let fetcher = builder
             .clone()
             .client(client.clone())
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(
+                client,
+                Arc::new(NoopCache.into()),
+            )))
             .build();
 
         assert!(matches!(
@@ -93,20 +108,31 @@ async fn federation_deny() {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
-            .resolver(Webfinger::with_client(client, Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::with_client(
+                client,
+                Arc::new(NoopCache.into()),
+            )))
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
 
         assert!(matches!(
-            fetcher.fetch_post("https://example.com/fakeobject").await,
-            Err(Error::BlockedInstance)
+            fetcher
+                .fetch_post("https://example.com/fakeobject")
+                .await
+                .unwrap_err()
+                .downcast_ref()
+                .unwrap(),
+            Error::BlockedInstance
         ));
         assert!(matches!(
-            fetcher
+            *fetcher
                 .fetch_post("https://other.badstuff.com/otherfake")
-                .await,
-            Err(Error::BlockedInstance)
+                .await
+                .unwrap_err()
+                .downcast_ref()
+                .unwrap(),
+            Error::BlockedInstance
         ));
     })
     .await;

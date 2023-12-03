@@ -1,7 +1,6 @@
 use crate::{
     error::Result,
     http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-    state::AccountService,
 };
 use axum::{
     debug_handler,
@@ -10,7 +9,7 @@ use axum::{
 };
 use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::account::Follow;
+use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

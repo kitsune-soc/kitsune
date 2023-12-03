@@ -7,7 +7,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
-use kitsune_core::traits::{fetcher::AccountFetchOptions, Resolver};
+use kitsune_core::traits::fetcher::AccountFetchOptions;
 use kitsune_db::{
     model::account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
     schema::accounts,
@@ -18,10 +18,7 @@ use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
 use scoped_futures::ScopedFutureExt;
 use url::Url;
 
-impl<R> Fetcher<R>
-where
-    R: Resolver,
-{
+impl Fetcher {
     /// Fetch an ActivityPub actor
     ///
     /// # Panics
@@ -75,7 +72,7 @@ where
                 .resolver
                 .resolve_account(&actor.preferred_username, domain)
                 .await
-                .map_err(|err| Error::Resolver(err.into()))?
+                .map_err(Error::Resolver)?
             {
                 Some(resource) if resource.uri == actor.id => {
                     actor.preferred_username = resource.username;

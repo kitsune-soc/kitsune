@@ -4,7 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-futures-util = "0.3.29"
+async-trait = "0.1.74"
 http = "0.2.11"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-messaging = { path = "../kitsune-messaging" }
