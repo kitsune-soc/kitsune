@@ -9,7 +9,7 @@ use scoped_futures::ScopedFutureExt;
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.
 // Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
-pub const MAX_FETCH_DEPTH: u32 = 20;
+pub const MAX_FETCH_DEPTH: u32 = 15;
 
 impl Fetcher {
     #[instrument(skip(self))]
