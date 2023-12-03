@@ -8,7 +8,7 @@ extern crate tracing;
 use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream, FutureExt, StreamExt, TryStreamExt};
+use futures_util::{stream, StreamExt, TryStreamExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{fetcher::PostFetchOptions, Fetcher as FetcherTrait};
@@ -286,7 +286,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         object,
         fetcher,
         search_backend,
-    } = preprocess_object(process_data).boxed().await?;
+    } = preprocess_object(process_data).await?;
 
     let post = db_pool
         .with_transaction(|tx| {

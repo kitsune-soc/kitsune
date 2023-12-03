@@ -81,11 +81,11 @@
           };
         in
         {
-          # Hack to make latest devenv work
-          devenv-up = self.devShells.${system}.default.config.procfileScript;
-
           formatter = pkgs.nixpkgs-fmt;
           packages = rec {
+            # Hack to make latest devenv work
+            devenv-up = self.devShells.${system}.default.config.procfileScript;
+
             default = main;
 
             cli = rustPlatform.buildRustPackage (basePackage // {
