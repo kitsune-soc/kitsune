@@ -1,13 +1,13 @@
-
-[profile.release]
-codegen-units = 1
-lto = true
-strip = true
+[profile.dev.package]
+backtrace = { opt-level = 3 }
+num-bigint-dig = { opt-level = 3 }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
-#lto = "thin"
+codegen-units = 1
+lto = true
+strip = true
 
 [workspace]
 exclude = ["xtask"]
@@ -36,7 +36,8 @@ members = [
     "crates/kitsune-service",
     "crates/kitsune-storage",
     "crates/kitsune-test",
-    "crates/kitsune-type", "crates/kitsune-url",
+    "crates/kitsune-type",
+    "crates/kitsune-url",
     "crates/kitsune-util",
     "crates/kitsune-webfinger",
     "kitsune",
@@ -51,17 +52,18 @@ members = [
 resolver = "2"
 
 [workspace.package]
+authors = ["Kitsune developers"]
 edition = "2021"
 version = "0.0.1-pre.4"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# Enable all features
+# Whether to pass --all-features to cargo build
 all-features = true
-# Allow own modification (temporary)
+# Skip checking whether the specified configuration files are up to date
 allow-dirty = ["ci"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.4.0-prerelease.3"
+cargo-dist-version = "0.5.0"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app

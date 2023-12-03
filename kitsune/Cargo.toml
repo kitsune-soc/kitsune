@@ -6,6 +6,12 @@ repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://joinkitsune.org"
 build = "build.rs"
 
+[package.metadata.wix]
+upgrade-guid = "560454A1-C372-48A1-9AA7-D41DB3D63E12"
+path-guid = "1C91B087-D09B-42C2-B413-208E775781E2"
+license = false
+eula = false
+
 [dependencies]
 ahash = "0.8.6"
 athena = { path = "../lib/athena" }
