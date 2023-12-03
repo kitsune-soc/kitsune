@@ -450,15 +450,13 @@ impl DelivererTrait for Deliverer {
     async fn deliver(&self, action: Action) -> Result<(), BoxError> {
         match action {
             Action::AcceptFollow(follow) => self.accept_follow(follow).await,
-            Action::Create(post) => self.create_or_repost(post).await,
-            Action::Delete(post) => self.delete_or_unrepost(post).await,
+            Action::Create(post) | Action::Repost(post) => self.create_or_repost(post).await,
+            Action::Delete(post) | Action::Unrepost(post) => self.delete_or_unrepost(post).await,
             Action::Favourite(favourite) => self.favourite(favourite).await,
             Action::Follow(follow) => self.follow(follow).await,
             Action::RejectFollow(follow) => self.reject_follow(follow).await,
-            Action::Repost(post) => self.create_or_repost(post).await,
             Action::Unfavourite(favourite) => self.unfavourite(favourite).await,
             Action::Unfollow(follow) => self.unfollow(follow).await,
-            Action::Unrepost(post) => self.delete_or_unrepost(post).await,
             Action::UpdateAccount(account) => self.update_account(account).await,
             Action::UpdatePost(post) => self.update_post(post).await,
         }
