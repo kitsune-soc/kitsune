@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     http::{
-        extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+        extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
     },
     state::Zustand,
@@ -12,11 +12,9 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::attachment::{AttachmentService, Update, Upload},
-};
+use kitsune_core::error::HttpError;
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -89,7 +87,7 @@ pub async fn post(
         }
     }
 
-    let upload = upload.build().map_err(|_| ApiError::BadRequest)?;
+    let upload = upload.build().map_err(|_| HttpError::BadRequest)?;
     let media_attachment = attachment_service.upload(upload).await?;
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
@@ -111,7 +109,7 @@ pub async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(attachment_id): Path<Uuid>,
-    FormOrJson(form): FormOrJson<UpdateAttachment>,
+    AgnosticForm(form): AgnosticForm<UpdateAttachment>,
 ) -> Result<Json<MediaAttachment>> {
     let update = Update::builder()
         .account_id(user_data.account.id)
@@ -121,8 +119,8 @@ pub async fn put(
 
     attachment_service
         .update(update)
-        .and_then(|model| mastodon_mapper.map(model))
         .map_err(Error::from)
+        .and_then(|model| mastodon_mapper.map(model).map_err(Error::from))
         .map_ok(Json)
         .await
 }

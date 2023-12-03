@@ -3,17 +3,33 @@ extern crate tracing;
 
 use athena::JobQueue;
 use kitsune_config::job_queue::Configuration;
-use kitsune_core::{
-    activitypub::Deliverer,
-    job::{JobRunnerContext, KitsuneContextRepo},
-    state::State as CoreState,
-};
 use kitsune_db::PgPool;
+use kitsune_email::{
+    lettre::{AsyncSmtpTransport, Tokio1Executor},
+    MailSender, MailingService,
+};
+use kitsune_federation::{
+    activitypub::PrepareDeliverer as PrepareActivityPubDeliverer, PrepareDeliverer,
+};
+use kitsune_federation_filter::FederationFilter;
+use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
 use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
+use kitsune_service::attachment::AttachmentService;
+use kitsune_url::UrlService;
 use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;
+use typed_builder::TypedBuilder;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
+
+#[derive(TypedBuilder)]
+pub struct JobDispatcherState {
+    attachment_service: AttachmentService,
+    db_pool: PgPool,
+    federation_filter: FederationFilter,
+    mail_sender: Option<MailSender<AsyncSmtpTransport<Tokio1Executor>>>,
+    url_service: UrlService,
+}
 
 pub fn prepare_job_queue(
     db_pool: PgPool,
@@ -35,13 +51,32 @@ pub fn prepare_job_queue(
 #[instrument(skip(job_queue, state))]
 pub async fn run_dispatcher(
     job_queue: JobQueue<KitsuneContextRepo>,
-    state: CoreState,
+    state: JobDispatcherState,
     num_job_workers: usize,
 ) {
-    let deliverer = Deliverer::builder()
-        .federation_filter(state.service.federation_filter.clone())
+    let prepare_activitypub_deliverer = PrepareActivityPubDeliverer::builder()
+        .attachment_service(state.attachment_service)
+        .db_pool(state.db_pool.clone())
+        .federation_filter(state.federation_filter)
+        .url_service(state.url_service.clone())
         .build();
-    let ctx = Arc::new(JobRunnerContext { deliverer, state });
+    let prepare_deliverer = PrepareDeliverer::builder()
+        .activitypub(prepare_activitypub_deliverer)
+        .build();
+
+    let mailing_service = MailingService::builder()
+        .db_pool(state.db_pool.clone())
+        .sender(state.mail_sender)
+        .url_service(state.url_service)
+        .build();
+
+    let ctx = Arc::new(JobRunnerContext {
+        db_pool: state.db_pool,
+        deliverer: Box::new(kitsune_federation::prepare_deliverer(prepare_deliverer)),
+        service: Service {
+            mailing: mailing_service,
+        },
+    });
 
     let mut job_joinset = JoinSet::new();
     loop {

@@ -6,7 +6,8 @@ use axum::{
     debug_handler,
     extract::{Path, State},
 };
-use kitsune_core::{mapping::MastodonMapper, service::post::PostService};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::post::PostService;
 use kitsune_type::mastodon::status::StatusSource;
 use speedy_uuid::Uuid;
 

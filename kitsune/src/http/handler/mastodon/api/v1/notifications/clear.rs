@@ -4,7 +4,7 @@ use crate::{
 };
 use axum::{debug_handler, extract::State};
 use http::StatusCode;
-use kitsune_core::service::notification::NotificationService;
+use kitsune_service::notification::NotificationService;
 
 #[debug_handler(state = crate::state::Zustand)]
 #[utoipa::path(

@@ -2,7 +2,7 @@ use crate::error::Result;
 use axum::extract::multipart;
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
-use kitsune_core::error::ApiError;
+use kitsune_core::error::HttpError;
 use kitsune_storage::BoxError;
 use std::io::SeekFrom;
 use tempfile::tempfile;
@@ -22,7 +22,7 @@ pub async fn buffer_multipart_to_tempfile(
     while let Some(chunk) = field.chunk().await? {
         if let Err(error) = tempfile.write_all(&chunk).await {
             error!(?error, "Failed to write chunk to tempfile");
-            return Err(ApiError::InternalServerError.into());
+            return Err(HttpError::InternalServerError.into());
         }
     }
 

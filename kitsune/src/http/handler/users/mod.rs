@@ -4,7 +4,9 @@ use axum::{
     routing::{self, post},
     Router,
 };
-use kitsune_core::{error::ApiError, mapping::IntoObject, service::account::AccountService};
+use kitsune_activitypub::mapping::IntoObject;
+use kitsune_core::error::HttpError;
+use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
 
@@ -21,9 +23,11 @@ async fn get(
     let account = account_service
         .get_by_id(account_id)
         .await?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or(HttpError::NotFound)?;
 
-    Ok(ActivityPubJson(account.into_object(&state.core).await?))
+    Ok(ActivityPubJson(
+        account.into_object(state.ap_state()).await?,
+    ))
 }
 
 pub fn routes() -> Router<Zustand> {

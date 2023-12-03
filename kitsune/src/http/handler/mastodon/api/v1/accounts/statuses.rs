@@ -1,6 +1,6 @@
 use crate::{
     consts::default_limit,
-    error::Result,
+    error::{Error, Result},
     http::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
@@ -10,15 +10,11 @@ use axum::{
     extract::{OriginalUri, Path, Query, State},
     Json,
 };
-use futures_util::{FutureExt, TryStreamExt};
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::{
-        account::{AccountService, GetPosts},
-        url::UrlService,
-    },
-};
+use futures_util::{FutureExt, TryFutureExt, TryStreamExt};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::{AccountService, GetPosts};
 use kitsune_type::mastodon::Status;
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;
@@ -67,6 +63,7 @@ pub async fn get(
     let mut statuses: Vec<Status> = account
         .get_posts(get_posts)
         .await?
+        .map_err(Error::from)
         .and_then(|post| {
             if let Some(AuthExtractor(ref user_data)) = user_data {
                 mastodon_mapper
@@ -75,6 +72,7 @@ pub async fn get(
             } else {
                 mastodon_mapper.map(post).right_future()
             }
+            .map_err(Error::from)
         })
         .try_collect()
         .await?;

@@ -1,7 +1,14 @@
 [package]
 name = "kitsune-job-runner"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
+
+[package.metadata.wix]
+upgrade-guid = "D61A497C-7468-4A29-B5D3-F9C44E93FF9E"
+path-guid = "55D885EF-63AA-4584-9E68-1BF28E6D033A"
+license = false
+eula = false
 
 [dependencies]
 athena = { path = "../lib/athena" }
@@ -11,11 +18,18 @@ deadpool-redis = "0.13.0"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-email = { path = "../crates/kitsune-email" }
+kitsune-federation = { path = "../crates/kitsune-federation" }
+kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
+kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-retry-policies = { path = "../crates/kitsune-retry-policies" }
+kitsune-service = { path = "../crates/kitsune-service" }
+kitsune-url = { path = "../crates/kitsune-url" }
 mimalloc = "0.1.39"
 tokio = { version = "1.34.0", features = ["full"] }
 toml = "0.8.8"
 tracing = "0.1.40"
+typed-builder = "0.18.0"
 
 [features]

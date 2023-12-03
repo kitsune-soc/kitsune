@@ -8,15 +8,13 @@ use axum::{
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::{
-    error::ApiError,
-    service::user::{Register, UserService},
-};
+use kitsune_core::error::HttpError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     PgPool,
 };
 use kitsune_oidc::OidcService;
+use kitsune_service::user::{Register, UserService};
 use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 
@@ -34,7 +32,7 @@ pub async fn get(
     Query(query): Query<CallbackQuery>,
 ) -> Result<Response> {
     let Some(oidc_service) = oidc_service else {
-        return Err(ApiError::BadRequest.into());
+        return Err(HttpError::BadRequest.into());
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;

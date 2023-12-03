@@ -1,17 +1,15 @@
 use crate::{
     error::Result,
-    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::account::{AccountService, Follow},
-};
+use kitsune_core::error::HttpError;
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -40,10 +38,10 @@ pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-    follow_body: Option<FormOrJson<FollowBody>>,
+    follow_body: Option<AgnosticForm<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        return Err(ApiError::BadRequest.into());
+        return Err(HttpError::BadRequest.into());
     }
 
     let follow = Follow::builder()

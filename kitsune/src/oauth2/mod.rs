@@ -5,12 +5,13 @@ use axum::response::{Redirect, Response};
 use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::{service::url::UrlService, util::generate_secret};
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
     PgPool,
 };
+use kitsune_url::UrlService;
+use kitsune_util::generate_secret;
 use oxide_auth::endpoint::Scope;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;

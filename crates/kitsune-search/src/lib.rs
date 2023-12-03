@@ -142,6 +142,10 @@ pub trait SearchBackend: Send + Sync {
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResultReference>>;
 
+    /// Update an entity inside the search index
+    ///
+    /// This is a separate function even though most search engines have immutable documents (meaning updating documents is actually: delete -> create).
+    /// That's due to the fact that there are in fact *some* search engines that support updating documents.
     async fn update_in_index(&self, item: SearchItem) -> Result<()>;
 }
 

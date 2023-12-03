@@ -2,14 +2,16 @@ use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::{consts::VERSION, service::user::UserService, try_join};
+use kitsune_core::consts::VERSION;
 use kitsune_db::{
     schema::{posts, users},
     PgPool,
 };
+use kitsune_service::user::UserService;
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
+use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
 use simd_json::{OwnedValue, ValueBuilder};
 

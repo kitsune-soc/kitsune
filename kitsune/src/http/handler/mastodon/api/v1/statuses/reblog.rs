@@ -1,16 +1,14 @@
 use crate::{
     error::Result,
-    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
 };
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::post::{PostService, RepostPost},
-};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::post::{PostService, RepostPost};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -39,7 +37,7 @@ pub async fn post(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-    FormOrJson(body): FormOrJson<RepostBody>,
+    AgnosticForm(body): AgnosticForm<RepostBody>,
 ) -> Result<Json<Status>> {
     let repost_post = RepostPost::builder()
         .account_id(user_data.account.id)

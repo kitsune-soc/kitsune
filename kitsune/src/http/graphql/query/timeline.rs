@@ -7,7 +7,7 @@ use async_graphql::{
     Context, Object, Result,
 };
 use futures_util::TryStreamExt;
-use kitsune_core::service::timeline::{GetHome, GetPublic};
+use kitsune_service::timeline::{GetHome, GetPublic};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]
@@ -23,7 +23,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service().timeline;
+        let timeline_service = &ctx.state().service.timeline;
 
         connection::query(
             after,
@@ -66,7 +66,7 @@ impl TimelineQuery {
         first: Option<i32>,
         last: Option<i32>,
     ) -> Result<Connection<Uuid, Post>> {
-        let timeline_service = &ctx.state().service().timeline;
+        let timeline_service = &ctx.state().service.timeline;
 
         connection::query(
             after,

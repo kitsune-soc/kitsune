@@ -3,7 +3,7 @@ use crate::http::graphql::{
     ContextExt,
 };
 use async_graphql::{Context, Object, Result};
-use kitsune_core::service::post::{CreatePost, DeletePost};
+use kitsune_service::post::{CreatePost, DeletePost};
 use speedy_uuid::Uuid;
 
 #[derive(Default)]
@@ -28,7 +28,7 @@ impl PostMutation {
             .visibility(visibility.into())
             .build();
 
-        let post = state.service().post.create(create_post).await?;
+        let post = state.service.post.create(create_post).await?;
 
         Ok(post.into())
     }
@@ -43,7 +43,7 @@ impl PostMutation {
             .post_id(id)
             .build();
 
-        state.service().post.delete(delete_post).await?;
+        state.service.post.delete(delete_post).await?;
 
         Ok(id)
     }

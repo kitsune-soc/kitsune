@@ -2,19 +2,17 @@
 backtrace = { opt-level = 3 }
 num-bigint-dig = { opt-level = 3 }
 
-[profile.release]
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
 codegen-units = 1
 lto = true
 strip = true
 
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-#lto = "thin"
-
 [workspace]
 exclude = ["xtask"]
 members = [
+    "crates/kitsune-activitypub",
     "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
@@ -23,18 +21,25 @@ members = [
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",
+    "crates/kitsune-federation",
+    "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
     "crates/kitsune-http-signatures",
+    "crates/kitsune-jobs",
     "crates/kitsune-language",
+    "crates/kitsune-mastodon",
     "crates/kitsune-messaging",
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-retry-policies",
     "crates/kitsune-search",
+    "crates/kitsune-service",
     "crates/kitsune-storage",
     "crates/kitsune-test",
     "crates/kitsune-type",
+    "crates/kitsune-url",
     "crates/kitsune-util",
+    "crates/kitsune-webfinger",
     "kitsune",
     "kitsune-cli",
     "kitsune-job-runner",
@@ -47,21 +52,20 @@ members = [
 resolver = "2"
 
 [workspace.package]
+authors = ["Kitsune developers"]
 edition = "2021"
 version = "0.0.1-pre.4"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# Enable all features
+# Whether to pass --all-features to cargo build
 all-features = true
-# Allow own modification (temporary)
-allow-dirty = ["ci"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.4.0-prerelease.3"
+cargo-dist-version = "0.5.0"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = ["shell", "powershell"]
+installers = ["powershell", "shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = [
     "aarch64-apple-darwin",

@@ -3,7 +3,6 @@ xtask = "run --manifest-path ./xtask/Cargo.toml --"
 
 [build]
 rustdocflags = ["--document-private-items"]
-rustflags = ["--cfg", "uuid_unstable"]
 
 [registries.crates-io]
 protocol = "sparse"

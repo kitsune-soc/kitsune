@@ -1,10 +1,12 @@
-use crate::{error::Result, http::extractor::MastodonAuthExtractor, state::Zustand};
-use axum::{debug_handler, extract::State, routing, Json, Router};
-use futures_util::TryStreamExt;
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::custom_emoji::{CustomEmojiService, GetEmojiList},
+use crate::{
+    error::{Error, Result},
+    http::extractor::MastodonAuthExtractor,
+    state::Zustand,
 };
+use axum::{debug_handler, extract::State, routing, Json, Router};
+use futures_util::{TryFutureExt, TryStreamExt};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::custom_emoji::{CustomEmojiService, GetEmojiList};
 use kitsune_type::mastodon::CustomEmoji;
 
 #[debug_handler(state = crate::state::Zustand)]
@@ -30,7 +32,8 @@ pub async fn get(
     let custom_emojis: Vec<CustomEmoji> = custom_emoji_service
         .get_list(get_emoji_list)
         .await?
-        .and_then(|acc| mastodon_mapper.map(acc))
+        .map_err(Error::from)
+        .and_then(|acc| mastodon_mapper.map(acc).map_err(Error::from))
         .try_collect()
         .await?;
 

@@ -5,11 +5,9 @@ use axum::{
 };
 use axum_extra::either::Either;
 use http::StatusCode;
-use kitsune_core::service::{
-    account::{AccountService, GetUser},
-    url::UrlService,
-};
+use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::webfinger::{Link, Resource};
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use utoipa::IntoParams;
 
@@ -78,27 +76,26 @@ mod tests {
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::{Request, Response, StatusCode};
     use hyper::Body;
+    use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
-    use kitsune_core::{
-        activitypub::Fetcher,
-        job::KitsuneContextRepo,
-        service::{
-            account::AccountService, attachment::AttachmentService,
-            federation_filter::FederationFilterService, job::JobService, url::UrlService,
-        },
-        webfinger::Webfinger,
-    };
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
         PgPool,
     };
+    use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
+    use kitsune_jobs::KitsuneContextRepo;
     use kitsune_search::NoopSearchService;
+    use kitsune_service::{
+        account::AccountService, attachment::AttachmentService, job::JobService,
+    };
     use kitsune_storage::fs::Storage;
     use kitsune_test::{database_test, redis_test};
     use kitsune_type::webfinger::Link;
+    use kitsune_url::UrlService;
+    use kitsune_webfinger::Webfinger;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::{convert::Infallible, sync::Arc};
@@ -131,15 +128,15 @@ mod tests {
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
-                FederationFilterService::new(&FederationFilterConfiguration::Deny {
+                FederationFilter::new(&FederationFilterConfiguration::Deny {
                     domains: Vec::new(),
                 })
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
             .build();
 
         let context_repo = KitsuneContextRepo::builder()
@@ -159,7 +156,7 @@ mod tests {
             .fetcher(fetcher)
             .job_service(job_service)
             .url_service(url_service)
-            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
             .build()
     }
 

@@ -1,6 +1,6 @@
 use crate::{
     error::Result,
-    http::extractor::{AuthExtractor, FormOrJson, MastodonAuthExtractor},
+    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
 use axum::{
@@ -9,10 +9,8 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
-use kitsune_core::{
-    mapping::MastodonMapper,
-    service::post::{CreatePost, DeletePost, PostService, UpdatePost},
-};
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::post::{CreatePost, DeletePost, PostService, UpdatePost};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -126,7 +124,7 @@ async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post_service): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
-    FormOrJson(form): FormOrJson<CreateForm>,
+    AgnosticForm(form): AgnosticForm<CreateForm>,
 ) -> Result<Json<Status>> {
     let create_post = CreatePost::builder()
         .author_id(user_data.account.id)
@@ -161,7 +159,7 @@ async fn put(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
-    FormOrJson(form): FormOrJson<UpdateForm>,
+    AgnosticForm(form): AgnosticForm<UpdateForm>,
 ) -> Result<Json<Status>> {
     let update_post = UpdatePost::builder()
         .account_id(user_data.account.id)

@@ -3,20 +3,19 @@ use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use futures_util::{stream, StreamExt, TryStreamExt};
-use kitsune_core::{
-    mapping::IntoActivity,
-    service::{account::GetPosts, url::UrlService},
-};
+use kitsune_activitypub::mapping::IntoActivity;
 use kitsune_db::{
     model::{account::Account, post::Post},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
 };
+use kitsune_service::account::GetPosts;
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
     Activity,
 };
+use kitsune_url::UrlService;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -39,7 +38,7 @@ pub async fn get(
     Query(query): Query<OutboxQuery>,
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
     let account = state
-        .db_pool()
+        .db_pool
         .with_connection(|db_conn| {
             use diesel_async::RunQueryDsl;
 
@@ -63,7 +62,7 @@ pub async fn get(
             .build();
 
         let posts: Vec<Post> = state
-            .service()
+            .service
             .account
             .get_posts(get_posts)
             .await?
@@ -80,7 +79,7 @@ pub async fn get(
             posts.last().map_or(Uuid::nil(), |post| post.id)
         );
         let ordered_items = stream::iter(posts)
-            .then(|post| post.into_activity(&state.core))
+            .then(|post| post.into_activity(state.ap_state()))
             .try_collect()
             .await?;
 
@@ -95,7 +94,7 @@ pub async fn get(
         })))
     } else {
         let public_post_count = state
-            .db_pool()
+            .db_pool
             .with_connection(|db_conn| {
                 use diesel_async::RunQueryDsl;
 

@@ -399,17 +399,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-recursion"
-version = "1.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fd55a5ba1179988837d24ab4c7cc8ed6efdeff578ede0416b4225a5fca35bd0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.39",
-]
-
-[[package]]
 name = "async-stream"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -509,7 +498,6 @@ dependencies = [
  "autometrics-macros",
  "cfg_aliases",
  "linkme",
- "metrics",
  "once_cell",
  "spez",
  "thiserror",
@@ -1585,6 +1573,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_more"
+version = "1.0.0-beta.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7abbfc297053be59290e3152f8cbcd52c8642e0728b69ee187d991d4c1af08d"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0-beta.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bba3e9872d7c58ce7ef0fcf1844fcc3e23ef2a58377b50df35dd98e42a5726e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
 ]
 
 [[package]]
@@ -2838,23 +2846,34 @@ dependencies = [
  "hyper",
  "include_dir",
  "iso8601-timestamp",
+ "kitsune-activitypub",
  "kitsune-blocking",
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-email",
  "kitsune-embed",
+ "kitsune-federation",
+ "kitsune-federation-filter",
  "kitsune-http-client",
  "kitsune-http-signatures",
  "kitsune-job-runner",
+ "kitsune-jobs",
  "kitsune-language",
+ "kitsune-mastodon",
+ "kitsune-messaging",
  "kitsune-observability",
  "kitsune-oidc",
  "kitsune-search",
+ "kitsune-service",
  "kitsune-storage",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-url",
+ "kitsune-util",
+ "kitsune-webfinger",
  "metrics",
  "mimalloc",
  "mime",
@@ -2885,6 +2904,54 @@ dependencies = [
  "url",
  "utoipa",
  "utoipa-swagger-ui",
+]
+
+[[package]]
+name = "kitsune-activitypub"
+version = "0.0.1-pre.4"
+dependencies = [
+ "async-trait",
+ "autometrics",
+ "base64-simd",
+ "diesel",
+ "diesel-async",
+ "futures-util",
+ "headers",
+ "http",
+ "hyper",
+ "iso8601-timestamp",
+ "kitsune-cache",
+ "kitsune-config",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-embed",
+ "kitsune-federation-filter",
+ "kitsune-http-client",
+ "kitsune-http-signatures",
+ "kitsune-language",
+ "kitsune-search",
+ "kitsune-service",
+ "kitsune-test",
+ "kitsune-type",
+ "kitsune-url",
+ "kitsune-util",
+ "kitsune-webfinger",
+ "mime",
+ "mime_guess",
+ "pretty_assertions",
+ "rsa",
+ "scoped-futures",
+ "serde",
+ "serial_test",
+ "sha2",
+ "simd-json",
+ "speedy-uuid",
+ "thiserror",
+ "tokio",
+ "tower",
+ "tracing",
+ "typed-builder",
+ "url",
 ]
 
 [[package]]
@@ -2962,74 +3029,16 @@ dependencies = [
 name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
- "ahash 0.8.6",
- "ammonia",
- "argon2",
- "async-recursion",
- "async-stream",
- "athena",
- "autometrics",
- "base64-simd",
- "bytes",
+ "async-trait",
  "const_format",
- "deadpool-redis",
- "derive_builder",
- "diesel",
- "diesel-async",
- "eyre",
- "futures-util",
- "garde",
- "globset",
- "headers",
- "hex-simd",
  "http",
- "hyper",
- "img-parts",
- "iso8601-timestamp",
- "kitsune-blocking",
- "kitsune-cache",
- "kitsune-captcha",
- "kitsune-config",
  "kitsune-db",
- "kitsune-email",
- "kitsune-embed",
- "kitsune-http-client",
- "kitsune-http-signatures",
- "kitsune-language",
  "kitsune-messaging",
- "kitsune-search",
- "kitsune-storage",
- "kitsune-test",
- "kitsune-type",
- "kitsune-util",
- "mime",
- "mime_guess",
- "password-hash",
- "pkcs8",
- "post-process",
- "pretty_assertions",
- "pulldown-cmark",
- "rand",
- "redis",
- "rsa",
- "rusty-s3",
- "scoped-futures",
  "serde",
- "serial_test",
- "sha2",
- "simd-json",
- "smol_str",
  "speedy-uuid",
- "tempfile",
  "thiserror",
- "time",
- "tokio",
- "tower",
- "tracing",
  "typed-builder",
- "url",
  "vergen",
- "zxcvbn",
 ]
 
 [[package]]
@@ -3063,8 +3072,14 @@ version = "0.0.1-pre.4"
 dependencies = [
  "askama",
  "askama_axum",
+ "diesel",
+ "diesel-async",
+ "kitsune-db",
+ "kitsune-url",
  "lettre",
  "mrml",
+ "scoped-futures",
+ "speedy-uuid",
  "thiserror",
  "typed-builder",
 ]
@@ -3085,6 +3100,34 @@ dependencies = [
  "smol_str",
  "thiserror",
  "typed-builder",
+]
+
+[[package]]
+name = "kitsune-federation"
+version = "0.0.1-pre.4"
+dependencies = [
+ "kitsune-activitypub",
+ "kitsune-cache",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-embed",
+ "kitsune-federation-filter",
+ "kitsune-search",
+ "kitsune-service",
+ "kitsune-url",
+ "kitsune-webfinger",
+ "typed-builder",
+]
+
+[[package]]
+name = "kitsune-federation-filter"
+version = "0.0.1-pre.4"
+dependencies = [
+ "globset",
+ "kitsune-config",
+ "kitsune-type",
+ "thiserror",
+ "url",
 ]
 
 [[package]]
@@ -3135,12 +3178,40 @@ dependencies = [
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-email",
+ "kitsune-federation",
+ "kitsune-federation-filter",
+ "kitsune-jobs",
  "kitsune-observability",
  "kitsune-retry-policies",
+ "kitsune-service",
+ "kitsune-url",
  "mimalloc",
  "tokio",
  "toml 0.8.8",
  "tracing",
+ "typed-builder",
+]
+
+[[package]]
+name = "kitsune-jobs"
+version = "0.0.1-pre.4"
+dependencies = [
+ "athena",
+ "derive_more 1.0.0-beta.6",
+ "diesel",
+ "diesel-async",
+ "eyre",
+ "futures-util",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-email",
+ "scoped-futures",
+ "serde",
+ "speedy-uuid",
+ "thiserror",
+ "tracing",
+ "typed-builder",
 ]
 
 [[package]]
@@ -3156,13 +3227,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-mastodon"
+version = "0.0.1-pre.4"
+dependencies = [
+ "derive_builder",
+ "diesel",
+ "diesel-async",
+ "futures-util",
+ "iso8601-timestamp",
+ "kitsune-cache",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-embed",
+ "kitsune-service",
+ "kitsune-type",
+ "kitsune-url",
+ "kitsune-util",
+ "mime",
+ "scoped-futures",
+ "serde",
+ "simd-json",
+ "smol_str",
+ "speedy-uuid",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "typed-builder",
+]
+
+[[package]]
 name = "kitsune-messaging"
 version = "0.0.1-pre.4"
 dependencies = [
  "ahash 0.8.6",
+ "derive_more 1.0.0-beta.6",
  "futures-util",
  "kitsune-retry-policies",
- "kitsune-util",
  "pin-project-lite",
  "redis",
  "serde",
@@ -3245,15 +3345,81 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-service"
+version = "0.0.1-pre.4"
+dependencies = [
+ "ahash 0.8.6",
+ "argon2",
+ "async-stream",
+ "athena",
+ "bytes",
+ "deadpool-redis",
+ "derive_builder",
+ "diesel",
+ "diesel-async",
+ "eyre",
+ "futures-util",
+ "garde",
+ "hex-simd",
+ "http",
+ "hyper",
+ "img-parts",
+ "iso8601-timestamp",
+ "kitsune-activitypub",
+ "kitsune-blocking",
+ "kitsune-cache",
+ "kitsune-captcha",
+ "kitsune-config",
+ "kitsune-core",
+ "kitsune-db",
+ "kitsune-email",
+ "kitsune-embed",
+ "kitsune-federation-filter",
+ "kitsune-http-client",
+ "kitsune-http-signatures",
+ "kitsune-jobs",
+ "kitsune-language",
+ "kitsune-messaging",
+ "kitsune-search",
+ "kitsune-storage",
+ "kitsune-test",
+ "kitsune-url",
+ "kitsune-util",
+ "kitsune-webfinger",
+ "mime",
+ "password-hash",
+ "pkcs8",
+ "post-process",
+ "pretty_assertions",
+ "rand",
+ "rsa",
+ "rusty-s3",
+ "scoped-futures",
+ "serde",
+ "serial_test",
+ "simd-json",
+ "smol_str",
+ "speedy-uuid",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tower",
+ "tracing",
+ "typed-builder",
+ "url",
+ "zxcvbn",
+]
+
+[[package]]
 name = "kitsune-storage"
 version = "0.0.1-pre.4"
 dependencies = [
  "bytes",
+ "derive_more 1.0.0-beta.6",
  "futures-util",
  "http",
  "hyper",
  "kitsune-http-client",
- "kitsune-util",
  "rusty-s3",
  "tempfile",
  "tokio",
@@ -3290,8 +3456,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-url"
+version = "0.0.1-pre.4"
+dependencies = [
+ "smol_str",
+ "speedy-uuid",
+ "typed-builder",
+]
+
+[[package]]
 name = "kitsune-util"
 version = "0.0.1-pre.4"
+dependencies = [
+ "ammonia",
+ "hex-simd",
+ "iso8601-timestamp",
+ "kitsune-type",
+ "pulldown-cmark",
+ "rand",
+ "speedy-uuid",
+ "tokio",
+]
+
+[[package]]
+name = "kitsune-webfinger"
+version = "0.0.1-pre.4"
+dependencies = [
+ "async-trait",
+ "autometrics",
+ "deadpool-redis",
+ "futures-util",
+ "http",
+ "hyper",
+ "kitsune-cache",
+ "kitsune-core",
+ "kitsune-http-client",
+ "kitsune-type",
+ "kitsune-util",
+ "pretty_assertions",
+ "simd-json",
+ "tokio",
+ "tower",
+ "tracing",
+]
 
 [[package]]
 name = "lazy_static"
@@ -5330,7 +5537,7 @@ checksum = "4eb30575f3638fc8f6815f448d50cb1a2e255b0897985c8c59f4d37b72a07b06"
 dependencies = [
  "bitflags 2.4.1",
  "cssparser",
- "derive_more",
+ "derive_more 0.99.17",
  "fxhash",
  "log",
  "new_debug_unreachable",

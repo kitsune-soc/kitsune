@@ -2,12 +2,12 @@ use super::{chrono_to_timestamp, timestamp_to_chrono};
 use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::util::generate_secret;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
     PgPool,
 };
+use kitsune_util::generate_secret;
 use oxide_auth::primitives::grant::{Extensions, Grant};
 use oxide_auth_async::primitives::Authorizer;
 use scoped_futures::ScopedFutureExt;

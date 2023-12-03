@@ -7,7 +7,7 @@ use axum::{
 };
 use http::header::CONTENT_TYPE;
 use hyper::Body;
-use kitsune_core::service::attachment::AttachmentService;
+use kitsune_service::attachment::AttachmentService;
 use speedy_uuid::Uuid;
 
 async fn get(

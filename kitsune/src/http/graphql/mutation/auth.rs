@@ -6,7 +6,7 @@ use crate::{
     oauth2::CreateApp,
 };
 use async_graphql::{Context, Object, Result};
-use kitsune_core::service::user::Register;
+use kitsune_service::user::Register;
 
 #[derive(Default)]
 pub struct AuthMutation;
@@ -44,7 +44,7 @@ impl AuthMutation {
             .password(password)
             .captcha_token(captcha_token)
             .build();
-        let new_user = state.service().user.register(register).await?;
+        let new_user = state.service.user.register(register).await?;
 
         Ok(new_user.into())
     }

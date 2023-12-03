@@ -1,5 +1,6 @@
 [package]
 name = "kitsune-config"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
 

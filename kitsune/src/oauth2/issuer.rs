@@ -3,12 +3,12 @@ use crate::error::Error;
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use kitsune_core::util::generate_secret;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_access_tokens, oauth2_applications, oauth2_refresh_tokens},
     PgPool,
 };
+use kitsune_util::generate_secret;
 use oxide_auth::primitives::{
     grant::{Extensions, Grant},
     issuer::{RefreshedToken, TokenType},

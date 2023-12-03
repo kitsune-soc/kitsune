@@ -1,6 +1,30 @@
+#![forbid(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::cast_sign_loss)]
+
+use hex_simd::{AsOut, AsciiCase};
 use std::ops::Deref;
 
+#[doc(hidden)]
+pub use tokio;
+
+pub mod convert;
+pub mod process;
+pub mod sanitize;
+
 mod macros;
+
+const TOKEN_LENGTH: usize = 32;
+
+#[inline]
+#[must_use]
+pub fn generate_secret() -> String {
+    let token_data: [u8; TOKEN_LENGTH] = rand::random();
+    let mut buf = [0_u8; TOKEN_LENGTH * 2];
+
+    (*hex_simd::encode_as_str(&token_data, buf.as_mut_slice().as_out(), AsciiCase::Lower))
+        .to_string()
+}
 
 #[derive(Clone, Debug)]
 pub enum CowBox<'a, T> {

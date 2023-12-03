@@ -4,11 +4,9 @@ use axum::{
     extract::{Query, State},
     Json,
 };
-use kitsune_core::{
-    error::ApiError,
-    mapping::MastodonMapper,
-    service::account::{AccountService, GetUser},
-};
+use kitsune_core::error::HttpError;
+use kitsune_mastodon::MastodonMapper;
+use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::mastodon::Account;
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -45,13 +43,13 @@ pub async fn get(
     let get_user = GetUser::builder()
         .username(username)
         .domain(domain)
-        .use_webfinger(false)
+        .use_resolver(false)
         .build();
 
     let account = account_service
         .get(get_user)
         .await?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or(HttpError::NotFound)?;
 
     Ok(Json(mastodon_mapper.map(account).await?))
 }

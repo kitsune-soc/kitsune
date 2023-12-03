@@ -1,6 +1,7 @@
 [package]
 name = "kitsune-db"
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
 build = "build.rs"
 

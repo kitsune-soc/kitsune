@@ -1,10 +1,17 @@
 [package]
 name = "kitsune"
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
 repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://joinkitsune.org"
 build = "build.rs"
+
+[package.metadata.wix]
+upgrade-guid = "560454A1-C372-48A1-9AA7-D41DB3D63E12"
+path-guid = "1C91B087-D09B-42C2-B413-208E775781E2"
+license = false
+eula = false
 
 [dependencies]
 ahash = "0.8.6"
@@ -38,20 +45,30 @@ human-panic = "1.2.2"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 include_dir = "0.7.3"
 iso8601-timestamp = "0.2.12"
+kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
+kitsune-federation = { path = "../crates/kitsune-federation" }
+kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
+kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-language = { path = "../crates/kitsune-language" }
+kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-search = { path = "../crates/kitsune-search" }
+kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-storage = { path = "../crates/kitsune-storage" }
 kitsune-type = { path = "../crates/kitsune-type" }
+kitsune-url = { path = "../crates/kitsune-url" }
+kitsune-util = { path = "../crates/kitsune-util" }
+kitsune-webfinger = { path = "../crates/kitsune-webfinger" }
 metrics = "0.21.1"
 mimalloc = "0.1.39"
 mime = "0.3.17"
@@ -88,6 +105,7 @@ utoipa-swagger-ui = { version = "4.0.0", features = ["axum"] }
 
 # --- Optional dependencies ---
 
+
 # "graphql" feature
 async-graphql = { version = "6.0.11", default-features = false, features = [
     "playground",
@@ -98,6 +116,9 @@ async-graphql = { version = "6.0.11", default-features = false, features = [
     "uuid",
 ], optional = true }
 async-graphql-axum = { version = "6.0.11", optional = true }
+
+# "mastodon-api" feature
+kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
 
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
@@ -117,6 +138,6 @@ graphql-api = [
     "dep:async-graphql-axum",
     "speedy-uuid/async-graphql",
 ]
-mastodon-api = ["kitsune-core/mastodon-api"]
-meilisearch = ["kitsune-core/meilisearch"]
+mastodon-api = ["dep:kitsune-mastodon"]
+meilisearch = ["kitsune-service/meilisearch", "kitsune-search/meilisearch"]
 oidc = ["dep:kitsune-oidc"]
