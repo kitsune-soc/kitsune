@@ -1,5 +1,6 @@
 [package]
 name = "tower-x-clacks-overhead"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
 

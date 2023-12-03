@@ -1,7 +1,14 @@
 [package]
 name = "kitsune-job-runner"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
+
+[package.metadata.wix]
+upgrade-guid = "D61A497C-7468-4A29-B5D3-F9C44E93FF9E"
+path-guid = "55D885EF-63AA-4584-9E68-1BF28E6D033A"
+license = false
+eula = false
 
 [dependencies]
 athena = { path = "../lib/athena" }

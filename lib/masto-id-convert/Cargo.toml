@@ -1,6 +1,7 @@
 [package]
 name = "masto-id-convert"
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
 
 [[bench]]

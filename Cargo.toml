@@ -60,14 +60,12 @@ version = "0.0.1-pre.4"
 [workspace.metadata.dist]
 # Whether to pass --all-features to cargo build
 all-features = true
-# Skip checking whether the specified configuration files are up to date
-allow-dirty = ["ci"]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.5.0"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = ["shell", "powershell"]
+installers = ["powershell", "shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = [
     "aarch64-apple-darwin",

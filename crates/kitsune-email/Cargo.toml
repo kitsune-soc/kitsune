@@ -1,5 +1,6 @@
 [package]
 name = "kitsune-email"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
 

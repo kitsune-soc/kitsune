@@ -1,5 +1,6 @@
 [package]
 name = "kitsune-observability"
+authors.workspace = true
 edition.workspace = true
 version.workspace = true
 
