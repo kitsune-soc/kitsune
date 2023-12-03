@@ -134,9 +134,9 @@ mod tests {
                 .unwrap(),
             )
             .search_backend(NoopSearchService)
+            .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .user_cache(Arc::new(NoopCache.into()))
-            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
             .build();
 
         let context_repo = KitsuneContextRepo::builder()
@@ -156,7 +156,7 @@ mod tests {
             .fetcher(fetcher)
             .job_service(job_service)
             .url_service(url_service)
-            .webfinger(Webfinger::new(Arc::new(NoopCache.into())))
+            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
             .build()
     }
 

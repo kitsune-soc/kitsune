@@ -47,7 +47,7 @@ async fn federation_allow() {
 
         assert!(matches!(
             *fetcher
-                .fetch_post("https://example.com/fakeobject")
+                .fetch_post("https://example.com/fakeobject".into())
                 .await
                 .unwrap_err()
                 .downcast_ref()
@@ -57,7 +57,7 @@ async fn federation_allow() {
 
         assert!(matches!(
             *fetcher
-                .fetch_post("https://other.badstuff.com/otherfake")
+                .fetch_post("https://other.badstuff.com/otherfake".into())
                 .await
                 .unwrap_err()
                 .downcast_ref()
@@ -77,7 +77,7 @@ async fn federation_allow() {
 
         assert!(matches!(
             fetcher
-                .fetch_post("https://corteximplant.com/@0x0/109501674056556919")
+                .fetch_post("https://corteximplant.com/@0x0/109501674056556919".into())
                 .await,
             Ok(..)
         ));
@@ -118,7 +118,7 @@ async fn federation_deny() {
 
         assert!(matches!(
             fetcher
-                .fetch_post("https://example.com/fakeobject")
+                .fetch_post("https://example.com/fakeobject".into())
                 .await
                 .unwrap_err()
                 .downcast_ref()
@@ -127,7 +127,7 @@ async fn federation_deny() {
         ));
         assert!(matches!(
             *fetcher
-                .fetch_post("https://other.badstuff.com/otherfake")
+                .fetch_post("https://other.badstuff.com/otherfake".into())
                 .await
                 .unwrap_err()
                 .downcast_ref()

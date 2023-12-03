@@ -1,8 +1,7 @@
 use crate::{error::Result, mails::confirm_account::ConfirmAccount, MailSender};
-use diesel::{ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use iso8601_timestamp::Timestamp;
-use kitsune_db::{model::user::User, schema::users, PgPool};
+use kitsune_db::{function::now, model::user::User, schema::users, PgPool};
 use kitsune_url::UrlService;
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use scoped_futures::ScopedFutureExt;
@@ -22,11 +21,16 @@ impl Mailing {
         self.sender.is_some()
     }
 
+    #[must_use]
+    pub fn sender(&self) -> Option<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
+        self.sender.clone()
+    }
+
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
         self.db_pool
             .with_connection(|db_conn| {
                 diesel::update(users::table.find(user_id))
-                    .set(users::confirmed_at.eq(Timestamp::now_utc()))
+                    .set(users::confirmed_at.eq(now().nullable()))
                     .execute(db_conn)
                     .scoped()
             })
@@ -43,7 +47,7 @@ impl Mailing {
                         .filter(users::confirmation_token.eq(confirmation_token))
                         .filter(users::confirmed_at.is_null()),
                 )
-                .set(users::confirmed_at.eq(Timestamp::now_utc()))
+                .set(users::confirmed_at.eq(now().nullable()))
                 .execute(db_conn)
                 .scoped()
             })

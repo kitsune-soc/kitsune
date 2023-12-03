@@ -4,6 +4,7 @@
 #![allow(
     clippy::cast_sign_loss,
     clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
     clippy::module_name_repetitions,
     forbidden_lint_groups
 )]
@@ -53,6 +54,7 @@ use kitsune_url::UrlService;
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
 
+#[allow(clippy::too_many_lines)]
 pub async fn initialise_state(
     config: &Configuration,
     db_pool: PgPool,
@@ -193,7 +195,7 @@ pub async fn initialise_state(
 
     let search_service = SearchService::builder()
         .db_pool(db_pool.clone())
-        .fetcher(fetcher)
+        .fetcher(fetcher.clone())
         .search_backend(search_backend)
         .build();
 
@@ -215,6 +217,7 @@ pub async fn initialise_state(
             post: status_event_emitter,
         },
         federation_filter,
+        fetcher,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
         oauth2: oauth2_service,

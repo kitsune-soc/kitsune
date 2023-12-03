@@ -12,7 +12,7 @@ pub struct AccountFetchOptions<'a> {
     #[builder(default, setter(strip_option))]
     pub acct: Option<(&'a str, &'a str)>,
 
-    /// Refetch the ActivityPub entity
+    /// Refetch the account
     ///
     /// This is mainly used to refresh possibly stale actors
     ///
@@ -20,11 +20,27 @@ pub struct AccountFetchOptions<'a> {
     #[builder(default = false)]
     pub refetch: bool,
 
-    /// URL of the ActivityPub entity
+    /// URL of the account
     pub url: &'a str,
 }
 
 impl<'a> From<&'a str> for AccountFetchOptions<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::builder().url(value).build()
+    }
+}
+
+#[derive(Clone, Copy, Debug, TypedBuilder)]
+pub struct PostFetchOptions<'a> {
+    /// Call depth of recursive calls of the post fetch logic
+    #[builder(default)]
+    pub call_depth: u32,
+
+    /// URL of the object
+    pub url: &'a str,
+}
+
+impl<'a> From<&'a str> for PostFetchOptions<'a> {
     fn from(value: &'a str) -> Self {
         Self::builder().url(value).build()
     }
@@ -41,7 +57,7 @@ pub trait Fetcher: Send + Sync + 'static {
 
     async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError>;
 
-    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, BoxError>;
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError>;
 }
 
 #[async_trait]
@@ -61,8 +77,8 @@ impl Fetcher for Arc<dyn Fetcher> {
         (**self).fetch_emoji(url).await
     }
 
-    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, BoxError> {
-        (**self).fetch_post(url).await
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
+        (**self).fetch_post(opts).await
     }
 }
 
@@ -98,9 +114,9 @@ where
         Ok(None)
     }
 
-    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, BoxError> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
         for fetcher in self {
-            if let Some(post) = fetcher.fetch_post(url).await? {
+            if let Some(post) = fetcher.fetch_post(opts).await? {
                 return Ok(Some(post));
             }
         }

@@ -45,6 +45,7 @@ human-panic = "1.2.2"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 include_dir = "0.7.3"
 iso8601-timestamp = "0.2.12"
+kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
@@ -59,6 +60,7 @@ kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-language = { path = "../crates/kitsune-language" }
+kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-service = { path = "../crates/kitsune-service" }
@@ -123,7 +125,6 @@ kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 
 [dev-dependencies]
 deadpool-redis = "0.13.0"
-kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"

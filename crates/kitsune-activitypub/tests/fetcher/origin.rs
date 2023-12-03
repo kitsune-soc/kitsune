@@ -70,7 +70,7 @@ async fn check_ap_id_authority() {
             .build();
 
         let _ = fetcher
-            .fetch_post("https://example.com/@0x0/109501674056556919")
+            .fetch_post("https://example.com/@0x0/109501674056556919".into())
             .await
             .unwrap_err();
     })
@@ -109,7 +109,7 @@ async fn check_ap_content_type() {
 
         assert!(matches!(
             *fetcher
-                .fetch_post("https://corteximplant.com/users/0x0")
+                .fetch_post("https://corteximplant.com/users/0x0".into())
                 .await
                 .unwrap_err()
                 .downcast_ref()

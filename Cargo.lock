@@ -399,17 +399,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-recursion"
-version = "1.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fd55a5ba1179988837d24ab4c7cc8ed6efdeff578ede0416b4225a5fca35bd0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.39",
-]
-
-[[package]]
 name = "async-stream"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2874,6 +2863,7 @@ dependencies = [
  "kitsune-jobs",
  "kitsune-language",
  "kitsune-mastodon",
+ "kitsune-messaging",
  "kitsune-observability",
  "kitsune-oidc",
  "kitsune-search",
@@ -2920,7 +2910,6 @@ dependencies = [
 name = "kitsune-activitypub"
 version = "0.0.1-pre.4"
 dependencies = [
- "async-recursion",
  "async-trait",
  "autometrics",
  "base64-simd",
@@ -3085,7 +3074,6 @@ dependencies = [
  "askama_axum",
  "diesel",
  "diesel-async",
- "iso8601-timestamp",
  "kitsune-db",
  "kitsune-url",
  "lettre",

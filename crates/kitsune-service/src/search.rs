@@ -38,7 +38,7 @@ pub struct Search<'a> {
     max_id: Option<Uuid>,
 }
 
-#[derive(TypedBuilder)]
+#[derive(Clone, TypedBuilder)]
 pub struct SearchService {
     db_pool: PgPool,
     fetcher: Arc<dyn Fetcher>,
@@ -71,7 +71,7 @@ impl SearchService {
                 }
             }
 
-            match self.fetcher.fetch_post(searched_url.as_str()).await {
+            match self.fetcher.fetch_post(searched_url.as_str().into()).await {
                 Ok(Some(post)) => results.push(SearchResult::Post(post)),
                 Ok(None) => debug!("no post found"),
                 Err(error) => {

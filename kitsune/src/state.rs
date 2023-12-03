@@ -1,6 +1,6 @@
 use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum_extra::extract::cookie;
-use kitsune_core::event::PostEventEmitter;
+use kitsune_core::{event::PostEventEmitter, traits::Fetcher};
 use kitsune_db::PgPool;
 use kitsune_email::MailingService;
 use kitsune_embed::Client as EmbedClient;
@@ -45,7 +45,7 @@ impl_from_ref! {
 impl_from_ref! {
     Zustand;
     [
-        MastodonMapper => |input: &Zustand| input.mastodon_mapper().clone()
+        MastodonMapper => |input: &Zustand| input.mastodon_mapper.clone()
     ]
 }
 
@@ -55,7 +55,7 @@ impl_from_ref! {
         AccountService => |input: &Zustand| input.service.account.clone(),
         AttachmentService => |input: &Zustand| input.service.attachment.clone(),
         CustomEmojiService => |input: &Zustand| input.service.custom_emoji.clone(),
-        FederationFilter => |input: &Zustand| input.service.federation_filter.clone(),
+        FederationFilter => |input: &Zustand| input.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
         MailingService => |input: &Zustand| input.service.mailing.clone(),
         NotificationService => |input: &Zustand| input.service.notification.clone(),
@@ -71,10 +71,11 @@ impl_from_ref! {
 impl_from_ref! {
     Zustand;
     [
-        PostEventEmitter => |input: &Zustand| input.event_emitter().post.clone()
+        PostEventEmitter => |input: &Zustand| input.event_emitter.post.clone()
     ]
 }
 
+#[derive(Clone)]
 pub struct SessionConfig {
     pub cookie_key: cookie::Key,
     pub flash_config: axum_flash::Config,
@@ -158,6 +159,7 @@ pub struct ZustandInner {
     pub embed_client: Option<EmbedClient>,
     pub event_emitter: EventEmitter,
     pub federation_filter: FederationFilter,
+    pub fetcher: Arc<dyn Fetcher>,
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: MastodonMapper,
     pub oauth2: OAuth2Service,
@@ -166,6 +168,21 @@ pub struct ZustandInner {
     pub oidc: Option<OidcService>,
     pub service: Service,
     pub session_config: SessionConfig,
+}
+
+impl ZustandInner {
+    #[must_use]
+    pub fn ap_state(&self) -> kitsune_activitypub::mapping::State<'_> {
+        kitsune_activitypub::mapping::State::builder()
+            .db_pool(&self.db_pool)
+            .service(
+                kitsune_activitypub::mapping::Service::builder()
+                    .attachment(&self.service.attachment)
+                    .url(&self.service.url)
+                    .build(),
+            )
+            .build()
+    }
 }
 
 #[derive(Clone)]

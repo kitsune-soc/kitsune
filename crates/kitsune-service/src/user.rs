@@ -4,11 +4,9 @@ use super::{
 };
 use crate::error::{Error, Result, UserError};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::future::OptionFuture;
 use garde::Validate;
-use iso8601_timestamp::Timestamp;
 use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     model::{

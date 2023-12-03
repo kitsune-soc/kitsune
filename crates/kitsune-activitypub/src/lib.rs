@@ -11,6 +11,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream, FutureExt, StreamExt, TryStreamExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
+use kitsune_core::traits::{fetcher::PostFetchOptions, Fetcher as FetcherTrait};
 use kitsune_db::{
     model::{
         account::Account,
@@ -79,7 +80,7 @@ async fn handle_mentions(
 async fn handle_custom_emojis(
     db_conn: &mut AsyncPgConnection,
     post_id: Uuid,
-    fetcher: &Fetcher,
+    fetcher: &dyn FetcherTrait,
     tags: &[Tag],
 ) -> Result<()> {
     let emoji_iter = tags.iter().filter(|tag| tag.r#type == TagType::Emoji);
@@ -107,7 +108,8 @@ async fn handle_custom_emojis(
             emoji_text: emoji_tag.name.clone(),
         })
         .try_collect::<Vec<PostCustomEmoji>>()
-        .await?;
+        .await
+        .map_err(Error::FetchEmoji)?;
 
     diesel::insert_into(posts_custom_emojis::table)
         .values(emojis)
@@ -171,7 +173,7 @@ pub struct ProcessNewObject<'a> {
     db_pool: &'a PgPool,
     embed_client: Option<&'a EmbedClient>,
     object: Box<Object>,
-    fetcher: &'a Fetcher,
+    fetcher: &'a dyn FetcherTrait,
     search_backend: &'a AnySearchBackend,
 }
 
@@ -184,7 +186,7 @@ struct PreprocessedObject<'a> {
     content_lang: Language,
     db_pool: &'a PgPool,
     object: Box<Object>,
-    fetcher: &'a Fetcher,
+    fetcher: &'a dyn FetcherTrait,
     search_backend: &'a AnySearchBackend,
 }
 
@@ -208,7 +210,11 @@ async fn preprocess_object(
             return Err(Error::InvalidDocument);
         }
 
-        let Some(author) = fetcher.fetch_actor(attributed_to.into()).await? else {
+        let Some(author) = fetcher
+            .fetch_account(attributed_to.into())
+            .await
+            .map_err(Error::FetchAccount)?
+        else {
             return Err(Error::NotFound);
         };
 
@@ -218,8 +224,14 @@ async fn preprocess_object(
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
     let in_reply_to_id = if let Some(ref in_reply_to) = object.in_reply_to {
         fetcher
-            .fetch_object_inner(in_reply_to, call_depth + 1)
-            .await?
+            .fetch_post(
+                PostFetchOptions::builder()
+                    .url(in_reply_to)
+                    .call_depth(call_depth + 1)
+                    .build(),
+            )
+            .await
+            .map_err(Error::FetchPost)?
             .map(|post| post.id)
     } else {
         None

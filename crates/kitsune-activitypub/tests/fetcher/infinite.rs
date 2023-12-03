@@ -110,7 +110,7 @@ async fn fetch_infinitely_long_reply_chain() {
                 .build();
 
             assert!(fetcher
-                .fetch_post("https://example.com/notes/0")
+                .fetch_post("https://example.com/notes/0".into())
                 .await
                 .is_ok());
         })

@@ -62,7 +62,7 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
         }
 
         let (user, account) = state
-            .db_pool()
+            .db_pool
             .with_connection(|db_conn| {
                 user_account_query
                     .select(<(User, Account)>::as_select())

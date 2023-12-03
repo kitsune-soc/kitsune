@@ -62,25 +62,32 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         };
 
         let ap_id = activity.actor();
-        let remote_user = state
-            .fetcher()
-            .fetch_actor(ap_id.into())
+        let Some(remote_user) = state
+            .fetcher
+            .fetch_account(ap_id.into())
             .await
-            .map_err(Error::from)?;
+            .map_err(Error::Fetcher)?
+        else {
+            return Err(Error::CoreHttp(HttpError::BadRequest).into());
+        };
 
-        if !verify_signature(&parts, state.db_pool(), Some(&remote_user)).await? {
+        if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = AccountFetchOptions::builder()
                 .refetch(true)
                 .url(ap_id)
                 .build();
-            let remote_user = state
-                .fetcher()
-                .fetch_actor(opts)
-                .await
-                .map_err(Error::from)?;
 
-            if !verify_signature(&parts, state.db_pool(), Some(&remote_user)).await? {
+            let Some(remote_user) = state
+                .fetcher
+                .fetch_account(opts)
+                .await
+                .map_err(Error::Fetcher)?
+            else {
+                return Err(Error::CoreHttp(HttpError::BadRequest).into());
+            };
+
+            if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }

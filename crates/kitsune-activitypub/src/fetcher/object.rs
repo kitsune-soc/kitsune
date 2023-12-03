@@ -1,6 +1,5 @@
 use super::Fetcher;
 use crate::{error::Result, process_new_object, ProcessNewObject};
-use async_recursion::async_recursion;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -13,12 +12,9 @@ use scoped_futures::ScopedFutureExt;
 pub const MAX_FETCH_DEPTH: u32 = 30;
 
 impl Fetcher {
-    #[async_recursion]
-    pub(crate) async fn fetch_object_inner(
-        &self,
-        url: &str,
-        call_depth: u32,
-    ) -> Result<Option<Post>> {
+    #[instrument(skip(self))]
+    #[autometrics(track_concurrency)]
+    pub(crate) async fn fetch_object(&self, url: &str, call_depth: u32) -> Result<Option<Post>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);
         }
@@ -64,11 +60,5 @@ impl Fetcher {
         self.post_cache.set(&post.url, &post).await?;
 
         Ok(Some(post))
-    }
-
-    #[instrument(skip(self))]
-    #[autometrics(track_concurrency)]
-    pub(crate) async fn fetch_object(&self, url: &str) -> Result<Option<Post>> {
-        self.fetch_object_inner(url, 0).await
     }
 }

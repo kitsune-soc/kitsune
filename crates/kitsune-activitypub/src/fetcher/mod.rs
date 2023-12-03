@@ -6,7 +6,10 @@ use kitsune_cache::ArcCache;
 use kitsune_core::{
     consts::USER_AGENT,
     error::BoxError,
-    traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait, Resolver},
+    traits::{
+        fetcher::{AccountFetchOptions, PostFetchOptions},
+        Fetcher as FetcherTrait, Resolver,
+    },
 };
 use kitsune_db::{
     model::{account::Account, custom_emoji::CustomEmoji, post::Post},
@@ -130,7 +133,7 @@ impl FetcherTrait for Fetcher {
         Ok(self.fetch_emoji(url).await?)
     }
 
-    async fn fetch_post(&self, url: &str) -> Result<Option<Post>, BoxError> {
-        Ok(self.fetch_object(url).await?)
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
+        Ok(self.fetch_object(opts.url, opts.call_depth).await?)
     }
 }

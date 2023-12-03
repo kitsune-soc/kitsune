@@ -10,6 +10,7 @@ use eyre::Context;
 use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
+use kitsune_job_runner::JobDispatcherState;
 use std::{
     borrow::Cow,
     env, future,
@@ -109,9 +110,18 @@ async fn boot() -> eyre::Result<()> {
             }
         }
     });
+
+    let dispatcher_state = JobDispatcherState::builder()
+        .attachment_service(state.service.attachment.clone())
+        .db_pool(state.db_pool.clone())
+        .federation_filter(state.federation_filter.clone())
+        .mail_sender(state.service.mailing.sender())
+        .url_service(state.service.url.clone())
+        .build();
+
     tokio::spawn(kitsune_job_runner::run_dispatcher(
         job_queue,
-        state.core.clone(),
+        dispatcher_state,
         config.job_queue.num_workers.get(),
     ));
 

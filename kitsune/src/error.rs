@@ -5,6 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use http::StatusCode;
+use kitsune_core::error::{BoxError, HttpError};
 use kitsune_service::error::{Error as ServiceError, PostError};
 use std::str::ParseBoolError;
 use thiserror::Error;
@@ -14,6 +15,9 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {
+    #[error(transparent)]
+    ActivityPub(#[from] kitsune_activitypub::error::Error),
+
     #[error(transparent)]
     Blocking(#[from] kitsune_blocking::Error),
 
@@ -33,6 +37,9 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
+    Fetcher(BoxError),
+
+    #[error(transparent)]
     Http(#[from] http::Error),
 
     #[error(transparent)]
@@ -41,6 +48,9 @@ pub enum Error {
     #[cfg(feature = "mastodon-api")]
     #[error(transparent)]
     Mastodon(#[from] kitsune_mastodon::error::Error),
+
+    #[error(transparent)]
+    Messaging(kitsune_messaging::BoxError),
 
     #[error(transparent)]
     Multipart(#[from] MultipartError),
@@ -125,7 +135,7 @@ impl IntoResponse for Error {
             Self::Service(ServiceError::Validate(report)) => {
                 (StatusCode::BAD_REQUEST, Json(report)).into_response()
             }
-            err @ Self::Service(ServiceError::NotFound) => {
+            err @ Self::CoreHttp(HttpError::NotFound) => {
                 (StatusCode::NOT_FOUND, err.to_string()).into_response()
             }
             err @ Self::Service(ServiceError::Post(PostError::BadRequest)) => {

@@ -139,7 +139,7 @@ async fn fetch_note() {
             .build();
 
         let note = fetcher
-            .fetch_post("https://corteximplant.com/@0x0/109501674056556919")
+            .fetch_post("https://corteximplant.com/@0x0/109501674056556919".into())
             .await
             .expect("Fetch note")
             .unwrap();

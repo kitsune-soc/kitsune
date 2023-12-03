@@ -31,6 +31,15 @@ pub enum Error {
     FederationFilter(#[from] kitsune_federation_filter::error::Error),
 
     #[error(transparent)]
+    FetchAccount(BoxError),
+
+    #[error(transparent)]
+    FetchEmoji(BoxError),
+
+    #[error(transparent)]
+    FetchPost(BoxError),
+
+    #[error(transparent)]
     Http(#[from] http::Error),
 
     #[error(transparent)]
