@@ -44,6 +44,7 @@ kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }

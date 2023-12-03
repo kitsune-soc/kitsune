@@ -27,6 +27,7 @@ use self::{
 use athena::JobQueue;
 use kitsune_config::Configuration;
 use kitsune_db::PgPool;
+use kitsune_email::MailingService;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_federation::{
     activitypub::PrepareFetcher as PrepareActivityPubFetcher, PrepareFetcher,
@@ -40,7 +41,6 @@ use kitsune_service::{
     custom_emoji::CustomEmojiService,
     instance::InstanceService,
     job::JobService,
-    mailing::MailingService,
     notification::NotificationService,
     post::{PostResolver, PostService},
     prepare,

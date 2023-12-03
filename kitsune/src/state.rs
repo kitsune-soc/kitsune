@@ -2,13 +2,14 @@ use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum_extra::extract::cookie;
 use kitsune_core::event::PostEventEmitter;
 use kitsune_db::PgPool;
+use kitsune_email::MailingService;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_service::{
     account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
     custom_emoji::CustomEmojiService, instance::InstanceService, job::JobService,
-    mailing::MailingService, notification::NotificationService, post::PostService,
-    search::SearchService, timeline::TimelineService, user::UserService,
+    notification::NotificationService, post::PostService, search::SearchService,
+    timeline::TimelineService, user::UserService,
 };
 use kitsune_url::UrlService;
 use std::{ops::Deref, sync::Arc};

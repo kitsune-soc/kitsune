@@ -13,10 +13,12 @@ use lettre::{
 use std::{iter, sync::Arc};
 use typed_builder::TypedBuilder;
 
+pub use self::service::Mailing as MailingService;
 pub use lettre;
 
 pub mod error;
 pub mod mails;
+pub mod service;
 pub mod traits;
 
 #[derive(Clone, TypedBuilder)]

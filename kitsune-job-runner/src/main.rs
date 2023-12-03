@@ -4,7 +4,7 @@ use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_job_runner::JobDispatcherState;
-use kitsune_service::attachment::AttachmentService;
+use kitsune_service::{attachment::AttachmentService, prepare};
 use kitsune_url::UrlService;
 use std::path::PathBuf;
 use tokio::fs;
@@ -55,6 +55,13 @@ async fn main() -> eyre::Result<()> {
         .attachment_service(attachment_service)
         .db_pool(db_pool)
         .federation_filter(federation_filter)
+        .mail_sender(
+            config
+                .email
+                .as_ref()
+                .map(prepare::mail_sender)
+                .transpose()?,
+        )
         .url_service(url_service)
         .build();
 

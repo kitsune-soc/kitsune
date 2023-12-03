@@ -126,19 +126,6 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
-        self.db_pool
-            .with_connection(|db_conn| {
-                diesel::update(users::table.find(user_id))
-                    .set(users::confirmed_at.eq(Timestamp::now_utc()))
-                    .execute(db_conn)
-                    .scoped()
-            })
-            .await?;
-
-        Ok(())
-    }
-
     #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {

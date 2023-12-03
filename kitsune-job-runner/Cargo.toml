@@ -11,6 +11,7 @@ deadpool-redis = "0.13.0"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }

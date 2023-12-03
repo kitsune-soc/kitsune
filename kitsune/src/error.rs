@@ -35,6 +35,9 @@ pub enum Error {
     #[error(transparent)]
     Http(#[from] http::Error),
 
+    #[error(transparent)]
+    Mailing(#[from] kitsune_email::error::Error),
+
     #[cfg(feature = "mastodon-api")]
     #[error(transparent)]
     Mastodon(#[from] kitsune_mastodon::error::Error),

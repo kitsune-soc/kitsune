@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, State},
     routing, Router,
 };
-use kitsune_service::mailing::MailingService;
+use kitsune_email::MailingService;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -14,10 +14,10 @@ struct GetPath {
 
 #[debug_handler(state = Zustand)]
 async fn get(
-    State(user_service): State<MailingService>,
+    State(mailing_service): State<MailingService>,
     Path(path): Path<GetPath>,
 ) -> Result<&'static str> {
-    user_service
+    mailing_service
         .mark_as_confirmed_by_token(path.confirmation_token.as_str())
         .await?;
 

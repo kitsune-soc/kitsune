@@ -26,6 +26,7 @@ use kitsune_db::{
     schema::job_context,
     PgPool,
 };
+use kitsune_email::MailingService;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -35,10 +36,14 @@ pub mod deliver;
 pub mod error;
 pub mod mailing;
 
+pub struct Service {
+    pub mailing: MailingService,
+}
+
 pub struct JobRunnerContext {
     pub deliverer: Box<dyn Deliverer>,
     pub db_pool: PgPool,
-    // pub mailing_service: MailingService,
+    pub service: Service,
 }
 
 #[derive(Debug, Deserialize, From, Serialize)]

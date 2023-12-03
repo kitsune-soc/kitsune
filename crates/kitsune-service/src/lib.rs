@@ -20,7 +20,6 @@ pub mod custom_emoji;
 pub mod error;
 pub mod instance;
 pub mod job;
-pub mod mailing;
 pub mod notification;
 pub mod post;
 pub mod prepare;
