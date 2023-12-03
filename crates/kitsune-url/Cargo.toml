@@ -1,0 +1,9 @@
+[package]
+name = "kitsune-url"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+smol_str = "0.2.0"
+speedy-uuid = { path = "../../lib/speedy-uuid" }
+typed-builder = "0.18.0"

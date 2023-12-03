@@ -9,7 +9,7 @@ use autometrics::autometrics;
 use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
-use kitsune_consts::USER_AGENT;
+use kitsune_core::consts::USER_AGENT;
 use kitsune_core::{
     error::BoxError,
     traits::{resolver::AccountResource, Resolver},

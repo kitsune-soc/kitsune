@@ -11,7 +11,7 @@
 #[macro_use]
 extern crate tracing;
 
-use kitsune_consts::API_MAX_LIMIT;
+use kitsune_core::consts::API_MAX_LIMIT;
 
 pub mod account;
 pub mod attachment;
@@ -26,7 +26,6 @@ pub mod post;
 pub mod prepare;
 pub mod search;
 pub mod timeline;
-pub mod url;
 pub mod user;
 
 pub struct LimitContext {

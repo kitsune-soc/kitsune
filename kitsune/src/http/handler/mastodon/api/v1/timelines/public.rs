@@ -12,11 +12,9 @@ use axum::{
 };
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{
-    timeline::{GetPublic, TimelineService},
-    url::UrlService,
-};
+use kitsune_service::timeline::{GetPublic, TimelineService};
 use kitsune_type::mastodon::Status;
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;

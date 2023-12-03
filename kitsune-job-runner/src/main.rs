@@ -1,10 +1,11 @@
 use clap::Parser;
 use color_eyre::eyre;
 use kitsune_config::Configuration;
-use kitsune_consts::VERSION;
+use kitsune_core::consts::VERSION;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_job_runner::JobDispatcherState;
-use kitsune_service::{attachment::AttachmentService, url::UrlService};
+use kitsune_service::attachment::AttachmentService;
+use kitsune_url::UrlService;
 use std::path::PathBuf;
 use tokio::fs;
 

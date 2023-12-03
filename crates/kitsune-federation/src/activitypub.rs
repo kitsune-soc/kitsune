@@ -10,7 +10,8 @@ use kitsune_db::{
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_search::AnySearchBackend;
-use kitsune_service::{attachment::AttachmentService, url::UrlService};
+use kitsune_service::attachment::AttachmentService;
+use kitsune_url::UrlService;
 use kitsune_webfinger::Webfinger;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;

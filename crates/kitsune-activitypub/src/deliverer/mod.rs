@@ -20,8 +20,9 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     PgPool,
 };
-use kitsune_service::{attachment::AttachmentService, url::UrlService};
+use kitsune_service::attachment::AttachmentService;
 use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
 use std::sync::Arc;

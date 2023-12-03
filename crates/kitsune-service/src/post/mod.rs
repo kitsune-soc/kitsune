@@ -2,7 +2,6 @@ use super::{
     instance::InstanceService,
     job::{Enqueue, JobService},
     notification::NotificationService,
-    url::UrlService,
     LimitContext,
 };
 use crate::error::{Error, PostError, Result};
@@ -45,6 +44,7 @@ use kitsune_jobs::deliver::{
 };
 use kitsune_language::{DetectionBackend, Language};
 use kitsune_search::SearchBackend;
+use kitsune_url::UrlService;
 use kitsune_util::{process, sanitize::CleanHtmlExt};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;

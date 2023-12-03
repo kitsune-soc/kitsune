@@ -2862,7 +2862,6 @@ dependencies = [
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
- "kitsune-consts",
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
@@ -2881,6 +2880,7 @@ dependencies = [
  "kitsune-storage",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-url",
  "kitsune-util",
  "kitsune-webfinger",
  "metrics",
@@ -2932,7 +2932,6 @@ dependencies = [
  "iso8601-timestamp",
  "kitsune-cache",
  "kitsune-config",
- "kitsune-consts",
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
@@ -2944,6 +2943,7 @@ dependencies = [
  "kitsune-service",
  "kitsune-test",
  "kitsune-type",
+ "kitsune-url",
  "kitsune-util",
  "kitsune-webfinger",
  "mime",
@@ -3036,18 +3036,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "kitsune-consts"
-version = "0.0.1-pre.4"
-dependencies = [
- "const_format",
- "vergen",
-]
-
-[[package]]
 name = "kitsune-core"
 version = "0.0.1-pre.4"
 dependencies = [
  "async-trait",
+ "const_format",
  "http",
  "kitsune-db",
  "kitsune-messaging",
@@ -3055,6 +3048,7 @@ dependencies = [
  "speedy-uuid",
  "thiserror",
  "typed-builder",
+ "vergen",
 ]
 
 [[package]]
@@ -3116,8 +3110,6 @@ dependencies = [
 name = "kitsune-federation"
 version = "0.0.1-pre.4"
 dependencies = [
- "derive_more 1.0.0-beta.6",
- "futures-util",
  "kitsune-activitypub",
  "kitsune-cache",
  "kitsune-core",
@@ -3126,6 +3118,7 @@ dependencies = [
  "kitsune-federation-filter",
  "kitsune-search",
  "kitsune-service",
+ "kitsune-url",
  "kitsune-webfinger",
  "typed-builder",
 ]
@@ -3187,7 +3180,7 @@ dependencies = [
  "color-eyre",
  "deadpool-redis",
  "kitsune-config",
- "kitsune-consts",
+ "kitsune-core",
  "kitsune-db",
  "kitsune-federation",
  "kitsune-federation-filter",
@@ -3195,6 +3188,7 @@ dependencies = [
  "kitsune-observability",
  "kitsune-retry-policies",
  "kitsune-service",
+ "kitsune-url",
  "mimalloc",
  "tokio",
  "toml 0.8.8",
@@ -3249,6 +3243,7 @@ dependencies = [
  "kitsune-embed",
  "kitsune-service",
  "kitsune-type",
+ "kitsune-url",
  "kitsune-util",
  "mime",
  "scoped-futures",
@@ -3377,7 +3372,6 @@ dependencies = [
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
- "kitsune-consts",
  "kitsune-core",
  "kitsune-db",
  "kitsune-email",
@@ -3391,6 +3385,7 @@ dependencies = [
  "kitsune-search",
  "kitsune-storage",
  "kitsune-test",
+ "kitsune-url",
  "kitsune-util",
  "kitsune-webfinger",
  "mime",
@@ -3463,6 +3458,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-url"
+version = "0.0.1-pre.4"
+dependencies = [
+ "smol_str",
+ "speedy-uuid",
+ "typed-builder",
+]
+
+[[package]]
 name = "kitsune-util"
 version = "0.0.1-pre.4"
 dependencies = [
@@ -3487,7 +3491,6 @@ dependencies = [
  "http",
  "hyper",
  "kitsune-cache",
- "kitsune-consts",
  "kitsune-core",
  "kitsune-http-client",
  "kitsune-type",

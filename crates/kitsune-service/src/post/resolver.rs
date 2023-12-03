@@ -109,7 +109,7 @@ mod test {
     use super::PostResolver;
     use crate::{
         account::AccountService, attachment::AttachmentService, custom_emoji::CustomEmojiService,
-        job::JobService, url::UrlService,
+        job::JobService,
     };
     use athena::JobQueue;
     use core::convert::Infallible;
@@ -132,6 +132,7 @@ mod test {
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
     use kitsune_test::{build_ap_response, database_test, redis_test};
+    use kitsune_url::UrlService;
     use kitsune_util::try_join;
     use kitsune_webfinger::Webfinger;
     use pretty_assertions::assert_eq;

@@ -9,7 +9,7 @@ clap = { version = "4.4.10", features = ["derive"] }
 color-eyre = "0.6.2"
 deadpool-redis = "0.13.0"
 kitsune-config = { path = "../crates/kitsune-config" }
-kitsune-consts = { path = "../crates/kitsune-consts" }
+kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
@@ -17,6 +17,7 @@ kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-retry-policies = { path = "../crates/kitsune-retry-policies" }
 kitsune-service = { path = "../crates/kitsune-service" }
+kitsune-url = { path = "../crates/kitsune-url" }
 mimalloc = "0.1.39"
 tokio = { version = "1.34.0", features = ["full"] }
 toml = "0.8.8"

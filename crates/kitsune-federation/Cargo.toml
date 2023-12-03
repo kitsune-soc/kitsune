@@ -4,8 +4,6 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-derive_more = { version = "1.0.0-beta.6", features = ["from"] }
-futures-util = "0.3.29"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
@@ -14,5 +12,6 @@ kitsune-embed = { path = "../kitsune-embed" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-service = { path = "../kitsune-service" }
+kitsune-url = { path = "../kitsune-url" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 typed-builder = "0.18.0"

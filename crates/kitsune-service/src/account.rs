@@ -1,7 +1,6 @@
 use super::{
     attachment::{AttachmentService, Upload},
     job::{Enqueue, JobService},
-    url::UrlService,
     LimitContext,
 };
 use crate::error::{Error, Result};
@@ -36,6 +35,7 @@ use kitsune_jobs::deliver::{
     unfollow::DeliverUnfollow,
     update::{DeliverUpdate, UpdateEntity},
 };
+use kitsune_url::UrlService;
 use kitsune_util::{sanitize::CleanHtmlExt, try_join};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;

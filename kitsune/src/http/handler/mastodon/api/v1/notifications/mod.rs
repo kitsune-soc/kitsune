@@ -16,11 +16,9 @@ use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_core::error::HttpError;
 use kitsune_mastodon::MastodonMapper;
-use kitsune_service::{
-    notification::{GetNotifications, NotificationService},
-    url::UrlService,
-};
+use kitsune_service::notification::{GetNotifications, NotificationService};
 use kitsune_type::mastodon::{notification::NotificationType, Notification};
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;

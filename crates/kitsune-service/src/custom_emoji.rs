@@ -1,3 +1,4 @@
+use super::attachment::{AttachmentService, Upload};
 use crate::error::{BoxError, Error, Result};
 use bytes::Bytes;
 use diesel::{
@@ -8,20 +9,16 @@ use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
-use kitsune_consts::MAX_EMOJI_SHORTCODE_LENGTH;
+use kitsune_core::consts::MAX_EMOJI_SHORTCODE_LENGTH;
 use kitsune_db::{
     model::{custom_emoji::CustomEmoji, media_attachment::MediaAttachment},
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
     PgPool,
 };
+use kitsune_url::UrlService;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
-
-use super::{
-    attachment::{AttachmentService, Upload},
-    url::UrlService,
-};
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE];
 

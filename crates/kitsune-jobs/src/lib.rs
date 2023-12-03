@@ -35,15 +35,10 @@ pub mod deliver;
 pub mod error;
 pub mod mailing;
 
-pub struct Service {
-    mailing: MailingService,
-    user: UserService,
-}
-
 pub struct JobRunnerContext {
     pub deliverer: Box<dyn Deliverer>,
     pub db_pool: PgPool,
-    pub service: Service,
+    // pub mailing_service: MailingService,
 }
 
 #[derive(Debug, Deserialize, From, Serialize)]

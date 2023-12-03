@@ -2,6 +2,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
 
+pub mod consts;
 pub mod error;
 pub mod event;
 pub mod traits;

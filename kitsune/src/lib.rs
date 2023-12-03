@@ -46,9 +46,9 @@ use kitsune_service::{
     prepare,
     search::SearchService,
     timeline::TimelineService,
-    url::UrlService,
     user::UserService,
 };
+use kitsune_url::UrlService;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
@@ -131,6 +131,7 @@ pub async fn initialise_state(
         .build();
 
     let mailing_service = MailingService::builder()
+        .db_pool(db_pool.clone())
         .sender(
             config
                 .email

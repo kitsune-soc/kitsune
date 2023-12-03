@@ -1,6 +1,6 @@
 use kitsune_db::PgPool;
 use kitsune_service::attachment::AttachmentService;
-use kitsune_service::url::UrlService;
+use kitsune_url::UrlService;
 use typed_builder::TypedBuilder;
 
 mod activity;

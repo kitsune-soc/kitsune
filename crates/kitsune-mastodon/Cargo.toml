@@ -17,6 +17,7 @@ kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
 kitsune-service = { path = "../kitsune-service" }
 kitsune-type = { path = "../kitsune-type" }
+kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 scoped-futures = "0.1.3"

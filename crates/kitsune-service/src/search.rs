@@ -1,13 +1,10 @@
-use std::sync::Arc;
-
 use crate::error::Result;
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{stream::FuturesUnordered, FutureExt, TryFutureExt, TryStreamExt};
 use garde::Validate;
-use kitsune_consts::API_MAX_LIMIT;
-use kitsune_core::traits::Fetcher;
+use kitsune_core::{consts::API_MAX_LIMIT, traits::Fetcher};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
@@ -16,6 +13,7 @@ use kitsune_db::{
 use kitsune_search::{SearchBackend, SearchIndex};
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
+use std::sync::Arc;
 use typed_builder::TypedBuilder;
 use url::Url;
 

@@ -10,7 +10,7 @@ use kitsune_db::{
     schema::{oauth2_applications, oauth2_authorization_codes},
     PgPool,
 };
-use kitsune_service::url::UrlService;
+use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
 use oxide_auth::endpoint::Scope;
 use scoped_futures::ScopedFutureExt;

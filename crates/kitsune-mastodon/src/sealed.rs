@@ -28,7 +28,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
-use kitsune_service::{attachment::AttachmentService, url::UrlService};
+use kitsune_service::attachment::AttachmentService;
 use kitsune_type::mastodon::{
     account::Source,
     media_attachment::MediaType,
@@ -37,6 +37,7 @@ use kitsune_type::mastodon::{
     status::{Mention, StatusSource},
     Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
 };
+use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use mime::Mime;
 use scoped_futures::ScopedFutureExt;

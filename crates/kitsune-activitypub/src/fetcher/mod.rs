@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
-use kitsune_consts::USER_AGENT;
 use kitsune_core::{
+    consts::USER_AGENT,
     error::BoxError,
     traits::{fetcher::AccountFetchOptions, Fetcher as FetcherTrait, Resolver},
 };

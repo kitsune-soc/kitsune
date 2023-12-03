@@ -9,12 +9,13 @@ use kitsune_db::{
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
 };
-use kitsune_service::{account::GetPosts, url::UrlService};
+use kitsune_service::account::GetPosts;
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
     Activity,
 };
+use kitsune_url::UrlService;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;

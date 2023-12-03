@@ -29,7 +29,6 @@ kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
 kitsune-config = { path = "../kitsune-config" }
-kitsune-consts = { path = "../kitsune-consts" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-email = { path = "../kitsune-email" }
@@ -41,6 +40,7 @@ kitsune-language = { path = "../kitsune-language" }
 kitsune-messaging = { path = "../kitsune-messaging" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
+kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 password-hash = { version = "0.5.0", features = ["std"] }

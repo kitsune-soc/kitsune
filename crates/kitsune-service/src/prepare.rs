@@ -11,7 +11,7 @@ use kitsune_email::{
 use kitsune_messaging::{
     redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
-use kitsune_search::{AnySearchBackend, MeiliSearchService, NoopSearchService, SqlSearchService};
+use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -148,7 +148,7 @@ pub async fn search(
 
             #[cfg(feature = "meilisearch")]
             #[allow(clippy::used_underscore_binding)]
-            MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+            kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                 .await
                 .context("Failed to connect to Meilisearch")?
                 .into()

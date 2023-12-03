@@ -1,4 +1,3 @@
-use super::url::UrlService;
 use crate::error::{AttachmentError, Error, Result};
 use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
@@ -7,7 +6,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::{pin_mut, stream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
-use kitsune_consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
+use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
@@ -15,6 +14,7 @@ use kitsune_db::{
 };
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
+use kitsune_url::UrlService;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -244,7 +244,6 @@ mod test {
     use crate::{
         attachment::{AttachmentService, Upload},
         error::Error,
-        url::UrlService,
     };
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -266,6 +265,7 @@ mod test {
     use kitsune_http_client::Client;
     use kitsune_storage::fs::Storage;
     use kitsune_test::database_test;
+    use kitsune_url::UrlService;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::convert::Infallible;

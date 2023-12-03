@@ -1,7 +1,6 @@
 use super::{
     captcha::CaptchaService,
     job::{Enqueue, JobService},
-    url::UrlService,
 };
 use crate::error::{Error, Result, UserError};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
@@ -21,6 +20,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
+use kitsune_url::UrlService;
 use kitsune_util::{generate_secret, try_join};
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
@@ -126,23 +126,6 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub async fn mark_as_confirmed_by_token(&self, confirmation_token: &str) -> Result<()> {
-        self.db_pool
-            .with_connection(|db_conn| {
-                diesel::update(
-                    users::table
-                        .filter(users::confirmation_token.eq(confirmation_token))
-                        .filter(users::confirmed_at.is_null()),
-                )
-                .set(users::confirmed_at.eq(Timestamp::now_utc()))
-                .execute(db_conn)
-                .scoped()
-            })
-            .await?;
-
-        Ok(())
-    }
-
     pub async fn mark_as_confirmed(&self, user_id: Uuid) -> Result<()> {
         self.db_pool
             .with_connection(|db_conn| {

@@ -2,7 +2,7 @@ use crate::{error::Result, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_consts::VERSION;
+use kitsune_core::consts::VERSION;
 use kitsune_db::{
     schema::{posts, users},
     PgPool,

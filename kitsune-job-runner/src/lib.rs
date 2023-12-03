@@ -10,7 +10,8 @@ use kitsune_federation::{
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo};
 use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
-use kitsune_service::{attachment::AttachmentService, url::UrlService};
+use kitsune_service::attachment::AttachmentService;
+use kitsune_url::UrlService;
 use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;
 use typed_builder::TypedBuilder;

@@ -2,7 +2,7 @@ use crate::error::{Error, Result};
 use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
-use kitsune_consts::USER_AGENT;
+use kitsune_core::consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;

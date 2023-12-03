@@ -5,11 +5,9 @@ use axum::{
 };
 use axum_extra::either::Either;
 use http::StatusCode;
-use kitsune_service::{
-    account::{AccountService, GetUser},
-    url::UrlService,
-};
+use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::webfinger::{Link, Resource};
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use utoipa::IntoParams;
 
@@ -91,11 +89,12 @@ mod tests {
     use kitsune_jobs::KitsuneContextRepo;
     use kitsune_search::NoopSearchService;
     use kitsune_service::{
-        account::AccountService, attachment::AttachmentService, job::JobService, url::UrlService,
+        account::AccountService, attachment::AttachmentService, job::JobService,
     };
     use kitsune_storage::fs::Storage;
     use kitsune_test::{database_test, redis_test};
     use kitsune_type::webfinger::Link;
+    use kitsune_url::UrlService;
     use kitsune_webfinger::Webfinger;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;

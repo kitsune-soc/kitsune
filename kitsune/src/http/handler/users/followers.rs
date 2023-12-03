@@ -3,11 +3,11 @@ use axum::extract::{OriginalUri, Path, State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::schema::{accounts, accounts_follows};
-use kitsune_service::url::UrlService;
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},
 };
+use kitsune_url::UrlService;
 use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 

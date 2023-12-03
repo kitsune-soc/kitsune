@@ -8,8 +8,9 @@ use kitsune_service::{
     account::AccountService, attachment::AttachmentService, captcha::CaptchaService,
     custom_emoji::CustomEmojiService, instance::InstanceService, job::JobService,
     mailing::MailingService, notification::NotificationService, post::PostService,
-    search::SearchService, timeline::TimelineService, url::UrlService, user::UserService,
+    search::SearchService, timeline::TimelineService, user::UserService,
 };
+use kitsune_url::UrlService;
 use std::{ops::Deref, sync::Arc};
 
 #[cfg(feature = "mastodon-api")]
@@ -55,6 +56,7 @@ impl_from_ref! {
         CustomEmojiService => |input: &Zustand| input.service.custom_emoji.clone(),
         FederationFilter => |input: &Zustand| input.service.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
+        MailingService => |input: &Zustand| input.service.mailing.clone(),
         NotificationService => |input: &Zustand| input.service.notification.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         SearchService => |input: &Zustand| input.service.search.clone(),
@@ -126,7 +128,6 @@ impl_from_ref! {
 ///
 /// This contains all the "emitters" that can emit events inside of Kitsune.
 /// Something like "a post has been created" or "an account has been followed".
-#[derive(Clone)]
 pub struct EventEmitter {
     pub post: PostEventEmitter,
 }
@@ -135,7 +136,6 @@ pub struct EventEmitter {
 ///
 /// This contains all the "services" that Kitsune consists of.
 /// These are things like the search service, post service, etc.
-#[derive(Clone)]
 pub struct Service {
     pub account: AccountService,
     pub attachment: AttachmentService,

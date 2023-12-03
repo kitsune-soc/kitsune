@@ -1,7 +1,7 @@
 use crate::state::Zustand;
 use axum::{extract::State, routing, Json, Router};
-use kitsune_service::url::UrlService;
 use kitsune_type::nodeinfo::well_known::{Link, WellKnown};
+use kitsune_url::UrlService;
 
 #[allow(clippy::unused_async)]
 #[utoipa::path(
