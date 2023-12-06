@@ -1,7 +1,7 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
-use color_eyre::eyre::{self, Result};
 use diesel_async::scoped_futures::ScopedFutureExt;
+use miette::{IntoDiagnostic, Result};
 
 mod config;
 mod role;
@@ -23,11 +23,11 @@ struct App {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    color_eyre::install()?;
+    miette::set_panic_hook();
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
-    let config: Configuration = envy::from_env()?;
+    let config: Configuration = envy::from_env().into_diagnostic()?;
     let db_conn = kitsune_db::connect(&config.database_url, 1).await?;
     let cmd = App::parse();
 
@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
                     AppSubcommand::Role(cmd) => self::role::handle(cmd, db_conn).await?,
                 }
 
-                Ok::<_, eyre::Report>(())
+                Ok::<_, miette::Report>(())
             }
             .scoped()
         })

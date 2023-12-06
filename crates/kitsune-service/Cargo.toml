@@ -14,7 +14,6 @@ deadpool-redis = "0.13.0"
 derive_builder = "0.12.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
-eyre = "0.6.9"
 futures-util = "0.3.29"
 garde = { version = "0.16.3", default-features = false, features = [
     "derive",
@@ -43,6 +42,7 @@ kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
+miette = "5.10.0"
 mime = "0.3.17"
 password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"

@@ -2,7 +2,10 @@ use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
 use kitsune_core::error::BoxError;
 use kitsune_http_signatures::ring;
 use rsa::pkcs8::der;
-use std::convert::Infallible;
+use std::{
+    convert::Infallible,
+    fmt::{Debug, Display},
+};
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -90,7 +93,7 @@ impl From<Infallible> for Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

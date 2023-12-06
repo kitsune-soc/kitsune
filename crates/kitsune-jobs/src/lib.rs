@@ -9,7 +9,6 @@ use self::{
     },
     mailing::confirmation::SendConfirmationMail,
 };
-use crate::error::Result;
 use athena::{JobContextRepository, Runnable};
 use derive_more::From;
 use diesel::{ExpressionMethods, QueryDsl};
@@ -23,13 +22,13 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_email::MailingService;
+use miette::IntoDiagnostic;
 use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 pub mod deliver;
-pub mod error;
 pub mod mailing;
 
 pub struct Service {
@@ -58,7 +57,7 @@ pub enum Job {
 
 impl Runnable for Job {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         match self {
@@ -90,7 +89,7 @@ impl KitsuneContextRepo {
 
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
-    type Error = eyre::Report;
+    type Error = miette::Report;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
@@ -109,7 +108,7 @@ impl JobContextRepository for KitsuneContextRepo {
 
         Ok(stream
             .map_ok(|ctx| (ctx.id, ctx.context.0))
-            .map_err(eyre::Report::from)
+            .map(IntoDiagnostic::into_diagnostic)
             .boxed())
     }
 

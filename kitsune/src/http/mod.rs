@@ -6,8 +6,8 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
-use eyre::Context;
 use kitsune_config::server;
+use miette::{Context, IntoDiagnostic};
 use std::time::Duration;
 use tower_http::{
     catch_panic::CatchPanicLayer,
@@ -34,7 +34,7 @@ pub mod extractor;
 pub fn create_router(
     state: Zustand,
     server_config: &server::Configuration,
-) -> eyre::Result<Router> {
+) -> miette::Result<Router> {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.to_string();
@@ -82,7 +82,8 @@ pub fn create_router(
     if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
             XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
-                .context("Invalid clacks overhead values")?;
+                .into_diagnostic()
+                .wrap_err("Invalid clacks overhead values")?;
 
         router = router.layer(clacks_overhead_layer);
     }
@@ -99,11 +100,13 @@ pub fn create_router(
 }
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: server::Configuration) -> eyre::Result<()> {
+pub async fn run(state: Zustand, server_config: server::Configuration) -> miette::Result<()> {
     let router = create_router(state, &server_config)?;
+
     axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
         .serve(router.into_make_service())
-        .await?;
+        .await
+        .into_diagnostic()?;
 
     Ok(())
 }

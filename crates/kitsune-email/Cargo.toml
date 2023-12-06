@@ -23,6 +23,7 @@ lettre = { version = "0.11.2", default-features = false, features = [
     "tokio1-rustls-tls",
     "tracing",
 ] }
+miette = "5.10.0"
 mrml = { version = "2.0.0-rc4", default-features = false, features = [
     "orderedmap",
     "parse",

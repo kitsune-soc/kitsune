@@ -50,7 +50,7 @@ pub async fn initialise_state(
     config: &Configuration,
     db_pool: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
-) -> eyre::Result<Zustand> {
+) -> miette::Result<Zustand> {
     let messaging_hub = prepare::messaging(&config.messaging).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 

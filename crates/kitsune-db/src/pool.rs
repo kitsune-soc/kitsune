@@ -3,11 +3,18 @@ use diesel_async::{
     scoped_futures::{ScopedBoxFuture, ScopedFutureWrapper},
     AsyncConnection, AsyncPgConnection,
 };
-use std::future::Future;
+use miette::Diagnostic;
+use std::{
+    fmt::{Debug, Display},
+    future::Future,
+};
 use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum PoolError<E> {
+#[derive(Debug, Diagnostic, Error)]
+pub enum PoolError<E>
+where
+    E: Display + Debug,
+{
     #[error(transparent)]
     Pool(#[from] DeadpoolError),
 
@@ -35,6 +42,7 @@ impl PgPool {
         for<'conn> F:
             FnOnce(&'conn mut Object<AsyncPgConnection>) -> ScopedFutureWrapper<'conn, 'a, Fut>,
         Fut: Future<Output = Result<T, E>>,
+        E: Display + Debug,
     {
         let mut conn = self.inner.get().await?;
         func(&mut conn).await.map_err(PoolError::User)
@@ -48,7 +56,7 @@ impl PgPool {
             ) -> ScopedBoxFuture<'a, 'r, Result<R, E>>
             + Send
             + 'a,
-        E: From<diesel::result::Error> + Send + 'a,
+        E: From<diesel::result::Error> + Debug + Display + Send + 'a,
         R: Send + 'a,
     {
         let mut conn = self.inner.get().await?;

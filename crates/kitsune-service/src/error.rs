@@ -1,5 +1,8 @@
 use kitsune_http_signatures::ring;
-use std::error::Error as StdError;
+use std::{
+    error::Error as StdError,
+    fmt::{Debug, Display},
+};
 use thiserror::Error;
 
 pub type BoxError = Box<dyn StdError + Send + Sync>;
@@ -133,7 +136,7 @@ pub enum Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

@@ -1,4 +1,4 @@
-use crate::{error::Error, JobRunnerContext};
+use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -25,7 +25,7 @@ pub struct DeliverUpdate {
 
 impl Runnable for DeliverUpdate {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let action = match self.entity {
@@ -78,7 +78,7 @@ impl Runnable for DeliverUpdate {
         ctx.deliverer
             .deliver(action)
             .await
-            .map_err(Error::Delivery)?;
+            .map_err(|err| miette::Report::new_boxed(err.into()))?;
 
         Ok(())
     }

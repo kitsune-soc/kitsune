@@ -1,4 +1,3 @@
-use eyre::Context;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
@@ -13,6 +12,7 @@ use kitsune_messaging::{
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
+use miette::{Context, IntoDiagnostic};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fmt::Display,
@@ -70,7 +70,7 @@ pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
     }
 }
 
-pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBackend> {
+pub fn storage(config: &storage::Configuration) -> miette::Result<AnyStorageBackend> {
     let storage = match config {
         storage::Configuration::Fs(ref fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
@@ -87,11 +87,12 @@ pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBacken
                 s3_config.secret_access_key.as_str(),
             );
             let s3_bucket = rusty_s3::Bucket::new(
-                s3_config.endpoint_url.parse()?,
+                s3_config.endpoint_url.parse().into_diagnostic()?,
                 path_style,
                 s3_config.bucket_name.to_string(),
                 s3_config.region.to_string(),
-            )?;
+            )
+            .into_diagnostic()?;
 
             S3Storage::new(s3_bucket, s3_credentials).into()
         }
@@ -102,12 +103,13 @@ pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBacken
 
 pub fn mail_sender(
     config: &email::Configuration,
-) -> eyre::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
+) -> miette::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
     let transport_builder = if config.starttls {
-        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())?
+        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())
     } else {
-        AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())?
-    };
+        AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())
+    }
+    .into_diagnostic()?;
 
     let transport = transport_builder
         .credentials((config.username.as_str(), config.password.as_str()).into())
@@ -115,11 +117,11 @@ pub fn mail_sender(
 
     Ok(MailSender::builder()
         .backend(transport)
-        .from_mailbox(Mailbox::from_str(config.from_address.as_str())?)
+        .from_mailbox(Mailbox::from_str(config.from_address.as_str()).into_diagnostic()?)
         .build())
 }
 
-pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<MessagingHub> {
+pub async fn messaging(config: &messaging::Configuration) -> miette::Result<MessagingHub> {
     let backend = match config {
         messaging::Configuration::InProcess => {
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
@@ -127,7 +129,8 @@ pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<Messag
         messaging::Configuration::Redis(ref redis_config) => {
             let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
                 .await
-                .context("Failed to initialise Redis messaging backend")?;
+                .into_diagnostic()
+                .wrap_err("Failed to initialise Redis messaging backend")?;
 
             MessagingHub::new(redis_messaging_backend)
         }
@@ -140,7 +143,7 @@ pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<Messag
 pub async fn search(
     search_config: &search::Configuration,
     db_pool: &PgPool,
-) -> eyre::Result<AnySearchBackend> {
+) -> miette::Result<AnySearchBackend> {
     let service = match search_config {
         search::Configuration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]
@@ -150,7 +153,7 @@ pub async fn search(
             #[allow(clippy::used_underscore_binding)]
             kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                 .await
-                .context("Failed to connect to Meilisearch")?
+                .wrap_err("Failed to connect to Meilisearch")?
                 .into()
         }
         search::Configuration::Sql => SqlSearchService::new(db_pool.clone()).into(),

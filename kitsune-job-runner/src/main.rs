@@ -1,13 +1,12 @@
 use clap::Parser;
-use color_eyre::eyre;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_job_runner::JobDispatcherState;
 use kitsune_service::{attachment::AttachmentService, prepare};
 use kitsune_url::UrlService;
+use miette::IntoDiagnostic;
 use std::path::PathBuf;
-use tokio::fs;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -22,12 +21,11 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> eyre::Result<()> {
-    color_eyre::install()?;
+async fn main() -> miette::Result<()> {
+    miette::set_panic_hook();
 
     let args = Args::parse();
-    let raw_config = fs::read_to_string(args.config).await?;
-    let config: Configuration = toml::from_str(&raw_config)?;
+    let config = Configuration::load(args.config).await?;
 
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
@@ -36,7 +34,8 @@ async fn main() -> eyre::Result<()> {
         config.database.max_connections as usize,
     )
     .await?;
-    let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)?;
+    let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)
+        .into_diagnostic()?;
 
     let url_service = UrlService::builder()
         .domain(config.url.domain)

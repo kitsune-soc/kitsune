@@ -1,6 +1,8 @@
 use core::fmt;
 use diesel_async::pooled_connection::deadpool::PoolError;
+use miette::Diagnostic;
 use std::error::Error as StdError;
+use thiserror::Error;
 
 pub type BoxError = Box<dyn StdError + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -35,7 +37,7 @@ impl fmt::Display for IsoCodeConversionError {
 
 impl StdError for IsoCodeConversionError {}
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum Error {
     #[error(transparent)]
     Blocking(#[from] kitsune_blocking::Error),
