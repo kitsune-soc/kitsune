@@ -7,7 +7,10 @@ use axum::{
 use http::StatusCode;
 use kitsune_core::error::{BoxError, HttpError};
 use kitsune_service::error::{Error as ServiceError, PostError};
-use std::str::ParseBoolError;
+use std::{
+    fmt::{Debug, Display},
+    str::ParseBoolError,
+};
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -110,7 +113,7 @@ pub enum OAuth2Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

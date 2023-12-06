@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    JobRunnerContext, Runnable,
-};
+use crate::{JobRunnerContext, Runnable};
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
@@ -17,7 +14,7 @@ pub struct DeliverReject {
 
 impl Runnable for DeliverReject {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
@@ -42,7 +39,7 @@ impl Runnable for DeliverReject {
         ctx.deliverer
             .deliver(Action::RejectFollow(follow))
             .await
-            .map_err(Error::Delivery)?;
+            .map_err(|err| miette::Report::new_boxed(err.into()))?;
 
         ctx.db_pool
             .with_connection(|db_conn| {

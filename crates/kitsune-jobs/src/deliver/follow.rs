@@ -1,4 +1,4 @@
-use crate::{error::Error, JobRunnerContext};
+use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -15,7 +15,7 @@ pub struct DeliverFollow {
 
 impl Runnable for DeliverFollow {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
@@ -40,7 +40,7 @@ impl Runnable for DeliverFollow {
         ctx.deliverer
             .deliver(Action::Follow(follow))
             .await
-            .map_err(Error::Delivery)?;
+            .map_err(|err| miette::Report::new_boxed(err.into()))?;
 
         Ok(())
     }

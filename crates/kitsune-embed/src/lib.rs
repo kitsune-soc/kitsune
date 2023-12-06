@@ -13,6 +13,7 @@ use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
+use std::fmt::{Debug, Display};
 use typed_builder::TypedBuilder;
 
 pub use embed_sdk;
@@ -47,7 +48,7 @@ pub enum Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

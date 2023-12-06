@@ -1,11 +1,15 @@
 use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
-use std::error::Error as StdError;
+use miette::Diagnostic;
+use std::{
+    error::Error as StdError,
+    fmt::{Debug, Display},
+};
 use thiserror::Error;
 
 pub type BoxError = Box<dyn StdError + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum Error {
     #[error(transparent)]
     Address(#[from] lettre::address::AddressError),
@@ -34,7 +38,7 @@ pub enum Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

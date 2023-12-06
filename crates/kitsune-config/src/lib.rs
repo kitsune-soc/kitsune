@@ -13,6 +13,7 @@ pub mod server;
 pub mod storage;
 pub mod url;
 
+use miette::{Context, IntoDiagnostic};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tokio::fs;
@@ -36,11 +37,17 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub async fn load<P>(path: P) -> eyre::Result<Self>
+    pub async fn load<P>(path: P) -> miette::Result<Self>
     where
         P: AsRef<Path>,
     {
-        let content = fs::read_to_string(path).await?;
-        toml::from_str(&content).map_err(eyre::Report::from)
+        let content = fs::read_to_string(path)
+            .await
+            .into_diagnostic()
+            .wrap_err("Couldn't read configuration file")?;
+
+        toml::from_str(&content)
+            .into_diagnostic()
+            .wrap_err("Failed to parse configuration file")
     }
 }

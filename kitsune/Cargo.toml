@@ -31,17 +31,14 @@ axum-extra = { version = "0.8.0", features = [
 axum-flash = "0.7.0"
 bytes = "1.5.0"
 chrono = { version = "0.4.31", default-features = false }
-clap = { version = "4.4.10", features = ["derive"] }
-color-eyre = "0.6.2"
+clap = { version = "4.4.10", features = ["derive", "wrap_help"] }
 const-oid = { version = "0.9.5", features = ["db"] }
 der = { version = "0.7.8", features = ["std"] }
 diesel = "2.1.4"
 diesel-async = "0.4.1"
-eyre = "0.6.9"
 futures-util = "0.3.29"
 headers = "0.3.9"
 http = "0.2.11"
-human-panic = "1.2.2"
 hyper = { version = "0.14.27", features = ["deprecated"] }
 include_dir = "0.7.3"
 iso8601-timestamp = "0.2.12"
@@ -70,6 +67,7 @@ kitsune-url = { path = "../crates/kitsune-url" }
 kitsune-util = { path = "../crates/kitsune-util" }
 kitsune-webfinger = { path = "../crates/kitsune-webfinger" }
 metrics = "0.21.1"
+miette = { version = "5.10.0", features = ["fancy"] }
 mimalloc = "0.1.39"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }

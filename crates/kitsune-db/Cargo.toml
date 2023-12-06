@@ -19,6 +19,7 @@ iso8601-timestamp = { version = "0.2.12", features = ["diesel-pg"] }
 kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
+miette = "5.10.0"
 num-derive = "0.4.1"
 num-traits = "0.2.17"
 serde = { version = "1.0.193", features = ["derive"] }

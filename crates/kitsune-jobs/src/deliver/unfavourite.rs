@@ -1,4 +1,4 @@
-use crate::{error::Error, JobRunnerContext};
+use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -15,7 +15,7 @@ pub struct DeliverUnfavourite {
 
 impl Runnable for DeliverUnfavourite {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
@@ -40,7 +40,7 @@ impl Runnable for DeliverUnfavourite {
         ctx.deliverer
             .deliver(Action::Unfavourite(favourite))
             .await
-            .map_err(Error::Delivery)?;
+            .map_err(|err| miette::Report::new_boxed(err.into()))?;
 
         ctx.db_pool
             .with_connection(|db_conn| {

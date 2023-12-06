@@ -1,4 +1,4 @@
-use crate::{error::Error, JobRunnerContext};
+use crate::JobRunnerContext;
 use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -15,7 +15,7 @@ pub struct DeliverDelete {
 
 impl Runnable for DeliverDelete {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = miette::Report;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
@@ -41,7 +41,7 @@ impl Runnable for DeliverDelete {
         ctx.deliverer
             .deliver(Action::Delete(post))
             .await
-            .map_err(Error::Delivery)?;
+            .map_err(|err| miette::Report::new_boxed(err.into()))?;
 
         ctx.db_pool
             .with_connection(|db_conn| {

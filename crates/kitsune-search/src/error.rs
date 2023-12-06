@@ -1,6 +1,8 @@
+use miette::Diagnostic;
+use std::fmt::{Debug, Display};
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum Error {
     #[error(transparent)]
     Database(#[from] diesel::result::Error),
@@ -15,7 +17,7 @@ pub enum Error {
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
 where
-    E: Into<Error>,
+    E: Into<Error> + Debug + Display,
 {
     fn from(value: kitsune_db::PoolError<E>) -> Self {
         match value {

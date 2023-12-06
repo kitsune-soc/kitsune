@@ -2,52 +2,16 @@
 extern crate tracing;
 
 use clap::Parser;
-use color_eyre::{config::HookBuilder, Help};
-use eyre::Context;
 use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
-use std::{
-    borrow::Cow,
-    env, future,
-    panic::{self, PanicInfo},
-    path::PathBuf,
-};
+use miette::{Context, IntoDiagnostic, MietteDiagnostic};
+use std::{env, future, path::PathBuf};
 use url::Url;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-fn install_handlers() -> eyre::Result<()> {
-    let (eyre_panic_hook, eyre_hook) = HookBuilder::new().into_hooks();
-    let metadata = human_panic::Metadata {
-        version: Cow::Borrowed(VERSION),
-        ..human_panic::metadata!()
-    };
-
-    let eyre_panic_hook = move |panic_info: &PanicInfo<'_>| {
-        eprintln!("{}", eyre_panic_hook.panic_report(panic_info));
-    };
-    let human_panic_hook = move |panic_info: &PanicInfo<'_>| {
-        let path = human_panic::handle_dump(&metadata, panic_info);
-        human_panic::print_msg(path, &metadata).ok();
-    };
-
-    eyre_hook.install()?;
-    panic::set_hook(Box::new(move |panic_info| {
-        let hook: &(dyn Fn(&PanicInfo<'_>) + Send + Sync) =
-            if cfg!(debug_assertions) || env::var("RUST_BACKTRACE").is_ok() {
-                &eyre_panic_hook
-            } else {
-                &human_panic_hook
-            };
-
-        hook(panic_info);
-    }));
-
-    Ok(())
-}
 
 fn postgres_url_diagnostics(db_url: &str) -> String {
     let url = match Url::parse(db_url) {
@@ -79,7 +43,7 @@ struct Args {
     config: PathBuf,
 }
 
-async fn boot() -> eyre::Result<()> {
+async fn boot() -> miette::Result<()> {
     println!("{STARTUP_FIGLET}");
 
     let args = Args::parse();
@@ -91,11 +55,16 @@ async fn boot() -> eyre::Result<()> {
         config.database.max_connections as usize,
     )
     .await
-    .context("Failed to connect to and migrate the database")
-    .with_suggestion(|| postgres_url_diagnostics(&config.database.url))?;
+    .wrap_err("Failed to connect to and migrate the database")
+    .map_err(|err| {
+        MietteDiagnostic::new(err.to_string())
+            .with_help(postgres_url_diagnostics(&config.database.url))
+    })?;
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
-        .context("Failed to connect to the Redis instance for the job scheduler")?;
+        .into_diagnostic()
+        .wrap_err("Failed to connect to the Redis instance for the job scheduler")?;
+
     let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
 
     tokio::spawn({
@@ -127,13 +96,14 @@ async fn boot() -> eyre::Result<()> {
     Ok(())
 }
 
-fn main() -> eyre::Result<()> {
-    install_handlers()?;
+fn main() -> miette::Result<()> {
+    miette::set_panic_hook();
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_stack_size(4 * 1024 * 1024) // Set the stack size to 4MiB
-        .build()?;
+        .build()
+        .into_diagnostic()?;
 
     runtime.block_on(boot())
 }
