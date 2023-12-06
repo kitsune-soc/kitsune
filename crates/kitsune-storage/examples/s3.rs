@@ -4,7 +4,7 @@ use kitsune_storage::{s3::Storage, StorageBackend};
 use rusty_s3::{Bucket, Credentials, UrlStyle};
 use std::{env, str};
 
-const TEST_DATA: &str = r#"
+const TEST_DATA: &str = r"
 散々な思い出は悲しみを穿つほど
 やるせない恨みはアイツのために
 置いてきたのさ
@@ -54,7 +54,7 @@ const TEST_DATA: &str = r#"
 もう寂しくないさ ないさ
 逆光よ (na-na-na, na-na-na-na-na)
 (Na-na-na, na-na-na-na-na)
-(Na-na-na, na-na-na-na-na, na-na-na-na-na-na)"#;
+(Na-na-na, na-na-na-na-na, na-na-na-na-na-na)";
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {

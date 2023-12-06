@@ -1,6 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![forbid(missing_docs, rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
+#![forbid(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use atoi::FromRadix10;

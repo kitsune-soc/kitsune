@@ -4,9 +4,6 @@
 //! **Important**: None of the texts are protected against XSS attacks. Keep that in mind.
 //!
 
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-
 use logos::{Lexer, Logos, Span};
 use std::{borrow::Cow, error::Error, fmt, future::Future};
 

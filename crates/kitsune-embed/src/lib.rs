@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
-
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, scoped_futures::ScopedFutureExt, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;

@@ -18,6 +18,7 @@ pub mod object;
 
 pub use self::helper::Privacy;
 
+#[must_use]
 pub fn ap_context() -> OwnedValue {
     json!([
         "https://www.w3.org/ns/activitystreams",
@@ -78,6 +79,7 @@ pub enum ObjectField {
 }
 
 impl ObjectField {
+    #[must_use]
     pub fn id(&self) -> &str {
         match self {
             Self::Activity(ref activity) => &activity.id,
@@ -88,6 +90,7 @@ impl ObjectField {
         }
     }
 
+    #[must_use]
     pub fn into_activity(self) -> Option<Box<Activity>> {
         if let Self::Activity(activity) = self {
             Some(activity)
@@ -96,6 +99,7 @@ impl ObjectField {
         }
     }
 
+    #[must_use]
     pub fn into_actor(self) -> Option<Actor> {
         if let Self::Actor(actor) = self {
             Some(actor)
@@ -104,6 +108,7 @@ impl ObjectField {
         }
     }
 
+    #[must_use]
     pub fn into_object(self) -> Option<Object> {
         if let Self::Object(object) = self {
             Some(object)
@@ -127,6 +132,7 @@ pub struct Activity {
 }
 
 impl Activity {
+    #[must_use]
     pub fn actor(&self) -> &str {
         match self.actor {
             StringOrObject::Object(ref obj) => &obj.id,
@@ -134,6 +140,7 @@ impl Activity {
         }
     }
 
+    #[must_use]
     pub fn object(&self) -> &str {
         match self.object {
             ObjectField::Activity(ref activity) => activity.id.as_str(),
@@ -187,6 +194,7 @@ pub struct Object {
 }
 
 impl Object {
+    #[must_use]
     pub fn attributed_to(&self) -> Option<&str> {
         match self.attributed_to {
             AttributedToField::Actor(ref actor) => Some(&actor.id),

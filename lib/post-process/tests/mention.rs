@@ -16,7 +16,7 @@ fn subdomain_mention() {
     insta::glob!("input/mention/subdomain_*", |path| {
         let mention = fs::read_to_string(path).unwrap();
         insta::assert_debug_snapshot!(parse_to_test_output(&mention));
-    })
+    });
 }
 
 #[test]

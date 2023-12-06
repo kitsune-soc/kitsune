@@ -52,3 +52,6 @@ pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tokio = { version = "1.34.0", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
+
+[lints]
+workspace = true

@@ -1,6 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-
 use futures_retry_policies::{retry_policies::RetryPolicies, tracing::Traced};
 use retry_policies::{policies::ExponentialBackoff, Jitter};
 use std::{

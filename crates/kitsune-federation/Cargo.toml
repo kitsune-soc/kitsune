@@ -16,3 +16,6 @@ kitsune-service = { path = "../kitsune-service" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 typed-builder = "0.18.0"
+
+[lints]
+workspace = true

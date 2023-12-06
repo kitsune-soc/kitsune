@@ -141,3 +141,6 @@ graphql-api = [
 mastodon-api = ["dep:kitsune-mastodon"]
 meilisearch = ["kitsune-service/meilisearch", "kitsune-search/meilisearch"]
 oidc = ["dep:kitsune-oidc"]
+
+[lints]
+workspace = true

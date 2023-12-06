@@ -78,3 +78,6 @@ pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
 tempfile = "3.8.1"
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
+
+[lints]
+workspace = true

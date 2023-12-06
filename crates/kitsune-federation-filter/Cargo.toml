@@ -10,3 +10,6 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-type = { path = "../kitsune-type" }
 thiserror = "1.0.50"
 url = "2.5.0"
+
+[lints]
+workspace = true

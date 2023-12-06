@@ -5,10 +5,7 @@
 //!
 
 #![feature(iter_intersperse)]
-#![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
 use http::{header::HeaderName, request::Parts, HeaderValue};

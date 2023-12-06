@@ -8,3 +8,6 @@ version.workspace = true
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 typed-builder = "0.18.0"
+
+[lints]
+workspace = true

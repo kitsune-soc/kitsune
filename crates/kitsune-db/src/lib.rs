@@ -1,12 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::module_name_repetitions,
-    forbidden_lint_groups
-)]
-
 use diesel::Connection;
 use diesel_async::{
     async_connection_wrapper::AsyncConnectionWrapper,

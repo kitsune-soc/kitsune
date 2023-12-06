@@ -26,18 +26,21 @@ pub struct Prepare {
 }
 
 #[inline]
+#[must_use]
 pub fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer> {
     let deliverer = self::activitypub::prepare_deliverer(prepare.activitypub);
     Arc::new(vec![deliverer])
 }
 
 #[inline]
+#[must_use]
 pub fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
     let fetcher = self::activitypub::prepare_fetcher(prepare.activitypub);
     Arc::new(vec![fetcher])
 }
 
 #[inline]
+#[must_use]
 pub fn prepare_federator(prepare: Prepare) -> Federator {
     Federator {
         deliverer: prepare_deliverer(prepare.deliverer),

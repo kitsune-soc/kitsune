@@ -1,8 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![forbid(rust_2018_idioms, unsafe_code)]
 #![deny(missing_docs)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(forbidden_lint_groups)]
 
 use self::util::BoxCloneService;
 use bytes::Buf;

@@ -1,7 +1,4 @@
 #![feature(iter_intersperse)]
-#![forbid(rust_2018_idioms, unsafe_code)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, forbidden_lint_groups)]
 
 use http::{header::InvalidHeaderValue, HeaderName, HeaderValue, Response};
 use pin_project_lite::pin_project;
