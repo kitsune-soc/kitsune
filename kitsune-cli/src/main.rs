@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::module_name_repetitions, forbidden_lint_groups)]
-
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
 use color_eyre::eyre::{self, Result};

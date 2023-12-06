@@ -9,7 +9,7 @@ fn simple_bench(c: &mut Criterion) {
     c.bench_function("simple_transform", |b| {
         b.to_async(FuturesExecutor).iter(|| async {
             let _ = post_process::transform(black_box(SIMPLE_POST), future::ok).await;
-        })
+        });
     });
 }
 

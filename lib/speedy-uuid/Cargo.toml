@@ -15,3 +15,6 @@ serde = { version = "1.0.193", optional = true }
 thiserror = "1.0.50"
 uuid = { version = "1.6.1", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["unstable", "uuid"] }
+
+[lints]
+workspace = true

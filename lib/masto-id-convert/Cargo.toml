@@ -23,3 +23,6 @@ std = []
 criterion = { version = "0.5.1", default-features = false }
 time = "0.3.30"
 uuid = { version = "1.6.1", features = ["v7"] }
+
+[lints]
+workspace = true

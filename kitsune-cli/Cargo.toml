@@ -26,3 +26,6 @@ tracing-subscriber = "0.3.18"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = ["build", "git", "gitcl"] }
+
+[lints]
+workspace = true

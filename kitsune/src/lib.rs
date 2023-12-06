@@ -1,13 +1,4 @@
 #![feature(iter_intersperse)]
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(
-    clippy::cast_sign_loss,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::module_name_repetitions,
-    forbidden_lint_groups
-)]
 
 #[macro_use]
 extern crate metrics;
