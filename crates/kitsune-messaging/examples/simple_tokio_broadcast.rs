@@ -9,16 +9,16 @@ async fn main() {
     let hub = MessagingHub::new(tokio_broadcast_backend);
 
     let consumer = hub.consumer::<OwnedValue>("test".into()).await.unwrap();
-    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 1: {:?}]", msg) }));
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 1: {msg:?}]") }));
 
     let consumer = hub.consumer::<OwnedValue>("test".into()).await.unwrap();
-    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 2: {:?}]", msg) }));
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 2: {msg:?}]") }));
 
     let consumer = hub.consumer::<OwnedValue>("test2".into()).await.unwrap();
-    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 3: {:?}]", msg) }));
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 3: {msg:?}]") }));
 
     let consumer = hub.consumer::<OwnedValue>("test2".into()).await.unwrap();
-    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 4: {:?}]", msg) }));
+    tokio::spawn(consumer.for_each(|msg| async move { println!("Consumer 4: {msg:?}]") }));
 
     for i in 1..=3 {
         let emitter = hub.emitter("test".into());

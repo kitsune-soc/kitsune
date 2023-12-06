@@ -1,7 +1,4 @@
 #![doc = include_str!("../README.md")]
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(forbidden_lint_groups)]
 
 use self::error::CaptchaVerification;
 use enum_dispatch::enum_dispatch;

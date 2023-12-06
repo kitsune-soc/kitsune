@@ -12,10 +12,12 @@ pub enum ActorType {
 }
 
 impl ActorType {
+    #[must_use]
     pub fn is_bot(&self) -> bool {
         matches!(self, Self::Service)
     }
 
+    #[must_use]
     pub fn is_group(&self) -> bool {
         matches!(self, Self::Group)
     }

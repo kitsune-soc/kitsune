@@ -1,7 +1,4 @@
 #![doc = include_str!("../README.md")]
-#![forbid(missing_docs, rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(forbidden_lint_groups)]
 
 use bytes::Bytes;
 use derive_more::From;

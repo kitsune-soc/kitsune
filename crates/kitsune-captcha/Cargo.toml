@@ -14,3 +14,6 @@ simd-json = "0.13.4"
 strum = { version = "0.25.0", features = ["derive"] }
 thiserror = "1.0.50"
 typed-builder = "0.18.0"
+
+[lints]
+workspace = true

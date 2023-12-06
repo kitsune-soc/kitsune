@@ -21,3 +21,6 @@ typed-builder = "0.18.0"
 pem = "3.0.2"
 pkcs8 = { version = "0.10.2", features = ["alloc"] }
 tokio = { version = "1.34.0", features = ["macros", "rt"] }
+
+[lints]
+workspace = true

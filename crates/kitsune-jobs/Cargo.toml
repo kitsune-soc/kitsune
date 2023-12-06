@@ -20,3 +20,6 @@ speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.50"
 tracing = "0.1.40"
 typed-builder = "0.18.0"
+
+[lints]
+workspace = true

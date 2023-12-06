@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, forbidden_lint_groups)]
-
 pub mod cache;
 pub mod captcha;
 pub mod database;

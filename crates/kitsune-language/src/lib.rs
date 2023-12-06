@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
-
 use rustc_hash::FxHashSet;
 use std::sync::OnceLock;
 

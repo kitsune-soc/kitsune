@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc)]
-
 use async_trait::async_trait;
 use eyre::Context;
 use hyper::body::Body;

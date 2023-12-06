@@ -1,7 +1,3 @@
-#![forbid(rust_2018_idioms)]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(forbidden_lint_groups, clippy::cast_possible_wrap)]
-
 #[macro_use]
 extern crate tracing;
 

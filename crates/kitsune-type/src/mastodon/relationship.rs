@@ -3,6 +3,7 @@ use speedy_uuid::Uuid;
 use utoipa::ToSchema;
 
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize, ToSchema)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Relationship {
     pub id: Uuid,
     pub following: bool,

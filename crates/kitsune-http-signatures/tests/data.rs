@@ -6,16 +6,16 @@ use ring::signature::{
     RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY,
 };
 
-const PUBLIC_KEY: &str = r#"
+const PUBLIC_KEY: &str = r"
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCFENGw33yGihy92pDjZQhl0C3
 6rPJj+CvfSC8+q28hxA161QFNUd13wuCTUcq0Qd2qsBe/2hFyc2DCJJg0h1L78+6
 Z4UMR7EOcpfdUE9Hf3m/hs+FUR45uBJeDK1HSFHD8bHKD6kv8FPGfJTotc+2xjJw
 oYi+1hqp1fIekaxsyQIDAQAB
 -----END PUBLIC KEY-----
-"#;
+";
 
-const SOME_PRIVATE_KEY: &str = r#"
+const SOME_PRIVATE_KEY: &str = r"
 -----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEAtVpWdypmE7PzU4IsR4KOOKCKfDzsF1PDxwpkfFof7kcHGzNo
 QC8b8yUGNHF5YYhzGR2FM/sNBdXroZvPJ1FLAE/pfm1TFLArPubzR/pan6/8uX6K
@@ -43,8 +43,9 @@ pA/3AoGAVmLOtGCN206G3vTg5ftUqzr+/2Nz4veAyI/FvXJpiGh8JzqHr1Y1EifE
 qkTAhsrR20WzWEscInV4gb5Q8SuAzhREZ6CJZnw1uRuzqJlJvc4h8Bsd8rNcZSNJ
 ycN7jXCNeRs5qIcy7Dej1Exzu0+Qvn4mzf1iFEAxPHHlzXQ+UMs=
 -----END RSA PRIVATE KEY-----
-"#;
+";
 
+#[must_use]
 pub fn get_parts() -> Parts {
     Request::builder()
         .method(Method::POST)
@@ -64,11 +65,13 @@ pub fn get_parts() -> Parts {
 }
 
 /// This private key isn't related to the public key you can get from `get_public_key`
+#[must_use]
 pub fn get_private_key() -> RsaKeyPair {
     let der = pem::parse(SOME_PRIVATE_KEY).unwrap();
     RsaKeyPair::from_der(der.contents()).unwrap()
 }
 
+#[must_use]
 pub fn get_public_key() -> UnparsedPublicKey<Vec<u8>> {
     let pem = pem::parse(PUBLIC_KEY).unwrap();
     let pub_key = Document::from_der(pem.contents()).unwrap();

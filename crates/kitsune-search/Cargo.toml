@@ -30,3 +30,6 @@ meilisearch-sdk = { version = "0.24.3", optional = true }
 [features]
 default = []
 meilisearch = ["dep:isahc", "dep:meilisearch-sdk"]
+
+[lints]
+workspace = true

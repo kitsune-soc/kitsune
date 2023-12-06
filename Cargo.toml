@@ -57,6 +57,7 @@ pedantic = "warn"
 
 cast_lossless = "allow"
 cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
 cast_sign_loss = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
