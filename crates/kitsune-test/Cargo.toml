@@ -12,7 +12,6 @@ futures-util = "0.3.29"
 http = "0.2.11"
 hyper = "0.14.27"
 kitsune-db = { path = "../kitsune-db" }
-miette = "5.10.0"
 pin-project-lite = "0.2.13"
 redis = "0.23.3"
 scoped-futures = "0.1.3"

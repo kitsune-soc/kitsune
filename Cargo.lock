@@ -3146,7 +3146,6 @@ dependencies = [
  "miette",
  "mimalloc",
  "tokio",
- "toml 0.8.8",
  "tracing",
  "typed-builder",
 ]
@@ -3396,7 +3395,6 @@ dependencies = [
  "http",
  "hyper",
  "kitsune-db",
- "miette",
  "pin-project-lite",
  "redis",
  "scoped-futures",
