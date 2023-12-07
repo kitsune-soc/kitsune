@@ -1,0 +1,13 @@
+[package]
+name = "csurf"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+http = "0.2.11"
+tower = { version = "0.4.13", default-features = false }
+zeroize = { version = "1.7.0", features = ["derive"] }
+
+[lints]
+workspace = true
