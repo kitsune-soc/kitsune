@@ -13,7 +13,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 miette = "5.10.0"
 moka = { version = "0.12.1", features = ["sync"] }
-once_cell = "1.18.0"
+once_cell = "1.19.0"
 openidconnect = { version = "3.4.0", default-features = false, features = [
     # Accept these two, per specification invalid, cases to increase compatibility
     "accept-rfc3339-timestamps",

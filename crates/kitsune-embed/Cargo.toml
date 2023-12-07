@@ -9,10 +9,10 @@ diesel = "2.1.4"
 diesel-async = "0.4.1"
 embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "bad5d4024502e361e0e899f0f59d2e246ff3ef61" }
 http = "0.2.11"
-iso8601-timestamp = "0.2.12"
+iso8601-timestamp = "0.2.13"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-http-client = { path = "../kitsune-http-client" }
-once_cell = "1.18.0"
+once_cell = "1.19.0"
 scraper = { version = "0.18.1", default-features = false }
 smol_str = "0.2.0"
 thiserror = "1.0.50"

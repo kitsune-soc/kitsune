@@ -3,7 +3,7 @@ use crate::{
     traits::{RenderableEmail, RenderedEmail},
 };
 use askama::Template;
-use mrml::{mjml::Mjml, prelude::render::Options as RenderOptions};
+use mrml::{mjml::Mjml, prelude::render::RenderOptions};
 use typed_builder::TypedBuilder;
 
 #[derive(Template, TypedBuilder)]

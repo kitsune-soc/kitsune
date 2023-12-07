@@ -24,7 +24,7 @@ garde = { version = "0.16.3", default-features = false, features = [
 ] }
 http = "0.2.11"
 img-parts = "0.3.0"
-iso8601-timestamp = "0.2.12"
+iso8601-timestamp = "0.2.13"
 kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
