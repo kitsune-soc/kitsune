@@ -2,7 +2,6 @@
 #![forbid(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use atoi::FromRadix10;
 use core::fmt;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
@@ -11,12 +10,18 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub enum Error {
     /// Number parsing error
-    NumberParse,
+    NumberParse(atoi_radix10::ParseIntErrorPublic),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
+    }
+}
+
+impl From<atoi_radix10::ParseIntErrorPublic> for Error {
+    fn from(value: atoi_radix10::ParseIntErrorPublic) -> Self {
+        Self::NumberParse(value)
     }
 }
 
@@ -55,10 +60,6 @@ pub fn process<T>(masto_id: T) -> Result<Uuid, Error>
 where
     T: AsRef<[u8]>,
 {
-    let (result, index) = u64::from_radix_10(masto_id.as_ref());
-    if index == 0 {
-        return Err(Error::NumberParse);
-    }
-
+    let result = atoi_radix10::parse(masto_id.as_ref())?;
     Ok(process_u64(result))
 }
