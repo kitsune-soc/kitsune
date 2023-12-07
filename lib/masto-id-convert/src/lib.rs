@@ -2,8 +2,8 @@
 #![forbid(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use atoi::FromRadix10;
 use core::fmt;
+use lexical_parse_integer::FromLexical;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
 
@@ -11,12 +11,18 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub enum Error {
     /// Number parsing error
-    NumberParse,
+    NumberParse(lexical_parse_integer::Error),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
+    }
+}
+
+impl From<lexical_parse_integer::Error> for Error {
+    fn from(value: lexical_parse_integer::Error) -> Self {
+        Self::NumberParse(value)
     }
 }
 
@@ -55,10 +61,6 @@ pub fn process<T>(masto_id: T) -> Result<Uuid, Error>
 where
     T: AsRef<[u8]>,
 {
-    let (result, index) = u64::from_radix_10(masto_id.as_ref());
-    if index == 0 {
-        return Err(Error::NumberParse);
-    }
-
+    let result = u64::from_lexical(masto_id.as_ref())?;
     Ok(process_u64(result))
 }

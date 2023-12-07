@@ -9,7 +9,7 @@ name = "process"
 harness = false
 
 [dependencies]
-atoi = { version = "2.0.0", default-features = false }
+lexical-parse-integer = { version = "0.8.6", default-features = false }
 nanorand = { version = "0.7.0", default-features = false, features = [
     "wyrand",
 ] }
