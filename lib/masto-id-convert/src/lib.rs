@@ -3,7 +3,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use core::fmt;
-use lexical_parse_integer::FromLexical;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
 
@@ -11,7 +10,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub enum Error {
     /// Number parsing error
-    NumberParse(lexical_parse_integer::Error),
+    NumberParse(atoi_radix10::ParseIntErrorPublic),
 }
 
 impl fmt::Display for Error {
@@ -20,8 +19,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<lexical_parse_integer::Error> for Error {
-    fn from(value: lexical_parse_integer::Error) -> Self {
+impl From<atoi_radix10::ParseIntErrorPublic> for Error {
+    fn from(value: atoi_radix10::ParseIntErrorPublic) -> Self {
         Self::NumberParse(value)
     }
 }
@@ -61,6 +60,6 @@ pub fn process<T>(masto_id: T) -> Result<Uuid, Error>
 where
     T: AsRef<[u8]>,
 {
-    let result = u64::from_lexical(masto_id.as_ref())?;
+    let result = atoi_radix10::parse(masto_id.as_ref())?;
     Ok(process_u64(result))
 }

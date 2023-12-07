@@ -463,6 +463,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "atoi_radix10"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6970a22a33d6a8f862aac371bac48505a1bfaa230ecb268c7b86fa4ac6e7121"
+
+[[package]]
 name = "atomic"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3733,8 +3739,8 @@ dependencies = [
 name = "masto-id-convert"
 version = "0.0.1-pre.4"
 dependencies = [
+ "atoi_radix10",
  "criterion",
- "lexical-parse-integer",
  "nanorand",
  "time",
  "uuid",
