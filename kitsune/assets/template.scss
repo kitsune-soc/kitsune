@@ -1,4 +1,5 @@
 @use "../../kitsune-fe/src/styles/colours" as *;
+@use "../../kitsune-fe/src/styles/mixins" as *;
 
 * {
   font-family: "Courier New", Courier, monospace;
@@ -36,6 +37,14 @@ body {
   text-shadow: $shade2dark 3px 3px 4.5px;
   line-height: 100%;
   margin: 25px auto;
+
+  @include only-on-mobile {
+    font-size: 42px;
+    color: $shade2light;
+    text-shadow: $shade2dark 3px 3px 4.5px;
+    line-height: 100%;
+    margin: 25px auto;
+  }
 }
 
 form,
@@ -57,6 +66,7 @@ form,
 
 form {
   padding: 8vh 4.5vh;
+
   & .field {
     width: 280px;
     min-height: 30px;
@@ -65,6 +75,16 @@ form {
     border: 0.5px solid $shade2light;
     border-radius: 2px;
     font-size: 20px;
+
+    @include only-on-mobile {
+      width: 200px;
+      min-height: 25px;
+      margin: 10px auto;
+      margin-bottom: 20px;
+      border: 0.5px solid $shade2light;
+      border-radius: 2px;
+      font-size: 16px;
+    }
   }
 }
 
@@ -93,6 +113,13 @@ div.consent-forms {
   font-size: 16px;
   font-weight: bold;
   max-width: 80%;
+
+  @include only-on-mobile {
+    font-size: 13px;
+    max-width: 70%;
+    text-align: center;
+    border-width: 3px;
+  }
 }
 
 .authUsername,
@@ -117,12 +144,18 @@ div.consent-forms {
   cursor: pointer;
   font-weight: bold;
   transition: 0.5s;
-}
 
-.formButton:hover {
-  background-color: $shade2light;
-  color: $dark1;
-  transition: 0.3s;
+  &:hover {
+    background-color: $shade2light;
+    color: $dark1;
+    transition: 0.3s;
+  }
+
+  @include only-on-mobile {
+    padding: 8px;
+    font-size: 16px;
+    width: 80px;
+  }
 }
 
 .tokenContainer {
@@ -163,53 +196,17 @@ div.consent-forms {
     background-color: $shade2dark;
     outline: 1px solid $dark2;
   }
+
+  @include only-on-mobile {
+    max-width: 250px;
+  }
 }
 
-@media only screen and (max-width: 500px) {
-  body {
-    backdrop-filter: blur(2px);
-    background-position: 50% 20%;
-  }
-
-  .header {
-    font-size: 42px;
-    color: $shade2light;
-    text-shadow: $shade2dark 3px 3px 4.5px;
-    line-height: 100%;
-    margin: 25px auto;
-  }
-
+@include only-on-mobile {
   form,
   .tokenContainer {
     padding: 6vh 4vh;
     font-size: 16px;
-    border-width: 3px;
-  }
-
-  .token {
-    max-width: 250px;
-  }
-
-  form .field {
-    width: 200px;
-    min-height: 25px;
-    margin: 10px auto;
-    margin-bottom: 20px;
-    border: 0.5px solid $shade2light;
-    border-radius: 2px;
-    font-size: 16px;
-  }
-
-  .formButton {
-    padding: 8px;
-    font-size: 16px;
-    width: 80px;
-  }
-
-  .disclaimer {
-    font-size: 13px;
-    max-width: 70%;
-    text-align: center;
     border-width: 3px;
   }
 }
