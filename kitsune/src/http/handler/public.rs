@@ -8,7 +8,7 @@ use mime::Mime;
 use once_cell::sync::Lazy;
 use std::{path::Path as FsPath, sync::RwLock};
 
-static PUBLIC_DIR: include_dir::Dir<'_> = include_dir!("public");
+static PUBLIC_DIR: include_dir::Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/assets");
 static PUBLIC_DIR_MIME_TYPE: Lazy<RwLock<AHashMap<&'static FsPath, Mime>>> =
     Lazy::new(RwLock::default);
 
