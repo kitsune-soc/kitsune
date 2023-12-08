@@ -1,44 +1,26 @@
-use ahash::AHashMap;
+use std::borrow::Cow;
+
 use axum::{extract::Path, routing, Router, TypedHeader};
 use axum_extra::either::Either;
 use headers::ContentType;
 use http::StatusCode;
-use include_dir::include_dir;
-use mime::Mime;
-use once_cell::sync::Lazy;
-use std::{path::Path as FsPath, sync::RwLock};
+use rust_embed::RustEmbed;
 
-static PUBLIC_DIR: include_dir::Dir<'_> = include_dir!("public");
-static PUBLIC_DIR_MIME_TYPE: Lazy<RwLock<AHashMap<&'static FsPath, Mime>>> =
-    Lazy::new(RwLock::default);
+#[derive(RustEmbed)]
+#[folder = "../public"]
+#[exclude = "*.scss"]
+struct AssetsDir;
 
 #[allow(clippy::unused_async)]
 async fn get(
     Path(path): Path<String>,
-) -> Either<(TypedHeader<ContentType>, &'static [u8]), StatusCode> {
-    let Some(file) = PUBLIC_DIR.get_file(path) else {
+) -> Either<(TypedHeader<ContentType>, Cow<'static, [u8]>), StatusCode> {
+    let Some(file) = AssetsDir::get(&path) else {
         return Either::E2(StatusCode::NOT_FOUND);
     };
+    let mime_type = mime_guess::from_path(&path).first_or_octet_stream();
 
-    let mime_type = PUBLIC_DIR_MIME_TYPE
-        .read()
-        .unwrap()
-        .get(file.path())
-        .map(Mime::clone);
-
-    let mime_type = if let Some(mime_type) = mime_type {
-        mime_type
-    } else {
-        let mime_type = mime_guess::from_path(file.path()).first_or_octet_stream();
-        PUBLIC_DIR_MIME_TYPE
-            .write()
-            .unwrap()
-            .insert(file.path(), mime_type.clone());
-
-        mime_type
-    };
-
-    Either::E1((TypedHeader(ContentType::from(mime_type)), file.contents()))
+    Either::E1((TypedHeader(ContentType::from(mime_type)), file.data))
 }
 
 pub fn routes<T>() -> Router<T>

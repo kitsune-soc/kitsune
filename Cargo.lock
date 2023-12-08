@@ -2471,9 +2471,9 @@ dependencies = [
 
 [[package]]
 name = "http-body"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5f38f16d184e36f2408a55281cd658ecbd3ca05cce6d6510a176eca393e26d1"
+checksum = "7ceab25649e9960c0311ea418d17bee82c0dcec1bd053b5f9a66e265a693bed2"
 dependencies = [
  "bytes",
  "http",
@@ -2617,25 +2617,6 @@ dependencies = [
  "bytes",
  "crc32fast",
  "miniz_oxide 0.5.4",
-]
-
-[[package]]
-name = "include_dir"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18762faeff7122e89e0857b02f7ce6fcc0d101d5e9ad2ad7846cc01d61b7f19e"
-dependencies = [
- "include_dir_macros",
-]
-
-[[package]]
-name = "include_dir_macros"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b139284b5cf57ecfa712bcc66950bb635b31aff41c188e8a4cfc758eca374a3f"
-dependencies = [
- "proc-macro2",
- "quote",
 ]
 
 [[package]]
@@ -2815,7 +2796,6 @@ dependencies = [
 name = "kitsune"
 version = "0.0.1-pre.4"
 dependencies = [
- "ahash 0.8.6",
  "argon2",
  "askama",
  "askama_axum",
@@ -2838,7 +2818,6 @@ dependencies = [
  "headers",
  "http",
  "hyper",
- "include_dir",
  "iso8601-timestamp",
  "kitsune-activitypub",
  "kitsune-blocking",
@@ -2873,12 +2852,12 @@ dependencies = [
  "mimalloc",
  "mime",
  "mime_guess",
- "once_cell",
  "oxide-auth",
  "oxide-auth-async",
  "oxide-auth-axum",
  "pkcs8",
  "pretty_assertions",
+ "rust-embed",
  "scoped-futures",
  "serde",
  "serde_urlencoded",
@@ -5489,6 +5468,7 @@ version = "8.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "816ccd4875431253d6bb54b804bcff4369cbde9bae33defde25fdf6c2ef91d40"
 dependencies = [
+ "globset",
  "sha2",
  "walkdir",
 ]
