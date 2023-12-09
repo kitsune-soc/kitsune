@@ -1,4 +1,4 @@
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use fs_extra::dir::{self, CopyOptions};
 use std::{env, error::Error, io, process::Command};
 
@@ -22,8 +22,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=assets");
     println!("cargo:rerun-if-changed=templates");
 
-    let assets_path = Utf8PathBuf::from("./assets").canonicalize_utf8()?;
-    let prepared_assets_path = Utf8PathBuf::from("./assets-dist").canonicalize_utf8()?;
+    let assets_path = Utf8Path::new("./assets").canonicalize_utf8()?;
+    let prepared_assets_path = Utf8Path::new("./assets-dist").canonicalize_utf8()?;
+
+    // Only clean the `assets-dist` directory on debug builds
+    if !cfg!(debug_assertions) {
+        dir::remove(&prepared_assets_path)?;
+    }
 
     let copy_options = CopyOptions {
         overwrite: true,
