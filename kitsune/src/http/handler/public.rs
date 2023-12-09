@@ -6,7 +6,7 @@ use rust_embed::RustEmbed;
 use std::borrow::Cow;
 
 #[derive(RustEmbed)]
-#[folder = "assets"]
+#[folder = "assets-dist"]
 #[exclude = "*.scss"]
 struct AssetsDir;
 
