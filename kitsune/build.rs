@@ -23,11 +23,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=templates");
 
     let assets_path = Utf8Path::new("./assets").canonicalize_utf8()?;
-    let prepared_assets_path = Utf8Path::new("./assets-dist").canonicalize_utf8()?;
+    let prepared_assets_path = Utf8Path::new("./assets-dist");
 
-    // Only clean the `assets-dist` directory on debug builds
+    // Only clean the `assets-dist` directory on non-debug builds
     if !cfg!(debug_assertions) {
-        dir::remove(&prepared_assets_path)?;
+        dir::remove(prepared_assets_path)?;
     }
 
     let copy_options = CopyOptions {
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         content_only: true,
         ..CopyOptions::default()
     };
-    dir::copy(assets_path, &prepared_assets_path, &copy_options)?;
+    dir::copy(assets_path, prepared_assets_path, &copy_options)?;
 
     xtask(&["build-scss", "--path", prepared_assets_path.as_str()])?;
 
