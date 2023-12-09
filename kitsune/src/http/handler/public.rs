@@ -1,13 +1,12 @@
-use std::borrow::Cow;
-
 use axum::{extract::Path, routing, Router, TypedHeader};
 use axum_extra::either::Either;
 use headers::ContentType;
 use http::StatusCode;
 use rust_embed::RustEmbed;
+use std::borrow::Cow;
 
 #[derive(RustEmbed)]
-#[folder = "../public"]
+#[folder = "assets-dist"]
 #[exclude = "*.scss"]
 struct AssetsDir;
 

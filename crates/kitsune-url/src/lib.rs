@@ -39,12 +39,12 @@ impl UrlService {
 
     #[must_use]
     pub fn default_avatar_url(&self) -> String {
-        format!("{}/public/assets/default-avatar.png", self.base_url())
+        format!("{}/public/default-avatar.png", self.base_url())
     }
 
     #[must_use]
     pub fn default_header_url(&self) -> String {
-        format!("{}/public/assets/default-header.png", self.base_url())
+        format!("{}/public/default-header.png", self.base_url())
     }
 
     #[must_use]

@@ -9,7 +9,7 @@ mod build_scss;
 #[argh(subcommand, name = "build-scss")]
 /// Build a directory of SCSS files
 struct BuildScss {
-    #[argh(option, default = "\"kitsune/assets\".into()")]
+    #[argh(option)]
     /// path to the directory
     path: PathBuf,
 }

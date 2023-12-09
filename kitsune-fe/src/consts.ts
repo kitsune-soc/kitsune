@@ -2,7 +2,7 @@ const BACKEND_PREFIX =
   import.meta.env.VITE_BACKEND_PREFIX ?? window.location.origin;
 
 const DEFAULT_PROFILE_PICTURE_URL =
-  BACKEND_PREFIX + '/public/assets/default-avatar.png';
+  BACKEND_PREFIX + '/public/default-avatar.png';
 
 const MAX_UUID = 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF';
 
