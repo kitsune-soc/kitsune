@@ -5,7 +5,7 @@ use enum_dispatch::enum_dispatch;
 use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use strum::EnumIter;
+use strum::{AsRefStr, EnumIter};
 
 mod error;
 #[cfg(feature = "meilisearch")]
@@ -101,7 +101,8 @@ impl From<DbPost> for SearchItem {
     }
 }
 
-#[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[strum(serialize_all = "snake_case")]
 pub enum SearchIndex {
     Account,
     Post,

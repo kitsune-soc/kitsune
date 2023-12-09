@@ -20,7 +20,6 @@ impl MeiliSearchService {
     /// # Errors
     ///
     /// - Failed to connect to the instance
-    #[allow(clippy::missing_panics_doc)]
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
         let service = Self {
             client: Client::new(host, Some(api_key)),
@@ -42,10 +41,7 @@ impl MeiliSearchService {
     }
 
     fn get_index(&self, index: SearchIndex) -> Index {
-        match index {
-            SearchIndex::Account => self.client.index("accounts"),
-            SearchIndex::Post => self.client.index("posts"),
-        }
+        self.client.index(index.as_ref())
     }
 }
 

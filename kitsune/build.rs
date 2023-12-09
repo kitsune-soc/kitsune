@@ -1,4 +1,6 @@
-use std::{io, process::Command};
+use camino::Utf8PathBuf;
+use fs_extra::dir::{self, CopyOptions};
+use std::{env, error::Error, io, process::Command};
 
 /// Run an `xtask` subcommand
 fn xtask(args: &[&str]) -> io::Result<()> {
@@ -16,10 +18,21 @@ fn xtask(args: &[&str]) -> io::Result<()> {
     })
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
+    println!("cargo:rerun-if-changed=assets");
     println!("cargo:rerun-if-changed=templates");
 
-    xtask(&["build-scss", "--path", "./assets"])?;
+    let assets_path = Utf8PathBuf::from("./assets").canonicalize_utf8()?;
+    let prepared_assets_path = Utf8PathBuf::from("./assets-dist").canonicalize_utf8()?;
+
+    let copy_options = CopyOptions {
+        overwrite: true,
+        content_only: true,
+        ..CopyOptions::default()
+    };
+    dir::copy(assets_path, &prepared_assets_path, &copy_options)?;
+
+    xtask(&["build-scss", "--path", prepared_assets_path.as_str()])?;
 
     Ok(())
 }
