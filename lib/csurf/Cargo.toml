@@ -10,6 +10,7 @@ blake3 = "1.5.0"
 cookie = "0.18.0"
 hex-simd = "0.8.0"
 http = "0.2.11"
+pin-project-lite = "0.2.13"
 rand = "0.8.5"
 tower = { version = "0.4.13", default-features = false }
 zeroize = { version = "1.7.0", features = ["derive"] }

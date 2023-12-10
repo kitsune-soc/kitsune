@@ -1,8 +1,12 @@
+use cookie::Cookie;
 use hex_simd::{AsciiCase, Out};
 use http::{Request, Response};
+use pin_project_lite::pin_project;
 use rand::RngCore;
 use std::{
     fmt::Display,
+    future::Future,
+    pin::Pin,
     sync::{Arc, Mutex},
     task::{self, Poll},
 };
@@ -20,7 +24,7 @@ struct Shared {
     set_data: Option<(Hash, Message)>,
 }
 
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct CsrfHandle {
     #[zeroize(skip)]
     inner: Arc<Mutex<Shared>>,
@@ -91,6 +95,29 @@ impl<S> Layer<S> for CsrfLayer {
     }
 }
 
+pin_project! {
+    pub struct ResponseFuture<F> {
+        #[pin]
+        inner: F,
+        handle: CsrfHandle,
+    }
+}
+
+impl<F, E, ResBody> Future for ResponseFuture<F>
+where
+    F: Future<Output = Result<Response<ResBody>, E>>,
+{
+    type Output = Result<Response<ResBody>, E>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        let this = self.project();
+
+        this.inner.poll(cx).map_ok(|_resp| {
+            todo!();
+        })
+    }
+}
+
 #[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct CsrfService<S> {
     #[zeroize(skip)]
@@ -109,14 +136,27 @@ where
     S: Service<Request<ReqBody>, Response = Response<ResBody>>,
 {
     type Error = S::Error;
-    type Future = S::Future;
+    type Future = ResponseFuture<S::Future>;
     type Response = S::Response;
 
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        self.inner.call(req)
+    fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
+        let handle = CsrfHandle {
+            inner: Arc::new(Mutex::new(Shared {
+                read_data: None,
+                set_data: None,
+            })),
+            key: self.key,
+        };
+
+        req.extensions_mut().insert(handle.clone());
+
+        ResponseFuture {
+            inner: self.inner.call(req),
+            handle,
+        }
     }
 }

@@ -1375,6 +1375,7 @@ dependencies = [
  "cookie 0.18.0",
  "hex-simd",
  "http",
+ "pin-project-lite",
  "rand 0.8.5",
  "tower",
  "zeroize",
