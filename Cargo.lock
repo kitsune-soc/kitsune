@@ -61,6 +61,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "aliri_braid"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df233d014e7a9ad9693f08f17eb198251fb75d94c345dcfa4bdedfecc67f24fb"
+dependencies = [
+ "aliri_braid_impl",
+]
+
+[[package]]
+name = "aliri_braid_impl"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1eb7c4fcde1858a6796c18a729b661346d38e05a207e2d9028bce822fc20283"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
+]
+
+[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -563,7 +583,7 @@ dependencies = [
  "axum",
  "axum-core",
  "bytes",
- "cookie",
+ "cookie 0.17.0",
  "futures-util",
  "http",
  "http-body",
@@ -585,7 +605,7 @@ dependencies = [
  "axum",
  "axum-core",
  "bytes",
- "cookie",
+ "cookie 0.17.0",
  "futures-util",
  "http",
  "http-body",
@@ -609,7 +629,7 @@ dependencies = [
  "axum-core",
  "axum-extra 0.7.7",
  "base64 0.21.5",
- "cookie",
+ "cookie 0.17.0",
  "http",
  "serde",
  "serde_json",
@@ -756,6 +776,19 @@ checksum = "23285ad32269793932e830392f2fe2f83e26488fd3ec778883a93c8323735780"
 dependencies = [
  "arrayref",
  "arrayvec",
+ "constant_time_eq",
+]
+
+[[package]]
+name = "blake3"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0231f06152bf547e9c2b5194f247cd97aacf6dcd8b15d8e5ec0663f64580da87"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "cc",
+ "cfg-if",
  "constant_time_eq",
 ]
 
@@ -1149,6 +1182,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cd91cf61412820176e137621345ee43b3f4423e589e7ae4e50d601d93e35ef8"
+dependencies = [
+ "time",
+ "version_check",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1327,7 +1370,12 @@ dependencies = [
 name = "csurf"
 version = "0.0.1-pre.4"
 dependencies = [
+ "aliri_braid",
+ "blake3",
+ "cookie 0.18.0",
+ "hex-simd",
  "http",
+ "rand 0.8.5",
  "tower",
  "zeroize",
 ]
