@@ -6,6 +6,9 @@
 target
 target-analyzer
 
+# Build-time generated CSS artifacts
+/kitsune/assets-dist
+
 # Redis dump
 /dump.rdb
 

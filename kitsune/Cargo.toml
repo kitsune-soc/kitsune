@@ -14,7 +14,6 @@ license = false
 eula = false
 
 [dependencies]
-ahash = "0.8.6"
 athena = { path = "../lib/athena" }
 argon2 = { version = "0.5.2", features = ["std"] }
 askama = { version = "0.12.1", features = [
@@ -40,7 +39,6 @@ futures-util = "0.3.29"
 headers = "0.3.9"
 http = "0.2.11"
 hyper = { version = "0.14.27", features = ["deprecated"] }
-include_dir = "0.7.3"
 iso8601-timestamp = "0.2.13"
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-blocking = { path = "../crates/kitsune-blocking" }
@@ -72,10 +70,10 @@ mimalloc = "0.1.39"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 pkcs8 = "0.10.2"
-once_cell = "1.19.0"
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.3.0"
+rust-embed = { version = "8.1.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_urlencoded = "0.7.1"
@@ -103,7 +101,6 @@ utoipa-swagger-ui = { version = "4.0.0", features = ["axum"] }
 
 # --- Optional dependencies ---
 
-
 # "graphql" feature
 async-graphql = { version = "6.0.11", default-features = false, features = [
     "playground",
@@ -120,6 +117,10 @@ kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
 
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
+
+[build-dependencies]
+camino = "1.1.6"
+fs_extra = "1.3.0"
 
 [dev-dependencies]
 deadpool-redis = "0.13.0"

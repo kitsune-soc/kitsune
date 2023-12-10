@@ -1,4 +1,6 @@
+use bubble_bath::BubbleBath;
 use kitsune_type::ap::{actor::Actor, Object};
+use once_cell::sync::Lazy;
 
 pub trait CleanHtmlExt {
     fn clean_html(&mut self);
@@ -28,6 +30,11 @@ impl CleanHtmlExt for Object {
 
 impl CleanHtmlExt for String {
     fn clean_html(&mut self) {
-        *self = ammonia::clean(self);
+        static BUBBLE_BATH: Lazy<BubbleBath<'static>> = Lazy::new(|| BubbleBath {
+            preserve_escaped: true,
+            ..BubbleBath::default()
+        });
+
+        *self = BUBBLE_BATH.clean(self).unwrap();
     }
 }
