@@ -24,6 +24,7 @@ pub struct Hash;
 #[aliri_braid::braid]
 pub struct Message;
 
+#[derive(Clone)]
 struct CsrfData {
     hash: Hash,
     message: Message,
@@ -59,6 +60,12 @@ fn raw_verify(key: &[u8; blake3::KEY_LEN], hash: &HashRef, message: &MessageRef)
 }
 
 impl CsrfHandle {
+    /// Keep the current signature and message inside the cookie
+    pub fn keep_cookie(&self) {
+        let mut guard = self.inner.lock().unwrap();
+        guard.set_data = guard.read_data.clone();
+    }
+
     /// Create a signature and store it inside a cookie
     ///
     /// **Important**: The data passed into this function should reference an *authenticated session*.
