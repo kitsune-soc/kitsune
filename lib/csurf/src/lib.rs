@@ -2,21 +2,22 @@
 extern crate tracing;
 
 use cookie::{Cookie, SameSite};
-use hex_simd::{AsciiCase, Out};
+use hex_simd::{AsOut, AsciiCase};
 use http::{header, HeaderValue, Request, Response};
 use pin_project_lite::pin_project;
-use rand::RngCore;
+use rand::{distributions::Alphanumeric, Rng};
 use std::{
     fmt::Display,
     future::Future,
     pin::Pin,
     sync::{Arc, Mutex},
-    task::{self, Poll},
+    task::{self, ready, Poll},
 };
 use tower::{Layer, Service};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const CSRF_COOKIE_NAME: &str = "CSRF_TOKEN";
+const RANDOM_DATA_LEN: usize = 32;
 
 #[aliri_braid::braid]
 pub struct Hash;
@@ -49,7 +50,7 @@ fn raw_verify(key: &[u8; blake3::KEY_LEN], hash: &HashRef, message: &MessageRef)
     }
 
     let mut decoded_hash = [0_u8; blake3::OUT_LEN];
-    if hex_simd::decode(hash.as_bytes(), Out::from_slice(&mut decoded_hash)).is_err() {
+    if hex_simd::decode(hash.as_bytes(), decoded_hash.as_mut().as_out()).is_err() {
         return false;
     }
 
@@ -61,6 +62,7 @@ fn raw_verify(key: &[u8; blake3::KEY_LEN], hash: &HashRef, message: &MessageRef)
 
 impl CsrfHandle {
     /// Keep the current signature and message inside the cookie
+    #[inline]
     pub fn keep_cookie(&self) {
         let mut guard = self.inner.lock().unwrap();
         guard.set_data = guard.read_data.clone();
@@ -70,13 +72,16 @@ impl CsrfHandle {
     ///
     /// **Important**: The data passed into this function should reference an *authenticated session*.
     /// The use of the user ID (or something similarly static) is *discouraged*, use the session ID.
+    #[inline]
     pub fn sign<SID>(&self, session_id: SID) -> Message
     where
         SID: AsRef<[u8]> + Display,
     {
-        let mut buf = [0; 16];
-        rand::thread_rng().fill_bytes(&mut buf);
-        let random = hex_simd::encode_to_string(buf, AsciiCase::Lower);
+        let random = rand::thread_rng()
+            .sample_iter(Alphanumeric)
+            .map(char::from)
+            .take(RANDOM_DATA_LEN)
+            .collect::<String>();
 
         let message = format!("{session_id}!{random}");
         let hash = blake3::keyed_hash(&self.key, message.as_bytes());
@@ -95,6 +100,7 @@ impl CsrfHandle {
     ///
     /// Simply pass in the message that was submitted by the client.
     /// Internally, we will compare this to the
+    #[inline]
     #[must_use]
     pub fn verify(&self, message: &MessageRef) -> bool {
         let guard = self.inner.lock().unwrap();
@@ -137,26 +143,29 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
 
-        this.inner.poll(cx).map_ok(|mut resp| {
-            let guard = this.handle.inner.lock().unwrap();
-            let mut cookie = Cookie::build(CSRF_COOKIE_NAME)
-                .permanent()
-                .same_site(SameSite::Strict)
-                .secure(true)
-                .build();
+        let mut response = ready!(this.inner.poll(cx))?;
+        let mut cookie = Cookie::build(CSRF_COOKIE_NAME)
+            .permanent()
+            .same_site(SameSite::Strict)
+            .secure(true)
+            .build();
 
-            if let Some(ref set_data) = guard.set_data {
-                let value = format!("{}.{}", set_data.hash, set_data.message);
-                cookie.set_value(value);
-            } else {
-                cookie.make_removal();
-            }
+        let guard = this.handle.inner.lock().unwrap();
+        if let Some(ref set_data) = guard.set_data {
+            let value = format!("{}.{}", set_data.hash, set_data.message);
+            cookie.set_value(value);
+        } else {
+            cookie.make_removal();
+        }
 
-            let header_value = HeaderValue::from_str(&cookie.encoded().to_string()).unwrap();
-            resp.headers_mut().append(header::SET_COOKIE, header_value);
+        let encoded_cookie = cookie.encoded().to_string();
+        let header_value = HeaderValue::from_str(&encoded_cookie).unwrap();
 
-            resp
-        })
+        response
+            .headers_mut()
+            .append(header::SET_COOKIE, header_value);
+
+        Poll::Ready(Ok(response))
     }
 }
 

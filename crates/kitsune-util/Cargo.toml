@@ -6,7 +6,6 @@ version.workspace = true
 
 [dependencies]
 bubble-bath = { git = "https://github.com/aumetra/bubble-bath.git", rev = "69522e28b7298d587fd7d036d065fab0e5daea22" }
-hex-simd = { version = "0.8.0", features = ["unstable"] }
 iso8601-timestamp = "0.2.13"
 kitsune-type = { path = "../kitsune-type" }
 once_cell = "1.19.0"

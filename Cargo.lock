@@ -3514,7 +3514,6 @@ name = "kitsune-util"
 version = "0.0.1-pre.4"
 dependencies = [
  "bubble-bath",
- "hex-simd",
  "iso8601-timestamp",
  "kitsune-type",
  "once_cell",
