@@ -1187,6 +1187,7 @@ version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cd91cf61412820176e137621345ee43b3f4423e589e7ae4e50d601d93e35ef8"
 dependencies = [
+ "percent-encoding",
  "time",
  "version_check",
 ]
@@ -1378,6 +1379,7 @@ dependencies = [
  "pin-project-lite",
  "rand 0.8.5",
  "tower",
+ "tracing",
  "zeroize",
 ]
 

@@ -1,6 +1,9 @@
-use cookie::Cookie;
+#[macro_use]
+extern crate tracing;
+
+use cookie::{Cookie, SameSite};
 use hex_simd::{AsciiCase, Out};
-use http::{Request, Response};
+use http::{header, HeaderValue, Request, Response};
 use pin_project_lite::pin_project;
 use rand::RngCore;
 use std::{
@@ -13,15 +16,22 @@ use std::{
 use tower::{Layer, Service};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
+const CSRF_COOKIE_NAME: &str = "CSRF_TOKEN";
+
 #[aliri_braid::braid]
 pub struct Hash;
 
 #[aliri_braid::braid]
 pub struct Message;
 
+struct CsrfData {
+    hash: Hash,
+    message: Message,
+}
+
 struct Shared {
-    read_data: Option<(Hash, Message)>,
-    set_data: Option<(Hash, Message)>,
+    read_data: Option<CsrfData>,
+    set_data: Option<CsrfData>,
 }
 
 #[derive(Clone, Zeroize, ZeroizeOnDrop)]
@@ -49,6 +59,10 @@ fn raw_verify(key: &[u8; blake3::KEY_LEN], hash: &HashRef, message: &MessageRef)
 }
 
 impl CsrfHandle {
+    /// Create a signature and store it inside a cookie
+    ///
+    /// **Important**: The data passed into this function should reference an *authenticated session*.
+    /// The use of the user ID (or something similarly static) is *discouraged*, use the session ID.
     pub fn sign<SID>(&self, session_id: SID) -> Message
     where
         SID: AsRef<[u8]> + Display,
@@ -62,11 +76,18 @@ impl CsrfHandle {
         let hash = hex_simd::encode_to_string(hash.as_bytes(), AsciiCase::Lower);
 
         let message: Message = message.into();
-        self.inner.lock().unwrap().set_data = Some((hash.into(), message.clone()));
+        self.inner.lock().unwrap().set_data = Some(CsrfData {
+            hash: hash.into(),
+            message: message.clone(),
+        });
 
         message
     }
 
+    /// Verify the CSRF request
+    ///
+    /// Simply pass in the message that was submitted by the client.
+    /// Internally, we will compare this to the
     #[must_use]
     pub fn verify(&self, message: &MessageRef) -> bool {
         let guard = self.inner.lock().unwrap();
@@ -74,11 +95,11 @@ impl CsrfHandle {
             return false;
         };
 
-        if !raw_verify(&self.key, &read_data.0, &read_data.1) {
+        if !raw_verify(&self.key, &read_data.hash, &read_data.message) {
             return false;
         }
 
-        raw_verify(&self.key, &read_data.0, message)
+        raw_verify(&self.key, &read_data.hash, message)
     }
 }
 
@@ -112,8 +133,25 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
 
-        this.inner.poll(cx).map_ok(|_resp| {
-            todo!();
+        this.inner.poll(cx).map_ok(|mut resp| {
+            let guard = this.handle.inner.lock().unwrap();
+            let mut cookie = Cookie::build(CSRF_COOKIE_NAME)
+                .permanent()
+                .same_site(SameSite::Strict)
+                .secure(true)
+                .build();
+
+            if let Some(ref set_data) = guard.set_data {
+                let value = format!("{}.{}", set_data.hash, set_data.message);
+                cookie.set_value(value);
+            } else {
+                cookie.make_removal();
+            }
+
+            let header_value = HeaderValue::from_str(&cookie.encoded().to_string()).unwrap();
+            resp.headers_mut().append(header::SET_COOKIE, header_value);
+
+            resp
         })
     }
 }
@@ -144,9 +182,44 @@ where
     }
 
     fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
+        let cookies = req
+            .headers()
+            .get_all(header::COOKIE)
+            .into_iter()
+            .filter_map(|value| value.to_str().ok())
+            .flat_map(Cookie::split_parse_encoded);
+
+        let mut csrf_cookie = None;
+        for cookie in cookies {
+            let cookie = match cookie {
+                Ok(cookie) => cookie,
+                Err(error) => {
+                    debug!(?error, "failed to decode cookie");
+                    continue;
+                }
+            };
+
+            if cookie.name() == CSRF_COOKIE_NAME {
+                csrf_cookie = Some(cookie);
+                break;
+            }
+        }
+
+        let read_data = if let Some(csrf_cookie) = csrf_cookie {
+            csrf_cookie
+                .value_trimmed()
+                .split_once('.')
+                .map(|(hash, message)| CsrfData {
+                    hash: hash.into(),
+                    message: message.into(),
+                })
+        } else {
+            None
+        };
+
         let handle = CsrfHandle {
             inner: Arc::new(Mutex::new(Shared {
-                read_data: None,
+                read_data,
                 set_data: None,
             })),
             key: self.key,
