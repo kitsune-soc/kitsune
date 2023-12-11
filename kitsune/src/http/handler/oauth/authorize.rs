@@ -166,15 +166,10 @@ pub async fn post(
 
     // TODO: Bad because no expiration. Either encode an expiration into the cookie and make this basically a shitty JWT
     // or store session IDs instead that are stored in a TTL data structure (these would need to be either storable in-memory or in Redis; similar to OIDC data)
-    #[allow(unused_mut)]
-    let mut user_id_cookie = Cookie::build("user_id", user.id.to_string())
+    let user_id_cookie = Cookie::build("user_id", user.id.to_string())
         .same_site(SameSite::Strict)
-        .expires(Expiration::Session);
-
-    #[cfg(not(debug_assertions))]
-    {
-        user_id_cookie = user_id_cookie.secure(true);
-    }
+        .expires(Expiration::Session)
+        .secure(true);
 
     Ok(Either::E1((
         cookies.add(user_id_cookie.finish()),
