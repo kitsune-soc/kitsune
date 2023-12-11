@@ -95,11 +95,8 @@ impl CsrfHandle {
             return false;
         };
 
-        if !raw_verify(&self.key, &read_data.hash, &read_data.message) {
-            return false;
-        }
-
-        raw_verify(&self.key, &read_data.hash, message)
+        raw_verify(&self.key, &read_data.hash, &read_data.message)
+            && raw_verify(&self.key, &read_data.hash, message)
     }
 }
 
