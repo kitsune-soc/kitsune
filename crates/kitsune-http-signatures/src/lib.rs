@@ -8,7 +8,7 @@
 #![deny(missing_docs)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};
-use http::{header::HeaderName, request::Parts, HeaderValue};
+use http::{header::HeaderName, request::Parts, uri::PathAndQuery, HeaderValue};
 use ring::{
     rand::SystemRandom,
     signature::{EcdsaKeyPair, Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_SHA256},
@@ -162,7 +162,7 @@ impl<'a> TryFrom<SignatureString<'a>> for String {
                             "(request-target): {} {}",
                             value.parts.method.as_str().to_lowercase(),
                             uri.path_and_query()
-                                .map_or_else(|| uri.path(), |path| path.as_str())
+                                .map_or_else(|| uri.path(), PathAndQuery::as_str)
                         )
                     }
                     SignatureComponent::Header(header_name) => {
