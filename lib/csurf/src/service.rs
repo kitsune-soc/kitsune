@@ -34,28 +34,14 @@ where
     }
 
     fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
-        let cookies = req
+        let csrf_cookie = req
             .headers()
             .get_all(header::COOKIE)
             .into_iter()
-            .filter_map(|value| value.to_str().ok())
-            .flat_map(Cookie::split_parse_encoded);
-
-        let mut csrf_cookie = None;
-        for cookie in cookies {
-            let cookie = match cookie {
-                Ok(cookie) => cookie,
-                Err(error) => {
-                    debug!(?error, "failed to decode cookie");
-                    continue;
-                }
-            };
-
-            if cookie.name() == CSRF_COOKIE_NAME {
-                csrf_cookie = Some(cookie);
-                break;
-            }
-        }
+            .filter_map(|value| value.to_str().ok()) // Filter out all the values that aren't valid UTF-8
+            .flat_map(Cookie::split_parse_encoded) // Parse all the cookie headers and flatten the resulting iterator into a contiguous one
+            .flatten() // Call `.flatten()` to turn `Result<Cookie, Error>` -> `Cookie`, ignoring all the errors
+            .find(|cookie| cookie.name() == CSRF_COOKIE_NAME); // Find the cookie with the name of our CSRF cookie
 
         let read_data = if let Some(csrf_cookie) = csrf_cookie {
             csrf_cookie

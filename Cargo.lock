@@ -1417,7 +1417,6 @@ dependencies = [
  "pin-project-lite",
  "rand 0.8.5",
  "tower",
- "tracing",
  "zeroize",
 ]
 
