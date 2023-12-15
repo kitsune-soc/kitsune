@@ -1,5 +1,5 @@
 use crate::{CsrfHandle, CSRF_COOKIE_NAME};
-use cookie::{Cookie, SameSite};
+use cookie::{Cookie, Expiration, SameSite};
 use http::{header, HeaderValue, Response};
 use pin_project_lite::pin_project;
 use std::{
@@ -27,7 +27,7 @@ where
 
         let mut response = ready!(this.inner.poll(cx))?;
         let mut cookie = Cookie::build(CSRF_COOKIE_NAME)
-            .permanent()
+            .expires(Expiration::Session)
             .same_site(SameSite::Strict)
             .secure(true)
             .build();
