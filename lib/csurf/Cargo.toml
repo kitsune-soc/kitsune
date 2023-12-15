@@ -16,11 +16,18 @@ tower = { version = "0.4.13", default-features = false }
 tracing = "0.1.40"
 zeroize = { version = "1.7.0", features = ["derive"] }
 
+# `axum` feature
+async-trait = { version = "0.1.74", optional = true }
+axum-core = { version = "0.3.4", optional = true }
+
 [dev-dependencies]
 futures = { version = "0.3.29", default-features = false, features = [
     "executor",
 ] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
+
+[features]
+axum = ["dep:async-trait", "dep:axum-core"]
 
 [lints]
 workspace = true

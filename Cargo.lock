@@ -1407,6 +1407,8 @@ name = "csurf"
 version = "0.0.1-pre.4"
 dependencies = [
  "aliri_braid",
+ "async-trait",
+ "axum-core",
  "blake3",
  "cookie 0.18.0",
  "futures",

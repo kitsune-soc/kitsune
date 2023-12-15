@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 #[macro_use]
 extern crate tracing;
 
@@ -250,6 +252,33 @@ where
         ResponseFuture {
             inner: self.inner.call(req),
             handle,
+        }
+    }
+}
+
+#[cfg(feature = "axum")]
+mod axum_impl {
+    use crate::CsrfHandle;
+    use async_trait::async_trait;
+    use axum_core::extract::FromRequestParts;
+    use http::request::Parts;
+    use std::convert::Infallible;
+
+    #[async_trait]
+    impl<S> FromRequestParts<S> for CsrfHandle {
+        type Rejection = Infallible;
+
+        async fn from_request_parts(
+            parts: &mut Parts,
+            _state: &S,
+        ) -> Result<Self, Self::Rejection> {
+            let handle = parts
+                .extensions
+                .get::<Self>()
+                .expect("Service not wrapped by CSRF middleware")
+                .clone();
+
+            Ok(handle)
         }
     }
 }
