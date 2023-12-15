@@ -14,7 +14,7 @@ pulldown-cmark = { version = "0.9.3", default-features = false, features = [
 ] }
 rand = "0.8.5"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-tokio = { version = "1.34.0", features = ["macros"] }
+tokio = { version = "1.35.0", features = ["macros"] }
 
 [lints]
 workspace = true
