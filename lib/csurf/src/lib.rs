@@ -118,6 +118,13 @@ pub struct CsrfLayer {
     key: [u8; blake3::KEY_LEN],
 }
 
+impl CsrfLayer {
+    #[must_use]
+    pub fn new(key: [u8; blake3::KEY_LEN]) -> Self {
+        Self { key }
+    }
+}
+
 impl<S> Layer<S> for CsrfLayer {
     type Service = CsrfService<S>;
 

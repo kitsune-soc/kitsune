@@ -1,6 +1,3 @@
-[profile.dev.package]
-backtrace = { opt-level = 3 }
-num-bigint-dig = { opt-level = 3 }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

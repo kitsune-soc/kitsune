@@ -1409,6 +1409,7 @@ dependencies = [
  "aliri_braid",
  "blake3",
  "cookie 0.18.0",
+ "futures",
  "hex-simd",
  "http",
  "pin-project-lite",

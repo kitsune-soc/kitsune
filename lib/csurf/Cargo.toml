@@ -16,5 +16,11 @@ tower = { version = "0.4.13", default-features = false }
 tracing = "0.1.40"
 zeroize = { version = "1.7.0", features = ["derive"] }
 
+[dev-dependencies]
+futures = { version = "0.3.29", default-features = false, features = [
+    "executor",
+] }
+tower = { version = "0.4.13", default-features = false, features = ["util"] }
+
 [lints]
 workspace = true
