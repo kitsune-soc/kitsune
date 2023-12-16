@@ -81,9 +81,7 @@ where
         let serialised = simd_json::to_string(value)?;
 
         debug!(%key, ttl = ?self.ttl, "Setting cache entry");
-        #[allow(clippy::cast_possible_truncation)]
-        conn.set_ex(key, serialised, self.ttl.as_secs() as usize)
-            .await?;
+        conn.set_ex(key, serialised, self.ttl.as_secs()).await?;
 
         Ok(())
     }
