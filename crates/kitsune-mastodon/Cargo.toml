@@ -24,7 +24,7 @@ serde = "1.0.193"
 simd-json = "0.13.4"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.50"
+thiserror = "1.0.51"
 tokio = { version = "1.35.0", features = ["rt"] }
 tracing = "0.1.40"
 typed-builder = "0.18.0"

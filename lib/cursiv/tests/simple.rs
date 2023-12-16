@@ -1,4 +1,4 @@
-use csurf::{CsrfHandle, CsrfLayer, Message};
+use cursiv::{CsrfHandle, CsrfLayer, Message};
 use futures::{executor, future};
 use http::{header, Request, Response};
 use std::convert::Infallible;

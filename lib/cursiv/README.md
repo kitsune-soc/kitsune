@@ -1,4 +1,4 @@
-# csurf
+# cursiv
 
 Small stateless CSRF crate for tower-based frameworks
 

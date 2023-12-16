@@ -23,7 +23,7 @@ redis = "0.23.3"
 serde = { version = "1.0.193", features = ["derive"] }
 simd-json = "0.13.4"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
-thiserror = "1.0.50"
+thiserror = "1.0.51"
 url = "2.5.0"
 
 [lints]

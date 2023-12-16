@@ -863,8 +863,9 @@ dependencies = [
 
 [[package]]
 name = "bubble-bath"
-version = "0.1.0"
-source = "git+https://github.com/aumetra/bubble-bath.git?rev=69522e28b7298d587fd7d036d065fab0e5daea22#69522e28b7298d587fd7d036d065fab0e5daea22"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0310632545de55ae183416a46ec13efac8704ad894fa746ae7af175cda255a4b"
 dependencies = [
  "ahash 0.8.6",
  "bytecount",
@@ -1092,7 +1093,7 @@ checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
 [[package]]
 name = "client-sdk-common"
 version = "0.1.0"
-source = "git+https://github.com/Lantern-chat/client-sdk-rs#13b49f504764cc458c655a0331bde631fd011a03"
+source = "git+https://github.com/Lantern-chat/client-sdk-rs#dfbf2b53f5341e46ef6fd073233253ea9e76a961"
 dependencies = [
  "rkyv",
  "serde",
@@ -1403,24 +1404,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "csurf"
-version = "0.0.1-pre.4"
-dependencies = [
- "aliri_braid",
- "async-trait",
- "axum-core",
- "blake3",
- "cookie 0.18.0",
- "futures",
- "hex-simd",
- "http",
- "pin-project-lite",
- "rand 0.8.5",
- "tower",
- "zeroize",
-]
-
-[[package]]
 name = "curl"
 version = "0.4.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1449,6 +1432,24 @@ dependencies = [
  "pkg-config",
  "vcpkg",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "cursiv"
+version = "0.0.1-pre.4"
+dependencies = [
+ "aliri_braid",
+ "async-trait",
+ "axum-core",
+ "blake3",
+ "cookie 0.18.0",
+ "futures",
+ "hex-simd",
+ "http",
+ "pin-project-lite",
+ "rand 0.8.5",
+ "tower",
+ "zeroize",
 ]
 
 [[package]]
@@ -6557,18 +6558,18 @@ checksum = "8eaa81235c7058867fa8c0e7314f33dcce9c215f535d1913822a2b3f5e289f3c"
 
 [[package]]
 name = "thiserror"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9a7210f5c9a7156bb50aa36aed4c95afb51df0df00713949448cf9e97d382d2"
+checksum = "f11c217e1416d6f036b870f14e0413d480dbf28edbee1f877abaf0206af43bb7"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "266b2e40bc00e5a6c09c3584011e08b06f123c00362c92b975ba9843aaaa14b8"
+checksum = "01742297787513b79cf8e29d1056ede1313e2420b7b3b15d0a768b4921f549df"
 dependencies = [
  "proc-macro2",
  "quote",
