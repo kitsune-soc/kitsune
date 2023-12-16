@@ -16,6 +16,7 @@ use axum_extra::{
     },
 };
 use axum_flash::{Flash, IncomingFlashes};
+use cursiv::CsrfHandle;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::users, PgPool};
@@ -54,12 +55,15 @@ pub struct LoginPage {
 }
 
 pub async fn get(
-    #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
-    #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+    #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
+        State<Option<OidcService>>,
+        Query<AuthorizeQuery>,
+    ),
 
     State(db_pool): State<PgPool>,
     State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
+    csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
 ) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
@@ -94,6 +98,7 @@ pub async fn get(
 
     let solicitor = OAuthOwnerSolicitor::builder()
         .authenticated_user(authenticated_user)
+        .csrf_handle(csrf_handle)
         .db_pool(db_pool)
         .build();
 
