@@ -7,9 +7,10 @@ edition.workspace = true
 [dependencies]
 bytes = "1.5.0"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
-futures-util = "0.3.30"
-http = "0.2.11"
-hyper = { version = "0.14.28", features = ["stream"] }
+futures-util = "0.3.29"
+http = "1.0.0"
+http-body-util = "0.1.0"
+hyper = "1.0.1"
 kitsune-http-client = { path = "../kitsune-http-client" }
 rusty-s3 = { version = "0.5.0", default-features = false }
 tokio = { version = "1.35.1", features = ["fs", "io-util"] }

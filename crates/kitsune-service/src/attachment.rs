@@ -180,7 +180,7 @@ impl AttachmentService {
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
     where
-        S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
+        S: Stream<Item = Result<Bytes, BoxError>> + Send + Sync + 'static,
     {
         upload.validate(&())?;
 

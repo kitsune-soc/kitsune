@@ -1,6 +1,7 @@
+use bytes::Bytes;
 use core::convert::Infallible;
-use hyper::Response;
-use hyper::{Body, Request};
+use http_body_util::{Empty, Full};
+use hyper::{Request, Response};
 use kitsune_http_client::Client;
 use simd_json::{base::ValueAsScalar, OwnedValue};
 use tower::service_fn;
@@ -9,7 +10,9 @@ use tower::service_fn;
 async fn json_request() {
     let client = service_fn(|req: Request<_>| async move {
         assert_eq!(req.headers()["Accept"], "application/activity+json");
-        Ok::<_, Infallible>(Response::new(Body::from(r#"{"preferredUsername":"0x0"}"#)))
+        Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(
+            r#"{"preferredUsername":"0x0"}"#,
+        ))))
     });
 
     let client = Client::builder()
@@ -19,7 +22,7 @@ async fn json_request() {
 
     let req = Request::builder()
         .uri("https://corteximplant.com/users/0x0")
-        .body(Body::empty())
+        .body(Empty::new())
         .unwrap();
 
     let response = client.execute(req).await.unwrap();

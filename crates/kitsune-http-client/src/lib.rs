@@ -2,28 +2,26 @@
 #![deny(missing_docs)]
 
 use self::util::BoxCloneService;
+use async_stream::try_stream;
 use bytes::Buf;
 use futures_core::Stream;
 use headers::{Date, HeaderMapExt};
-use http_body::{combinators::BoxBody, Body as HttpBody, Limited};
+use http_body::Body as HttpBody;
+use http_body_util::{combinators::BoxBody, BodyExt, BodyStream, Empty, Limited};
 use hyper::{
     body::Bytes,
-    client::HttpConnector,
     header::{HeaderName, USER_AGENT},
     http::{self, HeaderValue},
-    Body, Client as HyperClient, HeaderMap, Request, Response as HyperResponse, StatusCode, Uri,
-    Version,
+    HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
 };
-use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
+use hyper_rustls::HttpsConnectorBuilder;
+use hyper_util::{client::legacy::Client as HyperClient, rt::TokioExecutor};
 use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use kitsune_type::jsonld::RdfNode;
-use pin_project_lite::pin_project;
 use serde::de::DeserializeOwned;
 use std::{
     error::Error as StdError,
     fmt,
-    pin::Pin,
-    task::{self, Poll},
     time::{Duration, SystemTime},
 };
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
@@ -36,29 +34,11 @@ use tower_http::{
 
 mod util;
 
+type Body = BoxBody<Bytes, BoxError>;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
-
-pin_project! {
-    struct BodyStream<B> {
-        #[pin]
-        inner: B,
-    }
-}
-
-impl<B> Stream for BodyStream<B>
-where
-    B: HttpBody<Data = Bytes, Error = BoxError>,
-{
-    type Item = Result<Bytes>;
-
-    fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
-        let this = self.project();
-        this.inner.poll_data(cx).map_err(Into::into)
-    }
-}
 
 /// Client error type
 pub struct Error {
@@ -162,13 +142,19 @@ impl ClientBuilder {
     pub fn build(self) -> Client {
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()
+            .expect("Failed to fetch native certificates")
             .https_or_http()
             .enable_http1()
             .enable_http2()
             .build();
 
-        let client: HyperClient<HttpsConnector<HttpConnector>, Body> =
-            HyperClient::builder().build(connector);
+        let client = HyperClient::builder(TokioExecutor::new())
+            .build(connector)
+            .map_response(|resp| {
+                let (parts, body) = resp.into_parts();
+                let body = BoxBody::new(body);
+                HyperResponse::from_parts(parts, body)
+            });
 
         self.service(client)
     }
@@ -251,7 +237,15 @@ impl Client {
     ///
     /// - The inner client service isn't ready
     /// - The request failed
-    pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
+    pub async fn execute<B>(&self, req: Request<B>) -> Result<Response>
+    where
+        B: HttpBody<Data = Bytes> + Send + Sync + 'static,
+        B::Error: Into<BoxError> + 'static,
+    {
+        let (parts, body) = req.into_parts();
+        let body = BoxBody::new(body.map_err(Into::into));
+        let req = Request::from_parts(parts, body);
+
         let req = self.prepare_request(req);
         let response = self.inner.clone().ready().await?.call(req).await?;
 
@@ -270,14 +264,20 @@ impl Client {
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
-    pub async fn execute_signed<K>(
+    pub async fn execute_signed<B, K>(
         &self,
-        req: Request<Body>,
+        req: Request<B>,
         private_key: PrivateKey<'_, K>,
     ) -> Result<Response>
     where
+        B: HttpBody<Data = Bytes> + Send + Sync + 'static,
+        B::Error: Into<BoxError> + 'static,
         K: SigningKey + Send + 'static,
     {
+        let (parts, body) = req.into_parts();
+        let body = BoxBody::new(body.map_err(Into::into));
+        let req = Request::from_parts(parts, body);
+
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
 
@@ -314,7 +314,7 @@ impl Client {
     {
         let req = Request::builder()
             .uri(uri)
-            .body(Body::empty())
+            .body(Body::new(Empty::new().map_err(Into::into)))
             .map_err(BoxError::from)?;
 
         self.execute(req).await
@@ -428,8 +428,15 @@ impl Response {
 
     /// Stream the body
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
-        BodyStream {
-            inner: self.inner.into_body(),
+        try_stream! {
+            let body_stream = BodyStream::new(self.inner.into_body());
+
+            for await frame in body_stream {
+                match frame?.into_data() {
+                    Ok(val) if val.has_remaining() => yield val,
+                    _ => (),
+                }
+            }
         }
     }
 

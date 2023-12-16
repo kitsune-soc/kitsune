@@ -6,7 +6,8 @@ use crate::{Result, StorageBackend};
 use bytes::Bytes;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use http::Request;
-use hyper::Body;
+use http_body_util::{Empty, StreamBody};
+use hyper::body::Frame;
 use kitsune_http_client::Client as HttpClient;
 use rusty_s3::{
     actions::{DeleteObject, GetObject, PutObject},
@@ -39,7 +40,7 @@ impl S3Client {
         let request = Request::builder()
             .uri(String::from(delete_action.sign(FIVE_MINUTES)))
             .method(s3_method_to_http(DeleteObject::METHOD))
-            .body(Body::empty())?;
+            .body(Empty::new())?;
 
         self.http_client.execute(request).await?;
 
@@ -52,7 +53,7 @@ impl S3Client {
         let request = Request::builder()
             .uri(String::from(get_action.sign(FIVE_MINUTES)))
             .method(s3_method_to_http(GetObject::METHOD))
-            .body(Body::empty())?;
+            .body(Empty::new())?;
 
         let response = self.http_client.execute(request).await?;
 
@@ -61,14 +62,14 @@ impl S3Client {
 
     pub async fn put_object<S>(&self, path: &str, stream: S) -> Result<()>
     where
-        S: Stream<Item = Result<Bytes>> + Send + 'static,
+        S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         let put_action = self.bucket.put_object(Some(&self.credentials), path);
 
         let request = Request::builder()
             .uri(String::from(put_action.sign(FIVE_MINUTES)))
             .method(s3_method_to_http(PutObject::METHOD))
-            .body(Body::wrap_stream(stream))?;
+            .body(StreamBody::new(stream.map_ok(Frame::data)))?;
 
         self.http_client.execute(request).await?;
 
@@ -110,7 +111,7 @@ impl StorageBackend for Storage {
 
     async fn put<S>(&self, path: &str, input_stream: S) -> Result<()>
     where
-        S: Stream<Item = Result<Bytes>> + Send + 'static,
+        S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         self.client.put_object(path, input_stream).await
     }

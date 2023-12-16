@@ -9,7 +9,7 @@ aliri_braid = "0.4.0"
 blake3 = "1.5.0"
 cookie = { version = "0.18.0", features = ["percent-encode"] }
 hex-simd = "0.8.0"
-http = "0.2.11"
+http = "1.0.0"
 pin-project-lite = "0.2.13"
 rand = "0.8.5"
 tower = { version = "0.4.13", default-features = false }
@@ -17,7 +17,7 @@ zeroize = { version = "1.7.0", features = ["derive"] }
 
 # `axum` feature
 async-trait = { version = "0.1.77", optional = true }
-axum-core = { version = "0.3.4", optional = true }
+axum-core = { version = "0.4.1", optional = true }
 
 [dev-dependencies]
 futures = { version = "0.3.30", default-features = false, features = [

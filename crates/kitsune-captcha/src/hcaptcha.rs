@@ -1,5 +1,7 @@
 use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
+use bytes::Bytes;
 use http::Request;
+use http_body_util::Full;
 use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
@@ -41,7 +43,7 @@ impl CaptchaBackend for Captcha {
             .build();
         let body = serde_urlencoded::to_string(&body)?;
 
-        let request = Request::post(self.verify_url.clone())
+        let request: Request<Full<Bytes>> = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .body(body.into())?;

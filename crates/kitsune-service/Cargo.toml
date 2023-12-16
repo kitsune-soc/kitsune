@@ -22,7 +22,7 @@ garde = { version = "0.16.3", default-features = false, features = [
     "regex",
     "serde",
 ] }
-http = "0.2.11"
+http = "1.0.0"
 img-parts = "0.3.0"
 iso8601-timestamp = "0.2.16"
 kitsune-blocking = { path = "../kitsune-blocking" }
@@ -67,7 +67,7 @@ meilisearch = ["kitsune-search/meilisearch"]
 
 [dev-dependencies]
 hex-simd = { version = "0.8.0", features = ["unstable"] }
-hyper = "0.14.28"
+hyper = "1.0.1"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }

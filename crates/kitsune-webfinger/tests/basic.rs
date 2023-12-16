@@ -1,4 +1,5 @@
-use hyper::{Body, Request, Response};
+use http_body_util::Full;
+use hyper::{body::Bytes, Request, Response};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
@@ -15,7 +16,7 @@ async fn basic() {
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"
         );
         let body = include_str!("../../../test-fixtures/0x0_jrd.json");
-        Ok::<_, Infallible>(Response::new(Body::from(body)))
+        Ok::<Response<Full<Bytes>>, Infallible>(Response::new(Full::from(Bytes::from(body))))
     });
     let client = Client::builder().service(client);
 

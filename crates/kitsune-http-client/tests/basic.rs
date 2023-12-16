@@ -1,5 +1,7 @@
+use bytes::Bytes;
 use core::convert::Infallible;
-use hyper::{Body, Request, Response};
+use http_body_util::Empty;
+use hyper::{Request, Response};
 use kitsune_http_client::Client;
 use tower::service_fn;
 
@@ -7,13 +9,13 @@ use tower::service_fn;
 async fn basic_request() {
     let client = service_fn(|req: Request<_>| async move {
         assert_eq!(req.uri().path_and_query().unwrap(), "/path");
-        Ok::<_, Infallible>(Response::new(Body::empty()))
+        Ok::<_, Infallible>(Response::new(Empty::<Bytes>::new()))
     });
     let client = Client::builder().service(client);
 
     let req = Request::builder()
         .uri("https://example.com/path")
-        .body(Body::empty())
+        .body(Empty::new())
         .unwrap();
     let response = client.execute(req).await.unwrap();
 
