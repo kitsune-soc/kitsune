@@ -6,33 +6,11 @@ use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
-use miette::{Context, IntoDiagnostic, MietteDiagnostic};
+use miette::{Context, IntoDiagnostic};
 use std::{env, future, path::PathBuf};
-use url::Url;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-fn postgres_url_diagnostics(db_url: &str) -> String {
-    let url = match Url::parse(db_url) {
-        Ok(url) => url,
-        Err(err) => {
-            return format!(
-                "Failed to parse the connection string as a URL. Check the syntax!: {err}"
-            );
-        }
-    };
-
-    let message = if url.scheme().starts_with("postgres") && url.has_host() {
-        "Your connection string has the correct syntax. Is the host up?"
-    } else if url.scheme() == "sqlite" {
-        "SQLite is no longer supported as of v0.0.1-pre.1, please use PostgreSQL (our only supported DBMS)\n(This is a temporary diagnostic message and will probably be removed in the future)"
-    } else {
-        "Your connection string doesn't seem to be valid. Please check it again!"
-    };
-
-    message.into()
-}
 
 /// Kitsune Social Media server
 #[derive(Parser)]
@@ -55,11 +33,7 @@ async fn boot() -> miette::Result<()> {
         config.database.max_connections as usize,
     )
     .await
-    .wrap_err("Failed to connect to and migrate the database")
-    .map_err(|err| {
-        MietteDiagnostic::new(err.to_string())
-            .with_help(postgres_url_diagnostics(&config.database.url))
-    })?;
+    .wrap_err("Failed to connect to and migrate the database")?;
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
         .into_diagnostic()
