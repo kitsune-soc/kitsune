@@ -75,7 +75,8 @@ impl CsrfHandle {
     /// Verify the CSRF request
     ///
     /// Simply pass in the message that was submitted by the client.
-    /// Internally, we will compare this to the
+    /// Internally, we will verify the keyed hash read from the CSRF cookie to the value stored in the cookie,
+    /// and to the value passed to the function
     #[inline]
     #[must_use]
     pub fn verify(&self, message: &MessageRef) -> bool {
