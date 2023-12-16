@@ -33,13 +33,14 @@ So, as long as this disclaimer is here, make sure to double check all the change
 
 - `contrib/`: Files for configuring Kitsune (Systemd, Caddy, etc.)
 - `crates/`: Sub-crates Kitsune consists of
+- `docs/`: Documentation in form of an [mdBook](https://rust-lang.github.io/mdBook/)
 - `kitsune/`: Main Kitsune server binary
 - `kitsune-cli/`: Kitsune CLI binary
 - `kitsune-fe/`: Kitsune frontend project
 - `kitsune-job-runner/`: Kitsune dedicated job runner
 - `lib/`: Libraries made for Kitsune but with no dependencies on Kitsune-specific code. Easily usable by other projects
-- `proto/`: Any Protobuf definitions for the Kitsune project
 - `public/`: Public web assets
+- `web/`: Resources specific to the [website](https://joinkitsune.org)
 - `xtask/`: Task-runner polyfill
 
 ## Contributing

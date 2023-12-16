@@ -13,7 +13,7 @@ kitsune-db = { path = "../kitsune-db" }
 kitsune-messaging = { path = "../kitsune-messaging" }
 serde = { version = "1.0.193", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
-thiserror = "1.0.50"
+thiserror = "1.0.51"
 typed-builder = "0.18.0"
 
 [build-dependencies]

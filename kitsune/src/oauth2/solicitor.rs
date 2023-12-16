@@ -1,6 +1,7 @@
 use super::OAuthScope;
 use askama::Template;
 use async_trait::async_trait;
+use cursiv::CsrfHandle;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::oauth2_applications, PgPool};
@@ -18,12 +19,14 @@ use typed_builder::TypedBuilder;
 struct ConsentPage<'a> {
     authenticated_username: &'a str,
     app_name: &'a str,
+    csrf_token: &'a str,
     query: PageQueryParams,
     scopes: &'a [OAuthScope],
 }
 
 struct PageQueryParams {
     client_id: String,
+    csrf_token: Option<String>,
     redirect_uri: String,
     response_type: String,
     scope: String,
@@ -34,6 +37,7 @@ impl PageQueryParams {
     fn extract(query: &(dyn QueryParameter + 'static)) -> Option<Self> {
         Some(Self {
             client_id: query.unique_value("client_id")?.into_owned(),
+            csrf_token: query.unique_value("csrf_token").map(Cow::into_owned),
             redirect_uri: query.unique_value("redirect_uri")?.into_owned(),
             response_type: query.unique_value("response_type")?.into_owned(),
             scope: query.unique_value("scope")?.into_owned(),
@@ -45,6 +49,7 @@ impl PageQueryParams {
 #[derive(Clone, TypedBuilder)]
 pub struct OAuthOwnerSolicitor {
     authenticated_user: User,
+    csrf_handle: CsrfHandle,
     db_pool: PgPool,
 }
 
@@ -56,7 +61,17 @@ impl OAuthOwnerSolicitor {
         solicitation: &Solicitation<'_>,
     ) -> Result<OwnerConsent<OAuthResponse>, WebError> {
         let consent = match login_consent {
-            Some("accept") => OwnerConsent::Authorized(self.authenticated_user.id.to_string()),
+            Some("accept") => {
+                let Some(csrf_token) = query.csrf_token else {
+                    return Err(WebError::Query);
+                };
+
+                if !self.csrf_handle.verify(csrf_token.as_str().into()) {
+                    return Err(WebError::Authorization);
+                }
+
+                OwnerConsent::Authorized(self.authenticated_user.id.to_string())
+            }
             Some("deny") => OwnerConsent::Denied,
             Some(..) | None => {
                 let client_id: Uuid = solicitation
@@ -90,9 +105,13 @@ impl OAuthOwnerSolicitor {
                     .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
                     .expect("[Bug] Scopes weren't normalised");
 
+                let user_id = self.authenticated_user.id.to_string();
+                let csrf_token = self.csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
+
                 let body = ConsentPage {
                     authenticated_username: &self.authenticated_user.username,
                     app_name: &app_name,
+                    csrf_token: csrf_token.as_str(),
                     query,
                     scopes: &scopes,
                 }

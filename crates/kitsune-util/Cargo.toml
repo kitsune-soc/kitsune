@@ -5,8 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-bubble-bath = { git = "https://github.com/aumetra/bubble-bath.git", rev = "69522e28b7298d587fd7d036d065fab0e5daea22" }
-hex-simd = { version = "0.8.0", features = ["unstable"] }
+bubble-bath = "0.1.1"
 iso8601-timestamp = "0.2.13"
 kitsune-type = { path = "../kitsune-type" }
 once_cell = "1.19.0"
@@ -15,7 +14,7 @@ pulldown-cmark = { version = "0.9.3", default-features = false, features = [
 ] }
 rand = "0.8.5"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-tokio = { version = "1.34.0", features = ["macros"] }
+tokio = { version = "1.35.0", features = ["macros"] }
 
 [lints]
 workspace = true

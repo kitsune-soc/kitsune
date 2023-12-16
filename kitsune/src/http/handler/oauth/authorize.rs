@@ -16,6 +16,7 @@ use axum_extra::{
     },
 };
 use axum_flash::{Flash, IncomingFlashes};
+use cursiv::CsrfHandle;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::user::User, schema::users, PgPool};
@@ -54,12 +55,15 @@ pub struct LoginPage {
 }
 
 pub async fn get(
-    #[cfg(feature = "oidc")] State(oidc_service): State<Option<OidcService>>,
-    #[cfg(feature = "oidc")] Query(query): Query<AuthorizeQuery>,
+    #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
+        State<Option<OidcService>>,
+        Query<AuthorizeQuery>,
+    ),
 
     State(db_pool): State<PgPool>,
     State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
+    csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
 ) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
@@ -94,6 +98,7 @@ pub async fn get(
 
     let solicitor = OAuthOwnerSolicitor::builder()
         .authenticated_user(authenticated_user)
+        .csrf_handle(csrf_handle)
         .db_pool(db_pool)
         .build();
 
@@ -166,15 +171,10 @@ pub async fn post(
 
     // TODO: Bad because no expiration. Either encode an expiration into the cookie and make this basically a shitty JWT
     // or store session IDs instead that are stored in a TTL data structure (these would need to be either storable in-memory or in Redis; similar to OIDC data)
-    #[allow(unused_mut)]
-    let mut user_id_cookie = Cookie::build("user_id", user.id.to_string())
+    let user_id_cookie = Cookie::build("user_id", user.id.to_string())
         .same_site(SameSite::Strict)
-        .expires(Expiration::Session);
-
-    #[cfg(not(debug_assertions))]
-    {
-        user_id_cookie = user_id_cookie.secure(true);
-    }
+        .expires(Expiration::Session)
+        .secure(true);
 
     Ok(Either::E1((
         cookies.add(user_id_cookie.finish()),
