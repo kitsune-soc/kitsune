@@ -6,6 +6,7 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
+use cursiv::CsrfLayer;
 use kitsune_config::server;
 use miette::{Context, IntoDiagnostic};
 use std::time::Duration;
@@ -91,6 +92,7 @@ pub fn create_router(
     Ok(router
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
+        .layer(CsrfLayer::generate()) // TODO: Make this configurable instead of random
         .layer(DefaultBodyLimit::max(server_config.max_upload_size))
         .layer(TimeoutLayer::new(Duration::from_secs(
             server_config.request_timeout_secs,

@@ -2921,6 +2921,7 @@ dependencies = [
  "chrono",
  "clap",
  "const-oid",
+ "cursiv",
  "deadpool-redis",
  "der",
  "diesel",

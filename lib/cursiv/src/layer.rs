@@ -12,6 +12,11 @@ impl CsrfLayer {
     pub fn new(key: [u8; blake3::KEY_LEN]) -> Self {
         Self { key }
     }
+
+    #[must_use]
+    pub fn generate() -> Self {
+        Self::new(rand::random())
+    }
 }
 
 impl<S> Layer<S> for CsrfLayer {
