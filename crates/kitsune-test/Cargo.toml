@@ -12,7 +12,6 @@ diesel-async = "0.4.1"
 futures-util = "0.3.29"
 http = "1.0.0"
 http-body-util = "0.1.0"
-hyper = "1.0.1"
 kitsune-db = { path = "../kitsune-db" }
 pin-project-lite = "0.2.13"
 redis = "0.24.0"
