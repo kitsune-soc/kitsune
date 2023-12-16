@@ -92,7 +92,3 @@ targets = [
 ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
-
-[patch.crates-io]
-# Patch `redis` for up-to-date `ahash`
-redis = { git = "https://github.com/aumetra/redis-rs.git", rev = "3c4ee09d432a69e1d87d66dcba14c519467c9b81" }

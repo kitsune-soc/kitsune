@@ -5,7 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-deadpool-redis = "0.13.0"
+deadpool-redis = "0.14.0"
 enum_dispatch = "0.3.12"
 http = "0.2.11"
 hyper = "0.14.27"
@@ -19,7 +19,7 @@ openidconnect = { version = "3.4.0", default-features = false, features = [
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
 ] }
-redis = "0.23.3"
+redis = "0.24.0"
 serde = { version = "1.0.193", features = ["derive"] }
 simd-json = "0.13.4"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }

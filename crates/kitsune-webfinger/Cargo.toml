@@ -7,7 +7,7 @@ version.workspace = true
 [dependencies]
 async-trait = "0.1.74"
 autometrics = { version = "1.0.0", default-features = false }
-deadpool-redis = "0.13.0"
+deadpool-redis = "0.14.0"
 futures-util = "0.3.29"
 http = "0.2.11"
 kitsune-cache = { path = "../kitsune-cache" }

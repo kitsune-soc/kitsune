@@ -1596,9 +1596,9 @@ dependencies = [
 
 [[package]]
 name = "deadpool-redis"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84930e585871d35b8e06d3e03d03e3a8a4c5dc71afa4376c7cd5f9223e1da1ea"
+checksum = "36f2381b0e993d06a1f6d49f486b33bc4004085bf980340fc05726bacc681fff"
 dependencies = [
  "deadpool 0.10.0",
  "redis",
@@ -5365,8 +5365,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.3"
-source = "git+https://github.com/aumetra/redis-rs.git?rev=3c4ee09d432a69e1d87d66dcba14c519467c9b81#3c4ee09d432a69e1d87d66dcba14c519467c9b81"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c580d9cbbe1d1b479e8d67cf9daf6a62c957e6846048408b80b43ac3f6af84cd"
 dependencies = [
  "ahash 0.8.6",
  "arc-swap",
@@ -5380,6 +5381,8 @@ dependencies = [
  "pin-project-lite",
  "rustls",
  "rustls-native-certs",
+ "rustls-pemfile",
+ "rustls-webpki",
  "ryu",
  "sha1_smol",
  "socket2 0.4.10",
