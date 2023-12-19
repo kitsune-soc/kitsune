@@ -2,7 +2,7 @@
 CREATE SCHEMA kitsune;
 
 -- Unicode collation that effectively ignores all accent and case differences
--- We use this on our username columns to achieve case insensitivityand prevent imppersonation through accent characters
+-- We use this on our username columns to achieve case insensitivity and prevent imppersonation through accent characters
 CREATE COLLATION kitsune.ignore_accent_case (
     provider = icu,
     deterministic = false,
@@ -33,7 +33,7 @@ CREATE TABLE accounts (
     display_name TEXT,
     note TEXT,
     -- Use special collation to ignore case and accent differences
-    username TEXT NOT NULL COLLATE ignore_accent_case, 
+    username TEXT NOT NULL COLLATE kitsune.ignore_accent_case, 
     locked BOOLEAN NOT NULL,
     local BOOLEAN NOT NULL,
     domain TEXT NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE users (
     account_id UUID NOT NULL UNIQUE,
     oidc_id TEXT UNIQUE,
     -- Use special collation to ignore case and accent differences
-    username TEXT NOT NULL COLLATE ignore_accent_case,
+    username TEXT NOT NULL COLLATE kitsune.ignore_accent_case,
     email TEXT NOT NULL UNIQUE,
     password TEXT UNIQUE,
     domain TEXT NOT NULL,
@@ -150,8 +150,8 @@ CREATE TABLE posts (
 
     -- Generated full-text search column
     post_ts TSVECTOR GENERATED ALWAYS AS (
-        to_tsvector(iso_code_to_language(content_lang), COALESCE(subject, ''))
-            || to_tsvector(iso_code_to_language(content_lang), content)
+        to_tsvector(kitsune.iso_code_to_language(content_lang), COALESCE(subject, ''))
+            || to_tsvector(kitsune.iso_code_to_language(content_lang), content)
     ) STORED NOT NULL,
 
     -- Foreign key constraints
