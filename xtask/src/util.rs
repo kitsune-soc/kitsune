@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::ensure;
 use std::{env, ffi::OsStr, io, process::Command};
 
 pub fn cargo<I>(params: I) -> anyhow::Result<()>
@@ -13,10 +13,7 @@ where
         .stdout(io::stdout())
         .output()?;
 
-    if !output.status.success() {
-        let msg = String::from_utf8(output.stderr)?;
-        bail!("Failed to run cargo subcommand: {msg}");
-    }
+    ensure!(output.status.success(), "Failed to run cargo subcommand");
 
     Ok(())
 }
