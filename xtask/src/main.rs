@@ -24,6 +24,10 @@ struct Watch {
     #[argh(option, short = 'c', default = "\"config.toml\".into()")]
     /// path to the configuration file
     config: String,
+
+    #[argh(option, short = 'p', default = "\"kitsune\".into()")]
+    /// name of the binary in the workspace
+    bin: String,
 }
 
 #[derive(FromArgs)]
@@ -46,7 +50,7 @@ fn main() -> anyhow::Result<()> {
     let command: Command = argh::from_env();
     match command.subcommand {
         Subcommand::BuildScss(BuildScss { path }) => build_scss::build_scss(path)?,
-        Subcommand::Watch(Watch { config }) => watch::watch(&config)?,
+        Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
 
     Ok(())
