@@ -5,9 +5,9 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
-ahash = "0.8.6"
+ahash = "0.8.7"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
-futures-util = "0.3.29"
+futures-util = "0.3.30"
 kitsune-retry-policies = { path = "../kitsune-retry-policies" }
 pin-project-lite = "0.2.13"
 redis = { version = "0.24.0", features = [
@@ -15,9 +15,9 @@ redis = { version = "0.24.0", features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
-serde = "1.0.193"
+serde = "1.0.194"
 simd-json = "0.13.4"
-tokio = { version = "1.35.0", features = ["macros", "rt", "sync"] }
+tokio = { version = "1.35.1", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tracing = "0.1.40"
 

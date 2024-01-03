@@ -5,8 +5,8 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1.74"
-hyper = { version = "0.14.27", default-features = false }
+async-trait = "0.1.77"
+hyper = { version = "0.14.28", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "0.21.1"

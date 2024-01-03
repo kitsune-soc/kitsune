@@ -5,7 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-ahash = "0.8.6"
+ahash = "0.8.7"
 argon2 = "0.5.2"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
@@ -14,7 +14,7 @@ deadpool-redis = "0.14.0"
 derive_builder = "0.12.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
-futures-util = "0.3.29"
+futures-util = "0.3.30"
 garde = { version = "0.16.3", default-features = false, features = [
     "derive",
     "email",
@@ -24,7 +24,7 @@ garde = { version = "0.16.3", default-features = false, features = [
 ] }
 http = "0.2.11"
 img-parts = "0.3.0"
-iso8601-timestamp = "0.2.13"
+iso8601-timestamp = "0.2.16"
 kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
@@ -51,12 +51,12 @@ rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"
-serde = "1.0.193"
+serde = "1.0.194"
 simd-json = "0.13.4"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.51"
-tokio = { version = "1.35.0", features = ["macros"] }
+thiserror = "1.0.56"
+tokio = { version = "1.35.1", features = ["macros"] }
 tracing = "0.1.40"
 typed-builder = "0.18.0"
 url = "2.5.0"
@@ -67,7 +67,7 @@ meilisearch = ["kitsune-search/meilisearch"]
 
 [dev-dependencies]
 hex-simd = { version = "0.8.0", features = ["unstable"] }
-hyper = "0.14.27"
+hyper = "0.14.28"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }
@@ -76,7 +76,7 @@ kitsune-test = { path = "../kitsune-test" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 pretty_assertions = "1.4.0"
 serial_test = "2.0.0"
-tempfile = "3.8.1"
+tempfile = "3.9.0"
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 
 [lints]

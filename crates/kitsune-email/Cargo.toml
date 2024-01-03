@@ -14,7 +14,7 @@ diesel = "2.1.4"
 diesel-async = "0.4.1"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-url = { path = "../kitsune-url" }
-lettre = { version = "0.11.2", default-features = false, features = [
+lettre = { version = "0.11.3", default-features = false, features = [
     "builder",
     "hostname",
     "pool",
@@ -31,7 +31,7 @@ mrml = { version = "2.1.1", default-features = false, features = [
 ] }
 scoped-futures = "0.1.3"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.51"
+thiserror = "1.0.56"
 typed-builder = "0.18.0"
 
 [lints]
