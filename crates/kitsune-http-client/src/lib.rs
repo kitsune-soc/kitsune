@@ -346,7 +346,7 @@ impl Response {
     ///
     /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
-        hyper::body::to_bytes(self.inner).await.map_err(Into::into)
+        Ok(self.inner.collect().await?.to_bytes())
     }
 
     /// Get a reference to the headers

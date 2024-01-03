@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use hyper::body::Body;
+use hyper::body::{Body, HttpBody};
 use kitsune_config::{open_telemetry::Transport, Configuration};
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
@@ -42,7 +42,7 @@ impl HttpClient for HttpClientAdapter {
         let response = self.inner.execute(request).await?.into_inner();
 
         let (parts, body) = response.into_parts();
-        let body = hyper::body::to_bytes(body).await?;
+        let body = body.collect().await?.to_bytes();
 
         Ok(Response::from_parts(parts, body))
     }
