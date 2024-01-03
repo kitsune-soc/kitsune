@@ -6,7 +6,7 @@ use axum::{
 use bytes::Buf;
 use headers::{ContentType, HeaderMapExt};
 use http::{Request, StatusCode};
-use hyper::Body;
+use hyper::{body::HttpBody, Body};
 use simd_json::OwnedValue;
 
 /// Some clients send their OAuth credentials as JSON payloads. This against the OAuth2 RFC but alas, we want high compatibility with Mastodon clients
@@ -22,9 +22,10 @@ pub async fn json_to_urlencoded(req: Request<Body>, next: Next<Body>) -> Respons
     };
     let (parts, body) = req.into_parts();
 
-    let json_value = match hyper::body::aggregate(body)
+    let json_value = match body
+        .collect()
         .await
-        .map(|bytes| simd_json::from_reader::<_, OwnedValue>(bytes.reader()))
+        .map(|bytes| simd_json::from_reader::<_, OwnedValue>(bytes.aggregate().reader()))
     {
         Ok(Ok(value)) => value,
         Ok(Err(error)) => {

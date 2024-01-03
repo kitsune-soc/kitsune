@@ -14,6 +14,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
+use hyper::body::HttpBody;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
@@ -53,8 +54,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .into_parts();
         parts.uri = original_uri;
 
-        let activity: Activity = match hyper::body::aggregate(body).await {
-            Ok(body) => simd_json::from_reader(body.reader()).map_err(Error::from)?,
+        let activity: Activity = match body.collect().await {
+            Ok(body) => simd_json::from_reader(body.aggregate().reader()).map_err(Error::from)?,
             Err(error) => {
                 debug!(?error, "Failed to buffer body");
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());

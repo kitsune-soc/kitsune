@@ -32,6 +32,7 @@ members = [
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-retry-policies",
+    "crates/kitsune-scss-compiler",
     "crates/kitsune-search",
     "crates/kitsune-service",
     "crates/kitsune-storage",
@@ -49,6 +50,7 @@ members = [
     "lib/post-process",
     "lib/speedy-uuid",
     "lib/tower-x-clacks-overhead",
+    "xtask",
 ]
 resolver = "2"
 

@@ -5,8 +5,8 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
-iso8601-timestamp = "0.2.13"
-serde = { version = "1.0.193", features = ["derive"] }
+iso8601-timestamp = "0.2.16"
+serde = { version = "1.0.194", features = ["derive"] }
 simd-json = "0.13.4"
 smol_str = { version = "0.2.0", features = ["serde"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }

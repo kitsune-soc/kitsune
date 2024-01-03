@@ -15,24 +15,24 @@ diesel-async = { version = "0.4.1", features = [
 ] }
 diesel_full_text_search = { version = "2.1.1", default-features = false }
 diesel_migrations = "2.1.0"
-iso8601-timestamp = { version = "0.2.13", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.2.16", features = ["diesel-pg"] }
 kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 miette = "5.10.0"
 num-derive = "0.4.1"
 num-traits = "0.2.17"
-serde = { version = "1.0.193", features = ["derive"] }
+serde = { version = "1.0.194", features = ["derive"] }
 simd-json = "0.13.4"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
-thiserror = "1.0.51"
+thiserror = "1.0.56"
 tracing-log = "0.2.0"
 typed-builder = "0.18.0"
 
 [dev-dependencies]
 kitsune-test = { path = "../kitsune-test" }
 serial_test = "2.0.0"
-tokio = { version = "1.35.0", features = ["macros"] }
+tokio = { version = "1.35.1", features = ["macros"] }
 
 [lints]
 workspace = true

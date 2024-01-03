@@ -1,22 +1,6 @@
 use camino::Utf8Path;
 use fs_extra::dir::{self, CopyOptions};
-use std::{env, error::Error, io, process::Command};
-
-/// Run an `xtask` subcommand
-fn xtask(args: &[&str]) -> io::Result<()> {
-    let output = Command::new(env!("CARGO"))
-        .args(["run", "--manifest-path", "../xtask/Cargo.toml", "--"])
-        .args(args)
-        .output()?;
-
-    output.status.success().then_some(()).ok_or_else(|| {
-        let stderr = String::from_utf8(output.stderr).unwrap();
-        io::Error::new(
-            io::ErrorKind::Other,
-            format!("Failed to run xtask: {stderr}"),
-        )
-    })
-}
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=assets");
@@ -37,7 +21,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     dir::copy(assets_path, prepared_assets_path, &copy_options)?;
 
-    xtask(&["build-scss", "--path", prepared_assets_path.as_str()])?;
+    kitsune_scss_compiler::compile(prepared_assets_path)?;
 
     Ok(())
 }
