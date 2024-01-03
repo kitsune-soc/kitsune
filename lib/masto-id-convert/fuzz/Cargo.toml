@@ -1,0 +1,33 @@
+[package]
+name = "masto-id-convert-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.masto-id-convert]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_integer"
+path = "fuzz_targets/fuzz_integer.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_str"
+path = "fuzz_targets/fuzz_str.rs"
+test = false
+doc = false
