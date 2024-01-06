@@ -10,7 +10,6 @@ lto = true
 strip = true
 
 [workspace]
-exclude = ["xtask"]
 members = [
     "crates/kitsune-activitypub",
     "crates/kitsune-blocking",
@@ -66,6 +65,7 @@ cast_sign_loss = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
+no_effect_underscore_binding = "allow"
 
 [workspace.lints.rust]
 forbidden_lint_groups = "allow"
