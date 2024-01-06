@@ -1,5 +1,6 @@
 use super::handle::handle;
-use hyper::{Body, Request, Response};
+use http_body_util::Empty;
+use hyper::{body::Bytes, Request, Response};
 use kitsune_activitypub::{error::Error, Fetcher};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
@@ -32,7 +33,7 @@ async fn federation_allow() {
         let client = service_fn(
             #[allow(unreachable_code)] // https://github.com/rust-lang/rust/issues/67227
             |_: Request<_>| async {
-                panic!("Requested a denied domain") as Result<Response<Body>, Infallible>
+                panic!("Requested a denied domain") as Result<Response<Empty<Bytes>>, Infallible>
             },
         );
         let client = Client::builder().service(client);
@@ -92,7 +93,7 @@ async fn federation_deny() {
         let client = service_fn(
             #[allow(unreachable_code)]
             |_: Request<_>| async {
-                panic!("Requested a denied domain") as Result<Response<Body>, Infallible>
+                panic!("Requested a denied domain") as Result<Response<Empty<Bytes>>, Infallible>
             },
         );
         let client = Client::builder().service(client);

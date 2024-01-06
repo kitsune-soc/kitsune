@@ -67,6 +67,7 @@ meilisearch = ["kitsune-search/meilisearch"]
 
 [dev-dependencies]
 hex-simd = { version = "0.8.0", features = ["unstable"] }
+http-body-util = "0.1.0"
 hyper = "1.1.0"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-config = { path = "../kitsune-config" }

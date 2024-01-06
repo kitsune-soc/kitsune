@@ -3626,6 +3626,7 @@ dependencies = [
  "garde",
  "hex-simd",
  "http 1.0.0",
+ "http-body-util",
  "hyper 1.1.0",
  "img-parts",
  "iso8601-timestamp",

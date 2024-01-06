@@ -243,13 +243,13 @@ impl AttachmentService {
 mod test {
     use crate::{
         attachment::{AttachmentService, Upload},
-        error::Error,
+        error::{BoxError, Error},
     };
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
     use http::{Request, Response};
-    use hyper::Body;
+    use http_body_util::{combinators::BoxBody, Empty};
     use img_parts::{
         jpeg::{markers, JpegSegment},
         ImageEXIF,
@@ -343,8 +343,10 @@ mod test {
         .await;
     }
 
-    async fn handle(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
-        Ok::<_, Infallible>(Response::new(Body::empty()))
+    async fn handle(
+        _req: Request<BoxBody<Bytes, BoxError>>,
+    ) -> Result<Response<Empty<Bytes>>, Infallible> {
+        Ok::<_, Infallible>(Response::new(Empty::new()))
     }
 
     async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {

@@ -1,9 +1,13 @@
 use http::{Request, Response, StatusCode};
-use hyper::Body;
+use http_body_util::{combinators::BoxBody, Full};
+use hyper::body::Bytes;
 use kitsune_test::build_ap_response;
 use std::convert::Infallible;
+use tower::BoxError;
 
-pub async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+pub async fn handle(
+    req: Request<BoxBody<Bytes, BoxError>>,
+) -> Result<Response<Full<Bytes>>, Infallible> {
     match req.uri().path_and_query().unwrap().as_str() {
         "/users/0x0" => {
             let body = include_str!("../../../../test-fixtures/0x0_actor.json");
@@ -29,12 +33,12 @@ pub async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         }
         "/.well-known/webfinger?resource=acct:0x0@corteximplant.com" => {
             let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
-            Ok::<_, Infallible>(Response::new(Body::from(body)))
+            Ok::<_, Infallible>(Response::new(Full::new(body.as_bytes().into())))
         }
         path if path.starts_with("/.well-known/webfinger?") => Ok::<_, Infallible>(
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
-                .body(Body::empty())
+                .body(Full::default())
                 .unwrap(),
         ),
         path => panic!("HTTP client hit unexpected route: {path}"),
