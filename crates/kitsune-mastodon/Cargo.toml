@@ -20,8 +20,8 @@ kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 scoped-futures = "0.1.3"
-serde = "1.0.194"
-simd-json = "0.13.4"
+serde = "1.0.195"
+simd-json = "0.13.6"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.56"

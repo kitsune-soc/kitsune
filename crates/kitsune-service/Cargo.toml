@@ -15,7 +15,7 @@ derive_builder = "0.12.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
-garde = { version = "0.16.3", default-features = false, features = [
+garde = { version = "0.17.0", default-features = false, features = [
     "derive",
     "email",
     "email-idna",
@@ -51,8 +51,8 @@ rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
 scoped-futures = "0.1.3"
-serde = "1.0.194"
-simd-json = "0.13.4"
+serde = "1.0.195"
+simd-json = "0.13.6"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.56"
@@ -67,7 +67,7 @@ meilisearch = ["kitsune-search/meilisearch"]
 
 [dev-dependencies]
 hex-simd = { version = "0.8.0", features = ["unstable"] }
-hyper = "1.0.1"
+hyper = "1.1.0"
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }

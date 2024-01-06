@@ -22,8 +22,8 @@ kitsune-type = { path = "../kitsune-type" }
 miette = "5.10.0"
 num-derive = "0.4.1"
 num-traits = "0.2.17"
-serde = { version = "1.0.194", features = ["derive"] }
-simd-json = "0.13.4"
+serde = { version = "1.0.195", features = ["derive"] }
+simd-json = "0.13.6"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"
 tracing-log = "0.2.0"
