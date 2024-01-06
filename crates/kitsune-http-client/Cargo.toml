@@ -23,7 +23,6 @@ hyper-rustls = { git = "https://github.com/rustls/hyper-rustls.git", rev = "8e50
 ] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-type = { path = "../kitsune-type" }
-pin-project-lite = "0.2.13"
 serde = "1.0.195"
 simd-json = "0.13.6"
 tower = { version = "0.4.13", features = ["util"] }
