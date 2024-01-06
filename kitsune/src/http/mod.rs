@@ -10,6 +10,7 @@ use cursiv::CsrfLayer;
 use kitsune_config::server;
 use miette::{Context, IntoDiagnostic};
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
@@ -105,10 +106,10 @@ pub fn create_router(
 pub async fn run(state: Zustand, server_config: server::Configuration) -> miette::Result<()> {
     let router = create_router(state, &server_config)?;
 
-    axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
-        .serve(router.into_make_service())
+    let listener = TcpListener::bind(("0.0.0.0", server_config.port))
         .await
         .into_diagnostic()?;
+    axum::serve(listener, router).await.into_diagnostic()?;
 
     Ok(())
 }

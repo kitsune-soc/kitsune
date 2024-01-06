@@ -8,6 +8,8 @@ version.workspace = true
 deadpool-redis = "0.14.0"
 enum_dispatch = "0.3.12"
 http = "1.0.0"
+http-body-util = "0.1.0"
+http-compat = { path = "../../lib/http-compat" }
 hyper = "1.1.0"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }

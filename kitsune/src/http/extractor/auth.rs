@@ -3,8 +3,9 @@ use async_trait::async_trait;
 use axum::{
     extract::FromRequestParts,
     response::{IntoResponse, Response},
-    RequestPartsExt, TypedHeader,
+    RequestPartsExt,
 };
+use axum_extra::TypedHeader;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};

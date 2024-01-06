@@ -25,6 +25,7 @@ axum = { version = "0.7.3", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.1", features = [
     "cookie",
     "cookie-signed",
+    "typed-header",
     "query",
 ] }
 axum-flash = "0.8.0"
@@ -39,6 +40,7 @@ diesel-async = "0.4.1"
 futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.0.0"
+http-body-util = "0.1.0"
 hyper = "1.1.0"
 iso8601-timestamp = "0.2.16"
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }

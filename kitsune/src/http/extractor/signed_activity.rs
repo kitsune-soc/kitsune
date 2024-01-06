@@ -14,7 +14,7 @@ use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::{request::Parts, StatusCode};
-use hyper::body::HttpBody;
+use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_http_signatures::{
@@ -48,10 +48,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .await
             .map_err(IntoResponse::into_response)?;
 
-        let (mut parts, body) = req
-            .with_limited_body()
-            .expect("[Bug] Payload size of inbox not limited")
-            .into_parts();
+        let (mut parts, body) = req.with_limited_body().into_parts();
         parts.uri = original_uri;
 
         let activity: Activity = match body.collect().await {

@@ -73,9 +73,10 @@ mod tests {
         Json,
     };
     use axum_extra::either::Either;
+    use bytes::Bytes;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::{Request, Response, StatusCode};
-    use hyper::Body;
+    use http_body_util::combinators::BoxBody;
     use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
@@ -100,10 +101,12 @@ mod tests {
     use speedy_uuid::Uuid;
     use std::{convert::Infallible, sync::Arc};
     use tempfile::TempDir;
-    use tower::service_fn;
+    use tower::{service_fn, BoxError};
 
-    async fn handle(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
-        Ok::<_, Infallible>(Response::new(Body::empty()))
+    async fn handle(
+        _req: Request<BoxBody<Bytes, BoxError>>,
+    ) -> Result<Response<BoxBody<Bytes, Infallible>>, Infallible> {
+        Ok::<_, Infallible>(Response::new(BoxBody::default()))
     }
 
     fn build_account_service(
