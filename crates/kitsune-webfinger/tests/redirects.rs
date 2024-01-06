@@ -1,4 +1,4 @@
-use http_body_util::{combinators::BoxBody, Full};
+use http_body_util::Full;
 use hyper::{body::Bytes, Request, Response, StatusCode};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
@@ -65,12 +65,12 @@ async fn reject_fake_jrd_redirect() {
                     ..simd_json::from_slice(&mut base).unwrap()
                 })
                 .unwrap();
-                Ok::<_, Infallible>(Response::new(BoxBody::new(Full::new(Bytes::from(body)))))
+                Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))
             }
             ("whitehouse.gov", "/.well-known/webfinger?resource=acct:0x0@whitehouse.gov") => {
                 Ok(Response::builder()
                     .status(StatusCode::NOT_FOUND)
-                    .body(BoxBody::default())
+                    .body(Full::default())
                     .unwrap())
             }
             _ => panic!("HTTP client hit unexpected route: {}", req.uri()),
