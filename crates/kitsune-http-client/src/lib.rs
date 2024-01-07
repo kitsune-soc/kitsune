@@ -45,9 +45,15 @@ pub struct Error {
     inner: BoxError,
 }
 
-impl From<BoxError> for Error {
-    fn from(value: BoxError) -> Self {
-        Self { inner: value }
+impl Error {
+    #[inline]
+    pub(crate) fn new<E>(inner: E) -> Self
+    where
+        E: Into<BoxError>,
+    {
+        Self {
+            inner: inner.into(),
+        }
     }
 }
 
@@ -103,7 +109,7 @@ impl ClientBuilder {
     {
         self.default_headers.insert(
             key.try_into().map_err(|e| Error { inner: e.into() })?,
-            value.try_into().map_err(Into::into)?,
+            value.try_into().map_err(Error::new)?,
         );
 
         Ok(self)
@@ -245,9 +251,11 @@ impl Client {
         let (parts, body) = req.into_parts();
         let body = BoxBody::new(body.map_err(Into::into));
         let req = Request::from_parts(parts, body);
-
         let req = self.prepare_request(req);
-        let response = self.inner.clone().ready().await?.call(req).await?;
+
+        let mut ready_svc = self.inner.clone();
+        let ready_svc = ready_svc.ready().await.map_err(Error::new)?;
+        let response = ready_svc.call(req).await.map_err(Error::new)?;
 
         Ok(Response { inner: response })
     }
@@ -295,7 +303,7 @@ impl Client {
                 private_key,
             )
             .await
-            .map_err(BoxError::from)?;
+            .map_err(Error::new)?;
 
         parts.headers.insert(name, value);
         self.execute(Request::from_parts(parts, body)).await
@@ -315,7 +323,7 @@ impl Client {
         let req = Request::builder()
             .uri(uri)
             .body(Body::new(Empty::new().map_err(Into::into)))
-            .map_err(BoxError::from)?;
+            .map_err(Error::new)?;
 
         self.execute(req).await
     }
@@ -346,7 +354,7 @@ impl Response {
     ///
     /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
-        Ok(self.inner.collect().await?.to_bytes())
+        Ok(self.inner.collect().await.map_err(Error::new)?.to_bytes())
     }
 
     /// Get a reference to the headers
@@ -363,7 +371,7 @@ impl Response {
     /// - The body isn't a UTF-8 encoded string
     pub async fn text(self) -> Result<String> {
         let body = self.bytes().await?;
-        Ok(String::from_utf8(body.to_vec()).map_err(BoxError::from)?)
+        String::from_utf8(body.to_vec()).map_err(Error::new)
     }
 
     /// Read the body and deserialise it as JSON into a `serde` enabled structure
@@ -377,7 +385,7 @@ impl Response {
         T: DeserializeOwned,
     {
         let bytes = self.bytes().await?;
-        Ok(simd_json::from_reader(bytes.reader()).map_err(BoxError::from)?)
+        simd_json::from_reader(bytes.reader()).map_err(Error::new)
     }
 
     /// Read the body and deserialise it as JSON-LD node and verify the returned node's `@id`
@@ -400,20 +408,21 @@ impl Response {
             // This only happens if the `FollowRedirect` middleware neglect to insert the extension
             // or the URI doesn't contain the authority part, which won't occur in the current
             // version of `tower-http`
-            return Err(BoxError::from("Failed to get the server authority").into());
+            return Err(Error::new(BoxError::from(
+                "Failed to get the server authority",
+            )));
         };
 
         let node: T = self.json().await?;
         if let Some(id) = node.id() {
             if Uri::try_from(id)
-                .map_err(BoxError::from)?
+                .map_err(Error::new)?
                 .authority()
                 .map_or(true, |node_authority| *node_authority != server_authority)
             {
-                return Err(BoxError::from(
+                return Err(Error::new(BoxError::from(
                     "Authority of `@id` doesn't belong to the originating server",
-                )
-                .into());
+                )));
             }
         }
 
@@ -432,7 +441,7 @@ impl Response {
             let body_stream = BodyStream::new(self.inner.into_body());
 
             for await frame in body_stream {
-                match frame?.into_data() {
+                match frame.map_err(Error::new)?.into_data() {
                     Ok(val) if val.has_remaining() => yield val,
                     _ => (),
                 }
