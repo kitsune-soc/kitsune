@@ -243,13 +243,13 @@ impl AttachmentService {
 mod test {
     use crate::{
         attachment::{AttachmentService, Upload},
-        error::{BoxError, Error},
+        error::Error,
     };
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
     use http::{Request, Response};
-    use http_body_util::{combinators::BoxBody, Empty};
+    use http_body_util::Empty;
     use img_parts::{
         jpeg::{markers, JpegSegment},
         ImageEXIF,
@@ -344,7 +344,7 @@ mod test {
     }
 
     async fn handle(
-        _req: Request<BoxBody<Bytes, BoxError>>,
+        _req: Request<kitsune_http_client::Body>,
     ) -> Result<Response<Empty<Bytes>>, Infallible> {
         Ok::<_, Infallible>(Response::new(Empty::new()))
     }

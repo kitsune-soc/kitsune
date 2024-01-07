@@ -76,7 +76,7 @@ mod tests {
     use bytes::Bytes;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use http::{Request, Response, StatusCode};
-    use http_body_util::combinators::BoxBody;
+    use http_body_util::Empty;
     use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
@@ -101,12 +101,12 @@ mod tests {
     use speedy_uuid::Uuid;
     use std::{convert::Infallible, sync::Arc};
     use tempfile::TempDir;
-    use tower::{service_fn, BoxError};
+    use tower::service_fn;
 
     async fn handle(
-        _req: Request<BoxBody<Bytes, BoxError>>,
-    ) -> Result<Response<BoxBody<Bytes, Infallible>>, Infallible> {
-        Ok::<_, Infallible>(Response::new(BoxBody::default()))
+        _req: Request<kitsune_http_client::Body>,
+    ) -> Result<Response<Empty<Bytes>>, Infallible> {
+        Ok::<_, Infallible>(Response::new(Empty::new()))
     }
 
     fn build_account_service(

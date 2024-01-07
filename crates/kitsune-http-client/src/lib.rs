@@ -34,11 +34,13 @@ use tower_http::{
 
 mod util;
 
-type Body = BoxBody<Bytes, BoxError>;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
+
+/// Alias for our internal HTTP body type
+pub type Body = BoxBody<Bytes, BoxError>;
 
 /// Client error type
 pub struct Error {
@@ -219,7 +221,7 @@ impl Default for ClientBuilder {
 /// An opinionated HTTP client
 pub struct Client {
     default_headers: HeaderMap,
-    inner: BoxCloneService<Request<Body>, HyperResponse<BoxBody<Bytes, BoxError>>, BoxError>,
+    inner: BoxCloneService<Request<Body>, HyperResponse<Body>, BoxError>,
 }
 
 impl Client {
@@ -338,13 +340,13 @@ impl Default for Client {
 /// HTTP response
 #[derive(Debug)]
 pub struct Response {
-    inner: HyperResponse<BoxBody<Bytes, BoxError>>,
+    inner: HyperResponse<Body>,
 }
 
 impl Response {
     /// Convert the response into its inner `hyper` representation
     #[must_use]
-    pub fn into_inner(self) -> HyperResponse<BoxBody<Bytes, BoxError>> {
+    pub fn into_inner(self) -> HyperResponse<Body> {
         self.inner
     }
 

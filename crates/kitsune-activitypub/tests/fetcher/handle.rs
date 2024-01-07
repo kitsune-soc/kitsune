@@ -1,12 +1,11 @@
 use http::{Request, Response, StatusCode};
-use http_body_util::{combinators::BoxBody, Full};
+use http_body_util::Full;
 use hyper::body::Bytes;
 use kitsune_test::build_ap_response;
 use std::convert::Infallible;
-use tower::BoxError;
 
 pub async fn handle(
-    req: Request<BoxBody<Bytes, BoxError>>,
+    req: Request<kitsune_http_client::Body>,
 ) -> Result<Response<Full<Bytes>>, Infallible> {
     match req.uri().path_and_query().unwrap().as_str() {
         "/users/0x0" => {
