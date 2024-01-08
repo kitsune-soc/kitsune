@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use http_body_util::{BodyExt, Full};
+use http_body_util::BodyExt;
 use http_compat::Compat;
 use kitsune_config::{open_telemetry::Transport, Configuration};
 use metrics_opentelemetry::OpenTelemetryRecorder;
@@ -38,8 +38,7 @@ impl fmt::Debug for HttpClientAdapter {
 impl HttpClient for HttpClientAdapter {
     async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Bytes>, HttpError> {
         let (parts, body) = request.into_parts();
-        let body = Full::from(body);
-        let request = Request::from_parts(parts, body);
+        let request = Request::from_parts(parts, body.into());
 
         let response = self.inner.execute(request.compat()).await?.into_inner();
 

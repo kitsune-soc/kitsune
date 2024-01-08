@@ -4,10 +4,10 @@
 use self::util::BoxCloneService;
 use async_stream::try_stream;
 use bytes::Buf;
-use futures_core::Stream;
+use futures_util::Stream;
 use headers::{Date, HeaderMapExt};
 use http_body::Body as HttpBody;
-use http_body_util::{combinators::BoxBody, BodyExt, BodyStream, Empty, Limited};
+use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
     body::Bytes,
     header::{HeaderName, USER_AGENT},
@@ -32,15 +32,17 @@ use tower_http::{
     timeout::TimeoutLayer,
 };
 
+mod body;
 mod util;
 
+type BoxBody<E = BoxError> = http_body_util::combinators::BoxBody<Bytes, E>;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
 
 /// Alias for our internal HTTP body type
-pub type Body = BoxBody<Bytes, BoxError>;
+pub use self::body::Body;
 
 /// Client error type
 pub struct Error {
@@ -221,7 +223,7 @@ impl Default for ClientBuilder {
 /// An opinionated HTTP client
 pub struct Client {
     default_headers: HeaderMap,
-    inner: BoxCloneService<Request<Body>, HyperResponse<Body>, BoxError>,
+    inner: BoxCloneService<Request<Body>, HyperResponse<BoxBody>, BoxError>,
 }
 
 impl Client {
@@ -245,12 +247,7 @@ impl Client {
     ///
     /// - The inner client service isn't ready
     /// - The request failed
-    pub async fn execute<B>(&self, req: Request<B>) -> Result<Response>
-    where
-        B: HttpBody<Data = Bytes> + Send + Sync + 'static,
-        B::Error: Into<BoxError> + 'static,
-    {
-        let req = req.map(|body| BoxBody::new(body.map_err(Into::into)));
+    pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
 
         let mut ready_svc = self.inner.clone();
@@ -272,17 +269,14 @@ impl Client {
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
-    pub async fn execute_signed<B, K>(
+    pub async fn execute_signed<K>(
         &self,
-        req: Request<B>,
+        req: Request<Body>,
         private_key: PrivateKey<'_, K>,
     ) -> Result<Response>
     where
-        B: HttpBody<Data = Bytes> + Send + Sync + 'static,
-        B::Error: Into<BoxError> + 'static,
         K: SigningKey + Send + 'static,
     {
-        let req = req.map(|body| BoxBody::new(body.map_err(Into::into)));
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
 
@@ -319,7 +313,7 @@ impl Client {
     {
         let req = Request::builder()
             .uri(uri)
-            .body(Body::new(Empty::new().map_err(Into::into)))
+            .body(Body::empty())
             .map_err(Error::new)?;
 
         self.execute(req).await
@@ -335,13 +329,13 @@ impl Default for Client {
 /// HTTP response
 #[derive(Debug)]
 pub struct Response {
-    inner: HyperResponse<Body>,
+    inner: HyperResponse<BoxBody>,
 }
 
 impl Response {
     /// Convert the response into its inner `hyper` representation
     #[must_use]
-    pub fn into_inner(self) -> HyperResponse<Body> {
+    pub fn into_inner(self) -> HyperResponse<BoxBody> {
         self.inner
     }
 

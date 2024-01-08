@@ -1,9 +1,7 @@
-use bytes::Bytes;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{pooled_connection::deadpool, scoped_futures::ScopedFutureExt, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
-use http_body_util::Full;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     json::Json,
@@ -105,7 +103,7 @@ impl Client {
             }
         }
 
-        let request: Request<Full<Bytes>> = Request::builder()
+        let request = Request::builder()
             .method(Method::POST)
             .uri(self.embed_service.as_str())
             .body(url.to_string().into())

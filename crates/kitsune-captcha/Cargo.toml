@@ -5,10 +5,8 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
-bytes = "1.5.0"
 enum_dispatch = "0.3.12"
 http = "1.0.0"
-http-body-util = "0.1.0"
 kitsune-http-client = { path = "../kitsune-http-client" }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_urlencoded = "0.7.1"

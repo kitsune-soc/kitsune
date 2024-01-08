@@ -1,8 +1,8 @@
 use bytes::Bytes;
 use core::convert::Infallible;
-use http_body_util::{Empty, Full};
+use http_body_util::Full;
 use hyper::{Request, Response};
-use kitsune_http_client::Client;
+use kitsune_http_client::{Body, Client};
 use simd_json::{base::ValueAsScalar, OwnedValue};
 use tower::service_fn;
 
@@ -22,7 +22,7 @@ async fn json_request() {
 
     let req = Request::builder()
         .uri("https://corteximplant.com/users/0x0")
-        .body(Empty::new())
+        .body(Body::empty())
         .unwrap();
 
     let response = client.execute(req).await.unwrap();

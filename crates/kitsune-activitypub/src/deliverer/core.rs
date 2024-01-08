@@ -2,7 +2,6 @@ use crate::error::{Error, Result};
 use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
-use http_body_util::Full;
 use kitsune_core::consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_federation_filter::FederationFilter;
@@ -51,7 +50,7 @@ impl Deliverer {
             .method(Method::POST)
             .uri(inbox_url)
             .header("Digest", digest_header)
-            .body(Full::from(body))?;
+            .body(body.into())?;
 
         let (_tag, pkcs8_document) = SecretDocument::from_pem(&user.private_key)?;
         let private_key = PrivateKey::builder()

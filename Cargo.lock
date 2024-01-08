@@ -3225,10 +3225,8 @@ dependencies = [
 name = "kitsune-captcha"
 version = "0.0.1-pre.4"
 dependencies = [
- "bytes",
  "enum_dispatch",
  "http 1.0.0",
- "http-body-util",
  "kitsune-http-client",
  "serde",
  "serde_urlencoded",
@@ -3332,12 +3330,10 @@ dependencies = [
 name = "kitsune-embed"
 version = "0.0.1-pre.4"
 dependencies = [
- "bytes",
  "diesel",
  "diesel-async",
  "embed-sdk",
  "http 1.0.0",
- "http-body-util",
  "iso8601-timestamp",
  "kitsune-db",
  "kitsune-http-client",
@@ -3383,7 +3379,7 @@ version = "0.0.1-pre.4"
 dependencies = [
  "async-stream",
  "bytes",
- "futures-core",
+ "futures-util",
  "headers",
  "http-body 1.0.0",
  "http-body-util",
@@ -3392,6 +3388,7 @@ dependencies = [
  "hyper-util",
  "kitsune-http-signatures",
  "kitsune-type",
+ "pin-project",
  "serde",
  "simd-json",
  "tokio",
@@ -3551,7 +3548,6 @@ dependencies = [
  "deadpool-redis",
  "enum_dispatch",
  "http 1.0.0",
- "http-body-util",
  "http-compat",
  "kitsune-config",
  "kitsune-http-client",
@@ -3681,8 +3677,6 @@ dependencies = [
  "derive_more 1.0.0-beta.6",
  "futures-util",
  "http 1.0.0",
- "http-body-util",
- "hyper 1.1.0",
  "kitsune-http-client",
  "rusty-s3",
  "tempfile",

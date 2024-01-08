@@ -2,7 +2,7 @@ use bytes::Bytes;
 use core::convert::Infallible;
 use http_body_util::Empty;
 use hyper::{Request, Response};
-use kitsune_http_client::Client;
+use kitsune_http_client::{Body, Client};
 use tower::service_fn;
 
 #[tokio::test]
@@ -15,7 +15,7 @@ async fn basic_request() {
 
     let req = Request::builder()
         .uri("https://example.com/path")
-        .body(Empty::new())
+        .body(Body::empty())
         .unwrap();
     let response = client.execute(req).await.unwrap();
 
