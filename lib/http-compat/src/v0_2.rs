@@ -1,10 +1,11 @@
 use crate::Compat;
+use std::str::FromStr;
 
 impl Compat for http02::HeaderName {
     type Output = http1::HeaderName;
 
     fn compat(self) -> Self::Output {
-        unsafe { http1::HeaderName::from_bytes(self.as_str().as_bytes()).unwrap_unchecked() }
+        http1::HeaderName::from_bytes(self.as_str().as_bytes()).unwrap()
     }
 }
 
@@ -12,7 +13,7 @@ impl Compat for http02::HeaderValue {
     type Output = http1::HeaderValue;
 
     fn compat(self) -> Self::Output {
-        unsafe { http1::HeaderValue::from_maybe_shared_unchecked(self) }
+        http1::HeaderValue::from_bytes(self.as_bytes()).unwrap()
     }
 }
 
@@ -30,7 +31,7 @@ impl Compat for http02::Method {
     type Output = http1::Method;
 
     fn compat(self) -> Self::Output {
-        unsafe { http1::Method::from_bytes(self.as_ref().as_bytes()).unwrap_unchecked() }
+        http1::Method::from_bytes(self.as_str().as_bytes()).unwrap()
     }
 }
 
@@ -53,7 +54,7 @@ impl Compat for http02::Uri {
     type Output = http1::Uri;
 
     fn compat(self) -> Self::Output {
-        unsafe { http1::Uri::from_maybe_shared(self.to_string()).unwrap_unchecked() }
+        http1::Uri::from_str(&self.to_string()).unwrap()
     }
 }
 

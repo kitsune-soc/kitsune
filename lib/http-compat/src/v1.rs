@@ -4,7 +4,7 @@ impl Compat for http1::HeaderName {
     type Output = http02::HeaderName;
 
     fn compat(self) -> Self::Output {
-        unsafe { http02::HeaderName::from_bytes(self.as_str().as_bytes()).unwrap_unchecked() }
+        http02::HeaderName::from_bytes(self.as_str().as_bytes()).unwrap()
     }
 }
 
@@ -12,7 +12,7 @@ impl Compat for http1::HeaderValue {
     type Output = http02::HeaderValue;
 
     fn compat(self) -> Self::Output {
-        unsafe { http02::HeaderValue::from_maybe_shared_unchecked(self) }
+        http02::HeaderValue::from_bytes(self.as_bytes()).unwrap()
     }
 }
 
@@ -44,7 +44,7 @@ impl Compat for http1::StatusCode {
     type Output = http02::StatusCode;
 
     fn compat(self) -> Self::Output {
-        unsafe { http02::StatusCode::from_u16(self.as_u16()).unwrap_unchecked() }
+        http02::StatusCode::from_u16(self.as_u16()).unwrap()
     }
 }
 
