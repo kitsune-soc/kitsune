@@ -250,9 +250,7 @@ impl Client {
         B: HttpBody<Data = Bytes> + Send + Sync + 'static,
         B::Error: Into<BoxError> + 'static,
     {
-        let (parts, body) = req.into_parts();
-        let body = BoxBody::new(body.map_err(Into::into));
-        let req = Request::from_parts(parts, body);
+        let req = req.map(|body| BoxBody::new(body.map_err(Into::into)));
         let req = self.prepare_request(req);
 
         let mut ready_svc = self.inner.clone();
@@ -284,10 +282,7 @@ impl Client {
         B::Error: Into<BoxError> + 'static,
         K: SigningKey + Send + 'static,
     {
-        let (parts, body) = req.into_parts();
-        let body = BoxBody::new(body.map_err(Into::into));
-        let req = Request::from_parts(parts, body);
-
+        let req = req.map(|body| BoxBody::new(body.map_err(Into::into)));
         let req = self.prepare_request(req);
         let (mut parts, body) = req.into_parts();
 
