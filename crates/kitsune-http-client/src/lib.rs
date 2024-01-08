@@ -445,7 +445,10 @@ impl Response {
             for await frame in body_stream {
                 match frame.map_err(Error::new)?.into_data() {
                     Ok(val) if val.has_remaining() => yield val,
-                    _ => (),
+                    Ok(..) | Err(..) => {
+                        // There was either no remaining data or the frame was no data frame.
+                        // Therefore we just discard it.
+                    }
                 }
             }
         }
