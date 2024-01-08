@@ -434,9 +434,9 @@ impl Response {
 
     /// Stream the body
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
-        try_stream! {
-            let body_stream = BodyStream::new(self.inner.into_body());
+        let body_stream = BodyStream::new(self.inner.into_body());
 
+        try_stream! {
             for await frame in body_stream {
                 match frame.map_err(Error::new)?.into_data() {
                     Ok(val) if val.has_remaining() => yield val,
