@@ -9,7 +9,7 @@ async-trait = "0.1.77"
 autometrics = { version = "1.0.0", default-features = false }
 deadpool-redis = "0.14.0"
 futures-util = "0.3.30"
-http = "0.2.11"
+http = "1.0.0"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }
@@ -18,9 +18,10 @@ kitsune-util = { path = "../kitsune-util" }
 tracing = "0.1.40"
 
 [dev-dependencies]
-hyper = "0.14.28"
+http-body-util = "0.1.0"
+hyper = "1.1.0"
 pretty_assertions = "1.4.0"
-simd-json = { version = "0.13.4", features = ["hints"] }
+simd-json = { version = "0.13.6", features = ["hints"] }
 tokio = { version = "1.35.1", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 

@@ -360,7 +360,8 @@ pub async fn post(
     State(federation_filter): State<FederationFilter>,
     SignedActivity(author, activity): SignedActivity,
 ) -> Result<()> {
-    increment_counter!("received_activities");
+    let counter = counter!("received_activities");
+    counter.increment(1);
 
     if !federation_filter
         .is_entity_allowed(&activity)

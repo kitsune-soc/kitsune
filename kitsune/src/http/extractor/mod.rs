@@ -4,8 +4,9 @@ use axum::{
     body::Body,
     extract::FromRequest,
     response::{IntoResponse, Response},
-    Form, RequestExt, TypedHeader,
+    Form, RequestExt,
 };
+use axum_extra::TypedHeader;
 use headers::ContentType;
 use http::StatusCode;
 use mime::Mime;
@@ -27,7 +28,7 @@ mod signed_activity;
 pub struct AgnosticForm<T>(pub T);
 
 #[async_trait]
-impl<S, T> FromRequest<S, Body> for AgnosticForm<T>
+impl<S, T> FromRequest<S> for AgnosticForm<T>
 where
     S: Send + Sync,
     T: DeserializeOwned + Send + 'static,

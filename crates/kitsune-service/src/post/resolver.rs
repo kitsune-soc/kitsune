@@ -115,7 +115,8 @@ mod test {
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
-    use hyper::{Body, Request, Response};
+    use http_body_util::Full;
+    use hyper::{Request, Response};
     use iso8601_timestamp::Timestamp;
     use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
@@ -152,11 +153,11 @@ mod test {
                     match req.uri().path_and_query().unwrap().as_str() {
                         "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"=> {
                             let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
-                            Ok::<_, Infallible>(Response::new(Body::from(body)))
+                            Ok::<_, Infallible>(Response::new(Full::new(body.as_bytes().into())))
                         }
                         "/users/0x0" => {
                             let body = include_str!("../../../../test-fixtures/0x0_actor.json");
-                            Ok::<_, Infallible>(build_ap_response(body))
+                            Ok::<_, Infallible>(build_ap_response(body.as_bytes()))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),
                     }

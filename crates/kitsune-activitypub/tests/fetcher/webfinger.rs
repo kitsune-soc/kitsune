@@ -1,5 +1,6 @@
 use super::handle::handle;
-use hyper::{Body, Request, Response};
+use http_body_util::Full;
+use hyper::{Request, Response};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
@@ -38,7 +39,7 @@ async fn fetch_actor_with_custom_acct() {
                     | (
                         "joinkitsune.org",
                         "/.well-known/webfinger?resource=acct:0x0@joinkitsune.org",
-                    ) => Ok::<_, Infallible>(Response::new(Body::from(jrd_body))),
+                    ) => Ok::<_, Infallible>(Response::new(Full::from(jrd_body))),
                     _ => handle(req).await,
                 }
             }
@@ -111,14 +112,14 @@ async fn ignore_fake_webfinger_acct() {
                             ..jrd
                         };
                         let body = simd_json::to_string(&fake_jrd).unwrap();
-                        Ok::<_, Infallible>(Response::new(Body::from(body)))
+                        Ok::<_, Infallible>(Response::new(Full::from(body)))
                     }
                     (
                         "whitehouse.gov",
                         "/.well-known/webfinger?resource=acct:POTUS@whitehouse.gov",
                     ) => {
                         let body = simd_json::to_string(&jrd).unwrap();
-                        Ok(Response::new(Body::from(body)))
+                        Ok(Response::new(Full::from(body)))
                     }
                     _ => handle(req).await,
                 }

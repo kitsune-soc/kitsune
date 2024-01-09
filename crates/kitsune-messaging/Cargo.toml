@@ -15,8 +15,8 @@ redis = { version = "0.24.0", features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
-serde = "1.0.194"
-simd-json = "0.13.4"
+serde = "1.0.195"
+simd-json = "0.13.6"
 tokio = { version = "1.35.1", features = ["macros", "rt", "sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tracing = "0.1.40"

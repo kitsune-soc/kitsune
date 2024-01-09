@@ -11,8 +11,9 @@ base64-simd = { version = "0.8.0", features = ["unstable"] }
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
-headers = "0.3.9"
-http = "0.2.11"
+headers = "0.4.0"
+http = "1.0.0"
+http-body-util = "0.1.0"
 iso8601-timestamp = "0.2.16"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
@@ -31,9 +32,9 @@ mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 rsa = "0.9.6"
 scoped-futures = "0.1.3"
-serde = "1.0.194"
+serde = "1.0.195"
 sha2 = "0.10.8"
-simd-json = { version = "0.13.4", features = ["hints"] }
+simd-json = { version = "0.13.6", features = ["hints"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.56"
 tracing = "0.1.40"
@@ -44,7 +45,7 @@ url = "2.5.0"
 sha2 = { version = "0.10.8", features = ["asm"] }
 
 [dev-dependencies]
-hyper = "0.14.28"
+hyper = "1.1.0"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-test = { path = "../kitsune-test" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }

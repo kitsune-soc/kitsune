@@ -9,7 +9,7 @@ ignored = ["askama_axum"] # See reason below.
 
 [dependencies]
 askama = "0.12.1"
-askama_axum = "0.3.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
+askama_axum = "0.4.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 kitsune-db = { path = "../kitsune-db" }
@@ -24,7 +24,7 @@ lettre = { version = "0.11.3", default-features = false, features = [
     "tracing",
 ] }
 miette = "5.10.0"
-mrml = { version = "2.1.1", default-features = false, features = [
+mrml = { version = "3.0.0", default-features = false, features = [
     "orderedmap",
     "parse",
     "render",

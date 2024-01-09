@@ -6,13 +6,15 @@ version.workspace = true
 
 [dependencies]
 async-trait = "0.1.77"
-hyper = { version = "0.14.28", default-features = false }
+http-body-util = "0.1.0"
+http-compat = { path = "../../lib/http-compat" }
+hyper = { version = "1.1.0", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
-metrics = "0.21.1"
-metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "d4762c6704ecac8bca8f14ee201ce83d652c382a" }
-metrics-tracing-context = "0.14.0"
-metrics-util = "0.15.1"
+metrics = "0.22.0"
+metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "b2e2586da553ebd62abdcd3bfd04b5f41a32449a" }
+metrics-tracing-context = "0.15.0"
+metrics-util = "0.16.0"
 miette = "5.10.0"
 opentelemetry = { version = "0.21.0", default-features = false, features = [
     "trace",
@@ -26,7 +28,7 @@ opentelemetry-otlp = { version = "0.14.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.21.1", default-features = false, features = [
+opentelemetry_sdk = { version = "0.21.2", default-features = false, features = [
     "rt-tokio",
 ] }
 tracing = "0.1.40"

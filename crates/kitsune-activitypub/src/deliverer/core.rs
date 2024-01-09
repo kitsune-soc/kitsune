@@ -26,8 +26,8 @@ pub struct Deliverer {
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
     #[autometrics(track_concurrency)]
+    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
     pub async fn deliver(
         &self,
         inbox_url: &str,

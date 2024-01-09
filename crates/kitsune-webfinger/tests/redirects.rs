@@ -1,4 +1,5 @@
-use hyper::{Body, Request, Response, StatusCode};
+use http_body_util::Full;
+use hyper::{body::Bytes, Request, Response, StatusCode};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
@@ -29,7 +30,7 @@ async fn follow_jrd_redirect() {
                     "/.well-known/webfinger?resource=acct:0x0@corteximplant.com",
                 )
                 | ("joinkitsune.org", "/.well-known/webfinger?resource=acct:0x0@joinkitsune.org") => {
-                    Ok::<_, Infallible>(Response::new(Body::from(body)))
+                    Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))
                 }
                 _ => panic!("HTTP client hit unexpected route: {}", req.uri()),
             }
@@ -64,12 +65,12 @@ async fn reject_fake_jrd_redirect() {
                     ..simd_json::from_slice(&mut base).unwrap()
                 })
                 .unwrap();
-                Ok::<_, Infallible>(Response::new(Body::from(body)))
+                Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))
             }
             ("whitehouse.gov", "/.well-known/webfinger?resource=acct:0x0@whitehouse.gov") => {
                 Ok(Response::builder()
                     .status(StatusCode::NOT_FOUND)
-                    .body(Body::empty())
+                    .body(Full::default())
                     .unwrap())
             }
             _ => panic!("HTTP client hit unexpected route: {}", req.uri()),
@@ -110,7 +111,7 @@ async fn reject_unbounded_number_of_jrd_redirects() {
             ..simd_json::from_slice(&mut base).unwrap()
         })
         .unwrap();
-        Ok::<_, Infallible>(Response::new(Body::from(body)))
+        Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))
     });
     let client = Client::builder().service(client);
 

@@ -8,10 +8,10 @@ build = "build.rs"
 [dependencies]
 async-trait = "0.1.77"
 const_format = "0.2.32"
-http = "0.2.11"
+http = "1.0.0"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-messaging = { path = "../kitsune-messaging" }
-serde = { version = "1.0.194", features = ["derive"] }
+serde = { version = "1.0.195", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"
 typed-builder = "0.18.0"

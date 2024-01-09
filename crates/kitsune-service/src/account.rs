@@ -658,8 +658,8 @@ impl AccountService {
 
     pub async fn update<A, H>(&self, mut update: Update<A, H>) -> Result<Account>
     where
-        A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
-        H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + 'static,
+        A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + Sync + 'static,
+        H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + Sync + 'static,
     {
         update.validate(&())?;
 

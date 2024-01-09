@@ -1,7 +1,9 @@
 use self::catch_panic::CatchPanic;
+use bytes::Bytes;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
+use http_body_util::Full;
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
@@ -10,13 +12,13 @@ mod catch_panic;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
-pub fn build_ap_response<B>(body: B) -> http::Response<hyper::Body>
+pub fn build_ap_response<B>(body: B) -> http::Response<Full<Bytes>>
 where
-    hyper::Body: From<B>,
+    Bytes: From<B>,
 {
     http::Response::builder()
         .header(CONTENT_TYPE, "application/activity+json")
-        .body(body.into())
+        .body(Full::new(body.into()))
         .unwrap()
 }
 

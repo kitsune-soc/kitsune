@@ -5,12 +5,13 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+bytes = "1.5.0"
 deadpool-redis = "0.14.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
-http = "0.2.11"
-hyper = "0.14.28"
+http = "1.0.0"
+http-body-util = "0.1.0"
 kitsune-db = { path = "../kitsune-db" }
 pin-project-lite = "0.2.13"
 redis = "0.24.0"

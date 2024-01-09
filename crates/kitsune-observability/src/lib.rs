@@ -1,5 +1,6 @@
 use async_trait::async_trait;
-use hyper::body::{Body, HttpBody};
+use http_body_util::BodyExt;
+use http_compat::Compat;
 use kitsune_config::{open_telemetry::Transport, Configuration};
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
@@ -28,7 +29,8 @@ struct HttpClientAdapter {
 
 impl fmt::Debug for HttpClientAdapter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "HttpClientAdapter")
+        f.debug_struct(std::any::type_name::<Self>())
+            .finish_non_exhaustive()
     }
 }
 
@@ -36,15 +38,14 @@ impl fmt::Debug for HttpClientAdapter {
 impl HttpClient for HttpClientAdapter {
     async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Bytes>, HttpError> {
         let (parts, body) = request.into_parts();
-        let body = Body::from(body);
-        let request = Request::from_parts(parts, body);
+        let request = Request::from_parts(parts, body.into());
 
-        let response = self.inner.execute(request).await?.into_inner();
+        let response = self.inner.execute(request.compat()).await?.into_inner();
 
         let (parts, body) = response.into_parts();
         let body = body.collect().await?.to_bytes();
 
-        Ok(Response::from_parts(parts, body))
+        Ok(hyper::http::Response::from_parts(parts, body).compat())
     }
 }
 
@@ -96,7 +97,7 @@ where
 
 fn initialise_metrics(meter: Meter) -> miette::Result<()> {
     let recorder = TracingContextLayer::all().layer(OpenTelemetryRecorder::new(meter));
-    metrics::set_boxed_recorder(Box::new(recorder))
+    metrics::set_global_recorder(recorder)
         .into_diagnostic()
         .wrap_err("Couldn't install the global metrics recorder")?;
 
