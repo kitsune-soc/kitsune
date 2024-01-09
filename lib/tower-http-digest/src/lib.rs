@@ -1,5 +1,5 @@
-use bytes::{BufMut, BytesMut};
-use http::{HeaderName, HeaderValue, Request, Response};
+use bytes::{BufMut, Bytes, BytesMut};
+use http::{HeaderName, HeaderValue, Request};
 use http_body::Body;
 use pin_project_lite::pin_project;
 use sha2::{Digest, Sha256, Sha512};
@@ -22,10 +22,18 @@ static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 #[non_exhaustive]
 pub enum Algorithm {
     #[default]
-    #[strum(serialize = "sha-256", serialize = "id-sha-256")]
+    #[strum(
+        ascii_case_insensitive,
+        serialize = "sha-256",
+        serialize = "id-sha-256"
+    )]
     Sha256,
 
-    #[strum(serialize = "sha-512", serialize = "id-sha-512")]
+    #[strum(
+        ascii_case_insensitive,
+        serialize = "sha-512",
+        serialize = "id-sha-512"
+    )]
     Sha512,
 }
 
@@ -39,84 +47,132 @@ impl Algorithm {
 }
 
 pin_project! {
-    pub struct DigestFuture<S, B> {
-        inner: S,
+    #[project = DigestFutureProj]
+    pub enum DigestFuture<S, B, F> {
+        BuildingDigest {
+            service: S,
 
-        algorithm: Algorithm,
-        parts: Option<http::request::Parts>,
-        #[pin]
-        body: B,
-        body_accumulator: BytesMut,
+            algorithm: Algorithm,
+            parts: Option<http::request::Parts>,
+
+            #[pin]
+            body: B,
+            body_accumulator: Option<BytesMut>,
+        },
+        PollServiceFuture {
+            #[pin]
+            future: F,
+        },
     }
 }
 
-impl<S, B> Future for DigestFuture<S, B>
+impl<S, B> Future for DigestFuture<S, B, S::Future>
 where
     S: Service<Request<B>>,
     S::Error: Into<BoxError>,
-    B: Body,
+    B: Body + From<Bytes>,
     B::Error: Into<BoxError>,
 {
     type Output = Result<S::Response, BoxError>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let mut this = self.project();
+    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        loop {
+            match self.as_mut().project() {
+                DigestFutureProj::BuildingDigest {
+                    service,
+                    algorithm,
+                    parts,
+                    mut body,
+                    body_accumulator,
+                } => {
+                    while let Some(frame) = ready!(body.as_mut().poll_frame(cx))
+                        .transpose()
+                        .map_err(Into::into)?
+                    {
+                        if let Ok(data) = frame.into_data() {
+                            let accumulator = body_accumulator
+                                .as_mut()
+                                .expect("[Bug] Missing accumulator");
 
-        while let Some(frame) = ready!(this.body.as_mut().poll_frame(cx))
-            .transpose()
-            .map_err(Into::into)?
-        {
-            if let Ok(data) = frame.into_data() {
-                this.body_accumulator.put(data);
+                            accumulator.put(data);
+                        }
+                    }
+
+                    let digest_header = parts.as_ref().unwrap().headers.get(&DIGEST_HEADER_NAME);
+                    let algorithm = if let Some(digest_header) = digest_header {
+                        let Some((algorithm_name, ..)) = digest_header.to_str()?.split_once('=')
+                        else {
+                            return Poll::Ready(Err("Invalid header value".into()));
+                        };
+                        Algorithm::from_str(algorithm_name)?
+                    } else {
+                        *algorithm
+                    };
+
+                    let accumulator = body_accumulator
+                        .take()
+                        .expect("[Bug] Missing accumulator")
+                        .freeze();
+
+                    let hash = algorithm.digest(&accumulator);
+                    let encoded_digest = base64_simd::STANDARD.encode_to_string(hash);
+
+                    let header_value = format!("{}={}", algorithm.as_ref(), encoded_digest);
+                    let header_value = HeaderValue::from_str(&header_value).unwrap();
+
+                    let mut parts = parts.take().expect("[Bug] Missing parts");
+                    parts.headers.insert(&DIGEST_HEADER_NAME, header_value);
+
+                    let req = Request::from_parts(parts, accumulator.into());
+                    let future = service.call(req);
+
+                    self.set(DigestFuture::PollServiceFuture { future });
+                }
+                DigestFutureProj::PollServiceFuture { future } => {
+                    return future.poll(cx).map_err(Into::into);
+                }
             }
         }
-
-        let digest_header = this.parts.as_ref().unwrap().headers.get(DIGEST_HEADER_NAME);
-
-        let digest_header_value = if let Some(digest_header) = digest_header {
-            let (algorithm_name, _) = digest_header.to_str()?.split_once('=');
-            let algorithm = Algorithm::from_str(algorithm_name)?;
-        } else {
-            let hash = this.algorithm.digest(this.body_accumulator);
-            let encoded_digest = base64_simd::STANDARD.encode_to_string(hash);
-            let header_value = format!("{}={}", this.algorithm.as_ref(), encoded_digest);
-
-            HeaderValue::from_str(&header_value).unwrap()
-        };
-
-        let req = Request::from_parts(this.parts.take().expect("[Bug] Missing parts"), todo!());
-        this.inner.call(req)
     }
 }
 
 #[derive(Clone)]
 pub struct DigestService<S> {
     inner: S,
+    algorithm: Algorithm,
 }
 
 impl<S> DigestService<S> {
-    pub fn new(inner: S) -> Self {
-        Self { inner }
+    pub fn new(inner: S, algorithm: Algorithm) -> Self {
+        Self { inner, algorithm }
     }
 }
 
 impl<S, B> Service<Request<B>> for DigestService<S>
 where
-    S: Service<Request<B>>,
+    S: Service<Request<B>> + Clone,
     S::Error: Into<BoxError>,
-    B: Body,
+    B: Body + From<Bytes>,
     B::Error: Into<BoxError>,
 {
     type Response = S::Response;
     type Error = BoxError;
-    type Future = DigestFuture<S, B>;
+    type Future = DigestFuture<S, B, S::Future>;
 
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx).map_err(Into::into)
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        todo!();
+        let (parts, body) = req.into_parts();
+
+        DigestFuture::BuildingDigest {
+            service: self.inner.clone(),
+            algorithm: self.algorithm,
+            parts: Some(parts),
+            body,
+            body_accumulator: Some(BytesMut::new()),
+        }
     }
 }
 
@@ -136,6 +192,6 @@ impl<S> Layer<S> for DigestLayer {
     type Service = DigestService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        DigestService::new(inner)
+        DigestService::new(inner, self.algorithm)
     }
 }
