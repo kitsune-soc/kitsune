@@ -5,7 +5,6 @@ use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
 use miette::{Context, IntoDiagnostic};
 use std::{env, path::PathBuf};
-use tokio::signal::unix::SignalKind;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -17,28 +16,6 @@ struct Args {
     /// Path to the configuration file
     #[clap(long, short)]
     config: PathBuf,
-}
-
-async fn shutdown_signal() {
-    let ctrl_c = tokio::signal::ctrl_c();
-
-    #[cfg(target_family = "unix")]
-    let second_signal = async {
-        let mut terminate = tokio::signal::unix::signal(SignalKind::terminate()).unwrap();
-        let mut quit = tokio::signal::unix::signal(SignalKind::quit()).unwrap();
-
-        tokio::select! {
-            _ = terminate.recv() => (),
-            _ = quit.recv() => (),
-        }
-    };
-    #[cfg(not(target_family = "unix"))]
-    let second_signal = std::future::pending();
-
-    tokio::select! {
-        _ = ctrl_c => (),
-        () = second_signal => (),
-    }
 }
 
 async fn boot() -> miette::Result<()> {
@@ -68,7 +45,13 @@ async fn boot() -> miette::Result<()> {
         .url_service(state.service.url.clone())
         .build();
 
-    let server_fut = tokio::spawn(kitsune::http::run(state, config.server.clone()));
+    let shutdown_signal = kitsune::signal::shutdown();
+
+    let server_fut = tokio::spawn(kitsune::http::run(
+        state,
+        config.server.clone(),
+        shutdown_signal.clone(),
+    ));
     let job_runner_fut = tokio::spawn(kitsune_job_runner::run_dispatcher(
         job_queue,
         dispatcher_state,
@@ -78,7 +61,6 @@ async fn boot() -> miette::Result<()> {
     tokio::select! {
         res = server_fut => res.into_diagnostic()??,
         res = job_runner_fut => res.into_diagnostic()?,
-        () = shutdown_signal() => (),
     }
 
     Ok(())

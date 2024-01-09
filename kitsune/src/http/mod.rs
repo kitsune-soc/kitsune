@@ -103,13 +103,20 @@ pub fn create_router(
 }
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: server::Configuration) -> miette::Result<()> {
+pub async fn run(
+    state: Zustand,
+    server_config: server::Configuration,
+    shutdown_signal: crate::signal::Receiver,
+) -> miette::Result<()> {
     let router = create_router(state, &server_config)?;
-
     let listener = TcpListener::bind(("0.0.0.0", server_config.port))
         .await
         .into_diagnostic()?;
-    axum::serve(listener, router).await.into_diagnostic()?;
+
+    axum::serve(listener, router)
+        .with_graceful_shutdown(shutdown_signal.wait())
+        .await
+        .into_diagnostic()?;
 
     Ok(())
 }
