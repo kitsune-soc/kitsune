@@ -10,6 +10,7 @@ pub mod consts;
 pub mod error;
 pub mod http;
 pub mod oauth2;
+pub mod signal;
 pub mod state;
 
 use self::{
