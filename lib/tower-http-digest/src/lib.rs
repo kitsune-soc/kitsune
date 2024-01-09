@@ -1,6 +1,7 @@
-use bytes::{BufMut, Bytes, BytesMut};
+use axum_core::{body::Body, RequestExt};
+use bytes::{BufMut, BytesMut};
 use http::{HeaderName, HeaderValue, Request};
-use http_body::Body;
+use http_body::Body as HttpBody;
 use pin_project_lite::pin_project;
 use sha2::{Digest, Sha256, Sha512};
 use std::{
@@ -40,7 +41,7 @@ impl Algorithm {
 
 pin_project! {
     #[project = DigestFutureProj]
-    pub enum DigestFuture<S, B, F> {
+    pub enum DigestFuture<S, F> {
         BuildingDigest {
             service: S,
 
@@ -48,7 +49,7 @@ pin_project! {
             parts: Option<http::request::Parts>,
 
             #[pin]
-            body: B,
+            body: Body,
             body_accumulator: Option<BytesMut>,
         },
         PollServiceFuture {
@@ -58,12 +59,10 @@ pin_project! {
     }
 }
 
-impl<S, B> Future for DigestFuture<S, B, S::Future>
+impl<S> Future for DigestFuture<S, S::Future>
 where
-    S: Service<Request<B>>,
+    S: Service<Request<Body>>,
     S::Error: Into<BoxError>,
-    B: Body + From<Bytes>,
-    B::Error: Into<BoxError>,
 {
     type Output = Result<S::Response, BoxError>;
 
@@ -79,7 +78,7 @@ where
                 } => {
                     while let Some(frame) = ready!(body.as_mut().poll_frame(cx))
                         .transpose()
-                        .map_err(Into::into)?
+                        .map_err(BoxError::from)?
                     {
                         if let Ok(data) = frame.into_data() {
                             let accumulator = body_accumulator
@@ -140,23 +139,21 @@ impl<S> DigestService<S> {
     }
 }
 
-impl<S, B> Service<Request<B>> for DigestService<S>
+impl<S> Service<Request<Body>> for DigestService<S>
 where
-    S: Service<Request<B>> + Clone,
+    S: Service<Request<Body>> + Clone,
     S::Error: Into<BoxError>,
-    B: Body + From<Bytes>,
-    B::Error: Into<BoxError>,
 {
     type Response = S::Response;
     type Error = BoxError;
-    type Future = DigestFuture<S, B, S::Future>;
+    type Future = DigestFuture<S, S::Future>;
 
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx).map_err(Into::into)
     }
 
-    fn call(&mut self, req: Request<B>) -> Self::Future {
-        let (parts, body) = req.into_parts();
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let (parts, body) = req.with_limited_body().into_parts();
 
         DigestFuture::BuildingDigest {
             service: self.inner.clone(),

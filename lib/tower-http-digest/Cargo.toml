@@ -5,6 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+axum-core = "0.4.2"
 base64-simd = "0.8.0"
 bytes = "1.5.0"
 http = "1.0.0"

@@ -7086,6 +7086,7 @@ dependencies = [
 name = "tower-http-digest"
 version = "0.0.1-pre.4"
 dependencies = [
+ "axum-core 0.4.2",
  "base64-simd",
  "bytes",
  "futures",

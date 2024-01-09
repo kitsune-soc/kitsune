@@ -1,6 +1,5 @@
-use bytes::Bytes;
+use axum_core::body::Body;
 use http::Request;
-use http_body_util::Full;
 use std::convert::Infallible;
 use tower::{service_fn, ServiceExt};
 use tower_http_digest::{Algorithm, DigestLayer};
@@ -18,9 +17,9 @@ const EXPECTED_SHA512_HASH: &str =
 
 #[test]
 fn no_digest_sha256() {
-    let request = Request::new(Full::new(Bytes::from(TEXT)));
+    let request = Request::new(Body::from(TEXT));
     let mut service = DigestLayer::new(Algorithm::Sha256).layer(service_fn(
-        |request: Request<Full<Bytes>>| async move {
+        |request: Request<Body>| async move {
             let Some((algorithm, hash)) = request
                 .headers()
                 .get("digest")
@@ -46,9 +45,9 @@ fn no_digest_sha256() {
 
 #[test]
 fn no_digest_sha512() {
-    let request = Request::new(Full::new(Bytes::from(TEXT)));
+    let request = Request::new(Body::from(TEXT));
     let mut service = DigestLayer::new(Algorithm::Sha512).layer(service_fn(
-        |request: Request<Full<Bytes>>| async move {
+        |request: Request<Body>| async move {
             let Some((algorithm, hash)) = request
                 .headers()
                 .get("digest")
