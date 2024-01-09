@@ -1,13 +1,11 @@
-#[macro_use]
-extern crate tracing;
-
 use clap::Parser;
 use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
 use miette::{Context, IntoDiagnostic};
-use std::{env, future, path::PathBuf};
+use std::{env, path::PathBuf};
+use tokio::signal::unix::SignalKind;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -19,6 +17,28 @@ struct Args {
     /// Path to the configuration file
     #[clap(long, short)]
     config: PathBuf,
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = tokio::signal::ctrl_c();
+
+    #[cfg(target_family = "unix")]
+    let second_signal = async {
+        let mut terminate = tokio::signal::unix::signal(SignalKind::terminate()).unwrap();
+        let mut quit = tokio::signal::unix::signal(SignalKind::quit()).unwrap();
+
+        tokio::select! {
+            _ = terminate.recv() => (),
+            _ = quit.recv() => (),
+        }
+    };
+    #[cfg(not(target_family = "unix"))]
+    let second_signal = std::future::pending();
+
+    tokio::select! {
+        _ = ctrl_c => (),
+        () = second_signal => (),
+    }
 }
 
 async fn boot() -> miette::Result<()> {
@@ -40,17 +60,6 @@ async fn boot() -> miette::Result<()> {
         .wrap_err("Failed to connect to the Redis instance for the job scheduler")?;
 
     let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
-
-    tokio::spawn({
-        let server_fut = kitsune::http::run(state.clone(), config.server.clone());
-
-        async move {
-            if let Err(error) = server_fut.await {
-                error!(?error, "failed to run http server");
-            }
-        }
-    });
-
     let dispatcher_state = JobDispatcherState::builder()
         .attachment_service(state.service.attachment.clone())
         .db_pool(state.db_pool.clone())
@@ -59,13 +68,18 @@ async fn boot() -> miette::Result<()> {
         .url_service(state.service.url.clone())
         .build();
 
-    tokio::spawn(kitsune_job_runner::run_dispatcher(
+    let server_fut = tokio::spawn(kitsune::http::run(state, config.server.clone()));
+    let job_runner_fut = tokio::spawn(kitsune_job_runner::run_dispatcher(
         job_queue,
         dispatcher_state,
         config.job_queue.num_workers.get(),
     ));
 
-    future::pending::<()>().await;
+    tokio::select! {
+        res = server_fut => res.into_diagnostic()??,
+        res = job_runner_fut => res.into_diagnostic()?,
+        () = shutdown_signal() => (),
+    }
 
     Ok(())
 }
