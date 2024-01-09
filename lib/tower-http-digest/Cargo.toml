@@ -1,0 +1,10 @@
+[package]
+name = "tower-http-digest"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
