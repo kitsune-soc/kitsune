@@ -22,18 +22,10 @@ static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 #[non_exhaustive]
 pub enum Algorithm {
     #[default]
-    #[strum(
-        ascii_case_insensitive,
-        serialize = "sha-256",
-        serialize = "id-sha-256"
-    )]
+    #[strum(ascii_case_insensitive, serialize = "sha-256")]
     Sha256,
 
-    #[strum(
-        ascii_case_insensitive,
-        serialize = "sha-512",
-        serialize = "id-sha-512"
-    )]
+    #[strum(ascii_case_insensitive, serialize = "sha-512")]
     Sha512,
 }
 

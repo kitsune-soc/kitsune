@@ -7087,11 +7087,14 @@ version = "0.0.1-pre.4"
 dependencies = [
  "base64-simd",
  "bytes",
+ "futures",
  "http 1.0.0",
  "http-body 1.0.0",
+ "http-body-util",
  "pin-project-lite",
  "sha2",
  "strum",
+ "tower",
  "tower-layer",
  "tower-service",
 ]
