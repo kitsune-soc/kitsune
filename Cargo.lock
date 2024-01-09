@@ -3109,6 +3109,7 @@ dependencies = [
  "tokio-util",
  "tower",
  "tower-http",
+ "tower-http-digest",
  "tower-x-clacks-overhead",
  "tracing",
  "typed-builder",

@@ -2,13 +2,15 @@ use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     extract::{Path, State},
     routing::{self, post},
-    Router,
+    BoxError, Router,
 };
+use http::StatusCode;
 use kitsune_activitypub::mapping::IntoObject;
 use kitsune_core::error::HttpError;
 use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
+use tower_http_digest::DigestLayer;
 
 mod followers;
 mod following;
@@ -35,6 +37,14 @@ pub fn routes() -> Router<Zustand> {
         .route("/:user_id", routing::get(get))
         .route("/:user_id/followers", routing::get(followers::get))
         .route("/:user_id/following", routing::get(following::get))
-        .route("/:user_id/inbox", post(inbox::post))
+        .route(
+            "/:user_id/inbox",
+            post(inbox::post)
+                .layer(DigestLayer::default())
+                .handle_error(|error: BoxError| async move {
+                    error!(?error, "Digest layer failed");
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }),
+        )
         .route("/:user_id/outbox", routing::get(outbox::get))
 }
