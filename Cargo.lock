@@ -7085,10 +7085,13 @@ dependencies = [
 name = "tower-http-digest"
 version = "0.0.1-pre.4"
 dependencies = [
+ "base64-simd",
+ "bytes",
  "http 1.0.0",
  "http-body 1.0.0",
  "pin-project-lite",
  "sha2",
+ "strum",
  "tower-layer",
  "tower-service",
 ]
