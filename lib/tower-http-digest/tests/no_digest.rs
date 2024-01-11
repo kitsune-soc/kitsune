@@ -20,16 +20,14 @@ fn no_digest_sha256() {
     let request = Request::new(Body::from(TEXT));
     let mut service = DigestLayer::new(Algorithm::Sha256).layer(service_fn(
         |request: Request<Body>| async move {
-            let Some((algorithm, hash)) = request
+            let (algorithm, hash) = request
                 .headers()
                 .get("digest")
                 .unwrap()
                 .to_str()
                 .unwrap()
                 .split_once('=')
-            else {
-                panic!();
-            };
+                .unwrap();
 
             assert_eq!(algorithm, "sha-256");
             assert_eq!(hash, EXPECTED_SHA256_HASH);
