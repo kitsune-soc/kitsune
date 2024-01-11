@@ -2,18 +2,17 @@ use futures_util::{
     future::{Either, MapErr},
     TryFutureExt,
 };
-use http::{HeaderName, Request};
+use http::{HeaderName, HeaderValue, Request};
 use http_body::{Body as HttpBody, Frame};
+use memchr::memchr;
 use pin_project_lite::pin_project;
 use sha2::{digest::FixedOutput, Digest, Sha256, Sha512};
 use std::{
     error::Error as StdError,
     future::{self, Ready},
     pin::Pin,
-    str::FromStr,
     task::{self, ready, Poll},
 };
-use strum::{AsRefStr, EnumString};
 use subtle::ConstantTimeEq;
 use tower_layer::Layer;
 use tower_service::Service;
@@ -22,17 +21,56 @@ type BoxError = Box<dyn StdError + Send + Sync>;
 
 static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 
-#[derive(AsRefStr, Clone, EnumString)]
-#[non_exhaustive]
-pub enum Algorithm {
-    #[strum(ascii_case_insensitive, serialize = "sha-256")]
-    Sha256(Sha256),
+struct Verifier {
+    algorithm: Algorithm,
+    digest_value: Vec<u8>,
+}
 
-    #[strum(ascii_case_insensitive, serialize = "sha-512")]
+impl Verifier {
+    pub fn from_header_value(header_value: &HeaderValue) -> Result<Self, BoxError> {
+        let Some(pos) = memchr(b'=', header_value.as_bytes()) else {
+            return Err("Invalid header value".into());
+        };
+        let (algorithm_name, digest_value) = header_value.as_bytes().split_at(pos);
+        let algorithm = Algorithm::from_bytes(algorithm_name)
+            .ok_or_else(|| BoxError::from("Unsupported digest"))?;
+        let digest_value = base64_simd::STANDARD.decode_to_vec(&digest_value[1..])?;
+
+        Ok(Self {
+            algorithm,
+            digest_value,
+        })
+    }
+
+    pub fn update_digest(&mut self, val: &[u8]) {
+        self.algorithm.update(val);
+    }
+
+    pub fn verify(self) -> bool {
+        self.algorithm.finish().ct_eq(&self.digest_value).into()
+    }
+}
+
+#[derive(Clone)]
+#[non_exhaustive]
+enum Algorithm {
+    Sha256(Sha256),
     Sha512(Sha512),
 }
 
 impl Algorithm {
+    pub fn from_bytes(val: &[u8]) -> Option<Self> {
+        let algorithm = if b"sha-256".eq_ignore_ascii_case(val) {
+            Self::Sha256(Sha256::default())
+        } else if b"sha-512".eq_ignore_ascii_case(val) {
+            Self::Sha512(Sha512::default())
+        } else {
+            return None;
+        };
+
+        Some(algorithm)
+    }
+
     pub fn update(&mut self, data: &[u8]) {
         match self {
             Self::Sha256(digest) => digest.update(data),
@@ -49,18 +87,11 @@ impl Algorithm {
     }
 }
 
-impl Default for Algorithm {
-    fn default() -> Self {
-        Self::Sha256(Sha256::default())
-    }
-}
-
 pin_project! {
     pub struct VerifyDigestBody<B> {
         #[pin]
         inner: B,
-        algorithm: Option<Algorithm>,
-        digest_value: String,
+        verifier: Option<Verifier>,
     }
 }
 
@@ -83,19 +114,16 @@ where
             .map_err(Into::into)?;
 
         if let Some(frame) = frame.as_ref().and_then(Frame::data_ref) {
-            this.algorithm
+            this.verifier
                 .as_mut()
-                .expect("[Bug] Missing algorithm")
-                .update(frame.as_ref());
+                .expect("[Bug] Missing verifier")
+                .update_digest(frame.as_ref());
         }
 
         if frame.is_some() {
             return Poll::Ready(frame.map(Ok));
-        } else if let Some(algorithm) = this.algorithm.take() {
-            let calculated_digest = algorithm.finish();
-            let decoded_digest = base64_simd::STANDARD.decode_to_vec(this.digest_value)?;
-
-            if calculated_digest.ct_ne(&decoded_digest).into() {
+        } else if let Some(verifier) = this.verifier.take() {
+            if !verifier.verify() {
                 return Poll::Ready(Some(Err("Digest mismatch".into())));
             }
         }
@@ -141,32 +169,19 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        let digest_header = req.headers().get(&DIGEST_HEADER_NAME);
-
-        let (algorithm, digest_value) = if let Some(digest_header) = digest_header {
-            let digest_header_str = match digest_header.to_str() {
-                Ok(str) => str,
-                Err(err) => return Either::Right(future::ready(Err(err.into()))),
-            };
-
-            let Some((algorithm_name, digest_value)) = digest_header_str.split_once('=') else {
-                return Either::Right(future::ready(Err("Invalid header value".into())));
-            };
-
-            match Algorithm::from_str(algorithm_name) {
-                Ok(alg) => (alg, digest_value.to_string()),
-                Err(err) => return Either::Right(future::ready(Err(err.into()))),
-            }
-        } else {
+        let Some(digest_header) = req.headers().get(&DIGEST_HEADER_NAME) else {
             return Either::Right(future::ready(Err("Missing digest header".into())));
+        };
+        let verifier = match Verifier::from_header_value(digest_header) {
+            Ok(verifier) => verifier,
+            Err(err) => return Either::Right(future::ready(Err(err))),
         };
 
         Either::Left(
             self.inner
                 .call(req.map(|inner| VerifyDigestBody {
                     inner,
-                    algorithm: Some(algorithm),
-                    digest_value,
+                    verifier: Some(verifier),
                 }))
                 .map_err(Into::into),
         )

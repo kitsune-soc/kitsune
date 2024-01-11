@@ -49,14 +49,11 @@ fn digest_invalid_no_base64() {
         .unwrap();
 
     let mut service = VerifyDigestLayer::default().layer(service_fn(
-        |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
-            assert!(request.collect().await.is_err());
-            Ok::<_, Infallible>(())
-        },
+        |_request: Request<VerifyDigestBody<Full<Bytes>>>| async move { Ok::<_, Infallible>(()) },
     ));
 
     futures::executor::block_on(async move {
-        service.ready().await.unwrap().call(request).await.unwrap();
+        assert!(service.ready().await.unwrap().call(request).await.is_err());
     });
 }
 

@@ -9,9 +9,9 @@ base64-simd = "0.8.0"
 futures-util = { version = "0.3.30", default-features = false }
 http = "1.0.0"
 http-body = "1.0.0"
+memchr = "2.7.1"
 pin-project-lite = "0.2.13"
 sha2 = "0.10.8"
-strum = { version = "0.25.0", features = ["derive"] }
 subtle = "2.5.0"
 tower-layer = "0.3.2"
 tower-service = "0.3.2"
