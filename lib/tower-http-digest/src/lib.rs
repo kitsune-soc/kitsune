@@ -1,9 +1,9 @@
 use axum_core::{body::Body, RequestExt};
 use bytes::{BufMut, BytesMut};
 use http::{HeaderName, HeaderValue, Request};
-use http_body::Body as HttpBody;
+use http_body::{Body as HttpBody, Frame};
 use pin_project_lite::pin_project;
-use sha2::{Digest, Sha256, Sha512};
+use sha2::{digest::FixedOutput, Digest, Sha256, Sha512};
 use std::{
     error::Error as StdError,
     future::Future,
@@ -19,23 +19,78 @@ type BoxError = Box<dyn StdError + Send + Sync>;
 
 static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 
-#[derive(AsRefStr, Clone, Copy, Default, EnumString)]
+#[derive(AsRefStr, Clone, EnumString)]
 #[non_exhaustive]
 pub enum Algorithm {
-    #[default]
     #[strum(ascii_case_insensitive, serialize = "sha-256")]
-    Sha256,
+    Sha256(Sha256),
 
     #[strum(ascii_case_insensitive, serialize = "sha-512")]
-    Sha512,
+    Sha512(Sha512),
 }
 
 impl Algorithm {
-    pub fn digest(&self, data: impl AsRef<[u8]>) -> Vec<u8> {
+    pub fn update(&mut self, data: &[u8]) {
         match self {
-            Self::Sha256 => Sha256::digest(data).to_vec(),
-            Self::Sha512 => Sha512::digest(data).to_vec(),
+            Self::Sha256(digest) => digest.update(data),
+            Self::Sha512(digest) => digest.update(data),
         }
+    }
+
+    pub fn finish(self) -> Vec<u8> {
+        match self {
+            Self::Sha256(digest) => digest.finalize_fixed().to_vec(),
+            Self::Sha512(digest) => digest.finalize_fixed().to_vec(),
+        }
+    }
+}
+
+impl Default for Algorithm {
+    fn default() -> Self {
+        Self::Sha256(Sha256::default())
+    }
+}
+
+pin_project! {
+    pub struct DigestVerifyBody<B> {
+        #[pin]
+        inner: B,
+        algorithm: Algorithm,
+        digest_value: String,
+    }
+}
+
+impl<B> HttpBody for DigestVerifyBody<B>
+where
+    B: HttpBody,
+    B::Data: AsRef<[u8]>,
+    B::Error: Into<BoxError>,
+{
+    type Data = B::Data;
+    type Error = BoxError;
+
+    fn poll_frame(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
+        let this = self.project();
+        let frame = ready!(this.inner.poll_frame(cx))
+            .transpose()
+            .map_err(Into::into)?;
+
+        if let Some(frame) = frame.as_ref().and_then(Frame::data_ref) {
+            this.algorithm.update(frame.as_ref());
+        }
+
+        todo!();
+    }
+
+    fn is_end_stream(&self) -> bool {
+        self.inner.is_end_stream()
+    }
+
+    fn size_hint(&self) -> http_body::SizeHint {
+        self.inner.size_hint()
     }
 }
 
