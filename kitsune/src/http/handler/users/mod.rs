@@ -10,7 +10,7 @@ use kitsune_core::error::HttpError;
 use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
-use tower_http_digest::DigestLayer;
+use tower_http_digest::VerifyDigestLayer;
 
 mod followers;
 mod following;
@@ -40,7 +40,7 @@ pub fn routes() -> Router<Zustand> {
         .route(
             "/:user_id/inbox",
             post(inbox::post)
-                .layer(DigestLayer::default())
+                .layer(VerifyDigestLayer::default())
                 .handle_error(|error: BoxError| async move {
                     error!(?error, "Digest layer failed");
                     StatusCode::INTERNAL_SERVER_ERROR

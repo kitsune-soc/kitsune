@@ -10,7 +10,7 @@ enum_dispatch = "0.3.12"
 moka = { version = "0.12.3", features = ["sync"] }
 redis = "0.24.0"
 serde = "1.0.195"
-simd-json = "0.13.6"
+simd-json = "0.13.7"
 thiserror = "1.0.56"
 tracing = "0.1.40"
 typed-builder = "0.18.0"

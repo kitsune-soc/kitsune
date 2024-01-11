@@ -1,17 +1,20 @@
-use axum_core::{body::Body, RequestExt};
-use bytes::{BufMut, BytesMut};
-use http::{HeaderName, HeaderValue, Request};
+use futures_util::{
+    future::{Either, MapErr},
+    TryFutureExt,
+};
+use http::{HeaderName, Request};
 use http_body::{Body as HttpBody, Frame};
 use pin_project_lite::pin_project;
 use sha2::{digest::FixedOutput, Digest, Sha256, Sha512};
 use std::{
     error::Error as StdError,
-    future::Future,
+    future::{self, Ready},
     pin::Pin,
     str::FromStr,
     task::{self, ready, Poll},
 };
 use strum::{AsRefStr, EnumString};
+use subtle::ConstantTimeEq;
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -37,6 +40,7 @@ impl Algorithm {
         }
     }
 
+    #[must_use]
     pub fn finish(self) -> Vec<u8> {
         match self {
             Self::Sha256(digest) => digest.finalize_fixed().to_vec(),
@@ -52,15 +56,15 @@ impl Default for Algorithm {
 }
 
 pin_project! {
-    pub struct DigestVerifyBody<B> {
+    pub struct VerifyDigestBody<B> {
         #[pin]
         inner: B,
-        algorithm: Algorithm,
+        algorithm: Option<Algorithm>,
         digest_value: String,
     }
 }
 
-impl<B> HttpBody for DigestVerifyBody<B>
+impl<B> HttpBody for VerifyDigestBody<B>
 where
     B: HttpBody,
     B::Data: AsRef<[u8]>,
@@ -79,10 +83,24 @@ where
             .map_err(Into::into)?;
 
         if let Some(frame) = frame.as_ref().and_then(Frame::data_ref) {
-            this.algorithm.update(frame.as_ref());
+            this.algorithm
+                .as_mut()
+                .expect("[Bug] Missing algorithm")
+                .update(frame.as_ref());
         }
 
-        todo!();
+        if frame.is_some() {
+            return Poll::Ready(frame.map(Ok));
+        } else if let Some(algorithm) = this.algorithm.take() {
+            let calculated_digest = algorithm.finish();
+            let decoded_digest = base64_simd::STANDARD.decode_to_vec(this.digest_value)?;
+
+            if calculated_digest.ct_ne(&decoded_digest).into() {
+                return Poll::Ready(Some(Err("Digest mismatch".into())));
+            }
+        }
+
+        Poll::Ready(None)
     }
 
     fn is_end_stream(&self) -> bool {
@@ -94,174 +112,76 @@ where
     }
 }
 
-pin_project! {
-    #[project = DigestFutureProj]
-    pub enum DigestFuture<S, F> {
-        ParseHeader {
-            service: Option<S>,
-
-            algorithm: Algorithm,
-            parts: Option<http::request::Parts>,
-            body: Option<Body>,
-        },
-        BuildingDigest {
-            service: S,
-
-            algorithm: Algorithm,
-            parts: Option<http::request::Parts>,
-
-            #[pin]
-            body: Body,
-            body_accumulator: Option<BytesMut>,
-        },
-        PollServiceFuture {
-            #[pin]
-            future: F,
-        },
-    }
-}
-
-impl<S> Future for DigestFuture<S, S::Future>
-where
-    S: Service<Request<Body>>,
-    S::Error: Into<BoxError>,
-{
-    type Output = Result<S::Response, BoxError>;
-
-    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        loop {
-            match self.as_mut().project() {
-                DigestFutureProj::ParseHeader {
-                    service,
-                    algorithm,
-                    parts,
-                    body,
-                } => {
-                    let digest_header = parts
-                        .as_ref()
-                        .expect("[Bug] Missing parts")
-                        .headers
-                        .get(&DIGEST_HEADER_NAME);
-
-                    let algorithm = if let Some(digest_header) = digest_header {
-                        let Some((algorithm_name, ..)) = digest_header.to_str()?.split_once('=')
-                        else {
-                            return Poll::Ready(Err("Invalid header value".into()));
-                        };
-                        Algorithm::from_str(algorithm_name)?
-                    } else {
-                        *algorithm
-                    };
-
-                    let new_state = DigestFuture::BuildingDigest {
-                        service: service.take().expect("[Bug] Missing service"),
-                        algorithm,
-                        parts: parts.take(),
-                        body: body.take().expect("[Bug] Missing body"),
-                        body_accumulator: Some(BytesMut::new()),
-                    };
-                    self.set(new_state);
-                }
-                DigestFutureProj::BuildingDigest {
-                    service,
-                    algorithm,
-                    parts,
-                    mut body,
-                    body_accumulator,
-                } => {
-                    while let Some(frame) = ready!(body.as_mut().poll_frame(cx))
-                        .transpose()
-                        .map_err(BoxError::from)?
-                    {
-                        if let Ok(data) = frame.into_data() {
-                            let accumulator = body_accumulator
-                                .as_mut()
-                                .expect("[Bug] Missing accumulator");
-
-                            accumulator.put(data);
-                        }
-                    }
-
-                    let accumulator = body_accumulator
-                        .take()
-                        .expect("[Bug] Missing accumulator")
-                        .freeze();
-
-                    let hash = algorithm.digest(&accumulator);
-                    let encoded_digest = base64_simd::STANDARD.encode_to_string(hash);
-
-                    let header_value = format!("{}={}", algorithm.as_ref(), encoded_digest);
-                    let header_value = HeaderValue::from_str(&header_value).unwrap();
-
-                    let mut parts = parts.take().expect("[Bug] Missing parts");
-                    parts.headers.insert(&DIGEST_HEADER_NAME, header_value);
-
-                    let req = Request::from_parts(parts, accumulator.into());
-                    let future = service.call(req);
-
-                    self.set(DigestFuture::PollServiceFuture { future });
-                }
-                DigestFutureProj::PollServiceFuture { future } => {
-                    return future.poll(cx).map_err(Into::into);
-                }
-            }
-        }
-    }
-}
-
 #[derive(Clone)]
-pub struct DigestService<S> {
+pub struct VerifyDigestService<S> {
     inner: S,
-    algorithm: Algorithm,
 }
 
-impl<S> DigestService<S> {
-    pub fn new(inner: S, algorithm: Algorithm) -> Self {
-        Self { inner, algorithm }
+impl<S> VerifyDigestService<S> {
+    pub fn new(inner: S) -> Self {
+        Self { inner }
     }
 }
 
-impl<S> Service<Request<Body>> for DigestService<S>
+impl<S, B> Service<Request<B>> for VerifyDigestService<S>
 where
-    S: Service<Request<Body>> + Clone,
+    S: Service<Request<VerifyDigestBody<B>>>,
     S::Error: Into<BoxError>,
+    B: HttpBody,
+    B::Data: AsRef<[u8]>,
+    B::Error: Into<BoxError>,
 {
     type Response = S::Response;
     type Error = BoxError;
-    type Future = DigestFuture<S, S::Future>;
+    type Future =
+        Either<MapErr<S::Future, fn(S::Error) -> BoxError>, Ready<Result<S::Response, BoxError>>>;
 
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx).map_err(Into::into)
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let (parts, body) = req.with_limited_body().into_parts();
+    fn call(&mut self, req: Request<B>) -> Self::Future {
+        let digest_header = req.headers().get(&DIGEST_HEADER_NAME);
 
-        DigestFuture::ParseHeader {
-            service: Some(self.inner.clone()),
-            algorithm: self.algorithm,
-            parts: Some(parts),
-            body: Some(body),
-        }
+        let (algorithm, digest_value) = if let Some(digest_header) = digest_header {
+            let digest_header_str = match digest_header.to_str() {
+                Ok(str) => str,
+                Err(err) => return Either::Right(future::ready(Err(err.into()))),
+            };
+
+            let Some((algorithm_name, digest_value)) = digest_header_str.split_once('=') else {
+                return Either::Right(future::ready(Err("Invalid header value".into())));
+            };
+
+            match Algorithm::from_str(algorithm_name) {
+                Ok(alg) => (alg, digest_value.to_string()),
+                Err(err) => return Either::Right(future::ready(Err(err.into()))),
+            }
+        } else {
+            return Either::Right(future::ready(Err("Missing digest header".into())));
+        };
+
+        Either::Left(
+            self.inner
+                .call(req.map(|inner| VerifyDigestBody {
+                    inner,
+                    algorithm: Some(algorithm),
+                    digest_value,
+                }))
+                .map_err(Into::into),
+        )
     }
 }
 
 #[derive(Clone, Default)]
-pub struct DigestLayer {
-    algorithm: Algorithm,
+pub struct VerifyDigestLayer {
+    _priv: (),
 }
 
-impl DigestLayer {
-    #[must_use]
-    pub fn new(algorithm: Algorithm) -> Self {
-        Self { algorithm }
-    }
-}
-
-impl<S> Layer<S> for DigestLayer {
-    type Service = DigestService<S>;
+impl<S> Layer<S> for VerifyDigestLayer {
+    type Service = VerifyDigestService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        DigestService::new(inner, self.algorithm)
+        VerifyDigestService::new(inner)
     }
 }

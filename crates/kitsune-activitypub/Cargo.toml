@@ -33,7 +33,7 @@ rsa = "0.9.6"
 scoped-futures = "0.1.3"
 serde = "1.0.195"
 sha2 = "0.10.8"
-simd-json = { version = "0.13.6", features = ["hints"] }
+simd-json = { version = "0.13.7", features = ["hints"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.56"
 tracing = "0.1.40"
