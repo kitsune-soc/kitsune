@@ -82,7 +82,12 @@ where
                     parts,
                     body,
                 } => {
-                    let digest_header = parts.as_ref().unwrap().headers.get(&DIGEST_HEADER_NAME);
+                    let digest_header = parts
+                        .as_ref()
+                        .expect("[Bug] Missing parts")
+                        .headers
+                        .get(&DIGEST_HEADER_NAME);
+
                     let algorithm = if let Some(digest_header) = digest_header {
                         let Some((algorithm_name, ..)) = digest_header.to_str()?.split_once('=')
                         else {
@@ -94,10 +99,10 @@ where
                     };
 
                     let new_state = DigestFuture::BuildingDigest {
-                        service: service.take().unwrap(),
+                        service: service.take().expect("[Bug] Missing service"),
                         algorithm,
                         parts: parts.take(),
-                        body: body.take().unwrap(),
+                        body: body.take().expect("[Bug] Missing body"),
                         body_accumulator: Some(BytesMut::new()),
                     };
                     self.set(new_state);
