@@ -42,6 +42,13 @@ impl Algorithm {
 pin_project! {
     #[project = DigestFutureProj]
     pub enum DigestFuture<S, F> {
+        ParseHeader {
+            service: Option<S>,
+
+            algorithm: Algorithm,
+            parts: Option<http::request::Parts>,
+            body: Option<Body>,
+        },
         BuildingDigest {
             service: S,
 
@@ -69,6 +76,32 @@ where
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         loop {
             match self.as_mut().project() {
+                DigestFutureProj::ParseHeader {
+                    service,
+                    algorithm,
+                    parts,
+                    body,
+                } => {
+                    let digest_header = parts.as_ref().unwrap().headers.get(&DIGEST_HEADER_NAME);
+                    let algorithm = if let Some(digest_header) = digest_header {
+                        let Some((algorithm_name, ..)) = digest_header.to_str()?.split_once('=')
+                        else {
+                            return Poll::Ready(Err("Invalid header value".into()));
+                        };
+                        Algorithm::from_str(algorithm_name)?
+                    } else {
+                        *algorithm
+                    };
+
+                    let new_state = DigestFuture::BuildingDigest {
+                        service: service.take().unwrap(),
+                        algorithm,
+                        parts: parts.take(),
+                        body: body.take().unwrap(),
+                        body_accumulator: Some(BytesMut::new()),
+                    };
+                    self.set(new_state);
+                }
                 DigestFutureProj::BuildingDigest {
                     service,
                     algorithm,
@@ -88,17 +121,6 @@ where
                             accumulator.put(data);
                         }
                     }
-
-                    let digest_header = parts.as_ref().unwrap().headers.get(&DIGEST_HEADER_NAME);
-                    let algorithm = if let Some(digest_header) = digest_header {
-                        let Some((algorithm_name, ..)) = digest_header.to_str()?.split_once('=')
-                        else {
-                            return Poll::Ready(Err("Invalid header value".into()));
-                        };
-                        Algorithm::from_str(algorithm_name)?
-                    } else {
-                        *algorithm
-                    };
 
                     let accumulator = body_accumulator
                         .take()
@@ -155,12 +177,11 @@ where
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let (parts, body) = req.with_limited_body().into_parts();
 
-        DigestFuture::BuildingDigest {
-            service: self.inner.clone(),
+        DigestFuture::ParseHeader {
+            service: Some(self.inner.clone()),
             algorithm: self.algorithm,
             parts: Some(parts),
-            body,
-            body_accumulator: Some(BytesMut::new()),
+            body: Some(body),
         }
     }
 }
