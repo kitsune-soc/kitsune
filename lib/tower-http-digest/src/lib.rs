@@ -31,9 +31,11 @@ impl Verifier {
         let Some(pos) = memchr(b'=', header_value.as_bytes()) else {
             return Err("Invalid header value".into());
         };
+
         let (algorithm_name, digest_value) = header_value.as_bytes().split_at(pos);
         let algorithm = Algorithm::from_bytes(algorithm_name)
             .ok_or_else(|| BoxError::from("Unsupported digest"))?;
+
         let digest_value = base64_simd::STANDARD.decode_to_vec(&digest_value[1..])?;
 
         Ok(Self {
@@ -109,17 +111,16 @@ where
         cx: &mut task::Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         let this = self.project();
-        let frame = if let Some(frame) = ready!(this.inner.poll_frame(cx))
+        let Some(frame) = ready!(this.inner.poll_frame(cx))
             .transpose()
             .map_err(Into::into)?
-        {
-            frame
-        } else {
+        else {
             if let Some(verifier) = this.verifier.take() {
                 if !verifier.verify() {
                     return Poll::Ready(Some(Err("Digest mismatch".into())));
                 }
             }
+
             return Poll::Ready(None);
         };
 
@@ -130,7 +131,7 @@ where
                 .update_digest(frame.as_ref());
         }
 
-        return Poll::Ready(Some(Ok(frame)));
+        Poll::Ready(Some(Ok(frame)))
     }
 
     fn size_hint(&self) -> http_body::SizeHint {
