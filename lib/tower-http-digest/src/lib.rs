@@ -109,26 +109,28 @@ where
         cx: &mut task::Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         let this = self.project();
-        let frame = ready!(this.inner.poll_frame(cx))
+        let frame = if let Some(frame) = ready!(this.inner.poll_frame(cx))
             .transpose()
-            .map_err(Into::into)?;
+            .map_err(Into::into)?
+        {
+            frame
+        } else {
+            if let Some(verifier) = this.verifier.take() {
+                if !verifier.verify() {
+                    return Poll::Ready(Some(Err("Digest mismatch".into())));
+                }
+            }
+            return Poll::Ready(None);
+        };
 
-        if let Some(frame) = frame.as_ref().and_then(Frame::data_ref) {
+        if let Some(frame) = frame.data_ref() {
             this.verifier
                 .as_mut()
                 .expect("[Bug] Missing verifier")
                 .update_digest(frame.as_ref());
         }
 
-        if frame.is_some() {
-            return Poll::Ready(frame.map(Ok));
-        } else if let Some(verifier) = this.verifier.take() {
-            if !verifier.verify() {
-                return Poll::Ready(Some(Err("Digest mismatch".into())));
-            }
-        }
-
-        Poll::Ready(None)
+        return Poll::Ready(Some(Ok(frame)));
     }
 
     fn size_hint(&self) -> http_body::SizeHint {
