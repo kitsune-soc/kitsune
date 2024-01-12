@@ -66,7 +66,8 @@ fn digest_sha256() {
 
     let mut service = VerifyDigestLayer::default().layer(service_fn(
         |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
-            assert!(request.collect().await.is_ok());
+            let body = request.collect().await.unwrap().to_bytes();
+            assert_eq!(body, TEXT);
             Ok::<_, Infallible>(())
         },
     ));
