@@ -85,7 +85,8 @@ fn digest_sha512() {
 
     let mut service = VerifyDigestLayer::default().layer(service_fn(
         |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
-            let _ = request.collect().await.unwrap();
+            let body = request.collect().await.unwrap().to_bytes();
+            assert_eq!(body, TEXT);
 
             Ok::<_, Infallible>(())
         },
