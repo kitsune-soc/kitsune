@@ -17,7 +17,7 @@ thiserror = "1.0.56"
 typed-builder = "0.18.0"
 
 [build-dependencies]
-vergen = { version = "8.2.6", features = ["build", "git", "gitcl"] }
+vergen = { version = "8.2.7", features = ["build", "git", "gitcl"] }
 
 [lints]
 workspace = true

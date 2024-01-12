@@ -31,7 +31,7 @@ axum-extra = { version = "0.9.1", features = [
 axum-flash = "0.8.0"
 bytes = "1.5.0"
 chrono = { version = "0.4.31", default-features = false }
-clap = { version = "4.4.15", features = ["derive", "wrap_help"] }
+clap = { version = "4.4.16", features = ["derive", "wrap_help"] }
 const-oid = { version = "0.9.6", features = ["db"] }
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
 der = { version = "0.7.8", features = ["std"] }

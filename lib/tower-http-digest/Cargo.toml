@@ -6,6 +6,7 @@ version.workspace = true
 
 [dependencies]
 base64-simd = "0.8.0"
+either = { version = "1.9.0", default-features = false }
 futures-util = { version = "0.3.30", default-features = false }
 http = "1.0.0"
 http-body = "1.0.0"

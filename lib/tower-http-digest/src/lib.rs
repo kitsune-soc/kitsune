@@ -1,7 +1,5 @@
-use futures_util::{
-    future::{Either, MapErr},
-    TryFutureExt,
-};
+use either::Either;
+use futures_util::{future::MapErr, TryFutureExt};
 use http::{HeaderName, HeaderValue, Request};
 use http_body::{Body as HttpBody, Frame};
 use memchr::memchr;
@@ -49,7 +47,11 @@ impl Verifier {
     }
 
     pub fn verify(self) -> bool {
-        self.algorithm.finish().ct_eq(&self.digest_value).into()
+        self.algorithm
+            .finish()
+            .as_ref()
+            .ct_eq(&self.digest_value)
+            .into()
     }
 }
 
@@ -81,10 +83,10 @@ impl Algorithm {
     }
 
     #[must_use]
-    pub fn finish(self) -> Vec<u8> {
+    pub fn finish(self) -> impl AsRef<[u8]> {
         match self {
-            Self::Sha256(digest) => digest.finalize_fixed().to_vec(),
-            Self::Sha512(digest) => digest.finalize_fixed().to_vec(),
+            Self::Sha256(digest) => Either::Left(digest.finalize_fixed()),
+            Self::Sha512(digest) => Either::Right(digest.finalize_fixed()),
         }
     }
 }
