@@ -1,6 +1,9 @@
+#[macro_use]
+extern crate tracing;
+
+use bytes::Bytes;
 use either::Either;
-use futures_util::{future::MapErr, TryFutureExt};
-use http::{HeaderName, HeaderValue, Request};
+use http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use http_body::{Body as HttpBody, Frame};
 use memchr::memchr;
 use pin_project_lite::pin_project;
@@ -18,6 +21,9 @@ use tower_service::Service;
 type BoxError = Box<dyn StdError + Send + Sync>;
 
 static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
+
+static MISSING_DIGEST_HEADER_BODY: Bytes = Bytes::from_static(b"Missing digest header");
+static UNSUPPORTED_DIGEST_BODY: Bytes = Bytes::from_static(b"Unsupported digest");
 
 struct Verifier {
     algorithm: Algorithm,
@@ -152,40 +158,47 @@ impl<S> VerifyDigestService<S> {
     }
 }
 
-impl<S, B> Service<Request<B>> for VerifyDigestService<S>
+impl<S, ReqBody, ResBody> Service<Request<ReqBody>> for VerifyDigestService<S>
 where
-    S: Service<Request<VerifyDigestBody<B>>>,
-    S::Error: Into<BoxError>,
-    B: HttpBody,
-    B::Data: AsRef<[u8]>,
-    B::Error: Into<BoxError>,
+    S: Service<Request<VerifyDigestBody<ReqBody>>, Response = Response<ResBody>>,
+    ResBody: From<Bytes>,
 {
     type Response = S::Response;
-    type Error = BoxError;
-    type Future =
-        Either<MapErr<S::Future, fn(S::Error) -> BoxError>, Ready<Result<S::Response, BoxError>>>;
+    type Error = S::Error;
+    type Future = Either<S::Future, Ready<Result<S::Response, S::Error>>>;
 
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx).map_err(Into::into)
+        self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<B>) -> Self::Future {
+    fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         let Some(digest_header) = req.headers().get(&DIGEST_HEADER_NAME) else {
-            return Either::Right(future::ready(Err("Missing digest header".into())));
-        };
-        let verifier = match Verifier::from_header_value(digest_header) {
-            Ok(verifier) => verifier,
-            Err(err) => return Either::Right(future::ready(Err(err))),
+            debug!("Missing digest header");
+            let response = Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(MISSING_DIGEST_HEADER_BODY.clone().into())
+                .unwrap();
+
+            return Either::Right(future::ready(Ok(response)));
         };
 
-        Either::Left(
-            self.inner
-                .call(req.map(|inner| VerifyDigestBody {
-                    inner,
-                    verifier: Some(verifier),
-                }))
-                .map_err(Into::into),
-        )
+        let verifier = match Verifier::from_header_value(digest_header) {
+            Ok(verifier) => verifier,
+            Err(error) => {
+                debug!(?error, "Unsupported digest");
+                let response = Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(UNSUPPORTED_DIGEST_BODY.clone().into())
+                    .unwrap();
+
+                return Either::Right(future::ready(Ok(response)));
+            }
+        };
+
+        Either::Left(self.inner.call(req.map(|inner| VerifyDigestBody {
+            inner,
+            verifier: Some(verifier),
+        })))
     }
 }
 

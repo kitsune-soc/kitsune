@@ -257,7 +257,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a41603f7cdbf5ac4af60760f17253eb6adf6ec5b6f14a7ed830cf687d375f163"
 dependencies = [
  "askama",
- "axum-core 0.4.2",
+ "axum-core 0.4.3",
  "http 1.0.0",
 ]
 
@@ -374,7 +374,7 @@ checksum = "eb1c9aed04854fb55a9d3fbab94e013cfc7ca5e3cead0b49b439884f8a467039"
 dependencies = [
  "async-graphql",
  "async-trait",
- "axum 0.7.3",
+ "axum 0.7.4",
  "bytes",
  "futures-util",
  "serde_json",
@@ -581,12 +581,12 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d09dbe0e490df5da9d69b36dca48a76635288a82f92eca90024883a56202026d"
+checksum = "1236b4b292f6c4d6dc34604bb5120d85c3fe1d1aa596bd5cc52ca054d13e7b9e"
 dependencies = [
  "async-trait",
- "axum-core 0.4.2",
+ "axum-core 0.4.3",
  "axum-macros",
  "base64 0.21.7",
  "bytes",
@@ -637,9 +637,9 @@ dependencies = [
 
 [[package]]
 name = "axum-core"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87c8503f93e6d144ee5690907ba22db7ba79ab001a932ab99034f0fe836b3df"
+checksum = "a15c63fd72d41492dc4f497196f5da1fb04fb7529e631d73630d1b491e47a2e3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -658,12 +658,12 @@ dependencies = [
 
 [[package]]
 name = "axum-extra"
-version = "0.9.1"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "881348a37b079994894b6e5e46edcc4b8a60e1c0333669a65b810abeed780598"
+checksum = "895ff42f72016617773af68fb90da2a9677d89c62338ec09162d4909d86fdd8f"
 dependencies = [
- "axum 0.7.3",
- "axum-core 0.4.2",
+ "axum 0.7.4",
+ "axum-core 0.4.3",
  "bytes",
  "cookie",
  "futures-util",
@@ -687,7 +687,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1353f895919cf98d30146a7bb8e2275a5f096d1f6252be9101dbd29e8fe22e2f"
 dependencies = [
  "async-trait",
- "axum-core 0.4.2",
+ "axum-core 0.4.3",
  "axum-extra",
  "base64 0.21.7",
  "cookie",
@@ -700,9 +700,9 @@ dependencies = [
 
 [[package]]
 name = "axum-macros"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a2edad600410b905404c594e2523549f1bcd4bded1e252c8f74524ccce0b867"
+checksum = "00c055ee2d014ae5981ce1016374e8213682aa14d9bf40e48ab48b5f3ef20eaa"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1481,7 +1481,7 @@ version = "0.0.1-pre.4"
 dependencies = [
  "aliri_braid",
  "async-trait",
- "axum-core 0.4.2",
+ "axum-core 0.4.3",
  "blake3",
  "cookie",
  "futures",
@@ -3036,7 +3036,7 @@ dependencies = [
  "async-graphql-axum",
  "async-trait",
  "athena",
- "axum 0.7.3",
+ "axum 0.7.4",
  "axum-extra",
  "axum-flash",
  "bytes",
@@ -4763,7 +4763,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3592c190977a91610618349bd947fec5bf10b2ca1cdc882f6623031de4cd34e1"
 dependencies = [
- "axum 0.7.3",
+ "axum 0.7.4",
  "oxide-auth",
 ]
 
@@ -7090,7 +7090,6 @@ dependencies = [
  "bytes",
  "either",
  "futures",
- "futures-util",
  "http 1.0.0",
  "http-body 1.0.0",
  "http-body-util",
@@ -7101,6 +7100,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -7414,7 +7414,7 @@ version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b39868d43c011961e04b41623e050aedf2cc93652562ff7935ce0f819aaf2da"
 dependencies = [
- "axum 0.7.3",
+ "axum 0.7.4",
  "mime_guess",
  "regex",
  "rust-embed",
@@ -7473,9 +7473,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vergen"
-version = "8.2.7"
+version = "8.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2066fbfd3bfbadab28cab8bae840c9e74917bc6deeef2ed0781f2eb2fdfafdb"
+checksum = "6cf9c2670809c4840d4648fc7daa396551d7d88966f9ba93821b81a5c0c2d3f5"
 dependencies = [
  "anyhow",
  "rustversion",

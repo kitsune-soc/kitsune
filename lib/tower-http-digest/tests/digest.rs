@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use http::Request;
+use http::{Request, Response, StatusCode};
 use http_body_util::{BodyExt, Full};
 use std::convert::Infallible;
 use tower::{service_fn, ServiceExt};
@@ -32,7 +32,7 @@ fn digest_invalid_base64() {
     let mut service = VerifyDigestLayer::default().layer(service_fn(
         |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
             assert!(request.collect().await.is_err());
-            Ok::<_, Infallible>(())
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
         },
     ));
 
@@ -49,11 +49,14 @@ fn digest_invalid_no_base64() {
         .unwrap();
 
     let mut service = VerifyDigestLayer::default().layer(service_fn(
-        |_request: Request<VerifyDigestBody<Full<Bytes>>>| async move { Ok::<_, Infallible>(()) },
+        |_request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
+        },
     ));
 
     futures::executor::block_on(async move {
-        assert!(service.ready().await.unwrap().call(request).await.is_err());
+        let response = service.ready().await.unwrap().call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     });
 }
 
@@ -68,7 +71,7 @@ fn digest_sha256() {
         |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
             let body = request.collect().await.unwrap().to_bytes();
             assert_eq!(body, TEXT);
-            Ok::<_, Infallible>(())
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
         },
     ));
 
@@ -89,7 +92,7 @@ fn digest_sha512() {
             let body = request.collect().await.unwrap().to_bytes();
             assert_eq!(body, TEXT);
 
-            Ok::<_, Infallible>(())
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
         },
     ));
 

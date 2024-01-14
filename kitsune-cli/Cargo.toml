@@ -25,7 +25,7 @@ tokio = { version = "1.35.1", features = ["full"] }
 tracing-subscriber = "0.3.18"
 
 [build-dependencies]
-vergen = { version = "8.2.7", features = ["build", "git", "gitcl"] }
+vergen = { version = "8.2.8", features = ["build", "git", "gitcl"] }
 
 [lints]
 workspace = true
