@@ -1,5 +1,5 @@
 <template>
-  <select v-model="fluent.bundles.value">
+  <select v-model="fluent.bundles">
     <option
       v-for="(bundles, name) in availableLanguages"
       :key="name"
@@ -11,9 +11,5 @@
 </template>
 
 <script setup lang="ts">
-  import { useFluent } from 'fluent-vue';
-
-  import { availableLanguages } from '../i18n';
-
-  const fluent = useFluent();
+  import { fluent, availableLanguages } from '../i18n';
 </script>
