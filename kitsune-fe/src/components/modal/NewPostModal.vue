@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     :model-value="modelValue"
-    :title="$t('messages.newPost.title')"
+    :title="$t('messages-newPost-title')"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <BubbleMenu v-if="editor" :editor="editor" :tippy-options="tippyOptions">

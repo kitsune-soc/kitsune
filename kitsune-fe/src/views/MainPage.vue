@@ -13,26 +13,28 @@
           <span class="stat-highlight">
             {{ instanceInfo?.name }}
           </span>
-          {{ $t('stats.title') }}:
+          {{ $t('stats-title') }}:
           <ul>
             <li>
               <span class="stat-highlight">
                 {{ instanceInfo?.userCount }}
               </span>
-              {{ $tc('stats.user', instanceInfo?.userCount ?? 0) }}
+              {{ $t('stats-user', { count: instanceInfo?.userCount ?? 0 }) }}
             </li>
             <li>
               <span class="stat-highlight">
                 {{ instanceInfo?.localPostCount }}
               </span>
-              {{ $tc('stats.post', instanceInfo?.localPostCount ?? 0) }}
+              {{
+                $t('stats-post', { count: instanceInfo?.localPostCount ?? 0 })
+              }}
             </li>
           </ul>
         </div>
 
         <strong class="about-link">
           <router-link to="/about">
-            {{ $t('messages.mainPage.aboutInstance') }}
+            {{ $t('messages-mainPage-aboutInstance') }}
           </router-link>
         </strong>
       </div>

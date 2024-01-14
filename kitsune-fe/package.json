@@ -11,6 +11,7 @@
     "format": "prettier . --write"
   },
   "dependencies": {
+    "@fluent/bundle": "^0.18.0",
     "@formkit/core": "^1.4.0",
     "@formkit/validation": "^1.4.0",
     "@formkit/vue": "^1.4.0",
@@ -29,6 +30,7 @@
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/language-en": "^3.0.2",
     "floating-vue": "^5.0.3",
+    "fluent-vue": "^3.5.0",
     "graphql": "^16.8.1",
     "lodash": "^4.17.21",
     "pinia": "^2.1.7",
@@ -37,7 +39,6 @@
     "tiptap-markdown": "^0.8.9",
     "unhead": "^1.8.9",
     "vue": "^3.4.13",
-    "vue-i18n": "^9.9.0",
     "vue-powerglitch": "^1.0.0",
     "vue-router": "^4.2.5",
     "vue-virtual-scroller": "^2.0.0-beta.8"
@@ -61,6 +62,7 @@
     "prettier-plugin-css-order": "^2.0.1",
     "sass": "^1.69.7",
     "typescript": "^5.3.3",
+    "unplugin-fluent-vue": "^1.1.4",
     "vite": "^5.0.11",
     "vue-tsc": "^1.8.27"
   },
