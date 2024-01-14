@@ -1,8 +1,7 @@
 use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     extract::{Path, State},
-    routing::{self, post},
-    Router,
+    routing, Router,
 };
 use kitsune_activitypub::mapping::IntoObject;
 use kitsune_core::error::HttpError;
@@ -38,7 +37,7 @@ pub fn routes() -> Router<Zustand> {
         .route("/:user_id/following", routing::get(following::get))
         .route(
             "/:user_id/inbox",
-            post(inbox::post).layer(VerifyDigestLayer::default()),
+            routing::post(inbox::post).layer(VerifyDigestLayer::default()),
         )
         .route("/:user_id/outbox", routing::get(outbox::get))
 }
