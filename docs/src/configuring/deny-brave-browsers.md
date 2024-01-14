@@ -5,7 +5,7 @@ You can get pretty much all of Brave's "privacy advantages" with a Firefox + uBl
 
 (Plus, Brave is another Chromium-based browsers. Using Firefox helps diversify the browser landscape at least a little bit)
 
-When this setting is enabled, all browsers with the Brave User-Agent are redirected to an article explaining the hateful and problematic background of Brave Inc.  
+When this setting is enabled, all browsers with the Brave User-Agent are redirected to an [article explaining the hateful and problematic background of Brave](https://www.spacebar.news/stop-using-brave-browser/).  
 
 Since Kitsune is about choice, we give you the ability to simply toggle this functionality off.  
 While we give you that option, you maybe want to keep this option on.
