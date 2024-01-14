@@ -5,12 +5,12 @@
     </GlitchedElement>
 
     <p>
-      {{ $t('messages.notFoundPage.main') }}
+      {{ $t('messages-notFoundPage-main') }}
     </p>
 
     <strong class="about-link">
       <router-link to="/">
-        {{ $t('messages.notFoundPage.link') }}
+        {{ $t('messages-notFoundPage-link') }}
       </router-link>
     </strong>
   </div>

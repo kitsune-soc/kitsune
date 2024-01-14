@@ -76,7 +76,7 @@ rust_2018_idioms = "forbid"
 [workspace.package]
 authors = ["Kitsune developers"]
 edition = "2021"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

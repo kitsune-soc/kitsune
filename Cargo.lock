@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "athena"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "ahash 0.8.7",
  "deadpool-redis",
@@ -1477,7 +1477,7 @@ dependencies = [
 
 [[package]]
 name = "cursiv"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "aliri_braid",
  "async-trait",
@@ -2665,7 +2665,7 @@ dependencies = [
 
 [[package]]
 name = "http-compat"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "http 0.2.11",
  "http 1.0.0",
@@ -3027,7 +3027,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "argon2",
  "askama",
@@ -3121,7 +3121,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-activitypub"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-trait",
  "autometrics",
@@ -3170,7 +3170,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-blocking"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "once_cell",
  "rayon",
@@ -3181,7 +3181,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cache"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "deadpool-redis",
  "enum_dispatch",
@@ -3197,7 +3197,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-captcha"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "enum_dispatch",
  "http 1.0.0",
@@ -3212,7 +3212,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-cli"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "clap",
  "diesel",
@@ -3230,7 +3230,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-config"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "miette",
  "serde",
@@ -3241,7 +3241,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-core"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-trait",
  "const_format",
@@ -3257,7 +3257,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-db"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-email"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "askama",
  "askama_axum",
@@ -3302,7 +3302,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-embed"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3320,7 +3320,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-federation"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "kitsune-activitypub",
  "kitsune-cache",
@@ -3337,7 +3337,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-federation-filter"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "globset",
  "kitsune-config",
@@ -3349,7 +3349,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-client"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-stream",
  "bytes",
@@ -3372,7 +3372,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-http-signatures"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "base64-simd",
  "derive_builder",
@@ -3389,7 +3389,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-job-runner"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "athena",
  "clap",
@@ -3414,7 +3414,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-jobs"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "athena",
  "derive_more 1.0.0-beta.6",
@@ -3434,7 +3434,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-language"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3446,7 +3446,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-mastodon"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "derive_builder",
  "diesel",
@@ -3475,7 +3475,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-messaging"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "ahash 0.8.7",
  "derive_more 1.0.0-beta.6",
@@ -3492,7 +3492,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-observability"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-trait",
  "http-body-util",
@@ -3517,7 +3517,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-oidc"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "deadpool-redis",
  "enum_dispatch",
@@ -3539,7 +3539,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-retry-policies"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "futures-retry-policies",
  "retry-policies",
@@ -3547,7 +3547,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-scss-compiler"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "anyhow",
  "glob",
@@ -3557,7 +3557,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-search"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3578,7 +3578,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-service"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "ahash 0.8.7",
  "argon2",
@@ -3645,7 +3645,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-storage"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "bytes",
  "derive_more 1.0.0-beta.6",
@@ -3660,7 +3660,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-test"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "bytes",
  "deadpool-redis",
@@ -3677,7 +3677,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-type"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "iso8601-timestamp",
  "pretty_assertions",
@@ -3690,7 +3690,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-url"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "smol_str",
  "speedy-uuid",
@@ -3699,7 +3699,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-util"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "bubble-bath",
  "iso8601-timestamp",
@@ -3713,7 +3713,7 @@ dependencies = [
 
 [[package]]
 name = "kitsune-webfinger"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-trait",
  "autometrics",
@@ -4015,7 +4015,7 @@ dependencies = [
 
 [[package]]
 name = "masto-id-convert"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "atoi_radix10",
  "criterion",
@@ -5124,7 +5124,7 @@ checksum = "7170ef9988bc169ba16dd36a7fa041e5c4cbeb6a35b76d4c03daded371eae7c0"
 
 [[package]]
 name = "post-process"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "criterion",
  "futures",
@@ -6442,7 +6442,7 @@ dependencies = [
 
 [[package]]
 name = "speedy-uuid"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "async-graphql",
  "diesel",
@@ -7118,7 +7118,7 @@ checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
 name = "tower-stop-using-brave"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "either",
  "futures",
@@ -7132,7 +7132,7 @@ dependencies = [
 
 [[package]]
 name = "tower-x-clacks-overhead"
-version = "0.0.1-pre.4"
+version = "0.0.1-pre.5"
 dependencies = [
  "futures",
  "http 1.0.0",
