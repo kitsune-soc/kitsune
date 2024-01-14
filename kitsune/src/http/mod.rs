@@ -18,6 +18,7 @@ use tower_http::{
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
+use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -88,6 +89,10 @@ pub fn create_router(
                 .wrap_err("Invalid clacks overhead values")?;
 
         router = router.layer(clacks_overhead_layer);
+    }
+
+    if server_config.deny_brave_browsers {
+        router = router.layer(StopUsingBraveLayer::default());
     }
 
     Ok(router
