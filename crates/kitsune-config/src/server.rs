@@ -7,6 +7,7 @@ use smol_str::SmolStr;
 pub struct Configuration {
     #[serde(default)]
     pub clacks_overhead: Vec<SmolStr>,
+    pub deny_brave_browsers: bool,
     pub frontend_dir: SmolStr,
     pub max_upload_size: usize,
     pub media_proxy_enabled: bool,
