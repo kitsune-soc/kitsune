@@ -12,7 +12,7 @@ import { createApp } from 'vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 import App from './App.vue';
-import { i18n } from './i18n';
+import { fluent } from './i18n';
 import './icons';
 import { router } from './router';
 import './styles/root.scss';
@@ -40,7 +40,7 @@ createApp(App)
       },
     }),
   )
-  .use(i18n)
+  .use(fluent)
   .use(pinia)
   .use(router)
   .use(urql, urqlClient)
