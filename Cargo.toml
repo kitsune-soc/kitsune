@@ -50,6 +50,7 @@ members = [
     "lib/post-process",
     "lib/speedy-uuid",
     "lib/tower-http-digest",
+    "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
     "xtask",
 ]

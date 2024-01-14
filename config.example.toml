@@ -160,6 +160,14 @@ type = "in-process"
 #
 # This configuration changes the general behaviour that you'd mostly attribute to the underlying HTTP server
 [server]
+# Setting to deny browsers with the Brave User-Agent
+#
+# Brave is a company financed by cryptocurrency scams, founded by a queerphobic bigot
+# All the "privacy advantages" of Brave, you can get by getting a Firefox + uBlock Origin + DuckDuckGo installation
+#
+# When this setting is enabled, all browsers with the Brave User-Agent are redirected to an article
+# explaining the hateful background of Brave Inc.
+deny-brave-browsers = true
 # Values for the `X-Clacks-Overhead` header
 # You can use this as a sort of silent memorial
 # clacks-overhead = ["Natalie Nguyen", "John \"Soap\" MacTavish"]

@@ -9,6 +9,7 @@
     - [Captcha](./configuring/captcha.md)
     - [Clacks Overhead](./configuring/clacks-overhead.md)
     - [Database](./configuring/database.md)
+    - [Deny Brave Browsers](./configuring/deny-brave-browsers.md)
     - [Emailing](./configuring/email.md)
     - [Federation filter](./configuring/federation-filter.md)
     - [Instance](./configuring/instance.md)
