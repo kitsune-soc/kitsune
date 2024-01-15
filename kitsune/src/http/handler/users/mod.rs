@@ -1,14 +1,14 @@
 use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     extract::{Path, State},
-    routing::{self, post},
-    Router,
+    routing, Router,
 };
 use kitsune_activitypub::mapping::IntoObject;
 use kitsune_core::error::HttpError;
 use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;
+use tower_http_digest::VerifyDigestLayer;
 
 mod followers;
 mod following;
@@ -35,6 +35,9 @@ pub fn routes() -> Router<Zustand> {
         .route("/:user_id", routing::get(get))
         .route("/:user_id/followers", routing::get(followers::get))
         .route("/:user_id/following", routing::get(following::get))
-        .route("/:user_id/inbox", post(inbox::post))
+        .route(
+            "/:user_id/inbox",
+            routing::post(inbox::post).layer(VerifyDigestLayer::default()),
+        )
         .route("/:user_id/outbox", routing::get(outbox::get))
 }

@@ -23,7 +23,7 @@ redis = { version = "0.24.0", default-features = false, features = [
 ] }
 retry-policies = "0.2.1"
 serde = { version = "1.0.195", features = ["derive"] }
-simd-json = "0.13.6"
+simd-json = "0.13.7"
 smol_str = "0.2.0"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
 thiserror = "1.0.56"
