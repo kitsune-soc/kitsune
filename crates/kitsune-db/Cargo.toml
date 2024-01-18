@@ -27,7 +27,7 @@ simd-json = "0.13.7"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"
 tracing-log = "0.2.0"
-typed-builder = "0.18.0"
+typed-builder = "0.18.1"
 
 [dev-dependencies]
 kitsune-test = { path = "../kitsune-test" }

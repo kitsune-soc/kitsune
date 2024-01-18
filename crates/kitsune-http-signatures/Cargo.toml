@@ -15,7 +15,7 @@ time = { version = "0.3.31", default-features = false, features = [
     "parsing",
 ] }
 thiserror = "1.0.56"
-typed-builder = "0.18.0"
+typed-builder = "0.18.1"
 
 [dev-dependencies]
 pem = "3.0.3"

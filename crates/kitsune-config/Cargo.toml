@@ -7,7 +7,7 @@ version.workspace = true
 [dependencies]
 miette = "5.10.0"
 serde = { version = "1.0.195", features = ["derive"] }
-smol_str = { version = "0.2.0", features = ["serde"] }
+smol_str = { version = "0.2.1", features = ["serde"] }
 tokio = { version = "1.35.1", features = ["fs"] }
 toml = { version = "0.8.8", default-features = false, features = ["parse"] }
 
