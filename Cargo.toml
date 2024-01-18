@@ -83,11 +83,11 @@ version = "0.0.1-pre.5"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.5.0"
+cargo-dist-version = "0.7.2"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = ["powershell", "shell"]
+installers = ["shell", "powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = [
     "aarch64-apple-darwin",
