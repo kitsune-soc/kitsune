@@ -37,7 +37,7 @@ simd-json = { version = "0.13.7", features = ["hints"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.56"
 tracing = "0.1.40"
-typed-builder = "0.18.0"
+typed-builder = "0.18.1"
 url = "2.5.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
