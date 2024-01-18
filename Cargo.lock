@@ -2744,8 +2744,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-rustls"
-version = "0.25.0"
-source = "git+https://github.com/rustls/hyper-rustls.git?rev=8e502d807f637709b4d88c34d6bf7d921272a36a#8e502d807f637709b4d88c34d6bf7d921272a36a"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0bea761b46ae2b24eb4aef630d8d1c398157b6fc29e6350ecf090a0b70c952c"
 dependencies = [
  "futures-util",
  "http 1.0.0",

@@ -20,9 +20,7 @@ hyper-util = { version = "0.1.2", features = [
     "http2",
     "tokio",
 ] }
-hyper-rustls = { git = "https://github.com/rustls/hyper-rustls.git", rev = "8e502d807f637709b4d88c34d6bf7d921272a36a", features = [
-    "http2",
-] }
+hyper-rustls = { version = "0.26.0", features = ["http2"] }
 kitsune-http-signatures = { path = "../kitsune-http-signatures" }
 kitsune-type = { path = "../kitsune-type" }
 pin-project = "1.1.3"
