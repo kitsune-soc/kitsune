@@ -180,7 +180,7 @@ impl AttachmentService {
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
     where
-        S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
+        S: Stream<Item = Result<Bytes, BoxError>> + Send + Sync + 'static,
     {
         upload.validate(&())?;
 
@@ -249,7 +249,7 @@ mod test {
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
     use http::{Request, Response};
-    use hyper::Body;
+    use http_body_util::Empty;
     use img_parts::{
         jpeg::{markers, JpegSegment},
         ImageEXIF,
@@ -343,8 +343,10 @@ mod test {
         .await;
     }
 
-    async fn handle(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
-        Ok::<_, Infallible>(Response::new(Body::empty()))
+    async fn handle(
+        _req: Request<kitsune_http_client::Body>,
+    ) -> Result<Response<Empty<Bytes>>, Infallible> {
+        Ok::<_, Infallible>(Response::new(Empty::new()))
     }
 
     async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {

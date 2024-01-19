@@ -5,12 +5,14 @@ version = "0.0.0"
 publish = false
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.79"
 argh = "0.1.12"
-glob = "0.3.1"
-rsass = "0.28.6"
+kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "ansi",
     "fmt",
 ] }
+
+[lints]
+workspace = true

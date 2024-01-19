@@ -1,7 +1,7 @@
 <template>
   <fieldset ref="scroller" class="timeline">
     <legend class="timeline-legend">
-      {{ $t('messages.timeline.title') }}
+      {{ $t('messages-timeline-title') }}
     </legend>
     <DynamicScroller class="scroller" :items="posts" :min-item-size="50">
       <template

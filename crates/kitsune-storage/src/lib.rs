@@ -28,7 +28,7 @@ pub trait StorageBackend: Clone + Send + Sync {
     /// Stream something onto the object storage
     fn put<T>(&self, path: &str, input_stream: T) -> impl Future<Output = Result<()>>
     where
-        T: Stream<Item = Result<Bytes>> + Send + 'static;
+        T: Stream<Item = Result<Bytes>> + Send + Sync + 'static;
 }
 
 #[derive(Clone, From)]
@@ -58,7 +58,7 @@ impl StorageBackend for AnyStorageBackend {
 
     async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
     where
-        T: Stream<Item = Result<Bytes>> + Send + 'static,
+        T: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         match self {
             Self::Fs(fs) => fs.put(path, input_stream).await,

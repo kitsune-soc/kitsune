@@ -143,7 +143,7 @@ impl CustomEmojiService {
 
     pub async fn add_emoji<S>(&self, emoji_upload: EmojiUpload<S>) -> Result<CustomEmoji>
     where
-        S: Stream<Item = Result<Bytes, BoxError>> + Send + 'static,
+        S: Stream<Item = Result<Bytes, BoxError>> + Send + Sync + 'static,
     {
         emoji_upload.validate(&())?;
 

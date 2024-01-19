@@ -30,10 +30,12 @@ impl Modify for SecurityAddon {
 
 #[derive(ToSchema)]
 #[schema(as = SmolStr)]
+#[allow(dead_code)] // Otherwise `utoipa::ToSchema` can't correctly infer the type
 struct SmolStrPolyfill(String);
 
 #[derive(ToSchema)]
 #[schema(as = Timestamp)]
+#[allow(dead_code)] // Otherwise `utoipa::ToSchema` can't correctly infer the type
 struct TimestampPolyfill(String);
 
 #[derive(OpenApi)]

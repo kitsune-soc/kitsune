@@ -1,12 +1,11 @@
 use crate::{error::Result, state::Zustand};
 use axum::{
-    body::HttpBody,
+    body::Body,
     extract::{Path, State},
     response::{IntoResponse, Response},
     routing, Router,
 };
 use http::header::CONTENT_TYPE;
-use hyper::Body;
 use kitsune_service::attachment::AttachmentService;
 use speedy_uuid::Uuid;
 
@@ -19,7 +18,7 @@ async fn get(
 
     Ok((
         [(CONTENT_TYPE, attachment.content_type)],
-        Body::wrap_stream(stream).boxed(),
+        Body::from_stream(stream),
     )
         .into_response())
 }

@@ -41,7 +41,7 @@ impl StorageBackend for Storage {
 
     async fn put<T>(&self, path: &str, input_stream: T) -> Result<()>
     where
-        T: Stream<Item = Result<Bytes>> + Send + 'static,
+        T: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         let mut file = File::create(self.storage_dir.join(path)).await?;
         pin_mut!(input_stream);

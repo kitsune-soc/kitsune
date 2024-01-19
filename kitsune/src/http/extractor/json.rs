@@ -1,9 +1,8 @@
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
-use axum::{extract::FromRequest, response::Response, BoxError};
+use axum::{body::Body, extract::FromRequest, response::Response};
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use http::{header, HeaderMap, HeaderValue, Request, StatusCode};
-use hyper::body::HttpBody;
 use serde::{de::DeserializeOwned, Serialize};
 use std::ops::{Deref, DerefMut};
 
@@ -12,17 +11,14 @@ use std::ops::{Deref, DerefMut};
 pub struct Json<T>(pub T);
 
 #[async_trait]
-impl<T, S, B> FromRequest<S, B> for Json<T>
+impl<T, S> FromRequest<S> for Json<T>
 where
     T: DeserializeOwned,
     S: Send + Sync,
-    B: HttpBody + Send + 'static,
-    <B as HttpBody>::Data: Send,
-    <B as HttpBody>::Error: Into<BoxError>,
 {
     type Rejection = Response;
 
-    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
         if json_content_type(req.headers()) {
             let bytes = Bytes::from_request(req, state)
                 .await

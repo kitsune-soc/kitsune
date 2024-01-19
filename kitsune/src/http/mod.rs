@@ -10,6 +10,7 @@ use cursiv::CsrfLayer;
 use kitsune_config::server;
 use miette::{Context, IntoDiagnostic};
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
@@ -17,6 +18,7 @@ use tower_http::{
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
+use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -89,6 +91,10 @@ pub fn create_router(
         router = router.layer(clacks_overhead_layer);
     }
 
+    if server_config.deny_brave_browsers {
+        router = router.layer(StopUsingBraveLayer::default());
+    }
+
     Ok(router
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
@@ -102,11 +108,18 @@ pub fn create_router(
 }
 
 #[instrument(skip_all, fields(port = %server_config.port))]
-pub async fn run(state: Zustand, server_config: server::Configuration) -> miette::Result<()> {
+pub async fn run(
+    state: Zustand,
+    server_config: server::Configuration,
+    shutdown_signal: crate::signal::Receiver,
+) -> miette::Result<()> {
     let router = create_router(state, &server_config)?;
+    let listener = TcpListener::bind(("0.0.0.0", server_config.port))
+        .await
+        .into_diagnostic()?;
 
-    axum::Server::bind(&([0, 0, 0, 0], server_config.port).into())
-        .serve(router.into_make_service())
+    axum::serve(listener, router)
+        .with_graceful_shutdown(shutdown_signal.wait())
         .await
         .into_diagnostic()?;
 

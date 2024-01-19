@@ -28,12 +28,12 @@ impl UserMutation {
             account_update = account_update.note(note);
         }
 
-        if let Some(ref avatar) = avatar {
+        if let Some(avatar) = avatar {
             let media_attachment = handle_upload(ctx, avatar, None)?;
             account_update = account_update.avatar(media_attachment);
         }
 
-        if let Some(ref header) = header {
+        if let Some(header) = header {
             let media_attachment = handle_upload(ctx, header, None)?;
             account_update = account_update.header(media_attachment);
         }

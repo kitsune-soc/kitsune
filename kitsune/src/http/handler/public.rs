@@ -1,5 +1,5 @@
-use axum::{extract::Path, routing, Router, TypedHeader};
-use axum_extra::either::Either;
+use axum::{extract::Path, routing, Router};
+use axum_extra::{either::Either, TypedHeader};
 use headers::ContentType;
 use http::StatusCode;
 use rust_embed::RustEmbed;
