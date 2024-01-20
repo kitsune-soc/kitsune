@@ -6,5 +6,6 @@ use smol_str::SmolStr;
 pub struct Configuration {
     pub url: SmolStr,
     pub max_connections: u32,
+    #[serde(default)]
     pub use_tls: bool,
 }
