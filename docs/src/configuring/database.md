@@ -11,6 +11,7 @@ You can find instructions on creating a database (along with password-protected 
 ```
 postgres://[Username]:[Password]@[DBMS host]:[Port]/[Database name]
 ```
+
 ### Example URL
 
 ```
@@ -19,7 +20,21 @@ postgres://database-user:password-here@localhost:5432/db-name-here
 
 ## Maximum connections
 
-The `max-connections` setting defines how many connections the globally shared connection pool will open to the database server *at maximum*.  
+The `max-connections` setting defines how many connections the globally shared connection pool will open to the database server _at maximum_.  
 What you should set this value to depends on many factors.
 
 > We currently do not report any pool metrics via the Prometheus endpoint. This might be added in the future.
+
+## TLS support
+
+If you want to connect to a database using TLS, set the parameter `use-tls` to `true`.  
+This setting is equivalent to `ssl_mode=full-verify` if you are looking for a PostgreSQL equivalent.
+
+### Example
+
+```toml
+[database]
+url = "postgres://kitsune:verysecure@localhost/kitsune_prod"
+max-connections = 25
+use-tls = true
+```
