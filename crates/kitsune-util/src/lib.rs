@@ -22,6 +22,13 @@ pub fn generate_secret() -> String {
         .collect()
 }
 
+const _: () = {
+    assert!(
+        std::mem::size_of::<CowBox<'_, [u8; 1024]>>() <= std::mem::size_of::<usize>() * 2,
+        "Size guarantee violated (should have the size of two or less machine words)",
+    );
+};
+
 #[derive(Clone, Debug)]
 pub enum CowBox<'a, T> {
     Borrowed(&'a T),

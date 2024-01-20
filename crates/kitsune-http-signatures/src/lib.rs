@@ -4,7 +4,6 @@
 //! Only supports asymmetric signing schemes (aka. no HMAC and such)
 //!
 
-#![feature(iter_intersperse)]
 #![deny(missing_docs)]
 
 use crate::{header::SignatureHeader, util::UnixTimestampExt};

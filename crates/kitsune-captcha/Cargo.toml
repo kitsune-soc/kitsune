@@ -10,7 +10,7 @@ http = "1.0.0"
 kitsune-http-client = { path = "../kitsune-http-client" }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-simd-json = "0.13.7"
+simd-json = "0.13.8"
 strum = { version = "0.25.0", features = ["derive"] }
 thiserror = "1.0.56"
 typed-builder = "0.18.1"
