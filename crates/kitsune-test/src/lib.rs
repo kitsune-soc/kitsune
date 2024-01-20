@@ -4,6 +4,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
+use kitsune_config::database::Configuration as DatabaseConfig;
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
@@ -28,9 +29,13 @@ where
     Fut: Future,
 {
     let db_url = env::var("DATABASE_URL").expect("Missing database URL");
-    let pool = kitsune_db::connect(&db_url, 10)
-        .await
-        .expect("Failed to connect to database");
+    let pool = kitsune_db::connect(&DatabaseConfig {
+        url: db_url.into(),
+        max_connections: 10,
+        use_tls: false,
+    })
+    .await
+    .expect("Failed to connect to database");
 
     let out = CatchPanic::new(func(pool.clone())).await;
 

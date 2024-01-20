@@ -25,12 +25,9 @@ async fn boot() -> miette::Result<()> {
     let config = Configuration::load(args.config).await?;
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
-    let conn = kitsune_db::connect(
-        &config.database.url,
-        config.database.max_connections as usize,
-    )
-    .await
-    .wrap_err("Failed to connect to and migrate the database")?;
+    let conn = kitsune_db::connect(&config.database)
+        .await
+        .wrap_err("Failed to connect to and migrate the database")?;
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
         .into_diagnostic()

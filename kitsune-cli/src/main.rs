@@ -1,6 +1,7 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
 use diesel_async::scoped_futures::ScopedFutureExt;
+use kitsune_config::database::Configuration as DatabaseConfig;
 use miette::{IntoDiagnostic, Result};
 
 mod config;
@@ -28,7 +29,13 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let config: Configuration = envy::from_env().into_diagnostic()?;
-    let db_conn = kitsune_db::connect(&config.database_url, 1).await?;
+    let db_conn = kitsune_db::connect(&DatabaseConfig {
+        url: config.database_url.into(),
+        max_connections: 1,
+        use_tls: config.database_use_tls,
+    })
+    .await?;
+
     let cmd = App::parse();
 
     db_conn

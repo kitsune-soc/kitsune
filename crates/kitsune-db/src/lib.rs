@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tracing;
+
 use diesel::Connection;
 use diesel_async::{
     async_connection_wrapper::AsyncConnectionWrapper,
@@ -5,6 +8,7 @@ use diesel_async::{
     AsyncPgConnection,
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use kitsune_config::database::Configuration as DatabaseConfig;
 use tracing_log::LogTracer;
 
 pub use crate::{
@@ -14,6 +18,7 @@ pub use crate::{
 
 mod error;
 mod pool;
+mod tls;
 
 pub mod activity;
 pub mod function;
@@ -27,11 +32,11 @@ pub mod schema;
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 /// Connect to the database and run any pending migrations
-pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
+pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
     LogTracer::init().ok();
 
     kitsune_blocking::io({
-        let conn_str = conn_str.to_string();
+        let conn_str = config.url.clone();
 
         move || {
             let mut migration_conn =
@@ -46,9 +51,14 @@ pub async fn connect(conn_str: &str, max_pool_size: usize) -> Result<PgPool> {
     })
     .await??;
 
-    let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(conn_str);
-    let pool = Pool::builder(config)
-        .max_size(max_pool_size)
+    let pool_config = if config.use_tls {
+        AsyncDieselConnectionManager::new_with_config(config.url.as_str(), self::tls::pool_config())
+    } else {
+        AsyncDieselConnectionManager::new(config.url.as_str())
+    };
+
+    let pool = Pool::builder(pool_config)
+        .max_size(config.max_connections as usize)
         .build()
         .unwrap();
 
