@@ -6,7 +6,7 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-diesel = { version = "2.1.4", features = ["nightly-error-messages", "uuid"] }
+diesel = { version = "2.1.4", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = [
     "async-connection-wrapper",
     "deadpool",
@@ -23,7 +23,7 @@ miette = "5.10.0"
 num-derive = "0.4.1"
 num-traits = "0.2.17"
 serde = { version = "1.0.195", features = ["derive"] }
-simd-json = "0.13.7"
+simd-json = "0.13.8"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"
 tracing-log = "0.2.0"
