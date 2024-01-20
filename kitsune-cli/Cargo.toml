@@ -17,6 +17,7 @@ diesel = "2.1.4"
 diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
+kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-db = { path = "../crates/kitsune-db" }
 miette = { version = "5.10.0", features = ["fancy"] }
 serde = { version = "1.0.195", features = ["derive"] }

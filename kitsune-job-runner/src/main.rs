@@ -29,11 +29,7 @@ async fn main() -> miette::Result<()> {
 
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
-    let db_pool = kitsune_db::connect(
-        &config.database.url,
-        config.database.max_connections as usize,
-    )
-    .await?;
+    let db_pool = kitsune_db::connect(&config.database).await?;
     let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)
         .into_diagnostic()?;
 

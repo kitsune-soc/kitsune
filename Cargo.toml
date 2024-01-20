@@ -97,3 +97,6 @@ targets = [
 ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
+
+[patch.crates-io]
+diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "017ebe2fb7a2709ab5db92148dea5ce812a35e09" }
