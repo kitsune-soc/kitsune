@@ -36,6 +36,9 @@ $$
 CREATE TABLE accounts
 (
     id           UUID PRIMARY KEY,
+
+    avatar_id    UUID,
+    header_id    UUID,
     display_name TEXT,
     note         TEXT,
 
@@ -59,7 +62,7 @@ CREATE TABLE accounts
 
 -- Unique constraints
 ALTER TABLE accounts
-    ADD CONSTRAINT "constr-unique-accounts-username-domain"
+    ADD CONSTRAINT "uk-accounts-username-domain"
         UNIQUE (username, domain);
 
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
@@ -80,13 +83,13 @@ CREATE TABLE accounts_cryptographic_keys
 );
 
 ALTER TABLE accounts_cryptographic_keys
-    ADD CONSTRAINT "constr-foreign-accounts_cryptographic_keys-account_id"
+    ADD CONSTRAINT "fk-accounts_cryptographic_keys-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id)
             ON DELETE CASCADE
             ON UPDATE CASCADE;
 
 ALTER TABLE accounts_cryptographic_keys
-    ADD CONSTRAINT "constr-foreign-accounts_cryptographic_keys-key_id"
+    ADD CONSTRAINT "fk-accounts_cryptographic_keys-key_id"
         FOREIGN KEY (key_id) REFERENCES cryptographic_keys (key_id)
             ON DELETE CASCADE
             ON UPDATE CASCADE;
@@ -104,11 +107,11 @@ CREATE TABLE accounts_activitypub
 );
 
 ALTER TABLE accounts_activitypub
-    ADD CONSTRAINT "constr-foreign-accounts_activitypub-account_id"
+    ADD CONSTRAINT "fk-accounts_activitypub-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE accounts_activitypub
-    ADD CONSTRAINT "constr-foreign-accounts_activitypub-key_id"
+    ADD CONSTRAINT "fk-accounts_activitypub-key_id"
         FOREIGN KEY (key_id) REFERENCES cryptographic_keys (key_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE accounts_follows
@@ -125,7 +128,7 @@ CREATE TABLE accounts_follows
 
 -- UNIQUE constraints
 ALTER TABLE accounts_follows
-    ADD CONSTRAINT "constr-unique-accounts_follows-account_id-follower_id"
+    ADD CONSTRAINT "uk-accounts_follows-account_id-follower_id"
         UNIQUE (account_id, follower_id);
 
 -- Foreign key constraints
@@ -134,7 +137,7 @@ ALTER TABLE accounts_follows
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE accounts_follows
-    ADD CONSTRAINT "constr-foreign-accounts_follows-follower_id"
+    ADD CONSTRAINT "fk-accounts_follows-follower_id"
         FOREIGN KEY (follower_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE INDEX "idx-accounts_follows-account_id" ON accounts_follows (account_id);
@@ -153,7 +156,7 @@ CREATE TABLE accounts_preferences
 
 -- Foreign key constraints
 ALTER TABLE accounts_preferences
-    ADD CONSTRAINT "constr-foreign-accounts_preferences-account_id"
+    ADD CONSTRAINT "fk-accounts_preferences-account_id"
         FOREIGN KEY (account_id)
             REFERENCES accounts (id)
             ON DELETE CASCADE
@@ -180,11 +183,11 @@ CREATE TABLE users
 
 -- UNIQUE constraints
 ALTER TABLE users
-    ADD CONSTRAINT "constr-unique-users-username-domain"
+    ADD CONSTRAINT "uk-users-username-domain"
         UNIQUE (username, domain);
 
 ALTER TABLE users
-    ADD CONSTRAINT "constr-unique-users-confirmation_token"
+    ADD CONSTRAINT "uk-users-confirmation_token"
         UNIQUE (confirmation_token);
 
 CREATE TABLE users_accounts
@@ -196,12 +199,21 @@ CREATE TABLE users_accounts
 
 -- Foreign key constraints
 ALTER TABLE users_accounts
-    ADD CONSTRAINT "constr-foreign-users_accounts-user_id"
+    ADD CONSTRAINT "fk-users_accounts-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE users_accounts
-    ADD CONSTRAINT "constr-foreign-users_accounts-account_id"
+    ADD CONSTRAINT "fk-users_accounts-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE TABLE link_previews
+(
+    url        TEXT PRIMARY KEY,
+    embed_data JSONB       NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 CREATE TABLE posts
 (
@@ -217,6 +229,7 @@ CREATE TABLE posts
     content          TEXT                                                                                                   NOT NULL,
     content_source   TEXT                                                                                                   NOT NULL,
     content_lang     kitsune.language_iso_code                                                                              NOT NULL,
+    link_preview_url TEXT,
 
     visibility       INTEGER                                                                                                NOT NULL,
     is_local         BOOLEAN                                                                                                NOT NULL,
@@ -233,22 +246,75 @@ CREATE TABLE posts
 
 -- Foreign key constraints
 ALTER TABLE posts
-    ADD CONSTRAINT "constr-foreign-posts-account_id"
+    ADD CONSTRAINT "fk-posts-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE posts
-    ADD CONSTRAINT "constr-foreign-posts-in_reply_to_id"
+    ADD CONSTRAINT "fk-posts-in_reply_to_id"
         FOREIGN KEY (in_reply_to_id) REFERENCES posts (id) ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE posts
-    ADD CONSTRAINT "constr-foreign-posts-reposted_post_id"
+    ADD CONSTRAINT "fk-posts-reposted_post_id"
         FOREIGN KEY (reposted_post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE posts
+    ADD CONSTRAINT "fk-posts-link_preview_url"
+        FOREIGN KEY (link_preview_url) REFERENCES link_previews (url)
+            ON DELETE SET NULL
+            ON UPDATE CASCADE;
 
 CREATE INDEX "idx-posts-account_id" ON posts (account_id);
 CREATE INDEX "idx-posts-in_reply_to_id" ON posts (in_reply_to_id);
 CREATE INDEX "idx-posts-reposted_post_id" ON posts (reposted_post_id);
 CREATE INDEX "idx-posts-visibility" ON posts (visibility);
 CREATE INDEX "idx-posts-post_ts" ON posts USING GIN (post_ts);
+
+CREATE TABLE media_attachments
+(
+    id           UUID PRIMARY KEY,
+    account_id   UUID,
+    content_type TEXT        NOT NULL,
+    description  TEXT,
+    blurhash     TEXT,
+    file_path    TEXT,
+    remote_url   TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Foreign key constraints
+ALTER TABLE media_attachments
+    ADD CONSTRAINT "fk-media_attachments-account_id"
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Add columns for avatars and headers to the "accounts" table
+ALTER TABLE accounts
+    ADD CONSTRAINT "fk-accounts-avatar_id"
+        FOREIGN KEY (avatar_id) REFERENCES media_attachments (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
+
+ALTER TABLE accounts
+    ADD CONSTRAINT "fk-accounts-header_id"
+        FOREIGN KEY (header_id) REFERENCES media_attachments (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
+
+CREATE TABLE posts_media_attachments
+(
+    post_id             UUID NOT NULL,
+    media_attachment_id UUID NOT NULL,
+    PRIMARY KEY (post_id, media_attachment_id)
+);
+
+-- Foreign key constraints
+ALTER TABLE posts_media_attachments
+    ADD CONSTRAINT "fk-posts_media_attachments-post_id"
+        FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE posts_media_attachments
+    ADD CONSTRAINT "fk-posts_media_attachments-media_attachment_id"
+        FOREIGN KEY (media_attachment_id) REFERENCES media_attachments (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE posts_favourites
 (
@@ -261,16 +327,16 @@ CREATE TABLE posts_favourites
 
 -- UNIQUE constraints
 ALTER TABLE posts_favourites
-    ADD CONSTRAINT "constr-unique-posts_favourites-account_id-post_id"
+    ADD CONSTRAINT "uk-posts_favourites-account_id-post_id"
         UNIQUE (account_id, post_id);
 
 -- Foreign key constraints
 ALTER TABLE posts_favourites
-    ADD CONSTRAINT "constr-foreign-posts_favourites-account_id"
+    ADD CONSTRAINT "fk-posts_favourites-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE posts_favourites
-    ADD CONSTRAINT "constr-foreign-posts_favourites-post_id"
+    ADD CONSTRAINT "fk-posts_favourites-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE posts_mentions
@@ -283,11 +349,11 @@ CREATE TABLE posts_mentions
 
 -- Foreign key constraints
 ALTER TABLE posts_mentions
-    ADD CONSTRAINT "constr-foreign-posts_mentions-post_id"
+    ADD CONSTRAINT "fk-posts_mentions-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE posts_mentions
-    ADD CONSTRAINT "constr-foreign-posts_mentions-account_id"
+    ADD CONSTRAINT "fk-posts_mentions-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE job_context
@@ -322,11 +388,11 @@ CREATE TABLE oauth2_authorization_codes
 
 -- Foreign key constraints
 ALTER TABLE oauth2_authorization_codes
-    ADD CONSTRAINT "constr-foreign-oauth2_authorization_codes-application_id"
+    ADD CONSTRAINT "fk-oauth2_authorization_codes-application_id"
         FOREIGN KEY (application_id) REFERENCES oauth2_applications (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE oauth2_authorization_codes
-    ADD CONSTRAINT "constr-foreign-oauth2_authorization_codes-user_id"
+    ADD CONSTRAINT "fk-oauth2_authorization_codes-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE oauth2_access_tokens
@@ -341,11 +407,11 @@ CREATE TABLE oauth2_access_tokens
 
 -- Foreign key constraints
 ALTER TABLE oauth2_access_tokens
-    ADD CONSTRAINT "constr-foreign-oauth2_access_tokens-user_id"
+    ADD CONSTRAINT "fk-oauth2_access_tokens-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE oauth2_access_tokens
-    ADD CONSTRAINT "constr-foreign-oauth2_access_tokens-application_id"
+    ADD CONSTRAINT "fk-oauth2_access_tokens-application_id"
         FOREIGN KEY (application_id) REFERENCES oauth2_applications (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE oauth2_refresh_tokens
@@ -358,59 +424,12 @@ CREATE TABLE oauth2_refresh_tokens
 
 -- Foreign key constraint
 ALTER TABLE oauth2_refresh_tokens
-    ADD CONSTRAINT "constr-foreign-oauth2_refresh_tokens-access_token"
+    ADD CONSTRAINT "fk-oauth2_refresh_tokens-access_token"
         FOREIGN KEY (access_token) REFERENCES oauth2_access_tokens (token) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE oauth2_refresh_tokens
-    ADD CONSTRAINT "constr-foreign-oauth2_refresh_tokens-application_id"
+    ADD CONSTRAINT "fk-oauth2_refresh_tokens-application_id"
         FOREIGN KEY (application_id) REFERENCES oauth2_applications (id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-CREATE TABLE media_attachments
-(
-    id           UUID PRIMARY KEY,
-    account_id   UUID,
-    content_type TEXT        NOT NULL,
-    description  TEXT,
-    blurhash     TEXT,
-    file_path    TEXT,
-    remote_url   TEXT,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Foreign key constraints
-ALTER TABLE media_attachments
-    ADD CONSTRAINT "constr-foreign-media_attachments-account_id"
-        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-CREATE TABLE posts_media_attachments
-(
-    post_id             UUID NOT NULL,
-    media_attachment_id UUID NOT NULL,
-    PRIMARY KEY (post_id, media_attachment_id)
-);
-
--- Foreign key constraints
-ALTER TABLE posts_media_attachments
-    ADD CONSTRAINT "constr-foreign-posts_media_attachments-post_id"
-        FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE posts_media_attachments
-    ADD CONSTRAINT "constr-foreign-posts_media_attachments-media_attachment_id"
-        FOREIGN KEY (media_attachment_id) REFERENCES media_attachments (id) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- Add columns for avatars and headers to the "accounts" table
-ALTER TABLE accounts
-    ADD avatar_id UUID,
-    ADD FOREIGN KEY (avatar_id) REFERENCES media_attachments (id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE;
-
-ALTER TABLE accounts
-    ADD header_id UUID,
-    ADD FOREIGN KEY (header_id) REFERENCES media_attachments (id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE;
 
 CREATE TABLE users_roles
 (
@@ -422,26 +441,13 @@ CREATE TABLE users_roles
 
 -- UNIQUE constraints
 ALTER TABLE users_roles
-    ADD CONSTRAINT "constr-unique-users_roles-user_id-role"
+    ADD CONSTRAINT "uk-users_roles-user_id-role"
         UNIQUE (user_id, role);
 
 -- Foreign key constraints
 ALTER TABLE users_roles
-    ADD CONSTRAINT "constr-foreign-users_roles-user_id"
+    ADD CONSTRAINT "fk-users_roles-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
-
-CREATE TABLE link_previews
-(
-    url        TEXT PRIMARY KEY,
-    embed_data JSONB       NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-ALTER TABLE posts
-    ADD COLUMN link_preview_url TEXT REFERENCES link_previews (url)
-        ON DELETE SET NULL ON UPDATE CASCADE;
 
 CREATE TABLE notifications
 (
@@ -455,20 +461,20 @@ CREATE TABLE notifications
 
 -- UNIQUE constraints
 ALTER TABLE notifications
-    ADD CONSTRAINT "constr-unique-notifications-ra_id-tr_id-post_id-notif_type"
+    ADD CONSTRAINT "uk-notifications-ra_id-tr_id-post_id-notification_ty"
         UNIQUE (receiving_account_id, triggering_account_id, post_id, notification_type);
 
 -- Foreign key constraints
 ALTER TABLE notifications
-    ADD CONSTRAINT "constr-foreign-notifications-receiving_account_id"
+    ADD CONSTRAINT "fk-notifications-receiving_account_id"
         FOREIGN KEY (receiving_account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE notifications
-    ADD CONSTRAINT "constr-foreign-notifications-triggering_account_id"
+    ADD CONSTRAINT "fk-notifications-triggering_account_id"
         FOREIGN KEY (triggering_account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE notifications
-    ADD CONSTRAINT "constr-foreign-notifications-post_id"
+    ADD CONSTRAINT "fk-notifications-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE INDEX "idx-notifications-receiving_account_id" ON notifications (receiving_account_id);
@@ -488,12 +494,12 @@ CREATE TABLE custom_emojis
 
 -- Unique constraints
 ALTER TABLE custom_emojis
-    ADD CONSTRAINT "constr-unique-custom_emojis-shortcode-domain"
+    ADD CONSTRAINT "uk-custom_emojis-shortcode-domain"
         UNIQUE (shortcode, domain);
 
 -- Foreign key constraints
 ALTER TABLE custom_emojis
-    ADD CONSTRAINT "constr-foreign-custom_emojis-media_attachment_id"
+    ADD CONSTRAINT "fk-custom_emojis-media_attachment_id"
         FOREIGN KEY (media_attachment_id) REFERENCES media_attachments (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE posts_custom_emojis
@@ -506,11 +512,11 @@ CREATE TABLE posts_custom_emojis
 
 -- Foreign key constraints
 ALTER TABLE posts_custom_emojis
-    ADD CONSTRAINT "constr-foreign-posts_custom_emojis-post_id"
+    ADD CONSTRAINT "fk-posts_custom_emojis-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE posts_custom_emojis
-    ADD CONSTRAINT "constr-foreign-posts_custom_emojis-custom_emoji_id"
+    ADD CONSTRAINT "fk-posts_custom_emojis-custom_emoji_id"
         FOREIGN KEY (custom_emoji_id) REFERENCES custom_emojis (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE INDEX "idx-custom_emojis-remote_id" ON custom_emojis (remote_id);
