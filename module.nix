@@ -29,7 +29,7 @@ in
   options = {
     services.kitsune = {
       enable = mkEnableOption ''
-        Kitsune: an open-souce social media server utilising the ActivityPub protocol.
+        Kitsune: an open-source social media server utilising the ActivityPub protocol.
       '';
 
       packages = {
