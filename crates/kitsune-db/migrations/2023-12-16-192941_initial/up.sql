@@ -31,35 +31,29 @@ $$
 
 CREATE TABLE accounts
 (
-    id                      UUID PRIMARY KEY,
-    display_name            TEXT,
-    note                    TEXT,
+    id            UUID PRIMARY KEY,
+    display_name  TEXT,
+    note          TEXT,
+
     -- Use special collation to ignore case and accent differences
-    username                TEXT                                                                  NOT NULL COLLATE kitsune.ignore_accent_case,
-    locked                  BOOLEAN                                                               NOT NULL,
-    local                   BOOLEAN                                                               NOT NULL,
-    domain                  TEXT                                                                  NOT NULL,
-    actor_type              INTEGER                                                               NOT NULL,
-    url                     TEXT UNIQUE                                                           NOT NULL,
+    username      TEXT                                                                  NOT NULL COLLATE kitsune.ignore_accent_case,
+    locked        BOOLEAN                                                               NOT NULL,
+    local         BOOLEAN                                                               NOT NULL,
+    domain        TEXT                                                                  NOT NULL,
+    actor_type    INTEGER                                                               NOT NULL,
+    url           TEXT UNIQUE                                                           NOT NULL,
 
-    -- ActivityPub-specific data
-    featured_collection_url TEXT,
-    followers_url           TEXT,
-    following_url           TEXT,
-    inbox_url               TEXT,
-    outbox_url              TEXT,
-    shared_inbox_url        TEXT,
-    public_key_id           TEXT                                                                  NOT NULL UNIQUE,
-    public_key              TEXT                                                                  NOT NULL,
+    public_key_id TEXT                                                                  NOT NULL UNIQUE,
+    public_key    TEXT                                                                  NOT NULL,
 
-    created_at              TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
-    updated_at              TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
+    created_at    TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search column
-    account_ts              TSVECTOR GENERATED ALWAYS AS (
-                                setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
-                                          to_tsvector('simple', username), 'A') ||
-                                setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
+    account_ts    TSVECTOR GENERATED ALWAYS AS (
+                      setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
+                                to_tsvector('simple', username), 'A') ||
+                      setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
 );
 
 ALTER TABLE accounts
@@ -67,6 +61,21 @@ ALTER TABLE accounts
         UNIQUE (username, domain);
 
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
+
+CREATE TABLE accounts_activitypub
+(
+    account_id              UUID PRIMARY KEY,
+    featured_collection_url TEXT,
+    followers_url           TEXT,
+    following_url           TEXT,
+    inbox_url               TEXT,
+    outbox_url              TEXT,
+    shared_inbox_url        TEXT
+);
+
+ALTER TABLE accounts_activitypub
+    ADD CONSTRAINT "constr-foreign-accounts_activitypub-account_id"
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE accounts_follows
 (
@@ -119,8 +128,8 @@ ALTER TABLE accounts_preferences
 CREATE TABLE users
 (
     id                 UUID PRIMARY KEY,
-    account_id         UUID        NOT NULL UNIQUE,
     oidc_id            TEXT UNIQUE,
+
     -- Use special collation to ignore case and accent differences
     username           TEXT        NOT NULL COLLATE kitsune.ignore_accent_case,
     email              TEXT        NOT NULL UNIQUE,
@@ -145,10 +154,22 @@ ALTER TABLE users
     ADD CONSTRAINT "constr-unique-users-confirmation_token"
         UNIQUE (confirmation_token);
 
+CREATE TABLE users_accounts
+(
+    user_id    UUID,
+    account_id UUID,
+
+    PRIMARY KEY (user_id, account_id)
+);
+
 -- Foreign key constraints
-ALTER TABLE users
-    ADD CONSTRAINT "constr-foreign-users-account_id"
-        FOREIGN KEY (account_id) REFERENCES accounts (id);
+ALTER TABLE users_accounts
+    ADD CONSTRAINT "constr-foreign-users_accounts-user_id"
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE users_accounts
+    ADD CONSTRAINT "constr-foreign-users_accounts-account_id"
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE posts
 (
