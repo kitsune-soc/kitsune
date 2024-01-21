@@ -44,7 +44,7 @@ CREATE TABLE accounts
     locked        BOOLEAN                                                               NOT NULL,
     local         BOOLEAN                                                               NOT NULL,
     domain        TEXT                                                                  NOT NULL,
-    actor_type    INTEGER                                                               NOT NULL,
+    account_type  INTEGER                                                               NOT NULL,
     url           TEXT UNIQUE                                                           NOT NULL,
 
     public_key_id TEXT                                                                  NOT NULL UNIQUE,
@@ -67,15 +67,17 @@ ALTER TABLE accounts
 
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
 
-CREATE TABLE cryptographic_keys (
-    key_id TEXT PRIMARY KEY,
-    key_pem TEXT NOT NULL,
+CREATE TABLE cryptographic_keys
+(
+    key_id     TEXT PRIMARY KEY,
+    key_pem    TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE accounts_cryptographic_keys (
+CREATE TABLE accounts_cryptographic_keys
+(
     account_id UUID,
-    key_id TEXT,
+    key_id     TEXT,
     PRIMARY KEY (account_id, key_id)
 );
 
@@ -100,7 +102,7 @@ CREATE TABLE accounts_activitypub
     inbox_url               TEXT,
     outbox_url              TEXT,
     shared_inbox_url        TEXT,
-    key_id TEXT NOT NULL
+    key_id                  TEXT NOT NULL
 );
 
 ALTER TABLE accounts_activitypub
