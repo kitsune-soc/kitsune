@@ -23,6 +23,8 @@ async fn shutdown_signal() {
         _ = ctrl_c => (),
         () = second_signal => (),
     }
+
+    info!("Shutdown signal received. Shutting down gracefully..");
 }
 
 #[derive(Clone)]
