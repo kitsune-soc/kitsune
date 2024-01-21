@@ -159,7 +159,7 @@ CREATE TABLE posts_favourites (
     -- UNIQUE constraints
     UNIQUE (account_id, post_id),
 
-    -- Foreign key contraints
+    -- Foreign key constraints
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE ON UPDATE CASCADE
 );

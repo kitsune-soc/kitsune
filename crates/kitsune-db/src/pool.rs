@@ -24,7 +24,7 @@ where
 
 /// Small wrapper around [`Pool<AsyncPgConnection>`]
 ///
-/// The intent of this API is to encourage and make short-livel ownership of connections easier.
+/// The intent of this API is to encourage and make short-lived ownership of connections easier.
 /// With the traditional RAII guard based approach, it is rather hard (and/or ugly) to define clear scopes for connections
 /// (especially when they are used *a lot* throughout the code).
 ///

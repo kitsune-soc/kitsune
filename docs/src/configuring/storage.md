@@ -1,9 +1,9 @@
 # Storage
 
-As a microblogging platform, Kitsune also offers users the ability to attach images, videos, and audio to their posts. 
+As a microblogging platform, Kitsune also offers users the ability to attach images, videos, and audio to their posts.
 We offer multiple different storage backends to store the attachments to.
 
-> **Note**: You might want to increase the upload limit by tweaking the `max-upload-size` parameter in your configuration; the number is the upload limit in bytes. 
+> **Note**: You might want to increase the upload limit by tweaking the `max-upload-size` parameter in your configuration; the number is the upload limit in bytes.
 > The default set by the example configuration is 5MiB.
 
 ## File System
@@ -67,5 +67,5 @@ For example, Cloudflare R2 has a "no egress fee policy" which, due to this imple
 
 ### Migrating from file-system storage to S3
 
-The migration is pretty simple. Upload all the files from your upload directory into the S3 bucket (while preserving the same file hirearchy) and change the configuration.  
+The migration is pretty simple. Upload all the files from your upload directory into the S3 bucket (while preserving the same file hierarchy) and change the configuration.  
 Kitsune should then serve the files without any problems.

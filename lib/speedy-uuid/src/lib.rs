@@ -135,7 +135,7 @@ mod async_graphql_impl {
     /// # References
     ///
     /// * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
-    /// * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+    /// * [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
     #[Scalar(name = "UUID", specified_by_url = "http://tools.ietf.org/html/rfc4122")]
     impl ScalarType for Uuid {
         fn parse(value: Value) -> InputValueResult<Self> {

@@ -11,7 +11,7 @@
 
 </div>
 
-Kitsune is an open-souce social media server utilising the ActivityPub protocol.
+Kitsune is an open-source social media server utilising the ActivityPub protocol.
 Utilising the capabilities of ActivityPub, you can interact with people on Mastodon, Misskey, Akkoma, etc.
 Due to its decentralised nature, you can self-host Kitsune on your own hardware and still interact with everyone!
 
@@ -29,33 +29,13 @@ Both chat options are bridged. Feel free to join whichever you're more comfortab
 This software is far from production-ready. Breaking changes might happen.
 So, as long as this disclaimer is here, make sure to double check all the changes before you update your installation.
 
-## Project structure
-
-- `contrib/`: Files for configuring Kitsune (Systemd, Caddy, etc.)
-- `crates/`: Sub-crates Kitsune consists of
-- `docs/`: Documentation in form of an [mdBook](https://rust-lang.github.io/mdBook/)
-- `kitsune/`: Main Kitsune server binary
-- `kitsune-cli/`: Kitsune CLI binary
-- `kitsune-fe/`: Kitsune frontend project
-- `kitsune-job-runner/`: Kitsune dedicated job runner
-- `lib/`: Libraries made for Kitsune but with no dependencies on Kitsune-specific code. Easily usable by other projects
-- `public/`: Public web assets
-- `web/`: Resources specific to the [website](https://joinkitsune.org)
-- `xtask/`: Task-runner polyfill
-
 ## Contributing
 
-Contributions are very welcome. However, if you intend to change anything more than updating a dependency or fixing a small bug, please open an issue first.
-We would like to discuss any bigger changes before they are actually implemented.
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-### Security
+## Security
 
 If you found a suspected security vulnerability, please refer to our [security policy](./SECURITY.md) for more details.
-
-### Note on required libraries
-
-We use [Nix](https://nixos.org) for handling our development dependencies.
-When in doubt, install Nix and run `nix develop` to get yourself a shell with all required dependencies and services (you might need to enable some unstable features).
 
 ## License
 

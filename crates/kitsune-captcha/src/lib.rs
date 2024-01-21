@@ -18,7 +18,7 @@ pub enum ChallengeStatus {
     /// Input successfully sent and verified
     Verified,
 
-    /// Request was successfull but token verification failed
+    /// Request was successful but token verification failed
     Failed(Vec<CaptchaVerification>),
 }
 
