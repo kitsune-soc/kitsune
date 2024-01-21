@@ -1,9 +1,10 @@
-use crate::{pg_enum::ENUM_NAME, supported_languages};
+use crate::{
+    consts::{DB_ENUM_NAME, DB_FUNCTION_NAME},
+    supported_languages,
+};
 use diesel::{deserialize, pg::Pg, row::NamedRow, sql_types, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::{collections::HashSet, fmt::Write};
-
-const FUNCTION_NAME: &str = "kitsune.iso_code_to_language";
 
 #[derive(Debug)]
 struct PgCatalogResult {
@@ -34,7 +35,7 @@ where
 
     let mut function = format!(
         r#"
-        CREATE OR REPLACE FUNCTION {FUNCTION_NAME} ({ENUM_NAME})
+        CREATE OR REPLACE FUNCTION {DB_FUNCTION_NAME} ({DB_ENUM_NAME})
             RETURNS regconfig
             AS $$
                 SELECT CASE $1
