@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 #[macro_use]
 extern crate metrics;
 

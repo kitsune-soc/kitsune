@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 use http::{header::InvalidHeaderValue, HeaderName, HeaderValue, Response};
 use pin_project_lite::pin_project;
 use std::{
@@ -20,7 +18,7 @@ where
 {
     let names = format!(
         "GNU {}",
-        names.into_iter().intersperse(", ").collect::<String>()
+        itertools::intersperse(names, ", ").collect::<String>()
     )
     .parse()?;
 

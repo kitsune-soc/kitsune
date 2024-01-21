@@ -118,12 +118,14 @@ impl TryFrom<SignatureHeader<'_>> for String {
 
     fn try_from(value: SignatureHeader<'_>) -> Result<Self, Self::Error> {
         let signature = base64_simd::STANDARD.encode_to_string(value.signature);
-        let headers = value
-            .signature_components
-            .iter()
-            .map(SignatureComponent::as_str)
-            .intersperse(" ")
-            .collect::<String>();
+        let headers = itertools::intersperse(
+            value
+                .signature_components
+                .iter()
+                .map(SignatureComponent::as_str),
+            " ",
+        )
+        .collect::<String>();
 
         let mut signature_header = format!(
             "keyId=\"{}\",signature=\"{signature}\",headers=\"{headers}\"",

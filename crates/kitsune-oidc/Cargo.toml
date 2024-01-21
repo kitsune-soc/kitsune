@@ -21,7 +21,7 @@ openidconnect = { version = "3.4.0", default-features = false, features = [
 ] }
 redis = "0.24.0"
 serde = { version = "1.0.195", features = ["derive"] }
-simd-json = "0.13.7"
+simd-json = "0.13.8"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 thiserror = "1.0.56"
 url = "2.5.0"

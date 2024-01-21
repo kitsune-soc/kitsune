@@ -23,12 +23,13 @@ where
     type Error = Error;
 
     fn into_response_parts(self, mut res: ResponseParts) -> Result<ResponseParts, Self::Error> {
-        let value = self
-            .0
-            .into_iter()
-            .map(|(key, value)| Cow::Owned(format!("<{value}>; rel=\"{key}\"")))
-            .intersperse(Cow::Borrowed(", "))
-            .collect::<String>();
+        let value = itertools::intersperse(
+            self.0
+                .into_iter()
+                .map(|(key, value)| Cow::Owned(format!("<{value}>; rel=\"{key}\""))),
+            Cow::Borrowed(", "),
+        )
+        .collect::<String>();
 
         res.headers_mut().insert(
             "Link",

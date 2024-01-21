@@ -79,8 +79,7 @@ impl Registrar for OAuthRegistrar {
             if valid_scopes.peek().is_none() {
                 OAuthScope::Read.as_ref().parse().unwrap()
             } else {
-                valid_scopes
-                    .intersperse(" ")
+                itertools::intersperse(valid_scopes, " ")
                     .collect::<String>()
                     .parse()
                     .unwrap()

@@ -42,6 +42,7 @@ headers = "0.4.0"
 http = "1.0.0"
 http-body-util = "0.1.0"
 iso8601-timestamp = "0.2.16"
+itertools = { version = "0.12.0", default-features = false }
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
@@ -79,7 +80,7 @@ rust-embed = { version = "8.2.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.195", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-simd-json = "0.13.7"
+simd-json = "0.13.8"
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.25.0", features = ["derive", "phf"] }
 tempfile = "3.9.0"

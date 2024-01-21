@@ -13,8 +13,8 @@ diesel = { version = "2.1.4", features = [
 redis = { version = "0.24.0", default-features = false, optional = true }
 serde = { version = "1.0.195", optional = true }
 thiserror = "1.0.56"
-uuid = { version = "1.6.1", features = ["fast-rng", "v7"] }
-uuid-simd = { version = "0.8.0", features = ["unstable", "uuid"] }
+uuid = { version = "1.7.0", features = ["fast-rng", "v7"] }
+uuid-simd = { version = "0.8.0", features = ["uuid"] }
 
 [lints]
 workspace = true
