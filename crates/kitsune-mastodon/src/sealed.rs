@@ -151,7 +151,7 @@ impl IntoMastodon for DbAccount {
 
 /// Maps to the relationship between the two accounts
 ///
-/// - Left: Requestor of the relationship
+/// - Left: Requester of the relationship
 /// - Right: Target of the relationship
 impl IntoMastodon for (&DbAccount, &DbAccount) {
     type Output = Relationship;
@@ -161,9 +161,9 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (requestor, target) = self;
+        let (requester, target) = self;
 
-        let ((following, requested), followed_by) = state
+        let ((following, follow_requested), followed_by) = state
             .db_pool
             .with_connection(|db_conn| {
                 async move {
@@ -171,7 +171,7 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
                         .filter(
                             accounts_follows::account_id
                                 .eq(target.id)
-                                .and(accounts_follows::follower_id.eq(requestor.id)),
+                                .and(accounts_follows::follower_id.eq(requester.id)),
                         )
                         .get_result::<Follow>(db_conn)
                         .map(OptionalExtension::optional)
@@ -184,7 +184,7 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
                     let followed_by_fut = accounts_follows::table
                         .filter(
                             accounts_follows::account_id
-                                .eq(requestor.id)
+                                .eq(requester.id)
                                 .and(accounts_follows::follower_id.eq(target.id)),
                         )
                         .count()
@@ -207,7 +207,7 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
             blocked_by: false,
             muting: false,
             muting_notifications: false,
-            requested,
+            requested: follow_requested,
             domain_blocking: false,
             endorsed: false,
             note: String::default(),

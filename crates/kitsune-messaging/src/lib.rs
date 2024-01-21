@@ -161,7 +161,7 @@ where
 
 /// Message emitter
 ///
-/// This is cheaply clonable. Interally it is a string for the channel name and an `Arc` referencing the backend.
+/// This is cheaply clonable. Internally it is a string for the channel name and an `Arc` referencing the backend.
 #[derive(Clone)]
 pub struct MessageEmitter<M> {
     backend: Arc<AnyMessagingBackend>,
