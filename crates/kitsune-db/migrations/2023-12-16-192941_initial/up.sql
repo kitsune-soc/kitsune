@@ -29,6 +29,10 @@ SELECT 'english'::regconfig
 $$
     LANGUAGE SQL IMMUTABLE;
 
+--
+-- Now follow the actual table creation routines
+--
+
 CREATE TABLE accounts
 (
     id            UUID PRIMARY KEY,
@@ -56,11 +60,36 @@ CREATE TABLE accounts
                       setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
 );
 
+-- Unique constraints
 ALTER TABLE accounts
     ADD CONSTRAINT "constr-unique-accounts-username-domain"
         UNIQUE (username, domain);
 
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
+
+CREATE TABLE cryptographic_keys (
+    key_id TEXT PRIMARY KEY,
+    key_pem TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE accounts_cryptographic_keys (
+    account_id UUID,
+    key_id TEXT,
+    PRIMARY KEY (account_id, key_id)
+);
+
+ALTER TABLE accounts_cryptographic_keys
+    ADD CONSTRAINT "constr-foreign-accounts_cryptographic_keys-account_id"
+        FOREIGN KEY (account_id) REFERENCES accounts (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
+
+ALTER TABLE accounts_cryptographic_keys
+    ADD CONSTRAINT "constr-foreign-accounts_cryptographic_keys-key_id"
+        FOREIGN KEY (key_id) REFERENCES cryptographic_keys (key_id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
 
 CREATE TABLE accounts_activitypub
 (
@@ -70,12 +99,17 @@ CREATE TABLE accounts_activitypub
     following_url           TEXT,
     inbox_url               TEXT,
     outbox_url              TEXT,
-    shared_inbox_url        TEXT
+    shared_inbox_url        TEXT,
+    key_id TEXT NOT NULL
 );
 
 ALTER TABLE accounts_activitypub
     ADD CONSTRAINT "constr-foreign-accounts_activitypub-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE accounts_activitypub
+    ADD CONSTRAINT "constr-foreign-accounts_activitypub-key_id"
+        FOREIGN KEY (key_id) REFERENCES cryptographic_keys (key_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE accounts_follows
 (
@@ -158,7 +192,6 @@ CREATE TABLE users_accounts
 (
     user_id    UUID,
     account_id UUID,
-
     PRIMARY KEY (user_id, account_id)
 );
 
