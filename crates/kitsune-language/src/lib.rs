@@ -1,6 +1,7 @@
 use rustc_hash::FxHashSet;
 use std::sync::OnceLock;
 
+mod consts;
 mod detect;
 mod map;
 mod pg_enum;

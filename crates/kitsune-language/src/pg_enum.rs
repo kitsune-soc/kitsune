@@ -1,9 +1,7 @@
-use crate::supported_languages;
+use crate::{consts::DB_ENUM_NAME, supported_languages};
 use diesel::{pg::Pg, row::NamedRow, QueryResult, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::fmt::Write;
-
-pub const ENUM_NAME: &str = "kitsune.language_iso_code";
 
 struct CountResult {
     count: i64,
@@ -23,7 +21,7 @@ where
     C: AsyncConnection<Backend = Pg>,
 {
     let language_count: CountResult = diesel::sql_query(format!(
-        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{ENUM_NAME}));"
+        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{DB_ENUM_NAME}));"
     ))
     .get_result(conn)
     .await?;
@@ -37,7 +35,7 @@ where
     let queries = supported_languages().fold(String::new(), |mut out, lang| {
         write!(
             out,
-            "ALTER TYPE {ENUM_NAME} ADD VALUE IF NOT EXISTS '{}';",
+            "ALTER TYPE {DB_ENUM_NAME} ADD VALUE IF NOT EXISTS '{}';",
             lang.to_639_3()
         )
         .unwrap();
