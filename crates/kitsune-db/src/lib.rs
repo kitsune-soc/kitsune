@@ -67,13 +67,8 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
     {
         let mut conn = pool.get().await?;
 
-        kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
-        kitsune_language::generate_regconfig_function(
-            &mut conn,
-            "iso_code_to_language",
-            "language_iso_code",
-        )
-        .await?;
+        kitsune_language::generate_postgres_enum(&mut conn).await?;
+        kitsune_language::generate_regconfig_function(&mut conn).await?;
     }
 
     Ok(pool)

@@ -1,7 +1,9 @@
-use crate::supported_languages;
+use crate::{pg_enum::ENUM_NAME, supported_languages};
 use diesel::{deserialize, pg::Pg, row::NamedRow, sql_types, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::{collections::HashSet, fmt::Write};
+
+const FUNCTION_NAME: &str = "kitsune.iso_code_to_language";
 
 #[derive(Debug)]
 struct PgCatalogResult {
@@ -16,11 +18,7 @@ impl QueryableByName<Pg> for PgCatalogResult {
     }
 }
 
-pub async fn generate_regconfig_function<C>(
-    conn: &mut C,
-    function_name: &str,
-    enum_name: &str,
-) -> diesel::QueryResult<()>
+pub async fn generate_regconfig_function<C>(conn: &mut C) -> diesel::QueryResult<()>
 where
     C: AsyncConnection<Backend = Pg>,
 {
@@ -36,7 +34,7 @@ where
 
     let mut function = format!(
         r#"
-        CREATE OR REPLACE FUNCTION {function_name} ({enum_name})
+        CREATE OR REPLACE FUNCTION {FUNCTION_NAME} ({ENUM_NAME})
             RETURNS regconfig
             AS $$
                 SELECT CASE $1

@@ -3,6 +3,8 @@ use diesel::{pg::Pg, row::NamedRow, QueryResult, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::fmt::Write;
 
+pub const ENUM_NAME: &str = "kitsune.language_iso_code";
+
 struct CountResult {
     count: i64,
 }
@@ -16,12 +18,12 @@ impl QueryableByName<Pg> for CountResult {
 }
 
 /// Generate a PostgreSQL enum definition of all supported ISO language codes
-pub async fn generate_postgres_enum<C>(conn: &mut C, enum_name: &str) -> QueryResult<()>
+pub async fn generate_postgres_enum<C>(conn: &mut C) -> QueryResult<()>
 where
     C: AsyncConnection<Backend = Pg>,
 {
     let language_count: CountResult = diesel::sql_query(format!(
-        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{enum_name}));"
+        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{ENUM_NAME}));"
     ))
     .get_result(conn)
     .await?;
@@ -35,7 +37,7 @@ where
     let queries = supported_languages().fold(String::new(), |mut out, lang| {
         write!(
             out,
-            "ALTER TYPE {enum_name} ADD VALUE IF NOT EXISTS '{}';",
+            "ALTER TYPE {ENUM_NAME} ADD VALUE IF NOT EXISTS '{}';",
             lang.to_639_3()
         )
         .unwrap();
