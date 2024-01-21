@@ -44,12 +44,17 @@ where
             diesel::sql_query("DROP SCHEMA public CASCADE")
                 .execute(db_conn)
                 .await
-                .expect("Failed to delete schema");
+                .expect("Failed to delete \"public\" schema");
+
+            diesel::sql_query("DROP SCHEMA kitsune CASCADE")
+                .execute(db_conn)
+                .await
+                .expect("Failed to delete \"kitsune\" schema");
 
             diesel::sql_query("CREATE SCHEMA public")
                 .execute(db_conn)
                 .await
-                .expect("Failed to create schema");
+                .expect("Failed to create \"public\" schema");
 
             Ok::<_, BoxError>(())
         }
