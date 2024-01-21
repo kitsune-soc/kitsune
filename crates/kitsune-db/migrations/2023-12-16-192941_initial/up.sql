@@ -35,29 +35,26 @@ $$
 
 CREATE TABLE accounts
 (
-    id            UUID PRIMARY KEY,
-    display_name  TEXT,
-    note          TEXT,
+    id           UUID PRIMARY KEY,
+    display_name TEXT,
+    note         TEXT,
 
     -- Use special collation to ignore case and accent differences
-    username      TEXT                                                                  NOT NULL COLLATE kitsune.ignore_accent_case,
-    locked        BOOLEAN                                                               NOT NULL,
-    local         BOOLEAN                                                               NOT NULL,
-    domain        TEXT                                                                  NOT NULL,
-    account_type  INTEGER                                                               NOT NULL,
-    url           TEXT UNIQUE                                                           NOT NULL,
+    username     TEXT                                                                  NOT NULL COLLATE kitsune.ignore_accent_case,
+    locked       BOOLEAN                                                               NOT NULL,
+    local        BOOLEAN                                                               NOT NULL,
+    domain       TEXT                                                                  NOT NULL,
+    account_type INTEGER                                                               NOT NULL,
+    url          TEXT UNIQUE                                                           NOT NULL,
 
-    public_key_id TEXT                                                                  NOT NULL UNIQUE,
-    public_key    TEXT                                                                  NOT NULL,
-
-    created_at    TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
+    created_at   TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search column
-    account_ts    TSVECTOR GENERATED ALWAYS AS (
-                      setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
-                                to_tsvector('simple', username), 'A') ||
-                      setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
+    account_ts   TSVECTOR GENERATED ALWAYS AS (
+                     setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
+                               to_tsvector('simple', username), 'A') ||
+                     setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
 );
 
 -- Unique constraints
@@ -69,9 +66,10 @@ CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
 
 CREATE TABLE cryptographic_keys
 (
-    key_id     TEXT PRIMARY KEY,
-    key_pem    TEXT        NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    key_id          TEXT PRIMARY KEY,
+    public_key_pem  TEXT        NOT NULL,
+    private_key_pem TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE accounts_cryptographic_keys
@@ -171,7 +169,6 @@ CREATE TABLE users
     email              TEXT        NOT NULL UNIQUE,
     password           TEXT UNIQUE,
     domain             TEXT        NOT NULL,
-    private_key        TEXT        NOT NULL,
 
     -- Email confirmation
     confirmed_at       TIMESTAMPTZ,
