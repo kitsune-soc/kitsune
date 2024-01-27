@@ -5,13 +5,13 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-async-graphql = { version = "7.0.0", default-features = false, optional = true }
+async-graphql = { version = "7.0.1", default-features = false, optional = true }
 diesel = { version = "2.1.4", features = [
     "postgres_backend",
     "uuid",
 ], optional = true }
 redis = { version = "0.24.0", default-features = false, optional = true }
-serde = { version = "1.0.195", optional = true }
+serde = { version = "1.0.196", optional = true }
 thiserror = "1.0.56"
 uuid = { version = "1.7.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
