@@ -3,7 +3,6 @@ name = "athena"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
-license = "MIT"
 
 [dependencies]
 ahash = "0.8.7"
