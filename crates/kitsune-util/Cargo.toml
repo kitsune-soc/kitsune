@@ -6,7 +6,7 @@ version.workspace = true
 
 [dependencies]
 bubble-bath = "0.1.1"
-iso8601-timestamp = "0.2.16"
+iso8601-timestamp = "0.2.17"
 kitsune-type = { path = "../kitsune-type" }
 once_cell = "1.19.0"
 pulldown-cmark = { version = "0.9.3", default-features = false, features = [

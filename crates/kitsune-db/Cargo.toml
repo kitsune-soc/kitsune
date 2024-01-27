@@ -18,7 +18,7 @@ diesel_migrations = "2.1.0"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
-iso8601-timestamp = { version = "0.2.16", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.2.17", features = ["diesel-pg"] }
 kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-language = { path = "../kitsune-language" }
@@ -28,7 +28,7 @@ num-derive = "0.4.1"
 num-traits = "0.2.17"
 rustls = "0.22.2"
 rustls-native-certs = "0.7.0"
-serde = { version = "1.0.195", features = ["derive"] }
+serde = { version = "1.0.196", features = ["derive"] }
 simd-json = "0.13.8"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"

@@ -20,7 +20,7 @@ envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-db = { path = "../crates/kitsune-db" }
 miette = { version = "5.10.0", features = ["fancy"] }
-serde = { version = "1.0.195", features = ["derive"] }
+serde = { version = "1.0.196", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 tokio = { version = "1.35.1", features = ["full"] }
 tracing-subscriber = "0.3.18"
