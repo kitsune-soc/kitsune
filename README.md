@@ -39,9 +39,7 @@ If you found a suspected security vulnerability, please refer to our [security p
 
 ## License
 
-Kitsune is licensed under the [AGPL-3.0 license](https://opensource.org/license/agpl-v3).  
-The exception to this is the code contained within the `lib/` directory, which is dual-licensed under either the
-[MIT license](https://opensource.org/license/mit) or [Apache 2.0 license](https://opensource.org/license/apache-2-0/), at your choice.
+For licensing terms, check [LICENSE.md](./LICENSE.md)
 
 ### Contribution
 
