@@ -3,6 +3,7 @@ name = "tower-x-clacks-overhead"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 http = "1.0.0"
