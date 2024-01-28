@@ -18,7 +18,7 @@ kitsune-language = { path = "../kitsune-language" }
 miette = "5.10.0"
 serde = { version = "1.0.196", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-strum = { version = "0.25.0", features = ["derive"] }
+strum = { version = "0.26.0", features = ["derive"] }
 thiserror = "1.0.56"
 tracing = "0.1.40"
 

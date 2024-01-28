@@ -13,11 +13,8 @@ isolang = { version = "2.4.0", features = [
     "serde",
 ] }
 rustc-hash = "1.1.0"
-whatlang = { version = "0.16.4", optional = true }
-whichlang = { version = "0.1.0", optional = true }
-
-[features]
-default = ["whatlang"]
+whatlang = "0.16.4"
+whichlang = "0.1.0"
 
 [lints]
 workspace = true
