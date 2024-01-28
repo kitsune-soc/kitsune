@@ -3,6 +3,7 @@ name = "kitsune-config"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 miette = "5.10.0"

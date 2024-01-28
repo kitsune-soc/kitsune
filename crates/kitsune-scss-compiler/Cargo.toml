@@ -3,6 +3,7 @@ name = "kitsune-scss-compiler"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 anyhow = "1.0.79"

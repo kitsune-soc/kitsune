@@ -3,6 +3,7 @@ name = "kitsune-cache"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 deadpool-redis = "0.14.0"

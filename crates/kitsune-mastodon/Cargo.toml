@@ -3,6 +3,7 @@ name = "kitsune-mastodon"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 derive_builder = "0.13.0"

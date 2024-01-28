@@ -3,6 +3,7 @@ name = "kitsune-test"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 bytes = "1.5.0"

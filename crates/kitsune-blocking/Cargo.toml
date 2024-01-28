@@ -3,6 +3,7 @@ name = "kitsune-blocking"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 once_cell = "1.19.0"

@@ -3,6 +3,7 @@ name = "kitsune"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 repository = "https://github.com/kitsune-soc/kitsune"
 homepage = "https://joinkitsune.org"
 build = "build.rs"

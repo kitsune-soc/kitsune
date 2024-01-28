@@ -3,6 +3,7 @@ name = "kitsune-job-runner"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [package.metadata.wix]
 upgrade-guid = "D61A497C-7468-4A29-B5D3-F9C44E93FF9E"

@@ -3,6 +3,7 @@ name = "kitsune-type"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 iso8601-timestamp = "0.2.17"

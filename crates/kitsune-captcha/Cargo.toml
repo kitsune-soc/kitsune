@@ -3,6 +3,7 @@ name = "kitsune-captcha"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 enum_dispatch = "0.3.12"

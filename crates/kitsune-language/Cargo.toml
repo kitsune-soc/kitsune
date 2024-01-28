@@ -3,6 +3,7 @@ name = "kitsune-language"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 diesel = "2.1.4"

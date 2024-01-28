@@ -3,6 +3,7 @@ name = "kitsune-util"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 bubble-bath = "0.1.1"

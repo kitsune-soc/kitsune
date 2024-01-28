@@ -3,6 +3,7 @@ name = "kitsune-search"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [package.metadata.cargo-machete]
 ignored = ["isahc"] # To make `meilisearch` builds static
