@@ -3250,6 +3250,7 @@ dependencies = [
 name = "kitsune-config"
 version = "0.0.1-pre.5"
 dependencies = [
+ "isolang",
  "miette",
  "serde",
  "smol_str",
@@ -3349,6 +3350,7 @@ version = "0.0.1-pre.5"
 dependencies = [
  "kitsune-activitypub",
  "kitsune-cache",
+ "kitsune-config",
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
@@ -3465,6 +3467,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "isolang",
+ "kitsune-config",
  "rustc-hash",
  "whatlang",
  "whichlang",
@@ -3591,6 +3594,7 @@ dependencies = [
  "enum_dispatch",
  "futures-util",
  "isahc",
+ "kitsune-config",
  "kitsune-db",
  "kitsune-language",
  "meilisearch-sdk",
@@ -3600,6 +3604,7 @@ dependencies = [
  "strum 0.26.0",
  "thiserror",
  "tracing",
+ "typed-builder",
 ]
 
 [[package]]
@@ -3695,6 +3700,7 @@ dependencies = [
  "futures-util",
  "http 1.0.0",
  "http-body-util",
+ "isolang",
  "kitsune-config",
  "kitsune-db",
  "pin-project-lite",

@@ -1,23 +1,16 @@
 use isolang::Language;
-
-#[derive(Clone, Copy, Debug, Default)]
-pub enum DetectionBackend {
-    #[default]
-    Dummy,
-    Whatlang,
-    Whichlang,
-}
+use kitsune_config::language_detection::{self, DetectionBackend};
 
 /// Get the ISO code of the specified text
 ///
 /// If the language couldn't get detected reliably, it defaults to english
 #[must_use]
-pub fn detect_language(backend: DetectionBackend, text: &str) -> Language {
-    match backend {
-        DetectionBackend::Dummy => Language::Eng,
+pub fn detect_language(config: language_detection::Configuration, text: &str) -> Language {
+    match config.backend {
+        DetectionBackend::None => config.default_language,
         DetectionBackend::Whatlang => whatlang::detect(text)
             .and_then(|info| info.is_reliable().then_some(info.lang()))
-            .map_or(Language::Eng, crate::map::whatlang_to_isolang),
+            .map_or(config.default_language, crate::map::whatlang_to_isolang),
         DetectionBackend::Whichlang => {
             crate::map::whichlang_to_isolang(whichlang::detect_language(text))
         }

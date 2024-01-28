@@ -5,6 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+isolang = { version = "2.4.0", features = ["serde"] }
 miette = "5.10.0"
 serde = { version = "1.0.196", features = ["derive"] }
 smol_str = { version = "0.2.1", features = ["serde"] }

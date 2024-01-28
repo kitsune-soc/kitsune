@@ -1,7 +1,7 @@
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
-use kitsune_config::{cache, captcha, email, messaging, search, storage};
+use kitsune_config::{cache, captcha, email, language_detection, messaging, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
@@ -142,6 +142,7 @@ pub async fn messaging(config: &messaging::Configuration) -> miette::Result<Mess
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 pub async fn search(
     search_config: &search::Configuration,
+    language_detection_config: language_detection::Configuration,
     db_pool: &PgPool,
 ) -> miette::Result<AnySearchBackend> {
     let service = match search_config {
@@ -156,7 +157,11 @@ pub async fn search(
                 .wrap_err("Failed to connect to Meilisearch")?
                 .into()
         }
-        search::Configuration::Sql => SqlSearchService::new(db_pool.clone()).into(),
+        search::Configuration::Sql => SqlSearchService::builder()
+            .db_pool(db_pool.clone())
+            .language_detection_config(language_detection_config)
+            .build()
+            .into(),
         search::Configuration::None => NoopSearchService.into(),
     };
 
