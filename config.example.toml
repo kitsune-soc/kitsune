@@ -129,6 +129,10 @@ domains = []
 redis-url = "redis://localhost"
 num-workers = 20
 
+[language-detection]
+backend = "whatlang"
+default-language = "en"
+
 [messaging]
 type = "in-process"
 
