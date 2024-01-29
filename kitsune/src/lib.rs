@@ -77,7 +77,8 @@ pub async fn initialise_state(
             .build()
     });
 
-    let search_backend = prepare::search(&config.search, &db_pool).await?;
+    let search_backend =
+        prepare::search(&config.search, config.language_detection, &db_pool).await?;
 
     let prepare_activitypub_fetcher = PrepareActivityPubFetcher::builder()
         .account_cache(prepare::cache(&config.cache, "ACCOUNT-CACHE"))
@@ -85,6 +86,7 @@ pub async fn initialise_state(
         .db_pool(db_pool.clone())
         .embed_client(embed_client.clone())
         .federation_filter(federation_filter.clone())
+        .language_detection_config(config.language_detection)
         .post_cache(prepare::cache(&config.cache, "POST-CACHE"))
         .search_backend(search_backend.clone())
         .build();
@@ -177,6 +179,7 @@ pub async fn initialise_state(
         .embed_client(embed_client.clone())
         .instance_service(instance_service.clone())
         .job_service(job_service.clone())
+        .language_detection_config(config.language_detection)
         .post_resolver(post_resolver)
         .search_backend(search_backend.clone())
         .status_event_emitter(status_event_emitter.clone())
@@ -208,6 +211,7 @@ pub async fn initialise_state(
         },
         federation_filter,
         fetcher,
+        language_detection_config: config.language_detection,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
         oauth2: oauth2_service,

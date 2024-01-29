@@ -12,7 +12,7 @@ use kitsune_db::{
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::database_test;
+use kitsune_test::{database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
 use scoped_futures::ScopedFutureExt;
@@ -35,6 +35,7 @@ async fn fetch_actor() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(
                 client,
@@ -77,6 +78,7 @@ async fn fetch_emoji() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))))
             .account_cache(Arc::new(NoopCache.into()))
@@ -129,6 +131,7 @@ async fn fetch_note() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(
                 client,

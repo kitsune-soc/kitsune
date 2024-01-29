@@ -8,7 +8,7 @@ use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::database_test;
+use kitsune_test::{database_test, language_detection_config};
 use kitsune_type::webfinger::{Link, Resource};
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
@@ -56,6 +56,7 @@ async fn fetch_actor_with_custom_acct() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(
                 client,
@@ -137,6 +138,7 @@ async fn ignore_fake_webfinger_acct() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(
                 client,

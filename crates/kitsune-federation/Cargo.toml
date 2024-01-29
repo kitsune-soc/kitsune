@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-cache = { path = "../kitsune-cache" }
+kitsune-config = { path = "../kitsune-config" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }

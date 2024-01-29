@@ -1,41 +1,22 @@
 use isolang::Language;
-
-#[derive(Clone, Copy, Debug)]
-pub enum DetectionBackend {
-    Dummy,
-    #[cfg(feature = "whatlang")]
-    Whatlang,
-    #[cfg(feature = "whichlang")]
-    Whichlang,
-}
-
-impl Default for DetectionBackend {
-    #[allow(unreachable_code)]
-    fn default() -> Self {
-        #[cfg(feature = "whatlang")]
-        return Self::Whatlang;
-
-        #[cfg(feature = "whichlang")]
-        return Self::Whichlang;
-
-        Self::Dummy
-    }
-}
+use kitsune_config::language_detection::{self, DetectionBackend};
 
 /// Get the ISO code of the specified text
 ///
-/// If the language couldn't get detected reliably, it defaults to english
+/// If the language couldn't get detected reliably, it defaults to whatever you set as your default language
 #[must_use]
-#[allow(unused_variables)] // In case we don't have any detectors compiled
-pub fn detect_language(backend: DetectionBackend, text: &str) -> Language {
-    match backend {
-        DetectionBackend::Dummy => Language::Eng,
-        #[cfg(feature = "whatlang")]
+pub fn detect_language(config: language_detection::Configuration, text: &str) -> Language {
+    match config.backend {
+        DetectionBackend::None => config.default_language,
         DetectionBackend::Whatlang => whatlang::detect(text)
             .and_then(|info| info.is_reliable().then_some(info.lang()))
-            .map_or(Language::Eng, crate::map::whatlang_to_isolang),
-        #[cfg(feature = "whichlang")]
+            .map_or(config.default_language, crate::map::whatlang_to_isolang),
         DetectionBackend::Whichlang => {
+            // `whichlang` currently panics if it encounters an empty string
+            if text.is_empty() {
+                return config.default_language;
+            }
+
             crate::map::whichlang_to_isolang(whichlang::detect_language(text))
         }
     }
@@ -43,7 +24,24 @@ pub fn detect_language(backend: DetectionBackend, text: &str) -> Language {
 
 #[cfg(test)]
 mod test {
-    #[cfg(all(feature = "whatlang", feature = "whichlang"))]
+    use crate::detect_language;
+    use isolang::Language;
+    use kitsune_config::language_detection::{self, DetectionBackend};
+
+    #[test]
+    fn empty_no_panic_whichlang() {
+        let empty = "";
+        let spaces = " ";
+
+        let config = language_detection::Configuration {
+            backend: DetectionBackend::Whichlang,
+            default_language: Language::Eng,
+        };
+
+        let _ = detect_language(config, empty);
+        let _ = detect_language(config, spaces);
+    }
+
     #[test]
     fn supported_includes_detection_languages() {
         use crate::{

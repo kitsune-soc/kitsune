@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct FsConfiguration {
     pub upload_dir: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct S3Configuration {
     pub bucket_name: SmolStr,
@@ -18,7 +18,7 @@ pub struct S3Configuration {
     pub secret_access_key: SmolStr,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "type")]
 pub enum Configuration {
     Fs(FsConfiguration),

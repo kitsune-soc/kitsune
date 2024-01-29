@@ -4,7 +4,11 @@ use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
-use kitsune_config::database::Configuration as DatabaseConfig;
+use isolang::Language;
+use kitsune_config::{
+    database::Configuration as DatabaseConfig,
+    language_detection::{self, DetectionBackend},
+};
 use kitsune_db::PgPool;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
@@ -61,6 +65,14 @@ where
     match out {
         Ok(out) => out,
         Err(err) => panic::resume_unwind(err),
+    }
+}
+
+#[must_use]
+pub fn language_detection_config() -> language_detection::Configuration {
+    language_detection::Configuration {
+        backend: DetectionBackend::Whichlang,
+        default_language: Language::Eng,
     }
 }
 

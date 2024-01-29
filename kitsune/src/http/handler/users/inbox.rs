@@ -96,6 +96,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
             .db_pool(&state.db_pool)
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
+            .language_detection_config(state.language_detection_config)
             .object(Box::new(object))
             .search_backend(state.service.search.backend())
             .build();
@@ -329,6 +330,7 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
             .db_pool(&state.db_pool)
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
+            .language_detection_config(state.language_detection_config)
             .object(Box::new(object))
             .search_backend(state.service.search.backend())
             .build();

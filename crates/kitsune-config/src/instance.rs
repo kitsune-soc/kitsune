@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "type")]
 pub enum FederationFilterConfiguration {
     Allow { domains: Vec<SmolStr> },
     Deny { domains: Vec<SmolStr> },
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Configuration {
     pub allow_non_ascii_usernames: bool,

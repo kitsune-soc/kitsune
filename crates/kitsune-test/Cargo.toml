@@ -13,6 +13,7 @@ diesel-async = "0.4.1"
 futures-util = "0.3.30"
 http = "1.0.0"
 http-body-util = "0.1.0"
+isolang = "2.4.0"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 pin-project-lite = "0.2.13"

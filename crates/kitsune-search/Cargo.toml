@@ -14,14 +14,16 @@ diesel-async = "0.4.1"
 diesel_full_text_search = { version = "2.1.1", default-features = false }
 enum_dispatch = "0.3.12"
 futures-util = "0.3.30"
+kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-language = { path = "../kitsune-language" }
 miette = "5.10.0"
 serde = { version = "1.0.196", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-strum = { version = "0.25.0", features = ["derive"] }
+strum = { version = "0.26.1", features = ["derive"] }
 thiserror = "1.0.56"
 tracing = "0.1.40"
+typed-builder = "0.18.1"
 
 # "meilisearch" feature
 isahc = { version = "1.7.2", default-features = false, features = [

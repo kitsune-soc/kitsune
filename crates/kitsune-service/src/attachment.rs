@@ -45,7 +45,7 @@ pub struct Update {
     #[garde(skip)]
     attachment_id: Uuid,
     #[builder(setter(strip_option))]
-    #[garde(length(max = MAX_MEDIA_DESCRIPTION_LENGTH))]
+    #[garde(length(chars, max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
 }
 
@@ -58,7 +58,7 @@ pub struct Upload<S> {
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
     #[builder(default, setter(strip_option))]
-    #[garde(length(max = MAX_MEDIA_DESCRIPTION_LENGTH))]
+    #[garde(length(chars, max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
     #[builder(default = "Uuid::now_v7().to_string()")]
     #[garde(skip)]

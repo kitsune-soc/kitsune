@@ -1,5 +1,6 @@
 use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum_extra::extract::cookie;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::{event::PostEventEmitter, traits::Fetcher};
 use kitsune_db::PgPool;
 use kitsune_email::MailingService;
@@ -155,6 +156,7 @@ pub struct ZustandInner {
     pub event_emitter: EventEmitter,
     pub federation_filter: FederationFilter,
     pub fetcher: Arc<dyn Fetcher>,
+    pub language_detection_config: LanguageDetectionConfig,
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: MastodonMapper,
     pub oauth2: OAuth2Service,
