@@ -14,6 +14,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::event::{post::EventType, PostEvent, PostEventEmitter};
 use kitsune_db::{
     model::{
@@ -42,7 +43,7 @@ use kitsune_jobs::deliver::{
     unfavourite::DeliverUnfavourite,
     update::{DeliverUpdate, UpdateEntity},
 };
-use kitsune_language::{DetectionBackend, Language};
+use kitsune_language::Language;
 use kitsune_search::SearchBackend;
 use kitsune_url::UrlService;
 use kitsune_util::{process, sanitize::CleanHtmlExt};
@@ -301,6 +302,7 @@ pub struct PostService {
     embed_client: Option<EmbedClient>,
     instance_service: InstanceService,
     job_service: JobService,
+    language_detection_config: LanguageDetectionConfig,
     post_resolver: PostResolver,
     search_backend: kitsune_search::AnySearchBackend,
     status_event_emitter: PostEventEmitter,
@@ -457,7 +459,7 @@ impl PostService {
         content.clean_html();
 
         let detect_language =
-            |s: &str| kitsune_language::detect_language(DetectionBackend::default(), s);
+            |s: &str| kitsune_language::detect_language(self.language_detection_config, s);
         let content_lang = create_post.language.map_or_else(
             || detect_language(&content),
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
@@ -625,7 +627,7 @@ impl PostService {
             Some(lang) => Language::from_639_1(&lang),
             None => content
                 .as_ref()
-                .map(|c| kitsune_language::detect_language(DetectionBackend::default(), c)),
+                .map(|c| kitsune_language::detect_language(self.language_detection_config, c)),
         };
 
         let (mentioned_account_ids, custom_emojis, content) = match content.as_ref() {

@@ -7,8 +7,7 @@ mod pg_enum;
 mod regconfig;
 
 pub use self::{
-    detect::{detect_language, DetectionBackend},
-    pg_enum::generate_postgres_enum,
+    detect::detect_language, pg_enum::generate_postgres_enum,
     regconfig::generate_regconfig_function,
 };
 pub use isolang::Language;

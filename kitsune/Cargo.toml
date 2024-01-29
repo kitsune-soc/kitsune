@@ -82,7 +82,7 @@ serde = { version = "1.0.196", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
 speedy-uuid = { path = "../lib/speedy-uuid" }
-strum = { version = "0.25.0", features = ["derive", "phf"] }
+strum = { version = "0.26.1", features = ["derive", "phf"] }
 tempfile = "3.9.0"
 thiserror = "1.0.56"
 time = "0.3.31"

@@ -152,11 +152,11 @@ pub struct Update<A, H> {
     account_id: Uuid,
 
     #[builder(default, setter(strip_option))]
-    #[garde(length(max = 50))]
+    #[garde(length(chars, max = 50))]
     display_name: Option<String>,
 
     #[builder(default, setter(strip_option))]
-    #[garde(length(max = 150))]
+    #[garde(length(chars, max = 150))]
     note: Option<String>,
 
     #[builder(default, setter(strip_option))]

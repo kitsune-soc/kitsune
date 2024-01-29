@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
 use kitsune_cache::ArcCache;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::{
     consts::USER_AGENT,
     error::BoxError,
@@ -51,6 +52,7 @@ pub struct Fetcher {
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilter,
+    language_detection_config: LanguageDetectionConfig,
     #[builder(setter(into))]
     search_backend: kitsune_search::AnySearchBackend,
     resolver: Arc<dyn Resolver>,

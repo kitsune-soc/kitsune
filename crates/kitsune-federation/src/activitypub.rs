@@ -3,6 +3,7 @@ use kitsune_activitypub::{
     Fetcher as ActivityPubFetcher, InboxResolver,
 };
 use kitsune_cache::ArcCache;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::{resolver::AccountResource, Deliverer, Fetcher};
 use kitsune_db::{
     model::{account::Account, post::Post},
@@ -31,6 +32,7 @@ pub struct PrepareFetcher {
     db_pool: PgPool,
     embed_client: Option<kitsune_embed::Client>,
     federation_filter: FederationFilter,
+    language_detection_config: LanguageDetectionConfig,
     post_cache: ArcCache<str, Post>,
     search_backend: AnySearchBackend,
 }
@@ -64,6 +66,7 @@ pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
         .db_pool(prepare.db_pool.clone())
         .embed_client(prepare.embed_client)
         .federation_filter(prepare.federation_filter.clone())
+        .language_detection_config(prepare.language_detection_config)
         .post_cache(prepare.post_cache)
         .resolver(Arc::new(webfinger))
         .search_backend(prepare.search_backend)

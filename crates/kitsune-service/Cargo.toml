@@ -15,7 +15,7 @@ derive_builder = "0.13.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
-garde = { version = "0.17.0", default-features = false, features = [
+garde = { version = "0.18.0", default-features = false, features = [
     "derive",
     "email",
     "email-idna",

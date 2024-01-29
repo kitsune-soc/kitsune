@@ -3,6 +3,7 @@ use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
 use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
 use futures_util::TryStreamExt;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_db::{
     function::iso_code_to_language,
     lang::LanguageIsoCode,
@@ -10,19 +11,13 @@ use kitsune_db::{
     schema::{accounts, posts},
     PgPool,
 };
-use kitsune_language::DetectionBackend;
 use speedy_uuid::Uuid;
+use typed_builder::TypedBuilder;
 
-#[derive(Clone)]
+#[derive(Clone, TypedBuilder)]
 pub struct SearchService {
     db_pool: PgPool,
-}
-
-impl SearchService {
-    #[must_use]
-    pub fn new(db_pool: PgPool) -> Self {
-        Self { db_pool }
-    }
+    language_detection_config: LanguageDetectionConfig,
 }
 
 impl SearchBackend for SearchService {
@@ -48,7 +43,7 @@ impl SearchBackend for SearchService {
         min_id: Option<Uuid>,
         max_id: Option<Uuid>,
     ) -> Result<Vec<SearchResultReference>> {
-        let query_lang = kitsune_language::detect_language(DetectionBackend::default(), query);
+        let query_lang = kitsune_language::detect_language(self.language_detection_config, query);
         let query_fn_call = websearch_to_tsquery_with_search_config(
             iso_code_to_language(LanguageIsoCode::from(query_lang)),
             &query,
