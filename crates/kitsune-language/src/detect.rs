@@ -3,7 +3,7 @@ use kitsune_config::language_detection::{self, DetectionBackend};
 
 /// Get the ISO code of the specified text
 ///
-/// If the language couldn't get detected reliably, it defaults to english
+/// If the language couldn't get detected reliably, it defaults to whatever you set as your default language
 #[must_use]
 pub fn detect_language(config: language_detection::Configuration, text: &str) -> Language {
     match config.backend {
