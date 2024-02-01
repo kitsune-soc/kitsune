@@ -1,5 +1,4 @@
 use athena::{JobContextRepository, JobDetails, JobQueue, Runnable};
-use deadpool_redis::{Config, Runtime};
 use futures_util::{
     stream::{self, BoxStream},
     StreamExt,

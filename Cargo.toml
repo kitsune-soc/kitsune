@@ -47,6 +47,7 @@ members = [
     "lib/http-compat",
     "lib/kitsune-retry-policies",
     "lib/masto-id-convert",
+    "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
     "lib/tower-http-digest",

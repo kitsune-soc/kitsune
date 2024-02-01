@@ -480,11 +480,11 @@ name = "athena"
 version = "0.0.1-pre.5"
 dependencies = [
  "ahash 0.8.7",
- "deadpool-redis",
  "either",
  "futures-util",
  "iso8601-timestamp",
  "kitsune-retry-policies",
+ "multiplex-pool",
  "once_cell",
  "rand 0.8.5",
  "redis",
@@ -4373,6 +4373,10 @@ dependencies = [
  "spin 0.9.8",
  "version_check",
 ]
+
+[[package]]
+name = "multiplex-pool"
+version = "0.0.1-pre.5"
 
 [[package]]
 name = "nanorand"
