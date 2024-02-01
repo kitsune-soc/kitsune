@@ -1,5 +1,4 @@
-use crate::error::Result;
-use deadpool_redis::Pool as RedisPool;
+use crate::{error::Result, RedisPool};
 use once_cell::sync::Lazy;
 use rand::Rng;
 use redis::Script;
@@ -23,7 +22,7 @@ pub struct ScheduledJobActor {
 
 impl ScheduledJobActor {
     async fn run(&mut self) -> Result<()> {
-        let mut conn = self.redis_pool.get().await?;
+        let mut conn = self.redis_pool.get();
         SCHEDULE_SCRIPT
             .key(self.queue_name.as_str())
             .key(self.scheduled_queue_name.as_str())
