@@ -9,6 +9,10 @@ codegen-units = 1
 lto = true
 strip = true
 
+[profile.dist-smol]
+inherits = "dist"
+opt-level = "z"
+
 [workspace]
 members = [
     "crates/kitsune-activitypub",
