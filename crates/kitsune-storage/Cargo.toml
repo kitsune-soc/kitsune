@@ -11,12 +11,12 @@ futures-util = "0.3.30"
 http = "1.0.0"
 kitsune-http-client = { path = "../kitsune-http-client" }
 rusty-s3 = { version = "0.5.0", default-features = false }
-tokio = { version = "1.35.1", features = ["fs", "io-util"] }
+tokio = { version = "1.36.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.10", features = ["io"] }
 
 [dev-dependencies]
-tempfile = "3.9.0"
-tokio = { version = "1.35.1", features = ["macros", "rt"] }
+tempfile = "3.10.0"
+tokio = { version = "1.36.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

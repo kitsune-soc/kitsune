@@ -23,7 +23,7 @@ kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
-miette = "5.10.0"
+miette = "7.0.0"
 num-derive = "0.4.1"
 num-traits = "0.2.17"
 rustls = "0.22.2"
@@ -32,7 +32,7 @@ serde = { version = "1.0.196", features = ["derive"] }
 simd-json = "0.13.8"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.56"
-tokio = { version = "1.35.1", features = ["rt"] }
+tokio = { version = "1.36.0", features = ["rt"] }
 tokio-postgres = "0.7.10"
 tokio-postgres-rustls = "0.11.1"
 tracing = "0.1.40"
@@ -42,7 +42,7 @@ typed-builder = "0.18.1"
 [dev-dependencies]
 kitsune-test = { path = "../kitsune-test" }
 serial_test = "3.0.0"
-tokio = { version = "1.35.1", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros"] }
 
 [lints]
 workspace = true
