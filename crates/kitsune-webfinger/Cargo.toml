@@ -23,7 +23,7 @@ http-body-util = "0.1.0"
 hyper = "1.1.0"
 pretty_assertions = "1.4.0"
 simd-json = "0.13.8"
-tokio = { version = "1.35.1", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 
 [lints]

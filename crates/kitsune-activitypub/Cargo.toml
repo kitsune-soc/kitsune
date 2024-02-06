@@ -53,7 +53,7 @@ kitsune-test = { path = "../kitsune-test" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 pretty_assertions = "1.4.0"
 serial_test = "3.0.0"
-tokio = { version = "1.35.1", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 
 [lints]
