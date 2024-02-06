@@ -11,8 +11,9 @@ pub fn pool_config() -> ManagerConfig<AsyncPgConnection> {
 fn establish_conn(config: &str) -> BoxFuture<'_, ConnectionResult<AsyncPgConnection>> {
     async {
         let rustls_config = rustls::ClientConfig::builder()
-            .with_root_certificates(load_certs())
+            .with_root_certificates(load_certs().await)
             .with_no_client_auth();
+
         let tls = tokio_postgres_rustls::MakeRustlsConnect::new(rustls_config);
         let (client, conn) = tokio_postgres::connect(config, tls)
             .await
@@ -29,10 +30,16 @@ fn establish_conn(config: &str) -> BoxFuture<'_, ConnectionResult<AsyncPgConnect
     .boxed()
 }
 
-fn load_certs() -> rustls::RootCertStore {
+async fn load_certs() -> rustls::RootCertStore {
+    // Load certificates on a background thread to avoid blocking the runtime
+    //
+    // TODO(aumetra): Maybe add a fallback to `webpki-roots`?
+    let certs = kitsune_blocking::io(rustls_native_certs::load_native_certs)
+        .await
+        .unwrap()
+        .expect("Failed to load native certificates");
+
     let mut roots = rustls::RootCertStore::empty();
-    let certs =
-        rustls_native_certs::load_native_certs().expect("Failed to load native certificates");
     roots.add_parsable_certificates(certs);
     roots
 }

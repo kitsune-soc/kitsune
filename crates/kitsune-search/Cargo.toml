@@ -17,7 +17,7 @@ futures-util = "0.3.30"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-language = { path = "../kitsune-language" }
-miette = "5.10.0"
+miette = "7.0.0"
 serde = { version = "1.0.196", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.26.1", features = ["derive"] }
