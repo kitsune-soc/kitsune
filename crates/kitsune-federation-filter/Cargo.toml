@@ -3,6 +3,7 @@ name = "kitsune-federation-filter"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 globset = "0.4.14"

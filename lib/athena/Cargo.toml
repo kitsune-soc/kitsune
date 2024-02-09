@@ -3,7 +3,7 @@ name = "athena"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 ahash = "0.8.7"

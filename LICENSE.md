@@ -1,3 +1,18 @@
+# License structure
+
+The Kitsune monorepo contains differently licensed items:
+
+| Component                 | License (SPDX identifier) |
+| ------------------------- | ------------------------- |
+| `lib/` directory contents | `MIT OR Apache-2.0`       |
+| Anything else             | `AGPL-3.0-or-later`       |
+
+# License change notice
+
+Before, and including, commit c205e856abb7a27733bd38c8f39a081baedc73ce Kitsune was licensed under the MIT license.  
+The original license text follows here:
+
+```
 MIT License
 
 Copyright (c) 2023 Kitsune developers
@@ -19,3 +34,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```

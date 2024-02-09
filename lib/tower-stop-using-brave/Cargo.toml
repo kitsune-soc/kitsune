@@ -3,6 +3,7 @@ name = "tower-stop-using-brave"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 either = "1.9.0"

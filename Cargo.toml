@@ -81,6 +81,7 @@ rust_2018_idioms = "forbid"
 authors = ["Kitsune developers"]
 edition = "2021"
 version = "0.0.1-pre.5"
+license = "AGPL-3.0-or-later"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

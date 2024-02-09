@@ -3,6 +3,7 @@ name = "kitsune-messaging"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 ahash = "0.8.7"

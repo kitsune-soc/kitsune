@@ -3,6 +3,7 @@ name = "tower-http-digest"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 base64-simd = "0.8.0"

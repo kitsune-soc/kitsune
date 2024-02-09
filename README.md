@@ -39,7 +39,7 @@ If you found a suspected security vulnerability, please refer to our [security p
 
 ## License
 
-Kitsune is licensed under the [MIT license](http://opensource.org/licenses/MIT).
+For licensing terms, check [LICENSE.md](./LICENSE.md)
 
 ### Contribution
 

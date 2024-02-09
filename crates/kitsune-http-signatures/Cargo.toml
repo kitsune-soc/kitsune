@@ -3,6 +3,7 @@ name = "kitsune-http-signatures"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 base64-simd = "0.8.0"

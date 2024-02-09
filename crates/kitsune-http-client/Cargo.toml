@@ -3,6 +3,7 @@ name = "kitsune-http-client"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 async-stream = "0.3.5"

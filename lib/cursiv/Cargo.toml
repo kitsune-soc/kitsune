@@ -3,6 +3,7 @@ name = "cursiv"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 aliri_braid = "0.4.0"

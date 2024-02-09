@@ -3,6 +3,7 @@ name = "kitsune-jobs"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 athena = { path = "../../lib/athena" }

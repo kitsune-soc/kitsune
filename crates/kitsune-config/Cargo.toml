@@ -3,6 +3,7 @@ name = "kitsune-config"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 isolang = { version = "2.4.0", features = ["serde"] }

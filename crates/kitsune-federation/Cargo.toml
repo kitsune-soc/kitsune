@@ -3,6 +3,7 @@ name = "kitsune-federation"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 kitsune-activitypub = { path = "../kitsune-activitypub" }

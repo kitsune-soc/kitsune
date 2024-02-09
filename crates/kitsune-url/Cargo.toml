@@ -3,6 +3,7 @@ name = "kitsune-url"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 smol_str = "0.2.1"

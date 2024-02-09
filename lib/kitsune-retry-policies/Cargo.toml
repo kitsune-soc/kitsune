@@ -3,6 +3,7 @@ name = "kitsune-retry-policies"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 futures-retry-policies = { version = "0.3.1", features = [

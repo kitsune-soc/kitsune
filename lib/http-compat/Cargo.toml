@@ -3,6 +3,7 @@ name = "http-compat"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 http02 = { package = "http", version = "0.2.11" }
