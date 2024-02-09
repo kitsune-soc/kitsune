@@ -13,15 +13,16 @@ use kitsune_messaging::{
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
 use miette::{Context, IntoDiagnostic};
+use multiplex_pool::RoundRobinStrategy;
+use redis::aio::ConnectionManager;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{
-    fmt::Display,
-    str::FromStr,
-    sync::{Arc, OnceLock},
-    time::Duration,
-};
+use std::{fmt::Display, str::FromStr, sync::Arc, time::Duration};
+use tokio::sync::OnceCell;
 
-pub fn cache<K, V>(config: &cache::Configuration, cache_name: &str) -> ArcCache<K, V>
+pub async fn cache<K, V>(
+    config: &cache::Configuration,
+    cache_name: &str,
+) -> miette::Result<ArcCache<K, V>>
 where
     K: Display + Send + Sync + ?Sized + 'static,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
@@ -30,14 +31,22 @@ where
         cache::Configuration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         cache::Configuration::None => NoopCache.into(),
         cache::Configuration::Redis(ref redis_config) => {
-            static REDIS_POOL: OnceLock<deadpool_redis::Pool> = OnceLock::new();
+            static REDIS_POOL: OnceCell<multiplex_pool::Pool<ConnectionManager>> =
+                OnceCell::const_new();
 
-            let pool = REDIS_POOL.get_or_init(|| {
-                let config = deadpool_redis::Config::from_url(redis_config.url.clone());
-                config
-                    .create_pool(Some(deadpool_redis::Runtime::Tokio1))
-                    .unwrap()
-            });
+            let pool = REDIS_POOL
+                .get_or_try_init(|| async {
+                    let client = redis::Client::open(redis_config.url.as_str())?;
+
+                    multiplex_pool::Pool::from_producer(
+                        || client.get_connection_manager(),
+                        10,
+                        RoundRobinStrategy::default(),
+                    )
+                    .await
+                })
+                .await
+                .into_diagnostic()?;
 
             RedisCache::builder()
                 .prefix(cache_name)
@@ -48,7 +57,7 @@ where
         }
     };
 
-    Arc::new(cache)
+    Ok(Arc::new(cache))
 }
 
 #[must_use]

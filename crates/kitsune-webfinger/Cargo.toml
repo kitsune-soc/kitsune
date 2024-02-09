@@ -8,7 +8,6 @@ license.workspace = true
 [dependencies]
 async-trait = "0.1.77"
 autometrics = { version = "1.0.0", default-features = false }
-deadpool-redis = "0.14.0"
 futures-util = "0.3.30"
 http = "1.0.0"
 kitsune-cache = { path = "../kitsune-cache" }
@@ -16,6 +15,10 @@ kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
+multiplex-pool = { path = "../../lib/multiplex-pool" }
+redis = { version = "0.24.0", default-features = false, features = [
+    "connection-manager",
+] }
 tracing = "0.1.40"
 
 [dev-dependencies]

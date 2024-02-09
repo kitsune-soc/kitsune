@@ -3221,9 +3221,9 @@ dependencies = [
 name = "kitsune-cache"
 version = "0.0.1-pre.5"
 dependencies = [
- "deadpool-redis",
  "enum_dispatch",
  "moka",
+ "multiplex-pool",
  "redis",
  "serde",
  "simd-json",
@@ -3638,7 +3638,6 @@ dependencies = [
  "async-stream",
  "athena",
  "bytes",
- "deadpool-redis",
  "derive_builder",
  "diesel",
  "diesel-async",
@@ -3673,11 +3672,13 @@ dependencies = [
  "kitsune-webfinger",
  "miette",
  "mime",
+ "multiplex-pool",
  "password-hash",
  "pkcs8",
  "post-process",
  "pretty_assertions",
  "rand 0.8.5",
+ "redis",
  "rsa",
  "rusty-s3",
  "scoped-futures",
@@ -3716,7 +3717,6 @@ name = "kitsune-test"
 version = "0.0.1-pre.5"
 dependencies = [
  "bytes",
- "deadpool-redis",
  "diesel",
  "diesel-async",
  "futures-util",
@@ -3725,6 +3725,7 @@ dependencies = [
  "isolang",
  "kitsune-config",
  "kitsune-db",
+ "multiplex-pool",
  "pin-project-lite",
  "redis",
  "scoped-futures",
@@ -3772,7 +3773,6 @@ version = "0.0.1-pre.5"
 dependencies = [
  "async-trait",
  "autometrics",
- "deadpool-redis",
  "futures-util",
  "http 1.0.0",
  "http-body-util",
@@ -3782,7 +3782,9 @@ dependencies = [
  "kitsune-http-client",
  "kitsune-type",
  "kitsune-util",
+ "multiplex-pool",
  "pretty_assertions",
+ "redis",
  "simd-json",
  "tokio",
  "tower",
