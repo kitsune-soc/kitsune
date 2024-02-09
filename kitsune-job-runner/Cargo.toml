@@ -14,7 +14,6 @@ eula = false
 [dependencies]
 athena = { path = "../lib/athena" }
 clap = { version = "4.5.0", features = ["derive", "wrap_help"] }
-deadpool-redis = "0.14.0"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
@@ -28,6 +27,12 @@ kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
 miette = { version = "7.0.0", features = ["fancy"] }
 mimalloc = "0.1.39"
+multiplex-pool = { path = "../lib/multiplex-pool" }
+redis = { version = "0.24.0", default-features = false, features = [
+    "aio",
+    "connection-manager",
+    "tokio-rustls-comp",
+] }
 tokio = { version = "1.36.0", features = ["full"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"

@@ -3442,7 +3442,6 @@ version = "0.0.1-pre.5"
 dependencies = [
  "athena",
  "clap",
- "deadpool-redis",
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
@@ -3456,6 +3455,8 @@ dependencies = [
  "kitsune-url",
  "miette",
  "mimalloc",
+ "multiplex-pool",
+ "redis",
  "tokio",
  "tracing",
  "typed-builder",
