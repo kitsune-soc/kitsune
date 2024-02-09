@@ -39,14 +39,19 @@ impl<Object> FromIterator<Object> for Pool<Object> {
     }
 }
 
+impl<Object> Pool<Object> {
+    pub fn get_ref(&self) -> &Object {
+        self.inner.strategy.select(&self.inner.objects)
+    }
+}
+
 impl<Object> Pool<Object>
 where
     Object: Clone,
 {
     #[must_use]
     pub fn get(&self) -> Object {
-        let selected = self.inner.strategy.select(&self.inner.objects);
-        selected.clone()
+        self.get_ref().clone()
     }
 }
 
