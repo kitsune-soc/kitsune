@@ -13,9 +13,6 @@ pub enum Error {
     ClaimsVerification(#[from] ClaimsVerificationError),
 
     #[error(transparent)]
-    CreateRedisPool(#[from] deadpool_redis::CreatePoolError),
-
-    #[error(transparent)]
     Discovery(#[from] DiscoveryError<kitsune_http_client::Error>),
 
     #[error(transparent)]
@@ -38,9 +35,6 @@ pub enum Error {
 
     #[error(transparent)]
     Redis(#[from] redis::RedisError),
-
-    #[error(transparent)]
-    RedisPool(#[from] deadpool_redis::PoolError),
 
     #[error(transparent)]
     RequestToken(

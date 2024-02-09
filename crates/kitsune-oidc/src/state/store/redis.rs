@@ -1,16 +1,16 @@
 use super::Store;
 use crate::{error::Result, state::LoginState};
-use redis::AsyncCommands;
+use redis::{aio::ConnectionManager, AsyncCommands};
 
 const REDIS_PREFIX: &str = "OIDC-LOGIN-STATE";
 
 #[derive(Clone)]
 pub struct Redis {
-    pool: deadpool_redis::Pool,
+    pool: multiplex_pool::Pool<ConnectionManager>,
 }
 
 impl Redis {
-    pub fn new(pool: deadpool_redis::Pool) -> Self {
+    pub fn new(pool: multiplex_pool::Pool<ConnectionManager>) -> Self {
         Self { pool }
     }
 
@@ -22,7 +22,7 @@ impl Redis {
 
 impl Store for Redis {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
-        let mut conn = self.pool.get().await?;
+        let mut conn = self.pool.get();
         let raw_value: String = conn.get_del(Self::format_key(key)).await?;
 
         let mut raw_value = raw_value.into_bytes();
@@ -31,7 +31,7 @@ impl Store for Redis {
 
     async fn set(&self, key: &str, value: LoginState) -> Result<()> {
         let raw_value = simd_json::to_string(&value)?;
-        let mut conn = self.pool.get().await?;
+        let mut conn = self.pool.get();
         conn.set(Self::format_key(key), raw_value).await?;
 
         Ok(())
