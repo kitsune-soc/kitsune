@@ -25,8 +25,8 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 miette = "7.0.0"
-num-derive = "0.4.1"
-num-traits = "0.2.17"
+num-derive = "0.4.2"
+num-traits = "0.2.18"
 rustls = "0.22.2"
 rustls-native-certs = "0.7.0"
 serde = { version = "1.0.196", features = ["derive"] }
