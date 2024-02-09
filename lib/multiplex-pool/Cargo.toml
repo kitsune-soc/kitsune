@@ -3,6 +3,7 @@ name = "multiplex-pool"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 
