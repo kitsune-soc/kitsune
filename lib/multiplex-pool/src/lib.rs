@@ -1,6 +1,9 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
+use std::{
+    future::Future,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
 };
 
 pub trait Strategy<Object>: Send + Sync {
@@ -8,7 +11,7 @@ pub trait Strategy<Object>: Send + Sync {
 }
 
 #[derive(Default)]
-struct RoundRobinStrategy {
+pub struct RoundRobinStrategy {
     counter: AtomicUsize,
 }
 
@@ -28,16 +31,25 @@ pub struct Pool<Object> {
     inner: Arc<Inner<Object>>,
 }
 
-impl<Object> FromIterator<Object> for Pool<Object> {
-    fn from_iter<T: IntoIterator<Item = Object>>(iter: T) -> Self {
-        Self::new(
-            iter.into_iter().collect::<Box<[Object]>>(),
-            RoundRobinStrategy::default(),
-        )
-    }
-}
-
 impl<Object> Pool<Object> {
+    pub async fn from_producer<P, Fut, Err, S>(
+        mut producer: P,
+        count: usize,
+        strategy: S,
+    ) -> Result<Self, Err>
+    where
+        P: FnMut() -> Fut,
+        Fut: Future<Output = Result<Object, Err>>,
+        S: Strategy<Object> + 'static,
+    {
+        let mut objects = Vec::with_capacity(count);
+        for _ in 0..count {
+            objects.push((producer)().await?);
+        }
+
+        Ok(Self::new(objects, strategy))
+    }
+
     pub fn new<O, S>(objects: O, strategy: S) -> Self
     where
         O: Into<Box<[Object]>>,
@@ -77,11 +89,11 @@ impl<Object> Clone for Pool<Object> {
 
 #[cfg(test)]
 mod test {
-    use crate::Pool;
+    use crate::{Pool, RoundRobinStrategy};
 
     #[test]
     fn test_round_robin() {
-        let pool = (0..10).collect::<Pool<_>>();
+        let pool = Pool::new((0..10).collect::<Vec<_>>(), RoundRobinStrategy::default());
 
         for cnt in 0..20 {
             let item = pool.get();
