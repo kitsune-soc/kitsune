@@ -3,7 +3,7 @@ use std::sync::{
     Arc,
 };
 
-trait Strategy<Object>: Send + Sync {
+pub trait Strategy<Object>: Send + Sync {
     fn select<'a>(&self, obj: &'a [Object]) -> &'a Object;
 }
 
@@ -30,16 +30,28 @@ pub struct Pool<Object> {
 
 impl<Object> FromIterator<Object> for Pool<Object> {
     fn from_iter<T: IntoIterator<Item = Object>>(iter: T) -> Self {
-        Self {
-            inner: Arc::new(Inner {
-                strategy: Box::<RoundRobinStrategy>::default(),
-                objects: iter.into_iter().collect(),
-            }),
-        }
+        Self::new(
+            iter.into_iter().collect::<Box<[Object]>>(),
+            RoundRobinStrategy::default(),
+        )
     }
 }
 
 impl<Object> Pool<Object> {
+    pub fn new<O, S>(objects: O, strategy: S) -> Self
+    where
+        O: Into<Box<[Object]>>,
+        S: Strategy<Object> + 'static,
+    {
+        Self {
+            inner: Arc::new(Inner {
+                strategy: Box::new(strategy),
+                objects: objects.into(),
+            }),
+        }
+    }
+
+    #[must_use]
     pub fn get_ref(&self) -> &Object {
         self.inner.strategy.select(&self.inner.objects)
     }
