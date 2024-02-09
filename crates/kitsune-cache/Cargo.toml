@@ -10,7 +10,7 @@ enum_dispatch = "0.3.12"
 moka = { version = "0.12.5", features = ["sync"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 redis = { version = "0.24.0", default-features = false, features = [
-    "aio",
+    "connection-manager",
     "tokio-comp",
 ] }
 serde = "1.0.196"

@@ -51,6 +51,7 @@ post-process = { path = "../../lib/post-process" }
 rand = "0.8.5"
 redis = { version = "0.24.0", default-features = false, features = [
     "connection-manager",
+    "tokio-comp",
 ] }
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }

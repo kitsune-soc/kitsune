@@ -77,6 +77,9 @@ pkcs8 = "0.10.2"
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"
+redis = { version = "0.24.0", default-features = false, features = [
+    "tokio-rustls-comp",
+] }
 rust-embed = { version = "8.2.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.196", features = ["derive"] }
@@ -136,6 +139,7 @@ multiplex-pool = { path = "../lib/multiplex-pool" }
 pretty_assertions = "1.4.0"
 redis = { version = "0.24.0", default-features = false, features = [
     "connection-manager",
+    "tokio-comp",
 ] }
 serial_test = "3.0.0"
 tower = "0.4.13"

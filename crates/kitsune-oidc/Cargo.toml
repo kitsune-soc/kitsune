@@ -22,7 +22,7 @@ openidconnect = { version = "3.4.0", default-features = false, features = [
 ] }
 redis = { version = "0.24.0", default-features = false, features = [
     "connection-manager",
-    "tokio-rustls-comp",
+    "tokio-comp",
 ] }
 serde = { version = "1.0.196", features = ["derive"] }
 simd-json = "0.13.8"

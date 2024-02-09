@@ -18,6 +18,7 @@ kitsune-util = { path = "../kitsune-util" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 redis = { version = "0.24.0", default-features = false, features = [
     "connection-manager",
+    "tokio-comp",
 ] }
 tracing = "0.1.40"
 

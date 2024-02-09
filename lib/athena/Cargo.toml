@@ -19,7 +19,7 @@ redis = { version = "0.24.0", default-features = false, features = [
     "aio",
     "script",
     "streams",
-    "tokio-rustls-comp",
+    "tokio-comp",
 ] }
 retry-policies = "0.2.1"
 serde = { version = "1.0.196", features = ["derive"] }
