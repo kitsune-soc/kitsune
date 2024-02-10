@@ -1,5 +1,5 @@
 use diesel::{OptionalExtension, QueryDsl};
-use diesel_async::{pooled_connection::deadpool, scoped_futures::ScopedFutureExt, RunQueryDsl};
+use diesel_async::{pooled_connection::bb8, scoped_futures::ScopedFutureExt, RunQueryDsl};
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
@@ -43,7 +43,7 @@ pub enum Error {
     Http(#[from] kitsune_http_client::Error),
 
     #[error(transparent)]
-    Pool(#[from] deadpool::PoolError),
+    Pool(#[from] bb8::RunError),
 }
 
 impl<E> From<kitsune_db::PoolError<E>> for Error
