@@ -48,17 +48,16 @@ impl PgPool {
     }
 
     /// Run the code inside a context with a database transaction
-    pub async fn with_transaction<'a, R, E, F, Fut>(&self, func: F) -> Result<R, PoolError<E>>
+    pub async fn with_transaction<'a, F, Fut, T, E>(&self, func: F) -> Result<T, PoolError<E>>
     where
         F: for<'conn> FnOnce(&'conn mut AsyncPgConnection) -> ScopedFutureWrapper<'conn, 'a, Fut>
-            + Send
-            + 'a,
-        Fut: Future<Output = Result<R, E>> + Send,
-        E: From<diesel::result::Error> + Debug + Display + Send + 'a,
-        R: Send + 'a,
+            + Send,
+        Fut: Future<Output = Result<T, E>> + Send,
+        T: Send,
+        E: From<diesel::result::Error> + Debug + Display + Send,
     {
         let mut conn = self.inner.get().await?;
-        conn.transaction(|conn| (func)(conn).scope_boxed())
+        conn.transaction(|conn| func(conn).scope_boxed())
             .await
             .map_err(PoolError::User)
     }
