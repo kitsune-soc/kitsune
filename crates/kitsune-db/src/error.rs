@@ -1,5 +1,5 @@
 use core::fmt;
-use diesel_async::pooled_connection::deadpool::PoolError;
+use diesel_async::pooled_connection::bb8;
 use miette::Diagnostic;
 use std::error::Error as StdError;
 use thiserror::Error;
@@ -52,5 +52,5 @@ pub enum Error {
     Migration(BoxError),
 
     #[error(transparent)]
-    Pool(#[from] PoolError),
+    Pool(#[from] bb8::RunError),
 }

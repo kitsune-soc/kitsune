@@ -1,4 +1,4 @@
-use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
+use diesel_async::pooled_connection::bb8;
 use kitsune_core::error::BoxError;
 use kitsune_http_signatures::ring;
 use rsa::pkcs8::der;
@@ -19,7 +19,7 @@ pub enum Error {
     Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] DatabasePoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] der::Error),

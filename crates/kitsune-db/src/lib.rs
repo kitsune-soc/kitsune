@@ -4,7 +4,7 @@ extern crate tracing;
 use diesel::Connection;
 use diesel_async::{
     async_connection_wrapper::AsyncConnectionWrapper,
-    pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
+    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncPgConnection,
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -57,20 +57,23 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
         AsyncDieselConnectionManager::new(config.url.as_str())
     };
 
-    let pool = Pool::builder(pool_config)
-        .max_size(config.max_connections as usize)
-        .build()
+    let pool = Pool::builder()
+        .max_size(config.max_connections)
+        .build(pool_config)
+        .await
         .unwrap();
 
-    let mut conn = pool.get().await?;
+    {
+        let mut conn = pool.get().await?;
 
-    kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
-    kitsune_language::generate_regconfig_function(
-        &mut conn,
-        "iso_code_to_language",
-        "language_iso_code",
-    )
-    .await?;
+        kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
+        kitsune_language::generate_regconfig_function(
+            &mut conn,
+            "iso_code_to_language",
+            "language_iso_code",
+        )
+        .await?;
+    }
 
     Ok(pool.into())
 }

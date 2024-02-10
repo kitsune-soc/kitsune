@@ -4,6 +4,7 @@ use axum::{
     extract::multipart::MultipartError,
     response::{IntoResponse, Response},
 };
+use diesel_async::pooled_connection::bb8;
 use http::StatusCode;
 use kitsune_core::error::{BoxError, HttpError};
 use kitsune_service::error::{Error as ServiceError, PostError};
@@ -34,7 +35,7 @@ pub enum Error {
     Database(#[from] diesel::result::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] der::Error),

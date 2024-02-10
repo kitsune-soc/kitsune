@@ -778,6 +778,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bb8"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df7c2093d15d6a1d33b1f972e1c5ea3177748742b97a5f392aa83a65262c6780"
+dependencies = [
+ "async-trait",
+ "futures-channel",
+ "futures-util",
+ "parking_lot",
+ "tokio",
+]
+
+[[package]]
 name = "bcder"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1762,7 +1775,7 @@ version = "0.4.1"
 source = "git+https://github.com/weiznich/diesel_async.git?rev=017ebe2fb7a2709ab5db92148dea5ce812a35e09#017ebe2fb7a2709ab5db92148dea5ce812a35e09"
 dependencies = [
  "async-trait",
- "deadpool",
+ "bb8",
  "diesel",
  "futures-util",
  "scoped-futures",

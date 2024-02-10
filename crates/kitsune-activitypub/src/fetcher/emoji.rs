@@ -90,7 +90,7 @@ impl Fetcher {
                         .await?;
                     Ok::<_, Error>(emoji)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 

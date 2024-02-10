@@ -528,7 +528,7 @@ impl PostService {
 
                     Ok::<_, Error>(post)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 
@@ -681,7 +681,7 @@ impl PostService {
 
                     Ok::<_, Error>(post)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 
@@ -797,7 +797,7 @@ impl PostService {
 
                     Ok::<_, Error>(new_repost)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 
@@ -931,7 +931,7 @@ impl PostService {
 
                     Ok::<_, Error>(favourite)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 

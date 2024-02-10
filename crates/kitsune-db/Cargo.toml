@@ -10,7 +10,7 @@ build = "build.rs"
 diesel = { version = "2.1.4", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = [
     "async-connection-wrapper",
-    "deadpool",
+    "bb8",
     "postgres",
     "tokio",
 ] }

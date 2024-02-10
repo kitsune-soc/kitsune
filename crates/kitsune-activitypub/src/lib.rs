@@ -336,7 +336,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
 
                 Ok::<_, Error>(new_post)
             }
-            .scope_boxed()
+            .scoped()
         })
         .await?;
 
@@ -403,7 +403,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
 
                 Ok::<_, Error>(updated_post)
             }
-            .scope_boxed()
+            .scoped()
         })
         .await?;
 

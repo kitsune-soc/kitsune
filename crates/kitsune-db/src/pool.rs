@@ -1,6 +1,6 @@
 use diesel_async::{
-    pooled_connection::deadpool::{Object, Pool, PoolError as DeadpoolError},
-    scoped_futures::{ScopedBoxFuture, ScopedFutureWrapper},
+    pooled_connection::bb8::{self, Pool},
+    scoped_futures::{ScopedFutureExt, ScopedFutureWrapper},
     AsyncConnection, AsyncPgConnection,
 };
 use miette::Diagnostic;
@@ -16,7 +16,7 @@ where
     E: Display + Debug,
 {
     #[error(transparent)]
-    Pool(#[from] DeadpoolError),
+    Pool(#[from] bb8::RunError),
 
     #[error("{0}")]
     User(E),
@@ -39,8 +39,7 @@ impl PgPool {
     /// Run the code inside a context with a database connection
     pub async fn with_connection<'a, F, Fut, T, E>(&self, func: F) -> Result<T, PoolError<E>>
     where
-        for<'conn> F:
-            FnOnce(&'conn mut Object<AsyncPgConnection>) -> ScopedFutureWrapper<'conn, 'a, Fut>,
+        for<'conn> F: FnOnce(&'conn mut AsyncPgConnection) -> ScopedFutureWrapper<'conn, 'a, Fut>,
         Fut: Future<Output = Result<T, E>>,
         E: Display + Debug,
     {
@@ -49,18 +48,19 @@ impl PgPool {
     }
 
     /// Run the code inside a context with a database transaction
-    pub async fn with_transaction<'a, R, E, F>(&self, func: F) -> Result<R, PoolError<E>>
+    pub async fn with_transaction<'a, R, E, F, Fut>(&self, func: F) -> Result<R, PoolError<E>>
     where
-        F: for<'r> FnOnce(
-                &'r mut Object<AsyncPgConnection>,
-            ) -> ScopedBoxFuture<'a, 'r, Result<R, E>>
+        F: for<'conn> FnOnce(&'conn mut AsyncPgConnection) -> ScopedFutureWrapper<'conn, 'a, Fut>
             + Send
             + 'a,
+        Fut: Future<Output = Result<R, E>> + Send,
         E: From<diesel::result::Error> + Debug + Display + Send + 'a,
         R: Send + 'a,
     {
         let mut conn = self.inner.get().await?;
-        conn.transaction(func).await.map_err(PoolError::User)
+        conn.transaction(|conn| (func)(conn).scope_boxed())
+            .await
+            .map_err(PoolError::User)
     }
 }
 
