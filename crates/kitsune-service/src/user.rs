@@ -225,7 +225,7 @@ impl UserService {
 
                     Ok::<_, Error>(user)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 

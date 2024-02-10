@@ -180,7 +180,7 @@ impl Fetcher {
 
                     Ok::<_, Error>(account)
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await?;
 

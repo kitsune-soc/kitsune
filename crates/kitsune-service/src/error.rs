@@ -1,3 +1,4 @@
+use diesel_async::pooled_connection::bb8;
 use kitsune_http_signatures::ring;
 use std::{
     error::Error as StdError,
@@ -53,7 +54,7 @@ pub enum Error {
     Captcha(#[from] kitsune_captcha::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] pkcs8::der::Error),
