@@ -58,13 +58,13 @@ macro_rules! define_rayon_pool {
 }
 
 define_rayon_pool! {
-    name: crypto,
-    description: "Spawn cryptography-related work (signature creation/verification, password hashing, etc)"
+    name: cpu,
+    description: "Spawn general-purpose CPU bound work (image conversion, compression, etc.)"
 }
 
 define_rayon_pool! {
-    name: cpu,
-    description: "Spawn general-purpose CPU bound work (image conversion, compression, etc.)"
+    name: crypto,
+    description: "Spawn cryptography-related work (signature creation/verification, password hashing, etc)"
 }
 
 /// Spawn I/O-bound blocking work (blocking filesystem operations, blocking network operations, etc.)
