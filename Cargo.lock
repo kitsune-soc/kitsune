@@ -29,9 +29,9 @@ checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
 name = "ahash"
-version = "0.7.7"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a824f2aa7e75a0c98c5a504fceb80649e9c35265d44525b5f94de4771a395cd"
+checksum = "891477e0c6a8957309ee5c45a6368af3ae14bb510732d2684ffa19af310920f9"
 dependencies = [
  "getrandom 0.2.12",
  "once_cell",
@@ -40,9 +40,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c3a9648d43b9cd48db467b3f87fdd6e146bcc88ab0180006cef2179fe11d01"
+checksum = "42cd52102d3df161c77a887b608d7a4897d7cc112886a9537b738a887a03aaff"
 dependencies = [
  "cfg-if",
  "getrandom 0.2.12",
@@ -479,7 +479,7 @@ dependencies = [
 name = "athena"
 version = "0.0.1-pre.5"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "deadpool-redis",
  "either",
  "futures-util",
@@ -950,7 +950,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488a3c0921ff5891445f88552efc3ff82347d443ad906f5385539d48555f1a76"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "bytecount",
  "lol_html",
  "once_cell",
@@ -1082,9 +1082,9 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chrono"
-version = "0.4.33"
+version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f13690e35a5e4ace198e7beea2895d29f3a9cc55015fcebe6336bd2010af9eb"
+checksum = "5bc015644b92d5890fab7489e49d21f879d5c990186827d42ec511919404f38b"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2521,7 +2521,7 @@ version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5681137554ddff44396e5f149892c769d45301dd9aa19c51602a89ee214cb0ec"
 dependencies = [
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "serde",
 ]
 
@@ -2531,16 +2531,16 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 dependencies = [
- "ahash 0.7.7",
+ "ahash 0.7.8",
 ]
 
 [[package]]
 name = "hashbrown"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
 ]
 
 [[package]]
@@ -2549,7 +2549,7 @@ version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "allocator-api2",
 ]
 
@@ -3549,7 +3549,7 @@ dependencies = [
 name = "kitsune-messaging"
 version = "0.0.1-pre.5"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "derive_more 1.0.0-beta.6",
  "futures-util",
  "kitsune-retry-policies",
@@ -3654,7 +3654,7 @@ dependencies = [
 name = "kitsune-service"
 version = "0.0.1-pre.5"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "argon2",
  "async-stream",
  "athena",
@@ -4061,7 +4061,7 @@ dependencies = [
  "cfg-if",
  "cssparser 0.27.2",
  "encoding_rs",
- "hashbrown 0.13.1",
+ "hashbrown 0.13.2",
  "lazy_static",
  "lazycell",
  "memchr",
@@ -4181,7 +4181,7 @@ version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77b9e10a211c839210fd7f99954bda26e5f8e26ec686ad68da6a32df7c80e782"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "portable-atomic",
 ]
 
@@ -4214,15 +4214,15 @@ dependencies = [
 
 [[package]]
 name = "metrics-util"
-version = "0.16.0"
+version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2670b8badcc285d486261e2e9f1615b506baff91427b61bd336a472b65bbf5ed"
+checksum = "ece71ab046dcf45604e573329966ec1db5ff4b81cfa170a924ff4c959ab5451a"
 dependencies = [
  "aho-corasick",
  "crossbeam-epoch",
  "crossbeam-utils",
- "hashbrown 0.13.1",
- "indexmap 1.9.3",
+ "hashbrown 0.14.3",
+ "indexmap 2.2.2",
  "metrics",
  "num_cpus",
  "ordered-float 4.2.0",
@@ -4365,9 +4365,9 @@ dependencies = [
 
 [[package]]
 name = "mrml"
-version = "3.0.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "119192bf8e556b94c06ae02afb46680f76704abba2def85e2e5f5f8418b4db81"
+checksum = "decd52ecd768d703ded059629ed131ba38b012aa1abff3fd226ba89b7f0e734c"
 dependencies = [
  "indexmap 2.2.2",
  "mrml-macros",
@@ -5606,7 +5606,7 @@ version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c580d9cbbe1d1b479e8d67cf9daf6a62c957e6846048408b80b43ac3f6af84cd"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "arc-swap",
  "async-trait",
  "bytes",
@@ -6085,7 +6085,7 @@ version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "585480e3719b311b78a573db1c9d9c4c1f8010c2dee4cc59c2efe58ea4dbc3e1"
 dependencies = [
- "ahash 0.8.7",
+ "ahash 0.8.8",
  "cssparser 0.31.2",
  "ego-tree",
  "html5ever",

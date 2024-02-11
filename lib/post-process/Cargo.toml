@@ -13,11 +13,7 @@ harness = false
 logos = "0.14.0"
 
 [dev-dependencies]
-criterion = { version = "0.5.1", default-features = false, features = [
-    "cargo_bench_support",
-    "async_futures",
-    "rayon",
-] }
+criterion = { version = "0.5.1", features = ["async_futures"] }
 futures = "0.3.30"
 insta = { version = "1.34.0", features = ["glob"] }
 pretty_assertions = "1.4.0"

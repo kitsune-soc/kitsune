@@ -6,7 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-ahash = "0.8.7"
+ahash = "0.8.8"
 deadpool-redis = "0.14.0"
 either = { version = "1.10.0", default-features = false }
 futures-util = { version = "0.3.30", default-features = false }
