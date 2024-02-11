@@ -7,7 +7,7 @@ const CAVAGE_HEADER: &str = r#"keyId="Test",algorithm="rsa-sha256",headers="(req
 fn header1(c: &mut Criterion) {
     c.bench_function("parse_cavage_header1", |b| {
         b.iter(|| {
-            cavage::parse(black_box(CAVAGE_HEADER)).for_each(black_box(|_| {}));
+            let _ = cavage::parse(black_box(CAVAGE_HEADER));
         });
     });
 }

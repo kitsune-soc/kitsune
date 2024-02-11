@@ -13,7 +13,7 @@ serde = { version = "1.0.196", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
 strum = { version = "0.26.1", features = ["derive"] }
-thiserror = "1.0.56"
+thiserror = "1.0.57"
 typed-builder = "0.18.1"
 
 [lints]

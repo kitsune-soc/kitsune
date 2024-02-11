@@ -21,7 +21,7 @@ miette = "7.0.0"
 serde = { version = "1.0.196", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.26.1", features = ["derive"] }
-thiserror = "1.0.56"
+thiserror = "1.0.57"
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 

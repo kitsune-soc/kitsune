@@ -10,6 +10,7 @@ name = "parse_cavage_header"
 harness = false
 
 [dependencies]
+atoi_radix10 = "0.0.1"
 logos = "0.14.0"
 
 [dev-dependencies]

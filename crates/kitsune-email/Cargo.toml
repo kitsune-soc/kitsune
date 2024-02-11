@@ -32,7 +32,7 @@ mrml = { version = "3.0.1", default-features = false, features = [
 ] }
 scoped-futures = "0.1.3"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.56"
+thiserror = "1.0.57"
 typed-builder = "0.18.1"
 
 [lints]
