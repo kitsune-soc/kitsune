@@ -1,0 +1,19 @@
+[package]
+name = "kitsune-http-signatures-new"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bench]]
+name = "parse_cavage_header"
+harness = false
+
+[dependencies]
+logos = "0.14.0"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+criterion = "0.5.1"

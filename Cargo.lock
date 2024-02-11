@@ -1352,6 +1352,7 @@ dependencies = [
  "num-traits 0.2.18",
  "once_cell",
  "oorandom",
+ "plotters",
  "rayon",
  "regex",
  "serde",
@@ -3450,6 +3451,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-http-signatures-new"
+version = "0.0.1-pre.5"
+dependencies = [
+ "criterion",
+ "logos",
+]
+
+[[package]]
 name = "kitsune-job-runner"
 version = "0.0.1-pre.5"
 dependencies = [
@@ -5171,6 +5180,34 @@ name = "platforms"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "626dec3cac7cc0e1577a2ec3fc496277ec2baa084bebad95bb6fdbfae235f84c"
+
+[[package]]
+name = "plotters"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2c224ba00d7cadd4d5c660deaf2098e5e80e07846537c51f9cfa4be50c1fd45"
+dependencies = [
+ "num-traits 0.2.18",
+ "plotters-backend",
+ "plotters-svg",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "plotters-backend"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e76628b4d3a7581389a35d5b6e2139607ad7c75b17aed325f210aa91f4a9609"
+
+[[package]]
+name = "plotters-svg"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38f6d39893cca0701371e3c27294f09797214b86f1fb951b89ade8ec04e2abab"
+dependencies = [
+ "plotters-backend",
+]
 
 [[package]]
 name = "polling"

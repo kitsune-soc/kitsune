@@ -28,6 +28,7 @@ members = [
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
     "crates/kitsune-http-signatures",
+    "crates/kitsune-http-signatures-new",
     "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-mastodon",
@@ -76,6 +77,7 @@ no_effect_underscore_binding = "allow"
 [workspace.lints.rust]
 forbidden_lint_groups = "allow"
 rust_2018_idioms = "forbid"
+unsafe_code = "deny"
 
 [workspace.package]
 authors = ["Kitsune developers"]
