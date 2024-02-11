@@ -1,5 +1,5 @@
 [package]
-name = "kitsune-http-signatures-new"
+name = "http-signatures"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true

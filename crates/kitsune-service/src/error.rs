@@ -45,7 +45,7 @@ pub enum Error {
     Attachment(#[from] AttachmentError),
 
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),

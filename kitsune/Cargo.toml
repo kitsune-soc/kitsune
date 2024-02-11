@@ -30,6 +30,7 @@ axum-extra = { version = "0.9.2", features = [
     "query",
 ] }
 axum-flash = "0.8.0"
+blowocking = { path = "../lib/blowocking" }
 bytes = "1.5.0"
 chrono = { version = "0.4.34", default-features = false }
 clap = { version = "4.5.0", features = ["derive", "wrap_help"] }
@@ -45,7 +46,6 @@ http-body-util = "0.1.0"
 iso8601-timestamp = "0.2.17"
 itertools = { version = "0.12.1", default-features = false }
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
-kitsune-blocking = { path = "../crates/kitsune-blocking" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
 kitsune-config = { path = "../crates/kitsune-config" }

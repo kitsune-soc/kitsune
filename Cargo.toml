@@ -16,7 +16,6 @@ opt-level = "z"
 [workspace]
 members = [
     "crates/kitsune-activitypub",
-    "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
     "crates/kitsune-config",
@@ -47,6 +46,7 @@ members = [
     "kitsune-cli",
     "kitsune-job-runner",
     "lib/athena",
+    "lib/blowocking",
     "lib/cursiv",
     "lib/http-compat",
     "lib/http-signatures",

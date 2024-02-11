@@ -7,6 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
+blowocking = { path = "../../lib/blowocking" }
 diesel = { version = "2.1.4", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = [
     "async-connection-wrapper",
@@ -20,7 +21,6 @@ futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
 iso8601-timestamp = { version = "0.2.17", features = ["diesel-pg"] }
-kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }

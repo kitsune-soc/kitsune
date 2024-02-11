@@ -10,6 +10,7 @@ ahash = "0.8.8"
 argon2 = "0.5.3"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
+blowocking = { path = "../../lib/blowocking" }
 bytes = "1.5.0"
 deadpool-redis = "0.14.0"
 derive_builder = "0.13.0"
@@ -26,7 +27,6 @@ garde = { version = "0.18.0", default-features = false, features = [
 http = "1.0.0"
 img-parts = "0.3.0"
 iso8601-timestamp = "0.2.17"
-kitsune-blocking = { path = "../kitsune-blocking" }
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-captcha = { path = "../kitsune-captcha" }
 kitsune-config = { path = "../kitsune-config" }

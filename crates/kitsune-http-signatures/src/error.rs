@@ -12,7 +12,7 @@ pub enum Error {
     Base64(#[from] base64_simd::Error),
 
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error("Signature is expired")]
     ExpiredSignature,

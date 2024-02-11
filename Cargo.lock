@@ -914,6 +914,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "blowocking"
+version = "0.0.1-pre.5"
+dependencies = [
+ "once_cell",
+ "rayon",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "brotli"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2719,6 +2730,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ce4ef31cda248bbdb6e6820603b82dfcd9e833db65a43e997a0ccec777d11fe"
 
 [[package]]
+name = "http-signatures"
+version = "0.0.1-pre.5"
+dependencies = [
+ "criterion",
+ "logos",
+]
+
+[[package]]
 name = "httparse"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3090,6 +3109,7 @@ dependencies = [
  "axum 0.7.4",
  "axum-extra",
  "axum-flash",
+ "blowocking",
  "bytes",
  "camino",
  "chrono",
@@ -3108,7 +3128,6 @@ dependencies = [
  "iso8601-timestamp",
  "itertools 0.12.1",
  "kitsune-activitypub",
- "kitsune-blocking",
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",
@@ -3221,17 +3240,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kitsune-blocking"
-version = "0.0.1-pre.5"
-dependencies = [
- "once_cell",
- "rayon",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "kitsune-cache"
 version = "0.0.1-pre.5"
 dependencies = [
@@ -3313,13 +3321,13 @@ dependencies = [
 name = "kitsune-db"
 version = "0.0.1-pre.5"
 dependencies = [
+ "blowocking",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
  "diesel_migrations",
  "futures-util",
  "iso8601-timestamp",
- "kitsune-blocking",
  "kitsune-config",
  "kitsune-language",
  "kitsune-test",
@@ -3437,10 +3445,10 @@ name = "kitsune-http-signatures"
 version = "0.0.1-pre.5"
 dependencies = [
  "base64-simd",
+ "blowocking",
  "derive_builder",
  "http 1.0.0",
  "itertools 0.12.1",
- "kitsune-blocking",
  "pem",
  "pkcs8",
  "ring 0.17.7",
@@ -3448,14 +3456,6 @@ dependencies = [
  "time",
  "tokio",
  "typed-builder",
-]
-
-[[package]]
-name = "kitsune-http-signatures-new"
-version = "0.0.1-pre.5"
-dependencies = [
- "criterion",
- "logos",
 ]
 
 [[package]]
@@ -3658,6 +3658,7 @@ dependencies = [
  "argon2",
  "async-stream",
  "athena",
+ "blowocking",
  "bytes",
  "deadpool-redis",
  "derive_builder",
@@ -3672,7 +3673,6 @@ dependencies = [
  "img-parts",
  "iso8601-timestamp",
  "kitsune-activitypub",
- "kitsune-blocking",
  "kitsune-cache",
  "kitsune-captcha",
  "kitsune-config",

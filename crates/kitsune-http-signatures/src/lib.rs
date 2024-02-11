@@ -222,7 +222,7 @@ impl HttpSigner {
         let stringified_signature_string: String = signature_string.try_into()?;
 
         let signature =
-            kitsune_blocking::crypto(move || key.key.sign(stringified_signature_string.as_bytes()))
+            blowocking::crypto(move || key.key.sign(stringified_signature_string.as_bytes()))
                 .await?;
 
         let signature_header = SignatureHeader {
@@ -309,7 +309,7 @@ impl HttpVerifier {
         };
         let stringified_signature_string: String = signature_string.try_into()?;
 
-        kitsune_blocking::crypto(move || {
+        blowocking::crypto(move || {
             public_key.verify(
                 stringified_signature_string.as_bytes(),
                 &signature_header.signature,
