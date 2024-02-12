@@ -1,6 +1,6 @@
 mod parse;
 
-pub use self::parse::parse;
+pub use self::parse::{parse, ParseError};
 
 #[derive(Clone)]
 pub struct SignatureHeader<'a, I> {

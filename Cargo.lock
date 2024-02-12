@@ -2736,6 +2736,8 @@ dependencies = [
  "atoi_radix10",
  "criterion",
  "logos",
+ "miette",
+ "thiserror",
 ]
 
 [[package]]

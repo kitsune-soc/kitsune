@@ -1,8 +1,33 @@
 use super::SignatureHeader;
 use logos::{Lexer, Logos, Span};
+use miette::{Diagnostic, SourceSpan};
+use thiserror::Error;
 
-#[derive(Debug, Logos)]
-enum TokenTy {
+#[derive(Debug, Diagnostic, Error)]
+pub enum ParseError {
+    #[error("Invalid sequence")]
+    InvalidSequence {
+        #[label("This stuff")]
+        span: SourceSpan,
+    },
+
+    #[error("Missing field: {0}")]
+    MissingField(&'static str),
+
+    #[error("Radix 10 value parsing failed")]
+    Radix10Parse,
+
+    #[error("Unexpected token")]
+    UnexpectedToken {
+        got: TokenTy,
+        expected: TokenTy,
+        #[label("Expected: {expected:?}, got: {got:?}")]
+        span: SourceSpan,
+    },
+}
+
+#[derive(Debug, Logos, PartialEq)]
+pub enum TokenTy {
     #[regex(r"\w+")]
     Key,
 
@@ -23,23 +48,36 @@ struct Token {
 }
 
 impl Token {
-    pub fn parse(input: &str) -> impl Iterator<Item = Result<Token, ()>> + '_ {
+    pub fn parse(input: &str) -> impl Iterator<Item = Result<Token, ParseError>> + '_ {
         Lexer::<'_, TokenTy>::new(input)
             .spanned()
-            .map(|(ty, span)| ty.map(|ty| Token { ty, span }))
+            .map(|(ty, span)| {
+                ty.map({
+                    let span = span.clone();
+                    |ty| Token { ty, span }
+                })
+                .map_err(|()| ParseError::InvalidSequence { span: span.into() })
+            })
     }
 }
 
 macro_rules! ensure {
-    ($self:expr, $value:expr, $pattern:pat) => {{
-        let Ok(value) = $value else {
-            $self.is_broken = true;
-            return Some(Err(()));
+    ($self:expr, $value:expr, $pattern:expr) => {{
+        let value = match $value {
+            Ok(val) => val,
+            Err(err) => {
+                $self.is_broken = true;
+                return Some(Err(err));
+            }
         };
 
-        if !matches!(value.ty, $pattern) {
+        if value.ty != $pattern {
             $self.is_broken = true;
-            return Some(Err(()));
+            return Some(Err(ParseError::UnexpectedToken {
+                got: value.ty,
+                expected: $pattern,
+                span: value.span.into(),
+            }));
         }
 
         value
@@ -61,9 +99,9 @@ struct ParseIter<'a, I> {
 
 impl<'a, I> Iterator for ParseIter<'a, I>
 where
-    I: Iterator<Item = Result<Token, ()>>,
+    I: Iterator<Item = Result<Token, ParseError>>,
 {
-    type Item = Result<(&'a str, &'a str), ()>;
+    type Item = Result<(&'a str, &'a str), ParseError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_broken {
@@ -89,7 +127,7 @@ where
 
 /// Parse a cavage `Signature` header into key/value pairs with proper error handling
 #[inline]
-pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &str>>, ()> {
+pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &str>>, ParseError> {
     let kv_iter = ParseIter {
         inner: Token::parse(input),
         input,
@@ -107,23 +145,31 @@ pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &st
         let (key, value) = kv?;
 
         match key {
-            "algorithm" => {
-                // We just discard this value and ignore it
-                // It doesn't really matter anymore. We just figure the algorithm type out via the key algorithm identifier
-            }
             "keyId" => key_id = Some(value),
             "signature" => signature = Some(value),
             "headers" => headers = Some(value.split_whitespace()),
-            "created" => created = Some(atoi_radix10::parse_from_str(value).map_err(|_| ())?),
-            "expires" => expires = Some(atoi_radix10::parse_from_str(value).map_err(|_| ())?),
-            _ => return Err(()),
+            "created" => {
+                created = Some(
+                    atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
+                );
+            }
+            "expires" => {
+                expires = Some(
+                    atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
+                );
+            }
+            _ => {
+                // Simply discard unknown values
+                //
+                // Also covers the "algorithm" field since we just figure out the algorithm from the key and its algorithm identifier
+            }
         }
     }
 
     Ok(SignatureHeader {
-        key_id: key_id.ok_or(())?,
-        signature: signature.ok_or(())?,
-        headers: headers.ok_or(())?,
+        key_id: key_id.ok_or(ParseError::MissingField("keyId"))?,
+        signature: signature.ok_or(ParseError::MissingField("signature"))?,
+        headers: headers.ok_or(ParseError::MissingField("headers"))?,
         created,
         expires,
     })
