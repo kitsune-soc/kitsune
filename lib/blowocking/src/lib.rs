@@ -11,6 +11,7 @@ pub enum Error {
     Oneshot(#[from] oneshot::error::RecvError),
 
     #[error(transparent)]
+    #[cfg(feature = "io")]
     TokioJoin(#[from] tokio::task::JoinError),
 }
 
@@ -69,6 +70,7 @@ define_rayon_pool! {
 
 /// Spawn I/O-bound blocking work (blocking filesystem operations, blocking network operations, etc.)
 #[inline]
+#[cfg(feature = "io")]
 pub async fn io<F, O>(func: F) -> Result<O, Error>
 where
     F: FnOnce() -> O + Send + 'static,
