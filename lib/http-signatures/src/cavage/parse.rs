@@ -128,7 +128,7 @@ where
 /// Parse a cavage `Signature` header into key/value pairs with proper error handling
 #[inline]
 pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &str>>, ParseError> {
-    let kv_iter = ParseIter {
+    let mut kv_iter = ParseIter {
         inner: Token::parse(input),
         input,
         is_broken: false,
@@ -141,9 +141,7 @@ pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &st
     let mut created = None;
     let mut expires = None;
 
-    for kv in kv_iter {
-        let (key, value) = kv?;
-
+    while let Some((key, value)) = kv_iter.next().transpose()? {
         match key {
             "keyId" => key_id = Some(value),
             "signature" => signature = Some(value),
