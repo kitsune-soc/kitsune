@@ -27,14 +27,15 @@ pub enum ParseError {
 }
 
 #[derive(Debug, Logos, PartialEq)]
+#[logos(skip r"[ \n]+")]
 pub enum TokenTy {
-    #[regex(r"\w+")]
+    #[regex(r"[a-zA-Z]+")]
     Key,
 
     #[token("=")]
     Equals,
 
-    #[regex(r#""[^"]*""#)]
+    #[regex(r#""[^"]*"|[0-9]+"#)]
     Value,
 
     #[token(",")]
@@ -116,13 +117,8 @@ where
             ensure!(self, next, TokenTy::Comma);
         }
 
-        // TODO: We can technically replace this indexing with an unchecked index since we have the same input the lexer had.
-        //       Could skip some unnecessary branches and some unnecessary checks.
         let key = &self.input[key.span];
-
-        // Exclude the quotation marks of the match
-        let (value_start, value_end) = (value.span.start + 1, value.span.end - 1);
-        let value = &self.input[value_start..value_end];
+        let value = self.input[value.span].trim_matches('"');
 
         Some(Ok((key, value)))
     }
@@ -180,19 +176,41 @@ pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &st
 mod test {
     use super::parse;
 
-    const HEADER: &str = r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx+H7PHHDZgy4y/Ahn9Tny9V3GP6YgBPyUXMmoxWtLbHpUnXS2mg2+SbrQDMCJypxBLSPQR2aAjn7ndmw2iicw3HMbe8VfEdKFYRqzic+efkb3nndiv/x1xSHDJWeSWkx3ButlYSuBskLu6kd9Fswtemr3lgdDEmn04swr2Os0=""#;
+    const HEADER_1: &str = r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx+H7PHHDZgy4y/Ahn9Tny9V3GP6YgBPyUXMmoxWtLbHpUnXS2mg2+SbrQDMCJypxBLSPQR2aAjn7ndmw2iicw3HMbe8VfEdKFYRqzic+efkb3nndiv/x1xSHDJWeSWkx3ButlYSuBskLu6kd9Fswtemr3lgdDEmn04swr2Os0=""#;
+    const HEADER_2: &str = r#"keyId="Test",algorithm="rsa-sha256",created=1402170695, expires=1402170699,headers="(request-target) (created) (expires) host date content-type digest content-length",signature="vSdrb+dS3EceC9bcwHSo4MlyKS59iFIrhgYkz8+oVLEEzmYZZvRs8rgOp+63LEM3v+MFHB32NfpB2bEKBIvB1q52LaEUHFv120V01IL+TAD48XaERZFukWgHoBTLMhYS2Gb51gWxpeIq8knRmPnYePbF5MOkR0Zkly4zKH7s1dE=""#;
 
     #[test]
+    #[allow(clippy::unreadable_literal)]
     fn parse_header() {
-        let header = parse(HEADER).unwrap();
+        let header_1 = parse(HEADER_1).unwrap();
 
-        assert_eq!(header.created, None);
-        assert_eq!(header.expires, None);
-        assert_eq!(header.key_id, "Test");
-        assert_eq!(header.signature, "qdx+H7PHHDZgy4y/Ahn9Tny9V3GP6YgBPyUXMmoxWtLbHpUnXS2mg2+SbrQDMCJypxBLSPQR2aAjn7ndmw2iicw3HMbe8VfEdKFYRqzic+efkb3nndiv/x1xSHDJWeSWkx3ButlYSuBskLu6kd9Fswtemr3lgdDEmn04swr2Os0=");
+        assert_eq!(header_1.created, None);
+        assert_eq!(header_1.expires, None);
+        assert_eq!(header_1.key_id, "Test");
+        assert_eq!(header_1.signature, "qdx+H7PHHDZgy4y/Ahn9Tny9V3GP6YgBPyUXMmoxWtLbHpUnXS2mg2+SbrQDMCJypxBLSPQR2aAjn7ndmw2iicw3HMbe8VfEdKFYRqzic+efkb3nndiv/x1xSHDJWeSWkx3ButlYSuBskLu6kd9Fswtemr3lgdDEmn04swr2Os0=");
         assert_eq!(
-            header.headers.collect::<Vec<_>>(),
+            header_1.headers.collect::<Vec<_>>(),
             ["(request-target)", "host", "date"]
+        );
+
+        let header_2 = parse(HEADER_2).unwrap();
+
+        assert_eq!(header_2.created, Some(1402170695));
+        assert_eq!(header_2.expires, Some(1402170699));
+        assert_eq!(header_2.key_id, "Test");
+        assert_eq!(header_2.signature, "vSdrb+dS3EceC9bcwHSo4MlyKS59iFIrhgYkz8+oVLEEzmYZZvRs8rgOp+63LEM3v+MFHB32NfpB2bEKBIvB1q52LaEUHFv120V01IL+TAD48XaERZFukWgHoBTLMhYS2Gb51gWxpeIq8knRmPnYePbF5MOkR0Zkly4zKH7s1dE=");
+        assert_eq!(
+            header_2.headers.collect::<Vec<_>>(),
+            [
+                "(request-target)",
+                "(created)",
+                "(expires)",
+                "host",
+                "date",
+                "content-type",
+                "digest",
+                "content-length"
+            ]
         );
     }
 }
