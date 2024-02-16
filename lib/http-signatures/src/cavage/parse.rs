@@ -119,7 +119,10 @@ where
         // TODO: We can technically replace this indexing with an unchecked index since we have the same input the lexer had.
         //       Could skip some unnecessary branches and some unnecessary checks.
         let key = &self.input[key.span];
-        let value = self.input[value.span].trim_matches('"');
+
+        // Exclude the quotation marks of the match
+        let (value_start, value_end) = (value.span.start + 1, value.span.end - 1);
+        let value = &self.input[value_start..value_end];
 
         Some(Ok((key, value)))
     }
