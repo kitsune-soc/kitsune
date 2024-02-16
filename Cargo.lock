@@ -2700,6 +2700,7 @@ version = "0.0.1-pre.5"
 dependencies = [
  "atoi_radix10",
  "criterion",
+ "derive_builder",
  "logos",
  "miette",
  "thiserror",

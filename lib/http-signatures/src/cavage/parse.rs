@@ -1,4 +1,4 @@
-use super::SignatureHeader;
+use super::{SignatureHeader, SignatureHeaderBuilder, SignatureHeaderBuilderError};
 use logos::{Lexer, Logos, Span};
 use miette::{Diagnostic, SourceSpan};
 use thiserror::Error;
@@ -134,25 +134,25 @@ pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &st
         is_broken: false,
     };
 
-    // TODO: Maybe replace this with `derive_builder`? Not sure. That would definitely pull in `syn` v1 as a dependency.
-    let mut key_id = None;
-    let mut signature = None;
-    let mut headers = None;
-    let mut created = None;
-    let mut expires = None;
-
+    let mut builder = SignatureHeaderBuilder::default();
     while let Some((key, value)) = kv_iter.next().transpose()? {
         match key {
-            "keyId" => key_id = Some(value),
-            "signature" => signature = Some(value),
-            "headers" => headers = Some(value.split_whitespace()),
+            "keyId" => {
+                builder.key_id(value);
+            }
+            "signature" => {
+                builder.signature(value);
+            }
+            "headers" => {
+                builder.headers(value.split_whitespace());
+            }
             "created" => {
-                created = Some(
+                builder.created(
                     atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
                 );
             }
             "expires" => {
-                expires = Some(
+                builder.expires(
                     atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
                 );
             }
@@ -164,12 +164,12 @@ pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &st
         }
     }
 
-    Ok(SignatureHeader {
-        key_id: key_id.ok_or(ParseError::MissingField("keyId"))?,
-        signature: signature.ok_or(ParseError::MissingField("signature"))?,
-        headers: headers.ok_or(ParseError::MissingField("headers"))?,
-        created,
-        expires,
+    builder.build().map_err(|err| {
+        let SignatureHeaderBuilderError::UninitializedField(field_name) = err else {
+            unreachable!();
+        };
+
+        ParseError::MissingField(field_name)
     })
 }
 
