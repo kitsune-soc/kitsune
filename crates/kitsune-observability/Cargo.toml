@@ -16,7 +16,7 @@ metrics = "=0.22.0"
 metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "b2e2586da553ebd62abdcd3bfd04b5f41a32449a" }
 metrics-tracing-context = "0.15.0"
 metrics-util = "0.16.2"
-miette = "7.0.0"
+miette = "7.1.0"
 opentelemetry = { version = "0.21.0", default-features = false, features = [
     "trace",
 ] }

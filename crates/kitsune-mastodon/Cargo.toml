@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-derive_builder = "0.13.0"
+derive_builder = "0.20.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
