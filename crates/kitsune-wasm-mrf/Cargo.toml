@@ -1,0 +1,13 @@
+[package]
+name = "kitsune-wasm-mrf"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+wasmi = "0.31.2"
+wasmi_wasi = "0.31.2"
+
+[lints]
+workspace = true
