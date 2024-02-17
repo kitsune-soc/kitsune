@@ -1,6 +1,5 @@
-use std::env;
-
 use miette::miette;
+use std::env;
 
 fn main() -> miette::Result<()> {
     let header = env::args()
