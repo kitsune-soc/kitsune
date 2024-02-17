@@ -2700,10 +2700,12 @@ version = "0.0.1-pre.5"
 dependencies = [
  "atoi_radix10",
  "base64-simd",
+ "blowocking",
  "const-oid",
  "criterion",
  "derive_builder",
  "http 1.0.0",
+ "httpdate",
  "itertools 0.12.1",
  "logos",
  "miette",
