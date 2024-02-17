@@ -16,12 +16,14 @@ path = "bin/parse_header.rs"
 [dependencies]
 atoi_radix10 = "0.0.1"
 derive_builder = "0.20.0"
+http = "1.0.0"
 logos = "0.14.0"
 miette = "7.1.0"
 thiserror = "1.0.57"
 
 [dev-dependencies]
 criterion = "0.5.1"
+proptest = { version = "1.4.0", default-features = false, features = ["std"] }
 
 [features]
 cli = ["miette/fancy"]

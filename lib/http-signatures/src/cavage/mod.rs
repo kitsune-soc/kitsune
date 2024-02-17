@@ -1,8 +1,15 @@
+//!
+//! Implementation of Cavage-style HTTP signatures
+//!
+//! Compliant with <https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12> with added opinionated hardenings
+//!
+
 use derive_builder::Builder;
 
 pub use self::parse::{parse, ParseError};
 
 mod parse;
+mod signature_string;
 
 #[derive(Builder, Clone)]
 #[builder(vis = "pub(crate)")]

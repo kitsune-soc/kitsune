@@ -104,6 +104,7 @@ where
 {
     type Item = Result<(&'a str, &'a str), ParseError>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_broken {
             return None;
@@ -126,7 +127,9 @@ where
 
 /// Parse a cavage `Signature` header into key/value pairs with proper error handling
 #[inline]
-pub fn parse(input: &str) -> Result<SignatureHeader<'_, impl Iterator<Item = &str>>, ParseError> {
+pub fn parse(
+    input: &str,
+) -> Result<SignatureHeader<'_, impl Iterator<Item = &str> + Clone>, ParseError> {
     let mut kv_iter = ParseIter {
         inner: Token::parse(input),
         input,
