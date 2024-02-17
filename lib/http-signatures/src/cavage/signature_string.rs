@@ -1,3 +1,8 @@
+use http::Method;
+
+pub const REQUIRED_GET_HEADERS: &[&str] = &["host", "date"];
+pub const REQUIRED_POST_HEADERS: &[&str] = &["host", "date", "content-type", "digest"];
+
 #[inline]
 fn is_subset<I>(left: &[I], right: &[I]) -> bool
 where
@@ -12,6 +17,16 @@ where
 
 #[inline]
 pub fn construct<B>(request: &http::Request<B>, header_names: &[&str]) -> Result<(), ()> {
+    let fulfills_min_requirements = match *request.method() {
+        Method::GET => is_subset(REQUIRED_GET_HEADERS, header_names),
+        Method::POST => is_subset(REQUIRED_POST_HEADERS, header_names),
+        _ => todo!("how should we handle this?"),
+    };
+
+    if !fulfills_min_requirements {
+        return Err(());
+    }
+
     todo!();
 }
 

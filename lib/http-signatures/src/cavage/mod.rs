@@ -9,7 +9,8 @@ use derive_builder::Builder;
 pub use self::parse::{parse, ParseError};
 
 mod parse;
-mod signature_string;
+
+pub mod signature_string;
 
 #[derive(Builder, Clone)]
 #[builder(vis = "pub(crate)")]
