@@ -41,17 +41,18 @@ where
     I: Iterator<Item = &'a str> + Clone,
 {
     let header_names = signature_header.headers.clone().collect::<Vec<&str>>();
-    let fulfills_min_requirements = match *request.method() {
+    let fulfils_min_requirements = match *request.method() {
         Method::GET => is_subset(REQUIRED_GET_HEADERS, &header_names),
         Method::POST => is_subset(REQUIRED_POST_HEADERS, &header_names),
         _ => return Err(Error::InvalidMethod),
     };
 
-    if !fulfills_min_requirements {
+    if !fulfils_min_requirements {
         return Err(Error::MissingHeaderNames);
     }
 
     let mut signature_string = String::new();
+
     for name in header_names {
         match name {
             name @ "(request-target)" => {
@@ -82,8 +83,6 @@ where
             }
         }
     }
-
-    signature_string.shrink_to_fit();
 
     Ok(signature_string)
 }
