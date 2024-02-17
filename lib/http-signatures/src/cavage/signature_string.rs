@@ -111,11 +111,11 @@ mod test {
     }
 
     const BASIC_SIGNATURE_STRING: &str = "(request-target): get /foo?param=value&pet=dog\nhost: example.com\ndate: Sun, 05 Jan 2014 21:31:40 GMT";
+    const ALL_HEADERS_SIGNATURE_STRING: &str = "(request-target): post /foo?param=value&pet=dog\nhost: example.com\ndate: Sun, 05 Jan 2014 21:31:40 GMT\ncontent-type: application/json\ndigest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=\ncontent-length: 18";
 
-    #[test]
-    fn basic_signature_string() {
-        let request = Request::builder()
-            .method(Method::GET)
+    fn request(method: Method) -> Request<()> {
+        Request::builder()
+            .method(method)
             .uri(Uri::from_static("/foo?param=value&pet=dog"))
             .header("Host", "example.com")
             .header("Date", "Sun, 05 Jan 2014 21:31:40 GMT")
@@ -126,11 +126,25 @@ mod test {
             )
             .header("Content-Length", "18")
             .body(())
-            .unwrap();
+            .unwrap()
+    }
 
+    #[test]
+    fn basic_signature_string() {
+        let request = request(Method::GET);
         let signature_header = crate::cavage::parse(r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx""#).unwrap();
         let signature_string = super::construct(&request, &signature_header).unwrap();
 
         assert_eq!(signature_string, BASIC_SIGNATURE_STRING);
+    }
+
+    #[test]
+    #[ignore = "Test vector is broken"] // Lol. Lmao even.
+    fn all_headers_signature_string() {
+        let request = request(Method::POST);
+        let signature_header = crate::cavage::parse(r#"keyId="Test",algorithm="rsa-sha256",created=1402170695, expires=1402170699,headers="(request-target) (created) (expires) host date content-type digest content-length",signature="vSdr""#).unwrap();
+        let signature_string = super::construct(&request, &signature_header).unwrap();
+
+        assert_eq!(signature_string, ALL_HEADERS_SIGNATURE_STRING);
     }
 }
