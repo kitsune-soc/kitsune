@@ -22,6 +22,7 @@ atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
 derive_builder = "0.20.0"
 http = "1.0.0"
+itertools = { version = "0.12.1", default-features = false }
 logos = "0.14.0"
 miette = "7.1.0"
 ring = "0.17.7"

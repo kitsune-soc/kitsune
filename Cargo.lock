@@ -2703,6 +2703,7 @@ dependencies = [
  "criterion",
  "derive_builder",
  "http 1.0.0",
+ "itertools 0.12.1",
  "logos",
  "miette",
  "proptest",
