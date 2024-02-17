@@ -1,7 +1,8 @@
+use miette::Diagnostic;
 use ring::signature::UnparsedPublicKey;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum VerifyError {
     #[error(transparent)]
     Base64(#[from] base64_simd::Error),
