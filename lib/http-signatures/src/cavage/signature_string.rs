@@ -52,7 +52,6 @@ where
     }
 
     let mut signature_string = String::new();
-
     for name in header_names {
         match name {
             name @ "(request-target)" => {

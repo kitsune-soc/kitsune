@@ -8,9 +8,11 @@ use derive_builder::Builder;
 
 pub use self::parse::{parse, ParseError};
 pub use self::sign::{sign, SigningKey};
+pub use self::verify::{verify, VerifyError};
 
 mod parse;
 mod sign;
+mod verify;
 
 pub mod signature_string;
 
