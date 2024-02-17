@@ -84,12 +84,16 @@ where
         }
     }
 
+    // Remove the last new-line
+    signature_string.pop();
+
     Ok(signature_string)
 }
 
 #[cfg(test)]
 mod test {
     use super::is_subset;
+    use http::{Method, Request, Uri};
     use proptest::{prop_assert_eq, proptest};
     use std::collections::HashSet;
 
@@ -104,5 +108,29 @@ mod test {
 
             prop_assert_eq!(slice_subset, set_subset);
         }
+    }
+
+    const BASIC_SIGNATURE_STRING: &str = "(request-target): get /foo?param=value&pet=dog\nhost: example.com\ndate: Sun, 05 Jan 2014 21:31:40 GMT";
+
+    #[test]
+    fn basic_signature_string() {
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri(Uri::from_static("/foo?param=value&pet=dog"))
+            .header("Host", "example.com")
+            .header("Date", "Sun, 05 Jan 2014 21:31:40 GMT")
+            .header("Content-Type", "application/json")
+            .header(
+                "Digest",
+                "SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=",
+            )
+            .header("Content-Length", "18")
+            .body(())
+            .unwrap();
+
+        let signature_header = crate::cavage::parse(r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx""#).unwrap();
+        let signature_string = super::construct(&request, &signature_header).unwrap();
+
+        assert_eq!(signature_string, BASIC_SIGNATURE_STRING);
     }
 }
