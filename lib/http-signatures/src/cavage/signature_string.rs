@@ -1,7 +1,16 @@
+use crate::{REQUIRED_GET_HEADERS, REQUIRED_POST_HEADERS};
 use http::Method;
+use miette::Diagnostic;
+use thiserror::Error;
 
-pub const REQUIRED_GET_HEADERS: &[&str] = &["host", "date"];
-pub const REQUIRED_POST_HEADERS: &[&str] = &["host", "date", "content-type", "digest"];
+#[derive(Debug, Diagnostic, Error)]
+pub enum Error {
+    #[error("Invalid HTTP method")]
+    InvalidMethod,
+
+    #[error("Missing required header names")]
+    MissingHeaderNames,
+}
 
 #[inline]
 fn is_subset<I>(left: &[I], right: &[I]) -> bool
@@ -16,15 +25,15 @@ where
 }
 
 #[inline]
-pub fn construct<B>(request: &http::Request<B>, header_names: &[&str]) -> Result<(), ()> {
+pub fn construct<B>(request: &http::Request<B>, header_names: &[&str]) -> Result<(), Error> {
     let fulfills_min_requirements = match *request.method() {
         Method::GET => is_subset(REQUIRED_GET_HEADERS, header_names),
         Method::POST => is_subset(REQUIRED_POST_HEADERS, header_names),
-        _ => todo!("how should we handle this?"),
+        _ => return Err(Error::InvalidMethod),
     };
 
     if !fulfills_min_requirements {
-        return Err(());
+        return Err(Error::MissingHeaderNames);
     }
 
     todo!();
