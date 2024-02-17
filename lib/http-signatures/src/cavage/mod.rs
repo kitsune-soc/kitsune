@@ -7,8 +7,10 @@
 use derive_builder::Builder;
 
 pub use self::parse::{parse, ParseError};
+pub use self::sign::{sign, SigningKey};
 
 mod parse;
+mod sign;
 
 pub mod signature_string;
 
