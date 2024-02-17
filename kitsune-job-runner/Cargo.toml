@@ -13,7 +13,7 @@ eula = false
 
 [dependencies]
 athena = { path = "../lib/athena" }
-clap = { version = "4.5.0", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.1", features = ["derive", "wrap_help"] }
 deadpool-redis = "0.14.0"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
