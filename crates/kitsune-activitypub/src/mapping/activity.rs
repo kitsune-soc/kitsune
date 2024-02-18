@@ -7,7 +7,7 @@ use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
     schema::{accounts, posts},
 };
-use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
 use std::future::Future;
@@ -34,7 +34,7 @@ impl IntoActivity for Account {
             context: ap_context(),
             id: format!("{account_url}#update"),
             r#type: ActivityType::Update,
-            actor: StringOrObject::String(account_url),
+            actor: account_url,
             object: ObjectField::Actor(self.into_object(state).await?),
             published: Timestamp::now_utc(),
         })
@@ -74,7 +74,7 @@ impl IntoActivity for Favourite {
             context: ap_context(),
             id: self.url,
             r#type: ActivityType::Like,
-            actor: StringOrObject::String(account_url),
+            actor: account_url,
             object: ObjectField::Url(post_url),
             published: self.created_at,
         })
@@ -96,7 +96,7 @@ impl IntoActivity for Favourite {
             context: ap_context(),
             id: format!("{}#undo", self.url),
             r#type: ActivityType::Undo,
-            actor: StringOrObject::String(account_url.clone()),
+            actor: account_url.clone(),
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
             published: Timestamp::now_utc(),
         })
@@ -131,7 +131,7 @@ impl IntoActivity for Follow {
         Ok(Activity {
             context: ap_context(),
             id: self.url,
-            actor: StringOrObject::String(attributed_to),
+            actor: attributed_to,
             r#type: ActivityType::Follow,
             object: ObjectField::Url(object),
             published: self.created_at,
@@ -154,7 +154,7 @@ impl IntoActivity for Follow {
             context: ap_context(),
             id: format!("{}#undo", self.url),
             r#type: ActivityType::Undo,
-            actor: StringOrObject::String(attributed_to),
+            actor: attributed_to,
             published: self.created_at,
             object: ObjectField::Activity(self.into_activity(state).await?.into()),
         })
@@ -184,7 +184,7 @@ impl IntoActivity for Post {
                 context: ap_context(),
                 id: format!("{}/activity", self.url),
                 r#type: ActivityType::Announce,
-                actor: StringOrObject::String(account_url),
+                actor: account_url,
                 object: ObjectField::Url(reposted_post_url),
                 published: self.created_at,
             })
@@ -196,7 +196,7 @@ impl IntoActivity for Post {
                 context: ap_context(),
                 id: format!("{}/activity", object.id),
                 r#type: ActivityType::Create,
-                actor: StringOrObject::String(account_url),
+                actor: account_url,
                 published: created_at,
                 object: ObjectField::Object(object),
             })
@@ -211,7 +211,7 @@ impl IntoActivity for Post {
                 context: ap_context(),
                 id: format!("{}#undo", self.url),
                 r#type: ActivityType::Undo,
-                actor: StringOrObject::String(account_url),
+                actor: account_url,
                 object: ObjectField::Url(self.url),
                 published: Timestamp::now_utc(),
             }
@@ -222,7 +222,7 @@ impl IntoActivity for Post {
                 context: ap_context(),
                 id: format!("{}#delete", object.id),
                 r#type: ActivityType::Delete,
-                actor: StringOrObject::String(account_url),
+                actor: account_url,
                 published: Timestamp::now_utc(),
                 object: ObjectField::Object(object),
             }

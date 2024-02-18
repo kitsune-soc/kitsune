@@ -11,7 +11,7 @@ use kitsune_search::NoopSearchService;
 use kitsune_test::{build_ap_response, database_test, language_detection_config};
 use kitsune_type::ap::{
     actor::{Actor, ActorType, PublicKey},
-    ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+    ap_context, Object, ObjectType, PUBLIC_IDENTIFIER,
 };
 use kitsune_webfinger::Webfinger;
 use std::{
@@ -65,7 +65,7 @@ async fn fetch_infinitely_long_reply_chain() {
                             context: ap_context(),
                             id: format!("https://example.com/notes/{note_id}"),
                             r#type: ObjectType::Note,
-                            attributed_to: AttributedToField::Url(author.id.clone()),
+                            attributed_to: author.id.clone(),
                             in_reply_to: Some(format!("https://example.com/notes/{}", note_id + 1)),
                             name: None,
                             summary: None,

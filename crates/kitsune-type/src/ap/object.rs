@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::jsonld;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
     Audio,
@@ -11,9 +13,15 @@ pub enum MediaAttachmentType {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaAttachment {
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: MediaAttachmentType,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub name: Option<String>,
     pub media_type: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub blurhash: Option<String>,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub url: String,
 }

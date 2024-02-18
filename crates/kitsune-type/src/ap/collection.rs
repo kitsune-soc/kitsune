@@ -1,3 +1,4 @@
+use crate::jsonld;
 use serde::{Deserialize, Serialize};
 use simd_json::OwnedValue;
 
@@ -12,6 +13,7 @@ pub struct Collection {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: CollectionType,
     pub total_items: u64,
     pub first: Option<String>,
@@ -29,6 +31,7 @@ pub struct CollectionPage<T> {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: PageType,
     pub next: String,
     pub prev: String,

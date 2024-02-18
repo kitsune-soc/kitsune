@@ -1,5 +1,5 @@
 use super::object::MediaAttachment;
-use crate::jsonld::RdfNode;
+use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use simd_json::OwnedValue;
@@ -29,20 +29,43 @@ pub struct Actor {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: ActorType,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub name: Option<String>,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub preferred_username: String,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub subject: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub icon: Option<MediaAttachment>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub image: Option<MediaAttachment>,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub manually_approves_followers: bool,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub public_key: PublicKey,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub endpoints: Option<Endpoints>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub featured: Option<String>,
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub inbox: String,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub outbox: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub followers: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub following: Option<String>,
     #[serde(default = "Timestamp::now_utc")]
     pub published: Timestamp,
@@ -57,6 +80,8 @@ impl RdfNode for Actor {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Endpoints {
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub shared_inbox: Option<String>,
 }
 
@@ -64,6 +89,8 @@ pub struct Endpoints {
 #[serde(rename_all = "camelCase")]
 pub struct PublicKey {
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub owner: String,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub public_key_pem: String,
 }
