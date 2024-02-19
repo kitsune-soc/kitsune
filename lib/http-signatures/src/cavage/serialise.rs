@@ -2,9 +2,10 @@ use super::SignatureHeader;
 use std::fmt::Write;
 
 #[inline]
-pub fn serialise<'a, I>(header: SignatureHeader<'_, I, &str>) -> String
+pub fn serialise<'a, I, S>(header: SignatureHeader<'_, I, S>) -> String
 where
     I: Iterator<Item = &'a str>,
+    S: AsRef<str>,
 {
     let mut buffer = String::new();
 
@@ -16,7 +17,7 @@ where
     }
     buffer.push('"');
 
-    let _ = write!(buffer, ",signature=\"{}\"", header.signature);
+    let _ = write!(buffer, ",signature=\"{}\"", header.signature.as_ref());
 
     if let Some(created) = header.created {
         let _ = write!(buffer, ",created={created}");
