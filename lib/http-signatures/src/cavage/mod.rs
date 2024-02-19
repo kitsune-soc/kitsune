@@ -3,6 +3,12 @@
 //!
 //! Compliant with <https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12> with added opinionated hardenings
 //!
+//! ## Note
+//!
+//! The only supported HTTP methods for our hardening checks and the [`easy`] module are GET and POST.
+//! This is enough for the intended purpose of this library which is to allow for ActivityPub federation.
+//! If you need more methods, feel free to open an issue.
+//!
 
 use derive_builder::Builder;
 
