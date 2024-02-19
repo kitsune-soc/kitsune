@@ -31,6 +31,7 @@ miette = "7.1.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = "0.17.7"
 thiserror = "1.0.57"
+tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -39,7 +40,7 @@ proptest = { version = "1.4.0", default-features = false, features = ["std"] }
 [features]
 default = ["easy"]
 cli = ["miette/fancy"]
-easy = ["dep:blowocking"]
+easy = ["dep:blowocking", "dep:tracing"]
 
 [lints]
 workspace = true
