@@ -19,9 +19,9 @@ pub enum Error {
 }
 
 #[inline]
-pub fn construct<'a, B, I>(
+pub fn construct<'a, B, I, S>(
     request: &http::Request<B>,
-    signature_header: &SignatureHeader<'_, I>,
+    signature_header: &SignatureHeader<'_, I, S>,
 ) -> Result<String, Error>
 where
     I: Iterator<Item = &'a str> + Clone,

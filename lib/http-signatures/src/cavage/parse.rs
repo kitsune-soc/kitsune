@@ -129,7 +129,7 @@ where
 #[inline]
 pub fn parse(
     input: &str,
-) -> Result<SignatureHeader<'_, impl Iterator<Item = &str> + Clone>, ParseError> {
+) -> Result<SignatureHeader<'_, impl Iterator<Item = &str> + Clone, &str>, ParseError> {
     let mut kv_iter = ParseIter {
         inner: Token::parse(input),
         input,

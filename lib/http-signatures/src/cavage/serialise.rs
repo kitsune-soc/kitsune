@@ -2,7 +2,7 @@ use super::SignatureHeader;
 use std::fmt::Write;
 
 #[inline]
-pub fn serialise<'a, I>(header: SignatureHeader<'_, I>) -> String
+pub fn serialise<'a, I>(header: SignatureHeader<'_, I, &str>) -> String
 where
     I: Iterator<Item = &'a str>,
 {

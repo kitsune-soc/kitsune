@@ -61,7 +61,7 @@ where
     let signature_header = SignatureHeader {
         key_id,
         headers,
-        signature: "",
+        signature: (),
         created: None,
         expires: None,
     };
@@ -73,8 +73,11 @@ where
         blowocking::crypto(move || crate::crypto::sign(signature_string.as_bytes(), &key)).await?;
 
     let signature_header = SignatureHeader {
-        signature: &signature,
-        ..signature_header
+        key_id: signature_header.key_id,
+        headers: signature_header.headers,
+        signature: signature.as_str(),
+        created: signature_header.created,
+        expires: signature_header.expires,
     };
 
     let signature_header_value =

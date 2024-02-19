@@ -43,9 +43,9 @@ where
     }
 }
 
-pub fn is_safe<'a, B, I>(
+pub fn is_safe<'a, B, I, S>(
     req: &Request<B>,
-    signature_header: &SignatureHeader<'_, I>,
+    signature_header: &SignatureHeader<'_, I, S>,
 ) -> Result<(), SafetyCheckError>
 where
     I: Iterator<Item = &'a str> + Clone,
