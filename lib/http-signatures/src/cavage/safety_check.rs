@@ -70,9 +70,6 @@ where
         let created_time = SystemTime::UNIX_EPOCH + Duration::from_secs(created);
         let now = SystemTime::now();
 
-        // If there isn't a positive duration, simply set the duration to max to let the validation fail
-        //
-        // Tbh, if the clock scew of your server is that bad.. why do you even federate??
         if now.duration_since(created_time)? > MAX_ACCEPTED_SIGNATURE_AGE {
             return Err(SafetyCheckError::SignatureTooOld);
         }
