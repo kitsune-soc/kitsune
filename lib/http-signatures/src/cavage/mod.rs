@@ -14,6 +14,8 @@ mod parse;
 mod safety_check;
 mod serialise;
 
+#[cfg(feature = "easy")]
+pub mod easy;
 pub mod signature_string;
 
 #[derive(Builder, Clone)]
