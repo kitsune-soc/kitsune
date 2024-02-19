@@ -1,8 +1,10 @@
-use http::{header::DATE, Method, Request};
-use std::time::{Duration, SystemTime, SystemTimeError};
-use thiserror::Error;
-
 use super::SignatureHeader;
+use http::{header::DATE, Method, Request};
+use std::{
+    cmp::min,
+    time::{Duration, SystemTime, SystemTimeError},
+};
+use thiserror::Error;
 
 /// 15 minutes
 const MAX_ACCEPTED_SIGNATURE_AGE: Duration = Duration::from_secs(15 * 60);
@@ -66,20 +68,22 @@ where
         return Err(SafetyCheckError::MissingRequiredHeaders);
     }
 
+    let signature_valid_duration = if let Some(expires) = signature_header.expires {
+        min(Duration::from_secs(expires), MAX_ACCEPTED_SIGNATURE_AGE)
+    } else {
+        MAX_ACCEPTED_SIGNATURE_AGE
+    };
+
     if let Some(created) = signature_header.created {
         let created_time = SystemTime::UNIX_EPOCH + Duration::from_secs(created);
-        let now = SystemTime::now();
-
-        if now.duration_since(created_time)? > MAX_ACCEPTED_SIGNATURE_AGE {
+        if SystemTime::now().duration_since(created_time)? > signature_valid_duration {
             return Err(SafetyCheckError::SignatureTooOld);
         }
     }
 
     if let Some(date_header) = req.headers().get(DATE) {
         let date_header_time = httpdate::parse_http_date(date_header.to_str()?)?;
-        let now = SystemTime::now();
-
-        if now.duration_since(date_header_time)? > MAX_ACCEPTED_SIGNATURE_AGE {
+        if SystemTime::now().duration_since(date_header_time)? > signature_valid_duration {
             return Err(SafetyCheckError::SignatureTooOld);
         }
     }
