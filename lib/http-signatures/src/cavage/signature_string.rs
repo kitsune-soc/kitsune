@@ -1,23 +1,25 @@
+//!
+//! Utilities for handling signature strings
+//!
+
 use super::SignatureHeader;
 use miette::Diagnostic;
 use std::fmt::Write;
 use thiserror::Error;
 
+/// Signature string error
 #[derive(Debug, Diagnostic, Error)]
 pub enum Error {
+    /// Header had an invalid value (non-UTF8 value)
     #[error(transparent)]
     InvalidHeaderValue(#[from] http::header::ToStrError),
 
-    #[error("Invalid HTTP method")]
-    InvalidMethod,
-
-    #[error("Missing required header names")]
-    MissingHeaderNames,
-
+    /// Header is missing from the request
     #[error("Missing header value")]
     MissingHeaderValue,
 }
 
+/// Construct a new signature string from a parsed signature header and an HTTP request
 #[inline]
 pub fn construct<'a, B, I, S>(
     request: &http::Request<B>,

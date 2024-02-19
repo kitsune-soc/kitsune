@@ -1,3 +1,7 @@
+//!
+//! Common cryptographic operations
+//!
+
 mod sign;
 mod verify;
 

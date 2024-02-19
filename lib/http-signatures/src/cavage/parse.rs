@@ -3,24 +3,35 @@ use logos::{Lexer, Logos, Span};
 use miette::{Diagnostic, SourceSpan};
 use thiserror::Error;
 
+/// Signature header parse error
 #[derive(Debug, Diagnostic, Error)]
 pub enum ParseError {
+    /// Encountered an invalid sequence
     #[error("Invalid sequence")]
     InvalidSequence {
+        /// Span of the invalid sequence
         #[label("This stuff")]
         span: SourceSpan,
     },
 
+    /// Missing field in the header
     #[error("Missing field: {0}")]
     MissingField(&'static str),
 
+    /// Failed to parse an base 10 integer
     #[error("Radix 10 value parsing failed")]
     Radix10Parse,
 
+    /// Unexpected token
     #[error("Unexpected token")]
     UnexpectedToken {
+        /// Token type we got
         got: TokenTy,
+
+        /// Token type we expected
         expected: TokenTy,
+
+        /// Span of the unexpected token
         #[label("Expected: {expected:?}, got: {got:?}")]
         span: SourceSpan,
     },

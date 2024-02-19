@@ -3,9 +3,12 @@ use ring::{
     signature::{Ed25519KeyPair, RsaKeyPair, Signature, RSA_PKCS1_SHA256},
 };
 
+/// Signing key definition
 pub trait SigningKey {
+    /// Type the signature algorithm outputs
     type Output: AsRef<[u8]>;
 
+    /// Sign a message
     fn sign(&self, msg: &[u8]) -> Self::Output;
 }
 
@@ -33,6 +36,7 @@ impl SigningKey for RsaKeyPair {
     }
 }
 
+/// Sign a message with the provided signing key and encode the returned signature in Base64
 #[inline]
 pub fn sign<SK>(payload: &[u8], key: &SK) -> String
 where

@@ -1,6 +1,7 @@
 use super::SignatureHeader;
 use std::fmt::Write;
 
+/// Serialise an HTTP header into its string representation
 #[inline]
 pub fn serialise<'a, I, S>(header: SignatureHeader<'_, I, S>) -> String
 where

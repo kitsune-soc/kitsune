@@ -2,12 +2,15 @@ use miette::Diagnostic;
 use ring::signature::UnparsedPublicKey;
 use thiserror::Error;
 
+/// Verification error
 #[derive(Debug, Diagnostic, Error)]
 pub enum VerifyError {
+    /// Failed to decode the Base64 payload
     #[error(transparent)]
     Base64(#[from] base64_simd::Error),
 }
 
+/// Verify that the message corresponds with the signature using the provided verifying key
 #[inline]
 pub fn verify<B>(
     msg: &[u8],

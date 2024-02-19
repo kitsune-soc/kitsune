@@ -15,23 +15,30 @@ const MAX_ACCEPTED_SIGNATURE_AGE: Duration = Duration::from_secs(15 * 60);
 const REQUIRED_GET_HEADERS: &[&str] = &["host"];
 const REQUIRED_POST_HEADERS: &[&str] = &["host", "content-type", "digest"];
 
+/// Safety check error
 #[derive(Debug, Error)]
 pub enum SafetyCheckError {
+    /// `Date` header has an invalid format
     #[error(transparent)]
     InvalidDateHeader(#[from] httpdate::Error),
 
+    /// Header value is invalid (non UTF-8 value)
     #[error(transparent)]
     InvalidHeaderValue(#[from] http::header::ToStrError),
 
+    /// `SystemTime` operation failed
     #[error(transparent)]
     InvalidSystemTime(#[from] SystemTimeError),
 
+    /// Missing one of the required headers in the signature
     #[error("Missing required headers")]
     MissingRequiredHeaders,
 
+    /// Signature is too old and thus invalid
     #[error("Signature too old")]
     SignatureTooOld,
 
+    /// The HTTP method of the request is unsupported
     #[error("Unsupported HTTP method")]
     UnsupportedHttpMethod,
 }
@@ -48,6 +55,13 @@ where
     }
 }
 
+/// Perform a basic safety check
+///
+/// This safety check includes whether:
+///
+/// - the age of the signature is outside the acceptable range
+/// - the minimum of headers to ensure authenticity are included in the signature
+#[inline]
 pub fn is_safe<'a, B, I, S>(
     req: &Request<B>,
     signature_header: &SignatureHeader<'_, I, S>,

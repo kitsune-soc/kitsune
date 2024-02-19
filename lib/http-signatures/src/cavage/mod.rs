@@ -26,12 +26,22 @@ pub mod signature_string;
 
 #[derive(Builder, Clone)]
 #[builder(vis = "pub(crate)")]
+/// Struct representation of the `Signature` HTTP header
 pub struct SignatureHeader<'a, I, S> {
+    /// Unique identifier of the key this request was signed with
     pub key_id: &'a str,
+
+    /// The headers that are part of the signature
     pub headers: I,
+
+    /// The Base64 encoded signature
     pub signature: S,
+
+    /// (Optional) Unix timestamp in seconds when the signature was created
     #[builder(default, setter(strip_option))]
     pub created: Option<u64>,
+
+    /// (Optional) Unix timestamp in seconds when the signature should be considered invalid
     #[builder(default, setter(strip_option))]
     pub expires: Option<u64>,
 }

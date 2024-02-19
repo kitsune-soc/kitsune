@@ -1,3 +1,9 @@
+//!
+//! Easy and fool-proof HTTP signature handling
+//!
+//! Integrates with async and offers an incredibly simplistic interface for signing and verifying HTTP signatures
+//!
+
 use crate::{cavage::SignatureHeader, crypto::SigningKey, BoxError, SIGNATURE_HEADER};
 use http::{header::DATE, HeaderValue, Method};
 use std::{future::Future, time::SystemTime};
@@ -7,36 +13,47 @@ use tracing::{debug, instrument};
 const GET_HEADERS: &[&str] = &["host", "date"];
 const POST_HEADERS: &[&str] = &["host", "date", "content-type", "digest"];
 
+/// Easy module error
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Blocking pool communication failure
     #[error(transparent)]
     Blocking(#[from] blowocking::Error),
 
+    /// Couldn't get key from user-provided closure
     #[error(transparent)]
     GetKey(BoxError),
 
+    /// Invalid HTTP header value (non UTF-8 value)
     #[error(transparent)]
     InvalidHeaderValue(#[from] http::header::ToStrError),
 
+    /// Public key failed to parse
     #[error(transparent)]
     InvalidKey(#[from] crate::crypto::parse::Error),
 
+    /// Signature header parsing failed
     #[error(transparent)]
     InvalidSignatureHeader(#[from] super::ParseError),
 
+    /// Signature header is missing
     #[error("Missing signature")]
     MissingSignature,
 
+    /// Signature string construction failure
     #[error(transparent)]
     SignatureStringConstruction(#[from] super::signature_string::Error),
 
+    /// HTTP method is unsupported
     #[error("Unsupported HTTP method")]
     UnsupportedHttpMethod,
 
+    /// Verification failed
     #[error(transparent)]
     Verify(#[from] crate::crypto::VerifyError),
 }
 
+/// Sign an HTTP request using the provided signing key using opinionated defaults
 #[inline]
 #[instrument(skip_all)]
 pub async fn sign<B, SK>(
@@ -89,6 +106,7 @@ where
     Ok(req)
 }
 
+/// Verify an HTTP request using opinionated defaults
 #[inline]
 #[instrument(skip_all)]
 pub async fn verify<B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<bool, Error>
