@@ -34,9 +34,9 @@ impl SigningKey for RsaKeyPair {
 }
 
 #[inline]
-pub fn sign<KP>(payload: &[u8], key: &KP) -> String
+pub fn sign<SK>(payload: &[u8], key: &SK) -> String
 where
-    KP: SigningKey,
+    SK: SigningKey,
 {
     base64_simd::STANDARD.encode_to_string(key.sign(payload))
 }

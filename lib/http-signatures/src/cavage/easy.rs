@@ -1,7 +1,11 @@
-use crate::{BoxError, SIGNATURE_HEADER};
-use std::future::Future;
+use crate::{cavage::SignatureHeader, crypto::SigningKey, BoxError, SIGNATURE_HEADER};
+use http::{header::DATE, HeaderValue, Method};
+use std::{future::Future, time::SystemTime};
 use thiserror::Error;
 use tracing::{debug, instrument};
+
+const GET_HEADERS: &[&str] = &["host", "date"];
+const POST_HEADERS: &[&str] = &["host", "date", "content-type", "digest"];
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -26,14 +30,60 @@ pub enum Error {
     #[error(transparent)]
     SignatureStringConstruction(#[from] super::signature_string::Error),
 
+    #[error("Unsupported HTTP method")]
+    UnsupportedHttpMethod,
+
     #[error(transparent)]
     Verify(#[from] crate::crypto::VerifyError),
 }
 
 #[inline]
 #[instrument(skip_all)]
-pub async fn sign<B>(req: http::Request<B>) -> http::Request<B> {
-    todo!();
+pub async fn sign<B, SK>(
+    mut req: http::Request<B>,
+    key_id: &str,
+    key: SK,
+) -> Result<http::Request<B>, Error>
+where
+    SK: SigningKey + Send + 'static,
+{
+    // First, set/overwrite the `Date` header
+    let date_header_value =
+        HeaderValue::from_str(&httpdate::fmt_http_date(SystemTime::now())).unwrap();
+    req.headers_mut().insert(DATE, date_header_value);
+
+    let headers = match *req.method() {
+        Method::GET => GET_HEADERS.iter().copied(),
+        Method::POST => POST_HEADERS.iter().copied(),
+        _ => return Err(Error::UnsupportedHttpMethod),
+    };
+
+    let signature_header = SignatureHeader {
+        key_id,
+        headers,
+        signature: "",
+        created: None,
+        expires: None,
+    };
+
+    debug_assert!(super::is_safe(&req, &signature_header).is_ok());
+
+    let signature_string = super::signature_string::construct(&req, &signature_header)?;
+    let signature =
+        blowocking::crypto(move || crate::crypto::sign(signature_string.as_bytes(), &key)).await?;
+
+    let signature_header = SignatureHeader {
+        signature: &signature,
+        ..signature_header
+    };
+
+    let signature_header_value =
+        HeaderValue::from_str(&super::serialise(signature_header)).unwrap();
+
+    req.headers_mut()
+        .insert(&SIGNATURE_HEADER, signature_header_value);
+
+    Ok(req)
 }
 
 #[inline]
