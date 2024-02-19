@@ -6,6 +6,9 @@ use std::{
 };
 use thiserror::Error;
 
+/// 1 minute
+const CLOCK_SKEW_ADJUSTMENT: Duration = Duration::from_secs(60);
+
 /// 15 minutes
 const MAX_ACCEPTED_SIGNATURE_AGE: Duration = Duration::from_secs(15 * 60);
 
@@ -68,6 +71,7 @@ where
         return Err(SafetyCheckError::MissingRequiredHeaders);
     }
 
+    let now = SystemTime::now() - CLOCK_SKEW_ADJUSTMENT;
     let signature_valid_duration = if let Some(expires) = signature_header.expires {
         min(Duration::from_secs(expires), MAX_ACCEPTED_SIGNATURE_AGE)
     } else {
@@ -76,14 +80,14 @@ where
 
     if let Some(created) = signature_header.created {
         let created_time = SystemTime::UNIX_EPOCH + Duration::from_secs(created);
-        if SystemTime::now().duration_since(created_time)? > signature_valid_duration {
+        if now.duration_since(created_time)? > signature_valid_duration {
             return Err(SafetyCheckError::SignatureTooOld);
         }
     }
 
     if let Some(date_header) = req.headers().get(DATE) {
         let date_header_time = httpdate::parse_http_date(date_header.to_str()?)?;
-        if SystemTime::now().duration_since(date_header_time)? > signature_valid_duration {
+        if now.duration_since(date_header_time)? > signature_valid_duration {
             return Err(SafetyCheckError::SignatureTooOld);
         }
     }
