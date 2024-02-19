@@ -92,7 +92,7 @@ where
     let signature_header = SignatureHeader {
         key_id: signature_header.key_id,
         headers: signature_header.headers,
-        signature: signature.as_str(),
+        signature,
         created: signature_header.created,
         expires: signature_header.expires,
     };
