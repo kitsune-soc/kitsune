@@ -107,6 +107,9 @@ where
 }
 
 /// Verify an HTTP request using opinionated defaults
+///
+/// The closure is expected to return a future which resolves into a result which contains a PEM-encoded PKCS#8 verifying key.
+/// You don't need to supply any more information. The library will figure out the rest.
 #[inline]
 #[instrument(skip_all)]
 pub async fn verify<B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<bool, Error>
