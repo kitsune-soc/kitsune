@@ -1,6 +1,4 @@
 use super::SignatureHeader;
-use crate::{REQUIRED_GET_HEADERS, REQUIRED_POST_HEADERS};
-use http::Method;
 use miette::Diagnostic;
 use std::fmt::Write;
 use thiserror::Error;
@@ -21,18 +19,6 @@ pub enum Error {
 }
 
 #[inline]
-fn is_subset<I>(left: &[I], right: &[I]) -> bool
-where
-    I: PartialEq,
-{
-    if left.len() <= right.len() {
-        left.iter().all(|item| right.contains(item))
-    } else {
-        false
-    }
-}
-
-#[inline]
 pub fn construct<'a, B, I>(
     request: &http::Request<B>,
     signature_header: &SignatureHeader<'_, I>,
@@ -40,19 +26,8 @@ pub fn construct<'a, B, I>(
 where
     I: Iterator<Item = &'a str> + Clone,
 {
-    let header_names = signature_header.headers.clone().collect::<Vec<&str>>();
-    let fulfils_min_requirements = match *request.method() {
-        Method::GET => is_subset(REQUIRED_GET_HEADERS, &header_names),
-        Method::POST => is_subset(REQUIRED_POST_HEADERS, &header_names),
-        _ => return Err(Error::InvalidMethod),
-    };
-
-    if !fulfils_min_requirements {
-        return Err(Error::MissingHeaderNames);
-    }
-
     let mut signature_string = String::new();
-    for name in header_names {
+    for name in signature_header.headers.clone() {
         match name {
             name @ "(request-target)" => {
                 let method = request.method().as_str().to_lowercase();
@@ -91,23 +66,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::is_subset;
     use http::{Method, Request, Uri};
-    use proptest::{prop_assert_eq, proptest};
-    use std::collections::HashSet;
-
-    proptest! {
-        #[test]
-        fn subset_behaves_equal(left: HashSet<String>, right: HashSet<String>) {
-            let vec_left = left.iter().collect::<Vec<_>>();
-            let vec_right = right.iter().collect::<Vec<_>>();
-
-            let slice_subset = is_subset(&vec_left, &vec_right);
-            let set_subset = left.is_subset(&right);
-
-            prop_assert_eq!(slice_subset, set_subset);
-        }
-    }
 
     const BASIC_SIGNATURE_STRING: &str = "(request-target): get /foo?param=value&pet=dog\nhost: example.com\ndate: Sun, 05 Jan 2014 21:31:40 GMT";
     const ALL_HEADERS_SIGNATURE_STRING: &str = "(request-target): post /foo?param=value&pet=dog\nhost: example.com\ndate: Sun, 05 Jan 2014 21:31:40 GMT\ncontent-type: application/json\ndigest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=\ncontent-length: 18";
