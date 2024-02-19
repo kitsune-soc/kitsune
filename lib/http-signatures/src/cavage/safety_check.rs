@@ -85,9 +85,16 @@ where
         return Err(SafetyCheckError::MissingRequiredHeaders);
     }
 
-    let now = SystemTime::now() - CLOCK_SKEW_ADJUSTMENT;
+    // Move all of the timestamps a minute into the future to compensate for our local clock maybe lagging behind a bit
+    let now = SystemTime::now() + CLOCK_SKEW_ADJUSTMENT;
     let signature_valid_duration = if let Some(expires) = signature_header.expires {
-        min(Duration::from_secs(expires), MAX_ACCEPTED_SIGNATURE_AGE)
+        let expiration_timestamp =
+            SystemTime::UNIX_EPOCH + Duration::from_secs(expires) + CLOCK_SKEW_ADJUSTMENT;
+
+        min(
+            expiration_timestamp.duration_since(SystemTime::now())?,
+            MAX_ACCEPTED_SIGNATURE_AGE,
+        )
     } else {
         MAX_ACCEPTED_SIGNATURE_AGE
     };
