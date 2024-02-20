@@ -29,7 +29,7 @@ num-derive = "0.4.2"
 num-traits = "0.2.18"
 rustls = "0.22.2"
 rustls-native-certs = "0.7.0"
-serde = { version = "1.0.196", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.8"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.57"

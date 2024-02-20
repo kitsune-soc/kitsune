@@ -79,7 +79,7 @@ oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"
 rust-embed = { version = "8.2.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.196", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
 speedy-uuid = { path = "../lib/speedy-uuid" }
@@ -108,7 +108,7 @@ utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "7.0.1", default-features = false, features = [
+async-graphql = { version = "7.0.2", default-features = false, features = [
     "playground",
     "tempfile",
     "time",
@@ -116,7 +116,7 @@ async-graphql = { version = "7.0.1", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "7.0.1", optional = true }
+async-graphql-axum = { version = "7.0.2", optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
