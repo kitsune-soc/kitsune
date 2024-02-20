@@ -29,7 +29,7 @@ itertools = { version = "0.12.1", default-features = false }
 logos = "0.14.0"
 miette = "7.1.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
-ring = "0.17.7"
+ring = { version = "0.17.7", features = ["std"] }
 thiserror = "1.0.57"
 tracing = { version = "0.1.40", default-features = false, optional = true }
 

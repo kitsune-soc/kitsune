@@ -5,7 +5,7 @@
 //!
 
 use super::SafetyCheckError;
-use crate::{cavage::SignatureHeader, crypto::SigningKey, BoxError, SIGNATURE_HEADER};
+use crate::{cavage::SignatureHeader, BoxError, SIGNATURE_HEADER};
 use http::{header::DATE, HeaderValue, Method};
 use std::{future::Future, time::SystemTime};
 use thiserror::Error;
@@ -59,16 +59,17 @@ pub enum Error {
 }
 
 /// Sign an HTTP request using the provided signing key using opinionated defaults
+///
+/// The key parameter has to be an PEM-encoded private key in the PKCS#8 format
+///
+/// This will fail if the key algorithm is unsupported. For a list of supported algorithms, check [`crate::crypto::parse::private_key`]
 #[inline]
 #[instrument(skip_all)]
-pub async fn sign<B, SK>(
+pub async fn sign<B>(
     mut req: http::Request<B>,
     key_id: &str,
-    key: SK,
-) -> Result<http::Request<B>, Error>
-where
-    SK: SigningKey + Send + 'static,
-{
+    key: &str,
+) -> Result<http::Request<B>, Error> {
     // First, set/overwrite the `Date` header
     let date_header_value =
         HeaderValue::from_str(&httpdate::fmt_http_date(SystemTime::now())).unwrap();
@@ -90,6 +91,7 @@ where
 
     debug_assert!(super::is_safe(&req, &signature_header).is_ok());
 
+    let key = crate::crypto::parse::private_key(key)?;
     let signature_string = super::signature_string::construct(&req, &signature_header)?;
     let signature =
         blowocking::crypto(move || crate::crypto::sign(signature_string.as_bytes(), &key)).await?;
