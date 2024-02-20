@@ -2,11 +2,13 @@
 //! Parse cryptographic keys for use in the HTTP signature implementations
 //!
 
+use super::SigningKey as SigningKeyTrait;
 use const_oid::db::{rfc5912::RSA_ENCRYPTION, rfc8410::ID_ED_25519};
 use miette::Diagnostic;
-use pkcs8::{Document, SubjectPublicKeyInfoRef};
+use pkcs8::{Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef};
 use ring::signature::{
-    UnparsedPublicKey, VerificationAlgorithm, ED25519, RSA_PKCS1_2048_8192_SHA256,
+    Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, VerificationAlgorithm, ED25519,
+    RSA_PKCS1_2048_8192_SHA256,
 };
 use thiserror::Error;
 
@@ -16,6 +18,10 @@ pub enum Error {
     /// Malformed DER structure
     #[error(transparent)]
     Der(#[from] pkcs8::der::Error),
+
+    /// Key rejected
+    #[error(transparent)]
+    KeyRejected(#[from] ring::error::KeyRejected),
 
     /// Malformed key
     #[error("Malformed key")]
@@ -56,4 +62,53 @@ pub fn public_key(pem: &str) -> Result<UnparsedPublicKey<Vec<u8>>, Error> {
         .to_vec();
 
     Ok(UnparsedPublicKey::new(verify_algo, raw_bytes))
+}
+
+/// Enum dispatch over various signing keys
+#[non_exhaustive]
+pub enum SigningKey {
+    /// Ed25519
+    Ed25519(Ed25519KeyPair),
+
+    /// RSA
+    Rsa(RsaKeyPair),
+}
+
+impl SigningKeyTrait for SigningKey {
+    type Output = Vec<u8>;
+
+    fn sign(&self, msg: &[u8]) -> Self::Output {
+        match self {
+            Self::Ed25519(key) => key.sign(msg).as_ref().to_vec(),
+            Self::Rsa(key) => SigningKeyTrait::sign(key, msg),
+        }
+    }
+}
+
+/// Parse a private key from its PKCS#8 PEM form.
+/// This function uses constant-time PEM decoding and zeroizes any temporary allocations, following good cryptographic hygiene practices.
+///
+/// When working with this library, prefer using this function over your own decoding logic.
+///
+/// Currently supported algorithms:
+///
+/// - RSA
+/// - Ed25519
+#[inline]
+pub fn private_key(pem: &str) -> Result<SigningKey, Error> {
+    let (_tag_line, document) = SecretDocument::from_pem(pem)?;
+    let private_key_raw: PrivateKeyInfo<'_> = document.decode_msg()?;
+
+    let signing_key = if private_key_raw.algorithm.oid == RSA_ENCRYPTION {
+        SigningKey::Rsa(RsaKeyPair::from_der(private_key_raw.private_key)?)
+    } else if private_key_raw.algorithm.oid == ID_ED_25519 {
+        SigningKey::Ed25519(Ed25519KeyPair::from_seed_and_public_key(
+            private_key_raw.private_key,
+            private_key_raw.public_key.ok_or(Error::MalformedKey)?,
+        )?)
+    } else {
+        return Err(Error::UnknownKeyType);
+    };
+
+    Ok(signing_key)
 }
