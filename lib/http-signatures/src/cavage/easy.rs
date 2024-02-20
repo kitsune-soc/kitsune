@@ -4,6 +4,7 @@
 //! Integrates with async and offers an incredibly simplistic interface for signing and verifying HTTP signatures
 //!
 
+use super::SafetyCheckError;
 use crate::{cavage::SignatureHeader, crypto::SigningKey, BoxError, SIGNATURE_HEADER};
 use http::{header::DATE, HeaderValue, Method};
 use std::{future::Future, time::SystemTime};
@@ -39,6 +40,10 @@ pub enum Error {
     /// Signature header is missing
     #[error("Missing signature")]
     MissingSignature,
+
+    /// Safety check failure
+    #[error(transparent)]
+    SafetyCheck(#[from] SafetyCheckError),
 
     /// Signature string construction failure
     #[error(transparent)]
@@ -112,7 +117,7 @@ where
 /// You don't need to supply any more information. The library will figure out the rest.
 #[inline]
 #[instrument(skip_all)]
-pub async fn verify<B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<bool, Error>
+pub async fn verify<B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<(), Error>
 where
     F: Fn(&str) -> Fut,
     Fut: Future<Output = Result<String, E>>,
@@ -124,9 +129,7 @@ where
     };
 
     let signature_header = super::parse(header.to_str()?)?;
-    if super::is_safe(req, &signature_header).is_err() {
-        return Ok(false);
-    }
+    super::is_safe(req, &signature_header)?;
 
     let signature_string = super::signature_string::construct(req, &signature_header)?;
     let pem_key = get_key(signature_header.key_id)
@@ -136,10 +139,10 @@ where
     let encoded_signature = signature_header.signature.to_string();
     let public_key = crate::crypto::parse::public_key(&pem_key)?;
 
-    let is_valid = blowocking::crypto(move || {
+    blowocking::crypto(move || {
         crate::crypto::verify(signature_string.as_bytes(), &encoded_signature, &public_key)
     })
     .await??;
 
-    Ok(is_valid)
+    Ok(())
 }
