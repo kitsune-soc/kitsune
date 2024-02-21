@@ -9,7 +9,7 @@ license.workspace = true
 async-trait = "0.1.77"
 http-body-util = "0.1.0"
 http-compat = { path = "../../lib/http-compat" }
-hyper = { version = "1.1.0", default-features = false }
+hyper = { version = "1.2.0", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "=0.22.0"
