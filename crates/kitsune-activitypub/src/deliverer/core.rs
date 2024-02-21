@@ -6,7 +6,6 @@ use kitsune_core::consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
-use kitsune_http_signatures::{ring::signature::RsaKeyPair, PrivateKey};
 use kitsune_type::ap::Activity;
 use rsa::pkcs8::SecretDocument;
 use sha2::{Digest, Sha256};
@@ -51,12 +50,6 @@ impl Deliverer {
             .uri(inbox_url)
             .header("Digest", digest_header)
             .body(body.into())?;
-
-        let (_tag, pkcs8_document) = SecretDocument::from_pem(&user.private_key)?;
-        let private_key = PrivateKey::builder()
-            .key_id(&account.public_key_id)
-            .key(RsaKeyPair::from_pkcs8(pkcs8_document.as_bytes())?)
-            .build();
 
         let response = self.client.execute_signed(request, private_key).await?;
         debug!(status_code = %response.status(), "successfully executed http request");

@@ -3117,7 +3117,6 @@ dependencies = [
  "kitsune-federation",
  "kitsune-federation-filter",
  "kitsune-http-client",
- "kitsune-http-signatures",
  "kitsune-job-runner",
  "kitsune-jobs",
  "kitsune-language",
@@ -3191,7 +3190,6 @@ dependencies = [
  "kitsune-embed",
  "kitsune-federation-filter",
  "kitsune-http-client",
- "kitsune-http-signatures",
  "kitsune-language",
  "kitsune-search",
  "kitsune-service",
@@ -3406,10 +3404,10 @@ dependencies = [
  "headers",
  "http-body 1.0.0",
  "http-body-util",
+ "http-signatures",
  "hyper 1.1.0",
  "hyper-rustls",
  "hyper-util",
- "kitsune-http-signatures",
  "kitsune-type",
  "pin-project",
  "serde",
@@ -3417,24 +3415,6 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
-]
-
-[[package]]
-name = "kitsune-http-signatures"
-version = "0.0.1-pre.5"
-dependencies = [
- "base64-simd",
- "blowocking",
- "derive_builder",
- "http 1.0.0",
- "itertools 0.12.1",
- "pem",
- "pkcs8",
- "ring 0.17.8",
- "thiserror",
- "time",
- "tokio",
- "typed-builder",
 ]
 
 [[package]]
@@ -3661,7 +3641,6 @@ dependencies = [
  "kitsune-embed",
  "kitsune-federation-filter",
  "kitsune-http-client",
- "kitsune-http-signatures",
  "kitsune-jobs",
  "kitsune-language",
  "kitsune-messaging",

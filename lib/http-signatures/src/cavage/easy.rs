@@ -64,7 +64,7 @@ pub enum Error {
 ///
 /// This will fail if the key algorithm is unsupported. For a list of supported algorithms, check [`crate::crypto::parse::private_key`]
 #[inline]
-#[instrument(skip_all)]
+#[instrument(skip_all, fields(key_id))]
 pub async fn sign<B>(
     mut req: http::Request<B>,
     key_id: &str,

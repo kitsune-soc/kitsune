@@ -55,7 +55,6 @@ kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
 kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
-kitsune-http-signatures = { path = "../crates/kitsune-http-signatures" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-language = { path = "../crates/kitsune-language" }
