@@ -3399,7 +3399,6 @@ dependencies = [
  "async-stream",
  "bytes",
  "futures-util",
- "headers",
  "http-body 1.0.0",
  "http-body-util",
  "http-signatures",
