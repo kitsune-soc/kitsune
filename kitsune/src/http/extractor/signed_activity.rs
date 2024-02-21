@@ -10,21 +10,13 @@ use axum::{
     RequestExt,
 };
 use bytes::Buf;
-use const_oid::db::rfc8410::ID_ED_25519;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use http::{request::Parts, StatusCode};
+use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
-use kitsune_http_signatures::{
-    ring::signature::{
-        UnparsedPublicKey, VerificationAlgorithm, ED25519, RSA_PKCS1_2048_8192_SHA256,
-    },
-    HttpVerifier,
-};
 use kitsune_type::ap::Activity;
-use pkcs8::{Document, SubjectPublicKeyInfoRef};
 use scoped_futures::ScopedFutureExt;
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature
@@ -69,7 +61,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             return Err(Error::CoreHttp(HttpError::BadRequest).into());
         };
 
-        if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
+        let request = http::Request::from_parts(parts, ());
+        if !verify_signature(&request, &state.db_pool, Some(&remote_user)).await? {
             // Refetch the user and try again. Maybe they rekeyed
             let opts = AccountFetchOptions::builder()
                 .refetch(true)
@@ -85,7 +78,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 return Err(Error::CoreHttp(HttpError::BadRequest).into());
             };
 
-            if !verify_signature(&parts, &state.db_pool, Some(&remote_user)).await? {
+            if !verify_signature(&request, &state.db_pool, Some(&remote_user)).await? {
                 return Err(StatusCode::UNAUTHORIZED.into_response());
             }
         }
@@ -95,50 +88,35 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 }
 
 async fn verify_signature(
-    parts: &Parts,
+    req: &http::Request<()>,
     db_conn: &PgPool,
     expected_account: Option<&Account>,
 ) -> Result<bool> {
-    let is_valid = HttpVerifier::default()
-        .verify(parts, |key_id| async move {
-            let remote_user: Account = db_conn
-                .with_connection(|db_conn| {
-                    accounts::table
-                        .filter(accounts::public_key_id.eq(key_id))
-                        .select(Account::as_select())
-                        .first(db_conn)
-                        .scoped()
-                })
-                .await?;
+    let is_valid = http_signatures::cavage::easy::verify(req, |key_id| async {
+        let remote_user: Account = db_conn
+            .with_connection(|db_conn| {
+                accounts::table
+                    .filter(accounts::public_key_id.eq(key_id))
+                    .select(Account::as_select())
+                    .first(db_conn)
+                    .scoped()
+            })
+            .await?;
 
-            // If we have an expected account, which we have in the case of an incoming new activity,
-            // then we do this comparison.
-            // In the case of incoming activities, this is to ensure that the account this will be attributed to is actually the one signing it.
-            // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
-            if let Some(expected_account) = expected_account {
-                if expected_account.url != remote_user.url {
-                    return Err(HttpError::Unauthorised.into());
-                }
+        // If we have an expected account, which we have in the case of an incoming new activity,
+        // then we do this comparison.
+        // In the case of incoming activities, this is to ensure that the account this will be attributed to is actually the one signing it.
+        // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
+        if let Some(expected_account) = expected_account {
+            if expected_account.url != remote_user.url {
+                return Err(HttpError::Unauthorised.into());
             }
+        }
 
-            let (_tag, public_key) =
-                Document::from_pem(&remote_user.public_key).map_err(Error::from)?;
-            let public_key: SubjectPublicKeyInfoRef<'_> =
-                public_key.decode_msg().map_err(Error::from)?;
-            let public_key_bytes = public_key.subject_public_key.raw_bytes().to_vec();
-
-            // TODO: Replace this with an actual comparison as soon as the new const_oid version is out
-            let algorithm: &'static dyn VerificationAlgorithm =
-                if public_key.algorithm.oid.as_bytes() == ID_ED_25519.as_bytes() {
-                    &ED25519
-                } else {
-                    &RSA_PKCS1_2048_8192_SHA256
-                };
-
-            Ok(UnparsedPublicKey::new(algorithm, public_key_bytes))
-        })
-        .await
-        .is_ok();
+        Ok::<_, Error>(remote_user.public_key)
+    })
+    .await
+    .is_ok();
 
     Ok(is_valid)
 }

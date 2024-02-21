@@ -34,7 +34,6 @@ blowocking = { path = "../lib/blowocking" }
 bytes = "1.5.0"
 chrono = { version = "0.4.34", default-features = false }
 clap = { version = "4.5.1", features = ["derive", "wrap_help"] }
-const-oid = { version = "0.9.6", features = ["db"] }
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
 der = { version = "0.7.8", features = ["std"] }
 diesel = "2.1.4"
@@ -43,6 +42,7 @@ futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.0.0"
 http-body-util = "0.1.0"
+http-signatures = { path = "../lib/http-signatures" }
 iso8601-timestamp = "0.2.17"
 itertools = { version = "0.12.1", default-features = false }
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
@@ -72,7 +72,6 @@ miette = { version = "7.1.0", features = ["fancy"] }
 mimalloc = "0.1.39"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
-pkcs8 = "0.10.2"
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"

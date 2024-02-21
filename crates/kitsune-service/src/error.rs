@@ -1,5 +1,4 @@
 use diesel_async::pooled_connection::bb8;
-use kitsune_http_signatures::ring;
 use std::{
     error::Error as StdError,
     fmt::{Debug, Display},
@@ -85,9 +84,6 @@ pub enum Error {
 
     #[error(transparent)]
     JobQueue(#[from] athena::Error),
-
-    #[error(transparent)]
-    KeyRejected(#[from] ring::error::KeyRejected),
 
     #[error(transparent)]
     Mime(#[from] mime::FromStrError),
