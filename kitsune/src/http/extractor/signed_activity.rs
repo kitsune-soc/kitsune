@@ -92,28 +92,31 @@ async fn verify_signature(
     db_conn: &PgPool,
     expected_account: Option<&Account>,
 ) -> Result<bool> {
-    let is_valid = http_signatures::cavage::easy::verify(req, |key_id| async {
-        let remote_user: Account = db_conn
-            .with_connection(|db_conn| {
-                accounts::table
-                    .filter(accounts::public_key_id.eq(key_id))
-                    .select(Account::as_select())
-                    .first(db_conn)
-                    .scoped()
-            })
-            .await?;
+    let is_valid = http_signatures::cavage::easy::verify(req, |key_id| {
+        async move {
+            let remote_user: Account = db_conn
+                .with_connection(|db_conn| {
+                    accounts::table
+                        .filter(accounts::public_key_id.eq(key_id))
+                        .select(Account::as_select())
+                        .first(db_conn)
+                        .scoped()
+                })
+                .await?;
 
-        // If we have an expected account, which we have in the case of an incoming new activity,
-        // then we do this comparison.
-        // In the case of incoming activities, this is to ensure that the account this will be attributed to is actually the one signing it.
-        // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
-        if let Some(expected_account) = expected_account {
-            if expected_account.url != remote_user.url {
-                return Err(HttpError::Unauthorised.into());
+            // If we have an expected account, which we have in the case of an incoming new activity,
+            // then we do this comparison.
+            // In the case of incoming activities, this is to ensure that the account this will be attributed to is actually the one signing it.
+            // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
+            if let Some(expected_account) = expected_account {
+                if expected_account.url != remote_user.url {
+                    return Err(HttpError::Unauthorised.into());
+                }
             }
-        }
 
-        Ok::<_, Error>(remote_user.public_key)
+            Ok::<_, Error>(remote_user.public_key)
+        }
+        .scoped()
     })
     .await
     .is_ok();

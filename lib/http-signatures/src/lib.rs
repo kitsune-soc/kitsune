@@ -11,6 +11,9 @@
 
 use http::HeaderName;
 
+pub use ring;
+pub use scoped_futures;
+
 pub mod cavage;
 pub mod crypto;
 

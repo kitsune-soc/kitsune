@@ -7,6 +7,7 @@
 use super::SafetyCheckError;
 use crate::{cavage::SignatureHeader, BoxError, SIGNATURE_HEADER};
 use http::{header::DATE, HeaderValue, Method};
+use scoped_futures::ScopedFutureWrapper;
 use std::{future::Future, time::SystemTime};
 use thiserror::Error;
 use tracing::{debug, instrument};
@@ -119,9 +120,9 @@ pub async fn sign<B>(
 /// You don't need to supply any more information. The library will figure out the rest.
 #[inline]
 #[instrument(skip_all)]
-pub async fn verify<B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<(), Error>
+pub async fn verify<'a, B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<(), Error>
 where
-    F: Fn(&str) -> Fut,
+    for<'k_id> F: Fn(&'k_id str) -> ScopedFutureWrapper<'k_id, 'a, Fut>,
     Fut: Future<Output = Result<String, E>>,
     E: Into<BoxError>,
 {
