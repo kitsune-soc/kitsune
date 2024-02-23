@@ -1,5 +1,5 @@
 use super::{CacheBackend, CacheResult};
-use redis::AsyncCommands;
+use redis::{aio::ConnectionManager, AsyncCommands};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 use typed_builder::TypedBuilder;
@@ -13,7 +13,7 @@ where
     namespace: String,
     #[builder(setter(into))]
     prefix: String,
-    redis_conn: deadpool_redis::Pool,
+    redis_conn: multiplex_pool::Pool<ConnectionManager>,
     ttl: Duration,
 
     // Type phantom data
@@ -27,7 +27,11 @@ impl<K, V> Redis<K, V>
 where
     K: ?Sized,
 {
-    pub fn new<P>(redis_conn: deadpool_redis::Pool, prefix: P, ttl: Duration) -> Self
+    pub fn new<P>(
+        redis_conn: multiplex_pool::Pool<ConnectionManager>,
+        prefix: P,
+        ttl: Duration,
+    ) -> Self
     where
         P: Into<String>,
     {
@@ -50,7 +54,7 @@ where
 {
     #[instrument(skip_all, fields(%key))]
     async fn delete(&self, key: &K) -> CacheResult<()> {
-        let mut conn = self.redis_conn.get().await?;
+        let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
 
         debug!(%key, "Deleting cache entry");
@@ -61,7 +65,7 @@ where
 
     #[instrument(skip_all, fields(%key))]
     async fn get(&self, key: &K) -> CacheResult<Option<V>> {
-        let mut conn = self.redis_conn.get().await?;
+        let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
 
         debug!(%key, "Fetching cache entry");
@@ -76,7 +80,7 @@ where
 
     #[instrument(skip_all, fields(%key))]
     async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
-        let mut conn = self.redis_conn.get().await?;
+        let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
         let serialised = simd_json::to_string(value)?;
 

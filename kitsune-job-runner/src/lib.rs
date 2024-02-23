@@ -16,6 +16,8 @@ use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
 use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
+use multiplex_pool::RoundRobinStrategy;
+use redis::RedisResult;
 use std::{ops::ControlFlow, sync::Arc, time::Duration};
 use tokio::task::JoinSet;
 use typed_builder::TypedBuilder;
@@ -31,13 +33,19 @@ pub struct JobDispatcherState {
     url_service: UrlService,
 }
 
-pub fn prepare_job_queue(
+pub async fn prepare_job_queue(
     db_pool: PgPool,
     config: &Configuration,
-) -> Result<JobQueue<KitsuneContextRepo>, deadpool_redis::CreatePoolError> {
+) -> RedisResult<JobQueue<KitsuneContextRepo>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
-    let redis_pool = deadpool_redis::Config::from_url(config.redis_url.as_str())
-        .create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
+    let client = redis::Client::open(config.redis_url.as_str())?;
+    let redis_pool = multiplex_pool::Pool::from_producer(
+        || client.get_connection_manager(),
+        10,
+        RoundRobinStrategy::default(),
+    )
+    .await?;
 
     let queue = JobQueue::builder()
         .context_repository(context_repo)

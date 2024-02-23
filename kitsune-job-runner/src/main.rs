@@ -31,6 +31,7 @@ async fn main() -> miette::Result<()> {
 
     let db_pool = kitsune_db::connect(&config.database).await?;
     let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)
+        .await
         .into_diagnostic()?;
 
     let url_service = UrlService::builder()

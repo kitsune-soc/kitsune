@@ -11,11 +11,7 @@ derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.30"
 kitsune-retry-policies = { path = "../../lib/kitsune-retry-policies" }
 pin-project-lite = "0.2.13"
-redis = { version = "0.24.0", features = [
-    "aio",
-    "connection-manager",
-    "tokio-rustls-comp",
-] }
+redis = { version = "0.24.0", features = ["connection-manager", "tokio-comp"] }
 serde = "1.0.197"
 simd-json = "0.13.8"
 tokio = { version = "1.36.0", features = ["macros", "rt", "sync"] }
