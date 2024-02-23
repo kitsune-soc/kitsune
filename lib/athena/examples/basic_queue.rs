@@ -1,10 +1,10 @@
 use athena::{JobContextRepository, JobDetails, JobQueue, Runnable};
-use deadpool_redis::{Config, Runtime};
 use futures_util::{
     stream::{self, BoxStream},
     StreamExt,
 };
 use iso8601_timestamp::Timestamp;
+use multiplex_pool::{Pool, RoundRobinStrategy};
 use speedy_uuid::Uuid;
 use std::{
     io,
@@ -62,8 +62,14 @@ impl JobContextRepository for ContextRepo {
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let cfg = Config::from_url("redis://localhost");
-    let pool = cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
+    let client = redis::Client::open("redis://localhost").unwrap();
+    let pool = Pool::from_producer(
+        || client.get_connection_manager(),
+        5,
+        RoundRobinStrategy::default(),
+    )
+    .await
+    .unwrap();
 
     let queue = JobQueue::builder()
         .context_repository(ContextRepo)

@@ -1,7 +1,6 @@
 use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
-use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, Runnable};
+use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, RedisPool, Runnable};
 use ahash::AHashMap;
-use deadpool_redis::Pool as RedisPool;
 use either::Either;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
@@ -177,7 +176,7 @@ where
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
-        let mut redis_conn = self.redis_pool.get().await?;
+        let mut redis_conn = self.redis_pool.get();
         self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
             .query_async(&mut redis_conn)
             .await?;
@@ -189,7 +188,7 @@ where
         &self,
         max_jobs: usize,
     ) -> Result<impl Iterator<Item = JobData> + Clone> {
-        let mut redis_conn = self.redis_pool.get().await?;
+        let mut redis_conn = self.redis_pool.get();
         self.initialise_group(&mut redis_conn).await?;
 
         let StreamAutoClaimReply { claimed_ids, .. }: StreamAutoClaimReply =
@@ -284,7 +283,7 @@ where
         };
 
         {
-            let mut conn = self.redis_pool.get().await?;
+            let mut conn = self.redis_pool.get();
             pipeline.query_async::<_, ()>(&mut conn).await?;
         }
 
@@ -299,7 +298,7 @@ where
     }
 
     async fn reclaim_job(&self, job_data: &JobData) -> Result<()> {
-        let mut conn = self.redis_pool.get().await?;
+        let mut conn = self.redis_pool.get();
         conn.xclaim(
             self.queue_name.as_str(),
             self.consumer_group.as_str(),
