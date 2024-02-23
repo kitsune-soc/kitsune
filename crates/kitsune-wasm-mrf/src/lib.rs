@@ -1,3 +1,7 @@
+mod mrf_wit {
+    wasmtime::component::bindgen!();
+}
+
 pub fn register_mrf_module() {
     todo!();
 }
