@@ -6,7 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-ahash = "0.8.7"
+ahash = "0.8.9"
 deadpool-redis = "0.14.0"
 either = { version = "1.10.0", default-features = false }
 futures-util = { version = "0.3.30", default-features = false }
@@ -22,11 +22,11 @@ redis = { version = "0.24.0", default-features = false, features = [
     "tokio-rustls-comp",
 ] }
 retry-policies = "0.2.1"
-serde = { version = "1.0.196", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.8"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
-thiserror = "1.0.56"
+thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["macros", "rt", "sync"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"

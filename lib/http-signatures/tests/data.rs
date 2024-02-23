@@ -1,7 +1,11 @@
 #![allow(dead_code)]
 
-use http::{request::Parts, Method, Request, Uri};
-use pkcs8::{der::Decode, Document, SubjectPublicKeyInfoRef};
+use const_oid::db::rfc5912::RSA_ENCRYPTION;
+use http::{Method, Request, Uri};
+use pkcs8::{
+    der::EncodePem, spki::AlgorithmIdentifier, Document, LineEnding, PrivateKeyInfo,
+    SecretDocument, SubjectPublicKeyInfoRef,
+};
 use ring::signature::{
     RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY,
 };
@@ -46,7 +50,7 @@ ycN7jXCNeRs5qIcy7Dej1Exzu0+Qvn4mzf1iFEAxPHHlzXQ+UMs=
 ";
 
 #[must_use]
-pub fn get_parts() -> Parts {
+pub fn get_request() -> Request<()> {
     Request::builder()
         .method(Method::POST)
         .uri(Uri::from_static("/foo?param=value&pet=dog"))
@@ -60,21 +64,31 @@ pub fn get_parts() -> Parts {
         .header("Content-Length", "18")
         .body(())
         .unwrap()
-        .into_parts()
-        .0
 }
 
-/// This private key isn't related to the public key you can get from `get_public_key`
+#[must_use]
+pub fn get_pkcs8_private_key() -> String {
+    let (_tag, document) = SecretDocument::from_pem(SOME_PRIVATE_KEY).unwrap();
+    let private_key_info = PrivateKeyInfo {
+        algorithm: AlgorithmIdentifier {
+            oid: RSA_ENCRYPTION,
+            parameters: None,
+        },
+        private_key: document.as_bytes(),
+        public_key: None,
+    };
+    private_key_info.to_pem(LineEnding::CR).unwrap()
+}
+
 #[must_use]
 pub fn get_private_key() -> RsaKeyPair {
-    let der = pem::parse(SOME_PRIVATE_KEY).unwrap();
-    RsaKeyPair::from_der(der.contents()).unwrap()
+    let (_tag, document) = SecretDocument::from_pem(SOME_PRIVATE_KEY).unwrap();
+    RsaKeyPair::from_der(document.as_bytes()).unwrap()
 }
 
 #[must_use]
 pub fn get_public_key() -> UnparsedPublicKey<Vec<u8>> {
-    let pem = pem::parse(PUBLIC_KEY).unwrap();
-    let pub_key = Document::from_der(pem.contents()).unwrap();
+    let (_tag, pub_key) = Document::from_pem(PUBLIC_KEY).unwrap();
     let pub_key: SubjectPublicKeyInfoRef<'_> = pub_key.decode_msg().unwrap();
     let pub_key = pub_key.subject_public_key.raw_bytes().to_vec();
 

@@ -5,7 +5,6 @@ use self::util::BoxCloneService;
 use async_stream::try_stream;
 use bytes::Buf;
 use futures_util::Stream;
-use headers::{Date, HeaderMapExt};
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
@@ -16,14 +15,9 @@ use hyper::{
 };
 use hyper_rustls::HttpsConnectorBuilder;
 use hyper_util::{client::legacy::Client as HyperClient, rt::TokioExecutor};
-use kitsune_http_signatures::{HttpSigner, PrivateKey, SignatureComponent, SigningKey};
 use kitsune_type::jsonld::RdfNode;
 use serde::de::DeserializeOwned;
-use std::{
-    error::Error as StdError,
-    fmt,
-    time::{Duration, SystemTime},
-};
+use std::{error::Error as StdError, fmt, time::Duration};
 use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
 use tower_http::{
     decompression::DecompressionLayer,
@@ -235,8 +229,6 @@ impl Client {
 
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
         req.headers_mut().extend(self.default_headers.clone());
-        req.headers_mut()
-            .typed_insert(Date::from(SystemTime::now()));
 
         req
     }
@@ -269,35 +261,18 @@ impl Client {
     /// # Panics
     ///
     /// This should never panic. If it does, please open an issue.
-    pub async fn execute_signed<K>(
+    pub async fn execute_signed(
         &self,
         req: Request<Body>,
-        private_key: PrivateKey<'_, K>,
-    ) -> Result<Response>
-    where
-        K: SigningKey + Send + 'static,
-    {
-        let req = self.prepare_request(req);
-        let (mut parts, body) = req.into_parts();
+        key_id: &str,
+        private_key_pem: &str,
+    ) -> Result<Response> {
+        let req =
+            http_signatures::cavage::easy::sign(self.prepare_request(req), key_id, private_key_pem)
+                .await
+                .map_err(Error::new)?;
 
-        let (name, value) = HttpSigner::builder()
-            .include_creation_timestamp(true)
-            .expires_in(Duration::from_secs(30)) // Make the signature expire in 30 seconds
-            .build()
-            .sign(
-                &parts,
-                vec![
-                    SignatureComponent::RequestTarget,
-                    SignatureComponent::Header("Date"),
-                    SignatureComponent::Header("Digest"),
-                ],
-                private_key,
-            )
-            .await
-            .map_err(Error::new)?;
-
-        parts.headers.insert(name, value);
-        self.execute(Request::from_parts(parts, body)).await
+        self.execute(req).await
     }
 
     /// Shorthand for creating a GET request

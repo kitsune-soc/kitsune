@@ -23,7 +23,7 @@ pub enum Error {
     ActivityPub(#[from] kitsune_activitypub::error::Error),
 
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
