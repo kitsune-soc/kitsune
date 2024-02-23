@@ -13,7 +13,7 @@ redis = { version = "0.24.0", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
-serde = "1.0.196"
+serde = "1.0.197"
 simd-json = "0.13.8"
 thiserror = "1.0.57"
 tracing = "0.1.40"
