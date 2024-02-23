@@ -29,6 +29,7 @@ where
     I: Iterator<Item = &'a str> + Clone,
 {
     let mut signature_string = String::new();
+
     for name in signature_header.headers.clone() {
         match name {
             name @ "(request-target)" => {
