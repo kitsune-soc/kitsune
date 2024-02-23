@@ -1,6 +1,7 @@
 #![allow(clippy::unreadable_literal)]
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 
 fn process_bench(c: &mut Criterion) {
     c.bench_function("process integer 110368129515784116", |b| {

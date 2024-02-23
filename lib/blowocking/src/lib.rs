@@ -11,6 +11,7 @@ pub enum Error {
     Oneshot(#[from] oneshot::error::RecvError),
 
     #[error(transparent)]
+    #[cfg(feature = "io")]
     TokioJoin(#[from] tokio::task::JoinError),
 }
 
@@ -58,17 +59,18 @@ macro_rules! define_rayon_pool {
 }
 
 define_rayon_pool! {
-    name: crypto,
-    description: "Spawn cryptography-related work (signature creation/verification, password hashing, etc)"
-}
-
-define_rayon_pool! {
     name: cpu,
     description: "Spawn general-purpose CPU bound work (image conversion, compression, etc.)"
 }
 
+define_rayon_pool! {
+    name: crypto,
+    description: "Spawn cryptography-related work (signature creation/verification, password hashing, etc)"
+}
+
 /// Spawn I/O-bound blocking work (blocking filesystem operations, blocking network operations, etc.)
 #[inline]
+#[cfg(feature = "io")]
 pub async fn io<F, O>(func: F) -> Result<O, Error>
 where
     F: FnOnce() -> O + Send + 'static,

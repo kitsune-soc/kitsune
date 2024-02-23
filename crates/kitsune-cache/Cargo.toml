@@ -15,7 +15,7 @@ redis = { version = "0.24.0", default-features = false, features = [
 ] }
 serde = "1.0.196"
 simd-json = "0.13.8"
-thiserror = "1.0.56"
+thiserror = "1.0.57"
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 

@@ -50,8 +50,8 @@ impl PgPool {
     /// Run the code inside a context with a database transaction
     pub async fn with_transaction<'a, F, Fut, T, E>(&self, func: F) -> Result<T, PoolError<E>>
     where
-        F: for<'conn> FnOnce(&'conn mut AsyncPgConnection) -> ScopedFutureWrapper<'conn, 'a, Fut>
-            + Send,
+        for<'conn> F:
+            FnOnce(&'conn mut AsyncPgConnection) -> ScopedFutureWrapper<'conn, 'a, Fut> + Send,
         Fut: Future<Output = Result<T, E>> + Send,
         T: Send,
         E: From<diesel::result::Error> + Debug + Display + Send,

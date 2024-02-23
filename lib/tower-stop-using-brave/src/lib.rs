@@ -70,6 +70,7 @@ impl<S> Layer<S> for StopUsingBraveLayer {
 
 #[cfg(test)]
 mod test {
+    use crate::{StopUsingBraveLayer, REDIRECT_URL};
     use futures::executor;
     use http::{
         header::{LOCATION, USER_AGENT},
@@ -77,8 +78,6 @@ mod test {
     };
     use std::convert::Infallible;
     use tower::{service_fn, Layer, Service, ServiceExt};
-
-    use crate::{StopUsingBraveLayer, REDIRECT_URL};
 
     const BRAVE_USER_AGENTS: &[&str] = &[
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Brave/120.0.0.0",

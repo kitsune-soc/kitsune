@@ -1,7 +1,7 @@
 [files]
 extend-exclude = [
-    "crates/kitsune-http-signatures/tests/data.rs",
     "crates/kitsune-language/examples/basic.rs",
     "crates/kitsune-language/src/map.rs",
+    "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
 ]
