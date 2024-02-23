@@ -66,7 +66,7 @@ impl CacheInvalidationActor {
 pub struct MastodonMapper {
     #[builder(
         field(
-            type = "Option<PostEventConsumer>",
+            ty = "Option<PostEventConsumer>",
             build = "CacheInvalidationActor::builder()
                 .cache(
                     self.mastodon_cache

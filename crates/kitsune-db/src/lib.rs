@@ -35,7 +35,7 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
     LogTracer::init().ok();
 
-    kitsune_blocking::io({
+    blowocking::io({
         let conn_str = config.url.clone();
 
         move || {

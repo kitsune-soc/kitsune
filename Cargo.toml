@@ -16,7 +16,6 @@ opt-level = "z"
 [workspace]
 members = [
     "crates/kitsune-activitypub",
-    "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
     "crates/kitsune-config",
@@ -27,7 +26,6 @@ members = [
     "crates/kitsune-federation",
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
-    "crates/kitsune-http-signatures",
     "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-mastodon",
@@ -47,8 +45,10 @@ members = [
     "kitsune-cli",
     "kitsune-job-runner",
     "lib/athena",
+    "lib/blowocking",
     "lib/cursiv",
     "lib/http-compat",
+    "lib/http-signatures",
     "lib/kitsune-retry-policies",
     "lib/masto-id-convert",
     "lib/post-process",
@@ -76,6 +76,7 @@ no_effect_underscore_binding = "allow"
 [workspace.lints.rust]
 forbidden_lint_groups = "allow"
 rust_2018_idioms = "forbid"
+unsafe_code = "deny"
 
 [workspace.package]
 authors = ["Kitsune developers"]

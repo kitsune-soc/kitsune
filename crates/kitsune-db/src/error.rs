@@ -40,7 +40,7 @@ impl StdError for IsoCodeConversionError {}
 #[derive(Debug, Diagnostic, Error)]
 pub enum Error {
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error(transparent)]
     Diesel(#[from] diesel::result::Error),

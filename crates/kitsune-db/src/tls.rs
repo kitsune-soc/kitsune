@@ -34,7 +34,7 @@ async fn load_certs() -> rustls::RootCertStore {
     // Load certificates on a background thread to avoid blocking the runtime
     //
     // TODO(aumetra): Maybe add a fallback to `webpki-roots`?
-    let certs = kitsune_blocking::io(rustls_native_certs::load_native_certs)
+    let certs = blowocking::io(rustls_native_certs::load_native_certs)
         .await
         .unwrap()
         .expect("Failed to load native certificates");
