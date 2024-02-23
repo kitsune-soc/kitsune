@@ -10,13 +10,7 @@ use serde::{
     Deserialize,
 };
 
-/// Deserialises a JSON-LD node IRI.
-///
-/// When a single string is given, deserialises it verbatim.
-///
-/// When a map is given, deserialises the `id`/`@id` field value of it.
-///
-/// When a sequence is given, applies the above transformation to its elements.
+/// Deserialises a single node identifier string or a set of node identifier strings.
 pub struct Id<T> {
     seed: T,
 }

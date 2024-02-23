@@ -2,7 +2,7 @@ use super::{First, Id};
 use core::marker::PhantomData;
 use serde::de::{Deserialize, DeserializeSeed, Deserializer};
 
-/// Deserialises the node IRI of the first element of a JSON-LD set.
+/// Deserialises the node identifier string of the first element of a JSON-LD set.
 pub struct FirstId<T> {
     seed: T,
 }

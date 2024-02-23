@@ -8,8 +8,6 @@ use serde::de::{
 };
 
 /// Deserialises the first element of a JSON-LD set.
-///
-/// When an empty sequence is given, treats it as a unit.
 pub struct First<T> {
     seed: T,
 }

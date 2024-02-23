@@ -1,3 +1,36 @@
+//! Serde helpers to translate JSON-LD data structures.
+//!
+//! ## JSON-LD `@set`
+//!
+//! When a JSON-LD term's `@container` is unspecified or is set to `@set`, JSON entry values in the
+//! following groups are semantically equivalent, respectively:
+//!
+//! - A non-array value (`"value"`) and a single-value array of the same value (`["value"]`)
+//! - An empty array (`[]`), `null` and an absent entry
+//!
+//! The following helpers in the module deserialise a set as a sequence:
+//!
+//! - [`Set`]
+//! - [`IdSet`]
+//!
+//! The following helpers deserialise a single value or `null` from a set:
+//!
+//! - [`First`]
+//! - [`FirstId`]
+//! - [`FirstOk`]
+//!
+//! ## JSON-LD `@id`
+//!
+//! When a JSON-LD term's `@type` is set to `@id`, a JSON entry value of a single (IRI) string
+//! (`"http://example.com/"`) is a shorthand for a Linked Data node identified by that string
+//! (`{"@id": "http://example.com/"}`.
+//!
+//! The following helpers deserialise the node identifier string(s):
+//!
+//! - [`Id`]
+//! - [`FirstId`]
+//! - [`IdSet`]
+
 macro_rules! forward_to_into_deserializer {
     (
         fn visit_borrowed_str($T:ty);

@@ -14,8 +14,6 @@ use serde::de::{
 };
 
 /// Deserialises a JSON-LD set as a sequence.
-///
-/// If a single value is given, deserialises it as a single-value sequence.
 pub struct Set<T> {
     seed: T,
 }

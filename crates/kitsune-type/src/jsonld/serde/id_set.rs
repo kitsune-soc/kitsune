@@ -2,7 +2,7 @@ use super::{Id, Set};
 use core::marker::PhantomData;
 use serde::de::{Deserialize, DeserializeSeed, Deserializer};
 
-/// Deserialises a JSON-LD set of nodes as a sequence of node IRIs.
+/// Deserialises a JSON-LD set of nodes as a sequence of node identifier strings.
 pub struct IdSet<T> {
     seed: T,
 }
