@@ -27,7 +27,7 @@ pin-project = "1.1.4"
 serde = "1.0.197"
 simd-json = "0.13.8"
 tower = { version = "0.4.13", features = ["util"] }
-tower-http = { version = "0.5.1", features = [
+tower-http = { version = "0.5.2", features = [
     # Explicitly exclude `zstd`
     # It's not widely adopted and takes a long time to build
     "decompression-br",
