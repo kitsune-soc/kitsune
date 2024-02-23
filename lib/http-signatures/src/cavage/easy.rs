@@ -7,6 +7,7 @@
 use super::SafetyCheckError;
 use crate::{cavage::SignatureHeader, BoxError, SIGNATURE_HEADER};
 use http::{header::DATE, HeaderValue, Method};
+use miette::Diagnostic;
 use scoped_futures::ScopedFutureWrapper;
 use std::{future::Future, time::SystemTime};
 use thiserror::Error;
@@ -16,7 +17,7 @@ const GET_HEADERS: &[&str] = &["host", "date"];
 const POST_HEADERS: &[&str] = &["host", "date", "content-type", "digest"];
 
 /// Easy module error
-#[derive(Debug, Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum Error {
     /// Blocking pool communication failure
     #[error(transparent)]

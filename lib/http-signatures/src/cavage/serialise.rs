@@ -12,7 +12,7 @@ where
 
     let _ = write!(buffer, "keyId=\"{}\"", header.key_id);
 
-    buffer.push_str("headers=\"");
+    buffer.push_str(",headers=\"");
     for item in itertools::intersperse(header.headers, " ") {
         buffer.push_str(item);
     }

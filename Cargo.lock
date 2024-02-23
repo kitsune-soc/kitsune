@@ -2711,6 +2711,7 @@ dependencies = [
  "ring 0.17.8",
  "scoped-futures",
  "thiserror",
+ "tokio",
  "tracing",
 ]
 

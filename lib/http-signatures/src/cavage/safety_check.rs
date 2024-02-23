@@ -1,5 +1,6 @@
 use super::SignatureHeader;
 use http::{header::DATE, Method, Request};
+use miette::Diagnostic;
 use std::{
     cmp::min,
     time::{Duration, SystemTime, SystemTimeError},
@@ -16,7 +17,7 @@ const REQUIRED_GET_HEADERS: &[&str] = &["host"];
 const REQUIRED_POST_HEADERS: &[&str] = &["host", "content-type", "digest"];
 
 /// Safety check error
-#[derive(Debug, Error)]
+#[derive(Debug, Diagnostic, Error)]
 pub enum SafetyCheckError {
     /// `Date` header has an invalid format
     #[error(transparent)]
