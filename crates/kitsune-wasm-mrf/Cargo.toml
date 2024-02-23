@@ -6,7 +6,15 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-wasmtime = { version = "18.0.1", features = ["component-model"] }
+wasmtime = { version = "18.0.1", default-features = false, features = [
+    "async",
+    "cache",
+    "component-model",
+    "cranelift",
+    "parallel-compilation",
+    "pooling-allocator",
+    "runtime",
+] }
 
 [lints]
 workspace = true
