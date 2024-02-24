@@ -160,6 +160,7 @@ mod first_id;
 mod first_ok;
 mod id;
 mod id_set;
+mod optional;
 mod set;
 
 pub use self::first::First;
@@ -167,6 +168,7 @@ pub use self::first_id::FirstId;
 pub use self::first_ok::FirstOk;
 pub use self::id::Id;
 pub use self::id_set::IdSet;
+pub use self::optional::Optional;
 pub use self::set::Set;
 
 use core::{
@@ -375,7 +377,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{First, FirstId, FirstOk, IdSet};
+    use super::{First, FirstId, FirstOk, IdSet, Optional};
     use serde::Deserialize;
 
     /// Checks that the types work for some random real-world-ish use cases.
@@ -395,10 +397,10 @@ mod tests {
             #[serde(deserialize_with = "FirstId::deserialize")]
             attributed_to: String,
             #[serde(default)]
-            #[serde(deserialize_with = "First::deserialize")]
+            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
             summary: Option<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "First::deserialize")]
+            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
             content: Option<String>,
             #[serde(default)]
             #[serde(deserialize_with = "IdSet::deserialize")]

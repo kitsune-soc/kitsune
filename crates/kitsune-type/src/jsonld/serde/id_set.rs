@@ -32,6 +32,15 @@ where
     }
 }
 
+impl<'de, T> Default for IdSet<PhantomData<T>>
+where
+    T: Deserialize<'de>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'de, T> DeserializeSeed<'de> for IdSet<T>
 where
     T: DeserializeSeed<'de>,

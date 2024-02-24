@@ -164,13 +164,15 @@ pub struct Object {
     #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
     pub attributed_to: String,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
+    #[serde(
+        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
+    )]
     pub in_reply_to: Option<String>,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub name: Option<String>,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub summary: Option<String>,
     #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub content: String,
@@ -215,6 +217,6 @@ pub struct Tag {
     pub name: String,
     pub href: Option<String>,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub icon: Option<MediaAttachment>,
 }

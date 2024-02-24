@@ -39,6 +39,17 @@ where
     }
 }
 
+// XXX: Intentionally limiting to `First<PhantomData<_>>` rather than `First<_>` to help inference
+// of the type parameter of `Optional::<First<_>>::deserialize`.
+impl<'de, T> Default for First<PhantomData<T>>
+where
+    T: Deserialize<'de>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'de, T> DeserializeSeed<'de> for First<T>
 where
     T: DeserializeSeed<'de>,

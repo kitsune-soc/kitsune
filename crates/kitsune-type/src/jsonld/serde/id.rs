@@ -43,6 +43,15 @@ where
     }
 }
 
+impl<'de, T> Default for Id<PhantomData<T>>
+where
+    T: Deserialize<'de>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'de, T> DeserializeSeed<'de> for Id<T>
 where
     T: DeserializeSeed<'de>,
