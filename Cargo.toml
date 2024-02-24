@@ -41,6 +41,7 @@ members = [
     "crates/kitsune-url",
     "crates/kitsune-util",
     "crates/kitsune-wasm-mrf",
+    "crates/kitsune-wasm-mrf/example-mrf",
     "crates/kitsune-webfinger",
     "kitsune",
     "kitsune-cli",

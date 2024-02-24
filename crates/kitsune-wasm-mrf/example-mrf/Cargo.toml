@@ -1,0 +1,16 @@
+[package]
+name = "example-mrf"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.19.1"
+
+[lints]
+workspace = true
