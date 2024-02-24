@@ -57,6 +57,9 @@ pub enum Error {
     Messaging(kitsune_messaging::BoxError),
 
     #[error(transparent)]
+    Mrf(#[from] kitsune_wasm_mrf::Error),
+
+    #[error(transparent)]
     Multipart(#[from] MultipartError),
 
     #[error(transparent)]
