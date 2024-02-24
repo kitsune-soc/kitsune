@@ -17,6 +17,7 @@ tracing = "0.1.40"
 typed-builder = "0.18.1"
 walkdir = "2.4.0"
 wasmtime = { version = "18.0.1", default-features = false, features = [
+    "async",
     "component-model",
     "cranelift",
     "parallel-compilation",
@@ -24,7 +25,6 @@ wasmtime = { version = "18.0.1", default-features = false, features = [
     "runtime",
 ] }
 wasmtime-wasi = { version = "18.0.1", default-features = false, features = [
-    "preview1-on-preview2",
     "preview2",
 ] }
 

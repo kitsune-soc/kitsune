@@ -9,7 +9,10 @@ async fn basic() {
         .init();
 
     let service = MrfService::from_directory("tests").await.unwrap();
-    let result = service.handle_incoming("[imagine activity here]").unwrap();
+    let result = service
+        .handle_incoming("[imagine activity here]")
+        .await
+        .unwrap();
 
     assert_eq!(service.module_count(), 1);
     assert_eq!(

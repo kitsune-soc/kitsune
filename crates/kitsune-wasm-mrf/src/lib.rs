@@ -17,7 +17,7 @@ use wasmtime::{
 use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
 mod mrf_wit {
-    wasmtime::component::bindgen!();
+    wasmtime::component::bindgen!({ async: true });
 
     impl fep::mrf::types::Host for () {}
 }
@@ -65,6 +65,7 @@ impl MrfService {
         let mut config = Config::new();
         config
             .allocation_strategy(InstanceAllocationStrategy::pooling())
+            .async_support(true)
             .epoch_interruption(true)
             .wasm_component_model(true);
         let engine = Engine::new(&config).map_err(miette::Report::msg)?;
@@ -103,18 +104,25 @@ impl MrfService {
         let mut linker = Linker::<Context>::new(&engine);
         mrf_wit::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
             .map_err(miette::Report::msg)?;
-        wasmtime_wasi::preview2::command::sync::add_to_linker(&mut linker)
+        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
             .map_err(miette::Report::msg)?;
 
         let mut components = Vec::new();
         while let Some(wasm_data) = wasm_data_stream.try_next().await.into_diagnostic()? {
             let component = Component::new(&engine, wasm_data).map_err(miette::Report::msg)?;
-            let (bindings, _) = mrf_wit::Mrf::instantiate(&mut store, &component, &linker)
+            let (bindings, _) = mrf_wit::Mrf::instantiate_async(&mut store, &component, &linker)
+                .await
                 .map_err(miette::Report::msg)?;
 
             let meta = bindings.fep_mrf_meta();
-            let module_name = meta.call_name(&mut store).map_err(miette::Report::msg)?;
-            let module_version = meta.call_version(&mut store).map_err(miette::Report::msg)?;
+            let module_name = meta
+                .call_name(&mut store)
+                .await
+                .map_err(miette::Report::msg)?;
+            let module_version = meta
+                .call_version(&mut store)
+                .await
+                .map_err(miette::Report::msg)?;
 
             info!(name = %module_name, version = %module_version, "loaded MRF module");
 
@@ -132,7 +140,11 @@ impl MrfService {
         self.components.len()
     }
 
-    fn handle<'a>(&self, direction: Direction, activity: &'a str) -> Result<Outcome<'a>, Error> {
+    async fn handle<'a>(
+        &self,
+        direction: Direction,
+        activity: &'a str,
+    ) -> Result<Outcome<'a>, Error> {
         let mut store = Store::new(&self.engine, ());
         let mut activity = Cow::Borrowed(activity);
 
@@ -140,6 +152,7 @@ impl MrfService {
             let result = mrf
                 .fep_mrf_transform()
                 .call_transform(&mut store, direction, &activity)
+                .await
                 .map_err(Error::Runtime)?;
 
             match result {
@@ -161,11 +174,11 @@ impl MrfService {
         Ok(Outcome::Accept(activity))
     }
 
-    pub fn handle_incoming<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
-        self.handle(Direction::Incoming, activity)
+    pub async fn handle_incoming<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
+        self.handle(Direction::Incoming, activity).await
     }
 
-    pub fn handle_outgoing<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
-        self.handle(Direction::Outgoing, activity)
+    pub async fn handle_outgoing<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
+        self.handle(Direction::Outgoing, activity).await
     }
 }
