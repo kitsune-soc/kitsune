@@ -4,6 +4,7 @@ authors.workspace = true
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+build = "build.rs"
 
 [dependencies]
 futures-util = { version = "0.3.30", default-features = false, features = [
