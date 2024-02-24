@@ -5,7 +5,7 @@ use tracing::level_filters::LevelFilter;
 #[tokio::test]
 async fn basic() {
     tracing_subscriber::fmt()
-        .with_max_level(LevelFilter::TRACE)
+        .with_max_level(LevelFilter::DEBUG)
         .init();
 
     let service = MrfService::from_directory("tests").await.unwrap();

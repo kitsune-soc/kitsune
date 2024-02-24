@@ -156,7 +156,9 @@ impl MrfService {
                 .map_err(Error::Runtime)?;
 
             match result {
-                Ok(transformed) => activity = Cow::Owned(transformed),
+                Ok(transformed) => {
+                    activity = Cow::Owned(transformed);
+                }
                 Err(MrfError::ErrorContinue(msg)) => {
                     error!(%msg, "MRF errored out. Continuing.");
                 }
