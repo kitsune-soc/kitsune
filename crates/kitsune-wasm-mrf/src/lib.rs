@@ -1,16 +1,20 @@
 #[macro_use]
 extern crate tracing;
 
+use self::mrf_wit::fep::mrf::types::Error as MrfError;
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
-use miette::IntoDiagnostic;
-use std::{fmt::Debug, path::Path, sync::Arc};
+use miette::{Diagnostic, IntoDiagnostic};
+use mrf_wit::fep::mrf::types::Direction;
+use std::{borrow::Cow, fmt::Debug, path::Path, sync::Arc};
+use thiserror::Error;
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
 use wasmtime::{
-    component::{Component, Linker},
+    component::{Component, Linker, ResourceTable},
     Config, Engine, InstanceAllocationStrategy, Store,
 };
+use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
 mod mrf_wit {
     wasmtime::component::bindgen!();
@@ -18,9 +22,38 @@ mod mrf_wit {
     impl fep::mrf::types::Host for () {}
 }
 
+struct Context {
+    resource_table: ResourceTable,
+    wasi_ctx: WasiCtx,
+    unit: (),
+}
+
+impl WasiView for Context {
+    fn ctx(&mut self) -> &mut WasiCtx {
+        &mut self.wasi_ctx
+    }
+
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.resource_table
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Outcome<'a> {
+    Accept(Cow<'a, str>),
+    Reject,
+}
+
+#[derive(Debug, Diagnostic, Error)]
+pub enum Error {
+    #[error(transparent)]
+    Runtime(wasmtime::Error),
+}
+
 #[derive(Clone, TypedBuilder)]
 pub struct MrfService {
     components: Arc<[mrf_wit::Mrf]>,
+    engine: Engine,
 }
 
 impl MrfService {
@@ -32,7 +65,6 @@ impl MrfService {
         let mut config = Config::new();
         config
             .allocation_strategy(InstanceAllocationStrategy::pooling())
-            .async_support(true)
             .epoch_interruption(true)
             .wasm_component_model(true);
         let engine = Engine::new(&config).map_err(miette::Report::msg)?;
@@ -45,16 +77,34 @@ impl MrfService {
             .into_iter()
             .filter_map(|entry| {
                 let entry = entry.ok()?;
-                (entry.path().is_file() && entry.path().ends_with(".wasm"))
+                (entry.path().is_file() && entry.path().extension() == Some("wasm".as_ref()))
                     .then(|| entry.into_path())
             })
             .inspect(|path| debug!(?path, "discovered WASM module"))
             .map(fs::read)
             .collect::<FuturesUnordered<_>>();
 
-        let mut store = Store::new(&engine, ());
-        let mut linker = Linker::<()>::new(&engine);
-        mrf_wit::Mrf::add_to_linker(&mut linker, |x| x).map_err(miette::Report::msg)?;
+        let wasi_ctx = WasiCtxBuilder::new()
+            .allow_ip_name_lookup(true)
+            .allow_tcp(true)
+            .allow_udp(true)
+            .inherit_network()
+            .build();
+
+        let mut store = Store::new(
+            &engine,
+            Context {
+                resource_table: ResourceTable::new(),
+                wasi_ctx,
+                unit: (),
+            },
+        );
+
+        let mut linker = Linker::<Context>::new(&engine);
+        mrf_wit::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
+            .map_err(miette::Report::msg)?;
+        wasmtime_wasi::preview2::command::sync::add_to_linker(&mut linker)
+            .map_err(miette::Report::msg)?;
 
         let mut components = Vec::new();
         while let Some(wasm_data) = wasm_data_stream.try_next().await.into_diagnostic()? {
@@ -73,6 +123,49 @@ impl MrfService {
 
         Ok(Self {
             components: components.into(),
+            engine,
         })
+    }
+
+    #[must_use]
+    pub fn module_count(&self) -> usize {
+        self.components.len()
+    }
+
+    fn handle<'a>(&self, direction: Direction, activity: &'a str) -> Result<Outcome<'a>, Error> {
+        let mut store = Store::new(&self.engine, ());
+        let mut activity = Cow::Borrowed(activity);
+
+        for mrf in self.components.iter() {
+            let result = mrf
+                .fep_mrf_transform()
+                .call_transform(&mut store, direction, &activity)
+                .map_err(Error::Runtime)?;
+
+            match result {
+                Ok(transformed) => activity = Cow::Owned(transformed),
+                Err(MrfError::ErrorContinue(msg)) => {
+                    error!(%msg, "MRF errored out. Continuing.");
+                }
+                Err(MrfError::ErrorReject(msg)) => {
+                    error!(%msg, "MRF errored out. Aborting.");
+                    return Ok(Outcome::Reject);
+                }
+                Err(MrfError::Reject) => {
+                    error!("MRF rejected activity. Aborting.");
+                    return Ok(Outcome::Reject);
+                }
+            }
+        }
+
+        Ok(Outcome::Accept(activity))
+    }
+
+    pub fn handle_incoming<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
+        self.handle(Direction::Incoming, activity)
+    }
+
+    pub fn handle_outgoing<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
+        self.handle(Direction::Outgoing, activity)
     }
 }
