@@ -21,7 +21,6 @@ mod mrf_wit {
 #[derive(Clone, TypedBuilder)]
 pub struct MrfService {
     components: Arc<[mrf_wit::Mrf]>,
-    engine: Engine,
 }
 
 impl MrfService {
@@ -74,7 +73,6 @@ impl MrfService {
 
         Ok(Self {
             components: components.into(),
-            engine,
         })
     }
 }

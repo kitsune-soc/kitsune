@@ -1,5 +1,5 @@
 use crate::{CacheBackend, CacheResult};
-use moka::sync::Cache;
+use moka::future::Cache;
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
 pub struct InMemory<K, V>
@@ -35,16 +35,16 @@ where
     V: Clone + Send + Sync + 'static,
 {
     async fn delete(&self, key: &K) -> CacheResult<()> {
-        self.inner.remove(&key.to_string());
+        self.inner.remove(&key.to_string()).await;
         Ok(())
     }
 
     async fn get(&self, key: &K) -> CacheResult<Option<V>> {
-        Ok(self.inner.get(&key.to_string()))
+        Ok(self.inner.get(&key.to_string()).await)
     }
 
     async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
-        self.inner.insert(key.to_string(), value.clone());
+        self.inner.insert(key.to_string(), value.clone()).await;
         Ok(())
     }
 }
@@ -69,7 +69,7 @@ mod test {
         cache.set(&"hello", &"world").await.unwrap();
         cache.set(&"another", &"pair").await.unwrap();
 
-        cache.inner.run_pending_tasks();
+        cache.inner.run_pending_tasks().await;
 
         assert_eq!(cache.inner.entry_count(), 1);
     }
