@@ -130,7 +130,10 @@ impl MrfService {
                 .await
                 .map_err(miette::Report::msg)?;
 
-            let module_name = meta.call_name(&mut store).await.unwrap();
+            let module_name = meta
+                .call_name(&mut store)
+                .await
+                .map_err(miette::Report::msg)?;
             let module_version = meta
                 .call_version(&mut store)
                 .await
