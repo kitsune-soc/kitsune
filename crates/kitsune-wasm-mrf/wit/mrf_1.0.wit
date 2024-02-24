@@ -1,20 +1,5 @@
 package fep:mrf@1.0.0;
 
-interface meta {
-    /// Name of the MRF module
-    name: func() -> string;
-
-    /// Version of the MRF module
-    version: func() -> string;
-}
-
-interface transform {
-    use types.{direction, error};
-
-    /// Transform an ActivityPub activity
-    transform: func(direction: direction, activity: string) -> result<string, error>;
-}
-
 interface types {
     /// The direction the activity is going
     enum direction {
@@ -38,7 +23,17 @@ interface types {
     }
 }
 
+world meta {
+    /// Name of the MRF module
+    export name: func() -> string;
+
+    /// Version of the MRF module
+    export version: func() -> string;
+}
+
 world mrf {
-    export meta;
-    export transform;
+    use types.{direction, error};
+
+    /// Transform an ActivityPub activity
+    export transform: func(direction: direction, activity: string) -> result<string, error>;
 }

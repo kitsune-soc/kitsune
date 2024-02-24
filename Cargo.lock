@@ -977,9 +977,9 @@ dependencies = [
 
 [[package]]
 name = "bstr"
-version = "1.9.0"
+version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c48f0051a4b4c5e0b6d365cd04af53aeaa209e3cc15ec2cdb69e73cc87fbd0dc"
+checksum = "05efc5cfd9110c8416e471df0e96702d58690178e206e61b7173706673c93706"
 dependencies = [
  "memchr",
  "serde",
@@ -4011,7 +4011,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "tracing-subscriber",
  "typed-builder",
  "walkdir",
  "wasmtime",
@@ -4639,9 +4638,9 @@ dependencies = [
 
 [[package]]
 name = "mrml"
-version = "3.0.1"
+version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "decd52ecd768d703ded059629ed131ba38b012aa1abff3fd226ba89b7f0e734c"
+checksum = "256edfb7bd7bb2c953a71966a0e597b52409c778f27777f7bb170aac8a0ee3a0"
 dependencies = [
  "indexmap 2.2.3",
  "mrml-macros",
@@ -8210,6 +8209,7 @@ version = "18.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b06f80b13fdeba0ea5267813d0f06af822309f7125fc8db6094bcd485f0a4ae7"
 dependencies = [
+ "addr2line",
  "anyhow",
  "async-trait",
  "bincode",

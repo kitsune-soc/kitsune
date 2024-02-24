@@ -1,12 +1,20 @@
-use self::exports::fep::mrf::{meta, transform};
+mod meta {
+    wit_bindgen::generate!({
+        world: "meta",
+        exports: {
+            world: super::Mrf,
+        }
+    });
+}
 
-wit_bindgen::generate!({
-    world: "mrf",
-    exports: {
-        "fep:mrf/meta": Mrf,
-        "fep:mrf/transform": Mrf,
-    }
-});
+mod transform {
+    wit_bindgen::generate!({
+        world: "mrf",
+        exports: {
+            world: super::Mrf,
+        }
+    });
+}
 
 struct Mrf;
 
