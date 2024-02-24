@@ -6,15 +6,26 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
+futures-util = { version = "0.3.30", default-features = false, features = [
+    "alloc",
+] }
+miette = "7.1.0"
+thiserror = "1.0.57"
+tokio = { version = "1.36.0", features = ["fs"] }
+tracing = "0.1.40"
+typed-builder = "0.18.1"
+walkdir = "2.4.0"
 wasmtime = { version = "18.0.1", default-features = false, features = [
     "async",
-    "cache",
     "component-model",
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
     "runtime",
 ] }
+
+[dev-dependencies]
+tokio = { version = "1.36.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true
