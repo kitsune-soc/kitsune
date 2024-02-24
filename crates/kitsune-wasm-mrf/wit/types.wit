@@ -1,0 +1,22 @@
+interface types {
+    /// The direction the activity is going
+    enum direction {
+        /// The activity is being received
+        incoming,
+
+        /// The activity is being sent out
+        outgoing,
+    }
+
+    /// Error types
+    variant error {
+        /// Reject the activity
+        reject,
+
+        /// An error occurred but the processing can continue
+        error-continue(string),
+
+        /// An error occurred and the processing should not continue
+        error-reject(string),
+    }
+}
