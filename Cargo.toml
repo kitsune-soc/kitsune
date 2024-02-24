@@ -81,7 +81,7 @@ rust_2018_idioms = "forbid"
 unsafe_code = "deny"
 
 [workspace.package]
-authors = ["Kitsune developers"]
+authors = ["The Kitsune authors"]
 edition = "2021"
 version = "0.0.1-pre.5"
 license = "AGPL-3.0-or-later"

@@ -29,6 +29,7 @@ impl MrfService {
         config
             .allocation_strategy(InstanceAllocationStrategy::pooling())
             .async_support(true)
+            .epoch_interruption(true)
             .wasm_component_model(true);
         let engine = Engine::new(&config).map_err(miette::Report::msg)?;
 
