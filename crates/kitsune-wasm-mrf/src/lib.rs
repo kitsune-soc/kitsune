@@ -7,15 +7,20 @@ use std::{fmt::Debug, path::Path, sync::Arc};
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
-use wasmtime::{component::Component, Config, Engine, InstanceAllocationStrategy};
+use wasmtime::{
+    component::{Component, Linker},
+    Config, Engine, InstanceAllocationStrategy, Store,
+};
 
 mod mrf_wit {
     wasmtime::component::bindgen!();
+
+    impl fep::mrf::types::Host for () {}
 }
 
 #[derive(Clone, TypedBuilder)]
 pub struct MrfService {
-    components: Arc<[Component]>,
+    components: Arc<[mrf_wit::Mrf]>,
     engine: Engine,
 }
 
@@ -48,9 +53,23 @@ impl MrfService {
             .map(fs::read)
             .collect::<FuturesUnordered<_>>();
 
+        let mut store = Store::new(&engine, ());
+        let mut linker = Linker::<()>::new(&engine);
+        mrf_wit::Mrf::add_to_linker(&mut linker, |x| x).map_err(miette::Report::msg)?;
+
         let mut components = Vec::new();
         while let Some(wasm_data) = wasm_data_stream.try_next().await.into_diagnostic()? {
-            components.push(Component::new(&engine, wasm_data).map_err(miette::Report::msg)?);
+            let component = Component::new(&engine, wasm_data).map_err(miette::Report::msg)?;
+            let (bindings, _) = mrf_wit::Mrf::instantiate(&mut store, &component, &linker)
+                .map_err(miette::Report::msg)?;
+
+            let meta = bindings.fep_mrf_meta();
+            let module_name = meta.call_name(&mut store).map_err(miette::Report::msg)?;
+            let module_version = meta.call_version(&mut store).map_err(miette::Report::msg)?;
+
+            info!(name = %module_name, version = %module_version, "loaded MRF module");
+
+            components.push(bindings);
         }
 
         Ok(Self {
