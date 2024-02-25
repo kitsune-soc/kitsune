@@ -1,10 +1,9 @@
 #[macro_use]
 extern crate tracing;
 
-use self::mrf_wit::transform::fep::mrf::types::Error as MrfError;
+use self::mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError};
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
 use miette::{Diagnostic, IntoDiagnostic};
-use mrf_wit::transform::fep::mrf::types::Direction;
 use std::{borrow::Cow, fmt::Debug, path::Path, sync::Arc};
 use thiserror::Error;
 use tokio::fs;
