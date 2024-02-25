@@ -29,9 +29,12 @@ world meta {
 
     /// Version of the MRF module
     export version: func() -> string;
+
+    /// MRF API version this module is compatible with
+    export api-version: func() -> string;
 }
 
-world mrf {
+world mrf-v1 {
     use types.{direction, error};
 
     /// Transform an ActivityPub activity

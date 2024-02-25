@@ -9,7 +9,7 @@ mod meta {
 
 mod transform {
     wit_bindgen::generate!({
-        world: "mrf",
+        world: "mrf-v1",
         exports: {
             world: super::Mrf,
         }
@@ -24,6 +24,10 @@ impl meta::Guest for Mrf {
     }
 
     fn version() -> String {
+        "1.0.0".into()
+    }
+
+    fn api_version() -> String {
         "1.0.0".into()
     }
 }

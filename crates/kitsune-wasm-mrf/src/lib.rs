@@ -27,7 +27,7 @@ mod mrf_wit {
     pub mod transform {
         wasmtime::component::bindgen!({
             async: true,
-            world: "mrf",
+            world: "mrf-v1",
         });
     }
 
@@ -117,7 +117,7 @@ impl MrfService {
 
         let mut store = construct_store(&engine);
         let mut linker = Linker::<Context>::new(&engine);
-        mrf_wit::transform::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
+        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
             .map_err(miette::Report::msg)?;
         wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
             .map_err(miette::Report::msg)?;
@@ -166,7 +166,7 @@ impl MrfService {
 
         for component in self.components.iter() {
             let (mrf, _) =
-                mrf_wit::transform::Mrf::instantiate_async(&mut store, component, &self.linker)
+                mrf_wit::transform::MrfV1::instantiate_async(&mut store, component, &self.linker)
                     .await
                     .map_err(Error::Runtime)?;
 
