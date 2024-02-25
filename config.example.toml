@@ -137,7 +137,7 @@ default-language = "en"
 type = "in-process"
 
 [mrf]
-module-dir = "mrfs"
+module-dir = "mrf-modules"
 
 # OIDC configuration
 #
