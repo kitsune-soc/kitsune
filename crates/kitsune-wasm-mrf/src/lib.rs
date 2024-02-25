@@ -70,10 +70,9 @@ pub struct MrfService {
 
 fn construct_store(engine: &Engine) -> Store<Context> {
     let wasi_ctx = WasiCtxBuilder::new()
-        .allow_ip_name_lookup(true)
-        .allow_tcp(true)
-        .allow_udp(true)
-        .inherit_network()
+        .allow_ip_name_lookup(false)
+        .allow_tcp(false)
+        .allow_udp(false)
         .build();
 
     Store::new(
