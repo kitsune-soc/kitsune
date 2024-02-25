@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
-
 use crate::jsonld;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {

@@ -51,10 +51,10 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             }
         };
 
-        let ap_id = &activity.actor;
+        let ap_id = &activity.actor[..];
         let Some(remote_user) = state
             .fetcher
-            .fetch_account((&ap_id[..]).into())
+            .fetch_account(ap_id.into())
             .await
             .map_err(Error::Fetcher)?
         else {
