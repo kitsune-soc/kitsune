@@ -1,7 +1,4 @@
-use self::{
-    actor::{Actor, ActorType},
-    object::MediaAttachment,
-};
+use self::{actor::Actor, object::MediaAttachment};
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
@@ -48,13 +45,6 @@ pub enum ActivityType {
     Reject,
     Undo,
     Update,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct AttributedToListEntry {
-    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
-    pub r#type: ActorType,
-    pub id: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
