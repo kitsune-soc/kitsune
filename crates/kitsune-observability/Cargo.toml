@@ -13,15 +13,15 @@ hyper = { version = "1.2.0", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "=0.22.0"
-metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "b2e2586da553ebd62abdcd3bfd04b5f41a32449a" }
+metrics-opentelemetry = { git = "https://github.com/aumetra/metrics-opentelemetry.git", rev = "95537b16370e595981e195be52f98ea5983a7a8e" }
 metrics-tracing-context = "0.15.0"
 metrics-util = "0.16.2"
 miette = "7.1.0"
-opentelemetry = { version = "0.21.0", default-features = false, features = [
+opentelemetry = { version = "0.22.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry-http = "0.10.0"
-opentelemetry-otlp = { version = "0.14.0", default-features = false, features = [
+opentelemetry-http = "0.11.0"
+opentelemetry-otlp = { version = "0.15.0", default-features = false, features = [
     "grpc-tonic",
     "http-proto",
     "metrics",
@@ -29,7 +29,7 @@ opentelemetry-otlp = { version = "0.14.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.21.2", default-features = false, features = [
+opentelemetry_sdk = { version = "0.22.1", default-features = false, features = [
     "rt-tokio",
 ] }
 tracing = "0.1.40"

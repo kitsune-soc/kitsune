@@ -109,3 +109,4 @@ pr-run-mode = "plan"
 
 [patch.crates-io]
 diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "017ebe2fb7a2709ab5db92148dea5ce812a35e09" }
+tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "832783645d7d059fdd10673acf6341e58e454340" }
