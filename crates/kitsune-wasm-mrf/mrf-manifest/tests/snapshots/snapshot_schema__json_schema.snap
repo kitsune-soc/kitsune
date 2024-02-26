@@ -1,0 +1,60 @@
+---
+source: crates/kitsune-wasm-mrf/mrf-manifest/tests/snapshot_schema.rs
+expression: schema
+---
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Manifest",
+  "description": "Manifest of MRF modules",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "activityTypes",
+        "apiVersion",
+        "manifestVersion",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "activityTypes": {
+          "description": "Activity types passed to the MRF module\n\n`*` matching all types",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "apiVersion": {
+          "description": "Version of the MRF API",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApiVersion"
+            }
+          ]
+        },
+        "manifestVersion": {
+          "type": "string",
+          "enum": [
+            "v1"
+          ]
+        },
+        "name": {
+          "description": "Name of the MRF module",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version of the MRF module",
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ApiVersion": {
+      "type": "string",
+      "enum": [
+        "v1"
+      ]
+    }
+  }
+}
