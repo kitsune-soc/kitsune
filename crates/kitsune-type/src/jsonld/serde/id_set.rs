@@ -64,10 +64,10 @@ mod tests {
 
     #[test]
     fn single_string() {
-        let data = "http://example.com/".to_owned();
+        let data = "http://example.com/";
         assert_eq!(
-            IdSet::deserialize(into_deserializer(&data[..])),
-            Ok(vec![data])
+            IdSet::deserialize(into_deserializer(data)),
+            Ok(vec![data.to_owned()])
         );
     }
 

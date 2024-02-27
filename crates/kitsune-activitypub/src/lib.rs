@@ -211,7 +211,7 @@ async fn preprocess_object(
         }
 
         let Some(author) = fetcher
-            .fetch_account((&object.attributed_to[..]).into())
+            .fetch_account(object.attributed_to.as_str().into())
             .await
             .map_err(Error::FetchAccount)?
         else {

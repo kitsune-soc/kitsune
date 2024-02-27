@@ -153,8 +153,11 @@ mod tests {
 
     #[test]
     fn single() {
-        let data = "http://example.com/".to_owned();
-        assert_eq!(Id::deserialize(into_deserializer(&data[..])), Ok(data));
+        let data = "http://example.com/";
+        assert_eq!(
+            Id::deserialize(into_deserializer(data)),
+            Ok(data.to_owned())
+        );
     }
 
     #[test]
