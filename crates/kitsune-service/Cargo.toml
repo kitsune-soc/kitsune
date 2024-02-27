@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = "0.8.9"
+ahash = "0.8.10"
 argon2 = "0.5.3"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
@@ -81,7 +81,7 @@ kitsune-test = { path = "../kitsune-test" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 pretty_assertions = "1.4.0"
 serial_test = "3.0.0"
-tempfile = "3.10.0"
+tempfile = "3.10.1"
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 
 [lints]

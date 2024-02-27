@@ -87,7 +87,7 @@ simd-json = "0.13.8"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.26.1", features = ["derive", "phf"] }
-tempfile = "3.10.0"
+tempfile = "3.10.1"
 thiserror = "1.0.57"
 time = "0.3.34"
 tokio = { version = "1.36.0", features = ["full"] }

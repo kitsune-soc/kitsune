@@ -1,12 +1,3 @@
-mod meta {
-    wit_bindgen::generate!({
-        world: "meta",
-        exports: {
-            world: super::Mrf,
-        }
-    });
-}
-
 mod transform {
     wit_bindgen::generate!({
         world: "mrf-v1",
@@ -18,22 +9,9 @@ mod transform {
 
 struct Mrf;
 
-impl meta::Guest for Mrf {
-    fn name() -> String {
-        "Example MRF".into()
-    }
-
-    fn version() -> String {
-        "1.0.0".into()
-    }
-
-    fn api_version() -> String {
-        "1.0.0".into()
-    }
-}
-
 impl transform::Guest for Mrf {
     fn transform(
+        _config: String,
         _direction: transform::Direction,
         activity: String,
     ) -> Result<String, transform::Error> {

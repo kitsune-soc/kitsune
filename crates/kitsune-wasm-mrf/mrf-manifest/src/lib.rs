@@ -2,6 +2,14 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
+#[cfg(feature = "parse")]
+pub use self::parse::ParseError;
+
+#[cfg(feature = "parse")]
+mod parse;
+#[cfg(feature = "serialise")]
+mod serialise;
+
 #[derive(Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]

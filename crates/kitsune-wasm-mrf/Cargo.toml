@@ -11,6 +11,7 @@ futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
 miette = "7.1.0"
+mrf-manifest = { path = "mrf-manifest", features = ["parse"] }
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["fs"] }
 tracing = "0.1.40"

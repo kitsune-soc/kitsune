@@ -3,9 +3,9 @@ extern crate tracing;
 
 use self::mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError};
 use futures_util::{stream::FuturesUnordered, TryStreamExt};
-use miette::{Diagnostic, IntoDiagnostic};
+use miette::IntoDiagnostic;
+use mrf_manifest::Manifest;
 use std::{borrow::Cow, fmt::Debug, path::Path, sync::Arc};
-use thiserror::Error;
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
@@ -15,23 +15,10 @@ use wasmtime::{
 };
 use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
-mod mrf_wit {
-    pub mod meta {
-        wasmtime::component::bindgen!({
-            async: true,
-            world: "meta",
-        });
-    }
+pub use self::error::Error;
 
-    pub mod transform {
-        wasmtime::component::bindgen!({
-            async: true,
-            world: "mrf-v1",
-        });
-    }
-
-    impl transform::fep::mrf::types::Host for () {}
-}
+mod error;
+mod mrf_wit;
 
 struct Context {
     resource_table: ResourceTable,
@@ -55,12 +42,6 @@ pub enum Outcome<'a> {
     Reject,
 }
 
-#[derive(Debug, Diagnostic, Error)]
-pub enum Error {
-    #[error(transparent)]
-    Runtime(wasmtime::Error),
-}
-
 #[derive(Clone, TypedBuilder)]
 pub struct MrfService {
     components: Arc<[Component]>,
@@ -68,6 +49,7 @@ pub struct MrfService {
     linker: Arc<Linker<Context>>,
 }
 
+#[inline]
 fn construct_store(engine: &Engine) -> Store<Context> {
     let wasi_ctx = WasiCtxBuilder::new()
         .allow_ip_name_lookup(false)
@@ -113,7 +95,6 @@ impl MrfService {
             .map(fs::read)
             .collect::<FuturesUnordered<_>>();
 
-        let mut store = construct_store(&engine);
         let mut linker = Linker::<Context>::new(&engine);
         mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
             .map_err(miette::Report::msg)?;
@@ -122,22 +103,14 @@ impl MrfService {
 
         let mut components = Vec::new();
         while let Some(wasm_data) = wasm_data_stream.try_next().await.into_diagnostic()? {
-            let component = Component::new(&engine, wasm_data).map_err(miette::Report::msg)?;
+            let component = Component::new(&engine, &wasm_data).map_err(miette::Report::msg)?;
+            let Some(Manifest::V1(manifest)) = Manifest::parse(&wasm_data)? else {
+                error!("missing manifest. skipping load.");
+                continue;
+            };
+            info!(name = %manifest.name, version = %manifest.version, "loading MRF module");
 
-            let (meta, _) = mrf_wit::meta::Meta::instantiate_async(&mut store, &component, &linker)
-                .await
-                .map_err(miette::Report::msg)?;
-
-            let module_name = meta
-                .call_name(&mut store)
-                .await
-                .map_err(miette::Report::msg)?;
-            let module_version = meta
-                .call_version(&mut store)
-                .await
-                .map_err(miette::Report::msg)?;
-
-            info!(name = %module_name, version = %module_version, "loading MRF module");
+            // TODO: Manifest validation, permission grants, etc.
 
             components.push(component);
         }
@@ -168,8 +141,11 @@ impl MrfService {
                     .await
                     .map_err(Error::Runtime)?;
 
+            // TODO: Load configuration
+            let config = "";
+
             let result = mrf
-                .call_transform(&mut store, direction, &activity)
+                .call_transform(&mut store, config, direction, &activity)
                 .await
                 .map_err(Error::Runtime)?;
 
