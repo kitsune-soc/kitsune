@@ -42,21 +42,35 @@ struct ValidateModule {
 }
 
 #[derive(Subcommand)]
-enum ToolSubcommand {
+enum ManifestSubcommand {
     /// Add a manifest to a WASM component
     ///
     /// Note: We don't validate whether the WASM component already contains a manifest section.
     /// We simply append a new section.
-    AddManifest(AddManifest),
+    Add(AddManifest),
 
     /// Read the manifest from a WASM component
-    ReadManifest(ReadManifest),
+    Read(ReadManifest),
 
     /// Remove the manifest from a WASM component
-    RemoveManifest(RemoveManifest),
+    Remove(RemoveManifest),
+}
 
+#[derive(Subcommand)]
+enum ModuleSubcommand {
     /// Validate a WASM module
-    ValidateModule(ValidateModule),
+    Validate(ValidateModule),
+}
+
+#[derive(Subcommand)]
+enum ToolSubcommand {
+    /// Manage manifests embedded into modules
+    #[clap(subcommand)]
+    Manifest(ManifestSubcommand),
+
+    /// Manage WASM MRF modules
+    #[clap(subcommand)]
+    Module(ModuleSubcommand),
 }
 
 #[derive(Parser)]
@@ -117,19 +131,19 @@ fn write_manifest(manifest: &[u8], module_path: &Path) -> Result<()> {
 fn main() -> Result<()> {
     let args = ToolArgs::parse();
     match args.command {
-        ToolSubcommand::AddManifest(args) => {
+        ToolSubcommand::Manifest(ManifestSubcommand::Add(args)) => {
             let manifest = fs::read(args.manifest_path).into_diagnostic()?;
             fs::copy(&args.module_path, &args.output).into_diagnostic()?;
             write_manifest(&manifest, &args.output)?;
         }
-        ToolSubcommand::ReadManifest(args) => {
+        ToolSubcommand::Manifest(ManifestSubcommand::Read(args)) => {
             let data = fs::read(args.module_path).into_diagnostic()?;
             read_manifest(&data)?;
         }
-        ToolSubcommand::RemoveManifest(args) => {
+        ToolSubcommand::Manifest(ManifestSubcommand::Remove(args)) => {
             remove_manifest(&args.module_path, &args.output)?;
         }
-        ToolSubcommand::ValidateModule(args) => {
+        ToolSubcommand::Module(ModuleSubcommand::Validate(args)) => {
             let data = fs::read(args.module_path).into_diagnostic()?;
             wasmparser::validate(&data).into_diagnostic()?;
         }
