@@ -4657,6 +4657,7 @@ dependencies = [
  "miette",
  "olpc-cjson",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
  "thiserror",
@@ -6426,6 +6427,7 @@ checksum = "45a28f4c49489add4ce10783f7911893516f15afe45d015608d41faca6bc4d29"
 dependencies = [
  "dyn-clone",
  "schemars_derive",
+ "semver",
  "serde",
  "serde_json",
 ]

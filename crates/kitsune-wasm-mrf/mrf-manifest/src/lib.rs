@@ -38,7 +38,7 @@ pub struct ManifestV1<'a> {
 
     /// Version of the MRF module
     #[serde(borrow)]
-    pub version: Cow<'a, str>,
+    pub version: Cow<'a, semver::Version>,
 
     /// Activity types passed to the MRF module
     ///
