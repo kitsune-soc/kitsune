@@ -9,7 +9,7 @@ mod parse;
 #[cfg(feature = "serialise")]
 mod serialise;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -18,7 +18,7 @@ pub enum ApiVersion {
 }
 
 /// Manifest of MRF modules
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
@@ -27,7 +27,7 @@ pub enum Manifest<'a> {
     V1(ManifestV1<'a>),
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
