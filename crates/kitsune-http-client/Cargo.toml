@@ -25,6 +25,7 @@ hyper-rustls = { version = "0.26.0", features = ["http2"] }
 kitsune-type = { path = "../kitsune-type" }
 pin-project = "1.1.4"
 serde = "1.0.197"
+simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 simd-json = "0.13.8"
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.5.2", features = [

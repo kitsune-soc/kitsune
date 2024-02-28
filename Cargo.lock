@@ -3680,6 +3680,7 @@ dependencies = [
  "pin-project",
  "serde",
  "simd-json",
+ "simdutf8",
  "tokio",
  "tower",
  "tower-http",
