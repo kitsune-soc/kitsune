@@ -22,7 +22,8 @@ expression: schema
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "uniqueItems": true
         },
         "apiVersion": {
           "description": "Version of the MRF API",
