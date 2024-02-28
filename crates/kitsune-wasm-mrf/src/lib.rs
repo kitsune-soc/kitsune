@@ -2,10 +2,11 @@
 extern crate tracing;
 
 use self::mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError};
-use futures_util::{stream::FuturesUnordered, TryStreamExt};
-use miette::IntoDiagnostic;
+use futures_util::{stream::FuturesUnordered, TryFutureExt, TryStreamExt};
+use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::Manifest;
 use std::{borrow::Cow, fmt::Debug, path::Path, sync::Arc};
+use thiserror::Error;
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
@@ -40,6 +41,14 @@ impl WasiView for Context {
 pub enum Outcome<'a> {
     Accept(Cow<'a, str>),
     Reject,
+}
+
+#[derive(Debug, Diagnostic, Error)]
+#[error("{path_help}")]
+struct ComponentParseError {
+    path_help: String,
+    #[help]
+    advice: &'static str,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -92,7 +101,7 @@ impl MrfService {
                     .then(|| entry.into_path())
             })
             .inspect(|path| debug!(?path, "discovered WASM module"))
-            .map(fs::read)
+            .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
             .collect::<FuturesUnordered<_>>();
 
         let mut linker = Linker::<Context>::new(&engine);
@@ -102,8 +111,17 @@ impl MrfService {
             .map_err(miette::Report::msg)?;
 
         let mut components = Vec::new();
-        while let Some(wasm_data) = wasm_data_stream.try_next().await.into_diagnostic()? {
-            let component = Component::new(&engine, &wasm_data).map_err(miette::Report::msg)?;
+        while let Some((module_path, wasm_data)) =
+            wasm_data_stream.try_next().await.into_diagnostic()?
+        {
+            let component = Component::new(&engine, &wasm_data).map_err(|err| {
+                miette::Report::new(ComponentParseError {
+                    path_help: format!("path to the module: {}", module_path.display()),
+                    advice: "Did you make the WASM file a component via `wasm-tools`?",
+                })
+                .wrap_err(err)
+            })?;
+
             let Some(Manifest::V1(manifest)) = Manifest::parse(&wasm_data)? else {
                 error!("missing manifest. skipping load.");
                 continue;

@@ -6,7 +6,6 @@ impl Manifest<'_> {
         let mut buf = Vec::new();
         let mut ser = serde_json::Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
         serde::Serialize::serialize(self, &mut ser)?;
-
         Ok(buf)
     }
 }
