@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -10,7 +9,8 @@ mod parse;
 #[cfg(feature = "serialise")]
 mod serialise;
 
-#[derive(Deserialize, JsonSchema, Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ApiVersion {
@@ -18,7 +18,8 @@ pub enum ApiVersion {
 }
 
 /// Manifest of MRF modules
-#[derive(Deserialize, JsonSchema, Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
 pub enum Manifest<'a> {
@@ -26,7 +27,8 @@ pub enum Manifest<'a> {
     V1(ManifestV1<'a>),
 }
 
-#[derive(Deserialize, JsonSchema, Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
     /// Version of the MRF API
