@@ -1,3 +1,4 @@
+use schemars::{schema::RootSchema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
@@ -9,8 +10,7 @@ mod parse;
 #[cfg(feature = "serialise")]
 mod serialise;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(transparent)]
 pub struct ActivitySet<'a>(#[serde(borrow)] pub ahash::HashSet<&'a str>);
 
@@ -47,8 +47,7 @@ impl<'a> From<ahash::HashSet<&'a str>> for ActivitySet<'a> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ApiVersion {
@@ -56,7 +55,7 @@ pub enum ApiVersion {
 }
 
 /// Manifest of MRF modules
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
@@ -65,7 +64,7 @@ pub enum Manifest<'a> {
     V1(ManifestV1<'a>),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
@@ -82,4 +81,9 @@ pub struct ManifestV1<'a> {
     ///
     /// `*` matching all types
     pub activity_types: ActivitySet<'a>,
+
+    /// JSON schema of the configuration passed to the module
+    ///
+    /// This is optional but can be used for automatically generating a configuration UI
+    pub config_schema: Option<RootSchema>,
 }

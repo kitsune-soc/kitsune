@@ -1,5 +1,3 @@
-#![cfg(feature = "schemars")]
-
 use mrf_manifest::Manifest;
 
 #[test]
