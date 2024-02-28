@@ -60,7 +60,6 @@ pub enum ApiVersion {
 
 /// Manifest of MRF modules
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
 pub enum Manifest<'a> {
@@ -69,7 +68,6 @@ pub enum Manifest<'a> {
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
     /// Version of the MRF API
