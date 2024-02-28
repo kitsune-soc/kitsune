@@ -1,84 +1,13 @@
-use clap::{Args, Parser, Subcommand};
+use self::args::{ManifestSubcommand, ModuleSubcommand, ToolArgs, ToolSubcommand};
+use clap::Parser;
 use miette::{bail, IntoDiagnostic, Result};
 use std::{
     fs::{self, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
-#[derive(Args)]
-struct AddManifest {
-    /// Path to the manifest
-    manifest_path: PathBuf,
-
-    /// Path to the WASM module
-    module_path: PathBuf,
-
-    /// Path to where the modified WASM module should be written
-    #[arg(long, short)]
-    output: PathBuf,
-}
-
-#[derive(Args)]
-struct ReadManifest {
-    /// Path to the WASM module
-    module_path: PathBuf,
-}
-
-#[derive(Args)]
-struct RemoveManifest {
-    /// Path to the WASM module
-    module_path: PathBuf,
-
-    /// Path to where the modified WASM module should be written
-    #[arg(long, short)]
-    output: PathBuf,
-}
-
-#[derive(Args)]
-struct ValidateModule {
-    /// Path to the WASM module
-    module_path: PathBuf,
-}
-
-#[derive(Subcommand)]
-enum ManifestSubcommand {
-    /// Add a manifest to a WASM component
-    ///
-    /// Note: We don't validate whether the WASM component already contains a manifest section.
-    /// We simply append a new section.
-    Add(AddManifest),
-
-    /// Read the manifest from a WASM component
-    Read(ReadManifest),
-
-    /// Remove the manifest from a WASM component
-    Remove(RemoveManifest),
-}
-
-#[derive(Subcommand)]
-enum ModuleSubcommand {
-    /// Validate a WASM module
-    Validate(ValidateModule),
-}
-
-#[derive(Subcommand)]
-enum ToolSubcommand {
-    /// Manage manifests embedded into modules
-    #[clap(subcommand)]
-    Manifest(ManifestSubcommand),
-
-    /// Manage WASM MRF modules
-    #[clap(subcommand)]
-    Module(ModuleSubcommand),
-}
-
-#[derive(Parser)]
-#[command(about, version)]
-pub struct ToolArgs {
-    #[clap(subcommand)]
-    command: ToolSubcommand,
-}
+mod args;
 
 fn read_manifest(module: &[u8]) -> Result<()> {
     let Some((manifest, _section_range)) = mrf_manifest::decode(module)? else {
