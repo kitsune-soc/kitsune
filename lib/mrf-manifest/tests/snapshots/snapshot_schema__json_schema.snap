@@ -1,5 +1,5 @@
 ---
-source: crates/kitsune-wasm-mrf/mrf-manifest/tests/snapshot_schema.rs
+source: lib/mrf-manifest/tests/snapshot_schema.rs
 expression: schema
 ---
 {
@@ -8,6 +8,7 @@ expression: schema
   "description": "Manifest of MRF modules",
   "oneOf": [
     {
+      "description": "Manifest v1",
       "type": "object",
       "required": [
         "activityTypes",
@@ -64,9 +65,15 @@ expression: schema
   ],
   "definitions": {
     "ApiVersion": {
-      "type": "string",
-      "enum": [
-        "v1"
+      "description": "Version of the API used",
+      "oneOf": [
+        {
+          "description": "Version 1",
+          "type": "string",
+          "enum": [
+            "v1"
+          ]
+        }
       ]
     },
     "InstanceType": {

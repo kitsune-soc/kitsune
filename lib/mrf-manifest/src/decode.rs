@@ -4,18 +4,25 @@ use std::{io, ops::Range};
 use thiserror::Error;
 use wasmparser::Payload;
 
+/// Type specifying the range of a section
 pub type SectionRange = Range<usize>;
 
+/// Error while decoding the manifest from a WASM module
 #[derive(Debug, Diagnostic, Error)]
-pub enum ParseError {
+pub enum DecodeError {
+    /// Parsing of the JSON manifest failed
     #[error(transparent)]
     Parse(#[from] serde_json::Error),
 
+    /// Parsing of the WASM component failed
     #[error(transparent)]
     WarmParse(#[from] wasmparser::BinaryReaderError),
 }
 
-pub fn parse(module: &[u8]) -> Result<Option<(Manifest<'_>, SectionRange)>, ParseError> {
+/// Decode a manifest from a WASM module
+///
+/// If it was found a tuple consisting of the manifest and the custom section (including its type ID and length) is returned.
+pub fn decode(module: &[u8]) -> Result<Option<(Manifest<'_>, SectionRange)>, DecodeError> {
     let mut sections = wasmparser::Parser::new(0).parse_all(module);
     let payload = loop {
         match sections.next().transpose()? {

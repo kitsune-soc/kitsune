@@ -67,7 +67,7 @@ pub struct ToolArgs {
 }
 
 fn read_manifest(module: &[u8]) -> Result<()> {
-    let Some((manifest, _section_range)) = mrf_manifest::parse(module)? else {
+    let Some((manifest, _section_range)) = mrf_manifest::decode(module)? else {
         bail!("missing manifest in module");
     };
 
@@ -79,7 +79,7 @@ fn read_manifest(module: &[u8]) -> Result<()> {
 
 fn remove_manifest(module_path: &Path, output_path: &Path) -> Result<()> {
     let module = fs::read(module_path).into_diagnostic()?;
-    let Some((_manifest, section_range)) = mrf_manifest::parse(&module)? else {
+    let Some((_manifest, section_range)) = mrf_manifest::decode(&module)? else {
         bail!("missing manifest in module");
     };
 

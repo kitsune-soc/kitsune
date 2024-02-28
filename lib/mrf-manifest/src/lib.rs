@@ -1,23 +1,33 @@
+//!
+//! Rust definition of the MRF manifest
+//!
+//! Includes some utility functions for parsing/encoding
+//!
+
+#![deny(missing_docs)]
+
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
+#[cfg(feature = "parse")]
+pub use self::decode::{decode, DecodeError, SectionRange};
 #[cfg(feature = "encode")]
 pub use self::encode::encode;
-#[cfg(feature = "parse")]
-pub use self::parse::{parse, ParseError, SectionRange};
 #[cfg(feature = "serialise")]
 pub use self::serialise::serialise;
 
+#[cfg(feature = "parse")]
+mod decode;
 #[cfg(feature = "encode")]
 mod encode;
-#[cfg(feature = "parse")]
-mod parse;
 #[cfg(feature = "serialise")]
 mod serialise;
 
+/// Name of the section the manifest has to be encoded to
 pub const SECTION_NAME: &str = "manifest-v0";
 
+/// Wrapper around a hash set intended for use with the `activityTypes` field
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(transparent)]
 pub struct ActivitySet<'a>(#[serde(borrow)] pub ahash::HashSet<&'a str>);
@@ -55,10 +65,12 @@ impl<'a> From<ahash::HashSet<&'a str>> for ActivitySet<'a> {
     }
 }
 
+/// Version of the API used
 #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ApiVersion {
+    /// Version 1
     V1,
 }
 
@@ -67,10 +79,12 @@ pub enum ApiVersion {
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
 pub enum Manifest<'a> {
+    /// Manifest v1
     #[serde(borrow)]
     V1(ManifestV1<'a>),
 }
 
+/// Manifest v1
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
