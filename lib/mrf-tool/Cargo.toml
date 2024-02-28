@@ -1,5 +1,6 @@
 [package]
 name = "mrf-tool"
+description = "Tool for preparing and introspecting WASM MRFs"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
