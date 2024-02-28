@@ -3,12 +3,16 @@ use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "parse")]
-pub use self::parse::ParseError;
+pub use self::parse::{parse, ParseError, SectionRange};
+#[cfg(feature = "serialise")]
+pub use self::serialise::serialise;
 
 #[cfg(feature = "parse")]
 mod parse;
 #[cfg(feature = "serialise")]
 mod serialise;
+
+pub const SECTION_NAME: &str = "manifest-v0";
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(transparent)]

@@ -7,6 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 ahash = { version = "0.8.10", features = ["serde"] }
+leb128 = { version = "0.2.5", optional = true }
 miette = { version = "7.1.0", optional = true }
 olpc-cjson = { version = "0.1.3", optional = true }
 schemars = { version = "0.8.16", features = ["impl_json_schema", "semver"] }
@@ -20,5 +21,11 @@ wasmparser = { version = "0.201.0", optional = true }
 insta = { version = "1.35.1", default-features = false, features = ["json"] }
 
 [features]
-parse = ["dep:miette", "dep:serde_json", "dep:thiserror", "dep:wasmparser"]
+parse = [
+    "dep:miette",
+    "dep:leb128",
+    "dep:serde_json",
+    "dep:thiserror",
+    "dep:wasmparser",
+]
 serialise = ["dep:olpc-cjson", "dep:serde_json"]

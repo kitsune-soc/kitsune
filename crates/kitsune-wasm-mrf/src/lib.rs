@@ -122,7 +122,8 @@ impl MrfService {
                 .wrap_err(err)
             })?;
 
-            let Some(Manifest::V1(manifest)) = Manifest::parse(&wasm_data)? else {
+            let Some((Manifest::V1(manifest), _section_range)) = mrf_manifest::parse(&wasm_data)?
+            else {
                 error!("missing manifest. skipping load.");
                 continue;
             };
