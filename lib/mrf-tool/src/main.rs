@@ -1,12 +1,10 @@
 use clap::{Args, Parser, Subcommand};
 use miette::{bail, IntoDiagnostic, Result};
 use std::{
-    borrow::Cow,
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
 };
-use wasm_encoder::{ComponentSection, CustomSection};
 
 #[derive(Args)]
 struct AddManifest {
@@ -105,21 +103,13 @@ fn remove_manifest(module_path: &Path, output_path: &Path) -> Result<()> {
 fn write_manifest(manifest: &[u8], module_path: &Path) -> Result<()> {
     // Parse the manifest and re-encode it in canonical JSON
     let parsed_manifest = serde_json::from_slice(manifest).into_diagnostic()?;
-    let canonical_manifest = mrf_manifest::serialise(&parsed_manifest).into_diagnostic()?;
-
-    let custom_section = CustomSection {
-        name: Cow::Borrowed(mrf_manifest::SECTION_NAME),
-        data: Cow::Owned(canonical_manifest),
-    };
-
-    let mut buffer = Vec::new();
-    custom_section.append_to_component(&mut buffer);
+    let custom_section = mrf_manifest::encode(&parsed_manifest).into_diagnostic()?;
 
     let mut file = File::options()
         .append(true)
         .open(module_path)
         .into_diagnostic()?;
-    file.write_all(&buffer).into_diagnostic()?;
+    file.write_all(&custom_section).into_diagnostic()?;
 
     Ok(())
 }

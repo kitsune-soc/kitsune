@@ -2,11 +2,15 @@ use schemars::{schema::RootSchema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
+#[cfg(feature = "encode")]
+pub use self::encode::encode;
 #[cfg(feature = "parse")]
 pub use self::parse::{parse, ParseError, SectionRange};
 #[cfg(feature = "serialise")]
 pub use self::serialise::serialise;
 
+#[cfg(feature = "encode")]
+mod encode;
 #[cfg(feature = "parse")]
 mod parse;
 #[cfg(feature = "serialise")]
