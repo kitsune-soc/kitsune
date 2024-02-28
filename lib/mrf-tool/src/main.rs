@@ -16,7 +16,7 @@ struct AddManifest {
     /// Path to the WASM module
     module_path: PathBuf,
 
-    /// Path to where the modifed WASM module should be written
+    /// Path to where the modified WASM module should be written
     #[arg(long, short)]
     output: PathBuf,
 }
@@ -32,7 +32,7 @@ struct RemoveManifest {
     /// Path to the WASM module
     module_path: PathBuf,
 
-    /// Path to where the modifed WASM module should be written
+    /// Path to where the modified WASM module should be written
     #[arg(long, short)]
     output: PathBuf,
 }
