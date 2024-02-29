@@ -1,40 +1,54 @@
 #[macro_use]
 extern crate tracing;
 
-use self::mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError};
-use futures_util::{stream::FuturesUnordered, TryFutureExt, TryStreamExt};
+use self::{
+    ctx::{construct_store, Context},
+    mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError},
+};
+use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::Manifest;
-use std::{borrow::Cow, fmt::Debug, path::Path, sync::Arc};
+use std::{
+    borrow::Cow,
+    fmt::Debug,
+    io,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use thiserror::Error;
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
 use wasmtime::{
-    component::{Component, Linker, ResourceTable},
-    Config, Engine, InstanceAllocationStrategy, Store,
+    component::{Component, Linker},
+    Config, Engine, InstanceAllocationStrategy,
 };
-use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
 pub use self::error::Error;
 
+mod ctx;
 mod error;
 mod mrf_wit;
 
-struct Context {
-    resource_table: ResourceTable,
-    wasi_ctx: WasiCtx,
-    unit: (),
-}
-
-impl WasiView for Context {
-    fn ctx(&mut self) -> &mut WasiCtx {
-        &mut self.wasi_ctx
-    }
-
-    fn table(&mut self) -> &mut ResourceTable {
-        &mut self.resource_table
-    }
+#[inline]
+fn find_wasm_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
+where
+    P: AsRef<Path>,
+{
+    // Read all the `.wasm` files from the disk
+    // Recursively traverse the entire directory tree doing so and follow all symlinks
+    // Also run the I/O operations inside a `FuturesUnordered` to enable concurrent reading
+    WalkDir::new(dir)
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            (entry.path().is_file() && entry.path().extension() == Some("wasm".as_ref()))
+                .then(|| entry.into_path())
+        })
+        .inspect(|path| debug!(?path, "discovered WASM module"))
+        .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
+        .collect::<FuturesUnordered<_>>()
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -58,24 +72,6 @@ pub struct MrfService {
     linker: Arc<Linker<Context>>,
 }
 
-#[inline]
-fn construct_store(engine: &Engine) -> Store<Context> {
-    let wasi_ctx = WasiCtxBuilder::new()
-        .allow_ip_name_lookup(false)
-        .allow_tcp(false)
-        .allow_udp(false)
-        .build();
-
-    Store::new(
-        engine,
-        Context {
-            resource_table: ResourceTable::new(),
-            wasi_ctx,
-            unit: (),
-        },
-    )
-}
-
 impl MrfService {
     #[instrument]
     pub async fn from_directory<P>(dir: P) -> miette::Result<Self>
@@ -87,28 +83,9 @@ impl MrfService {
             .allocation_strategy(InstanceAllocationStrategy::pooling())
             .async_support(true)
             .wasm_component_model(true);
+
         let engine = Engine::new(&config).map_err(miette::Report::msg)?;
-
-        // Read all the `.wasm` files from the disk
-        // Recursively traverse the entire directory tree doing so and follow all symlinks
-        // Also run the I/O operations inside a `FuturesUnordered` to enable concurrent reading
-        let mut wasm_data_stream = WalkDir::new(dir)
-            .follow_links(true)
-            .into_iter()
-            .filter_map(|entry| {
-                let entry = entry.ok()?;
-                (entry.path().is_file() && entry.path().extension() == Some("wasm".as_ref()))
-                    .then(|| entry.into_path())
-            })
-            .inspect(|path| debug!(?path, "discovered WASM module"))
-            .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
-            .collect::<FuturesUnordered<_>>();
-
-        let mut linker = Linker::<Context>::new(&engine);
-        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
-            .map_err(miette::Report::msg)?;
-        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
-            .map_err(miette::Report::msg)?;
+        let mut wasm_data_stream = find_wasm_mrf_modules(dir);
 
         let mut components = Vec::new();
         while let Some((module_path, wasm_data)) =
@@ -133,6 +110,12 @@ impl MrfService {
 
             components.push(component);
         }
+
+        let mut linker = Linker::<Context>::new(&engine);
+        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
+            .map_err(miette::Report::msg)?;
+        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
+            .map_err(miette::Report::msg)?;
 
         Ok(Self {
             components: components.into(),
@@ -189,10 +172,12 @@ impl MrfService {
         Ok(Outcome::Accept(activity))
     }
 
+    #[inline]
     pub async fn handle_incoming<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
         self.handle(Direction::Incoming, activity).await
     }
 
+    #[inline]
     pub async fn handle_outgoing<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
         self.handle(Direction::Outgoing, activity).await
     }
