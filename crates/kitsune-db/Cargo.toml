@@ -27,7 +27,7 @@ kitsune-type = { path = "../kitsune-type" }
 miette = "7.1.0"
 num-derive = "0.4.2"
 num-traits = "0.2.18"
-rustls = "0.22.2"
+rustls = "=0.22.2"
 rustls-native-certs = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.8"
