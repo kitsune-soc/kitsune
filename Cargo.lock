@@ -2249,6 +2249,7 @@ dependencies = [
 name = "example-mrf"
 version = "0.0.1-pre.5"
 dependencies = [
+ "rand 0.8.5",
  "wit-bindgen",
 ]
 

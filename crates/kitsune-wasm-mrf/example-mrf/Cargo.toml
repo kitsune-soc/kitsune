@@ -10,6 +10,7 @@ build = "build.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
+rand = "0.8.5"
 wit-bindgen = "0.20.0"
 
 [lints]
