@@ -124,7 +124,7 @@ impl MrfService {
         })
     }
 
-    #[instrument]
+    #[instrument(skip_all, fields(module_dir = %config.module_dir))]
     pub async fn from_directory(config: &MrfConfiguration) -> miette::Result<Self> {
         let mut engine_config = Config::new();
         engine_config
@@ -144,7 +144,7 @@ impl MrfService {
 
         let mut modules = Vec::new();
         while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
-            // TODO: Manifest validation, permission grants, etc.
+            // TODO: permission grants, etc.
 
             let Manifest::V1(ref manifest_v1) = manifest else {
                 error!("unknown manifest version. expected v1");
@@ -155,6 +155,13 @@ impl MrfService {
                 .module_config
                 .get(&*manifest_v1.name)
                 .cloned()
+                .inspect(|_| {
+                    debug!(
+                        name = %manifest_v1.name,
+                        version = %manifest_v1.version,
+                        "found configuration",
+                    );
+                })
                 .unwrap_or_default();
 
             let module = MrfModule {
