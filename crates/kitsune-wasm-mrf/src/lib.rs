@@ -8,7 +8,7 @@ use self::{
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
 use kitsune_config::mrf::Configuration as MrfConfiguration;
 use miette::{Diagnostic, IntoDiagnostic};
-use mrf_manifest::Manifest;
+use mrf_manifest::{Manifest, ManifestV1};
 use smol_str::SmolStr;
 use std::{
     borrow::Cow,
@@ -58,7 +58,7 @@ fn load_mrf_module(
     engine: &Engine,
     module_path: &Path,
     bytes: &[u8],
-) -> miette::Result<Option<(Manifest<'static>, Component)>> {
+) -> miette::Result<Option<(ManifestV1<'static>, Component)>> {
     let component = Component::new(engine, bytes).map_err(|err| {
         miette::Report::new(ComponentParseError {
             path_help: format!("path to the module: {}", module_path.display()),
@@ -78,7 +78,7 @@ fn load_mrf_module(
 
     info!(name = %manifest_v1.name, version = %manifest_v1.version, "loaded MRF module");
 
-    Ok(Some((manifest.to_owned(), component)))
+    Ok(Some((manifest_v1.to_owned(), component)))
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -98,7 +98,7 @@ struct ComponentParseError {
 pub struct MrfModule {
     pub component: Component,
     pub config: SmolStr,
-    pub manifest: Manifest<'static>,
+    pub manifest: ManifestV1<'static>,
 }
 
 #[derive(Clone, TypedBuilder)]
@@ -146,21 +146,16 @@ impl MrfService {
         while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
             // TODO: permission grants, etc.
 
-            let Manifest::V1(ref manifest_v1) = manifest else {
-                error!("unknown manifest version. expected v1");
-                continue;
-            };
-
             let span = info_span!(
                 "load_mrf_module_config",
-                name = %manifest_v1.name,
-                version = %manifest_v1.version,
+                name = %manifest.name,
+                version = %manifest.version,
             );
 
             let config = span.in_scope(|| {
                 config
                     .module_config
-                    .get(&*manifest_v1.name)
+                    .get(&*manifest.name)
                     .cloned()
                     .inspect(|_| debug!("found configuration"))
                     .unwrap_or_else(|| {
@@ -195,6 +190,11 @@ impl MrfService {
         let mut activity = Cow::Borrowed(activity);
 
         for module in self.modules.iter() {
+            let activity_types = &module.manifest.activity_types; // TODO: Pass activity type into function. Somehow.
+            if !activity_types.all_activities() && !activity_types.contains(todo!() as &str) {
+                continue;
+            }
+
             let (mrf, _) =
                 mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
                     .await
