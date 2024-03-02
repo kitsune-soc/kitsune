@@ -5,7 +5,7 @@ use self::{
     ctx::{construct_store, Context},
     mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError},
 };
-use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
+use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::Manifest;
 use std::{
@@ -31,7 +31,7 @@ mod error;
 mod mrf_wit;
 
 #[inline]
-fn find_wasm_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
+fn find_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
 where
     P: AsRef<Path>,
 {
@@ -49,6 +49,34 @@ where
         .inspect(|path| debug!(?path, "discovered WASM module"))
         .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
         .collect::<FuturesUnordered<_>>()
+}
+
+#[inline]
+fn load_mrf_module(
+    engine: &Engine,
+    module_path: &Path,
+    bytes: &[u8],
+) -> miette::Result<Option<(Manifest<'static>, Component)>> {
+    let component = Component::new(engine, bytes).map_err(|err| {
+        miette::Report::new(ComponentParseError {
+            path_help: format!("path to the module: {}", module_path.display()),
+            advice: "Did you make the WASM file a component via `wasm-tools`?",
+        })
+        .wrap_err(err)
+    })?;
+
+    let Some((manifest, _section_range)) = mrf_manifest::decode(bytes)? else {
+        error!("missing manifest. skipping load.");
+        return Ok(None);
+    };
+    let Manifest::V1(ref manifest_v1) = manifest else {
+        error!("invalid manifest version. expected v1");
+        return Ok(None);
+    };
+
+    info!(name = %manifest_v1.name, version = %manifest_v1.version, "loaded MRF module");
+
+    Ok(Some((manifest.to_owned(), component)))
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -73,6 +101,21 @@ pub struct MrfService {
 }
 
 impl MrfService {
+    #[inline]
+    pub fn from_components(engine: Engine, components: Vec<Component>) -> miette::Result<Self> {
+        let mut linker = Linker::<Context>::new(&engine);
+        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
+            .map_err(miette::Report::msg)?;
+        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
+            .map_err(miette::Report::msg)?;
+
+        Ok(Self {
+            components: components.into(),
+            engine,
+            linker: Arc::new(linker),
+        })
+    }
+
     #[instrument]
     pub async fn from_directory<P>(dir: P) -> miette::Result<Self>
     where
@@ -85,43 +128,22 @@ impl MrfService {
             .wasm_component_model(true);
 
         let engine = Engine::new(&config).map_err(miette::Report::msg)?;
-        let mut wasm_data_stream = find_wasm_mrf_modules(dir);
+        let wasm_data_stream = find_mrf_modules(dir)
+            .map(IntoDiagnostic::into_diagnostic)
+            .and_then(|(module_path, wasm_data)| {
+                let engine = &engine;
+
+                async move { load_mrf_module(engine, &module_path, &wasm_data) }
+            });
+        tokio::pin!(wasm_data_stream);
 
         let mut components = Vec::new();
-        while let Some((module_path, wasm_data)) =
-            wasm_data_stream.try_next().await.into_diagnostic()?
-        {
-            let component = Component::new(&engine, &wasm_data).map_err(|err| {
-                miette::Report::new(ComponentParseError {
-                    path_help: format!("path to the module: {}", module_path.display()),
-                    advice: "Did you make the WASM file a component via `wasm-tools`?",
-                })
-                .wrap_err(err)
-            })?;
-
-            let Some((Manifest::V1(manifest), _section_range)) = mrf_manifest::decode(&wasm_data)?
-            else {
-                error!("missing manifest. skipping load.");
-                continue;
-            };
-            info!(name = %manifest.name, version = %manifest.version, "loading MRF module");
-
+        while let Some((_manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
             // TODO: Manifest validation, permission grants, etc.
-
             components.push(component);
         }
 
-        let mut linker = Linker::<Context>::new(&engine);
-        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
-            .map_err(miette::Report::msg)?;
-        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
-            .map_err(miette::Report::msg)?;
-
-        Ok(Self {
-            components: components.into(),
-            engine,
-            linker: Arc::new(linker),
-        })
+        Self::from_components(engine, components)
     }
 
     #[must_use]

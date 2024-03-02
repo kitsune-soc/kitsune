@@ -31,3 +31,6 @@ parse = [
     "dep:wasmparser",
 ]
 serialise = ["dep:olpc-cjson", "dep:serde_json"]
+
+[lints]
+workspace = true
