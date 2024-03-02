@@ -3970,6 +3970,7 @@ dependencies = [
  "simd-json",
  "smol_str",
  "speedy-uuid",
+ "strum 0.26.1",
  "utoipa",
 ]
 
@@ -4002,8 +4003,10 @@ version = "0.0.1-pre.5"
 dependencies = [
  "futures-util",
  "kitsune-config",
+ "kitsune-type",
  "miette",
  "mrf-manifest",
+ "simd-json",
  "smol_str",
  "thiserror",
  "tokio",

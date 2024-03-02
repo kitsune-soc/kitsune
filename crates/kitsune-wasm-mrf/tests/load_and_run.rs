@@ -33,7 +33,7 @@ async fn basic() {
     )
     .unwrap();
     let result = service
-        .handle_incoming("[imagine activity here]")
+        .handle_incoming("[anything]", "[imagine activity here]")
         .await
         .unwrap();
 

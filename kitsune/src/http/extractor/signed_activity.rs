@@ -9,6 +9,7 @@ use axum::{
     response::{IntoResponse, Response},
     RequestExt,
 };
+use bytes::Buf;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -50,6 +51,9 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
             }
         };
+
+        let activity: Activity =
+            simd_json::from_reader(aggregated_body.clone().reader()).map_err(Error::from)?;
         let Ok(str_body) = simdutf8::basic::from_utf8(&aggregated_body) else {
             debug!("Malformed body. Not UTF-8");
             return Err(StatusCode::BAD_REQUEST.into_response());
@@ -58,7 +62,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         let Outcome::Accept(str_body) = state
             .service
             .mrf
-            .handle_incoming(str_body)
+            .handle_incoming(activity.r#type.as_ref(), str_body)
             .await
             .map_err(Error::from)?
         else {

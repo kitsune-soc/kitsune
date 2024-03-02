@@ -7,6 +7,7 @@ use self::{
 };
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
 use kitsune_config::mrf::Configuration as MrfConfiguration;
+use kitsune_type::ap::Activity;
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::{Manifest, ManifestV1};
 use smol_str::SmolStr;
@@ -184,14 +185,15 @@ impl MrfService {
     async fn handle<'a>(
         &self,
         direction: Direction,
+        activity_type: &str,
         activity: &'a str,
     ) -> Result<Outcome<'a>, Error> {
         let mut store = construct_store(&self.engine);
         let mut activity = Cow::Borrowed(activity);
 
         for module in self.modules.iter() {
-            let activity_types = &module.manifest.activity_types; // TODO: Pass activity type into function. Somehow.
-            if !activity_types.all_activities() && !activity_types.contains(todo!() as &str) {
+            let activity_types = &module.manifest.activity_types;
+            if !activity_types.all_activities() && !activity_types.contains(activity_type) {
                 continue;
             }
 
@@ -227,12 +229,34 @@ impl MrfService {
     }
 
     #[inline]
-    pub async fn handle_incoming<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
-        self.handle(Direction::Incoming, activity).await
+    pub async fn handle_incoming<'a>(
+        &self,
+        activity_type: &str,
+        activity: &'a str,
+    ) -> Result<Outcome<'a>, Error> {
+        self.handle(Direction::Incoming, activity_type, activity)
+            .await
     }
 
     #[inline]
-    pub async fn handle_outgoing<'a>(&self, activity: &'a str) -> Result<Outcome<'a>, Error> {
-        self.handle(Direction::Outgoing, activity).await
+    pub async fn handle_outgoing(&self, activity: &Activity) -> Result<Outcome<'static>, Error> {
+        let serialised = simd_json::to_string(activity)?;
+        let outcome = self
+            .handle(Direction::Outgoing, activity.r#type.as_ref(), &serialised)
+            .await?;
+
+        let outcome: Outcome<'static> = match outcome {
+            Outcome::Accept(Cow::Borrowed(..)) => {
+                // As per the logic in the previous function, we can assume that if the Cow is owned, it has been modified
+                // If it hasn't been modified it is in its borrowed state
+                //
+                // Therefore we don't need to allocate again here, simply reconstruct a new `Outcome` with an owned Cow.
+                Outcome::Accept(Cow::Owned(serialised))
+            }
+            Outcome::Accept(Cow::Owned(owned)) => Outcome::Accept(Cow::Owned(owned)),
+            Outcome::Reject => Outcome::Reject,
+        };
+
+        Ok(outcome)
     }
 }
