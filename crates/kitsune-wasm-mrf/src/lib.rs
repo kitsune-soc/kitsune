@@ -3,7 +3,7 @@ extern crate tracing;
 
 use self::{
     ctx::{construct_store, Context},
-    mrf_wit::transform::fep::mrf::types::{Direction, Error as MrfError},
+    mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
 use miette::{Diagnostic, IntoDiagnostic};
@@ -104,7 +104,7 @@ impl MrfService {
     #[inline]
     pub fn from_components(engine: Engine, components: Vec<Component>) -> miette::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
-        mrf_wit::transform::MrfV1::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
+        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
             .map_err(miette::Report::msg)?;
         wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
             .map_err(miette::Report::msg)?;
@@ -160,10 +160,9 @@ impl MrfService {
         let mut activity = Cow::Borrowed(activity);
 
         for component in self.components.iter() {
-            let (mrf, _) =
-                mrf_wit::transform::MrfV1::instantiate_async(&mut store, component, &self.linker)
-                    .await
-                    .map_err(Error::Runtime)?;
+            let (mrf, _) = mrf_wit::v1::Mrf::instantiate_async(&mut store, component, &self.linker)
+                .await
+                .map_err(Error::Runtime)?;
 
             // TODO: Load configuration
             let config = "";

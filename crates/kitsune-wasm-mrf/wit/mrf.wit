@@ -23,7 +23,7 @@ interface types {
     }
 }
 
-world mrf-v1 {
+world mrf {
     use types.{direction, error};
 
     /// Transform an ActivityPub activity

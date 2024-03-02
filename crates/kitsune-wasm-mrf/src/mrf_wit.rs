@@ -1,8 +1,8 @@
-pub mod transform {
+pub mod v1 {
     wasmtime::component::bindgen!({
         async: true,
-        world: "mrf-v1",
+        world: "mrf",
     });
 }
 
-impl transform::fep::mrf::types::Host for () {}
+impl v1::fep::mrf::types::Host for () {}
