@@ -11,13 +11,17 @@ fn dummy_manifest() -> ManifestV1<'static> {
         api_version: ApiVersion::V1,
         name: "dummy".into(),
         version: "1.0.0".parse().unwrap(),
-        activity_types: ActivitySet::from(HashSet::default()),
+        activity_types: ActivitySet::from(
+            [Cow::Borrowed("*")].into_iter().collect::<HashSet<_, _>>(),
+        ),
         config_schema: None,
     }
 }
 
 #[tokio::test]
 async fn basic() {
+    tracing_subscriber::fmt::init();
+
     let mut config = Config::new();
     config.async_support(true).wasm_component_model(true);
     let engine = Engine::new(&config).unwrap();
