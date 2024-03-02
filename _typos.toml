@@ -2,6 +2,12 @@
 extend-exclude = [
     "crates/kitsune-language/examples/basic.rs",
     "crates/kitsune-language/src/map.rs",
+
+    # Exclude all WIT dependencies since we don't really have control over that
+    "crates/kitsune-wasm-mrf/wit/deps/*",
+    "crates/kitsune-wasm-mrf/wit/wasi-keyvalue",
+    "crates/kitsune-wasm-mrf/wit/wasi-logging",
+
     "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
 ]
