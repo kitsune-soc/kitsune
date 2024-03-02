@@ -22,6 +22,9 @@ fn dummy_manifest() -> ManifestV1<'static> {
 async fn basic() {
     tracing_subscriber::fmt::init();
 
+    let dir = tempfile::tempdir().unwrap();
+    let fs_backend = kitsune_wasm_mrf::kv_storage::FsBackend::from_path(dir.path()).unwrap();
+
     let mut config = Config::new();
     config.async_support(true).wasm_component_model(true);
     let engine = Engine::new(&config).unwrap();
@@ -34,6 +37,7 @@ async fn basic() {
             config: SmolStr::default(),
             manifest: dummy_manifest(),
         }],
+        fs_backend.into(),
     )
     .unwrap();
     let result = service

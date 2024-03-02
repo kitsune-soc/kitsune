@@ -6,7 +6,7 @@ use self::{
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
-use kitsune_config::mrf::Configuration as MrfConfiguration;
+use kitsune_config::mrf::{Configuration as MrfConfiguration, FsKvStorage, KvStorage};
 use kitsune_type::ap::Activity;
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::{Manifest, ManifestV1};
@@ -136,6 +136,12 @@ impl MrfService {
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]
     pub async fn from_directory(config: &MrfConfiguration) -> miette::Result<Self> {
+        let storage = match config.storage {
+            KvStorage::Fs(FsKvStorage { ref path }) => {
+                kv_storage::FsBackend::from_path(path.as_str())?.into()
+            }
+        };
+
         let mut engine_config = Config::new();
         engine_config
             .allocation_strategy(InstanceAllocationStrategy::pooling())
@@ -183,7 +189,7 @@ impl MrfService {
             modules.push(module);
         }
 
-        Self::from_components(engine, modules, todo!())
+        Self::from_components(engine, modules, storage)
     }
 
     #[must_use]

@@ -1,7 +1,20 @@
 use super::{Backend, BoxError, BucketBackend};
+use miette::IntoDiagnostic;
+use std::path::Path;
 
 pub struct FsBackend {
     inner: sled::Db,
+}
+
+impl FsBackend {
+    pub fn from_path<P>(path: P) -> miette::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        Ok(Self {
+            inner: sled::open(path).into_diagnostic()?,
+        })
+    }
 }
 
 impl Backend for FsBackend {

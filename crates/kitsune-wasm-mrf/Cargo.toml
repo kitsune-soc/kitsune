@@ -40,6 +40,7 @@ wasmtime-wasi = { version = "18.0.2", default-features = false, features = [
 ] }
 
 [dev-dependencies]
+tempfile = "3.10.1"
 tokio = { version = "1.36.0", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
 

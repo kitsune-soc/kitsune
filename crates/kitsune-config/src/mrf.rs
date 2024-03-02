@@ -19,4 +19,5 @@ pub enum KvStorage {
 pub struct Configuration {
     pub module_dir: SmolStr,
     pub module_config: HashMap<SmolStr, SmolStr>,
+    pub storage: KvStorage,
 }

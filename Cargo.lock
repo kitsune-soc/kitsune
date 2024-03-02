@@ -4024,6 +4024,7 @@ dependencies = [
  "slab",
  "sled",
  "smol_str",
+ "tempfile",
  "thiserror",
  "tokio",
  "tracing",
