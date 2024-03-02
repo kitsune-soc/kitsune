@@ -1,4 +1,4 @@
-#![allow(unsafe_code)]
+#![allow(clippy::missing_safety_doc, clippy::transmute_int_to_bool, unsafe_code)]
 
 use self::wasi::logging::logging::{self, Level};
 

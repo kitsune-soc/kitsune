@@ -1,5 +1,33 @@
 package fep:mrf@1.0.0;
 
+/// Home-grown version of wasi-keyvalue
+/// 
+/// Built around a synchronous interface since MRFs are synchronous in their current representation
+interface keyvalue {
+    /// Opaque representation of some error
+    resource error {}
+
+    /// Logical collection of Key-Value pairs
+    resource bucket {
+        /// Open or create a new bucket
+        open-bucket: static func(name: string) -> result<bucket, error>;
+    }
+
+    /// Get a value from a bucket
+    get: func(bucket: borrow<bucket>, key: string) -> result<option<list<u8>>, error>;
+
+    /// Set the value inside a bucket
+    /// 
+    /// Overwrites existing values
+    set: func(bucket: borrow<bucket>, key: string, value: list<u8>) -> result<_, error>;
+
+    /// Delete the value from a bucket
+    delete: func(bucket: borrow<bucket>, key: string) -> result<_, error>;
+
+    /// Check if a key exists in the bucket
+    exists: func(bucket: borrow<bucket>, key: string) -> result<bool, error>;
+}
+
 interface types {
     /// The direction the activity is going
     enum direction {
@@ -26,6 +54,7 @@ interface types {
 world mrf {
     use types.{direction, error};
 
+    import keyvalue;
     import wasi:logging/logging;
 
     /// Transform an ActivityPub activity
