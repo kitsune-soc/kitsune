@@ -10,8 +10,10 @@ build = "build.rs"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
+kitsune-config = { path = "../kitsune-config" }
 miette = "7.1.0"
 mrf-manifest = { path = "../../lib/mrf-manifest", features = ["parse"] }
+smol_str = "0.2.1"
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["fs"] }
 tracing = "0.1.40"

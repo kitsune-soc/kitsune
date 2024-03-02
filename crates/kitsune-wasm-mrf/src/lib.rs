@@ -6,8 +6,10 @@ use self::{
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
+use kitsune_config::mrf::Configuration as MrfConfiguration;
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::Manifest;
+use smol_str::SmolStr;
 use std::{
     borrow::Cow,
     fmt::Debug,
@@ -93,16 +95,22 @@ struct ComponentParseError {
     advice: &'static str,
 }
 
+pub struct MrfModule {
+    pub component: Component,
+    pub config: SmolStr,
+    pub manifest: Manifest<'static>,
+}
+
 #[derive(Clone, TypedBuilder)]
 pub struct MrfService {
-    components: Arc<[Component]>,
     engine: Engine,
     linker: Arc<Linker<Context>>,
+    modules: Arc<[MrfModule]>,
 }
 
 impl MrfService {
     #[inline]
-    pub fn from_components(engine: Engine, components: Vec<Component>) -> miette::Result<Self> {
+    pub fn from_components(engine: Engine, modules: Vec<MrfModule>) -> miette::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
         mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
             .map_err(miette::Report::msg)?;
@@ -110,25 +118,22 @@ impl MrfService {
             .map_err(miette::Report::msg)?;
 
         Ok(Self {
-            components: components.into(),
             engine,
             linker: Arc::new(linker),
+            modules: modules.into(),
         })
     }
 
     #[instrument]
-    pub async fn from_directory<P>(dir: P) -> miette::Result<Self>
-    where
-        P: AsRef<Path> + Debug,
-    {
-        let mut config = Config::new();
-        config
+    pub async fn from_directory(config: &MrfConfiguration) -> miette::Result<Self> {
+        let mut engine_config = Config::new();
+        engine_config
             .allocation_strategy(InstanceAllocationStrategy::pooling())
             .async_support(true)
             .wasm_component_model(true);
 
-        let engine = Engine::new(&config).map_err(miette::Report::msg)?;
-        let wasm_data_stream = find_mrf_modules(dir)
+        let engine = Engine::new(&engine_config).map_err(miette::Report::msg)?;
+        let wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
             .map(IntoDiagnostic::into_diagnostic)
             .and_then(|(module_path, wasm_data)| {
                 let engine = &engine;
@@ -137,18 +142,36 @@ impl MrfService {
             });
         tokio::pin!(wasm_data_stream);
 
-        let mut components = Vec::new();
-        while let Some((_manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
+        let mut modules = Vec::new();
+        while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
             // TODO: Manifest validation, permission grants, etc.
-            components.push(component);
+
+            let Manifest::V1(ref manifest_v1) = manifest else {
+                error!("unknown manifest version. expected v1");
+                continue;
+            };
+
+            let config = config
+                .module_config
+                .get(&*manifest_v1.name)
+                .cloned()
+                .unwrap_or_default();
+
+            let module = MrfModule {
+                component,
+                config,
+                manifest,
+            };
+
+            modules.push(module);
         }
 
-        Self::from_components(engine, components)
+        Self::from_components(engine, modules)
     }
 
     #[must_use]
     pub fn module_count(&self) -> usize {
-        self.components.len()
+        self.modules.len()
     }
 
     async fn handle<'a>(
@@ -159,16 +182,14 @@ impl MrfService {
         let mut store = construct_store(&self.engine);
         let mut activity = Cow::Borrowed(activity);
 
-        for component in self.components.iter() {
-            let (mrf, _) = mrf_wit::v1::Mrf::instantiate_async(&mut store, component, &self.linker)
-                .await
-                .map_err(Error::Runtime)?;
-
-            // TODO: Load configuration
-            let config = "";
+        for module in self.modules.iter() {
+            let (mrf, _) =
+                mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
+                    .await
+                    .map_err(Error::Runtime)?;
 
             let result = mrf
-                .call_transform(&mut store, config, direction, &activity)
+                .call_transform(&mut store, &module.config, direction, &activity)
                 .await
                 .map_err(Error::Runtime)?;
 

@@ -4001,8 +4001,10 @@ name = "kitsune-wasm-mrf"
 version = "0.0.1-pre.5"
 dependencies = [
  "futures-util",
+ "kitsune-config",
  "miette",
  "mrf-manifest",
+ "smol_str",
  "thiserror",
  "tokio",
  "tracing",
