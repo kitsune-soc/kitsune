@@ -21,6 +21,7 @@ redis = { version = "0.24.0", default-features = false, features = [
     "tokio-comp",
 ] }
 tracing = "0.1.40"
+urlencoding = "2.1.3"
 
 [dev-dependencies]
 http-body-util = "0.1.0"

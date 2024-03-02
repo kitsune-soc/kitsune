@@ -94,7 +94,10 @@ impl Resolver for Webfinger {
                 return Ok(Some(ret));
             }
 
-            let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
+            let webfinger_url = format!(
+                "https://{domain}/.well-known/webfinger?resource={}",
+                urlencoding::encode(acct)
+            );
             let response = self.client.get(webfinger_url).await?;
 
             if matches!(response.status(), StatusCode::NOT_FOUND | StatusCode::GONE) {

@@ -4036,6 +4036,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "urlencoding",
 ]
 
 [[package]]
