@@ -62,7 +62,12 @@ fn main() -> Result<()> {
     match args.command {
         ToolSubcommand::Manifest(ManifestSubcommand::Add(args)) => {
             let manifest = fs::read(args.manifest_path).into_diagnostic()?;
-            fs::copy(&args.module_path, &args.output).into_diagnostic()?;
+
+            // Only copy if the paths are distinct
+            if args.module_path != args.output {
+                fs::copy(&args.module_path, &args.output).into_diagnostic()?;
+            }
+
             write_manifest(&manifest, &args.output)?;
         }
         ToolSubcommand::Manifest(ManifestSubcommand::Read(args)) => {
