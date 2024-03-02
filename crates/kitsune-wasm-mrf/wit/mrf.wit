@@ -26,6 +26,8 @@ interface types {
 world mrf {
     use types.{direction, error};
 
+    import wasi:logging/logging;
+
     /// Transform an ActivityPub activity
     export transform: func(configuration: string, direction: direction, activity: string) -> result<string, error>;
 }

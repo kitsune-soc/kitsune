@@ -1,0 +1,2 @@
+keyvalue = "wasi-keyvalue/wit"
+logging = "wasi-logging/wit"
