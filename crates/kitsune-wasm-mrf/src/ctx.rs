@@ -1,7 +1,16 @@
+use crate::kv_storage;
+use slab::Slab;
+use std::sync::Arc;
 use wasmtime::{component::ResourceTable, Engine, Store};
 use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
+pub struct KvContext {
+    pub storage: Arc<kv_storage::BackendDispatch>,
+    pub buckets: Slab<kv_storage::BucketBackendDispatch>,
+}
+
 pub struct Context {
+    pub kv_ctx: KvContext,
     pub resource_table: ResourceTable,
     pub wasi_ctx: WasiCtx,
 }
@@ -17,7 +26,10 @@ impl WasiView for Context {
 }
 
 #[inline]
-pub fn construct_store(engine: &Engine) -> Store<Context> {
+pub fn construct_store(
+    engine: &Engine,
+    storage: Arc<kv_storage::BackendDispatch>,
+) -> Store<Context> {
     let wasi_ctx = WasiCtxBuilder::new()
         .allow_ip_name_lookup(false)
         .allow_tcp(false)
@@ -27,6 +39,10 @@ pub fn construct_store(engine: &Engine) -> Store<Context> {
     Store::new(
         engine,
         Context {
+            kv_ctx: KvContext {
+                storage,
+                buckets: Slab::new(),
+            },
             resource_table: ResourceTable::new(),
             wasi_ctx,
         },

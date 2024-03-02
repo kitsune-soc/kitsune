@@ -34,6 +34,8 @@ mod error;
 mod logging;
 mod mrf_wit;
 
+pub mod kv_storage;
+
 #[inline]
 fn find_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
 where
@@ -108,11 +110,16 @@ pub struct MrfService {
     engine: Engine,
     linker: Arc<Linker<Context>>,
     modules: Arc<[MrfModule]>,
+    storage: Arc<kv_storage::BackendDispatch>,
 }
 
 impl MrfService {
     #[inline]
-    pub fn from_components(engine: Engine, modules: Vec<MrfModule>) -> miette::Result<Self> {
+    pub fn from_components(
+        engine: Engine,
+        modules: Vec<MrfModule>,
+        storage: kv_storage::BackendDispatch,
+    ) -> miette::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
 
         mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(miette::Report::msg)?;
@@ -123,6 +130,7 @@ impl MrfService {
             engine,
             linker: Arc::new(linker),
             modules: modules.into(),
+            storage: Arc::new(storage),
         })
     }
 
@@ -175,7 +183,7 @@ impl MrfService {
             modules.push(module);
         }
 
-        Self::from_components(engine, modules)
+        Self::from_components(engine, modules, todo!())
     }
 
     #[must_use]
@@ -189,7 +197,7 @@ impl MrfService {
         activity_type: &str,
         activity: &'a str,
     ) -> Result<Outcome<'a>, Error> {
-        let mut store = construct_store(&self.engine);
+        let mut store = construct_store(&self.engine, self.storage.clone());
         let mut activity = Cow::Borrowed(activity);
 
         for module in self.modules.iter() {
