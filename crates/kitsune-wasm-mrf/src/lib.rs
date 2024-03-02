@@ -151,18 +151,22 @@ impl MrfService {
                 continue;
             };
 
+            let span = info_span!(
+                "load_mrf_module_config",
+                name = %manifest_v1.name,
+                version = %manifest_v1.version,
+            );
+            let _enter_guard = span.enter();
+
             let config = config
                 .module_config
                 .get(&*manifest_v1.name)
                 .cloned()
-                .inspect(|_| {
-                    debug!(
-                        name = %manifest_v1.name,
-                        version = %manifest_v1.version,
-                        "found configuration",
-                    );
-                })
-                .unwrap_or_default();
+                .inspect(|_| debug!("found configuration"))
+                .unwrap_or_else(|| {
+                    debug!("didn't find configuration. defaulting to empty string");
+                    SmolStr::default()
+                });
 
             let module = MrfModule {
                 component,
