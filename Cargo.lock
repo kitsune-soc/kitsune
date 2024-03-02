@@ -4001,6 +4001,7 @@ dependencies = [
 name = "kitsune-wasm-mrf"
 version = "0.0.1-pre.5"
 dependencies = [
+ "async-trait",
  "futures-util",
  "kitsune-config",
  "kitsune-type",

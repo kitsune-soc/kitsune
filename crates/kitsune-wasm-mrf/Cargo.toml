@@ -7,6 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
+async-trait = "0.1.77"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }

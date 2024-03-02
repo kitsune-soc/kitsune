@@ -4,7 +4,6 @@ use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 pub struct Context {
     pub resource_table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub unit: (),
 }
 
 impl WasiView for Context {
@@ -30,7 +29,6 @@ pub fn construct_store(engine: &Engine) -> Store<Context> {
         Context {
             resource_table: ResourceTable::new(),
             wasi_ctx,
-            unit: (),
         },
     )
 }

@@ -31,6 +31,7 @@ pub use self::error::Error;
 
 mod ctx;
 mod error;
+mod logging;
 mod mrf_wit;
 
 #[inline]
@@ -113,8 +114,8 @@ impl MrfService {
     #[inline]
     pub fn from_components(engine: Engine, modules: Vec<MrfModule>) -> miette::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
-        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| &mut ctx.unit)
-            .map_err(miette::Report::msg)?;
+
+        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(miette::Report::msg)?;
         wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
             .map_err(miette::Report::msg)?;
 

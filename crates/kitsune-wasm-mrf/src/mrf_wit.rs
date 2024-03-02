@@ -5,4 +5,4 @@ pub mod v1 {
     });
 }
 
-impl v1::fep::mrf::types::Host for () {}
+impl v1::fep::mrf::types::Host for crate::ctx::Context {}
