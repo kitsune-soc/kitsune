@@ -1,6 +1,3 @@
 [submodule "crates/kitsune-wasm-mrf/wit/wasi-logging"]
 	path = crates/kitsune-wasm-mrf/wit/wasi-logging
 	url = https://github.com/WebAssembly/wasi-logging.git
-[submodule "crates/kitsune-wasm-mrf/wit/wasi-keyvalue"]
-	path = crates/kitsune-wasm-mrf/wit/wasi-keyvalue
-	url = https://github.com/WebAssembly/wasi-keyvalue.git
