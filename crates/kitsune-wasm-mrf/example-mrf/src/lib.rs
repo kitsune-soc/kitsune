@@ -1,5 +1,7 @@
 #![allow(unsafe_code)]
 
+use self::wasi::logging::logging::{self, Level};
+
 wit_bindgen::generate!();
 
 struct Mrf;
@@ -10,8 +12,12 @@ impl Guest for Mrf {
         _direction: Direction,
         activity: String,
     ) -> Result<String, Error> {
-        // We could do a lot here. But this is just an example
-        // So we do literally nothing. Just wasting execution time.
+        logging::log(
+            Level::Debug,
+            "example-mrf",
+            "we got an activity! that's cool!",
+        );
+
         Ok(activity)
     }
 }
