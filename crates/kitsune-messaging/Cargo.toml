@@ -6,7 +6,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = "0.8.10"
+ahash = "0.8.11"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.30"
 kitsune-retry-policies = { path = "../../lib/kitsune-retry-policies" }

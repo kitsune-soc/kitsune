@@ -9,7 +9,7 @@ license.workspace = true
 async-trait = "0.1.77"
 autometrics = { version = "1.0.1", default-features = false }
 futures-util = "0.3.30"
-http = "1.0.0"
+http = "1.1.0"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }

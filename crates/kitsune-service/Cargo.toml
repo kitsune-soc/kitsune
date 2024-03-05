@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = "0.8.10"
+ahash = "0.8.11"
 argon2 = "0.5.3"
 async-stream = "0.3.5"
 athena = { path = "../../lib/athena" }
@@ -23,7 +23,7 @@ garde = { version = "0.18.0", default-features = false, features = [
     "regex",
     "serde",
 ] }
-http = "1.0.0"
+http = "1.1.0"
 img-parts = "0.3.0"
 iso8601-timestamp = "0.2.17"
 kitsune-cache = { path = "../kitsune-cache" }

@@ -13,7 +13,7 @@ diesel = "2.1.4"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
 headers = "0.4.0"
-http = "1.0.0"
+http = "1.1.0"
 iso8601-timestamp = "0.2.17"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-config = { path = "../kitsune-config" }

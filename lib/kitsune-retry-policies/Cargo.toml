@@ -11,7 +11,7 @@ futures-retry-policies = { version = "0.3.1", features = [
     "tokio",
     "tracing",
 ] }
-retry-policies = "0.2.1"
+retry-policies = "0.3.0"
 
 [lints]
 workspace = true
