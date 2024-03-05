@@ -51,6 +51,7 @@ members = [
     "lib/cursiv",
     "lib/http-compat",
     "lib/http-signatures",
+    "lib/just-retry",
     "lib/kitsune-retry-policies",
     "lib/masto-id-convert",
     "lib/mrf-manifest",

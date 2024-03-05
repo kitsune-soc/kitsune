@@ -3333,6 +3333,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "just-retry"
+version = "0.0.1-pre.5"
+dependencies = [
+ "retry-policies 0.3.0",
+]
+
+[[package]]
 name = "kitsune"
 version = "0.0.1-pre.5"
 dependencies = [

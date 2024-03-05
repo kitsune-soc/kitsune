@@ -1,0 +1,12 @@
+[package]
+name = "just-retry"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+retry-policies = "0.3.0"
+
+[lints]
+workspace = true
