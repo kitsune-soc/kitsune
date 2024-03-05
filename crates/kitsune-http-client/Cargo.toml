@@ -23,7 +23,7 @@ hyper-util = { version = "0.1.3", features = [
 ] }
 hyper-rustls = { version = "0.26.0", features = ["http2"] }
 kitsune-type = { path = "../kitsune-type" }
-pin-project = "1.1.4"
+pin-project = "1.1.5"
 serde = "1.0.197"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 simd-json = "0.13.8"
