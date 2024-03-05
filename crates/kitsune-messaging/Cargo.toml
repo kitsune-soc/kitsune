@@ -9,7 +9,7 @@ license.workspace = true
 ahash = "0.8.11"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.30"
-kitsune-retry-policies = { path = "../../lib/kitsune-retry-policies" }
+just-retry = { path = "../../lib/just-retry" }
 pin-project-lite = "0.2.13"
 redis = { version = "0.24.0", features = ["connection-manager", "tokio-comp"] }
 serde = "1.0.197"

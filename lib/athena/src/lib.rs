@@ -9,6 +9,7 @@ pub use self::{
     error::Error,
     queue::{JobDetails, JobQueue},
 };
+pub use tokio_util::task::TaskTracker;
 
 mod error;
 mod macros;

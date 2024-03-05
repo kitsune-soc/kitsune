@@ -505,18 +505,18 @@ dependencies = [
  "either",
  "futures-util",
  "iso8601-timestamp",
- "kitsune-retry-policies",
+ "just-retry",
  "multiplex-pool",
  "once_cell",
  "rand 0.8.5",
  "redis",
- "retry-policies 0.3.0",
  "serde",
  "simd-json",
  "smol_str",
  "speedy-uuid",
  "thiserror",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
  "typed-builder",
@@ -2485,28 +2485,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "futures-retry-policies"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6deb4087bf085042b95438ac07d98b85976f22549c4ae8dee6b44a1ff094b049"
-dependencies = [
- "chrono",
- "futures-retry-policies-core",
- "retry-policies 0.2.1",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "futures-retry-policies-core"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "222776451f4c0381948cc6ab590f674e0216e99738c436e4f09bc9754d7f9933"
-dependencies = [
- "pin-project",
-]
-
-[[package]]
 name = "futures-sink"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3336,7 +3314,10 @@ dependencies = [
 name = "just-retry"
 version = "0.0.1-pre.5"
 dependencies = [
- "retry-policies 0.3.0",
+ "chrono",
+ "retry-policies",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -3690,6 +3671,7 @@ version = "0.0.1-pre.5"
 dependencies = [
  "athena",
  "clap",
+ "just-retry",
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
@@ -3698,7 +3680,6 @@ dependencies = [
  "kitsune-federation-filter",
  "kitsune-jobs",
  "kitsune-observability",
- "kitsune-retry-policies",
  "kitsune-service",
  "kitsune-url",
  "miette",
@@ -3779,7 +3760,7 @@ dependencies = [
  "ahash 0.8.11",
  "derive_more 1.0.0-beta.6",
  "futures-util",
- "kitsune-retry-policies",
+ "just-retry",
  "pin-project-lite",
  "redis",
  "serde",
@@ -3834,14 +3815,6 @@ dependencies = [
  "speedy-uuid",
  "thiserror",
  "url",
-]
-
-[[package]]
-name = "kitsune-retry-policies"
-version = "0.0.1-pre.5"
-dependencies = [
- "futures-retry-policies",
- "retry-policies 0.3.0",
 ]
 
 [[package]]
@@ -6104,17 +6077,6 @@ dependencies = [
 
 [[package]]
 name = "retry-policies"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17dd00bff1d737c40dbcd47d4375281bf4c17933f9eef0a185fc7bacca23ecbd"
-dependencies = [
- "anyhow",
- "chrono",
- "rand 0.8.5",
-]
-
-[[package]]
-name = "retry-policies"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "493b4243e32d6eedd29f9a398896e35c6943a123b55eec97dcaee98310d25810"
@@ -7585,6 +7547,8 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
+ "futures-util",
+ "hashbrown 0.14.3",
  "pin-project-lite",
  "tokio",
  "tracing",

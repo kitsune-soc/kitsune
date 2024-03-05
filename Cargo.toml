@@ -52,7 +52,6 @@ members = [
     "lib/http-compat",
     "lib/http-signatures",
     "lib/just-retry",
-    "lib/kitsune-retry-policies",
     "lib/masto-id-convert",
     "lib/mrf-manifest",
     "lib/mrf-tool",
