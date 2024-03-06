@@ -5,7 +5,7 @@ use std::{
     cell::RefCell,
     sync::{
         atomic::{AtomicI64, Ordering},
-        Arc,
+        Arc, Weak,
     },
     time::{Duration, SystemTime},
 };
@@ -30,23 +30,29 @@ pub enum DeltaDirection {
 /// Handle to adjust the delta of the clock
 #[derive(Clone)]
 pub struct MockHandle {
-    delta: Arc<AtomicI64>,
+    delta: Weak<AtomicI64>,
 }
 
 impl MockHandle {
     /// Adjust the delta by the duration in the direction specified
     pub fn adjust(&self, direction: DeltaDirection, delta: Duration) {
+        let Some(delta_handle) = self.delta.upgrade() else {
+            return;
+        };
+
         let mut delta = delta.as_nanos() as i64;
         if direction == DeltaDirection::Sub {
             delta = -delta;
         }
 
-        self.delta.fetch_add(delta, Ordering::AcqRel);
+        delta_handle.fetch_add(delta, Ordering::AcqRel);
     }
 
     /// Set the delta to the absolute value
     pub fn set_delta(&self, delta: i64) {
-        self.delta.store(delta, Ordering::Release);
+        if let Some(delta_handle) = self.delta.upgrade() {
+            delta_handle.store(delta, Ordering::Release);
+        }
     }
 }
 
@@ -82,7 +88,7 @@ impl Clock {
         let delta = Arc::new(AtomicI64::default());
 
         let mock_handle = MockHandle {
-            delta: Arc::clone(&delta),
+            delta: Arc::downgrade(&delta),
         };
         let clock = Self { delta: Some(delta) };
 
