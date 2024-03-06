@@ -32,8 +32,8 @@ axum-extra = { version = "0.9.2", features = [
 axum-flash = "0.8.0"
 blowocking = { path = "../lib/blowocking" }
 bytes = "1.5.0"
-chrono = { version = "0.4.34", default-features = false }
-clap = { version = "4.5.1", features = ["derive", "wrap_help"] }
+chrono = { version = "0.4.35", default-features = false }
+clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
 der = { version = "0.7.8", features = ["std"] }
 diesel = "2.1.4"
