@@ -2,10 +2,10 @@
 #![deny(missing_docs)]
 
 use std::{
-    mem,
+    cell::RefCell,
     sync::{
         atomic::{AtomicI64, Ordering},
-        Arc, RwLock,
+        Arc,
     },
     time::{Duration, SystemTime},
 };
@@ -14,7 +14,7 @@ thread_local! {
     /// Thread-local clock
     ///
     /// Defaults to a default [`Clock`], not to a `None` since clocks are cheap to instantiate
-    static THREAD_CLOCK: RwLock<Clock> = RwLock::new(Clock::default());
+    static THREAD_CLOCK: RefCell<Clock> = RefCell::new(Clock::default());
 }
 
 /// Duration the delta should be adjusted in
@@ -57,7 +57,7 @@ pub struct ClockGuard {
 
 impl Drop for ClockGuard {
     fn drop(&mut self) {
-        THREAD_CLOCK.with(|clock| *clock.write().unwrap() = self.old_clock.take().unwrap());
+        THREAD_CLOCK.with(|clock| clock.replace(self.old_clock.take().unwrap()));
     }
 }
 
@@ -94,8 +94,7 @@ impl Clock {
     /// As long as the guard is kept live, the [`now`] function will read the time of this clock
     #[must_use]
     pub fn enter(&self) -> ClockGuard {
-        let old_clock =
-            THREAD_CLOCK.with(|clock| mem::replace(&mut *clock.write().unwrap(), self.clone()));
+        let old_clock = THREAD_CLOCK.with(|clock| clock.replace(self.clone()));
 
         ClockGuard {
             old_clock: Some(old_clock),
@@ -123,7 +122,7 @@ impl Clock {
 /// Read the current time from the thread-local clock
 #[must_use]
 pub fn now() -> SystemTime {
-    THREAD_CLOCK.with(|clock| clock.read().unwrap().now())
+    THREAD_CLOCK.with(|clock| clock.borrow().now())
 }
 
 #[cfg(test)]
