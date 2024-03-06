@@ -11,8 +11,8 @@ harness = false
 
 [dependencies]
 
-[lints]
-workspace = true
-
 [dev-dependencies]
 criterion = "0.5.1"
+
+[lints]
+workspace = true
