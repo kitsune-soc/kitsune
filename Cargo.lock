@@ -178,9 +178,9 @@ checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 
 [[package]]
 name = "arc-swap"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
+checksum = "7b3d0060af21e8d11a926981cc00c6c1541aa91dd64b9f881985c3da1094425f"
 
 [[package]]
 name = "argh"
@@ -2680,6 +2680,7 @@ dependencies = [
  "ring 0.17.8",
  "scoped-futures",
  "thiserror",
+ "tick-tock-mock",
  "tokio",
  "tracing",
 ]
@@ -6843,6 +6844,13 @@ checksum = "8b9ef9bad013ada3808854ceac7b46812a6465ba368859a37e2100283d2d719c"
 dependencies = [
  "cfg-if",
  "once_cell",
+]
+
+[[package]]
+name = "tick-tock-mock"
+version = "0.0.1-pre.5"
+dependencies = [
+ "criterion",
 ]
 
 [[package]]

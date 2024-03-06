@@ -1,0 +1,18 @@
+[package]
+name = "tick-tock-mock"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[[bench]]
+name = "simple_now"
+harness = false
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[lints]
+workspace = true

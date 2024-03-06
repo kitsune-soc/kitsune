@@ -54,6 +54,7 @@ members = [
     "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
+    "lib/tick-tock-mock",
     "lib/tower-http-digest",
     "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
