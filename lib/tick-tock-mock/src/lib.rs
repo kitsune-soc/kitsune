@@ -1,11 +1,11 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-use arc_swap::ArcSwap;
 use std::{
+    mem,
     sync::{
         atomic::{AtomicI64, Ordering},
-        Arc,
+        Arc, RwLock,
     },
     time::{Duration, SystemTime},
 };
@@ -14,7 +14,7 @@ thread_local! {
     /// Thread-local clock
     ///
     /// Defaults to a default [`Clock`], not to a `None` since clocks are cheap to instantiate
-    static THREAD_CLOCK: ArcSwap<Clock> = ArcSwap::new(Arc::new(Clock::default()));
+    static THREAD_CLOCK: RwLock<Clock> = RwLock::new(Clock::default());
 }
 
 /// Duration the delta should be adjusted in
@@ -52,12 +52,12 @@ impl MockHandle {
 
 /// Guard which will reset the thread-local upon drop
 pub struct ClockGuard {
-    old_clock: Arc<Clock>,
+    old_clock: Option<Clock>,
 }
 
 impl Drop for ClockGuard {
     fn drop(&mut self) {
-        THREAD_CLOCK.with(|clock| clock.store(Arc::clone(&self.old_clock)));
+        THREAD_CLOCK.with(|clock| *clock.write().unwrap() = self.old_clock.take().unwrap());
     }
 }
 
@@ -94,8 +94,12 @@ impl Clock {
     /// As long as the guard is kept live, the [`now`] function will read the time of this clock
     #[must_use]
     pub fn enter(&self) -> ClockGuard {
-        let old_clock = THREAD_CLOCK.with(|clock| clock.swap(Arc::new(self.clone())));
-        ClockGuard { old_clock }
+        let old_clock =
+            THREAD_CLOCK.with(|clock| mem::replace(&mut *clock.write().unwrap(), self.clone()));
+
+        ClockGuard {
+            old_clock: Some(old_clock),
+        }
     }
 
     /// Read the current time from the system clock and apply the delta
@@ -119,7 +123,7 @@ impl Clock {
 /// Read the current time from the thread-local clock
 #[must_use]
 pub fn now() -> SystemTime {
-    THREAD_CLOCK.with(|clock| clock.load().now())
+    THREAD_CLOCK.with(|clock| clock.read().unwrap().now())
 }
 
 #[cfg(test)]

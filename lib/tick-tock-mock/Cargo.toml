@@ -10,7 +10,6 @@ name = "simple_now"
 harness = false
 
 [dependencies]
-arc-swap = "1.7.0"
 
 [lints]
 workspace = true

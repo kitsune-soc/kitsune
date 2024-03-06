@@ -6849,7 +6849,6 @@ dependencies = [
 name = "tick-tock-mock"
 version = "0.0.1-pre.5"
 dependencies = [
- "arc-swap",
  "criterion",
 ]
 
