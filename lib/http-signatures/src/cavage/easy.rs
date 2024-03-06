@@ -4,8 +4,10 @@
 //! Integrates with async and offers an incredibly simplistic interface for signing and verifying HTTP signatures
 //!
 
-use super::SafetyCheckError;
-use crate::{cavage::SignatureHeader, BoxError, SIGNATURE_HEADER};
+use crate::{
+    cavage::{SafetyCheckError, SignatureHeader},
+    BoxError, SIGNATURE_HEADER,
+};
 use http::{header::DATE, HeaderValue, Method};
 use miette::Diagnostic;
 use scoped_futures::ScopedFutureWrapper;
