@@ -78,7 +78,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             }
         };
 
-        let ap_id = activity.actor();
+        let ap_id = activity.actor.as_str();
         let Some(remote_user) = state
             .fetcher
             .fetch_account(ap_id.into())

@@ -16,6 +16,7 @@ utoipa = { version = "4.2.0", features = ["chrono", "uuid"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
+serde_test = "1"
 
 [lints]
 workspace = true

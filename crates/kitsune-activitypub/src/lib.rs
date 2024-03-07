@@ -201,16 +201,17 @@ async fn preprocess_object(
         language_detection_config,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
-    let attributed_to = object.attributed_to().ok_or(Error::InvalidDocument)?;
     let user = if let Some(author) = author {
         CowBox::borrowed(author)
     } else {
-        if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
+        if Uri::try_from(&object.attributed_to)?.authority()
+            != Uri::try_from(&object.id)?.authority()
+        {
             return Err(Error::InvalidDocument);
         }
 
         let Some(author) = fetcher
-            .fetch_account(attributed_to.into())
+            .fetch_account(object.attributed_to.as_str().into())
             .await
             .map_err(Error::FetchAccount)?
         else {
