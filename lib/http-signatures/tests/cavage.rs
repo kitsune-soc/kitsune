@@ -1,11 +1,13 @@
 use const_oid::db::rfc5912::RSA_ENCRYPTION;
+use http_signatures::BoxError;
 use pkcs8::{
     der::{asn1::BitStringRef, EncodePem},
     spki::AlgorithmIdentifier,
     LineEnding, SubjectPublicKeyInfoRef,
 };
 use scoped_futures::ScopedFutureExt;
-use std::future;
+use std::{future, time::Duration};
+use tick_tock_mock::DeltaDirection;
 
 mod data;
 
@@ -52,4 +54,31 @@ async fn easy() {
     })
     .await
     .unwrap();
+}
+
+#[tokio::test]
+async fn easy_expires() {
+    let (clock, mock) = tick_tock_mock::Clock::mockable();
+    let _guard = clock.enter();
+
+    let req = self::data::get_request();
+    let signed_request =
+        http_signatures::cavage::easy::sign(req, "Test", &self::data::get_pkcs8_private_key())
+            .await
+            .unwrap();
+
+    // Forward the clock an hour..
+    mock.adjust(DeltaDirection::Add, Duration::from_secs(60 * 60));
+
+    http_signatures::cavage::easy::verify(&signed_request, |_key_id| {
+        future::ready(
+            #[allow(unreachable_code)]
+            {
+                unreachable!() as Result<_, BoxError>
+            },
+        )
+        .scoped()
+    })
+    .await
+    .unwrap_err();
 }

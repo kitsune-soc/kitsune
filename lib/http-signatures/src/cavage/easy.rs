@@ -4,12 +4,14 @@
 //! Integrates with async and offers an incredibly simplistic interface for signing and verifying HTTP signatures
 //!
 
-use super::SafetyCheckError;
-use crate::{cavage::SignatureHeader, BoxError, SIGNATURE_HEADER};
+use crate::{
+    cavage::{SafetyCheckError, SignatureHeader},
+    BoxError, SIGNATURE_HEADER,
+};
 use http::{header::DATE, HeaderValue, Method};
 use miette::Diagnostic;
 use scoped_futures::ScopedFutureWrapper;
-use std::{future::Future, time::SystemTime};
+use std::future::Future;
 use thiserror::Error;
 use tracing::{debug, instrument};
 
@@ -74,7 +76,7 @@ pub async fn sign<B>(
 ) -> Result<http::Request<B>, Error> {
     // First, set/overwrite the `Date` header
     let date_header_value =
-        HeaderValue::from_str(&httpdate::fmt_http_date(SystemTime::now())).unwrap();
+        HeaderValue::from_str(&httpdate::fmt_http_date(tick_tock_mock::now())).unwrap();
     req.headers_mut().insert(DATE, date_header_value);
 
     let headers = match *req.method() {
