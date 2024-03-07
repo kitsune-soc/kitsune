@@ -1,9 +1,5 @@
-use self::{
-    actor::{Actor, ActorType},
-    helper::StringOrObject,
-    object::MediaAttachment,
-};
-use crate::jsonld::RdfNode;
+use self::{actor::Actor, object::MediaAttachment};
+use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use simd_json::{json, OwnedValue};
@@ -49,20 +45,6 @@ pub enum ActivityType {
     Reject,
     Undo,
     Update,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct AttributedToListEntry {
-    pub r#type: ActorType,
-    pub id: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-pub enum AttributedToField {
-    Actor(Actor),
-    Url(String),
-    List(Vec<AttributedToListEntry>),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -124,22 +106,16 @@ pub struct Activity {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: ActivityType,
-    pub actor: StringOrObject<Actor>,
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
+    pub actor: String,
     pub object: ObjectField,
     #[serde(default = "Timestamp::now_utc")]
     pub published: Timestamp,
 }
 
 impl Activity {
-    #[must_use]
-    pub fn actor(&self) -> &str {
-        match self.actor {
-            StringOrObject::Object(ref obj) => &obj.id,
-            StringOrObject::String(ref url) => url,
-        }
-    }
-
     #[must_use]
     pub fn object(&self) -> &str {
         match self.object {
@@ -173,35 +149,40 @@ pub struct Object {
     #[serde(default, rename = "@context")]
     pub context: OwnedValue,
     pub id: String,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: ObjectType,
-    pub attributed_to: AttributedToField,
+    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
+    pub attributed_to: String,
+    #[serde(default)]
+    #[serde(
+        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
+    )]
     pub in_reply_to: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub name: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub summary: Option<String>,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub content: String,
     pub media_type: Option<String>,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::Set::deserialize")]
     pub attachment: Vec<MediaAttachment>,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::Set::deserialize")]
     pub tag: Vec<Tag>,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub sensitive: bool,
     pub published: Timestamp,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::IdSet::deserialize")]
     pub to: Vec<String>,
     #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::IdSet::deserialize")]
     pub cc: Vec<String>,
-}
-
-impl Object {
-    #[must_use]
-    pub fn attributed_to(&self) -> Option<&str> {
-        match self.attributed_to {
-            AttributedToField::Actor(ref actor) => Some(&actor.id),
-            AttributedToField::Url(ref url) => Some(url),
-            AttributedToField::List(ref list) => list.iter().map(|item| item.id.as_str()).next(),
-        }
-    }
 }
 
 impl RdfNode for Object {
@@ -220,8 +201,12 @@ pub enum TagType {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Tag {
     pub id: Option<String>,
+    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: TagType,
+    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
     pub name: String,
     pub href: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
     pub icon: Option<MediaAttachment>,
 }
