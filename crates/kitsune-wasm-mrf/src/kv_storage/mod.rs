@@ -5,9 +5,13 @@ use enum_dispatch::enum_dispatch;
 use std::{error::Error, future::Future};
 use wasmtime::component::Resource;
 
-pub use self::fs::{FsBackend, FsBucketBackend};
+pub use self::{
+    fs::{FsBackend, FsBucketBackend},
+    redis::{RedisBackend, RedisBucketBackend},
+};
 
 mod fs;
+mod redis;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
@@ -29,6 +33,7 @@ pub trait BucketBackend {
 #[derive(From)]
 pub enum BackendDispatch {
     Fs(FsBackend),
+    Redis(RedisBackend),
 }
 
 impl Backend for BackendDispatch {
@@ -37,6 +42,7 @@ impl Backend for BackendDispatch {
     async fn open(&self, name: &str) -> Result<Self::Bucket, BoxError> {
         match self {
             Self::Fs(fs) => fs.open(name).await.map(Into::into),
+            Self::Redis(redis) => redis.open(name).await.map(Into::into),
         }
     }
 }
@@ -44,6 +50,7 @@ impl Backend for BackendDispatch {
 #[enum_dispatch(BucketBackend)]
 pub enum BucketBackendDispatch {
     Fs(FsBucketBackend),
+    Redis(RedisBucketBackend),
 }
 
 #[async_trait]

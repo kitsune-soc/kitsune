@@ -41,7 +41,7 @@ kitsune-search = { path = "../kitsune-search" }
 kitsune-storage = { path = "../kitsune-storage" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
-miette = "7.1.0"
+miette = "7.2.0"
 mime = "0.3.17"
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 password-hash = { version = "0.5.0", features = ["std"] }

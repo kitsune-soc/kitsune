@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
 leb128 = { version = "0.2.5", optional = true }
-miette = { version = "7.1.0", optional = true }
+miette = { version = "7.2.0", optional = true }
 olpc-cjson = { version = "0.1.3", optional = true }
 schemars = { version = "0.8.16", features = ["impl_json_schema", "semver"] }
 semver = { version = "1.0.22", features = ["serde"] }
