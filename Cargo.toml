@@ -95,7 +95,7 @@ license = "AGPL-3.0-or-later"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.7.2"
+cargo-dist-version = "0.11.1"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
