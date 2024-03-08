@@ -35,7 +35,6 @@ pub struct PrepareFetcher {
     embed_client: Option<kitsune_embed::Client>,
     federation_filter: FederationFilter,
     language_detection_config: LanguageDetectionConfig,
-    mrf_service: MrfService,
     post_cache: ArcCache<str, Post>,
     search_backend: AnySearchBackend,
 }

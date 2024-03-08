@@ -81,8 +81,6 @@ pub async fn initialise_state(
     let search_backend =
         prepare::search(&config.search, config.language_detection, &db_pool).await?;
 
-    let mrf_service = MrfService::from_config(&config.mrf).await?;
-
     let prepare_activitypub_fetcher = PrepareActivityPubFetcher::builder()
         .account_cache(prepare::cache(&config.cache, "ACCOUNT-CACHE").await?)
         .account_resource_cache(prepare::cache(&config.cache, "ACCOUNT-RESOURCE-CACHE").await?)
@@ -90,7 +88,6 @@ pub async fn initialise_state(
         .embed_client(embed_client.clone())
         .federation_filter(federation_filter.clone())
         .language_detection_config(config.language_detection)
-        .mrf_service(mrf_service.clone())
         .post_cache(prepare::cache(&config.cache, "POST-CACHE").await?)
         .search_backend(search_backend.clone())
         .build();
@@ -155,6 +152,8 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build()
         .unwrap();
+
+    let mrf_service = MrfService::from_config(&config.mrf).await?;
 
     let notification_service = NotificationService::builder()
         .db_pool(db_pool.clone())
