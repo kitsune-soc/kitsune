@@ -137,7 +137,7 @@ impl MrfService {
     }
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]
-    pub async fn from_directory(config: &MrfConfiguration) -> miette::Result<Self> {
+    pub async fn from_config(config: &MrfConfiguration) -> miette::Result<Self> {
         let storage = match config.storage {
             KvStorage::Fs(FsKvStorage { ref path }) => {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()

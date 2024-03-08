@@ -170,7 +170,7 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build();
 
-    let mrf_service = MrfService::from_directory(&config.mrf).await?;
+    let mrf_service = MrfService::from_config(&config.mrf).await?;
 
     let post_resolver = PostResolver::builder()
         .account(account_service.clone())
