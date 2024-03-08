@@ -16,6 +16,7 @@ use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 use multiplex_pool::RoundRobinStrategy;
 use redis::RedisResult;
 use std::{sync::Arc, time::Duration};
@@ -29,6 +30,7 @@ pub struct JobDispatcherState {
     db_pool: PgPool,
     federation_filter: FederationFilter,
     mail_sender: Option<MailSender<AsyncSmtpTransport<Tokio1Executor>>>,
+    mrf_service: MrfService,
     url_service: UrlService,
 }
 
@@ -65,6 +67,7 @@ pub async fn run_dispatcher(
         .attachment_service(state.attachment_service)
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter)
+        .mrf_service(state.mrf_service)
         .url_service(state.url_service.clone())
         .build();
     let prepare_deliverer = PrepareDeliverer::builder()

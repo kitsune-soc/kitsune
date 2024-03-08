@@ -3446,6 +3446,7 @@ dependencies = [
  "kitsune-type",
  "kitsune-url",
  "kitsune-util",
+ "kitsune-wasm-mrf",
  "kitsune-webfinger",
  "mime",
  "mime_guess",
@@ -3627,6 +3628,7 @@ dependencies = [
  "kitsune-search",
  "kitsune-service",
  "kitsune-url",
+ "kitsune-wasm-mrf",
  "kitsune-webfinger",
  "typed-builder",
 ]
@@ -3683,6 +3685,7 @@ dependencies = [
  "kitsune-observability",
  "kitsune-service",
  "kitsune-url",
+ "kitsune-wasm-mrf",
  "miette",
  "mimalloc",
  "multiplex-pool",

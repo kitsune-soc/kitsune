@@ -4,6 +4,7 @@ use http_body::Frame;
 use http_body_util::StreamBody;
 use pin_project::pin_project;
 use std::{
+    borrow::Cow,
     fmt::{self, Debug},
     pin::Pin,
     task::{self, Poll},
@@ -66,6 +67,12 @@ impl Debug for Body {
 impl From<Bytes> for Body {
     fn from(value: Bytes) -> Self {
         Self::data(value)
+    }
+}
+
+impl From<Cow<'_, str>> for Body {
+    fn from(value: Cow<'_, str>) -> Self {
+        Self::data(value.into_owned())
     }
 }
 

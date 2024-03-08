@@ -7,6 +7,7 @@ use kitsune_db::model::{account::Account, user::User};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::ap::Activity;
+use kitsune_wasm_mrf::{MrfService, Outcome};
 use sha2::{Digest, Sha256};
 use std::pin::pin;
 use typed_builder::TypedBuilder;
@@ -20,6 +21,7 @@ pub struct Deliverer {
     #[builder(default = Client::builder().user_agent(USER_AGENT).unwrap().build())]
     client: Client,
     federation_filter: FederationFilter,
+    mrf_service: MrfService,
 }
 
 impl Deliverer {
@@ -40,7 +42,11 @@ impl Deliverer {
             return Ok(());
         }
 
-        let body = simd_json::to_string(&activity)?;
+        let body = match self.mrf_service.handle_outgoing(activity).await? {
+            Outcome::Accept(body) => body,
+            Outcome::Reject => todo!(),
+        };
+
         let body_digest = base64_simd::STANDARD.encode_to_string(Sha256::digest(body.as_bytes()));
         let digest_header = format!("sha-256={body_digest}");
 

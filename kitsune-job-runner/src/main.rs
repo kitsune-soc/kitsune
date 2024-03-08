@@ -5,6 +5,7 @@ use kitsune_federation_filter::FederationFilter;
 use kitsune_job_runner::JobDispatcherState;
 use kitsune_service::{attachment::AttachmentService, prepare};
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 use miette::IntoDiagnostic;
 use std::path::PathBuf;
 
@@ -34,6 +35,7 @@ async fn main() -> miette::Result<()> {
         .await
         .into_diagnostic()?;
 
+    let mrf_service = MrfService::from_config(&config.mrf).await?;
     let url_service = UrlService::builder()
         .domain(config.url.domain)
         .scheme(config.url.scheme)
@@ -58,6 +60,7 @@ async fn main() -> miette::Result<()> {
                 .map(prepare::mail_sender)
                 .transpose()?,
         )
+        .mrf_service(mrf_service)
         .url_service(url_service)
         .build();
 
