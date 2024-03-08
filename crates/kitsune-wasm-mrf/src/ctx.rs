@@ -5,6 +5,7 @@ use wasmtime::{component::ResourceTable, Engine, Store};
 use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
 
 pub struct KvContext {
+    pub module_name: Option<String>,
     pub storage: Arc<kv_storage::BackendDispatch>,
     pub buckets: Slab<kv_storage::BucketBackendDispatch>,
 }
@@ -40,6 +41,7 @@ pub fn construct_store(
         engine,
         Context {
             kv_ctx: KvContext {
+                module_name: None,
                 storage,
                 buckets: Slab::new(),
             },

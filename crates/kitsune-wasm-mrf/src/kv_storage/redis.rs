@@ -2,7 +2,6 @@ use super::BoxError;
 use miette::IntoDiagnostic;
 use redis::{aio::ConnectionManager, AsyncCommands};
 
-const POOL_SIZE: usize = 5;
 const REDIS_NAMESPACE: &str = "MRF-KV-STORE";
 
 pub struct RedisBackend {
@@ -10,10 +9,10 @@ pub struct RedisBackend {
 }
 
 impl RedisBackend {
-    pub async fn from_client(client: redis::Client) -> miette::Result<Self> {
+    pub async fn from_client(client: redis::Client, pool_size: usize) -> miette::Result<Self> {
         let pool = multiplex_pool::Pool::from_producer(
             || client.get_connection_manager(),
-            POOL_SIZE,
+            pool_size,
             multiplex_pool::RoundRobinStrategy::default(),
         )
         .await

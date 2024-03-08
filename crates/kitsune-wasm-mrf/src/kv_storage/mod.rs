@@ -63,7 +63,12 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         &mut self,
         name: String,
     ) -> wasmtime::Result<Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>>> {
-        let module_name = todo!();
+        let module_name = self
+            .kv_ctx
+            .module_name
+            .as_ref()
+            .expect("[Bug] Module name not set");
+
         let bucket = match self.kv_ctx.storage.open(&name, module_name).await {
             Ok(bucket) => bucket,
             Err(error) => {

@@ -6,7 +6,9 @@ use self::{
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
-use kitsune_config::mrf::{Configuration as MrfConfiguration, FsKvStorage, KvStorage};
+use kitsune_config::mrf::{
+    Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
+};
 use kitsune_type::ap::Activity;
 use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::{Manifest, ManifestV1};
@@ -140,6 +142,12 @@ impl MrfService {
             KvStorage::Fs(FsKvStorage { ref path }) => {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()
             }
+            KvStorage::Redis(RedisKvStorage { ref url, pool_size }) => {
+                let client = redis::Client::open(url.as_str()).into_diagnostic()?;
+                kv_storage::RedisBackend::from_client(client, pool_size.get())
+                    .await?
+                    .into()
+            }
         };
 
         let mut engine_config = Config::new();
@@ -216,6 +224,8 @@ impl MrfService {
                 mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
                     .await
                     .map_err(Error::Runtime)?;
+
+            store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
 
             let result = mrf
                 .call_transform(&mut store, &module.config, direction, &activity)
