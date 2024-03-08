@@ -18,7 +18,11 @@ type BoxError = Box<dyn Error + Send + Sync>;
 pub trait Backend {
     type Bucket: BucketBackend;
 
-    fn open(&self, name: &str) -> impl Future<Output = Result<Self::Bucket, BoxError>> + Send;
+    fn open(
+        &self,
+        module_name: &str,
+        name: &str,
+    ) -> impl Future<Output = Result<Self::Bucket, BoxError>> + Send;
 }
 
 #[enum_dispatch]
@@ -39,10 +43,10 @@ pub enum BackendDispatch {
 impl Backend for BackendDispatch {
     type Bucket = BucketBackendDispatch;
 
-    async fn open(&self, name: &str) -> Result<Self::Bucket, BoxError> {
+    async fn open(&self, module_name: &str, name: &str) -> Result<Self::Bucket, BoxError> {
         match self {
-            Self::Fs(fs) => fs.open(name).await.map(Into::into),
-            Self::Redis(redis) => redis.open(name).await.map(Into::into),
+            Self::Fs(fs) => fs.open(module_name, name).await.map(Into::into),
+            Self::Redis(redis) => redis.open(module_name, name).await.map(Into::into),
         }
     }
 }
@@ -59,7 +63,8 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         &mut self,
         name: String,
     ) -> wasmtime::Result<Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>>> {
-        let bucket = match self.kv_ctx.storage.open(&name).await {
+        let module_name = todo!();
+        let bucket = match self.kv_ctx.storage.open(&name, module_name).await {
             Ok(bucket) => bucket,
             Err(error) => {
                 error!(?error, "failed to open bucket");

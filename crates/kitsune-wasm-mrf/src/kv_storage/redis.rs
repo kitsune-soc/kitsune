@@ -1,19 +1,34 @@
 use super::BoxError;
+use miette::IntoDiagnostic;
 use redis::{aio::ConnectionManager, AsyncCommands};
 
+const POOL_SIZE: usize = 5;
 const REDIS_NAMESPACE: &str = "MRF-KV-STORE";
 
 pub struct RedisBackend {
-    module_name: String,
     pool: multiplex_pool::Pool<ConnectionManager>,
+}
+
+impl RedisBackend {
+    pub async fn from_client(client: redis::Client) -> miette::Result<Self> {
+        let pool = multiplex_pool::Pool::from_producer(
+            || client.get_connection_manager(),
+            POOL_SIZE,
+            multiplex_pool::RoundRobinStrategy::default(),
+        )
+        .await
+        .into_diagnostic()?;
+
+        Ok(Self { pool })
+    }
 }
 
 impl super::Backend for RedisBackend {
     type Bucket = RedisBucketBackend;
 
-    async fn open(&self, name: &str) -> Result<Self::Bucket, BoxError> {
+    async fn open(&self, module_name: &str, name: &str) -> Result<Self::Bucket, BoxError> {
         Ok(RedisBucketBackend {
-            name: format!("{REDIS_NAMESPACE}:{}:{name}", self.module_name),
+            name: format!("{REDIS_NAMESPACE}:{module_name}:{name}"),
             pool: self.pool.clone(),
         })
     }

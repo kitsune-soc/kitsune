@@ -20,9 +20,9 @@ impl FsBackend {
 impl Backend for FsBackend {
     type Bucket = FsBucketBackend;
 
-    async fn open(&self, name: &str) -> Result<Self::Bucket, BoxError> {
+    async fn open(&self, module_name: &str, name: &str) -> Result<Self::Bucket, BoxError> {
         self.inner
-            .open_tree(name)
+            .open_tree(format!("{module_name}:{name}"))
             .map(|tree| FsBucketBackend { inner: tree })
             .map_err(Into::into)
     }
