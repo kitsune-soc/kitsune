@@ -337,7 +337,11 @@ impl Response {
     /// - The body isn't a UTF-8 encoded string
     pub async fn text(self) -> Result<String> {
         let body = self.bytes().await?;
-        String::from_utf8(body.to_vec()).map_err(Error::new)
+        // `.to_owned()` as the same performance overhead as calling `.to_vec()` on the `Bytes` body.
+        // Therefore we can circumvent unsafe usage here by simply calling `.to_owned()` on the string slice at no extra cost.
+        simdutf8::basic::from_utf8(&body)
+            .map(ToOwned::to_owned)
+            .map_err(Error::new)
     }
 
     /// Read the body and deserialise it as JSON into a `serde` enabled structure

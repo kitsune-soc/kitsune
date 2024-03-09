@@ -213,7 +213,9 @@ mod tests {
 
     #[test]
     fn unit() {
+        #[allow(clippy::let_unit_value)]
         let data = ();
+
         assert_eq!(
             Set::deserialize(into_deserializer(data)),
             Ok(Vec::<u32>::new())

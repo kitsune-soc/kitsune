@@ -81,7 +81,7 @@ impl Resolver for Webfinger {
         let mut username = username;
         let mut domain = domain;
 
-        let original_acct = format!("acct:{username}@{domain}");
+        let original_acct = format!("acct:{}@{domain}", urlencoding::encode(username));
 
         let mut acct_buf: String;
         let mut acct = original_acct.as_str();

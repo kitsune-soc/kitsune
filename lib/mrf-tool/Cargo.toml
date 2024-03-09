@@ -1,0 +1,21 @@
+[package]
+name = "mrf-tool"
+description = "Tool for preparing and introspecting WASM MRFs"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
+miette = { version = "7.2.0", features = ["fancy"] }
+mrf-manifest = { path = "../mrf-manifest", features = [
+    "encode",
+    "parse",
+    "serialise",
+] }
+serde_json = "1.0.114"
+wasmparser = "0.201.0"
+
+[lints]
+workspace = true

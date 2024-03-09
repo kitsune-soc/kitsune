@@ -13,6 +13,7 @@ use kitsune_federation_filter::FederationFilter;
 use kitsune_search::AnySearchBackend;
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 use kitsune_webfinger::Webfinger;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
@@ -22,6 +23,7 @@ pub struct PrepareDeliverer {
     attachment_service: AttachmentService,
     db_pool: PgPool,
     federation_filter: FederationFilter,
+    mrf_service: MrfService,
     url_service: UrlService,
 }
 
@@ -41,6 +43,7 @@ pub struct PrepareFetcher {
 pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer> {
     let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()
         .federation_filter(prepare.federation_filter)
+        .mrf_service(prepare.mrf_service)
         .build();
 
     let inbox_resolver = InboxResolver::new(prepare.db_pool.clone());

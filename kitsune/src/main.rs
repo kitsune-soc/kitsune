@@ -40,6 +40,7 @@ async fn boot() -> miette::Result<()> {
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter.clone())
         .mail_sender(state.service.mailing.sender())
+        .mrf_service(state.service.mrf.clone())
         .url_service(state.service.url.clone())
         .build();
 

@@ -13,7 +13,8 @@ eula = false
 
 [dependencies]
 athena = { path = "../lib/athena" }
-clap = { version = "4.5.1", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
+just-retry = { path = "../lib/just-retry" }
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
@@ -22,10 +23,10 @@ kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
-kitsune-retry-policies = { path = "../lib/kitsune-retry-policies" }
 kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
-miette = { version = "7.1.0", features = ["fancy"] }
+kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
+miette = { version = "7.2.0", features = ["fancy"] }
 mimalloc = "0.1.39"
 multiplex-pool = { path = "../lib/multiplex-pool" }
 redis = { version = "0.24.0", default-features = false, features = [

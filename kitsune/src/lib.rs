@@ -40,6 +40,7 @@ use kitsune_service::{
     user::UserService,
 };
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
@@ -152,6 +153,8 @@ pub async fn initialise_state(
         .build()
         .unwrap();
 
+    let mrf_service = MrfService::from_config(&config.mrf).await?;
+
     let notification_service = NotificationService::builder()
         .db_pool(db_pool.clone())
         .build();
@@ -225,6 +228,7 @@ pub async fn initialise_state(
             custom_emoji: custom_emoji_service,
             job: job_service,
             mailing: mailing_service,
+            mrf: mrf_service,
             notification: notification_service,
             post: post_service,
             instance: instance_service,

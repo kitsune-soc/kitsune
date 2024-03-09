@@ -14,7 +14,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::task::JoinSet;
+use tokio_util::task::TaskTracker;
 
 #[derive(Clone)]
 struct JobCtx;
@@ -96,11 +96,13 @@ async fn main() {
             .unwrap();
     }
 
-    let mut jobs = JoinSet::new();
+    let jobs = TaskTracker::new();
+    jobs.close();
+
     loop {
         if tokio::time::timeout(
             Duration::from_secs(5),
-            queue.spawn_jobs(20, Arc::new(()), &mut jobs),
+            queue.spawn_jobs(20, Arc::new(()), &jobs),
         )
         .await
         .is_err()
@@ -108,6 +110,7 @@ async fn main() {
             return;
         }
 
-        while jobs.join_next().await.is_some() {}
+        jobs.wait().await;
+        println!("spawned");
     }
 }

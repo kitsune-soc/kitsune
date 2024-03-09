@@ -136,6 +136,9 @@ default-language = "en"
 [messaging]
 type = "in-process"
 
+[mrf]
+module-dir = "mrf-modules"
+
 # OIDC configuration
 #
 # Kitsune can use an OIDC service to manage logins

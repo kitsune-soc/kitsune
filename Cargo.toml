@@ -40,6 +40,8 @@ members = [
     "crates/kitsune-type",
     "crates/kitsune-url",
     "crates/kitsune-util",
+    "crates/kitsune-wasm-mrf",
+    "crates/kitsune-wasm-mrf/example-mrf",
     "crates/kitsune-webfinger",
     "kitsune",
     "kitsune-cli",
@@ -49,8 +51,10 @@ members = [
     "lib/cursiv",
     "lib/http-compat",
     "lib/http-signatures",
-    "lib/kitsune-retry-policies",
+    "lib/just-retry",
     "lib/masto-id-convert",
+    "lib/mrf-manifest",
+    "lib/mrf-tool",
     "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
@@ -81,7 +85,7 @@ rust_2018_idioms = "forbid"
 unsafe_code = "deny"
 
 [workspace.package]
-authors = ["Kitsune developers"]
+authors = ["The Kitsune authors"]
 edition = "2021"
 version = "0.0.1-pre.5"
 license = "AGPL-3.0-or-later"
@@ -91,7 +95,7 @@ license = "AGPL-3.0-or-later"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.7.2"
+cargo-dist-version = "0.11.1"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app

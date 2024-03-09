@@ -17,6 +17,7 @@ use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, PgPool};
 use kitsune_type::ap::Activity;
+use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;
 
 /// Parses the body into an ActivityPub activity and verifies the HTTP signature
@@ -43,11 +44,37 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         let (mut parts, body) = req.with_limited_body().into_parts();
         parts.uri = original_uri;
 
-        let activity: Activity = match body.collect().await {
-            Ok(body) => simd_json::from_reader(body.aggregate().reader()).map_err(Error::from)?,
+        let aggregated_body = match body.collect().await {
+            Ok(body) => body.to_bytes(),
             Err(error) => {
                 debug!(?error, "Failed to buffer body");
                 return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+            }
+        };
+
+        let activity: Activity =
+            simd_json::from_reader(aggregated_body.clone().reader()).map_err(Error::from)?;
+        let Ok(str_body) = simdutf8::basic::from_utf8(&aggregated_body) else {
+            debug!("Malformed body. Not UTF-8");
+            return Err(StatusCode::BAD_REQUEST.into_response());
+        };
+
+        let Outcome::Accept(str_body) = state
+            .service
+            .mrf
+            .handle_incoming(activity.r#type.as_ref(), str_body)
+            .await
+            .map_err(Error::from)?
+        else {
+            debug!("sending rejection");
+            return Err(StatusCode::BAD_REQUEST.into_response());
+        };
+
+        let activity: Activity = match simd_json::from_reader(str_body.as_ref().as_bytes()) {
+            Ok(activity) => activity,
+            Err(error) => {
+                debug!(?error, "Malformed activity");
+                return Err(StatusCode::BAD_REQUEST.into_response());
             }
         };
 

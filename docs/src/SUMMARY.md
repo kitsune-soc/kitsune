@@ -16,6 +16,7 @@
   - [Job Scheduler](./configuring/job-scheduler.md)
   - [Language Detection](./configuring/language-detection.md)
   - [Link embedding](./configuring/link-embedding.md)
+  - [MRF (Message Rewrite Facility)](./configuring/mrf.md)
   - [Messaging](./configuring/messaging.md)
   - [OIDC (OpenID Connect)](./configuring/oidc.md)
   - [OpenTelemetry](./configuring/opentelemetry.md)

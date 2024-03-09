@@ -9,7 +9,7 @@ license.workspace = true
 globset = "0.4.14"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-type = { path = "../kitsune-type" }
-miette = "7.1.0"
+miette = "7.2.0"
 thiserror = "1.0.57"
 url = "2.5.0"
 

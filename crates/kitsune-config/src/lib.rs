@@ -7,6 +7,7 @@ pub mod instance;
 pub mod job_queue;
 pub mod language_detection;
 pub mod messaging;
+pub mod mrf;
 pub mod oidc;
 pub mod open_telemetry;
 pub mod search;
@@ -31,6 +32,7 @@ pub struct Configuration {
     pub job_queue: job_queue::Configuration,
     pub language_detection: language_detection::Configuration,
     pub messaging: messaging::Configuration,
+    pub mrf: mrf::Configuration,
     pub opentelemetry: Option<open_telemetry::Configuration>,
     pub server: server::Configuration,
     pub search: search::Configuration,

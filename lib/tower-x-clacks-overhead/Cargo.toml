@@ -6,7 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-http = "1.0.0"
+http = "1.1.0"
 itertools = { version = "0.12.1", default-features = false }
 pin-project-lite = "0.2.13"
 tower-layer = "0.3.2"

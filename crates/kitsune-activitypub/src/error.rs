@@ -59,6 +59,9 @@ pub enum Error {
     #[error("Missing host")]
     MissingHost,
 
+    #[error(transparent)]
+    Mrf(#[from] kitsune_wasm_mrf::Error),
+
     #[error("Not found")]
     NotFound,
 

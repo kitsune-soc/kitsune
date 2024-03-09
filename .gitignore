@@ -18,6 +18,9 @@ target-analyzer
 # Production configuration file
 /config.toml
 
+# MRF directory
+/mrf-modules
+
 # Devenv stuff
 /result
 /.devenv

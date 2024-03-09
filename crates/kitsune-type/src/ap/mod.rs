@@ -3,6 +3,7 @@ use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use simd_json::{json, OwnedValue};
+use strum::AsRefStr;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
@@ -33,7 +34,7 @@ pub fn ap_context() -> OwnedValue {
     ])
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(AsRefStr, Clone, Debug, Deserialize, Serialize)]
 pub enum ActivityType {
     Accept,
     Announce,

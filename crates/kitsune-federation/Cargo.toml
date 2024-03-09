@@ -16,6 +16,7 @@ kitsune-federation-filter = { path = "../kitsune-federation-filter" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-service = { path = "../kitsune-service" }
 kitsune-url = { path = "../kitsune-url" }
+kitsune-wasm-mrf = { path = "../kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 typed-builder = "0.18.1"
 
