@@ -18,7 +18,7 @@ use kitsune_type::ap::{
     ap_context,
     emoji::Emoji,
     object::{MediaAttachment, MediaAttachmentType},
-    AttributedToField, Object, ObjectType, Tag, TagType,
+    Object, ObjectType, Tag, TagType,
 };
 use kitsune_util::try_join;
 use mime::Mime;
@@ -177,7 +177,7 @@ impl IntoObject for Post {
             context: ap_context(),
             id: self.url,
             r#type: ObjectType::Note,
-            attributed_to: AttributedToField::Url(account_url),
+            attributed_to: account_url,
             in_reply_to,
             sensitive: self.is_sensitive,
             name: None,

@@ -3,16 +3,17 @@ name = "kitsune-captcha"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 enum_dispatch = "0.3.12"
-http = "1.0.0"
+http = "1.1.0"
 kitsune-http-client = { path = "../kitsune-http-client" }
-serde = { version = "1.0.195", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
-strum = { version = "0.25.0", features = ["derive"] }
-thiserror = "1.0.56"
+strum = { version = "0.26.1", features = ["derive"] }
+thiserror = "1.0.57"
 typed-builder = "0.18.1"
 
 [lints]

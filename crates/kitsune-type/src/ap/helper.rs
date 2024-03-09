@@ -1,34 +1,4 @@
 use super::{Object, PUBLIC_IDENTIFIER};
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-pub enum StringOrObject<T> {
-    String(String),
-    Object(T),
-}
-
-impl<T> StringOrObject<T> {
-    pub fn into_string(self) -> Option<String> {
-        match self {
-            Self::String(str) => Some(str),
-            Self::Object(..) => None,
-        }
-    }
-
-    pub fn into_object(self) -> Option<T> {
-        match self {
-            Self::String(..) => None,
-            Self::Object(obj) => Some(obj),
-        }
-    }
-}
-
-impl<T> Default for StringOrObject<T> {
-    fn default() -> Self {
-        Self::String(String::new())
-    }
-}
 
 pub trait CcTo {
     fn cc(&self) -> &[String];

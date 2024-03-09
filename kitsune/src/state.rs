@@ -1,5 +1,6 @@
 use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum_extra::extract::cookie;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::{event::PostEventEmitter, traits::Fetcher};
 use kitsune_db::PgPool;
 use kitsune_email::MailingService;
@@ -12,6 +13,7 @@ use kitsune_service::{
     timeline::TimelineService, user::UserService,
 };
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 use std::{ops::Deref, sync::Arc};
 
 #[cfg(feature = "mastodon-api")]
@@ -58,6 +60,7 @@ impl_from_ref! {
         FederationFilter => |input: &Zustand| input.federation_filter.clone(),
         JobService => |input: &Zustand| input.service.job.clone(),
         MailingService => |input: &Zustand| input.service.mailing.clone(),
+        MrfService => |input: &Zustand| input.service.mrf.clone(),
         NotificationService => |input: &Zustand| input.service.notification.clone(),
         PostService => |input: &Zustand| input.service.post.clone(),
         SearchService => |input: &Zustand| input.service.search.clone(),
@@ -140,6 +143,7 @@ pub struct Service {
     pub custom_emoji: CustomEmojiService,
     pub job: JobService,
     pub mailing: MailingService,
+    pub mrf: MrfService,
     pub notification: NotificationService,
     pub post: PostService,
     pub instance: InstanceService,
@@ -155,6 +159,7 @@ pub struct ZustandInner {
     pub event_emitter: EventEmitter,
     pub federation_filter: FederationFilter,
     pub fetcher: Arc<dyn Fetcher>,
+    pub language_detection_config: LanguageDetectionConfig,
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: MastodonMapper,
     pub oauth2: OAuth2Service,

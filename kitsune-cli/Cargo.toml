@@ -3,6 +3,7 @@ name = "kitsune-cli"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 build = "build.rs"
 
 [package.metadata.wix]
@@ -12,17 +13,17 @@ license = false
 eula = false
 
 [dependencies]
-clap = { version = "4.4.18", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
 diesel = "2.1.4"
 diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-db = { path = "../crates/kitsune-db" }
-miette = { version = "5.10.0", features = ["fancy"] }
-serde = { version = "1.0.195", features = ["derive"] }
+miette = { version = "7.2.0", features = ["fancy"] }
+serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
-tokio = { version = "1.35.1", features = ["full"] }
+tokio = { version = "1.36.0", features = ["full"] }
 tracing-subscriber = "0.3.18"
 
 [build-dependencies]

@@ -52,6 +52,7 @@ impl Fetcher {
             .db_pool(&self.db_pool)
             .embed_client(self.embed_client.as_ref())
             .fetcher(self)
+            .language_detection_config(self.language_detection_config)
             .object(Box::new(object))
             .search_backend(&self.search_backend)
             .build();

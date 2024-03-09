@@ -3,26 +3,32 @@ name = "kitsune-webfinger"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 async-trait = "0.1.77"
-autometrics = { version = "1.0.0", default-features = false }
-deadpool-redis = "0.14.0"
+autometrics = { version = "1.0.1", default-features = false }
 futures-util = "0.3.30"
-http = "1.0.0"
+http = "1.1.0"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
+multiplex-pool = { path = "../../lib/multiplex-pool" }
+redis = { version = "0.24.0", default-features = false, features = [
+    "connection-manager",
+    "tokio-comp",
+] }
 tracing = "0.1.40"
+urlencoding = "2.1.3"
 
 [dev-dependencies]
 http-body-util = "0.1.0"
-hyper = "1.1.0"
+hyper = "1.2.0"
 pretty_assertions = "1.4.0"
 simd-json = "0.13.8"
-tokio = { version = "1.35.1", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 
 [lints]

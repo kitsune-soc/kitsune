@@ -3,17 +3,20 @@ name = "kitsune-type"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
-iso8601-timestamp = "0.2.16"
-serde = { version = "1.0.195", features = ["derive"] }
+iso8601-timestamp = "0.2.17"
+serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.8"
 smol_str = { version = "0.2.1", features = ["serde"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
+strum = { version = "0.26.1", features = ["derive"] }
 utoipa = { version = "4.2.0", features = ["chrono", "uuid"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
+serde_test = "1"
 
 [lints]
 workspace = true

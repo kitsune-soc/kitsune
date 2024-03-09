@@ -1,7 +1,8 @@
 #[macro_use]
 extern crate tracing;
 
-use athena::JobQueue;
+use athena::{JobQueue, TaskTracker};
+use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
 use kitsune_email::{
@@ -13,11 +14,12 @@ use kitsune_federation::{
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
-use kitsune_retry_policies::{futures_backoff_policy, RetryPolicy};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
-use std::{ops::ControlFlow, sync::Arc, time::Duration};
-use tokio::task::JoinSet;
+use kitsune_wasm_mrf::MrfService;
+use multiplex_pool::RoundRobinStrategy;
+use redis::RedisResult;
+use std::{sync::Arc, time::Duration};
 use typed_builder::TypedBuilder;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
@@ -28,16 +30,23 @@ pub struct JobDispatcherState {
     db_pool: PgPool,
     federation_filter: FederationFilter,
     mail_sender: Option<MailSender<AsyncSmtpTransport<Tokio1Executor>>>,
+    mrf_service: MrfService,
     url_service: UrlService,
 }
 
-pub fn prepare_job_queue(
+pub async fn prepare_job_queue(
     db_pool: PgPool,
     config: &Configuration,
-) -> Result<JobQueue<KitsuneContextRepo>, deadpool_redis::CreatePoolError> {
+) -> RedisResult<JobQueue<KitsuneContextRepo>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
-    let redis_pool = deadpool_redis::Config::from_url(config.redis_url.as_str())
-        .create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
+    let client = redis::Client::open(config.redis_url.as_str())?;
+    let redis_pool = multiplex_pool::Pool::from_producer(
+        || client.get_connection_manager(),
+        10,
+        RoundRobinStrategy::default(),
+    )
+    .await?;
 
     let queue = JobQueue::builder()
         .context_repository(context_repo)
@@ -58,6 +67,7 @@ pub async fn run_dispatcher(
         .attachment_service(state.attachment_service)
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter)
+        .mrf_service(state.mrf_service)
         .url_service(state.url_service.clone())
         .build();
     let prepare_deliverer = PrepareDeliverer::builder()
@@ -78,28 +88,29 @@ pub async fn run_dispatcher(
         },
     });
 
-    let mut job_joinset = JoinSet::new();
+    let job_queue = Arc::new(job_queue);
+    let job_tracker = TaskTracker::new();
+    job_tracker.close();
+
     loop {
-        let mut backoff_policy = futures_backoff_policy();
-        loop {
-            let result = job_queue
-                .spawn_jobs(
-                    num_job_workers - job_joinset.len(),
-                    Arc::clone(&ctx),
-                    &mut job_joinset,
-                )
-                .await;
+        let _ = (|| {
+            let job_queue = Arc::clone(&job_queue);
+            let ctx = Arc::clone(&ctx);
+            let job_tracker = job_tracker.clone();
 
-            if let ControlFlow::Continue(duration) = backoff_policy.should_retry(result) {
-                tokio::time::sleep(duration).await;
-            } else {
-                break;
+            async move {
+                job_queue
+                    .spawn_jobs(
+                        num_job_workers - job_tracker.len(),
+                        Arc::clone(&ctx),
+                        &job_tracker,
+                    )
+                    .await
             }
-        }
-
-        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, async {
-            while job_joinset.join_next().await.is_some() {}
         })
+        .retry(just_retry::backoff_policy())
         .await;
+
+        let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, job_tracker.wait()).await;
     }
 }

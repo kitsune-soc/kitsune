@@ -3,10 +3,12 @@ name = "kitsune-federation"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [dependencies]
 kitsune-activitypub = { path = "../kitsune-activitypub" }
 kitsune-cache = { path = "../kitsune-cache" }
+kitsune-config = { path = "../kitsune-config" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
@@ -14,6 +16,7 @@ kitsune-federation-filter = { path = "../kitsune-federation-filter" }
 kitsune-search = { path = "../kitsune-search" }
 kitsune-service = { path = "../kitsune-service" }
 kitsune-url = { path = "../kitsune-url" }
+kitsune-wasm-mrf = { path = "../kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "../kitsune-webfinger" }
 typed-builder = "0.18.1"
 

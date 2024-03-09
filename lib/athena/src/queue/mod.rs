@@ -1,27 +1,30 @@
 use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
-use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, Runnable};
+use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, RedisPool, Runnable};
 use ahash::AHashMap;
-use deadpool_redis::Pool as RedisPool;
 use either::Either;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
-use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
+use just_retry::{
+    retry_policies::{policies::ExponentialBackoff, Jitter},
+    JustRetryPolicy, RetryExt, StartTime,
+};
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
     AsyncCommands, RedisResult,
 };
-use retry_policies::{policies::ExponentialBackoff, Jitter, RetryDecision, RetryPolicy};
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
 use std::{
+    ops::ControlFlow,
     pin::pin,
     str::FromStr,
     sync::Arc,
     time::{Duration, SystemTime},
 };
-use tokio::{sync::OnceCell, task::JoinSet, time::Instant};
+use tokio::{sync::OnceCell, time::Instant};
+use tokio_util::task::TaskTracker;
 use typed_builder::TypedBuilder;
 
 mod scheduled;
@@ -177,7 +180,7 @@ where
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
-        let mut redis_conn = self.redis_pool.get().await?;
+        let mut redis_conn = self.redis_pool.get();
         self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
             .query_async(&mut redis_conn)
             .await?;
@@ -189,7 +192,7 @@ where
         &self,
         max_jobs: usize,
     ) -> Result<impl Iterator<Item = JobData> + Clone> {
-        let mut redis_conn = self.redis_pool.get().await?;
+        let mut redis_conn = self.redis_pool.get();
         self.initialise_group(&mut redis_conn).await?;
 
         let StreamAutoClaimReply { claimed_ids, .. }: StreamAutoClaimReply =
@@ -264,13 +267,15 @@ where
                     .jitter(Jitter::Bounded)
                     .build_with_max_retries(self.max_retries);
 
-                if let RetryDecision::Retry { execute_after } = backoff.should_retry(*fail_count) {
+                if let ControlFlow::Continue(delta) =
+                    backoff.should_retry(StartTime::Irrelevant, *fail_count)
+                {
                     let job_meta = JobMeta {
                         job_id: *job_id,
                         fail_count: fail_count + 1,
                     };
 
-                    let backoff_timestamp = Timestamp::from(SystemTime::from(execute_after));
+                    let backoff_timestamp = Timestamp::from(SystemTime::now() + delta);
                     let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
 
                     pipeline.add_command(enqueue_cmd);
@@ -284,7 +289,7 @@ where
         };
 
         {
-            let mut conn = self.redis_pool.get().await?;
+            let mut conn = self.redis_pool.get();
             pipeline.query_async::<_, ()>(&mut conn).await?;
         }
 
@@ -299,7 +304,7 @@ where
     }
 
     async fn reclaim_job(&self, job_data: &JobData) -> Result<()> {
-        let mut conn = self.redis_pool.get().await?;
+        let mut conn = self.redis_pool.get();
         conn.xclaim(
             self.queue_name.as_str(),
             self.consumer_group.as_str(),
@@ -316,7 +321,7 @@ where
         &self,
         max_jobs: usize,
         run_ctx: Arc<<CR::JobContext as Runnable>::Context>,
-        join_set: &mut JoinSet<()>,
+        join_set: &TaskTracker,
     ) -> Result<()> {
         let job_data = self.fetch_job_data(max_jobs).await?;
         let context_stream = self
@@ -357,7 +362,7 @@ where
                         result = &mut run_fut => break result,
                         _ = tick_interval.tick() => {
                             (|| this.reclaim_job(job_data))
-                                .retry(futures_backoff_policy())
+                                .retry(just_retry::backoff_policy())
                                 .await
                                 .expect("Failed to reclaim job");
                         }
@@ -379,7 +384,7 @@ where
                 };
 
                 (|| this.complete_job(&job_state))
-                    .retry(futures_backoff_policy())
+                    .retry(just_retry::backoff_policy())
                     .await
                     .expect("Failed to mark job as completed");
             });

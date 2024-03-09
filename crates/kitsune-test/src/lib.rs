@@ -4,8 +4,14 @@ use diesel_async::RunQueryDsl;
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
-use kitsune_config::database::Configuration as DatabaseConfig;
+use isolang::Language;
+use kitsune_config::{
+    database::Configuration as DatabaseConfig,
+    language_detection::{self, DetectionBackend},
+};
 use kitsune_db::PgPool;
+use multiplex_pool::RoundRobinStrategy;
+use redis::aio::ConnectionManager;
 use scoped_futures::ScopedFutureExt;
 use std::{env, error::Error, panic};
 
@@ -69,20 +75,32 @@ where
     }
 }
 
+#[must_use]
+pub fn language_detection_config() -> language_detection::Configuration {
+    language_detection::Configuration {
+        backend: DetectionBackend::Whichlang,
+        default_language: Language::Eng,
+    }
+}
+
 pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
 where
-    F: FnOnce(deadpool_redis::Pool) -> Fut,
+    F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
     Fut: Future,
 {
     let redis_url = env::var("REDIS_URL").expect("Missing redis URL");
-    let config = deadpool_redis::Config::from_url(redis_url);
-    let pool = config
-        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
-        .unwrap();
+    let client = redis::Client::open(redis_url).unwrap();
+    let pool = multiplex_pool::Pool::from_producer(
+        || client.get_connection_manager(),
+        5,
+        RoundRobinStrategy::default(),
+    )
+    .await
+    .unwrap();
 
     let out = CatchPanic::new(func(pool.clone())).await;
 
-    let mut conn = pool.get().await.unwrap();
+    let mut conn = pool.get();
     let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
 
     match out {

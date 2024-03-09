@@ -4,6 +4,7 @@ use axum::{
     extract::multipart::MultipartError,
     response::{IntoResponse, Response},
 };
+use diesel_async::pooled_connection::bb8;
 use http::StatusCode;
 use kitsune_core::error::{BoxError, HttpError};
 use kitsune_service::error::{Error as ServiceError, PostError};
@@ -22,7 +23,7 @@ pub enum Error {
     ActivityPub(#[from] kitsune_activitypub::error::Error),
 
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
@@ -34,7 +35,7 @@ pub enum Error {
     Database(#[from] diesel::result::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] der::Error),
@@ -54,6 +55,9 @@ pub enum Error {
 
     #[error(transparent)]
     Messaging(kitsune_messaging::BoxError),
+
+    #[error(transparent)]
+    Mrf(#[from] kitsune_wasm_mrf::Error),
 
     #[error(transparent)]
     Multipart(#[from] MultipartError),

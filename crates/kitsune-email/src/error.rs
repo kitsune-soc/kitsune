@@ -1,4 +1,4 @@
-use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
+use diesel_async::pooled_connection::bb8::RunError as DatabasePoolError;
 use miette::Diagnostic;
 use std::{
     error::Error as StdError,

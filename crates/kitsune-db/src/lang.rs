@@ -42,6 +42,7 @@ impl FromSql<sql_types::LanguageIsoCode, Pg> for LanguageIsoCode {
     fn from_sql(
         bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
+        #[allow(unsafe_code)]
         let code_txt = unsafe { str::from_utf8_unchecked(bytes.as_bytes()) };
         let lang = kitsune_language::Language::from_639_3(code_txt)
             .ok_or_else(|| IsoCodeConversionError(code_txt.to_string()))?;

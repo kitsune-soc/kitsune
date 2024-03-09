@@ -58,7 +58,7 @@ impl Issuer for OAuthIssuer {
 
                     Ok::<_, Error>((access_token, refresh_token))
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await
             .map_err(|_| ())?;
@@ -111,7 +111,7 @@ impl Issuer for OAuthIssuer {
 
                     Ok::<_, Error>((new_access_token, refresh_token))
                 }
-                .scope_boxed()
+                .scoped()
             })
             .await
             .map_err(|_| ())?;

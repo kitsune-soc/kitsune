@@ -9,10 +9,13 @@ codegen-units = 1
 lto = true
 strip = true
 
+[profile.dist-smol]
+inherits = "dist"
+opt-level = "z"
+
 [workspace]
 members = [
     "crates/kitsune-activitypub",
-    "crates/kitsune-blocking",
     "crates/kitsune-cache",
     "crates/kitsune-captcha",
     "crates/kitsune-config",
@@ -23,14 +26,12 @@ members = [
     "crates/kitsune-federation",
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
-    "crates/kitsune-http-signatures",
     "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-mastodon",
     "crates/kitsune-messaging",
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
-    "crates/kitsune-retry-policies",
     "crates/kitsune-scss-compiler",
     "crates/kitsune-search",
     "crates/kitsune-service",
@@ -39,16 +40,25 @@ members = [
     "crates/kitsune-type",
     "crates/kitsune-url",
     "crates/kitsune-util",
+    "crates/kitsune-wasm-mrf",
+    "crates/kitsune-wasm-mrf/example-mrf",
     "crates/kitsune-webfinger",
     "kitsune",
     "kitsune-cli",
     "kitsune-job-runner",
     "lib/athena",
+    "lib/blowocking",
     "lib/cursiv",
     "lib/http-compat",
+    "lib/http-signatures",
+    "lib/just-retry",
     "lib/masto-id-convert",
+    "lib/mrf-manifest",
+    "lib/mrf-tool",
+    "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
+    "lib/tick-tock-mock",
     "lib/tower-http-digest",
     "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
@@ -72,18 +82,20 @@ no_effect_underscore_binding = "allow"
 [workspace.lints.rust]
 forbidden_lint_groups = "allow"
 rust_2018_idioms = "forbid"
+unsafe_code = "deny"
 
 [workspace.package]
-authors = ["Kitsune developers"]
+authors = ["The Kitsune authors"]
 edition = "2021"
 version = "0.0.1-pre.5"
+license = "AGPL-3.0-or-later"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.7.2"
+cargo-dist-version = "0.11.1"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app

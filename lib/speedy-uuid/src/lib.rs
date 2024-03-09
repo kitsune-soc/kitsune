@@ -83,7 +83,11 @@ impl DerefMut for Uuid {
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = self.as_ascii_bytes();
+
+        #[allow(unsafe_code)]
+        // Safety: The `uuid-simd` library provides a buffer of correctly encoded UTF-8 bytes
         let display = unsafe { str::from_utf8_unchecked(&bytes) };
+
         write!(f, "{display}")
     }
 }
@@ -282,6 +286,9 @@ mod serde_impl {
             S: serde::Serializer,
         {
             let bytes = self.as_ascii_bytes();
+
+            #[allow(unsafe_code)]
+            // Safety: The `uuid-simd` library provides a buffer of correctly encoded UTF-8 bytes
             serializer.serialize_str(unsafe { str::from_utf8_unchecked(&bytes) })
         }
     }

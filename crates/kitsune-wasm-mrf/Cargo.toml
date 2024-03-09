@@ -1,0 +1,53 @@
+[package]
+name = "kitsune-wasm-mrf"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[dependencies]
+async-trait = "0.1.77"
+derive_more = { version = "1.0.0-beta.6", features = ["from"] }
+enum_dispatch = "0.3.12"
+futures-util = { version = "0.3.30", default-features = false, features = [
+    "alloc",
+] }
+kitsune-config = { path = "../kitsune-config" }
+kitsune-type = { path = "../kitsune-type" }
+miette = "7.2.0"
+mrf-manifest = { path = "../../lib/mrf-manifest", features = ["parse"] }
+multiplex-pool = { path = "../../lib/multiplex-pool" }
+redis = { version = "0.24.0", default-features = false, features = [
+    "connection-manager",
+    "tokio-rustls-comp",
+] }
+simd-json = "0.13.8"
+slab = "0.4.9"
+sled = "0.34.7"
+smol_str = "0.2.1"
+thiserror = "1.0.57"
+tokio = { version = "1.36.0", features = ["fs"] }
+tracing = "0.1.40"
+typed-builder = "0.18.1"
+walkdir = "2.5.0"
+wasmtime = { version = "18.0.2", default-features = false, features = [
+    "addr2line",
+    "async",
+    "component-model",
+    "cranelift",
+    "parallel-compilation",
+    "pooling-allocator",
+    "runtime",
+] }
+wasmtime-wasi = { version = "18.0.2", default-features = false, features = [
+    "preview2",
+] }
+
+[dev-dependencies]
+tempfile = "3.10.1"
+tokio = { version = "1.36.0", features = ["macros", "rt"] }
+tracing-subscriber = "0.3.18"
+
+[lints]
+workspace = true

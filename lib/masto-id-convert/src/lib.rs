@@ -39,15 +39,7 @@ pub fn process_u64(masto_id: u64) -> Uuid {
     let mut rand_data = [0; 10];
     wyrand.fill_bytes(&mut rand_data);
 
-    let mut raw_uuid = [0; 16];
-    let timestamp_ms_be = timestamp_ms.to_be_bytes();
-    raw_uuid[..6].copy_from_slice(&timestamp_ms_be[2..]);
-    raw_uuid[6..].copy_from_slice(&rand_data);
-
-    raw_uuid[6] = (raw_uuid[6] & 0x0F) | 0x70;
-    raw_uuid[8] = (raw_uuid[8] & 0x3F) | 0x80;
-
-    Uuid::from_bytes(raw_uuid)
+    uuid::Builder::from_unix_timestamp_millis(timestamp_ms, &rand_data).into_uuid()
 }
 
 /// Process an ASCII-encoded Mastodon snowflake into a UUID v7 identifier

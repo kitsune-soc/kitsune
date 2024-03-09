@@ -7,6 +7,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream, StreamExt, TryStreamExt};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
+use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::{fetcher::PostFetchOptions, Fetcher as FetcherTrait};
 use kitsune_db::{
     model::{
@@ -22,7 +23,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_language::{DetectionBackend, Language};
+use kitsune_language::Language;
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use kitsune_util::{convert::timestamp_to_uuid, process, sanitize::CleanHtmlExt, CowBox};
@@ -171,6 +172,7 @@ pub struct ProcessNewObject<'a> {
     object: Box<Object>,
     fetcher: &'a dyn FetcherTrait,
     search_backend: &'a AnySearchBackend,
+    language_detection_config: LanguageDetectionConfig,
 }
 
 #[derive(TypedBuilder)]
@@ -196,18 +198,20 @@ async fn preprocess_object(
         mut object,
         fetcher,
         search_backend,
+        language_detection_config,
     }: ProcessNewObject<'_>,
 ) -> Result<PreprocessedObject<'_>> {
-    let attributed_to = object.attributed_to().ok_or(Error::InvalidDocument)?;
     let user = if let Some(author) = author {
         CowBox::borrowed(author)
     } else {
-        if Uri::try_from(attributed_to)?.authority() != Uri::try_from(&object.id)?.authority() {
+        if Uri::try_from(&object.attributed_to)?.authority()
+            != Uri::try_from(&object.id)?.authority()
+        {
             return Err(Error::InvalidDocument);
         }
 
         let Some(author) = fetcher
-            .fetch_account(attributed_to.into())
+            .fetch_account(object.attributed_to.as_str().into())
             .await
             .map_err(Error::FetchAccount)?
         else {
@@ -255,7 +259,7 @@ async fn preprocess_object(
     object.clean_html();
 
     let content_lang =
-        kitsune_language::detect_language(DetectionBackend::default(), object.content.as_str());
+        kitsune_language::detect_language(language_detection_config, object.content.as_str());
 
     Ok(PreprocessedObject {
         user,
@@ -333,7 +337,7 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
 
                 Ok::<_, Error>(new_post)
             }
-            .scope_boxed()
+            .scoped()
         })
         .await?;
 
@@ -400,7 +404,7 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
 
                 Ok::<_, Error>(updated_post)
             }
-            .scope_boxed()
+            .scoped()
         })
         .await?;
 

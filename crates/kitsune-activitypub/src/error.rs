@@ -1,6 +1,5 @@
-use diesel_async::pooled_connection::deadpool::PoolError as DatabasePoolError;
+use diesel_async::pooled_connection::bb8;
 use kitsune_core::error::BoxError;
-use kitsune_http_signatures::ring;
 use rsa::pkcs8::der;
 use std::{
     convert::Infallible,
@@ -19,7 +18,7 @@ pub enum Error {
     Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] DatabasePoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] der::Error),
@@ -57,11 +56,11 @@ pub enum Error {
     #[error(transparent)]
     InvalidUri(#[from] http::uri::InvalidUri),
 
-    #[error(transparent)]
-    KeyRejected(#[from] ring::error::KeyRejected),
-
     #[error("Missing host")]
     MissingHost,
+
+    #[error(transparent)]
+    Mrf(#[from] kitsune_wasm_mrf::Error),
 
     #[error("Not found")]
     NotFound,

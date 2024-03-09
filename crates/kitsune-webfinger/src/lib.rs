@@ -14,6 +14,7 @@ use kitsune_core::{
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
+use redis::aio::ConnectionManager;
 use std::{ptr, sync::Arc, time::Duration};
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
@@ -31,7 +32,7 @@ pub struct Webfinger {
 
 impl Webfinger {
     #[must_use]
-    pub fn with_defaults(redis_conn: deadpool_redis::Pool) -> Self {
+    pub fn with_defaults(redis_conn: multiplex_pool::Pool<ConnectionManager>) -> Self {
         Self::new(Arc::new(
             RedisCache::new(redis_conn, "webfinger", CACHE_DURATION).into(),
         ))
@@ -80,7 +81,7 @@ impl Resolver for Webfinger {
         let mut username = username;
         let mut domain = domain;
 
-        let original_acct = format!("acct:{username}@{domain}");
+        let original_acct = format!("acct:{}@{domain}", urlencoding::encode(username));
 
         let mut acct_buf: String;
         let mut acct = original_acct.as_str();

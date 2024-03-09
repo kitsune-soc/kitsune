@@ -5,7 +5,7 @@
 use crate::{util::TransparentDebug, MessagingBackend, Result};
 use ahash::AHashMap;
 use futures_util::{future, Stream, StreamExt, TryStreamExt};
-use kitsune_retry_policies::{futures_backoff_policy, RetryFutureExt};
+use just_retry::RetryExt;
 use redis::{
     aio::{ConnectionManager, PubSub},
     AsyncCommands, RedisError,
@@ -87,7 +87,7 @@ impl MultiplexActor {
                                     .map(|conn| TransparentDebug(conn.into_pubsub()))
                             }
                         })
-                        .retry(futures_backoff_policy())
+                        .retry(just_retry::backoff_policy())
                         .await
                         .map(|conn| conn.0)
                         .unwrap();

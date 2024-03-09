@@ -5,6 +5,7 @@ use argh::FromArgs;
 use std::path::PathBuf;
 
 mod build_scss;
+mod clean;
 mod util;
 mod watch;
 
@@ -16,6 +17,11 @@ struct BuildScss {
     /// path to the directory
     path: PathBuf,
 }
+
+#[derive(FromArgs)]
+#[argh(subcommand, name = "clean")]
+/// Clean all target directories
+struct Clean {}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "watch")]
@@ -34,6 +40,7 @@ struct Watch {
 #[argh(subcommand)]
 enum Subcommand {
     BuildScss(BuildScss),
+    Clean(Clean),
     Watch(Watch),
 }
 
@@ -50,6 +57,7 @@ fn main() -> anyhow::Result<()> {
     let command: Command = argh::from_env();
     match command.subcommand {
         Subcommand::BuildScss(BuildScss { path }) => build_scss::build_scss(path)?,
+        Subcommand::Clean(..) => clean::clean()?,
         Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
 

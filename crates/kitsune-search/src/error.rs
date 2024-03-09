@@ -1,3 +1,4 @@
+use diesel_async::pooled_connection::bb8;
 use miette::Diagnostic;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
@@ -8,7 +9,7 @@ pub enum Error {
     Database(#[from] diesel::result::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[cfg(feature = "meilisearch")]
     #[error(transparent)]

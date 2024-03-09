@@ -30,6 +30,7 @@ async fn boot() -> miette::Result<()> {
         .wrap_err("Failed to connect to and migrate the database")?;
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
+        .await
         .into_diagnostic()
         .wrap_err("Failed to connect to the Redis instance for the job scheduler")?;
 
@@ -39,6 +40,7 @@ async fn boot() -> miette::Result<()> {
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter.clone())
         .mail_sender(state.service.mailing.sender())
+        .mrf_service(state.service.mrf.clone())
         .url_service(state.service.url.clone())
         .build();
 

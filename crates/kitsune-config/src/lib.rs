@@ -5,7 +5,9 @@ pub mod email;
 pub mod embed;
 pub mod instance;
 pub mod job_queue;
+pub mod language_detection;
 pub mod messaging;
+pub mod mrf;
 pub mod oidc;
 pub mod open_telemetry;
 pub mod search;
@@ -18,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tokio::fs;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Configuration {
     pub cache: cache::Configuration,
@@ -28,7 +30,9 @@ pub struct Configuration {
     pub embed: Option<embed::Configuration>,
     pub instance: instance::Configuration,
     pub job_queue: job_queue::Configuration,
+    pub language_detection: language_detection::Configuration,
     pub messaging: messaging::Configuration,
+    pub mrf: mrf::Configuration,
     pub opentelemetry: Option<open_telemetry::Configuration>,
     pub server: server::Configuration,
     pub search: search::Configuration,

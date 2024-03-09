@@ -9,10 +9,13 @@ pub use self::{
     error::Error,
     queue::{JobDetails, JobQueue},
 };
+pub use tokio_util::task::TaskTracker;
 
 mod error;
 mod macros;
 mod queue;
+
+type RedisPool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
 
 pub trait Runnable {
     /// User-defined context that is getting passed to the job when run

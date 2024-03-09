@@ -6,6 +6,7 @@ use crate::{
     },
 };
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
+use multiplex_pool::RoundRobinStrategy;
 use openidconnect::{
     core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
     AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
@@ -63,8 +64,13 @@ impl OidcService {
         let login_state_store = match config.store {
             StoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
             StoreConfiguration::Redis(ref redis_config) => {
-                let config = deadpool_redis::Config::from_url(redis_config.url.clone());
-                let pool = config.create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+                let client = redis::Client::open(redis_config.url.as_str())?;
+                let pool = multiplex_pool::Pool::from_producer(
+                    || client.get_connection_manager(),
+                    10,
+                    RoundRobinStrategy::default(),
+                )
+                .await?;
 
                 RedisStore::new(pool).into()
             }

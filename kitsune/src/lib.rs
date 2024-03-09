@@ -40,6 +40,7 @@ use kitsune_service::{
     user::UserService,
 };
 use kitsune_url::UrlService;
+use kitsune_wasm_mrf::MrfService;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
@@ -77,15 +78,17 @@ pub async fn initialise_state(
             .build()
     });
 
-    let search_backend = prepare::search(&config.search, &db_pool).await?;
+    let search_backend =
+        prepare::search(&config.search, config.language_detection, &db_pool).await?;
 
     let prepare_activitypub_fetcher = PrepareActivityPubFetcher::builder()
-        .account_cache(prepare::cache(&config.cache, "ACCOUNT-CACHE"))
-        .account_resource_cache(prepare::cache(&config.cache, "ACCOUNT-RESOURCE-CACHE"))
+        .account_cache(prepare::cache(&config.cache, "ACCOUNT-CACHE").await?)
+        .account_resource_cache(prepare::cache(&config.cache, "ACCOUNT-RESOURCE-CACHE").await?)
         .db_pool(db_pool.clone())
         .embed_client(embed_client.clone())
         .federation_filter(federation_filter.clone())
-        .post_cache(prepare::cache(&config.cache, "POST-CACHE"))
+        .language_detection_config(config.language_detection)
+        .post_cache(prepare::cache(&config.cache, "POST-CACHE").await?)
         .search_backend(search_backend.clone())
         .build();
 
@@ -145,10 +148,12 @@ pub async fn initialise_state(
         )
         .db_pool(db_pool.clone())
         .embed_client(embed_client.clone())
-        .mastodon_cache(prepare::cache(&config.cache, "MASTODON-CACHE"))
+        .mastodon_cache(prepare::cache(&config.cache, "MASTODON-CACHE").await?)
         .url_service(url_service.clone())
         .build()
         .unwrap();
+
+    let mrf_service = MrfService::from_config(&config.mrf).await?;
 
     let notification_service = NotificationService::builder()
         .db_pool(db_pool.clone())
@@ -177,6 +182,7 @@ pub async fn initialise_state(
         .embed_client(embed_client.clone())
         .instance_service(instance_service.clone())
         .job_service(job_service.clone())
+        .language_detection_config(config.language_detection)
         .post_resolver(post_resolver)
         .search_backend(search_backend.clone())
         .status_event_emitter(status_event_emitter.clone())
@@ -208,6 +214,7 @@ pub async fn initialise_state(
         },
         federation_filter,
         fetcher,
+        language_detection_config: config.language_detection,
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
         oauth2: oauth2_service,
@@ -221,6 +228,7 @@ pub async fn initialise_state(
             custom_emoji: custom_emoji_service,
             job: job_service,
             mailing: mailing_service,
+            mrf: mrf_service,
             notification: notification_service,
             post: post_service,
             instance: instance_service,

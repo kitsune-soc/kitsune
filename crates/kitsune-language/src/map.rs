@@ -1,4 +1,3 @@
-#[cfg(feature = "whatlang")]
 pub fn whatlang_to_isolang(lang: whatlang::Lang) -> isolang::Language {
     match lang {
         whatlang::Lang::Epo => isolang::Language::Epo,
@@ -73,7 +72,6 @@ pub fn whatlang_to_isolang(lang: whatlang::Lang) -> isolang::Language {
     }
 }
 
-#[cfg(feature = "whichlang")]
 pub fn whichlang_to_isolang(lang: whichlang::Lang) -> isolang::Language {
     match lang {
         whichlang::Lang::Ara => isolang::Language::Ara,

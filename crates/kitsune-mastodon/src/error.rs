@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use diesel_async::pooled_connection::deadpool::PoolError as DeadpoolError;
+use diesel_async::pooled_connection::bb8;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
@@ -10,7 +10,7 @@ pub enum Error {
     Cache(#[from] kitsune_cache::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] DeadpoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Diesel(#[from] diesel::result::Error),

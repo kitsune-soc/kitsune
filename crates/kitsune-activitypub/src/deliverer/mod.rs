@@ -21,7 +21,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_service::attachment::AttachmentService;
-use kitsune_type::ap::{ap_context, helper::StringOrObject, Activity, ActivityType, ObjectField};
+use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use scoped_futures::ScopedFutureExt;
@@ -93,7 +93,7 @@ impl Deliverer {
             context: ap_context(),
             id: format!("{}#accept", follow.url),
             r#type: ActivityType::Accept,
-            actor: StringOrObject::String(followed_account_url),
+            actor: followed_account_url,
             object: ObjectField::Url(follow.url),
             published: Timestamp::now_utc(),
         };
@@ -280,7 +280,7 @@ impl Deliverer {
             context: ap_context(),
             id: format!("{}#reject", follow.url),
             r#type: ActivityType::Reject,
-            actor: StringOrObject::String(followed_account_url),
+            actor: followed_account_url,
             object: ObjectField::Url(follow.url),
             published: Timestamp::now_utc(),
         };

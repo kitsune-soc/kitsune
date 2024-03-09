@@ -54,7 +54,7 @@ pub struct GetEmojiList {
 pub struct EmojiUpload<S> {
     #[garde(custom(is_allowed_filetype))]
     content_type: String,
-    #[garde(length(max = MAX_EMOJI_SHORTCODE_LENGTH))]
+    #[garde(length(chars, max = MAX_EMOJI_SHORTCODE_LENGTH))]
     #[garde(pattern("^([a-zA-Z0-9]_?)*[a-zA-Z0-9]$"))]
     shortcode: String,
     #[garde(skip)]

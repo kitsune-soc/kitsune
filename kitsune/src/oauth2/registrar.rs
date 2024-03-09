@@ -106,8 +106,8 @@ impl Registrar for OAuthRegistrar {
         let mut client_query = oauth2_applications::table.find(client_id).into_boxed();
 
         if let Some(passphrase) = passphrase {
-            let passphrase =
-                str::from_utf8(passphrase).map_err(|_| RegistrarError::PrimitiveError)?;
+            let passphrase = simdutf8::basic::from_utf8(passphrase)
+                .map_err(|_| RegistrarError::PrimitiveError)?;
             client_query = client_query.filter(oauth2_applications::secret.eq(passphrase));
         }
 

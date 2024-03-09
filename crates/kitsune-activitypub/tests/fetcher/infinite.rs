@@ -8,10 +8,10 @@ use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::{build_ap_response, database_test};
+use kitsune_test::{build_ap_response, database_test, language_detection_config};
 use kitsune_type::ap::{
     actor::{Actor, ActorType, PublicKey},
-    ap_context, AttributedToField, Object, ObjectType, PUBLIC_IDENTIFIER,
+    ap_context, Object, ObjectType, PUBLIC_IDENTIFIER,
 };
 use kitsune_webfinger::Webfinger;
 use std::{
@@ -65,7 +65,7 @@ async fn fetch_infinitely_long_reply_chain() {
                             context: ap_context(),
                             id: format!("https://example.com/notes/{note_id}"),
                             r#type: ObjectType::Note,
-                            attributed_to: AttributedToField::Url(author.id.clone()),
+                            attributed_to: author.id.clone(),
                             in_reply_to: Some(format!("https://example.com/notes/{}", note_id + 1)),
                             name: None,
                             summary: None,
@@ -103,6 +103,7 @@ async fn fetch_infinitely_long_reply_chain() {
                     })
                     .unwrap(),
                 )
+                .language_detection_config(language_detection_config())
                 .search_backend(NoopSearchService)
                 .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))))
                 .account_cache(Arc::new(NoopCache.into()))

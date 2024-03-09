@@ -1,4 +1,4 @@
-use kitsune_http_signatures::ring;
+use diesel_async::pooled_connection::bb8;
 use std::{
     error::Error as StdError,
     fmt::{Debug, Display},
@@ -44,7 +44,7 @@ pub enum Error {
     Attachment(#[from] AttachmentError),
 
     #[error(transparent)]
-    Blocking(#[from] kitsune_blocking::Error),
+    Blocking(#[from] blowocking::Error),
 
     #[error(transparent)]
     Cache(#[from] kitsune_cache::Error),
@@ -53,7 +53,7 @@ pub enum Error {
     Captcha(#[from] kitsune_captcha::Error),
 
     #[error(transparent)]
-    DatabasePool(#[from] diesel_async::pooled_connection::deadpool::PoolError),
+    DatabasePool(#[from] bb8::RunError),
 
     #[error(transparent)]
     Der(#[from] pkcs8::der::Error),
@@ -84,9 +84,6 @@ pub enum Error {
 
     #[error(transparent)]
     JobQueue(#[from] athena::Error),
-
-    #[error(transparent)]
-    KeyRejected(#[from] ring::error::KeyRejected),
 
     #[error(transparent)]
     Mime(#[from] mime::FromStrError),

@@ -13,9 +13,6 @@ pub enum Error {
     Redis(#[from] redis::RedisError),
 
     #[error(transparent)]
-    RedisPool(#[from] deadpool_redis::PoolError),
-
-    #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
 
     #[error(transparent)]

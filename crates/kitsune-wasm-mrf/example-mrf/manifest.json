@@ -1,0 +1,7 @@
+{
+    "manifestVersion": "v1",
+    "apiVersion": "v1",
+    "name": "example-mrf",
+    "version": "1.0.0",
+    "activityTypes": ["*"]
+}

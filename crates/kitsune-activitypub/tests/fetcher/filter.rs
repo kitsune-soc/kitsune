@@ -8,7 +8,7 @@ use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::database_test;
+use kitsune_test::{database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
 use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
@@ -40,6 +40,7 @@ async fn federation_allow() {
         let fetcher = builder
             .clone()
             .client(client.clone())
+            .language_detection_config(language_detection_config())
             .resolver(Arc::new(Webfinger::with_client(
                 client,
                 Arc::new(NoopCache.into()),
@@ -70,6 +71,7 @@ async fn federation_allow() {
         let fetcher = builder
             .clone()
             .client(client.clone())
+            .language_detection_config(language_detection_config())
             .resolver(Arc::new(Webfinger::with_client(
                 client,
                 Arc::new(NoopCache.into()),
@@ -108,6 +110,7 @@ async fn federation_deny() {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .resolver(Arc::new(Webfinger::with_client(
                 client,

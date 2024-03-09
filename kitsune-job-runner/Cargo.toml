@@ -3,6 +3,7 @@ name = "kitsune-job-runner"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [package.metadata.wix]
 upgrade-guid = "D61A497C-7468-4A29-B5D3-F9C44E93FF9E"
@@ -12,8 +13,8 @@ eula = false
 
 [dependencies]
 athena = { path = "../lib/athena" }
-clap = { version = "4.4.18", features = ["derive", "wrap_help"] }
-deadpool-redis = "0.14.0"
+clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
+just-retry = { path = "../lib/just-retry" }
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
@@ -22,12 +23,18 @@ kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
-kitsune-retry-policies = { path = "../crates/kitsune-retry-policies" }
 kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
-miette = { version = "5.10.0", features = ["fancy"] }
+kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
+miette = { version = "7.2.0", features = ["fancy"] }
 mimalloc = "0.1.39"
-tokio = { version = "1.35.1", features = ["full"] }
+multiplex-pool = { path = "../lib/multiplex-pool" }
+redis = { version = "0.24.0", default-features = false, features = [
+    "aio",
+    "connection-manager",
+    "tokio-rustls-comp",
+] }
+tokio = { version = "1.36.0", features = ["full"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 

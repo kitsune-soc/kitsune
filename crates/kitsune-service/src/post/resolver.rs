@@ -132,7 +132,7 @@ mod test {
     use kitsune_jobs::KitsuneContextRepo;
     use kitsune_search::NoopSearchService;
     use kitsune_storage::fs::Storage as FsStorage;
-    use kitsune_test::{build_ap_response, database_test, redis_test};
+    use kitsune_test::{build_ap_response, database_test, language_detection_config, redis_test};
     use kitsune_url::UrlService;
     use kitsune_util::try_join;
     use kitsune_webfinger::Webfinger;
@@ -176,6 +176,7 @@ mod test {
                         })
                         .unwrap(),
                     )
+                    .language_detection_config(language_detection_config())
                     .resolver(webfinger.clone())
                     .search_backend(NoopSearchService)
                     .account_cache(Arc::new(NoopCache.into()))

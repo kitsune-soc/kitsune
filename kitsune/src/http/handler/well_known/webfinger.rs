@@ -93,10 +93,11 @@ mod tests {
         account::AccountService, attachment::AttachmentService, job::JobService,
     };
     use kitsune_storage::fs::Storage;
-    use kitsune_test::{database_test, redis_test};
+    use kitsune_test::{database_test, language_detection_config, redis_test};
     use kitsune_type::webfinger::Link;
     use kitsune_url::UrlService;
     use kitsune_webfinger::Webfinger;
+    use redis::aio::ConnectionManager;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::{convert::Infallible, sync::Arc};
@@ -111,7 +112,7 @@ mod tests {
 
     fn build_account_service(
         db_pool: PgPool,
-        redis_pool: deadpool_redis::Pool,
+        redis_pool: multiplex_pool::Pool<ConnectionManager>,
         url_service: UrlService,
     ) -> AccountService {
         let temp_dir = TempDir::new().unwrap();
@@ -136,6 +137,7 @@ mod tests {
                 })
                 .unwrap(),
             )
+            .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
