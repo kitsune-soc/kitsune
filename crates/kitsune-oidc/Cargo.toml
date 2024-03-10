@@ -20,7 +20,7 @@ openidconnect = { version = "3.5.0", default-features = false, features = [
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
 ] }
-redis = { version = "0.24.0", default-features = false, features = [
+redis = { version = "0.25.0", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }

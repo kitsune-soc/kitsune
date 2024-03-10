@@ -2,7 +2,7 @@
 //! Redis implementation
 //!
 
-use crate::{util::TransparentDebug, MessagingBackend, Result};
+use crate::{MessagingBackend, Result};
 use ahash::AHashMap;
 use futures_util::{future, Stream, StreamExt, TryStreamExt};
 use just_retry::RetryExt;
@@ -82,14 +82,12 @@ impl MultiplexActor {
                             let client = self.client.clone();
                             async move {
                                 client
-                                    .get_async_connection()
+                                    .get_async_pubsub()
                                     .await
-                                    .map(|conn| TransparentDebug(conn.into_pubsub()))
                             }
                         })
                         .retry(just_retry::backoff_policy())
                         .await
-                        .map(|conn| conn.0)
                         .unwrap();
 
                         for key in self.mapping.keys() {
@@ -111,7 +109,7 @@ impl MultiplexActor {
 
         let actor = Self {
             mapping: AHashMap::new(),
-            conn: client.get_async_connection().await?.into_pubsub(),
+            conn: client.get_async_pubsub().await?,
             client,
             registration_queue: receiver,
         };

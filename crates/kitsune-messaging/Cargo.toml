@@ -11,7 +11,7 @@ derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.30"
 just-retry = { path = "../../lib/just-retry" }
 pin-project-lite = "0.2.13"
-redis = { version = "0.24.0", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.25.0", features = ["connection-manager", "tokio-comp"] }
 serde = "1.0.197"
 simd-json = "0.13.8"
 tokio = { version = "1.36.0", features = ["macros", "rt", "sync"] }

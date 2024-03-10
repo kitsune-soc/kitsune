@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 diesel = "2.1.4"
 diesel-async = "0.4.1"
-embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "0d43394bb2514f57edc402a83f69b171705c3650" }
+embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "39f526e9674766596a6fc988623683c15d3564b9" }
 http = "1.1.0"
 iso8601-timestamp = "0.2.17"
 kitsune-db = { path = "../kitsune-db" }
