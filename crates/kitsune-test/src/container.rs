@@ -12,7 +12,7 @@ impl Service for Container<'_, Postgres> {
 
     fn url(&self) -> String {
         let port = self.get_host_port_ipv4(Self::PORT);
-        format!("postgres://postgres:postgres@localhost:{port}/test_db")
+        format!("postgres://postgres:postgres@127.0.0.1:{port}/test_db")
     }
 }
 
@@ -21,7 +21,7 @@ impl Service for Container<'_, Redis> {
 
     fn url(&self) -> String {
         let port = self.get_host_port_ipv4(Self::PORT);
-        format!("redis://localhost:{port}")
+        format!("redis://127.0.0.1:{port}")
     }
 }
 
