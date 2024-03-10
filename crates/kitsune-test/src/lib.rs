@@ -36,6 +36,11 @@ where
     F: FnOnce(PgPool) -> Fut,
     Fut: Future,
 {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Debug)
+        .is_test(true)
+        .try_init();
+
     let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
     let pool = kitsune_db::connect(&DatabaseConfig {
         url: resource_handle.url().into(),
@@ -85,6 +90,11 @@ where
     F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
     Fut: Future,
 {
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Debug)
+        .is_test(true)
+        .try_init();
+
     let resource_handle = get_resource!("REDIS_URL", self::container::redis);
     let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
     let pool = multiplex_pool::Pool::from_producer(
