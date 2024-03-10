@@ -37,6 +37,7 @@ where
     Fut: Future,
 {
     let _ = tracing_subscriber::fmt::try_init();
+    let _ = tracing_log::LogTracer::init();
 
     let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
     let pool = kitsune_db::connect(&DatabaseConfig {
@@ -88,6 +89,7 @@ where
     Fut: Future,
 {
     let _ = tracing_subscriber::fmt::try_init();
+    let _ = tracing_log::LogTracer::init();
 
     let resource_handle = get_resource!("REDIS_URL", self::container::redis);
     let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
