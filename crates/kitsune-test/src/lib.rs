@@ -13,9 +13,11 @@ use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
 use scoped_futures::ScopedFutureExt;
-use std::{env, error::Error, panic};
+use std::{error::Error, panic};
 
 mod catch_panic;
+mod container;
+mod resource;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
@@ -34,9 +36,9 @@ where
     F: FnOnce(PgPool) -> Fut,
     Fut: Future,
 {
-    let db_url = env::var("DATABASE_URL").expect("Missing database URL");
+    let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
     let pool = kitsune_db::connect(&DatabaseConfig {
-        url: db_url.into(),
+        url: resource_handle.url().into(),
         max_connections: 10,
         use_tls: false,
     })
@@ -83,8 +85,8 @@ where
     F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
     Fut: Future,
 {
-    let redis_url = env::var("REDIS_URL").expect("Missing redis URL");
-    let client = redis::Client::open(redis_url).unwrap();
+    let resource_handle = get_resource!("REDIS_URL", self::container::redis);
+    let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
     let pool = multiplex_pool::Pool::from_producer(
         || client.get_connection_manager(),
         5,
