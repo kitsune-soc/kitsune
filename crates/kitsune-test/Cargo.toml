@@ -17,11 +17,17 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 pin-project-lite = "0.2.13"
-redis = { version = "0.24.0", default-features = false, features = [
+redis = { version = "0.25.0", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
 scoped-futures = "0.1.3"
+testcontainers = "0.15.0"
+testcontainers-modules = { version = "0.3.5", features = [
+    "minio",
+    "postgres",
+    "redis",
+] }
 
 [lints]
 workspace = true

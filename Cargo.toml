@@ -1,6 +1,3 @@
-[profile.dev.package]
-backtrace = { opt-level = 3 }
-num-bigint-dig = { opt-level = 3 }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
@@ -32,6 +29,7 @@ members = [
     "crates/kitsune-messaging",
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
+    "crates/kitsune-s3",
     "crates/kitsune-scss-compiler",
     "crates/kitsune-search",
     "crates/kitsune-service",

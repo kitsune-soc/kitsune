@@ -11,7 +11,7 @@ diesel = { version = "2.1.4", features = [
     "postgres_backend",
     "uuid",
 ], optional = true }
-redis = { version = "0.24.0", default-features = false, optional = true }
+redis = { version = "0.25.0", default-features = false, optional = true }
 serde = { version = "1.0.197", optional = true }
 thiserror = "1.0.57"
 uuid = { version = "1.7.0", features = ["fast-rng", "v7"] }
