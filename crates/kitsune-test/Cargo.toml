@@ -9,14 +9,12 @@ license.workspace = true
 bytes = "1.5.0"
 diesel = "2.1.4"
 diesel-async = "0.4.1"
-env_logger = "0.11.3"
 futures-util = "0.3.30"
 http = "1.1.0"
 http-body-util = "0.1.0"
 isolang = "2.4.0"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
-log = "0.4.21"
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 pin-project-lite = "0.2.13"
 redis = { version = "0.25.0", default-features = false, features = [
@@ -30,6 +28,7 @@ testcontainers-modules = { version = "0.3.5", features = [
     "postgres",
     "redis",
 ] }
+tracing-subscriber = "0.3.18"
 
 [lints]
 workspace = true
