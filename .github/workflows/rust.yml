@@ -68,7 +68,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - uses: taiki-e/install-action@nextest
-      - run: nix develop --impure --command bash -c "unset DATABASE_URL LD_LIBRARY_PATH REDIS_URL && cargo nextest run --all-features -- --show-output"
+      - run: nix develop --impure --command bash -c "unset DATABASE_URL LD_LIBRARY_PATH REDIS_URL && cargo nextest run --all-features"
         # env:
         #   DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
         #   REDIS_URL: "redis://localhost"
