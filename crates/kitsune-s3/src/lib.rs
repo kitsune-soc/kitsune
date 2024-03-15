@@ -86,11 +86,19 @@ pub struct Client {
 impl Client {
     pub async fn create_bucket(&self) -> Result<()> {
         let create_action = self.bucket.create_bucket(&self.credentials);
+        let body = format!(
+            r#"
+                <CreateBucketConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+                    <LocationConstraint>{}</LocationConstraint>
+                </CreateBucketConfiguration>
+            "#,
+            self.bucket.region()
+        );
 
         let request = Request::builder()
             .uri(String::from(create_action.sign(TWO_MINUTES)))
             .method(http_method_by_value(&create_action))
-            .body(Body::empty())?;
+            .body(Body::data(body))?;
 
         execute_request(&self.http_client, request).await?;
 
