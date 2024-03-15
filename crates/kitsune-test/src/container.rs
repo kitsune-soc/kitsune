@@ -12,7 +12,7 @@ impl Service for Container<'_, MinIO> {
 
     fn url(&self) -> String {
         let port = self.get_host_port_ipv4(Self::PORT);
-        format!("http://localhost:{port}")
+        format!("http://127.0.0.1:{port}")
     }
 }
 

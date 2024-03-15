@@ -9,6 +9,7 @@ use typed_builder::TypedBuilder;
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T, E = BoxError> = std::result::Result<T, E>;
 
+const ERROR_BODY_LIMIT: usize = 50_000; // 50KB
 const TWO_MINUTES: Duration = Duration::from_secs(2 * 60);
 
 #[inline]
@@ -30,10 +31,38 @@ where
     s3_method_to_http(T::METHOD)
 }
 
+async fn aggregate_error_msg(res: Response) -> Option<String> {
+    let (_remaining_limit, body) = res
+        .stream()
+        .map_err(BoxError::from)
+        .try_fold(
+            (ERROR_BODY_LIMIT, Vec::new()),
+            |(mut remaining_limit, mut acc), chunk| async move {
+                acc.extend_from_slice(&chunk);
+                remaining_limit = remaining_limit.saturating_sub(chunk.len());
+                if remaining_limit == 0 {
+                    return Err(Box::from("body length exceeded"));
+                }
+
+                Ok((remaining_limit, acc))
+            },
+        )
+        .await
+        .ok()?;
+
+    Some(String::from_utf8_lossy(&body).to_string())
+}
+
 async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Response> {
     let response = client.execute(req).await?;
     if !response.status().is_success() {
-        return Err(Box::from(format!("s3 request failed: {response:?}")));
+        let mut err_msg = format!("s3 request failed: {response:?}");
+        if let Some(extra) = aggregate_error_msg(response).await {
+            err_msg.push_str("\nbody: ");
+            err_msg.push_str(&extra);
+        }
+
+        return Err(Box::from(err_msg));
     }
 
     Ok(response)

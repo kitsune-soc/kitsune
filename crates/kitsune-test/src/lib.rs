@@ -86,8 +86,9 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("MINIO_URL", self::container::minio);
+    let endpoint = resource_handle.url().parse().unwrap();
     let bucket = rusty_s3::Bucket::new(
-        resource_handle.url().parse().unwrap(),
+        endpoint,
         rusty_s3::UrlStyle::Path,
         "test_bucket",
         "us-east-1",
