@@ -13,5 +13,9 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 rusty-s3 = { version = "0.5.0", default-features = false }
 typed-builder = "0.18.1"
 
+[dev-dependencies]
+kitsune-test = { path = "../kitsune-test" }
+tokio = { version = "1.36.0", features = ["macros", "rt"] }
+
 [lints]
 workspace = true

@@ -3896,7 +3896,9 @@ dependencies = [
  "futures-util",
  "http 1.1.0",
  "kitsune-http-client",
+ "kitsune-test",
  "rusty-s3",
+ "tokio",
  "typed-builder",
 ]
 
@@ -4756,11 +4758,12 @@ dependencies = [
 
 [[package]]
 name = "mrml"
-version = "3.0.4"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11090cceb14c2eaf9d10c1503937b3a53323f322c475f409c1e51a0d86949a8d"
+checksum = "70b2e3b2ec6b01dcced4bdc6f446c85d9a48cf7c995e357b3b086ec9ab310211"
 dependencies = [
  "indexmap 2.2.5",
+ "itertools 0.12.1",
  "mrml-macros",
  "rustc-hash",
  "thiserror",
@@ -4819,9 +4822,9 @@ checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
 
 [[package]]
 name = "new_debug_unreachable"
-version = "1.0.4"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
+checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
 name = "nibble_vec"

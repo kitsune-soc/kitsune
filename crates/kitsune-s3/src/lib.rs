@@ -115,3 +115,44 @@ impl Client {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::BoxError;
+    use futures_util::{future, stream, TryStreamExt};
+    use kitsune_test::minio_test;
+
+    const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
+
+    #[tokio::test]
+    async fn full_test() {
+        minio_test(|client| async move {
+            client
+                .put_object(
+                    "good song",
+                    stream::once(future::ok::<_, BoxError>(TEST_DATA.into())),
+                )
+                .await
+                .unwrap();
+
+            let data = client
+                .get_object("good song")
+                .await
+                .unwrap()
+                .try_fold(Vec::new(), |mut acc, chunk| async move {
+                    acc.extend_from_slice(&chunk);
+                    Ok(acc)
+                })
+                .await
+                .unwrap();
+
+            assert_eq!(data, TEST_DATA);
+
+            client.delete_object("good song").await.unwrap();
+
+            let result = client.get_object("good song").await;
+            assert!(result.is_err());
+        })
+        .await;
+    }
+}
