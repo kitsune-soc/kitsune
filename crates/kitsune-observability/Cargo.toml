@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-trait = "0.1.77"
-http-body-util = "0.1.0"
+http-body-util = "0.1.1"
 http-compat = { path = "../../lib/http-compat" }
 hyper = { version = "1.2.0", default-features = false }
 kitsune-config = { path = "../kitsune-config" }

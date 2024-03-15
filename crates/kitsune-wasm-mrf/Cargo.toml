@@ -18,7 +18,7 @@ kitsune-type = { path = "../kitsune-type" }
 miette = "7.2.0"
 mrf-manifest = { path = "../../lib/mrf-manifest", features = ["parse"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
-redis = { version = "0.25.0", default-features = false, features = [
+redis = { version = "0.25.1", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
@@ -26,12 +26,12 @@ simd-json = "0.13.8"
 slab = "0.4.9"
 sled = "0.34.7"
 smol_str = "0.2.1"
-thiserror = "1.0.57"
+thiserror = "1.0.58"
 tokio = { version = "1.36.0", features = ["fs"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 walkdir = "2.5.0"
-wasmtime = { version = "18.0.2", default-features = false, features = [
+wasmtime = { version = "18.0.3", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -40,7 +40,7 @@ wasmtime = { version = "18.0.2", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "18.0.2", default-features = false, features = [
+wasmtime-wasi = { version = "18.0.3", default-features = false, features = [
     "preview2",
 ] }
 

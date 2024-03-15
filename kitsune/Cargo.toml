@@ -33,15 +33,15 @@ axum-flash = "0.8.0"
 blowocking = { path = "../lib/blowocking" }
 bytes = "1.5.0"
 chrono = { version = "0.4.35", default-features = false }
-clap = { version = "4.5.2", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.3", features = ["derive", "wrap_help"] }
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
 der = { version = "0.7.8", features = ["std"] }
-diesel = "2.1.4"
+diesel = "2.1.5"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.1.0"
-http-body-util = "0.1.0"
+http-body-util = "0.1.1"
 http-signatures = { path = "../lib/http-signatures" }
 iso8601-timestamp = "0.2.17"
 itertools = { version = "0.12.1", default-features = false }
@@ -76,7 +76,7 @@ mime_guess = { version = "2.0.4", default-features = false }
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"
-redis = { version = "0.25.0", default-features = false, features = [
+redis = { version = "0.25.1", default-features = false, features = [
     "tokio-rustls-comp",
 ] }
 rust-embed = { version = "8.3.0", features = ["include-exclude"] }
@@ -86,9 +86,9 @@ serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
-strum = { version = "0.26.1", features = ["derive", "phf"] }
+strum = { version = "0.26.2", features = ["derive", "phf"] }
 tempfile = "3.10.1"
-thiserror = "1.0.57"
+thiserror = "1.0.58"
 time = "0.3.34"
 tokio = { version = "1.36.0", features = ["full"] }
 tokio-util = { version = "0.7.10", features = ["compat"] }
@@ -137,7 +137,7 @@ kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 multiplex-pool = { path = "../lib/multiplex-pool" }
 pretty_assertions = "1.4.0"
-redis = { version = "0.25.0", default-features = false, features = [
+redis = { version = "0.25.1", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }

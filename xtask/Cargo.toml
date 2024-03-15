@@ -6,7 +6,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-anyhow = "1.0.80"
+anyhow = "1.0.81"
 argh = "0.1.12"
 kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 tracing = { version = "0.1.40", default-features = false }
