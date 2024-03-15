@@ -10,8 +10,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-C debuginfo=0"
   RUST_LOG: "debug"
+  RUSTFLAGS: "-C debuginfo=0"
 
 jobs:
   clippy:

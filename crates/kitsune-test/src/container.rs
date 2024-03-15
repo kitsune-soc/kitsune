@@ -29,8 +29,7 @@ pub fn postgres(client: &CliClient) -> impl Service + '_ {
     let base = Postgres::default()
         .with_user("postgres")
         .with_password("postgres")
-        .with_db_name("test_db")
-        .with_host_auth();
+        .with_db_name("test_db");
 
     client.run(RunnableImage::from(base).with_tag("15-alpine"))
 }
