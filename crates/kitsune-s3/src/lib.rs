@@ -59,6 +59,19 @@ impl Client {
         Ok(())
     }
 
+    pub async fn delete_bucket(&self) -> Result<()> {
+        let delete_action = self.bucket.delete_bucket(&self.credentials);
+
+        let request = Request::builder()
+            .uri(String::from(delete_action.sign(TWO_MINUTES)))
+            .method(http_method_by_value(&delete_action))
+            .body(Body::empty())?;
+
+        self.http_client.execute(request).await?;
+
+        Ok(())
+    }
+
     pub async fn delete_object(&self, path: &str) -> Result<()> {
         let delete_action = self.bucket.delete_object(Some(&self.credentials), path);
 

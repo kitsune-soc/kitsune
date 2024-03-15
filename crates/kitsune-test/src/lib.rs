@@ -13,7 +13,7 @@ use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
 use scoped_futures::ScopedFutureExt;
-use std::{error::Error, panic};
+use std::{error::Error, panic, sync::Arc};
 
 mod catch_panic;
 mod container;
@@ -77,6 +77,38 @@ pub fn language_detection_config() -> language_detection::Configuration {
     language_detection::Configuration {
         backend: DetectionBackend::Whichlang,
         default_language: Language::Eng,
+    }
+}
+
+pub async fn minio_test<F, Fut>(func: F) -> Fut::Output
+where
+    F: FnOnce(Arc<kitsune_s3::Client>) -> Fut,
+    Fut: Future,
+{
+    let resource_handle = get_resource!("MINIO_URL", self::container::minio);
+    let bucket = rusty_s3::Bucket::new(
+        resource_handle.url().parse().unwrap(),
+        rusty_s3::UrlStyle::Path,
+        "test_bucket",
+        "us-east-1",
+    )
+    .unwrap();
+    let credentials = rusty_s3::Credentials::new("minioadmin", "minioadmin");
+    let client = kitsune_s3::Client::builder()
+        .bucket(bucket)
+        .credentials(credentials)
+        .build();
+    let client = Arc::new(client);
+
+    client.create_bucket().await.unwrap();
+
+    let out = CatchPanic::new(func(client.clone())).await;
+
+    client.delete_bucket().await.unwrap();
+
+    match out {
+        Ok(out) => out,
+        Err(err) => panic::resume_unwind(err),
     }
 }
 

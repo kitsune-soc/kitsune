@@ -1,10 +1,19 @@
 use testcontainers::{clients::Cli as CliClient, Container, RunnableImage};
-use testcontainers_modules::{postgres::Postgres, redis::Redis};
+use testcontainers_modules::{minio::MinIO, postgres::Postgres, redis::Redis};
 
 pub trait Service {
     const PORT: u16;
 
     fn url(&self) -> String;
+}
+
+impl Service for Container<'_, MinIO> {
+    const PORT: u16 = 9000;
+
+    fn url(&self) -> String {
+        let port = self.get_host_port_ipv4(Self::PORT);
+        format!("http://localhost:{port}")
+    }
 }
 
 impl Service for Container<'_, Postgres> {
@@ -23,6 +32,10 @@ impl Service for Container<'_, Redis> {
         let port = self.get_host_port_ipv4(Self::PORT);
         format!("redis://127.0.0.1:{port}")
     }
+}
+
+pub fn minio(client: &CliClient) -> impl Service + '_ {
+    client.run(MinIO::default())
 }
 
 pub fn postgres(client: &CliClient) -> impl Service + '_ {
