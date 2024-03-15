@@ -3898,6 +3898,7 @@ dependencies = [
  "kitsune-http-client",
  "kitsune-test",
  "rusty-s3",
+ "serial_test",
  "tokio",
  "typed-builder",
 ]

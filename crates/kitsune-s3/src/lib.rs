@@ -125,6 +125,7 @@ mod test {
     const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn full_test() {
         minio_test(|client| async move {
             client
