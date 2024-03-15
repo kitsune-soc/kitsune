@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use futures_util::{Stream, TryStream, TryStreamExt};
 use http::Request;
-use kitsune_http_client::{Body, Client as HttpClient};
+use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{Bucket, Credentials, S3Action};
 use std::time::Duration;
 use typed_builder::TypedBuilder;
@@ -30,6 +30,15 @@ where
     s3_method_to_http(T::METHOD)
 }
 
+async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Response> {
+    let response = client.execute(req).await?;
+    if !response.status().is_success() {
+        return Err(Box::from(format!("s3 request failed: {response:?}")));
+    }
+
+    Ok(response)
+}
+
 #[derive(TypedBuilder)]
 pub struct Client {
     bucket: Bucket,
@@ -54,7 +63,7 @@ impl Client {
             .method(http_method_by_value(&create_action))
             .body(Body::empty())?;
 
-        self.http_client.execute(request).await?;
+        execute_request(&self.http_client, request).await?;
 
         Ok(())
     }
@@ -67,7 +76,7 @@ impl Client {
             .method(http_method_by_value(&delete_action))
             .body(Body::empty())?;
 
-        self.http_client.execute(request).await?;
+        execute_request(&self.http_client, request).await?;
 
         Ok(())
     }
@@ -80,7 +89,7 @@ impl Client {
             .method(http_method_by_value(&delete_action))
             .body(Body::empty())?;
 
-        self.http_client.execute(request).await?;
+        execute_request(&self.http_client, request).await?;
 
         Ok(())
     }
@@ -93,7 +102,7 @@ impl Client {
             .method(http_method_by_value(&get_action))
             .body(Body::empty())?;
 
-        let response = self.http_client.execute(request).await?;
+        let response = execute_request(&self.http_client, request).await?;
 
         Ok(response.stream().map_err(Into::into))
     }
@@ -110,7 +119,7 @@ impl Client {
             .method(http_method_by_value(&put_action))
             .body(Body::stream(stream))?;
 
-        self.http_client.execute(request).await?;
+        execute_request(&self.http_client, request).await?;
 
         Ok(())
     }
