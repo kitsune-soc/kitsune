@@ -67,6 +67,13 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
+      - name: Enable Docker Remote API on Localhost
+        shell: bash
+        run: |
+          sudo mkdir -p /etc/systemd/system/docker.service.d/
+          sudo cp ./.github/docker.override.conf /etc/systemd/system/docker.service.d/override.conf
+          sudo systemctl daemon-reload
+          sudo systemctl restart docker
       - run: nix develop --impure --command bash -c "unset LD_LIBRARY_PATH && cargo test --all-features -- --show-output"
         # env:
         #   DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
