@@ -30,7 +30,8 @@ pub fn postgres(client: &CliClient) -> Container<'_, Postgres> {
         Postgres::default()
             .with_user("postgres")
             .with_password("postgres")
-            .with_db_name("test_db"),
+            .with_db_name("test_db")
+            .with_host_auth(),
     )
 }
 

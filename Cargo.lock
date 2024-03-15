@@ -4069,8 +4069,6 @@ dependencies = [
  "scoped-futures",
  "testcontainers",
  "testcontainers-modules",
- "tracing-log",
- "tracing-subscriber",
 ]
 
 [[package]]
