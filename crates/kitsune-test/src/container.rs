@@ -1,4 +1,4 @@
-use testcontainers::{clients::Cli as CliClient, Container};
+use testcontainers::{clients::Cli as CliClient, Container, RunnableImage};
 use testcontainers_modules::{postgres::Postgres, redis::Redis};
 
 pub trait Service {
@@ -25,17 +25,17 @@ impl Service for Container<'_, Redis> {
     }
 }
 
-pub fn postgres(client: &CliClient) -> Container<'_, Postgres> {
-    client.run(
-        Postgres::default()
-            .with_user("postgres")
-            .with_password("postgres")
-            .with_db_name("test_db")
-            .with_host_auth(),
-    )
+pub fn postgres(client: &CliClient) -> impl Service + '_ {
+    let base = Postgres::default()
+        .with_user("postgres")
+        .with_password("postgres")
+        .with_db_name("test_db")
+        .with_host_auth();
+
+    client.run(RunnableImage::from(base).with_tag("15-alpine"))
 }
 
-pub fn redis(client: &CliClient) -> Container<'_, Redis> {
+pub fn redis(client: &CliClient) -> impl Service + '_ {
     #[allow(clippy::default_constructed_unit_structs)]
     client.run(Redis::default())
 }

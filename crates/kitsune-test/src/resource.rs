@@ -20,18 +20,17 @@ macro_rules! get_resource {
     };
 }
 
-pub enum ResourceHandle<'a, I>
+pub enum ResourceHandle<S>
 where
-    I: testcontainers::Image,
+    S: Service,
 {
-    Container(testcontainers::Container<'a, I>),
+    Container(S),
     Url(String),
 }
 
-impl<I> ResourceHandle<'_, I>
+impl<S> ResourceHandle<S>
 where
-    I: testcontainers::Image,
-    for<'a> testcontainers::Container<'a, I>: Service,
+    S: Service,
 {
     pub fn url(&self) -> Cow<'_, str> {
         match self {
