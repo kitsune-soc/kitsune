@@ -1,4 +1,3 @@
-use self::catch_panic::CatchPanic;
 use bytes::Bytes;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
@@ -12,8 +11,9 @@ use kitsune_config::{
 use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
+use resource::provide_resource;
 use scoped_futures::ScopedFutureExt;
-use std::{error::Error, panic, sync::Arc};
+use std::{error::Error, sync::Arc};
 
 mod catch_panic;
 mod container;
@@ -45,31 +45,27 @@ where
     .await
     .expect("Failed to connect to database");
 
-    let out = CatchPanic::new(func(pool.clone())).await;
+    provide_resource(pool, func, |pool| async move {
+        pool.with_connection(|db_conn| {
+            async move {
+                diesel::sql_query("DROP SCHEMA public CASCADE")
+                    .execute(db_conn)
+                    .await
+                    .expect("Failed to delete schema");
 
-    pool.with_connection(|db_conn| {
-        async move {
-            diesel::sql_query("DROP SCHEMA public CASCADE")
-                .execute(db_conn)
-                .await
-                .expect("Failed to delete schema");
+                diesel::sql_query("CREATE SCHEMA public")
+                    .execute(db_conn)
+                    .await
+                    .expect("Failed to create schema");
 
-            diesel::sql_query("CREATE SCHEMA public")
-                .execute(db_conn)
-                .await
-                .expect("Failed to create schema");
-
-            Ok::<_, BoxError>(())
-        }
-        .scoped()
+                Ok::<_, BoxError>(())
+            }
+            .scoped()
+        })
+        .await
+        .expect("Failed to get connection");
     })
     .await
-    .expect("Failed to get connection");
-
-    match out {
-        Ok(out) => out,
-        Err(err) => panic::resume_unwind(err),
-    }
 }
 
 #[must_use]
@@ -103,14 +99,10 @@ where
 
     client.create_bucket().await.unwrap();
 
-    let out = CatchPanic::new(func(client.clone())).await;
-
-    client.delete_bucket().await.unwrap();
-
-    match out {
-        Ok(out) => out,
-        Err(err) => panic::resume_unwind(err),
-    }
+    provide_resource(client, func, |client| async move {
+        client.delete_bucket().await.unwrap();
+    })
+    .await
 }
 
 pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
@@ -128,13 +120,9 @@ where
     .await
     .unwrap();
 
-    let out = CatchPanic::new(func(pool.clone())).await;
-
-    let mut conn = pool.get();
-    let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
-
-    match out {
-        Ok(out) => out,
-        Err(err) => panic::resume_unwind(err),
-    }
+    provide_resource(pool, func, |pool| async move {
+        let mut conn = pool.get();
+        let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
+    })
+    .await
 }
