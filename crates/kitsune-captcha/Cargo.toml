@@ -12,8 +12,8 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.8"
-strum = { version = "0.26.1", features = ["derive"] }
-thiserror = "1.0.57"
+strum = { version = "0.26.2", features = ["derive"] }
+thiserror = "1.0.58"
 typed-builder = "0.18.1"
 
 [lints]
