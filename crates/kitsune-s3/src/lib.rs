@@ -172,10 +172,15 @@ impl Client {
             [].into_iter(),
         );
 
+        let method = http_method_by_value(&complete_multipart_upload);
+        let uri = String::from(complete_multipart_upload.sign(TWO_MINUTES));
+        let body = complete_multipart_upload.body();
+
         let request = Request::builder()
-            .uri(String::from(complete_multipart_upload.sign(TWO_MINUTES)))
-            .method(http_method_by_value(&complete_multipart_upload))
-            .body(Body::data(complete_multipart_upload.body()))?;
+            .header(CONTENT_LENGTH, body.len())
+            .uri(uri)
+            .method(method)
+            .body(Body::data(body))?;
 
         execute_request(&self.http_client, request).await?;
 
