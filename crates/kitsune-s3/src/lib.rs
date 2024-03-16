@@ -169,7 +169,7 @@ impl Client {
             Some(&self.credentials),
             path,
             create_response.upload_id(),
-            (&[] as &[&str]).iter().copied(),
+            [].into_iter(),
         );
 
         let request = Request::builder()
