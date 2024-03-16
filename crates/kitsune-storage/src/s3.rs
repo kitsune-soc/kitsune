@@ -23,9 +23,13 @@ impl Storage {
             .credentials(credentials)
             .build();
 
-        Self {
-            client: Arc::new(s3_client),
-        }
+        Self::from(Arc::new(s3_client))
+    }
+}
+
+impl From<Arc<kitsune_s3::Client>> for Storage {
+    fn from(client: Arc<kitsune_s3::Client>) -> Self {
+        Self { client }
     }
 }
 
