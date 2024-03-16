@@ -152,28 +152,56 @@ impl Client {
 
         futures_util::pin_mut!(stream);
 
-        let mut etags = Vec::new();
-        while let Some((id, chunk)) = stream.try_next().await.map_err(Into::into)? {
-            let upload_part = self.bucket.upload_part(
-                Some(&self.credentials),
-                path,
-                id,
-                create_response.upload_id(),
-            );
+        let etags_fut = async {
+            let mut etags = Vec::new();
 
-            let request = Request::builder()
-                .header(CONTENT_LENGTH, chunk.len())
-                .uri(String::from(upload_part.sign(TWO_MINUTES)))
-                .method(http_method_by_value(&upload_part))
-                .body(Body::data(chunk))?;
+            while let Some((id, chunk)) = stream.try_next().await.map_err(Into::into)? {
+                let upload_part = self.bucket.upload_part(
+                    Some(&self.credentials),
+                    path,
+                    id,
+                    create_response.upload_id(),
+                );
 
-            let response = execute_request(&self.http_client, request).await?;
-            let Some(etag_header) = response.headers().get(ETAG) else {
-                return Err(Box::from("missing etag header"));
-            };
+                let request = Request::builder()
+                    .header(CONTENT_LENGTH, chunk.len())
+                    .uri(String::from(upload_part.sign(TWO_MINUTES)))
+                    .method(http_method_by_value(&upload_part))
+                    .body(Body::data(chunk))?;
 
-            etags.push(etag_header.to_str()?.to_string());
-        }
+                let response = execute_request(&self.http_client, request).await?;
+                let Some(etag_header) = response.headers().get(ETAG) else {
+                    return Err(Box::from("missing etag header"));
+                };
+
+                etags.push(etag_header.to_str()?.to_string());
+            }
+
+            Ok(etags)
+        };
+
+        let etags = match etags_fut.await {
+            Ok(etags) => etags,
+            Err(error) => {
+                // Send an abort request if anything inside the upload loop errored out
+                // Just to be nice to the S3 API :D
+
+                let abort_multipart_upload = self.bucket.abort_multipart_upload(
+                    Some(&self.credentials),
+                    path,
+                    create_response.upload_id(),
+                );
+
+                let request = Request::builder()
+                    .uri(String::from(abort_multipart_upload.sign(TWO_MINUTES)))
+                    .method(http_method_by_value(&abort_multipart_upload))
+                    .body(Body::empty())?;
+
+                execute_request(&self.http_client, request).await?;
+
+                return Err(error);
+            }
+        };
 
         let complete_multipart_upload = self.bucket.complete_multipart_upload(
             Some(&self.credentials),
@@ -249,6 +277,22 @@ mod test {
             client.delete_object("good song").await.unwrap();
 
             let result = client.get_object("good song").await;
+            assert!(result.is_err());
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn abort_request_works() {
+        minio_test(|client| async move {
+            let result = client
+                .put_object(
+                    "this will break horribly",
+                    stream::once(future::err(BoxError::from("hehe"))),
+                )
+                .await;
+
             assert!(result.is_err());
         })
         .await;
