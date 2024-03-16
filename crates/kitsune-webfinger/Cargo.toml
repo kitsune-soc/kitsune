@@ -16,7 +16,7 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
-redis = { version = "0.24.0", default-features = false, features = [
+redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
@@ -24,7 +24,7 @@ tracing = "0.1.40"
 urlencoding = "2.1.3"
 
 [dev-dependencies]
-http-body-util = "0.1.0"
+http-body-util = "0.1.1"
 hyper = "1.2.0"
 pretty_assertions = "1.4.0"
 simd-json = "0.13.8"

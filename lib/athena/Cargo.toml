@@ -14,7 +14,7 @@ just-retry = { path = "../just-retry" }
 multiplex-pool = { path = "../multiplex-pool" }
 once_cell = "1.19.0"
 rand = "0.8.5"
-redis = { version = "0.24.0", default-features = false, features = [
+redis = { version = "0.25.2", default-features = false, features = [
     "ahash",
     "connection-manager",
     "script",
@@ -25,14 +25,14 @@ serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.8"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
-thiserror = "1.0.57"
+thiserror = "1.0.58"
 tokio = { version = "1.36.0", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.10", features = ["rt"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 
 [dev-dependencies]
-redis = { version = "0.24.0", features = ["connection-manager"] }
+redis = { version = "0.25.2", features = ["connection-manager"] }
 tracing-subscriber = "0.3.18"
 
 [lints]

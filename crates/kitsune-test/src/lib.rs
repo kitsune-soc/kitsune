@@ -1,4 +1,3 @@
-use self::catch_panic::CatchPanic;
 use bytes::Bytes;
 use diesel_async::RunQueryDsl;
 use futures_util::Future;
@@ -12,10 +11,13 @@ use kitsune_config::{
 use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
+use resource::provide_resource;
 use scoped_futures::ScopedFutureExt;
-use std::{env, error::Error, panic};
+use std::{error::Error, sync::Arc};
 
 mod catch_panic;
+mod container;
+mod resource;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
@@ -34,40 +36,36 @@ where
     F: FnOnce(PgPool) -> Fut,
     Fut: Future,
 {
-    let db_url = env::var("DATABASE_URL").expect("Missing database URL");
+    let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
     let pool = kitsune_db::connect(&DatabaseConfig {
-        url: db_url.into(),
+        url: resource_handle.url().into(),
         max_connections: 10,
         use_tls: false,
     })
     .await
     .expect("Failed to connect to database");
 
-    let out = CatchPanic::new(func(pool.clone())).await;
+    provide_resource(pool, func, |pool| async move {
+        pool.with_connection(|db_conn| {
+            async move {
+                diesel::sql_query("DROP SCHEMA public CASCADE")
+                    .execute(db_conn)
+                    .await
+                    .expect("Failed to delete schema");
 
-    pool.with_connection(|db_conn| {
-        async move {
-            diesel::sql_query("DROP SCHEMA public CASCADE")
-                .execute(db_conn)
-                .await
-                .expect("Failed to delete schema");
+                diesel::sql_query("CREATE SCHEMA public")
+                    .execute(db_conn)
+                    .await
+                    .expect("Failed to create schema");
 
-            diesel::sql_query("CREATE SCHEMA public")
-                .execute(db_conn)
-                .await
-                .expect("Failed to create schema");
-
-            Ok::<_, BoxError>(())
-        }
-        .scoped()
+                Ok::<_, BoxError>(())
+            }
+            .scoped()
+        })
+        .await
+        .expect("Failed to get connection");
     })
     .await
-    .expect("Failed to get connection");
-
-    match out {
-        Ok(out) => out,
-        Err(err) => panic::resume_unwind(err),
-    }
 }
 
 #[must_use]
@@ -78,13 +76,42 @@ pub fn language_detection_config() -> language_detection::Configuration {
     }
 }
 
+pub async fn minio_test<F, Fut>(func: F) -> Fut::Output
+where
+    F: FnOnce(Arc<kitsune_s3::Client>) -> Fut,
+    Fut: Future,
+{
+    let resource_handle = get_resource!("MINIO_URL", self::container::minio);
+    let endpoint = resource_handle.url().parse().unwrap();
+    let bucket = rusty_s3::Bucket::new(
+        endpoint,
+        rusty_s3::UrlStyle::Path,
+        "test-bucket",
+        "us-east-1",
+    )
+    .unwrap();
+    let credentials = rusty_s3::Credentials::new("minioadmin", "minioadmin");
+    let client = kitsune_s3::Client::builder()
+        .bucket(bucket)
+        .credentials(credentials)
+        .build();
+    let client = Arc::new(client);
+
+    client.create_bucket().await.unwrap();
+
+    provide_resource(client, func, |client| async move {
+        client.delete_bucket().await.unwrap();
+    })
+    .await
+}
+
 pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
 where
     F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
     Fut: Future,
 {
-    let redis_url = env::var("REDIS_URL").expect("Missing redis URL");
-    let client = redis::Client::open(redis_url).unwrap();
+    let resource_handle = get_resource!("REDIS_URL", self::container::redis);
+    let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
     let pool = multiplex_pool::Pool::from_producer(
         || client.get_connection_manager(),
         5,
@@ -93,13 +120,9 @@ where
     .await
     .unwrap();
 
-    let out = CatchPanic::new(func(pool.clone())).await;
-
-    let mut conn = pool.get();
-    let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
-
-    match out {
-        Ok(out) => out,
-        Err(err) => panic::resume_unwind(err),
-    }
+    provide_resource(pool, func, |pool| async move {
+        let mut conn = pool.get();
+        let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
+    })
+    .await
 }
