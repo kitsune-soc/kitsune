@@ -1,10 +1,13 @@
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
-use http::{header::CONTENT_LENGTH, Request};
+use http::{
+    header::{CONTENT_LENGTH, ETAG},
+    Request,
+};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
-use std::time::Duration;
+use std::{ops::Deref, time::Duration};
 use typed_builder::TypedBuilder;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
@@ -146,6 +149,7 @@ impl Client {
         futures_util::pin_mut!(stream);
 
         let mut ctr = 1;
+        let mut etags = Vec::new();
         while let Some(chunk) = stream.try_next().await.map_err(Into::into)? {
             let upload_part = self.bucket.upload_part(
                 Some(&self.credentials),
@@ -160,7 +164,11 @@ impl Client {
                 .method(http_method_by_value(&upload_part))
                 .body(Body::data(chunk))?;
 
-            execute_request(&self.http_client, request).await?;
+            let response = execute_request(&self.http_client, request).await?;
+            let Some(etag_header) = response.headers().get(ETAG) else {
+                return Err(Box::from("missing etag header"));
+            };
+            etags.push(etag_header.to_str()?.to_string());
 
             ctr += 1;
         }
@@ -169,7 +177,7 @@ impl Client {
             Some(&self.credentials),
             path,
             create_response.upload_id(),
-            [].into_iter(),
+            etags.iter().map(Deref::deref),
         );
 
         let method = http_method_by_value(&complete_multipart_upload);
