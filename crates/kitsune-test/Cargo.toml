@@ -18,7 +18,7 @@ kitsune-db = { path = "../kitsune-db" }
 kitsune-s3 = { path = "../kitsune-s3" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 pin-project-lite = "0.2.13"
-redis = { version = "0.25.1", default-features = false, features = [
+redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }

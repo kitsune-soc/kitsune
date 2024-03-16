@@ -76,7 +76,7 @@ mime_guess = { version = "2.0.4", default-features = false }
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"
-redis = { version = "0.25.1", default-features = false, features = [
+redis = { version = "0.25.2", default-features = false, features = [
     "tokio-rustls-comp",
 ] }
 rust-embed = { version = "8.3.0", features = ["include-exclude"] }
@@ -111,7 +111,7 @@ utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "7.0.2", default-features = false, features = [
+async-graphql = { version = "7.0.3", default-features = false, features = [
     "playground",
     "tempfile",
     "time",
@@ -119,7 +119,7 @@ async-graphql = { version = "7.0.2", default-features = false, features = [
     "unblock",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "7.0.2", optional = true }
+async-graphql-axum = { version = "7.0.3", optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
@@ -137,7 +137,7 @@ kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 multiplex-pool = { path = "../lib/multiplex-pool" }
 pretty_assertions = "1.4.0"
-redis = { version = "0.25.1", default-features = false, features = [
+redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }

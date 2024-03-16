@@ -3,6 +3,7 @@ use futures_util::{Stream, TryStream, TryStreamExt};
 use http::Request;
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{Bucket, Credentials, S3Action};
+use serde::Serialize;
 use std::time::Duration;
 use typed_builder::TypedBuilder;
 
@@ -11,6 +12,12 @@ type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 const ERROR_BODY_LIMIT: usize = 50_000; // 50KB
 const TWO_MINUTES: Duration = Duration::from_secs(2 * 60);
+
+#[derive(Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct CreateBucketConfiguration<'a> {
+    location_constraint: &'a str,
+}
 
 #[inline]
 const fn s3_method_to_http(method: rusty_s3::Method) -> http::Method {
@@ -86,14 +93,9 @@ pub struct Client {
 impl Client {
     pub async fn create_bucket(&self) -> Result<()> {
         let create_action = self.bucket.create_bucket(&self.credentials);
-        let body = format!(
-            r#"
-                <CreateBucketConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
-                    <LocationConstraint>{}</LocationConstraint>
-                </CreateBucketConfiguration>
-            "#,
-            self.bucket.region()
-        );
+        let body = quick_xml::se::to_string(&CreateBucketConfiguration {
+            location_constraint: self.bucket.region(),
+        })?;
 
         let request = Request::builder()
             .uri(String::from(create_action.sign(TWO_MINUTES)))
@@ -164,11 +166,26 @@ impl Client {
 
 #[cfg(test)]
 mod test {
-    use crate::BoxError;
+    use crate::{BoxError, CreateBucketConfiguration};
     use futures_util::{future, stream, TryStreamExt};
     use kitsune_test::minio_test;
 
     const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
+
+    #[test]
+    fn create_bucket_configuration() {
+        let config = CreateBucketConfiguration {
+            location_constraint: "neptune",
+        };
+        let encoded = quick_xml::se::to_string(&config).unwrap();
+
+        assert_eq!(
+            encoded,
+            "<CreateBucketConfiguration>\
+                <LocationConstraint>neptune</LocationConstraint>\
+            </CreateBucketConfiguration>"
+        );
+    }
 
     #[tokio::test]
     #[serial_test::serial]
