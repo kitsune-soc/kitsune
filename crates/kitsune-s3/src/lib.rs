@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use futures_util::{Stream, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt};
 use http::{
     header::{CONTENT_LENGTH, ETAG},
     Request,
@@ -146,15 +146,18 @@ impl Client {
             .await?;
         let create_response = CreateMultipartUpload::parse_response(&response)?;
 
+        let stream = futures_util::stream::iter(1..) // Chunk IDs for the S3 API are 1-based
+            .zip(stream)
+            .map(|(id, result)| result.map(|chunk| (id, chunk)));
+
         futures_util::pin_mut!(stream);
 
-        let mut ctr = 1;
         let mut etags = Vec::new();
-        while let Some(chunk) = stream.try_next().await.map_err(Into::into)? {
+        while let Some((id, chunk)) = stream.try_next().await.map_err(Into::into)? {
             let upload_part = self.bucket.upload_part(
                 Some(&self.credentials),
                 path,
-                ctr,
+                id,
                 create_response.upload_id(),
             );
 
@@ -168,9 +171,8 @@ impl Client {
             let Some(etag_header) = response.headers().get(ETAG) else {
                 return Err(Box::from("missing etag header"));
             };
-            etags.push(etag_header.to_str()?.to_string());
 
-            ctr += 1;
+            etags.push(etag_header.to_str()?.to_string());
         }
 
         let complete_multipart_upload = self.bucket.complete_multipart_upload(
