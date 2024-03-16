@@ -152,7 +152,7 @@ impl Client {
 
         futures_util::pin_mut!(stream);
 
-        let etags_fut = async {
+        let upload_chunks_fut = async {
             let mut etags = Vec::new();
 
             while let Some((id, chunk)) = stream.try_next().await.map_err(Into::into)? {
@@ -180,7 +180,7 @@ impl Client {
             Ok(etags)
         };
 
-        let etags = match etags_fut.await {
+        let etags = match upload_chunks_fut.await {
             Ok(etags) => etags,
             Err(error) => {
                 // Send an abort request if anything inside the upload loop errored out
