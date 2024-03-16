@@ -90,7 +90,7 @@ where
     let bucket = rusty_s3::Bucket::new(
         endpoint,
         rusty_s3::UrlStyle::Path,
-        "test_bucket",
+        "test-bucket",
         "us-east-1",
     )
     .unwrap();
