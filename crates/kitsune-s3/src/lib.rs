@@ -128,13 +128,13 @@ impl Client {
         S: Stream<Item = Result<Bytes, E>> + Send + Sync + 'static,
         E: Into<BoxError>,
     {
-        let create_mutlipart_upload = self
+        let create_multipart_upload = self
             .bucket
             .create_multipart_upload(Some(&self.credentials), path);
 
         let request = Request::builder()
-            .uri(String::from(create_mutlipart_upload.sign(TWO_MINUTES)))
-            .method(http_method_by_value(&create_mutlipart_upload))
+            .uri(String::from(create_multipart_upload.sign(TWO_MINUTES)))
+            .method(http_method_by_value(&create_multipart_upload))
             .body(Body::empty())?;
 
         let response = execute_request(&self.http_client, request)
