@@ -1,8 +1,8 @@
 use bytes::Bytes;
-use futures_util::{Stream, TryStream, TryStreamExt};
+use futures_util::{Stream, TryStreamExt};
 use http::Request;
 use kitsune_http_client::{Body, Client as HttpClient, Response};
-use rusty_s3::{Bucket, Credentials, S3Action};
+use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
 use std::time::Duration;
 use typed_builder::TypedBuilder;
@@ -10,7 +10,6 @@ use typed_builder::TypedBuilder;
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T, E = BoxError> = std::result::Result<T, E>;
 
-const ERROR_BODY_LIMIT: usize = 50_000; // 50KB
 const TWO_MINUTES: Duration = Duration::from_secs(2 * 60);
 
 #[derive(Serialize)]
@@ -38,36 +37,14 @@ where
     s3_method_to_http(T::METHOD)
 }
 
-async fn aggregate_error_msg(res: Response) -> Option<String> {
-    let (_remaining_limit, body) = res
-        .stream()
-        .map_err(BoxError::from)
-        .try_fold(
-            (ERROR_BODY_LIMIT, Vec::new()),
-            |(mut remaining_limit, mut acc), chunk| async move {
-                acc.extend_from_slice(&chunk);
-                remaining_limit = remaining_limit.saturating_sub(chunk.len());
-                if remaining_limit == 0 {
-                    return Err(Box::from("body length exceeded"));
-                }
-
-                Ok((remaining_limit, acc))
-            },
-        )
-        .await
-        .ok()?;
-
-    Some(String::from_utf8_lossy(&body).to_string())
-}
-
 async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Response> {
     let response = client.execute(req).await?;
     if !response.status().is_success() {
         let mut err_msg = format!("s3 request failed: {response:?}");
-        if let Some(extra) = aggregate_error_msg(response).await {
-            err_msg.push_str("\nbody: ");
-            err_msg.push_str(&extra);
-        }
+
+        let body = response.text().await?;
+        err_msg.push_str("\nbody: ");
+        err_msg.push_str(&body);
 
         return Err(Box::from(err_msg));
     }
@@ -146,17 +123,58 @@ impl Client {
         Ok(response.stream().map_err(Into::into))
     }
 
-    pub async fn put_object<S>(&self, path: &str, stream: S) -> Result<()>
+    pub async fn put_object<S, E>(&self, path: &str, stream: S) -> Result<()>
     where
-        S: TryStream<Ok = Bytes> + Send + Sync + 'static,
-        S::Error: Into<BoxError>,
+        S: Stream<Item = Result<Bytes, E>> + Send + Sync + 'static,
+        E: Into<BoxError>,
     {
-        let put_action = self.bucket.put_object(Some(&self.credentials), path);
+        let create_mutlipart_upload = self
+            .bucket
+            .create_multipart_upload(Some(&self.credentials), path);
 
         let request = Request::builder()
-            .uri(String::from(put_action.sign(TWO_MINUTES)))
-            .method(http_method_by_value(&put_action))
-            .body(Body::stream(stream))?;
+            .uri(String::from(create_mutlipart_upload.sign(TWO_MINUTES)))
+            .method(http_method_by_value(&create_mutlipart_upload))
+            .body(Body::empty())?;
+
+        let response = execute_request(&self.http_client, request)
+            .await?
+            .text()
+            .await?;
+        let create_response = CreateMultipartUpload::parse_response(&response)?;
+
+        futures_util::pin_mut!(stream);
+
+        let mut ctr = 1;
+        while let Some(chunk) = stream.try_next().await.map_err(Into::into)? {
+            let upload_part = self.bucket.upload_part(
+                Some(&self.credentials),
+                path,
+                ctr,
+                create_response.upload_id(),
+            );
+
+            let request = Request::builder()
+                .uri(String::from(upload_part.sign(TWO_MINUTES)))
+                .method(http_method_by_value(&upload_part))
+                .body(Body::data(chunk))?;
+
+            execute_request(&self.http_client, request).await?;
+
+            ctr += 1;
+        }
+
+        let complete_multipart_upload = self.bucket.complete_multipart_upload(
+            Some(&self.credentials),
+            path,
+            create_response.upload_id(),
+            (&[] as &[&str]).iter().copied(),
+        );
+
+        let request = Request::builder()
+            .uri(String::from(complete_multipart_upload.sign(TWO_MINUTES)))
+            .method(http_method_by_value(&complete_multipart_upload))
+            .body(Body::data(complete_multipart_upload.body()))?;
 
         execute_request(&self.http_client, request).await?;
 
