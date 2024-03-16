@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
-use http::Request;
+use http::{header::CONTENT_LENGTH, Request};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
@@ -155,6 +155,7 @@ impl Client {
             );
 
             let request = Request::builder()
+                .header(CONTENT_LENGTH, chunk.len())
                 .uri(String::from(upload_part.sign(TWO_MINUTES)))
                 .method(http_method_by_value(&upload_part))
                 .body(Body::data(chunk))?;
