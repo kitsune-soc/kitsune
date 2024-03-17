@@ -173,11 +173,11 @@ where
             fqdn.push('.');
         }
 
-        Self {
-            fqdn,
-            strategy,
-            resolver: OpaqueDebug(default_resolver()),
-        }
+        Self::builder()
+            .fqdn(fqdn)
+            .strategy(strategy)
+            .resolver(default_resolver())
+            .build()
     }
 
     /// Return the FQDN
