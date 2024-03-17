@@ -152,10 +152,22 @@ pub struct Verifier<S>
 where
     S: VerificationStrategy,
 {
+    #[builder(setter(
+        transform = |mut fqdn: String| {
+            // Since this is supposed to be a FQDN, we can just push a dot to the end of it
+            // This will speed up the query to the resolver
+            if !fqdn.ends_with('.') {
+                fqdn.push('.');
+            }
+
+            fqdn
+        }
+    ))]
     fqdn: String,
     strategy: S,
 
     #[builder(
+        default = OpaqueDebug(default_resolver()),
         setter(transform = |resolver: Arc<dyn DnsResolver>| OpaqueDebug(resolver))
     )]
     resolver: OpaqueDebug<Arc<dyn DnsResolver>>,
@@ -165,21 +177,6 @@ impl<S> Verifier<S>
 where
     S: VerificationStrategy,
 {
-    /// Create a new verifier
-    pub fn new(mut fqdn: String, strategy: S) -> Self {
-        // Since this is supposed to be a FQDN, we can just push a dot to the end of it
-        // This will speed up the query to the resolver
-        if !fqdn.ends_with('.') {
-            fqdn.push('.');
-        }
-
-        Self::builder()
-            .fqdn(fqdn)
-            .strategy(strategy)
-            .resolver(default_resolver())
-            .build()
-    }
-
     /// Return the FQDN
     #[must_use]
     pub fn fqdn(&self) -> &str {
@@ -291,10 +288,16 @@ mod test {
 
     #[test]
     fn normalizes_to_fqdn() {
-        let domain_verifier = Verifier::new("aumetra.xyz".into(), DummyStrategy::default());
+        let domain_verifier = Verifier::builder()
+            .fqdn("aumetra.xyz".into())
+            .strategy(DummyStrategy::default())
+            .build();
         assert_eq!(domain_verifier.fqdn(), "aumetra.xyz.");
 
-        let fqdn_verifier = Verifier::new("aumetra.xyz.".into(), DummyStrategy::default());
+        let fqdn_verifier = Verifier::builder()
+            .fqdn("aumetra.xyz.".into())
+            .strategy(DummyStrategy::default())
+            .build();
         assert_eq!(fqdn_verifier.fqdn(), "aumetra.xyz.");
     }
 }

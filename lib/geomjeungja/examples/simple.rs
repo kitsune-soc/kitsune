@@ -5,7 +5,10 @@ async fn main() {
     // Create a verification strategy
     let verification_strategy =
         KeyValueStrategy::generate(&mut rand::thread_rng(), "kakunin".into());
-    let verifier = Verifier::new("aumetra.xyz".into(), verification_strategy);
+    let verifier = Verifier::builder()
+        .fqdn("aumetra.xyz".into())
+        .strategy(verification_strategy)
+        .build();
 
     // Now we store that somewhere for later verification
     let serialised_strategy = serde_json::to_string(verifier.strategy()).unwrap();
@@ -17,7 +20,11 @@ async fn main() {
         serde_json::from_str(&serialised_strategy).unwrap();
 
     // Let's check if they didn't lie
-    let verifier = Verifier::new("aumetra.xyz".into(), deserialised_strategy);
+    let verifier = Verifier::builder()
+        .fqdn("aumetra.xyz".into())
+        .strategy(deserialised_strategy)
+        .build();
+
     match verifier.verify().await {
         Ok(()) => println!("Successfully verified. All good!"),
         Err(Error::Unverified) => println!("TXT records didn't contain the KV pair :("),
