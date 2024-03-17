@@ -7,7 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.77"
+async-trait = "0.1.78"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 enum_dispatch = "0.3.12"
 futures-util = { version = "0.3.30", default-features = false, features = [
