@@ -2643,6 +2643,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "geomjeungja"
+version = "0.0.1-pre.5"
+dependencies = [
+ "hickory-resolver",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "simdutf8",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3468,19 +3482,6 @@ version = "0.0.1-pre.5"
 dependencies = [
  "chrono",
  "retry-policies",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "kakunin"
-version = "0.1.0"
-dependencies = [
- "hickory-resolver",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "thiserror",
  "tokio",
  "tracing",
 ]
