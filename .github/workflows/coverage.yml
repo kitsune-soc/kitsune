@@ -14,10 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@cargo-tarpaulin
-      - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - name: Generate code coverage
         run: |
