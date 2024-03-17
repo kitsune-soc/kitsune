@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![forbid(missing_docs)]
+#![deny(missing_docs)]
 
 #[macro_use]
 extern crate tracing;
@@ -16,6 +16,7 @@ use rand::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{convert::Infallible, future::Future, ops::Deref, sync::Arc};
+use typed_builder::TypedBuilder;
 
 mod util;
 
@@ -150,13 +151,18 @@ pub fn default_resolver() -> Arc<dyn DnsResolver> {
 }
 
 /// Verifier for an arbitrary FQDN
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TypedBuilder)]
+#[builder(doc)]
 pub struct Verifier<S>
 where
     S: VerificationStrategy,
 {
     fqdn: String,
     strategy: S,
+
+    #[builder(
+        setter(transform = |resolver: Arc<dyn DnsResolver>| OpaqueDebug(resolver))
+    )]
     resolver: OpaqueDebug<Arc<dyn DnsResolver>>,
 }
 

@@ -2657,6 +2657,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "typed-builder",
 ]
 
 [[package]]
