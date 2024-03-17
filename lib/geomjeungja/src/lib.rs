@@ -16,6 +16,7 @@ use rand::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{convert::Infallible, future::Future, ops::Deref, sync::Arc};
+use thiserror::Error;
 use typed_builder::TypedBuilder;
 
 mod util;
@@ -26,14 +27,8 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 const TOKEN_LENGTH: usize = 40;
 
 /// Combined error type
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 pub enum Error {
-    /// The builder was incomplete
-    ///
-    /// The field is the name of the missing field
-    #[error("Incomplete Builder: Field \"{0}\" is missing from the builder")]
-    IncompleteBuilder(&'static str),
-
     /// The resolver returned an error
     #[error(transparent)]
     Resolve(BoxError),
