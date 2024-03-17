@@ -4,9 +4,10 @@
 #[macro_use]
 extern crate tracing;
 
+use crate::util::OpaqueDebug;
+use async_trait::async_trait;
 use hickory_resolver::{
     config::{ResolverConfig, ResolverOpts},
-    error::ResolveError,
     TokioAsyncResolver,
 };
 use rand::{
@@ -14,7 +15,9 @@ use rand::{
     RngCore,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{convert::Infallible, future::Future};
+use std::{convert::Infallible, future::Future, ops::Deref, sync::Arc};
+
+mod util;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T, E = Error> = std::result::Result<T, E>;
@@ -32,7 +35,7 @@ pub enum Error {
 
     /// The resolver returned an error
     #[error(transparent)]
-    Resolve(#[from] ResolveError),
+    Resolve(BoxError),
 
     /// The verification strategy errored out
     #[error(transparent)]
@@ -41,6 +44,31 @@ pub enum Error {
     /// The domain did not have the required TXT record
     #[error("The domain did not have a TXT record matching the requirements")]
     Unverified,
+}
+
+/// DNS resolver
+#[async_trait]
+pub trait DnsResolver: Send + Sync {
+    /// Resolve an FQDN and return its TXT records
+    async fn lookup_txt(&self, fqdn: &str) -> Result<Vec<String>, BoxError>;
+}
+
+#[async_trait]
+impl DnsResolver for TokioAsyncResolver {
+    async fn lookup_txt(&self, fqdn: &str) -> Result<Vec<String>, BoxError> {
+        let records =
+            self.txt_lookup(fqdn)
+                .await?
+                .iter()
+                .flat_map(|record| {
+                    record.txt_data().iter().filter_map(|data| {
+                        simdutf8::basic::from_utf8(data).ok().map(ToOwned::to_owned)
+                    })
+                })
+                .collect();
+
+        Ok(records)
+    }
 }
 
 /// Domain verification strategy
@@ -112,6 +140,15 @@ impl VerificationStrategy for KeyValueStrategy {
     }
 }
 
+/// Construct the default resolver used by this library
+#[must_use]
+pub fn default_resolver() -> Arc<dyn DnsResolver> {
+    Arc::new(TokioAsyncResolver::tokio(
+        ResolverConfig::default(),
+        ResolverOpts::default(),
+    ))
+}
+
 /// Verifier for an arbitrary FQDN
 #[derive(Clone, Debug)]
 pub struct Verifier<S>
@@ -120,6 +157,7 @@ where
 {
     fqdn: String,
     strategy: S,
+    resolver: OpaqueDebug<Arc<dyn DnsResolver>>,
 }
 
 impl<S> Verifier<S>
@@ -134,7 +172,11 @@ where
             fqdn.push('.');
         }
 
-        Self { fqdn, strategy }
+        Self {
+            fqdn,
+            strategy,
+            resolver: OpaqueDebug(default_resolver()),
+        }
     }
 
     /// Return the FQDN
@@ -153,20 +195,15 @@ where
     /// Returns `Ok(())` when the check succeeded and the token is present
     #[instrument(skip_all, fields(%self.fqdn))]
     pub async fn verify(&self) -> Result<()> {
-        let resolver =
-            TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
-        let txt_records = resolver.txt_lookup(&self.fqdn).await?;
-
-        let txt_record_iter = txt_records.iter().flat_map(|record| {
-            record
-                .txt_data()
-                .iter()
-                .filter_map(|data| simdutf8::basic::from_utf8(data).ok())
-        });
+        let txt_records = self
+            .resolver
+            .lookup_txt(&self.fqdn)
+            .await
+            .map_err(Error::Resolve)?;
 
         let is_valid = self
             .strategy
-            .verify(txt_record_iter)
+            .verify(txt_records.iter().map(Deref::deref))
             .await
             .map_err(|err| Error::VerificationStrategy(err.into()))?;
 
@@ -176,7 +213,19 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{DummyStrategy, Verifier};
+    use crate::{DummyStrategy, KeyValueStrategy, Verifier};
+    use rand::SeedableRng;
+    use rand_xorshift::XorShiftRng;
+
+    const RNG_SEED: [u8; 16] = *b"im breaking down";
+
+    #[test]
+    fn key_value_strategy_schema() {
+        let kv_strategy =
+            KeyValueStrategy::generate(&mut XorShiftRng::from_seed(RNG_SEED), "key".into());
+
+        insta::assert_json_snapshot!(kv_strategy);
+    }
 
     #[test]
     fn normalizes_to_fqdn() {

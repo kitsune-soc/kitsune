@@ -6,6 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+async-trait = "0.1.78"
 hickory-resolver = { version = "0.24.0", features = ["dns-over-rustls"] }
 rand = "0.8.5"
 serde = { version = "1.0.197", features = ["derive"] }
@@ -14,6 +15,8 @@ thiserror = "1.0.58"
 tracing = "0.1.40"
 
 [dev-dependencies]
+insta = { version = "1.36.1", features = ["json"] }
+rand_xorshift = "0.3.0"
 serde_json = "1.0.114"
 tokio = { version = "1.36.0", features = ["macros", "rt"] }
 

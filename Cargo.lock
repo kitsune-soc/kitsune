@@ -2646,8 +2646,11 @@ dependencies = [
 name = "geomjeungja"
 version = "0.0.1-pre.5"
 dependencies = [
+ "async-trait",
  "hickory-resolver",
+ "insta",
  "rand 0.8.5",
+ "rand_xorshift",
  "serde",
  "serde_json",
  "simdutf8",
