@@ -4108,7 +4108,6 @@ name = "kitsune-test"
 version = "0.0.1-pre.5"
 dependencies = [
  "bytes",
- "diesel",
  "diesel-async",
  "futures-util",
  "http 1.1.0",
@@ -4122,7 +4121,6 @@ dependencies = [
  "rand 0.8.5",
  "redis",
  "rusty-s3",
- "scoped-futures",
  "testcontainers",
  "testcontainers-modules",
  "url",

@@ -7,7 +7,6 @@ license.workspace = true
 
 [dependencies]
 bytes = "1.5.0"
-diesel = "2.1.5"
 diesel-async = "0.4.1"
 futures-util = "0.3.30"
 http = "1.1.0"
@@ -24,7 +23,6 @@ redis = { version = "0.25.2", default-features = false, features = [
     "tokio-rustls-comp",
 ] }
 rusty-s3 = { version = "0.5.0", default-features = false }
-scoped-futures = "0.1.3"
 testcontainers = { version = "0.15.0", features = ["watchdog"] }
 testcontainers-modules = { version = "0.3.5", features = [
     "minio",
