@@ -14,7 +14,6 @@ use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
 
 #[tokio::test]
-#[serial_test::serial]
 async fn federation_allow() {
     database_test(|db_pool| async move {
         let builder = Fetcher::builder()
@@ -89,7 +88,6 @@ async fn federation_allow() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn federation_deny() {
     database_test(|db_pool| async move {
         let client = service_fn(

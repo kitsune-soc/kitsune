@@ -20,7 +20,6 @@ use std::sync::Arc;
 use tower::service_fn;
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fetch_actor() {
     database_test(|db_pool| async move {
         let client = Client::builder().service(service_fn(handle));
@@ -63,7 +62,6 @@ async fn fetch_actor() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fetch_emoji() {
     database_test(|db_pool| async move {
         let client = Client::builder().service(service_fn(handle));
@@ -116,7 +114,6 @@ async fn fetch_emoji() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fetch_note() {
     database_test(|db_pool| async move {
         let client = Client::builder().service(service_fn(handle));

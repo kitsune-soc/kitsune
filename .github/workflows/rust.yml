@@ -38,6 +38,29 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
@@ -45,4 +68,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - uses: taiki-e/install-action@nextest
-      - run: nix develop --impure --command bash -c "unset DATABASE_URL LD_LIBRARY_PATH REDIS_URL && cargo nextest run --all-features"
+      - run: nix develop --impure --command bash -c "unset LD_LIBRARY_PATH && cargo nextest run --all-features"
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
+          REDIS_URL: "redis://localhost"

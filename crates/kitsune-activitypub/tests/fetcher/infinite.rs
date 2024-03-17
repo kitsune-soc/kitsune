@@ -24,7 +24,6 @@ use std::{
 use tower::service_fn;
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fetch_infinitely_long_reply_chain() {
     database_test(|db_pool| async move {
             let request_counter = Arc::new(AtomicU32::new(0));

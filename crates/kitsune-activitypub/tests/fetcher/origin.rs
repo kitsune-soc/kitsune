@@ -14,7 +14,6 @@ use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
 
 #[tokio::test]
-#[serial_test::serial]
 async fn check_ap_id_authority() {
     database_test(|db_pool| async move {
         let builder = Fetcher::builder()
@@ -80,7 +79,6 @@ async fn check_ap_id_authority() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn check_ap_content_type() {
     database_test(|db_pool| async move {
         let client = service_fn(|req: Request<_>| async {
