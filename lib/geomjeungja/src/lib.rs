@@ -239,7 +239,7 @@ mod test {
         let resolver = crate::default_resolver();
 
         let verifier = Verifier::builder()
-            .fqdn("example.org".into())
+            .fqdn("example.org.".into())
             .resolver(resolver)
             .strategy(dummy)
             .build();
@@ -256,7 +256,7 @@ mod test {
         };
 
         let verifier = Verifier::builder()
-            .fqdn("aumetra.xyz".into())
+            .fqdn("aumetra.xyz.".into())
             .resolver(Arc::new(resolver))
             .strategy(dummy)
             .build();
