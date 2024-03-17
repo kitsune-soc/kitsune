@@ -3,11 +3,12 @@ use std::{
     ops::{Deref, DerefMut},
     str::{self, FromStr},
 };
+use thiserror::Error;
 use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
 
 pub use uuid;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Simd(#[from] uuid_simd::Error),
@@ -327,18 +328,19 @@ mod test {
     fn deserialize_bytes() {
         use serde_test::Configure;
 
-        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap().compact();
-        serde_test::assert_de_tokens(&uuid, &[Token::Bytes(&UUID_1_BYTES)]);
+        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap();
+        serde_test::assert_de_tokens(&uuid.compact(), &[Token::Bytes(&UUID_1_BYTES)]);
+        serde_test::assert_de_tokens(&uuid.readable(), &[Token::Bytes(&UUID_1_BYTES)]);
     }
 
     #[test]
     #[cfg(feature = "serde")]
     fn deserialize_byte_array() {
-        use serde_test::Configure;
+        use serde_test::{Compact, Configure};
 
-        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap().readable();
+        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap();
         serde_test::assert_de_tokens(
-            &uuid,
+            &uuid.readable(),
             &[
                 Token::Seq { len: Some(16) },
                 Token::U8(UUID_1_BYTES[0]),
@@ -360,5 +362,17 @@ mod test {
                 Token::SeqEnd,
             ],
         );
+
+        serde_test::assert_de_tokens_error::<Compact<Uuid>>(
+            &[Token::Seq { len: Some(16) }],
+            "invalid type: sequence, expected bytes",
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn serialize_uuid() {
+        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap();
+        serde_test::assert_ser_tokens(&uuid, &[Token::Str(UUID_1)]);
     }
 }
