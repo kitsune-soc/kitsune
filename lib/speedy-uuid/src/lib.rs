@@ -296,14 +296,69 @@ mod serde_impl {
 
 #[cfg(test)]
 mod test {
+    use serde_test::Token;
+
     use crate::Uuid;
     use std::str::FromStr;
 
     const UUID_1: &str = "38058daf-b2cd-4832-902a-83583ac07e28";
+    const UUID_1_BYTES: [u8; 16] = [
+        0x38, 0x05, 0x8d, 0xaf, 0xb2, 0xcd, 0x48, 0x32, 0x90, 0x2a, 0x83, 0x58, 0x3a, 0xc0, 0x7e,
+        0x28,
+    ];
 
     #[test]
     fn parse_1() {
         let uuid = Uuid::from_str(UUID_1).unwrap();
         assert_eq!(UUID_1, uuid.to_string());
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn deserialize_str() {
+        use serde_test::Configure;
+
+        let uuid = Uuid::from_str(UUID_1).unwrap().readable();
+        serde_test::assert_de_tokens(&uuid, &[Token::Str(UUID_1)]);
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn deserialize_bytes() {
+        use serde_test::Configure;
+
+        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap().compact();
+        serde_test::assert_de_tokens(&uuid, &[Token::Bytes(&UUID_1_BYTES)]);
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn deserialize_byte_array() {
+        use serde_test::Configure;
+
+        let uuid = Uuid::from_slice(&UUID_1_BYTES).unwrap().readable();
+        serde_test::assert_de_tokens(
+            &uuid,
+            &[
+                Token::Seq { len: Some(16) },
+                Token::U8(UUID_1_BYTES[0]),
+                Token::U8(UUID_1_BYTES[1]),
+                Token::U8(UUID_1_BYTES[2]),
+                Token::U8(UUID_1_BYTES[3]),
+                Token::U8(UUID_1_BYTES[4]),
+                Token::U8(UUID_1_BYTES[5]),
+                Token::U8(UUID_1_BYTES[6]),
+                Token::U8(UUID_1_BYTES[7]),
+                Token::U8(UUID_1_BYTES[8]),
+                Token::U8(UUID_1_BYTES[9]),
+                Token::U8(UUID_1_BYTES[10]),
+                Token::U8(UUID_1_BYTES[11]),
+                Token::U8(UUID_1_BYTES[12]),
+                Token::U8(UUID_1_BYTES[13]),
+                Token::U8(UUID_1_BYTES[14]),
+                Token::U8(UUID_1_BYTES[15]),
+                Token::SeqEnd,
+            ],
+        );
     }
 }

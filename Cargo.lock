@@ -7209,6 +7209,7 @@ dependencies = [
  "diesel",
  "redis",
  "serde",
+ "serde_test",
  "thiserror",
  "uuid",
  "uuid-simd",
