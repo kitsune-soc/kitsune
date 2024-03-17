@@ -219,17 +219,78 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{DummyStrategy, KeyValueStrategy, Verifier};
+    use crate::{BoxError, DnsResolver, DummyStrategy, Error, KeyValueStrategy, Verifier};
+    use async_trait::async_trait;
     use rand::SeedableRng;
     use rand_xorshift::XorShiftRng;
+    use std::sync::Arc;
 
     const RNG_SEED: [u8; 16] = *b"im breaking down";
+
+    #[derive(Clone)]
+    struct TestResolver {
+        expected_fqdn: String,
+        records: Vec<String>,
+    }
+
+    #[async_trait]
+    impl DnsResolver for TestResolver {
+        async fn lookup_txt(&self, fqdn: &str) -> Result<Vec<String>, BoxError> {
+            assert_eq!(fqdn, self.expected_fqdn);
+            Ok(self.records.clone())
+        }
+    }
+
+    #[tokio::test]
+    async fn rejects_invalid_records() {
+        let kv_strategy =
+            KeyValueStrategy::generate(&mut XorShiftRng::from_seed(RNG_SEED), "key".into());
+        let mut resolver = TestResolver {
+            expected_fqdn: "aumetra.xyz.".into(),
+            records: vec![],
+        };
+
+        let verifier = Verifier::builder()
+            .fqdn("aumetra.xyz.".into())
+            .resolver(Arc::new(resolver.clone()))
+            .strategy(kv_strategy.clone())
+            .build();
+        assert!(matches!(verifier.verify().await, Err(Error::Unverified)));
+
+        resolver.records = vec![format!("{}=obviously_not_valid", kv_strategy.key)];
+
+        let verifier = Verifier::builder()
+            .fqdn("aumetra.xyz.".into())
+            .resolver(Arc::new(resolver.clone()))
+            .strategy(kv_strategy.clone())
+            .build();
+        assert!(matches!(verifier.verify().await, Err(Error::Unverified)));
+    }
+
+    #[tokio::test]
+    async fn validation_works() {
+        let kv_strategy =
+            KeyValueStrategy::generate(&mut XorShiftRng::from_seed(RNG_SEED), "key".into());
+        let txt_record = format!("{}={}", kv_strategy.key, kv_strategy.value);
+
+        let resolver = TestResolver {
+            expected_fqdn: "aumetra.xyz.".into(),
+            records: vec![txt_record],
+        };
+        let verifier = Verifier::builder()
+            .fqdn("aumetra.xyz.".into())
+            .resolver(Arc::new(resolver))
+            .strategy(kv_strategy)
+            .build();
+
+        let result = verifier.verify().await;
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn key_value_strategy_schema() {
         let kv_strategy =
             KeyValueStrategy::generate(&mut XorShiftRng::from_seed(RNG_SEED), "key".into());
-
         insta::assert_json_snapshot!(kv_strategy);
     }
 
