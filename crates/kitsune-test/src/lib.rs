@@ -1,3 +1,4 @@
+use ::redis::aio::ConnectionManager;
 use bytes::Bytes;
 use diesel_async::{AsyncConnection, AsyncPgConnection, SimpleAsyncConnection};
 use futures_util::Future;
@@ -10,7 +11,6 @@ use kitsune_config::{
 };
 use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
-use redis::aio::ConnectionManager;
 use resource::provide_resource;
 use std::sync::Arc;
 use url::Url;
@@ -18,6 +18,7 @@ use uuid::Uuid;
 
 mod catch_panic;
 mod container;
+mod redis;
 mod resource;
 
 pub fn build_ap_response<B>(body: B) -> http::Response<Full<Bytes>>
@@ -115,20 +116,20 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("REDIS_URL", self::container::redis);
-    let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
+    let client = ::redis::Client::open(resource_handle.url().as_ref()).unwrap();
 
     // Connect to a random Redis database
-    let db_id = Uuid::new_v4().as_simple().to_string();
-    let connect_query = format!("SELECT {db_id}");
+    let db_id = self::redis::find_unused_database(&client).await;
     let pool = multiplex_pool::Pool::from_producer(
         || async {
             let mut conn = client.get_connection_manager().await?;
-            let (): () = redis::cmd(&connect_query)
+            let (): () = ::redis::cmd("SELECT")
+                .arg(db_id)
                 .query_async(&mut conn)
                 .await
                 .unwrap();
 
-            Ok::<_, redis::RedisError>(conn)
+            Ok::<_, ::redis::RedisError>(conn)
         },
         5,
         RoundRobinStrategy::default(),
@@ -138,7 +139,10 @@ where
 
     provide_resource(pool, func, |pool| async move {
         let mut conn = pool.get();
-        let (): () = redis::cmd("FLUSHDB").query_async(&mut conn).await.unwrap();
+        let (): () = ::redis::cmd("FLUSHDB")
+            .query_async(&mut conn)
+            .await
+            .unwrap();
     })
     .await
 }

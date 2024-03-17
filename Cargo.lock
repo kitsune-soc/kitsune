@@ -4119,6 +4119,7 @@ dependencies = [
  "kitsune-s3",
  "multiplex-pool",
  "pin-project-lite",
+ "rand 0.8.5",
  "redis",
  "rusty-s3",
  "scoped-futures",
