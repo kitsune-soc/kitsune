@@ -166,7 +166,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn basic() {
         database_test(|db_pool| {
             redis_test(|redis_pool| async move {
@@ -234,7 +233,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn custom_domain() {
         database_test(|db_pool| {
             redis_test(|redis_pool| async move {

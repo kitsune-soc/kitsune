@@ -16,7 +16,6 @@ use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fetch_actor_with_custom_acct() {
     database_test(|db_pool| async move {
         let mut jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json").to_owned();
@@ -80,7 +79,6 @@ async fn fetch_actor_with_custom_acct() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn ignore_fake_webfinger_acct() {
     database_test(|db_pool| async move {
         let link = Link {

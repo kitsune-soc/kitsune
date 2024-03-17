@@ -63,7 +63,6 @@ async fn create_user(conn: &mut AsyncPgConnection, username: &str) -> Result<Use
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn accounts_username() {
     database_test(|db_pool| async move {
         db_pool
@@ -95,7 +94,6 @@ async fn accounts_username() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn users_username() {
     database_test(|db_pool| async move {
         db_pool

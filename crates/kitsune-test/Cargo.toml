@@ -30,6 +30,8 @@ testcontainers-modules = { version = "0.3.5", features = [
     "postgres",
     "redis",
 ] }
+url = "2.5.0"
+uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
 
 [lints]
 workspace = true

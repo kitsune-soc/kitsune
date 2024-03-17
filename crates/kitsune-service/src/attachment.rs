@@ -273,7 +273,6 @@ mod test {
     use tower::service_fn;
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn upload_jpeg() {
         database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));

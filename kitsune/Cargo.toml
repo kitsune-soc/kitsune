@@ -141,7 +141,6 @@ redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
-serial_test = "3.0.0"
 tower = "0.4.13"
 
 [features]

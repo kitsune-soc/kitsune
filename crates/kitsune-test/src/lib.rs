@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncConnection, AsyncPgConnection, SimpleAsyncConnection};
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
@@ -12,14 +12,13 @@ use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
 use resource::provide_resource;
-use scoped_futures::ScopedFutureExt;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
+use url::Url;
+use uuid::Uuid;
 
 mod catch_panic;
 mod container;
 mod resource;
-
-type BoxError = Box<dyn Error + Send + Sync>;
 
 pub fn build_ap_response<B>(body: B) -> http::Response<Full<Bytes>>
 where
@@ -37,33 +36,35 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
+    let mut url = Url::parse(&resource_handle.url()).unwrap();
+
+    // Create a new separate database for this test
+    let id = Uuid::new_v4().as_simple().to_string();
+    let db_name = format!("kitsune_test_{id}");
+
+    let mut admin_conn = AsyncPgConnection::establish(url.as_str()).await.unwrap();
+
+    admin_conn
+        .batch_execute(&format!("CREATE DATABASE {db_name}"))
+        .await
+        .unwrap();
+
+    url.set_path(&db_name);
+
     let pool = kitsune_db::connect(&DatabaseConfig {
-        url: resource_handle.url().into(),
+        url: url.as_str().into(),
         max_connections: 10,
         use_tls: false,
     })
     .await
     .expect("Failed to connect to database");
 
-    provide_resource(pool, func, |pool| async move {
-        pool.with_connection(|db_conn| {
-            async move {
-                diesel::sql_query("DROP SCHEMA public CASCADE")
-                    .execute(db_conn)
-                    .await
-                    .expect("Failed to delete schema");
-
-                diesel::sql_query("CREATE SCHEMA public")
-                    .execute(db_conn)
-                    .await
-                    .expect("Failed to create schema");
-
-                Ok::<_, BoxError>(())
-            }
-            .scoped()
-        })
-        .await
-        .expect("Failed to get connection");
+    provide_resource(pool, func, |_pool| async move {
+        // Drop the newly created database. We don't need it anymore.
+        admin_conn
+            .batch_execute(&format!("DROP DATABASE {db_name}"))
+            .await
+            .unwrap();
     })
     .await
 }
@@ -83,10 +84,13 @@ where
 {
     let resource_handle = get_resource!("MINIO_URL", self::container::minio);
     let endpoint = resource_handle.url().parse().unwrap();
+
+    // Create a new bucket with a random ID
+    let bucket_id = Uuid::new_v4().as_simple().to_string();
     let bucket = rusty_s3::Bucket::new(
         endpoint,
         rusty_s3::UrlStyle::Path,
-        "test-bucket",
+        format!("test-bucket-{bucket_id}"),
         "us-east-1",
     )
     .unwrap();
@@ -112,8 +116,20 @@ where
 {
     let resource_handle = get_resource!("REDIS_URL", self::container::redis);
     let client = redis::Client::open(resource_handle.url().as_ref()).unwrap();
+
+    // Connect to a random Redis database
+    let db_id = Uuid::new_v4().as_simple().to_string();
+    let connect_query = format!("SELECT {db_id}");
     let pool = multiplex_pool::Pool::from_producer(
-        || client.get_connection_manager(),
+        || async {
+            let mut conn = client.get_connection_manager().await?;
+            let (): () = redis::cmd(&connect_query)
+                .query_async(&mut conn)
+                .await
+                .unwrap();
+
+            Ok::<_, redis::RedisError>(conn)
+        },
         5,
         RoundRobinStrategy::default(),
     )
@@ -122,7 +138,7 @@ where
 
     provide_resource(pool, func, |pool| async move {
         let mut conn = pool.get();
-        let (): () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
+        let (): () = redis::cmd("FLUSHDB").query_async(&mut conn).await.unwrap();
     })
     .await
 }

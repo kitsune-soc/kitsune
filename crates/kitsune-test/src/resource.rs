@@ -20,6 +20,26 @@ macro_rules! get_resource {
     };
 }
 
+pub enum ResourceHandle<S>
+where
+    S: Service,
+{
+    Container(S),
+    Url(String),
+}
+
+impl<S> ResourceHandle<S>
+where
+    S: Service,
+{
+    pub fn url(&self) -> Cow<'_, str> {
+        match self {
+            Self::Container(container) => Cow::Owned(container.url()),
+            Self::Url(ref url) => Cow::Borrowed(url),
+        }
+    }
+}
+
 /// Provide a resource to the `run` closure, catch any panics that may occur while polling the future returned by `run`,
 /// then run the `cleanup` closure, and resume any panic unwinds that were caught
 pub async fn provide_resource<Resource, Run, Cleanup, RunFut, CleanupFut>(
@@ -40,25 +60,5 @@ where
     match out {
         Ok(ret) => ret,
         Err(err) => panic::resume_unwind(err),
-    }
-}
-
-pub enum ResourceHandle<S>
-where
-    S: Service,
-{
-    Container(S),
-    Url(String),
-}
-
-impl<S> ResourceHandle<S>
-where
-    S: Service,
-{
-    pub fn url(&self) -> Cow<'_, str> {
-        match self {
-            Self::Container(container) => Cow::Owned(container.url()),
-            Self::Url(ref url) => Cow::Borrowed(url),
-        }
     }
 }

@@ -42,7 +42,6 @@ typed-builder = "0.18.1"
 
 [dev-dependencies]
 kitsune-test = { path = "../kitsune-test" }
-serial_test = "3.0.0"
 tokio = { version = "1.36.0", features = ["macros"] }
 
 [lints]

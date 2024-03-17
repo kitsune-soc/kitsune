@@ -250,7 +250,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn full_test() {
         minio_test(|client| async move {
             client
@@ -283,7 +282,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn abort_request_works() {
         minio_test(|client| async move {
             let result = client
