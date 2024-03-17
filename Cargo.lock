@@ -1991,7 +1991,7 @@ dependencies = [
 [[package]]
 name = "diesel-async"
 version = "0.4.1"
-source = "git+https://github.com/weiznich/diesel_async.git?rev=017ebe2fb7a2709ab5db92148dea5ce812a35e09#017ebe2fb7a2709ab5db92148dea5ce812a35e09"
+source = "git+https://github.com/weiznich/diesel_async.git?rev=1ef43d2a8a4080c1e9e5c34056f4d26cbb2a85cc#1ef43d2a8a4080c1e9e5c34056f4d26cbb2a85cc"
 dependencies = [
  "async-trait",
  "bb8",
@@ -2181,9 +2181,9 @@ checksum = "e2153bd83ebc09db15bcbdc3e2194d901804952e3dc96967e1cd3b0c5c32d112"
 [[package]]
 name = "embed-sdk"
 version = "0.1.0"
-source = "git+https://github.com/Lantern-chat/embed-service.git?rev=0d43394bb2514f57edc402a83f69b171705c3650#0d43394bb2514f57edc402a83f69b171705c3650"
+source = "git+https://github.com/Lantern-chat/embed-service.git?rev=39f526e9674766596a6fc988623683c15d3564b9#39f526e9674766596a6fc988623683c15d3564b9"
 dependencies = [
- "bitflags 1.3.2",
+ "bitflags 2.4.2",
  "client-sdk-common",
  "iso8601-timestamp",
  "serde",
