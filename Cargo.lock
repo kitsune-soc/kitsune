@@ -4123,6 +4123,7 @@ dependencies = [
  "rusty-s3",
  "testcontainers",
  "testcontainers-modules",
+ "tokio",
  "url",
  "uuid",
 ]

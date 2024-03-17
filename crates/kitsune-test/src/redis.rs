@@ -1,10 +1,11 @@
 use rand::Rng;
 use redis::{aio::MultiplexedConnection, RedisResult, Value};
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, time::Duration};
 
 const DATABASE_RANGE: RangeInclusive<u8> = 1..=15;
 const LOCK_KEY: &str = "_TEST_LOCK";
 const LOCK_VALUE: &str = "LOCKED";
+const SLEEP_DURATION: Duration = Duration::from_millis(100);
 
 async fn switch_and_try_lock(conn: &mut MultiplexedConnection, id: u8) -> bool {
     let (): () = redis::cmd("SELECT")
@@ -42,5 +43,7 @@ pub async fn find_unused_database(client: &redis::Client) -> u8 {
         if switch_and_try_lock(&mut connection, db_id).await {
             break db_id;
         }
+
+        tokio::time::sleep(SLEEP_DURATION).await;
     }
 }
