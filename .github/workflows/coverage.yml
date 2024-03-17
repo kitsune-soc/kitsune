@@ -1,4 +1,4 @@
-name: coverage
+name: Coverage
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: coverage
+    name: Test coverage
     runs-on: ubuntu-latest
     services:
       postgres:
