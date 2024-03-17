@@ -55,3 +55,48 @@ where
     let result = atoi_radix10::parse(masto_id.as_ref())?;
     Ok(process_u64(result))
 }
+
+#[cfg(test)]
+mod test {
+    #![allow(clippy::unreadable_literal)]
+
+    use time::{Month, OffsetDateTime};
+
+    // ID nabbed from this post: <https://hachyderm.io/@samhenrigold/112094325204679902>
+    const ID: u64 = 112094325204679902;
+    const ID_STR: &str = "112094325204679902";
+
+    fn uuid_timestamp_to_time(timestamp: uuid::Timestamp) -> OffsetDateTime {
+        let (seconds, nanos) = timestamp.to_unix();
+        let nanos = ((seconds as i128) * 1_000_000_000) + (nanos as i128);
+        OffsetDateTime::from_unix_timestamp_nanos(nanos).unwrap()
+    }
+
+    #[test]
+    fn integer_convert_works() {
+        let uuid = crate::process_u64(ID);
+        let timestamp = uuid_timestamp_to_time(uuid.get_timestamp().unwrap());
+
+        assert_eq!(timestamp.day(), 14);
+        assert_eq!(timestamp.month(), Month::March);
+        assert_eq!(timestamp.year(), 2024);
+
+        assert_eq!(timestamp.hour(), 13);
+        assert_eq!(timestamp.minute(), 41);
+        assert_eq!(timestamp.second(), 3);
+    }
+
+    #[test]
+    fn string_convert_works() {
+        let uuid = crate::process(ID_STR).unwrap();
+        let timestamp = uuid_timestamp_to_time(uuid.get_timestamp().unwrap());
+
+        assert_eq!(timestamp.day(), 14);
+        assert_eq!(timestamp.month(), Month::March);
+        assert_eq!(timestamp.year(), 2024);
+
+        assert_eq!(timestamp.hour(), 13);
+        assert_eq!(timestamp.minute(), 41);
+        assert_eq!(timestamp.second(), 3);
+    }
+}
