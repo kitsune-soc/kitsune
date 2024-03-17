@@ -234,6 +234,37 @@ mod test {
     }
 
     #[tokio::test]
+    async fn default_resolver_works() {
+        let dummy = DummyStrategy::default();
+        let resolver = crate::default_resolver();
+
+        let verifier = Verifier::builder()
+            .fqdn("example.org".into())
+            .resolver(resolver)
+            .strategy(dummy)
+            .build();
+
+        assert!(verifier.verify().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn dummy_strategy_works() {
+        let dummy = DummyStrategy::default();
+        let resolver = TestResolver {
+            expected_fqdn: "aumetra.xyz.".into(),
+            records: vec![],
+        };
+
+        let verifier = Verifier::builder()
+            .fqdn("aumetra.xyz".into())
+            .resolver(Arc::new(resolver))
+            .strategy(dummy)
+            .build();
+
+        assert!(verifier.verify().await.is_ok());
+    }
+
+    #[tokio::test]
     async fn rejects_invalid_records() {
         let kv_strategy =
             KeyValueStrategy::generate(&mut XorShiftRng::from_seed(RNG_SEED), "key".into());
