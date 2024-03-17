@@ -50,6 +50,7 @@ members = [
     "lib/athena",
     "lib/blowocking",
     "lib/cursiv",
+    "lib/geomjeungja",
     "lib/http-compat",
     "lib/http-signatures",
     "lib/just-retry",
