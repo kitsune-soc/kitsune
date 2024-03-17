@@ -297,9 +297,8 @@ mod serde_impl {
 
 #[cfg(test)]
 mod test {
-    use serde_test::Token;
-
     use crate::Uuid;
+    use serde_test::Token;
     use std::str::FromStr;
 
     const UUID_1: &str = "38058daf-b2cd-4832-902a-83583ac07e28";
