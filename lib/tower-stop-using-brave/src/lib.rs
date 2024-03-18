@@ -77,7 +77,7 @@ mod test {
         Request, Response, StatusCode,
     };
     use std::convert::Infallible;
-    use tower::{service_fn, Layer, Service, ServiceExt};
+    use tower::{service_fn, Layer, ServiceExt};
 
     const BRAVE_USER_AGENTS: &[&str] = &[
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Brave/120.0.0.0",
@@ -104,15 +104,14 @@ mod test {
     #[test]
     fn matches_brave_agents() {
         for user_agent in BRAVE_USER_AGENTS {
-            let mut service =
-                StopUsingBraveLayer::default().layer(service_fn(|_req: Request<()>| async move {
-                    // The "unreachable" expression provides type annotations for the compiler to figure out the response and error types
-                    #[allow(unreachable_code)]
-                    {
-                        panic!("Shouldn't have reached the handler!")
-                            as Result<Response<()>, Infallible>
-                    }
-                }));
+            let service = StopUsingBraveLayer::default().layer(service_fn(|_req: Request<()>| {
+                // The "unreachable" expression provides type annotations for the compiler to figure out the response and error types
+                #[allow(unreachable_code)]
+                async move {
+                    panic!("Shouldn't have reached the handler!")
+                        as Result<Response<()>, Infallible>
+                }
+            }));
 
             let response = executor::block_on(async move {
                 let request = Request::builder()
@@ -120,7 +119,7 @@ mod test {
                     .body(())
                     .unwrap();
 
-                service.ready().await.unwrap().call(request).await.unwrap()
+                service.oneshot(request).await.unwrap()
             });
 
             assert_eq!(response.status(), StatusCode::FOUND);
@@ -134,7 +133,7 @@ mod test {
     #[test]
     fn doesnt_match_other_agents() {
         for user_agent in OTHER_USER_AGENTS {
-            let mut service =
+            let service =
                 StopUsingBraveLayer::default().layer(service_fn(|_req: Request<()>| async move {
                     Ok::<_, Infallible>(
                         Response::builder().status(StatusCode::OK).body(()).unwrap(),
@@ -147,7 +146,7 @@ mod test {
                     .body(())
                     .unwrap();
 
-                service.ready().await.unwrap().call(request).await.unwrap()
+                service.oneshot(request).await.unwrap()
             });
 
             assert_eq!(response.status(), StatusCode::OK);
