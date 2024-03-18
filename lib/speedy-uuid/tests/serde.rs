@@ -10,12 +10,6 @@ const UUID_BYTES: [u8; 16] = [
 ];
 
 #[test]
-fn deserialize_str() {
-    let uuid = Uuid::from_str(UUID).unwrap().readable();
-    serde_test::assert_de_tokens(&uuid, &[Token::Str(UUID)]);
-}
-
-#[test]
 fn deserialize_bytes() {
     let uuid = Uuid::from_slice(&UUID_BYTES).unwrap();
     serde_test::assert_de_tokens(&uuid.compact(), &[Token::Bytes(&UUID_BYTES)]);
@@ -53,6 +47,12 @@ fn deserialize_byte_array() {
         &[Token::Seq { len: Some(16) }],
         "invalid type: sequence, expected bytes",
     );
+}
+
+#[test]
+fn deserialize_str() {
+    let uuid = Uuid::from_str(UUID).unwrap().readable();
+    serde_test::assert_de_tokens(&uuid, &[Token::Str(UUID)]);
 }
 
 #[test]
