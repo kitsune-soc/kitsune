@@ -17,6 +17,54 @@ const EXPECTED_SHA512_HASH: &str =
     "zTNHlXez9GjaWU8Z/7OM6ntFjCbxcOfuc7NRp8F4m3fVrmG5K/7QST2lQiif8EGEopqih9eFlbo0dumbsBYP4g==";
 
 #[test]
+fn can_handle_one_invalid() {
+    let request = Request::builder()
+        .header(
+            "digest",
+            format!("made-up-hash=woowee,sha-512={EXPECTED_SHA512_HASH}"),
+        )
+        .body(Full::from(TEXT))
+        .unwrap();
+
+    let mut service = VerifyDigestLayer::default().layer(service_fn(
+        |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
+            let body = request.collect().await.unwrap().to_bytes();
+            assert_eq!(body, TEXT);
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
+        },
+    ));
+
+    futures::executor::block_on(async move {
+        let response = service.ready().await.unwrap().call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+    });
+}
+
+#[test]
+fn can_handle_multiple() {
+    let request = Request::builder()
+        .header(
+            "digest",
+            format!("sha-256={EXPECTED_SHA256_HASH},sha-512={EXPECTED_SHA512_HASH}"),
+        )
+        .body(Full::from(TEXT))
+        .unwrap();
+
+    let mut service = VerifyDigestLayer::default().layer(service_fn(
+        |request: Request<VerifyDigestBody<Full<Bytes>>>| async move {
+            let body = request.collect().await.unwrap().to_bytes();
+            assert_eq!(body, TEXT);
+            Ok::<_, Infallible>(Response::<Full<Bytes>>::default())
+        },
+    ));
+
+    futures::executor::block_on(async move {
+        let response = service.ready().await.unwrap().call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+    });
+}
+
+#[test]
 fn digest_invalid_base64() {
     let request = Request::builder()
         .header(
@@ -37,6 +85,8 @@ fn digest_invalid_base64() {
     ));
 
     futures::executor::block_on(async move {
+        // The response code is ignored here since the actual validation is done in the HTTP body
+        // The above assert ensures that our code actually errors out on mismatch
         service.ready().await.unwrap().call(request).await.unwrap();
     });
 }
@@ -76,7 +126,8 @@ fn digest_sha256() {
     ));
 
     futures::executor::block_on(async move {
-        service.ready().await.unwrap().call(request).await.unwrap();
+        let response = service.ready().await.unwrap().call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     });
 }
 
@@ -97,6 +148,7 @@ fn digest_sha512() {
     ));
 
     futures::executor::block_on(async move {
-        service.ready().await.unwrap().call(request).await.unwrap();
+        let response = service.ready().await.unwrap().call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     });
 }

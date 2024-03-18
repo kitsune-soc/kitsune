@@ -25,6 +25,39 @@ static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 static MISSING_DIGEST_HEADER_BODY: Bytes = Bytes::from_static(b"Missing digest header");
 static UNSUPPORTED_DIGEST_BODY: Bytes = Bytes::from_static(b"Unsupported digest");
 
+fn handle_single(bytes: &[u8]) -> Result<Option<Verifier>, BoxError> {
+    let Some(pos) = memchr(b'=', bytes) else {
+        return Err("Invalid header value".into());
+    };
+
+    let (algorithm_name, digest_value) = bytes.split_at(pos);
+    let Some(algorithm) = Algorithm::from_bytes(algorithm_name) else {
+        return Ok(None);
+    };
+
+    let digest_value = base64_simd::STANDARD.decode_to_vec(&digest_value[1..])?;
+
+    Ok(Some(Verifier {
+        algorithm,
+        digest_value,
+    }))
+}
+
+fn handle_multiple(mut bytes: &[u8]) -> Result<Option<Verifier>, BoxError> {
+    while let Some(split_pos) = memchr(b',', bytes) {
+        let (algo, rest) = bytes.split_at(split_pos);
+
+        if let Some(verifier) = handle_single(algo)? {
+            return Ok(Some(verifier));
+        }
+
+        bytes = &rest[1..];
+    }
+
+    // And run one last time over the remaining bytes
+    handle_single(bytes)
+}
+
 struct Verifier {
     algorithm: Algorithm,
     digest_value: Vec<u8>,
@@ -32,20 +65,15 @@ struct Verifier {
 
 impl Verifier {
     pub fn from_header_value(header_value: &HeaderValue) -> Result<Self, BoxError> {
-        let Some(pos) = memchr(b'=', header_value.as_bytes()) else {
-            return Err("Invalid header value".into());
-        };
+        let header_bytes = header_value.as_bytes();
 
-        let (algorithm_name, digest_value) = header_value.as_bytes().split_at(pos);
-        let algorithm = Algorithm::from_bytes(algorithm_name)
-            .ok_or_else(|| BoxError::from("Unsupported digest"))?;
-
-        let digest_value = base64_simd::STANDARD.decode_to_vec(&digest_value[1..])?;
-
-        Ok(Self {
-            algorithm,
-            digest_value,
-        })
+        if memchr(b',', header_bytes).is_some() {
+            handle_multiple(header_bytes)
+        } else {
+            handle_single(header_bytes)
+        }
+        .transpose()
+        .ok_or_else(|| BoxError::from("No compatible digest found"))?
     }
 
     pub fn update_digest(&mut self, val: &[u8]) {
