@@ -22,7 +22,7 @@ redis = { version = "0.25.2", default-features = false, features = [
     "tokio-comp",
 ] }
 serde = { version = "1.0.197", features = ["derive"] }
-simd-json = "0.13.8"
+simd-json = "0.13.9"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
 thiserror = "1.0.58"

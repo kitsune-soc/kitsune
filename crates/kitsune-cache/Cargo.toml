@@ -14,7 +14,7 @@ redis = { version = "0.25.2", default-features = false, features = [
     "tokio-comp",
 ] }
 serde = "1.0.197"
-simd-json = "0.13.8"
+simd-json = "0.13.9"
 thiserror = "1.0.58"
 tracing = "0.1.40"
 typed-builder = "0.18.1"

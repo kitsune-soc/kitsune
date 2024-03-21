@@ -2,7 +2,7 @@ use crate::kv_storage;
 use slab::Slab;
 use std::sync::Arc;
 use wasmtime::{component::ResourceTable, Engine, Store};
-use wasmtime_wasi::preview2::{WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 
 pub struct KvContext {
     pub module_name: Option<String>,
