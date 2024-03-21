@@ -1,7 +1,7 @@
 use kitsune_wasm_mrf::{MrfModule, MrfService, Outcome};
 use mrf_manifest::{ActivitySet, ApiVersion, ManifestV1};
 use smol_str::SmolStr;
-use std::{borrow::Cow, collections::HashSet};
+use std::{borrow::Cow, collections::BTreeSet};
 use wasmtime::{component::Component, Config, Engine};
 
 const WASM_COMPONENT: &[u8] = include_bytes!("example_mrf.component.wasm");
@@ -12,7 +12,7 @@ fn dummy_manifest() -> ManifestV1<'static> {
         name: "dummy".into(),
         version: "1.0.0".parse().unwrap(),
         activity_types: ActivitySet::from(
-            [Cow::Borrowed("*")].into_iter().collect::<HashSet<_, _>>(),
+            [Cow::Borrowed("*")].into_iter().collect::<BTreeSet<_>>(),
         ),
         config_schema: None,
     }

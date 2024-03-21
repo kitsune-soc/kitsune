@@ -1,0 +1,5 @@
+---
+source: lib/mrf-manifest/tests/serialise.rs
+expression: encoded_manifest_str
+---
+{"activityTypes":["Announce","Create","Delete","Like"],"apiVersion":"v1","configSchema":null,"manifestVersion":"v1","name":"test-manifest","version":"0.0.1-cattywampus"}

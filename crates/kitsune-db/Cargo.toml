@@ -30,7 +30,7 @@ num-traits = "0.2.18"
 rustls = "=0.22.2"
 rustls-native-certs = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
-simd-json = "0.13.8"
+simd-json = "0.13.9"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.58"
 tokio = { version = "1.36.0", features = ["rt"] }

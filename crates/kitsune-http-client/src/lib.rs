@@ -241,9 +241,8 @@ impl Client {
     pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
 
-        let mut ready_svc = self.inner.clone();
-        let ready_svc = ready_svc.ready().await.map_err(Error::new)?;
-        let response = ready_svc.call(req).await.map_err(Error::new)?;
+        let ready_svc = self.inner.clone();
+        let response = ready_svc.oneshot(req).await.map_err(Error::new)?;
 
         Ok(Response { inner: response })
     }

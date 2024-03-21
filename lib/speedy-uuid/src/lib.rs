@@ -3,11 +3,12 @@ use std::{
     ops::{Deref, DerefMut},
     str::{self, FromStr},
 };
+use thiserror::Error;
 use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
 
 pub use uuid;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Simd(#[from] uuid_simd::Error),
@@ -291,19 +292,5 @@ mod serde_impl {
             // Safety: The `uuid-simd` library provides a buffer of correctly encoded UTF-8 bytes
             serializer.serialize_str(unsafe { str::from_utf8_unchecked(&bytes) })
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::Uuid;
-    use std::str::FromStr;
-
-    const UUID_1: &str = "38058daf-b2cd-4832-902a-83583ac07e28";
-
-    #[test]
-    fn parse_1() {
-        let uuid = Uuid::from_str(UUID_1).unwrap();
-        assert_eq!(UUID_1, uuid.to_string());
     }
 }

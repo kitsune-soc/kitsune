@@ -1,11 +1,11 @@
 use cursiv::{CsrfHandle, CsrfLayer, Message};
-use futures::{executor, future};
 use http::{header, Request, Response};
-use std::convert::Infallible;
+use std::{convert::Infallible, future};
 use tower::{service_fn, Layer, Service, ServiceExt};
 
 fn common() -> impl Service<Request<()>, Response = Response<()>, Error = Infallible> {
     let key = blake3::derive_key("wawa", b"bartmoss");
+
     let service = service_fn(|req: Request<()>| {
         let handle = req.extensions().get::<CsrfHandle>().unwrap();
         if let Some(msg) = req.extensions().get::<Message>() {
@@ -17,27 +17,18 @@ fn common() -> impl Service<Request<()>, Response = Response<()>, Error = Infall
         let mut resp = Response::new(());
         resp.extensions_mut().insert(msg);
 
-        future::ok::<_, Infallible>(resp)
+        future::ready(Ok::<_, Infallible>(resp))
     });
 
     CsrfLayer::new(key).layer(service)
 }
 
-#[test]
+#[futures_test::test]
 #[should_panic = "BAD VERIFICATION"]
-fn panic_wrong_signature() {
-    let mut service = common();
+async fn panic_wrong_signature() {
+    let mut service = common().ready_oneshot().await.unwrap();
 
-    let response = executor::block_on(async {
-        service
-            .ready()
-            .await
-            .unwrap()
-            .call(Request::default())
-            .await
-            .unwrap()
-    });
-
+    let response = service.call(Request::default()).await.unwrap();
     let req = Request::builder()
         .header(
             header::COOKIE,
@@ -47,21 +38,13 @@ fn panic_wrong_signature() {
         .body(())
         .unwrap();
 
-    executor::block_on(async { service.ready().await.unwrap().call(req).await.unwrap() });
+    service.oneshot(req).await.unwrap();
 }
 
-#[test]
-fn sign_verify_simple() {
-    let mut service = common();
-    let response = executor::block_on(async {
-        service
-            .ready()
-            .await
-            .unwrap()
-            .call(Request::default())
-            .await
-            .unwrap()
-    });
+#[futures_test::test]
+async fn sign_verify_simple() {
+    let mut service = common().ready_oneshot().await.unwrap();
+    let response = service.call(Request::default()).await.unwrap();
 
     let req = Request::builder()
         .header(
@@ -72,5 +55,5 @@ fn sign_verify_simple() {
         .body(())
         .unwrap();
 
-    executor::block_on(async { service.ready().await.unwrap().call(req).await.unwrap() });
+    service.oneshot(req).await.unwrap();
 }

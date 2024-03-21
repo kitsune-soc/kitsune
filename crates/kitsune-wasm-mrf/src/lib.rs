@@ -125,8 +125,7 @@ impl MrfService {
         let mut linker = Linker::<Context>::new(&engine);
 
         mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(miette::Report::msg)?;
-        wasmtime_wasi::preview2::command::add_to_linker(&mut linker)
-            .map_err(miette::Report::msg)?;
+        wasmtime_wasi::command::add_to_linker(&mut linker).map_err(miette::Report::msg)?;
 
         Ok(Self {
             engine,

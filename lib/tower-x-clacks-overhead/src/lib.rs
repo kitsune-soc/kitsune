@@ -124,26 +124,16 @@ mod test {
     use std::convert::Infallible;
     use tower::{service_fn, ServiceExt};
     use tower_layer::Layer;
-    use tower_service::Service;
 
-    #[test]
-    fn add_header() {
-        let mut service = XClacksOverheadLayer::new(["Johnny"])
+    #[futures_test::test]
+    async fn add_header() {
+        let service = XClacksOverheadLayer::new(["Johnny"])
             .unwrap()
             .layer(service_fn(|_req: Request<()>| async move {
                 Ok::<_, Infallible>(Response::new(()))
             }));
 
-        let response = futures::executor::block_on(async move {
-            service
-                .ready()
-                .await
-                .unwrap()
-                .call(Request::new(()))
-                .await
-                .unwrap()
-        });
-
+        let response = service.oneshot(Request::new(())).await.unwrap();
         let clacks_overhead = response.headers().get(&HEADER_NAME).unwrap();
         assert_eq!(clacks_overhead.as_bytes(), b"GNU Johnny");
     }
