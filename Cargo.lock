@@ -47,7 +47,6 @@ dependencies = [
  "cfg-if",
  "getrandom 0.2.12",
  "once_cell",
- "serde",
  "version_check",
  "zerocopy",
 ]
@@ -4846,7 +4845,6 @@ dependencies = [
 name = "mrf-manifest"
 version = "0.0.1-pre.5"
 dependencies = [
- "ahash 0.8.11",
  "insta",
  "leb128",
  "miette",

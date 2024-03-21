@@ -10,6 +10,7 @@ use schemars::{schema::RootSchema, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
+    collections::BTreeSet,
     ops::{Deref, DerefMut},
 };
 
@@ -41,7 +42,7 @@ where
 /// Wrapper around a hash set intended for use with the `activityTypes` field
 #[derive(Clone, Debug, Deserialize, Eq, JsonSchema, PartialEq, Serialize)]
 #[serde(transparent)]
-pub struct ActivitySet<'a>(#[serde(borrow)] pub ahash::HashSet<Cow<'a, str>>);
+pub struct ActivitySet<'a>(#[serde(borrow)] pub BTreeSet<Cow<'a, str>>);
 
 impl ActivitySet<'_> {
     /// Does the set of requested activity types contain `*`?
@@ -58,13 +59,13 @@ impl ActivitySet<'_> {
             .iter()
             .cloned()
             .map(cow_to_static)
-            .collect::<ahash::HashSet<Cow<'static, str>>>()
+            .collect::<BTreeSet<Cow<'static, str>>>()
             .into()
     }
 }
 
 impl<'a> Deref for ActivitySet<'a> {
-    type Target = ahash::HashSet<Cow<'a, str>>;
+    type Target = BTreeSet<Cow<'a, str>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -77,15 +78,14 @@ impl DerefMut for ActivitySet<'_> {
     }
 }
 
-#[allow(clippy::implicit_hasher)] // Literally not applicable here. False positive. Otherwise we would need to have the whole thing generic over the hasher
-impl<'a> From<ActivitySet<'a>> for ahash::HashSet<Cow<'a, str>> {
+impl<'a> From<ActivitySet<'a>> for BTreeSet<Cow<'a, str>> {
     fn from(value: ActivitySet<'a>) -> Self {
         value.0
     }
 }
 
-impl<'a> From<ahash::HashSet<Cow<'a, str>>> for ActivitySet<'a> {
-    fn from(value: ahash::HashSet<Cow<'a, str>>) -> Self {
+impl<'a> From<BTreeSet<Cow<'a, str>>> for ActivitySet<'a> {
+    fn from(value: BTreeSet<Cow<'a, str>>) -> Self {
         Self(value)
     }
 }
