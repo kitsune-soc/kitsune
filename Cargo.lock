@@ -4858,6 +4858,7 @@ dependencies = [
  "thiserror",
  "wasm-encoder",
  "wasmparser",
+ "wat",
 ]
 
 [[package]]
@@ -8819,6 +8820,28 @@ name = "wasmtime-wmemcheck"
 version = "19.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36bd91a4dc55af0bf55e9e2ab0ea13724cfb5c5a1acdf8873039769208f59490"
+
+[[package]]
+name = "wast"
+version = "201.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ef6e1ef34d7da3e2b374fd2b1a9c0227aff6cad596e1b24df9b58d0f6222faa"
+dependencies = [
+ "bumpalo",
+ "leb128",
+ "memchr",
+ "unicode-width",
+ "wasm-encoder",
+]
+
+[[package]]
+name = "wat"
+version = "1.201.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "453d5b37a45b98dee4f4cb68015fc73634d7883bbef1c65e6e9c78d454cf3f32"
+dependencies = [
+ "wast",
+]
 
 [[package]]
 name = "web-sys"

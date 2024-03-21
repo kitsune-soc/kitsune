@@ -20,16 +20,17 @@ wasmparser = { version = "0.201.0", optional = true }
 
 [dev-dependencies]
 insta = { version = "1.36.1", default-features = false, features = ["json"] }
+wat = "1.201.0"
 
 [features]
-encode = ["dep:wasm-encoder", "serialise"]
-parse = [
+decode = [
     "dep:miette",
     "dep:leb128",
     "dep:serde_json",
     "dep:thiserror",
     "dep:wasmparser",
 ]
+encode = ["dep:wasm-encoder", "serialise"]
 serialise = ["dep:olpc-cjson", "dep:serde_json"]
 
 [lints]

@@ -13,14 +13,14 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-#[cfg(feature = "parse")]
+#[cfg(feature = "decode")]
 pub use self::decode::{decode, DecodeError, SectionRange};
 #[cfg(feature = "encode")]
 pub use self::encode::encode;
 #[cfg(feature = "serialise")]
 pub use self::serialise::serialise;
 
-#[cfg(feature = "parse")]
+#[cfg(feature = "decode")]
 mod decode;
 #[cfg(feature = "encode")]
 mod encode;
@@ -39,7 +39,7 @@ where
 }
 
 /// Wrapper around a hash set intended for use with the `activityTypes` field
-#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, JsonSchema, PartialEq, Serialize)]
 #[serde(transparent)]
 pub struct ActivitySet<'a>(#[serde(borrow)] pub ahash::HashSet<Cow<'a, str>>);
 
@@ -91,7 +91,7 @@ impl<'a> From<ahash::HashSet<Cow<'a, str>>> for ActivitySet<'a> {
 }
 
 /// Version of the API used
-#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ApiVersion {
@@ -100,7 +100,7 @@ pub enum ApiVersion {
 }
 
 /// Manifest of MRF modules
-#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "manifestVersion")]
 #[non_exhaustive]
 pub enum Manifest<'a> {
@@ -122,7 +122,7 @@ impl Manifest<'_> {
 }
 
 /// Manifest v1
-#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestV1<'a> {
     /// Version of the MRF API

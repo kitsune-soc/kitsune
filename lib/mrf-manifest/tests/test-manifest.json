@@ -1,0 +1,12 @@
+{
+    "manifestVersion": "v1",
+    "apiVersion": "v1",
+    "name": "test-manifest",
+    "version": "0.0.1-cattywampus",
+    "activityTypes": [
+        "Announce",
+        "Create",
+        "Delete",
+        "Like"
+    ]
+}
