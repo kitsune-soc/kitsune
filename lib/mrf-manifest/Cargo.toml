@@ -24,8 +24,8 @@ wat = "1.201.0"
 
 [features]
 decode = [
-    "dep:miette",
     "dep:leb128",
+    "dep:miette",
     "dep:serde_json",
     "dep:thiserror",
     "dep:wasmparser",

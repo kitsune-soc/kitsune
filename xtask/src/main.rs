@@ -2,26 +2,21 @@
 extern crate tracing;
 
 use argh::FromArgs;
-use std::path::PathBuf;
 
-mod build_scss;
 mod clean;
+mod fmt_toml;
 mod util;
 mod watch;
-
-#[derive(FromArgs)]
-#[argh(subcommand, name = "build-scss")]
-/// Build a directory of SCSS files
-struct BuildScss {
-    #[argh(option)]
-    /// path to the directory
-    path: PathBuf,
-}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "clean")]
 /// Clean all target directories
 struct Clean {}
+
+#[derive(FromArgs)]
+#[argh(subcommand, name = "fmt-toml")]
+/// Format TOML across the workspace
+struct FmtToml {}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "watch")]
@@ -39,8 +34,8 @@ struct Watch {
 #[derive(FromArgs)]
 #[argh(subcommand)]
 enum Subcommand {
-    BuildScss(BuildScss),
     Clean(Clean),
+    FmtToml(FmtToml),
     Watch(Watch),
 }
 
@@ -56,8 +51,8 @@ fn main() -> anyhow::Result<()> {
 
     let command: Command = argh::from_env();
     match command.subcommand {
-        Subcommand::BuildScss(BuildScss { path }) => build_scss::build_scss(path)?,
         Subcommand::Clean(..) => clean::clean()?,
+        Subcommand::FmtToml(..) => fmt_toml::fmt()?,
         Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
 

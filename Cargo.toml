@@ -1,6 +1,7 @@
 [profile.dev.package]
 backtrace = { opt-level = 3 }
 num-bigint-dig = { opt-level = 3 }
+taplo = { debug-assertions = false } # A debug assertion will make the xtask panic with too long trailing comments
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
@@ -101,13 +102,13 @@ cargo-dist-version = "0.12.0"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = ["shell", "powershell"]
+installers = ["powershell", "shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = [
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
-    "x86_64-unknown-linux-musl",
     "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-musl",
 ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
