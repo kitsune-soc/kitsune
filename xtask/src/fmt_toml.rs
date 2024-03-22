@@ -3,10 +3,8 @@ use std::fs;
 
 fn formatter_settings() -> taplo::formatter::Options {
     taplo::formatter::Options {
-        indent_entries: true,
-        indent_tables: true,
+        indent_string: " ".repeat(4),
         reorder_arrays: true,
-        reorder_keys: true,
         ..Default::default()
     }
 }

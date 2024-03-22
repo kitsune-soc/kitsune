@@ -1,0 +1,23 @@
+name: "TOML checks"
+
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  fmt-check:
+    name: "Formatting"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          cargo xtask fmt-toml
+          CHANGES_IN_REPO=$(git status --porcelain)
+          if [[ -n "$CHANGES_IN_REPO" ]]; then
+              exit 1
+          fi

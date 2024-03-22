@@ -31,7 +31,7 @@ testcontainers-modules = { version = "0.3.5", features = [
 ] }
 tokio = { version = "1.36.0", features = ["time"] }
 url = "2.5.0"
-uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
+uuid = { version = "1.8.0", features = ["fast-rng", "v4"] }
 
 [lints]
 workspace = true

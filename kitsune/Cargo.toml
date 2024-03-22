@@ -26,8 +26,8 @@ axum = { version = "0.7.4", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.2", features = [
     "cookie",
     "cookie-signed",
-    "typed-header",
     "query",
+    "typed-header",
 ] }
 axum-flash = "0.8.0"
 blowocking = { path = "../lib/blowocking" }
@@ -151,7 +151,7 @@ graphql-api = [
     "speedy-uuid/async-graphql",
 ]
 mastodon-api = ["dep:kitsune-mastodon"]
-meilisearch = ["kitsune-service/meilisearch", "kitsune-search/meilisearch"]
+meilisearch = ["kitsune-search/meilisearch", "kitsune-service/meilisearch"]
 oidc = ["dep:kitsune-oidc"]
 
 [lints]
