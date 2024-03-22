@@ -9,7 +9,6 @@ publish = false
 anyhow = "1.0.81"
 argh = "0.1.12"
 glob = "0.3.1"
-kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 taplo = { version = "0.13.0", default-features = false }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [

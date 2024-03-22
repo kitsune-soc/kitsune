@@ -9336,7 +9336,6 @@ dependencies = [
  "anyhow",
  "argh",
  "glob",
- "kitsune-scss-compiler",
  "taplo",
  "tracing",
  "tracing-subscriber",
