@@ -23,6 +23,10 @@ export default defineConfig({
 
       baseDir: path.resolve('src'),
       ftlDir: path.resolve('src/locales'),
+
+      getFtlPath(locale) {
+        return path.join('src/locales', `${locale}.ftl`);
+      },
     }),
   ],
 });
