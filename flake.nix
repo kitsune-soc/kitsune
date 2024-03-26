@@ -24,9 +24,11 @@
           pkgs = import nixpkgs {
             inherit overlays system;
           };
+          stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
           rustPlatform = pkgs.makeRustPlatform {
             cargo = pkgs.rust-bin.stable.latest.minimal;
             rustc = pkgs.rust-bin.stable.latest.minimal;
+            inherit stdenv;
           };
           baseDependencies = with pkgs; [
             openssl
