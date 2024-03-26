@@ -106,10 +106,12 @@
 
             frontend = pkgs.mkYarnPackage {
               inherit version;
-
+              packageJSON = "${src}/kitsune-fe/package.json";
+              yarnLock = "${src}/kitsune-fe/yarn.lock";
               src = "${src}/kitsune-fe";
 
               buildPhase = ''
+                export HOME=$(mktemp -d)
                 yarn --offline build
               '';
 
