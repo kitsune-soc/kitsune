@@ -32,13 +32,15 @@
           };
           baseDependencies = with pkgs; [
             openssl
-            pkg-config
-            protobuf
             sqlite
             zlib
           ];
+          nativeDependencies = with pkgs; [
+            protobuf
+            pkg-config
+            rustPlatform.bindgenHook
+          ];
 
-          cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml); # TODO: Set the target CPU conditionally
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource ./.;
@@ -61,10 +63,11 @@
               allowBuiltinFetchGit = true;
             };
 
-            nativeBuildInputs = baseDependencies;
+            OPENSSL_NO_VENDOR = 1;
 
-            PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig"; # Not sure why this is broken but it is
-            RUSTFLAGS = builtins.concatStringsSep " " cargoConfig.build.rustflags; # Oh god help.
+            buildInputs = baseDependencies;
+
+            nativeBuildInputs = nativeDependencies;
 
             checkFlags = [
               # Depend on creating an HTTP client and that reads from the systems truststore
@@ -133,7 +136,7 @@
                     rust-bin.stable.latest.default
                   ]
                   ++
-                  baseDependencies;
+                  baseDependencies ++ nativeDependencies;
 
                   enterShell = ''
                     export PG_HOST=127.0.0.1
