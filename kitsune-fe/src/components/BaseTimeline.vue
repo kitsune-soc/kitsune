@@ -44,7 +44,7 @@
   import { ref } from 'vue';
   import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 
-  import Post, { Post as PostType } from './Post.vue';
+  import Post, { Post as PostType } from './PostComponent.vue';
 
   const props = defineProps<{
     posts: PostType[];

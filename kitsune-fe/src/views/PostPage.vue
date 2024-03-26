@@ -14,7 +14,7 @@
 <script lang="ts" setup>
   import { useRoute } from 'vue-router';
 
-  import Post from '../components/Post.vue';
+  import Post from '../components/PostComponent.vue';
   import { getPostById } from '../graphql/post';
 
   const route = useRoute();
