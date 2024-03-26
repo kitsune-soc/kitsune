@@ -6,7 +6,7 @@
   import { ref, watch } from 'vue';
 
   import BaseTimeline from '../../components/BaseTimeline.vue';
-  import { Post } from '../../components/Post.vue';
+  import { Post } from '../../components/PostComponent.vue';
   import { MAX_UUID } from '../../consts';
   import { getHome } from '../../graphql/timeline';
 
