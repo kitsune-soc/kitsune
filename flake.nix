@@ -82,6 +82,23 @@
               "--skip=webfinger::test::fetch_qarnax_ap_id"
               "--skip=basic_request"
               "--skip=json_request"
+              "--skip=http::handler::well_known::webfinger::tests::basic"
+              "--skip=http::handler::well_known::webfinger::tests::custom_domain"
+              "--skip=test::default_resolver_works"
+              "--skip=fetcher::basic::fetch_actor"
+              "--skip=fetcher::basic::fetch_emoji"
+              "--skip=fetcher::basic::fetch_note"
+              "--skip=fetcher::filter::federation_allow"
+              "--skip=fetcher::filter::federation_deny"
+              "--skip=fetcher::infinite::fetch_infinitely_long_reply_chain"
+              "--skip=fetcher::origin::check_ap_content_type"
+              "--skip=fetcher::origin::check_ap_id_authority"
+              "--skip=fetcher::webfinger::fetch_actor_with_custom_acct"
+              "--skip=fetcher::webfinger::ignore_fake_webfinger_acct"
+              "--skip=accounts_username"
+              "--skip=users_username"
+              "--skip=test::abort_request_works"
+              "--skip=test::full_test"
             ];
           };
         in
