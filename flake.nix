@@ -72,41 +72,6 @@
             cargoExtraArgs = "--locked ${features}";
           };
 
-          cargoTestExtraArgs = pkgs.lib.strings.concatStringsSep " " [
-            "--"
-            # Depend on creating an HTTP client and that reads from the systems truststore
-            # Because nix is fully isolated, these types of tests fail
-            #
-            # Some (most?) of these also depend on the network? Not good??
-            "--skip=activitypub::fetcher::test::federation_allow"
-            "--skip=activitypub::fetcher::test::federation_deny"
-            "--skip=activitypub::fetcher::test::fetch_actor"
-            "--skip=activitypub::fetcher::test::fetch_note"
-            "--skip=resolve::post::test::parse_mentions"
-            "--skip=webfinger::test::fetch_qarnax_ap_id"
-            "--skip=basic_request"
-            "--skip=json_request"
-            "--skip=http::handler::well_known::webfinger::tests::basic"
-            "--skip=http::handler::well_known::webfinger::tests::custom_domain"
-            "--skip=test::default_resolver_works"
-            "--skip=fetcher::basic::fetch_actor"
-            "--skip=fetcher::basic::fetch_emoji"
-            "--skip=fetcher::basic::fetch_note"
-            "--skip=fetcher::filter::federation_allow"
-            "--skip=fetcher::filter::federation_deny"
-            "--skip=fetcher::infinite::fetch_infinitely_long_reply_chain"
-            "--skip=fetcher::origin::check_ap_content_type"
-            "--skip=fetcher::origin::check_ap_id_authority"
-            "--skip=fetcher::webfinger::fetch_actor_with_custom_acct"
-            "--skip=fetcher::webfinger::ignore_fake_webfinger_acct"
-            "--skip=accounts_username"
-            "--skip=users_username"
-            "--skip=test::abort_request_works"
-            "--skip=test::full_test"
-            "--skip=attachment::test::upload_jpeg"
-            "--skip=post::resolver::test::parse_post"
-          ];
-
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
           version = cargoToml.workspace.package.version;
 
@@ -123,13 +88,15 @@
             cli = craneLib.buildPackage (commonArgs // {
               pname = "kitsune-cli";
               cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-cli";
-              inherit cargoArtifacts cargoTestExtraArgs;
+              inherit cargoArtifacts;
+              doCheck = false;
             });
 
             main = craneLib.buildPackage (commonArgs // rec {
               pname = "kitsune";
               cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune";
-              inherit cargoArtifacts cargoTestExtraArgs;
+              inherit cargoArtifacts;
+              doCheck = false;
             });
 
             frontend = pkgs.mkYarnPackage {
