@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.78"
+async-trait = "0.1.79"
 http-body-util = "0.1.1"
 http-compat = { path = "../../lib/http-compat" }
 hyper = { version = "1.2.0", default-features = false }
