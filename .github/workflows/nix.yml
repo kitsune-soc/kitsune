@@ -1,0 +1,38 @@
+name: Nix checks
+
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_LOG: "debug"
+  RUSTFLAGS: "-C debuginfo=0"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix flake check -L --show-trace --keep-going --impure
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: nix build
+        run: nix run nixpkgs#nixci -- -- --impure
+
+      - name: nix check overlay
+        run: cd test-overlay && nix build --no-write-lock-file -L .#kitsune
+
