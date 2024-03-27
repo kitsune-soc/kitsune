@@ -7,15 +7,15 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-clap = { version = "4.5.3", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 miette = { version = "7.2.0", features = ["fancy"] }
 mrf-manifest = { path = "../mrf-manifest", features = [
     "decode",
     "encode",
     "serialise",
 ] }
-serde_json = "1.0.114"
-wasmparser = "0.201.0"
+serde_json = "1.0.115"
+wasmparser = "0.202.0"
 
 [lints]
 workspace = true

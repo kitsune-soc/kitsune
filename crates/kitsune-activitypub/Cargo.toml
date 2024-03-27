@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.78"
+async-trait = "0.1.79"
 autometrics = { version = "1.0.1", default-features = false }
 base64-simd = "0.8.0"
 diesel = "2.1.5"
