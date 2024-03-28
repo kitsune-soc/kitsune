@@ -30,8 +30,12 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: nix build
-        run: nix run nixpkgs#nixci -- -- --impure
+      - name: nix build main
+        run: nix build --override-input debugBuild github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698 -L .#main
+      - name: nix build cli
+        run: nix build --override-input debugBuild github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698 -L .#cli
+      - name: nix build frontend
+        run: nix build --override-input debugBuild github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698 -L .#frontend
 
       - name: nix check overlay
         run: cd test-overlay && nix build --no-write-lock-file -L .#kitsune
