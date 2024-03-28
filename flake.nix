@@ -15,96 +15,113 @@
       };
       url = "github:oxalica/rust-overlay";
     };
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # The premise is this is the "default" and if you want to do a debug build,
+    # pass it in as an arg.
+    # like so `nix build --override-input debugBuild github:boolean-option/true`
+    debugBuild.url = "github:boolean-option/false/d06b4794a134686c70a1325df88a6e6768c6b212";
   };
-  outputs = { self, devenv, flake-utils, nixpkgs, rust-overlay, ... } @ inputs:
-    flake-utils.lib.eachDefaultSystem
+  outputs = { self, devenv, flake-utils, nixpkgs, rust-overlay, crane, ... } @ inputs:
+    (flake-utils.lib.eachDefaultSystem
       (system:
         let
+          features = "--all-features";
           overlays = [ (import rust-overlay) ];
           pkgs = import nixpkgs {
             inherit overlays system;
           };
+          stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
           rustPlatform = pkgs.makeRustPlatform {
             cargo = pkgs.rust-bin.stable.latest.minimal;
             rustc = pkgs.rust-bin.stable.latest.minimal;
+            inherit stdenv;
           };
-          baseDependencies = with pkgs; [
+
+          craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.stable.latest.minimal;
+          buildInputs = with pkgs; [
             openssl
-            pkg-config
-            protobuf
             sqlite
             zlib
           ];
 
-          cargoConfig = builtins.fromTOML (builtins.readFile ./.cargo/config.toml); # TODO: Set the target CPU conditionally
-          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+          nativeBuildInputs = with pkgs; [
+            protobuf
+            pkg-config
+            rustPlatform.bindgenHook
+          ];
+
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource ./.;
             filter = name: type:
               let baseName = baseNameOf (toString name);
               in !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
           };
-          version = cargoToml.workspace.package.version;
 
-          basePackage = {
-            inherit version src;
+          commonArgs = {
+            inherit src stdenv buildInputs nativeBuildInputs;
+
+            strictDeps = true;
 
             meta = {
               description = "ActivityPub-federated microblogging";
               homepage = "https://joinkitsune.org";
             };
 
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-              allowBuiltinFetchGit = true;
-            };
+            OPENSSL_NO_VENDOR = 1;
+            NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+            cargoExtraArgs = "--locked ${features}";
+          } // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
+            # do a debug build, as `dev` is the default debug profile
+            CARGO_PROFILE = "dev";
+          });
 
-            nativeBuildInputs = baseDependencies;
+          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+          version = cargoToml.workspace.package.version;
 
-            PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig"; # Not sure why this is broken but it is
-            RUSTFLAGS = builtins.concatStringsSep " " cargoConfig.build.rustflags; # Oh god help.
-
-            checkFlags = [
-              # Depend on creating an HTTP client and that reads from the systems truststore
-              # Because nix is fully isolated, these types of tests fail
-              #
-              # Some (most?) of these also depend on the network? Not good??
-              "--skip=activitypub::fetcher::test::federation_allow"
-              "--skip=activitypub::fetcher::test::federation_deny"
-              "--skip=activitypub::fetcher::test::fetch_actor"
-              "--skip=activitypub::fetcher::test::fetch_note"
-              "--skip=resolve::post::test::parse_mentions"
-              "--skip=webfinger::test::fetch_qarnax_ap_id"
-              "--skip=basic_request"
-              "--skip=json_request"
-            ];
-          };
+          cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {
+            pname = "kitsune-workspace";
+            src = craneLib.cleanCargoSource src;
+          });
         in
         {
           formatter = pkgs.nixpkgs-fmt;
           packages = rec {
-            # Hack to make latest devenv work
-            devenv-up = self.devShells.${system}.default.config.procfileScript;
-
             default = main;
 
-            cli = rustPlatform.buildRustPackage (basePackage // {
+            cli = craneLib.buildPackage (commonArgs // {
               pname = "kitsune-cli";
-              cargoBuildFlags = "-p kitsune-cli";
+              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-cli";
+              inherit cargoArtifacts;
+              doCheck = false;
             });
 
-            main = rustPlatform.buildRustPackage (basePackage // {
+            mrf-tool = craneLib.buildPackage (commonArgs // {
+              pname = "mrf-tool";
+              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin mrf-tool";
+              inherit cargoArtifacts;
+              doCheck = false;
+            });
+
+            main = craneLib.buildPackage (commonArgs // rec {
               pname = "kitsune";
-              buildFeatures = [ "meilisearch" "oidc" ];
-              cargoBuildFlags = "-p kitsune";
+              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune --bin kitsune-job-runner";
+              inherit cargoArtifacts;
+              doCheck = false;
             });
 
             frontend = pkgs.mkYarnPackage {
               inherit version;
-
+              packageJSON = "${src}/kitsune-fe/package.json";
+              yarnLock = "${src}/kitsune-fe/yarn.lock";
               src = "${src}/kitsune-fe";
 
               buildPhase = ''
+                export HOME=$(mktemp -d)
                 yarn --offline build
               '';
 
@@ -131,7 +148,7 @@
                     rust-bin.stable.latest.default
                   ]
                   ++
-                  baseDependencies;
+                  buildInputs ++ nativeBuildInputs;
 
                   enterShell = ''
                     export PG_HOST=127.0.0.1
@@ -170,6 +187,13 @@
       nixosModules = rec {
         default = kitsune;
         kitsune = (import ./module.nix);
+      };
+    }) // {
+      nixci.default = {
+        debug = {
+          dir = ".";
+          overrideInputs.debugBuild = "github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698";
+        };
       };
     };
 }

@@ -25,3 +25,5 @@ target-analyzer
 /result
 /.devenv
 /.pre-commit-config.yaml
+/test-overlay/flake.lock
+/test-overlay/result
