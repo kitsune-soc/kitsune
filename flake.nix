@@ -100,9 +100,16 @@
               doCheck = false;
             });
 
+            mrf-tool = craneLib.buildPackage (commonArgs // {
+              pname = "mrf-tool";
+              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin mrf-tool";
+              inherit cargoArtifacts;
+              doCheck = false;
+            });
+
             main = craneLib.buildPackage (commonArgs // rec {
               pname = "kitsune";
-              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune";
+              cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune --bin kitsune-job-runner";
               inherit cargoArtifacts;
               doCheck = false;
             });
