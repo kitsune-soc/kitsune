@@ -20,9 +20,14 @@
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # The premise is this is the "default" and if you want to do a debug build,
+    # pass it in as an arg.
+    # like so `nix build --override-input debugBuild github:boolean-option/true`
+    debugBuild.url = "github:boolean-option/false/d06b4794a134686c70a1325df88a6e6768c6b212";
   };
   outputs = { self, devenv, flake-utils, nixpkgs, rust-overlay, crane, ... } @ inputs:
-    flake-utils.lib.eachDefaultSystem
+    (flake-utils.lib.eachDefaultSystem
       (system:
         let
           features = "--all-features";
@@ -70,7 +75,10 @@
             OPENSSL_NO_VENDOR = 1;
             NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
             cargoExtraArgs = "--locked ${features}";
-          };
+          } // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
+            # do a debug build, as `dev` is the default debug profile
+            CARGO_PROFILE = "dev";
+          });
 
           cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
           version = cargoToml.workspace.package.version;
@@ -172,6 +180,13 @@
       nixosModules = rec {
         default = kitsune;
         kitsune = (import ./module.nix);
+      };
+    }) // {
+      nixci.default = {
+        debug = {
+          dir = ".";
+          overrideInputs.debugBuild = "github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698";
+        };
       };
     };
 }
