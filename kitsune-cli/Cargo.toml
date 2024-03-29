@@ -23,7 +23,7 @@ kitsune-db = { path = "../crates/kitsune-db" }
 miette = { version = "7.2.0", features = ["fancy"] }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
-tokio = { version = "1.36.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full"] }
 tracing-subscriber = "0.3.18"
 
 [build-dependencies]

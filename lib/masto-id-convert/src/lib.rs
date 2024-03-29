@@ -57,9 +57,8 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unreadable_literal)]
 mod test {
-    #![allow(clippy::unreadable_literal)]
-
     use time::{Month, OffsetDateTime};
 
     // ID nabbed from this post: <https://hachyderm.io/@samhenrigold/112094325204679902>

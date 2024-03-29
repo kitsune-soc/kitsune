@@ -8,7 +8,7 @@ use typed_builder::TypedBuilder;
 #[derive(Clone, Copy, Debug, TypedBuilder)]
 /// Options passed to the fetcher
 pub struct AccountFetchOptions<'a> {
-    /// Prefetched WebFinger `acct` URI
+    /// Prefetched Webfinger `acct` URI
     #[builder(default, setter(strip_option))]
     pub acct: Option<(&'a str, &'a str)>,
 

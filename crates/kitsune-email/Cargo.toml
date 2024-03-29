@@ -15,7 +15,7 @@ diesel = "2.1.5"
 diesel-async = "0.4.1"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-url = { path = "../kitsune-url" }
-lettre = { version = "0.11.5", default-features = false, features = [
+lettre = { version = "0.11.6", default-features = false, features = [
     "builder",
     "hostname",
     "pool",

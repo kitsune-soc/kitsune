@@ -60,7 +60,7 @@ simd-json = "0.13.9"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 thiserror = "1.0.58"
-tokio = { version = "1.36.0", features = ["macros", "sync"] }
+tokio = { version = "1.37.0", features = ["macros", "sync"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 url = "2.5.0"

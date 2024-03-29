@@ -34,7 +34,7 @@ redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
-tokio = { version = "1.36.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 

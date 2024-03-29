@@ -29,7 +29,7 @@ testcontainers-modules = { version = "0.3.6", features = [
     "postgres",
     "redis",
 ] }
-tokio = { version = "1.36.0", features = ["time"] }
+tokio = { version = "1.37.0", features = ["time"] }
 url = "2.5.0"
 uuid = { version = "1.8.0", features = ["fast-rng", "v4"] }
 

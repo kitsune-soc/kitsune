@@ -20,7 +20,7 @@ miette = "7.2.0"
 opentelemetry = { version = "0.22.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry-http = "0.11.0"
+opentelemetry-http = "0.11.1"
 opentelemetry-otlp = { version = "0.15.0", default-features = false, features = [
     "grpc-tonic",
     "http-proto",

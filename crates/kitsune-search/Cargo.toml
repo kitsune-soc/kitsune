@@ -12,7 +12,7 @@ ignored = ["isahc"] # To make `meilisearch` builds static
 diesel = "2.1.5"
 diesel-async = "0.4.1"
 diesel_full_text_search = { version = "2.1.1", default-features = false }
-enum_dispatch = "0.3.12"
+enum_dispatch = "0.3.13"
 futures-util = "0.3.30"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }

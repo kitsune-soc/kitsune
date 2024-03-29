@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-enum_dispatch = "0.3.12"
+enum_dispatch = "0.3.13"
 moka = { version = "0.12.5", features = ["future"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 redis = { version = "0.25.2", default-features = false, features = [
@@ -20,7 +20,7 @@ tracing = "0.1.40"
 typed-builder = "0.18.1"
 
 [dev-dependencies]
-tokio = { version = "1.36.0", features = ["macros", "rt"] }
+tokio = { version = "1.37.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

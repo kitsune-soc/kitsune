@@ -9,7 +9,7 @@ build = "build.rs"
 [dependencies]
 async-trait = "0.1.79"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
-enum_dispatch = "0.3.12"
+enum_dispatch = "0.3.13"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
@@ -27,7 +27,7 @@ slab = "0.4.9"
 sled = "0.34.7"
 smol_str = "0.2.1"
 thiserror = "1.0.58"
-tokio = { version = "1.36.0", features = ["fs"] }
+tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 walkdir = "2.5.0"
@@ -44,7 +44,7 @@ wasmtime-wasi = { version = "19.0.0", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"
-tokio = { version = "1.36.0", features = ["macros", "rt"] }
+tokio = { version = "1.37.0", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
 
 [lints]
