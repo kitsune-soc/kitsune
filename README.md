@@ -46,7 +46,8 @@ For licensing terms, check [LICENSE.md](./LICENSE.md)
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you,
 shall be licensed as above, without any additional terms or conditions.
 
-## Sponsor
-Woodpecker CI Instance sponsored by CleanC
+## Sponsors
+
+Woodpecker CI Instance is sponsored by CleanC
 
 [![CleanC logo](./assets/sponsor_cleanc.svg)](https://cleanc.kr)
