@@ -37,8 +37,8 @@
           };
           stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
           rustPlatform = pkgs.makeRustPlatform {
-            cargo = pkgs.rust-bin.stable.latest.minimal;
-            rustc = pkgs.rust-bin.stable.latest.minimal;
+            cargo = pkgs.rust-bin.beta.latest.minimal;
+            rustc = pkgs.rust-bin.beta.latest.minimal;
             inherit stdenv;
           };
 

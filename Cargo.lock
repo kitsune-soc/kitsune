@@ -6862,6 +6862,8 @@ dependencies = [
 [[package]]
 name = "scoped-futures"
 version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1473e24c637950c9bd38763220bea91ec3e095a89f672bbd7a10d03e77ba467"
 dependencies = [
  "cfg-if",
  "pin-utils",

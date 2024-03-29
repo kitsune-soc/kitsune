@@ -39,7 +39,6 @@ fn raw_verify(key: &[u8; blake3::KEY_LEN], hash: &HashRef, message: &MessageRef)
 impl CsrfHandle {
     /// Keep the current signature and message inside the cookie
     #[inline]
-    #[allow(clippy::assigning_clones)] // `.clone_from` usage won't work because of the mutex without trying way too hard
     pub fn keep_cookie(&self) {
         let inner = &mut *self.inner.lock().unwrap();
         inner.set_data.clone_from(&inner.read_data);
