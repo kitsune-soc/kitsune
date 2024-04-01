@@ -8,10 +8,9 @@ use kitsune_core::{consts::API_MAX_LIMIT, traits::Fetcher};
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_search::{SearchBackend, SearchIndex};
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
@@ -97,30 +96,27 @@ impl SearchService {
             .try_concat()
             .await?;
 
-        let search_backend_results = self
-            .db_pool
-            .with_connection(|db_conn| {
-                result_references
-                    .iter()
-                    .map(|result| match result.index {
-                        SearchIndex::Account => accounts::table
-                            .find(result.id)
-                            .select(Account::as_select())
-                            .get_result::<Account>(db_conn)
-                            .map_ok(SearchResult::Account)
-                            .left_future(),
-                        SearchIndex::Post => posts::table
-                            .find(result.id)
-                            .select(Post::as_select())
-                            .get_result::<Post>(db_conn)
-                            .map_ok(SearchResult::Post)
-                            .right_future(),
-                    })
-                    .collect::<FuturesUnordered<_>>()
-                    .try_collect::<Vec<SearchResult>>()
-                    .scoped()
-            })
-            .await?;
+        let search_backend_results = with_connection!(self.db_pool, |db_conn| {
+            result_references
+                .iter()
+                .map(|result| match result.index {
+                    SearchIndex::Account => accounts::table
+                        .find(result.id)
+                        .select(Account::as_select())
+                        .get_result::<Account>(db_conn)
+                        .map_ok(SearchResult::Account)
+                        .left_future(),
+                    SearchIndex::Post => posts::table
+                        .find(result.id)
+                        .select(Post::as_select())
+                        .get_result::<Post>(db_conn)
+                        .map_ok(SearchResult::Post)
+                        .right_future(),
+                })
+                .collect::<FuturesUnordered<_>>()
+                .try_collect::<Vec<SearchResult>>()
+                .await
+        })?;
 
         results.extend(search_backend_results);
 

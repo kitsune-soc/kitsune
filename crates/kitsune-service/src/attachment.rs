@@ -10,12 +10,11 @@ use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
 use kitsune_url::UrlService;
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -93,15 +92,10 @@ pub struct AttachmentService {
 
 impl AttachmentService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
-        self.db_pool
-            .with_connection(|db_conn| {
-                media_attachments::table
-                    .find(id)
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            media_attachments::table.find(id).get_result(db_conn).await
+        })
+        .map_err(Error::from)
     }
 
     /// Get the URL to an attachment
@@ -161,21 +155,19 @@ impl AttachmentService {
             };
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                diesel::update(
-                    media_attachments::table.filter(
-                        media_attachments::id
-                            .eq(update.attachment_id)
-                            .and(media_attachments::account_id.eq(update.account_id)),
-                    ),
-                )
-                .set(changeset)
-                .get_result(db_conn)
-                .scoped()
-            })
+        with_connection!(self.db_pool, |db_conn| {
+            diesel::update(
+                media_attachments::table.filter(
+                    media_attachments::id
+                        .eq(update.attachment_id)
+                        .and(media_attachments::account_id.eq(update.account_id)),
+                ),
+            )
+            .set(changeset)
+            .get_result(db_conn)
             .await
-            .map_err(Error::from)
+        })
+        .map_err(Error::from)
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
@@ -217,23 +209,20 @@ impl AttachmentService {
         }
         .map_err(Error::Storage)?;
 
-        let media_attachment = self
-            .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(media_attachments::table)
-                    .values(NewMediaAttachment {
-                        id: Uuid::now_v7(),
-                        content_type: upload.content_type.as_str(),
-                        account_id: upload.account_id,
-                        description: upload.description.as_deref(),
-                        blurhash: None,
-                        file_path: Some(upload.path.as_str()),
-                        remote_url: None,
-                    })
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let media_attachment = with_connection!(self.db_pool, |db_conn| {
+            diesel::insert_into(media_attachments::table)
+                .values(NewMediaAttachment {
+                    id: Uuid::now_v7(),
+                    content_type: upload.content_type.as_str(),
+                    account_id: upload.account_id,
+                    description: upload.description.as_deref(),
+                    blurhash: None,
+                    file_path: Some(upload.path.as_str()),
+                    remote_url: None,
+                })
+                .get_result(db_conn)
+                .await
+        })?;
 
         Ok(media_attachment)
     }

@@ -3,7 +3,7 @@ macro_rules! with_connection {
     ($pool:expr, |$conn_name:ident| $code:block) => {{
         let mut conn = $pool.get().await?;
         let $conn_name = &mut *conn;
-        async move { $code }.await
+        async { $code }.await
     }};
 }
 
@@ -20,8 +20,16 @@ macro_rules! with_connection_panicky {
 
 #[macro_export]
 macro_rules! with_transaction {
-    ($pool:expr, $func:expr) => {{
+    ($pool:expr, |$conn_name:ident| $code:block) => {{
+        use $crate::diesel_async::AsyncConnection;
+
         let mut conn = $pool.get().await?;
-        conn.transaction(|conn| Box::pin(($func)(conn))).await
+        conn.transaction(|conn| {
+            Box::pin(async move {
+                let $conn_name = conn;
+                $code
+            })
+        })
+        .await
     }};
 }

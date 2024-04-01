@@ -14,6 +14,8 @@ use tracing_log::LogTracer;
 pub type PgPool = Pool<AsyncPgConnection>;
 
 pub use crate::error::{Error, Result};
+#[doc(hidden)]
+pub use diesel_async;
 
 mod error;
 mod pool;

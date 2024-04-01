@@ -1,3 +1,4 @@
+use eyre::WrapErr;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
@@ -12,7 +13,6 @@ use kitsune_messaging::{
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
-use miette::{Context, IntoDiagnostic};
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
 use serde::{de::DeserializeOwned, Serialize};
@@ -22,7 +22,7 @@ use tokio::sync::OnceCell;
 pub async fn cache<K, V>(
     config: &cache::Configuration,
     cache_name: &str,
-) -> miette::Result<ArcCache<K, V>>
+) -> eyre::Result<ArcCache<K, V>>
 where
     K: Display + Send + Sync + ?Sized + 'static,
     V: Clone + DeserializeOwned + Serialize + Send + Sync + 'static,
@@ -78,7 +78,7 @@ pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
     }
 }
 
-pub fn storage(config: &storage::Configuration) -> miette::Result<AnyStorageBackend> {
+pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBackend> {
     let storage = match config {
         storage::Configuration::Fs(ref fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
@@ -110,7 +110,7 @@ pub fn storage(config: &storage::Configuration) -> miette::Result<AnyStorageBack
 
 pub fn mail_sender(
     config: &email::Configuration,
-) -> miette::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
+) -> eyre::Result<MailSender<AsyncSmtpTransport<Tokio1Executor>>> {
     let transport_builder = if config.starttls {
         AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())
     } else {
@@ -127,7 +127,7 @@ pub fn mail_sender(
         .build())
 }
 
-pub async fn messaging(config: &messaging::Configuration) -> miette::Result<MessagingHub> {
+pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<MessagingHub> {
     let backend = match config {
         messaging::Configuration::InProcess => {
             MessagingHub::new(TokioBroadcastMessagingBackend::default())
@@ -149,7 +149,7 @@ pub async fn search(
     search_config: &search::Configuration,
     language_detection_config: language_detection::Configuration,
     db_pool: &PgPool,
-) -> miette::Result<AnySearchBackend> {
+) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
         search::Configuration::Meilisearch(_config) => {
             #[cfg(not(feature = "meilisearch"))]
