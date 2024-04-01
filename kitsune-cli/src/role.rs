@@ -1,11 +1,11 @@
 use clap::{Args, Subcommand, ValueEnum};
+use color_eyre::eyre::Result;
 use diesel::{BelongingToDsl, BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use kitsune_db::model::{
     user::User,
     user_role::{NewUserRole, Role as DbRole, UserRole},
 };
-use miette::{IntoDiagnostic, Result};
 use speedy_uuid::Uuid;
 
 #[derive(Subcommand)]
@@ -57,8 +57,7 @@ async fn add_role(db_conn: &mut AsyncPgConnection, username_str: &str, role: Rol
     let user = users
         .filter(username.eq(username_str))
         .first::<User>(db_conn)
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     let new_role = NewUserRole {
         id: Uuid::now_v7(),
@@ -69,8 +68,7 @@ async fn add_role(db_conn: &mut AsyncPgConnection, username_str: &str, role: Rol
     diesel::insert_into(users_roles::table)
         .values(&new_role)
         .execute(db_conn)
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     Ok(())
 }
@@ -81,13 +79,11 @@ async fn list_roles(db_conn: &mut AsyncPgConnection, username_str: &str) -> Resu
     let user: User = users::table
         .filter(users::username.eq(username_str))
         .first(db_conn)
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     let roles = UserRole::belonging_to(&user)
         .load::<UserRole>(db_conn)
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     println!("User \"{username_str}\" has the following roles:");
     for role in roles {
@@ -107,8 +103,7 @@ async fn remove_role(
     let user = users::table
         .filter(users::username.eq(username_str))
         .first::<User>(db_conn)
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     diesel::delete(
         users_roles::table.filter(
@@ -118,8 +113,7 @@ async fn remove_role(
         ),
     )
     .execute(db_conn)
-    .await
-    .into_diagnostic()?;
+    .await?;
 
     Ok(())
 }

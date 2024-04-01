@@ -5,12 +5,12 @@ use self::{
     ctx::{construct_store, Context},
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
-use futures_util::{stream::FuturesUnordered, Stream, StreamExt, TryFutureExt, TryStreamExt};
+use color_eyre::{eyre, Section};
+use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
 use kitsune_config::mrf::{
     Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
 use kitsune_type::ap::Activity;
-use miette::{Diagnostic, IntoDiagnostic};
 use mrf_manifest::{Manifest, ManifestV1};
 use smol_str::SmolStr;
 use std::{
@@ -20,7 +20,6 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use thiserror::Error;
 use tokio::fs;
 use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
@@ -64,14 +63,11 @@ fn load_mrf_module(
     engine: &Engine,
     module_path: &Path,
     bytes: &[u8],
-) -> miette::Result<Option<(ManifestV1<'static>, Component)>> {
-    let component = Component::new(engine, bytes).map_err(|err| {
-        miette::Report::new(ComponentParseError {
-            path_help: format!("path to the module: {}", module_path.display()),
-            advice: "Did you make the WASM file a component via `wasm-tools`?",
-        })
-        .wrap_err(err)
-    })?;
+) -> eyre::Result<Option<(ManifestV1<'static>, Component)>> {
+    let component = Component::new(engine, bytes)
+        .map_err(eyre::Report::msg)
+        .with_note(|| format!("path to the module: {}", module_path.display()))
+        .suggestion("Did you make the WASM file a component via `wasm-tools`?")?;
 
     let Some((manifest, _section_range)) = mrf_manifest::decode(bytes)? else {
         error!("missing manifest. skipping load.");
@@ -91,14 +87,6 @@ fn load_mrf_module(
 pub enum Outcome<'a> {
     Accept(Cow<'a, str>),
     Reject,
-}
-
-#[derive(Debug, Diagnostic, Error)]
-#[error("{path_help}")]
-struct ComponentParseError {
-    path_help: String,
-    #[help]
-    advice: &'static str,
 }
 
 pub struct MrfModule {
@@ -121,11 +109,11 @@ impl MrfService {
         engine: Engine,
         modules: Vec<MrfModule>,
         storage: kv_storage::BackendDispatch,
-    ) -> miette::Result<Self> {
+    ) -> eyre::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
 
-        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(miette::Report::msg)?;
-        wasmtime_wasi::command::add_to_linker(&mut linker).map_err(miette::Report::msg)?;
+        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
+        wasmtime_wasi::command::add_to_linker(&mut linker).map_err(eyre::Report::msg)?;
 
         Ok(Self {
             engine,
@@ -136,13 +124,13 @@ impl MrfService {
     }
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]
-    pub async fn from_config(config: &MrfConfiguration) -> miette::Result<Self> {
+    pub async fn from_config(config: &MrfConfiguration) -> eyre::Result<Self> {
         let storage = match config.storage {
             KvStorage::Fs(FsKvStorage { ref path }) => {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()
             }
             KvStorage::Redis(RedisKvStorage { ref url, pool_size }) => {
-                let client = redis::Client::open(url.as_str()).into_diagnostic()?;
+                let client = redis::Client::open(url.as_str())?;
                 kv_storage::RedisBackend::from_client(client, pool_size.get())
                     .await?
                     .into()
@@ -155,9 +143,9 @@ impl MrfService {
             .async_support(true)
             .wasm_component_model(true);
 
-        let engine = Engine::new(&engine_config).map_err(miette::Report::msg)?;
+        let engine = Engine::new(&engine_config).map_err(eyre::Report::msg)?;
         let wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
-            .map(IntoDiagnostic::into_diagnostic)
+            .map_err(eyre::Report::from)
             .and_then(|(module_path, wasm_data)| {
                 let engine = &engine;
 

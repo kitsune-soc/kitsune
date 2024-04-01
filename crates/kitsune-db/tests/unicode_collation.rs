@@ -1,11 +1,12 @@
 use diesel::SelectableHelper;
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use kitsune_db::{
     model::{
         account::{Account, ActorType, NewAccount},
         user::{NewUser, User},
     },
     schema::{accounts, users},
+    with_connection_panicky,
 };
 use kitsune_test::database_test;
 use speedy_uuid::Uuid;
@@ -65,30 +66,22 @@ async fn create_user(conn: &mut AsyncPgConnection, username: &str) -> Result<Use
 #[tokio::test]
 async fn accounts_username() {
     database_test(|db_pool| async move {
-        db_pool
-            .with_connection(|conn| {
-                async move {
-                    let initial_insert = create_account(conn, "aumetra").await;
-                    assert!(initial_insert.is_ok());
+        with_connection_panicky!(db_pool, |conn| {
+            let initial_insert = create_account(conn, "aumetra").await;
+            assert!(initial_insert.is_ok());
 
-                    let case_mutation = create_account(conn, "AuMeTrA").await;
-                    assert!(case_mutation.is_err());
+            let case_mutation = create_account(conn, "AuMeTrA").await;
+            assert!(case_mutation.is_err());
 
-                    let unicode_mutation_1 = create_account(conn, "äumeträ").await;
-                    assert!(unicode_mutation_1.is_err());
+            let unicode_mutation_1 = create_account(conn, "äumeträ").await;
+            assert!(unicode_mutation_1.is_err());
 
-                    let unicode_mutation_2 = create_account(conn, "🅰umetr🅰").await;
-                    assert!(unicode_mutation_2.is_err());
+            let unicode_mutation_2 = create_account(conn, "🅰umetr🅰").await;
+            assert!(unicode_mutation_2.is_err());
 
-                    let unicode_case_mutation = create_account(conn, "🅰UMETR🅰").await;
-                    assert!(unicode_case_mutation.is_err());
-
-                    Result::Ok(())
-                }
-                .scoped()
-            })
-            .await
-            .unwrap();
+            let unicode_case_mutation = create_account(conn, "🅰UMETR🅰").await;
+            assert!(unicode_case_mutation.is_err());
+        });
     })
     .await;
 }
@@ -96,30 +89,22 @@ async fn accounts_username() {
 #[tokio::test]
 async fn users_username() {
     database_test(|db_pool| async move {
-        db_pool
-            .with_connection(|conn| {
-                async move {
-                    let initial_insert = create_user(conn, "aumetra").await;
-                    assert!(initial_insert.is_ok());
+        with_connection_panicky!(db_pool, |conn| {
+            let initial_insert = create_user(conn, "aumetra").await;
+            assert!(initial_insert.is_ok());
 
-                    let case_mutation = create_user(conn, "AuMeTrA").await;
-                    assert!(case_mutation.is_err());
+            let case_mutation = create_user(conn, "AuMeTrA").await;
+            assert!(case_mutation.is_err());
 
-                    let unicode_mutation_1 = create_user(conn, "äumeträ").await;
-                    assert!(unicode_mutation_1.is_err());
+            let unicode_mutation_1 = create_user(conn, "äumeträ").await;
+            assert!(unicode_mutation_1.is_err());
 
-                    let unicode_mutation_2 = create_user(conn, "🅰umetr🅰").await;
-                    assert!(unicode_mutation_2.is_err());
+            let unicode_mutation_2 = create_user(conn, "🅰umetr🅰").await;
+            assert!(unicode_mutation_2.is_err());
 
-                    let unicode_case_mutation = create_user(conn, "🅰UMETR🅰").await;
-                    assert!(unicode_case_mutation.is_err());
-
-                    Result::Ok(())
-                }
-                .scoped()
-            })
-            .await
-            .unwrap();
+            let unicode_case_mutation = create_user(conn, "🅰UMETR🅰").await;
+            assert!(unicode_case_mutation.is_err());
+        });
     })
     .await;
 }

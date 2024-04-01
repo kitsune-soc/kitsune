@@ -171,7 +171,7 @@ mod tests {
             redis_test(|redis_pool| async move {
                 let account_id = db_pool
                     .with_connection(|db_conn| {
-                        async move { Ok::<_, miette::Report>(prepare_db(db_conn).await) }.scoped()
+                        async move { Ok::<_, eyre::Report>(prepare_db(db_conn).await) }.scoped()
                     })
                     .await
                     .unwrap();
@@ -240,7 +240,7 @@ mod tests {
                     .with_connection(|db_conn| {
                         async move {
                             prepare_db(db_conn).await;
-                            Ok::<_, miette::Report>(())
+                            Ok::<_, eyre::Report>(())
                         }
                         .scoped()
                     })

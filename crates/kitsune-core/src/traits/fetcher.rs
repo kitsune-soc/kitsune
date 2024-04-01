@@ -1,6 +1,6 @@
 use super::Resolver;
-use crate::error::BoxError;
 use async_trait::async_trait;
+use eyre::Result;
 use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post};
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
@@ -50,14 +50,11 @@ impl<'a> From<&'a str> for PostFetchOptions<'a> {
 pub trait Fetcher: Send + Sync + 'static {
     fn resolver(&self) -> Arc<dyn Resolver>;
 
-    async fn fetch_account(
-        &self,
-        opts: AccountFetchOptions<'_>,
-    ) -> Result<Option<Account>, BoxError>;
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>>;
 
-    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError>;
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>>;
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError>;
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>>;
 }
 
 #[async_trait]
@@ -66,18 +63,15 @@ impl Fetcher for Arc<dyn Fetcher> {
         (**self).resolver()
     }
 
-    async fn fetch_account(
-        &self,
-        opts: AccountFetchOptions<'_>,
-    ) -> Result<Option<Account>, BoxError> {
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {
         (**self).fetch_account(opts).await
     }
 
-    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError> {
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         (**self).fetch_emoji(url).await
     }
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>> {
         (**self).fetch_post(opts).await
     }
 }
@@ -91,10 +85,7 @@ where
         Arc::new(self.iter().map(Fetcher::resolver).collect::<Vec<_>>())
     }
 
-    async fn fetch_account(
-        &self,
-        opts: AccountFetchOptions<'_>,
-    ) -> Result<Option<Account>, BoxError> {
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {
         for fetcher in self {
             if let Some(account) = fetcher.fetch_account(opts).await? {
                 return Ok(Some(account));
@@ -104,7 +95,7 @@ where
         Ok(None)
     }
 
-    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError> {
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         for fetcher in self {
             if let Some(emoji) = fetcher.fetch_emoji(url).await? {
                 return Ok(Some(emoji));
@@ -114,7 +105,7 @@ where
         Ok(None)
     }
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>> {
         for fetcher in self {
             if let Some(post) = fetcher.fetch_post(opts).await? {
                 return Ok(Some(post));

@@ -1393,6 +1393,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "color-eyre"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55146f5e46f237f7423d74111267d4597b59b0dad0ffaf7303bce9945d843ad5"
+dependencies = [
+ "backtrace",
+ "color-spantrace",
+ "eyre",
+ "indenter",
+ "once_cell",
+ "owo-colors 3.5.0",
+ "tracing-error",
+]
+
+[[package]]
+name = "color-spantrace"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd6be1b2a7e382e2b98b43b2adcca6bb0e465af0bdd38123873ae61eb17a72c2"
+dependencies = [
+ "once_cell",
+ "owo-colors 3.5.0",
+ "tracing-core",
+ "tracing-error",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2394,6 +2421,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "eyre"
+version = "0.6.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cd915d99f24784cdc19fd37ef22b97e3ff0ae756c7e492e9fbfe897d61e2aec"
+dependencies = [
+ "indenter",
+ "once_cell",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3348,6 +3385,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indenter"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
+
+[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3643,7 +3686,6 @@ dependencies = [
  "kitsune-wasm-mrf",
  "kitsune-webfinger",
  "metrics",
- "miette",
  "mimalloc",
  "mime",
  "mime_guess",
@@ -3762,13 +3804,13 @@ name = "kitsune-cli"
 version = "0.0.1-pre.6"
 dependencies = [
  "clap",
+ "color-eyre",
  "diesel",
  "diesel-async",
  "dotenvy",
  "envy",
  "kitsune-config",
  "kitsune-db",
- "miette",
  "serde",
  "speedy-uuid",
  "tokio",
@@ -3780,8 +3822,8 @@ dependencies = [
 name = "kitsune-config"
 version = "0.0.1-pre.6"
 dependencies = [
+ "eyre",
  "isolang",
- "miette",
  "serde",
  "smol_str",
  "tokio",
@@ -3794,6 +3836,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
  "const_format",
+ "eyre",
  "http 1.1.0",
  "kitsune-db",
  "kitsune-messaging",
@@ -3819,7 +3862,6 @@ dependencies = [
  "kitsune-language",
  "kitsune-test",
  "kitsune-type",
- "miette",
  "num-derive",
  "num-traits",
  "rustls 0.23.4",
@@ -3847,9 +3889,7 @@ dependencies = [
  "kitsune-db",
  "kitsune-url",
  "lettre",
- "miette",
  "mrml",
- "scoped-futures",
  "speedy-uuid",
  "thiserror",
  "typed-builder",
@@ -3899,7 +3939,6 @@ dependencies = [
  "globset",
  "kitsune-config",
  "kitsune-type",
- "miette",
  "thiserror",
  "url",
 ]
@@ -3945,7 +3984,6 @@ dependencies = [
  "kitsune-service",
  "kitsune-url",
  "kitsune-wasm-mrf",
- "miette",
  "mimalloc",
  "multiplex-pool",
  "redis",
@@ -3962,11 +4000,11 @@ dependencies = [
  "derive_more 1.0.0-beta.6",
  "diesel",
  "diesel-async",
+ "eyre",
  "futures-util",
  "kitsune-core",
  "kitsune-db",
  "kitsune-email",
- "miette",
  "scoped-futures",
  "serde",
  "speedy-uuid",
@@ -4038,6 +4076,7 @@ name = "kitsune-observability"
 version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
+ "eyre",
  "http-body-util",
  "http-compat",
  "hyper 1.2.0",
@@ -4047,7 +4086,6 @@ dependencies = [
  "metrics-opentelemetry",
  "metrics-tracing-context",
  "metrics-util",
- "miette",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-otlp",
@@ -4067,7 +4105,6 @@ dependencies = [
  "http-compat",
  "kitsune-config",
  "kitsune-http-client",
- "miette",
  "moka",
  "multiplex-pool",
  "once_cell",
@@ -4120,7 +4157,6 @@ dependencies = [
  "kitsune-db",
  "kitsune-language",
  "meilisearch-sdk",
- "miette",
  "serde",
  "speedy-uuid",
  "strum",
@@ -4142,6 +4178,7 @@ dependencies = [
  "derive_builder",
  "diesel",
  "diesel-async",
+ "eyre",
  "futures-util",
  "garde",
  "hex-simd",
@@ -4169,7 +4206,6 @@ dependencies = [
  "kitsune-url",
  "kitsune-util",
  "kitsune-webfinger",
- "miette",
  "mime",
  "multiplex-pool",
  "password-hash",
@@ -4277,12 +4313,12 @@ name = "kitsune-wasm-mrf"
 version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
+ "color-eyre",
  "derive_more 1.0.0-beta.6",
  "enum_dispatch",
  "futures-util",
  "kitsune-config",
  "kitsune-type",
- "miette",
  "mrf-manifest",
  "multiplex-pool",
  "redis",
@@ -4307,6 +4343,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
  "autometrics",
+ "eyre",
  "futures-util",
  "http 1.1.0",
  "http-body-util",
@@ -4838,7 +4875,7 @@ dependencies = [
  "backtrace-ext",
  "cfg-if",
  "miette-derive",
- "owo-colors",
+ "owo-colors 4.0.0",
  "supports-color",
  "supports-hyperlinks",
  "supports-unicode",
@@ -4976,7 +5013,6 @@ version = "0.0.1-pre.6"
 dependencies = [
  "insta",
  "leb128",
- "miette",
  "olpc-cjson",
  "schemars",
  "semver",
@@ -4993,7 +5029,7 @@ name = "mrf-tool"
 version = "0.0.1-pre.6"
 dependencies = [
  "clap",
- "miette",
+ "color-eyre",
  "mrf-manifest",
  "serde_json",
  "wasmparser 0.202.0",
@@ -5440,6 +5476,12 @@ name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
+
+[[package]]
+name = "owo-colors"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
 
 [[package]]
 name = "owo-colors"

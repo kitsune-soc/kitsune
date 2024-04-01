@@ -14,13 +14,13 @@ eula = false
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
+color-eyre = "0.6.3"
 diesel = "2.1.5"
 diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-db = { path = "../crates/kitsune-db" }
-miette = { version = "7.2.0", features = ["fancy"] }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["full"] }

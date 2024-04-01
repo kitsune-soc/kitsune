@@ -3,8 +3,7 @@ use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
-use kitsune_db::{model::favourite::Favourite, schema::posts_favourites};
-use scoped_futures::ScopedFutureExt;
+use kitsune_db::{model::favourite::Favourite, schema::posts_favourites, with_connection};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -15,23 +14,17 @@ pub struct DeliverUnfavourite {
 
 impl Runnable for DeliverUnfavourite {
     type Context = JobRunnerContext;
-    type Error = miette::Report;
+    type Error = eyre::Report;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let favourite = ctx
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    posts_favourites::table
-                        .find(self.favourite_id)
-                        .get_result::<Favourite>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let favourite = with_connection!(ctx.db_pool, |db_conn| {
+            posts_favourites::table
+                .find(self.favourite_id)
+                .get_result::<Favourite>(db_conn)
+                .await
+                .optional()
+        })?;
 
         let Some(favourite) = favourite else {
             return Ok(());
@@ -39,16 +32,13 @@ impl Runnable for DeliverUnfavourite {
 
         ctx.deliverer
             .deliver(Action::Unfavourite(favourite))
-            .await
-            .map_err(|err| miette::Report::new_boxed(err.into()))?;
-
-        ctx.db_pool
-            .with_connection(|db_conn| {
-                diesel::delete(posts_favourites::table.find(self.favourite_id))
-                    .execute(db_conn)
-                    .scoped()
-            })
             .await?;
+
+        with_connection!(ctx.db_pool, |db_conn| {
+            diesel::delete(posts_favourites::table.find(self.favourite_id))
+                .execute(db_conn)
+                .await
+        })?;
 
         Ok(())
     }

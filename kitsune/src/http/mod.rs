@@ -85,7 +85,6 @@ pub fn create_router(
     if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
             XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
-                .into_diagnostic()
                 .wrap_err("Invalid clacks overhead values")?;
 
         router = router.layer(clacks_overhead_layer);
@@ -114,14 +113,11 @@ pub async fn run(
     shutdown_signal: crate::signal::Receiver,
 ) -> miette::Result<()> {
     let router = create_router(state, &server_config)?;
-    let listener = TcpListener::bind(("0.0.0.0", server_config.port))
-        .await
-        .into_diagnostic()?;
+    let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
 
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown_signal.wait())
-        .await
-        .into_diagnostic()?;
+        .await?;
 
     Ok(())
 }

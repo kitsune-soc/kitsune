@@ -1,5 +1,5 @@
 use super::{Backend, BoxError, BucketBackend};
-use miette::IntoDiagnostic;
+use color_eyre::eyre;
 use std::path::Path;
 
 pub struct FsBackend {
@@ -7,12 +7,12 @@ pub struct FsBackend {
 }
 
 impl FsBackend {
-    pub fn from_path<P>(path: P) -> miette::Result<Self>
+    pub fn from_path<P>(path: P) -> eyre::Result<Self>
     where
         P: AsRef<Path>,
     {
         Ok(Self {
-            inner: sled::open(path).into_diagnostic()?,
+            inner: sled::open(path)?,
         })
     }
 }

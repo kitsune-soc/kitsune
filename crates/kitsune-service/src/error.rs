@@ -1,8 +1,5 @@
 use diesel_async::pooled_connection::bb8;
-use std::{
-    error::Error as StdError,
-    fmt::{Debug, Display},
-};
+use std::{error::Error as StdError, fmt::Debug};
 use thiserror::Error;
 
 pub type BoxError = Box<dyn StdError + Send + Sync>;
@@ -71,7 +68,7 @@ pub enum Error {
     Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]
-    Fetcher(BoxError),
+    Fetcher(eyre::Report),
 
     #[error(transparent)]
     Http(#[from] http::Error),
@@ -101,7 +98,7 @@ pub enum Error {
     PostProcessing(post_process::BoxError),
 
     #[error(transparent)]
-    Resolver(BoxError),
+    Resolver(eyre::Report),
 
     #[error(transparent)]
     Rsa(#[from] rsa::Error),
@@ -129,16 +126,4 @@ pub enum Error {
 
     #[error(transparent)]
     Validate(#[from] garde::Report),
-}
-
-impl<E> From<kitsune_db::PoolError<E>> for Error
-where
-    E: Into<Error> + Debug + Display,
-{
-    fn from(value: kitsune_db::PoolError<E>) -> Self {
-        match value {
-            kitsune_db::PoolError::Pool(err) => err.into(),
-            kitsune_db::PoolError::User(err) => err.into(),
-        }
-    }
 }

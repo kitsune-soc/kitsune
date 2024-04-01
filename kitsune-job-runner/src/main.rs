@@ -31,9 +31,8 @@ async fn main() -> miette::Result<()> {
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
     let db_pool = kitsune_db::connect(&config.database).await?;
-    let job_queue = kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue)
-        .await
-        .into_diagnostic()?;
+    let job_queue =
+        kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue).await?;
 
     let mrf_service = MrfService::from_config(&config.mrf).await?;
     let url_service = UrlService::builder()

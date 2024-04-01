@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 async-trait = "0.1.79"
 autometrics = { version = "1.0.1", default-features = false }
+eyre = "0.6.12"
 futures-util = "0.3.30"
 http = "1.1.0"
 kitsune-cache = { path = "../kitsune-cache" }

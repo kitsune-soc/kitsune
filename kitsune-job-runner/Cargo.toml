@@ -26,7 +26,6 @@ kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
 kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
-miette = { version = "7.2.0", features = ["fancy"] }
 mimalloc = "0.1.39"
 multiplex-pool = { path = "../lib/multiplex-pool" }
 redis = { version = "0.25.2", default-features = false, features = [

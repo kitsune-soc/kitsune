@@ -1,9 +1,6 @@
 use http::StatusCode;
 use std::borrow::Cow;
-use std::error::Error as StdError;
 use thiserror::Error;
-
-pub type BoxError = Box<dyn StdError + Send + Sync>;
 
 macro_rules! http_error {
     ($($variant_name:ident => $status_code:path),*$(,)?) => {

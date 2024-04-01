@@ -279,7 +279,7 @@ mod test {
 
             let account_id = db_pool
                 .with_connection(|db_conn| {
-                    async move { Ok::<_, miette::Report>(prepare_db(db_conn).await) }.scoped()
+                    async move { Ok::<_, eyre::Report>(prepare_db(db_conn).await) }.scoped()
                 })
                 .await
                 .unwrap();

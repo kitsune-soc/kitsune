@@ -6,8 +6,8 @@ use kitsune_core::traits::deliverer::Action;
 use kitsune_db::{
     model::{account::Account, post::Post},
     schema::{accounts, posts},
+    with_connection,
 };
-use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -25,25 +25,19 @@ pub struct DeliverUpdate {
 
 impl Runnable for DeliverUpdate {
     type Context = JobRunnerContext;
-    type Error = miette::Report;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let action = match self.entity {
             UpdateEntity::Account => {
-                let account = ctx
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        async move {
-                            accounts::table
-                                .find(self.id)
-                                .select(Account::as_select())
-                                .get_result(db_conn)
-                                .await
-                                .optional()
-                        }
-                        .scoped()
-                    })
-                    .await?;
+                let account = with_connection!(ctx.db_pool, |db_conn| {
+                    accounts::table
+                        .find(self.id)
+                        .select(Account::as_select())
+                        .get_result(db_conn)
+                        .await
+                        .optional()
+                })?;
 
                 let Some(account) = account else {
                     return Ok(());
@@ -52,20 +46,14 @@ impl Runnable for DeliverUpdate {
                 Action::UpdateAccount(account)
             }
             UpdateEntity::Status => {
-                let post = ctx
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        async move {
-                            posts::table
-                                .find(self.id)
-                                .select(Post::as_select())
-                                .get_result(db_conn)
-                                .await
-                                .optional()
-                        }
-                        .scoped()
-                    })
-                    .await?;
+                let post = with_connection!(ctx.db_pool, |db_conn| {
+                    posts::table
+                        .find(self.id)
+                        .select(Post::as_select())
+                        .get_result(db_conn)
+                        .await
+                        .optional()
+                })?;
 
                 let Some(post) = post else {
                     return Ok(());
@@ -75,10 +63,7 @@ impl Runnable for DeliverUpdate {
             }
         };
 
-        ctx.deliverer
-            .deliver(action)
-            .await
-            .map_err(|err| miette::Report::new_boxed(err.into()))?;
+        ctx.deliverer.deliver(action).await?;
 
         Ok(())
     }

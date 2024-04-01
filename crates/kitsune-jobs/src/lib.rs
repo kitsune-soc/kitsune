@@ -19,11 +19,9 @@ use kitsune_db::{
     json::Json,
     model::job_context::{JobContext, NewJobContext},
     schema::job_context,
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_email::MailingService;
-use miette::IntoDiagnostic;
-use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -57,7 +55,7 @@ pub enum Job {
 
 impl Runnable for Job {
     type Context = JobRunnerContext;
-    type Error = miette::Report;
+    type Error = eyre::Report;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         match self {
@@ -89,37 +87,32 @@ impl KitsuneContextRepo {
 
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
-    type Error = miette::Report;
+    type Error = eyre::Report;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
     where
         I: Iterator<Item = Uuid> + Send + 'static,
     {
-        let stream = self
-            .db_pool
-            .with_connection(|conn| {
-                job_context::table
-                    .filter(job_context::id.eq_any(job_ids))
-                    .load_stream::<JobContext<Job>>(conn)
-                    .scoped()
-            })
-            .await?;
+        let stream = with_connection!(self.db_pool, |conn| {
+            job_context::table
+                .filter(job_context::id.eq_any(job_ids))
+                .load_stream::<JobContext<Job>>(conn)
+                .await
+        })?;
 
         Ok(stream
             .map_ok(|ctx| (ctx.id, ctx.context.0))
-            .map(IntoDiagnostic::into_diagnostic)
+            .map_err(eyre::Report::from)
             .boxed())
     }
 
     async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error> {
-        self.db_pool
-            .with_connection(|conn| {
-                diesel::delete(job_context::table.find(job_id))
-                    .execute(conn)
-                    .scoped()
-            })
-            .await?;
+        with_connection!(self.db_pool, |conn| {
+            diesel::delete(job_context::table.find(job_id))
+                .execute(conn)
+                .await
+        })?;
 
         Ok(())
     }
@@ -129,17 +122,15 @@ impl JobContextRepository for KitsuneContextRepo {
         job_id: Uuid,
         context: Self::JobContext,
     ) -> Result<(), Self::Error> {
-        self.db_pool
-            .with_connection(|conn| {
-                diesel::insert_into(job_context::table)
-                    .values(NewJobContext {
-                        id: job_id,
-                        context: Json(context),
-                    })
-                    .execute(conn)
-                    .scoped()
-            })
-            .await?;
+        with_connection!(self.db_pool, |conn| {
+            diesel::insert_into(job_context::table)
+                .values(NewJobContext {
+                    id: job_id,
+                    context: Json(context),
+                })
+                .execute(conn)
+                .await
+        })?;
 
         Ok(())
     }

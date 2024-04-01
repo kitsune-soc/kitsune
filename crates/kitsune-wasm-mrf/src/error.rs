@@ -1,7 +1,6 @@
-use miette::Diagnostic;
 use thiserror::Error;
 
-#[derive(Debug, Diagnostic, Error)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Json(#[from] simd_json::Error),

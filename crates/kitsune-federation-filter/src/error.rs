@@ -1,9 +1,8 @@
-use miette::Diagnostic;
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-#[derive(Debug, Diagnostic, Error)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Glob(#[from] globset::Error),

@@ -45,8 +45,7 @@ where
                     )
                     .await
                 })
-                .await
-                .into_diagnostic()?;
+                .await?;
 
             RedisCache::builder()
                 .prefix(cache_name)
@@ -96,12 +95,11 @@ pub fn storage(config: &storage::Configuration) -> miette::Result<AnyStorageBack
                 s3_config.secret_access_key.as_str(),
             );
             let s3_bucket = rusty_s3::Bucket::new(
-                s3_config.endpoint_url.parse().into_diagnostic()?,
+                s3_config.endpoint_url.parse()?,
                 path_style,
                 s3_config.bucket_name.to_string(),
                 s3_config.region.to_string(),
-            )
-            .into_diagnostic()?;
+            )?;
 
             S3Storage::new(s3_bucket, s3_credentials).into()
         }
@@ -117,8 +115,7 @@ pub fn mail_sender(
         AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(config.host.as_str())
     } else {
         AsyncSmtpTransport::<Tokio1Executor>::relay(config.host.as_str())
-    }
-    .into_diagnostic()?;
+    }?;
 
     let transport = transport_builder
         .credentials((config.username.as_str(), config.password.as_str()).into())
@@ -126,7 +123,7 @@ pub fn mail_sender(
 
     Ok(MailSender::builder()
         .backend(transport)
-        .from_mailbox(Mailbox::from_str(config.from_address.as_str()).into_diagnostic()?)
+        .from_mailbox(Mailbox::from_str(config.from_address.as_str())?)
         .build())
 }
 
@@ -138,7 +135,6 @@ pub async fn messaging(config: &messaging::Configuration) -> miette::Result<Mess
         messaging::Configuration::Redis(ref redis_config) => {
             let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
                 .await
-                .into_diagnostic()
                 .wrap_err("Failed to initialise Redis messaging backend")?;
 
             MessagingHub::new(redis_messaging_backend)

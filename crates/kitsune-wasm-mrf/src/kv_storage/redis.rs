@@ -1,5 +1,5 @@
 use super::BoxError;
-use miette::IntoDiagnostic;
+use color_eyre::eyre;
 use redis::{aio::ConnectionManager, AsyncCommands};
 
 const REDIS_NAMESPACE: &str = "MRF-KV-STORE";
@@ -9,14 +9,13 @@ pub struct RedisBackend {
 }
 
 impl RedisBackend {
-    pub async fn from_client(client: redis::Client, pool_size: usize) -> miette::Result<Self> {
+    pub async fn from_client(client: redis::Client, pool_size: usize) -> eyre::Result<Self> {
         let pool = multiplex_pool::Pool::from_producer(
             || client.get_connection_manager(),
             pool_size,
             multiplex_pool::RoundRobinStrategy::default(),
         )
-        .await
-        .into_diagnostic()?;
+        .await?;
 
         Ok(Self { pool })
     }
