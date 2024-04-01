@@ -16,7 +16,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-s3 = { path = "../kitsune-s3" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
-pin-project-lite = "0.2.13"
+pin-project-lite = "0.2.14"
 rand = "0.8.5"
 redis = { version = "0.25.2", default-features = false, features = [
     "connection-manager",
