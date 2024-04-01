@@ -13,5 +13,7 @@ extend-exclude = [
 
     "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
+
+    # Exclude all snapshot files
     "*.snap",
 ]
