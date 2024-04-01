@@ -11,20 +11,16 @@ use diesel::{
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::{
-    error::BoxError,
-    traits::{deliverer::Action, Deliverer as DelivererTrait},
-};
+use kitsune_core::traits::{deliverer::Action, Deliverer as DelivererTrait};
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post, user::User},
     schema::{accounts, posts, users},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_service::attachment::AttachmentService;
 use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
-use scoped_futures::ScopedFutureExt;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
@@ -61,26 +57,21 @@ impl Deliverer {
     }
 
     async fn accept_follow(&self, follow: Follow) -> Result<()> {
-        let (follower_inbox_url, (followed_account, followed_user)): (String, _) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let follower_inbox_url_fut = accounts::table
-                        .find(follow.follower_id)
-                        .select(accounts::inbox_url.assume_not_null())
-                        .get_result::<String>(db_conn);
+        let (follower_inbox_url, (followed_account, followed_user)): (String, _) =
+            with_connection!(self.db_pool, |db_conn| {
+                let follower_inbox_url_fut = accounts::table
+                    .find(follow.follower_id)
+                    .select(accounts::inbox_url.assume_not_null())
+                    .get_result::<String>(db_conn);
 
-                    let followed_info_fut = accounts::table
-                        .find(follow.account_id)
-                        .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn);
+                let followed_info_fut = accounts::table
+                    .find(follow.account_id)
+                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(db_conn);
 
-                    try_join!(follower_inbox_url_fut, followed_info_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(follower_inbox_url_fut, followed_info_fut)
+            })?;
 
         let followed_account_url = self.service.url.user_url(followed_account.id);
 
@@ -111,17 +102,14 @@ impl Deliverer {
     }
 
     async fn create_or_repost(&self, post: Post) -> Result<()> {
-        let (account, user) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                accounts::table
-                    .find(post.account_id)
-                    .inner_join(users::table)
-                    .select(<(Account, User)>::as_select())
-                    .get_result::<(Account, User)>(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let (account, user) = with_connection!(self.db_pool, |db_conn| {
+            accounts::table
+                .find(post.account_id)
+                .inner_join(users::table)
+                .select(<(Account, User)>::as_select())
+                .get_result::<(Account, User)>(db_conn)
+                .await
+        })?;
 
         let inbox_stream = self
             .inbox_resolver
@@ -141,21 +129,15 @@ impl Deliverer {
     }
 
     async fn delete_or_unrepost(&self, post: Post) -> Result<()> {
-        let account_user_data = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts::table
-                        .find(post.account_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let account_user_data = with_connection!(self.db_pool, |db_conn| {
+            accounts::table
+                .find(post.account_id)
+                .inner_join(users::table)
+                .select(<(Account, User)>::as_select())
+                .get_result::<(Account, User)>(db_conn)
+                .await
+                .optional()
+        })?;
 
         let Some((account, user)) = account_user_data else {
             return Ok(());
@@ -179,27 +161,21 @@ impl Deliverer {
     }
 
     async fn favourite(&self, favourite: Favourite) -> Result<()> {
-        let ((account, user), inbox_url) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_user_fut = accounts::table
-                        .find(favourite.account_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result(db_conn);
+        let ((account, user), inbox_url) = with_connection!(self.db_pool, |db_conn| {
+            let account_user_fut = accounts::table
+                .find(favourite.account_id)
+                .inner_join(users::table)
+                .select(<(Account, User)>::as_select())
+                .get_result(db_conn);
 
-                    let inbox_url_fut = posts::table
-                        .find(favourite.post_id)
-                        .inner_join(accounts::table)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
+            let inbox_url_fut = posts::table
+                .find(favourite.post_id)
+                .inner_join(accounts::table)
+                .select(accounts::inbox_url)
+                .get_result::<Option<String>>(db_conn);
 
-                    try_join!(account_user_fut, inbox_url_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_user_fut, inbox_url_fut)
+        })?;
 
         if let Some(ref inbox_url) = inbox_url {
             let activity = favourite.into_activity(self.mapping_state()).await?;
@@ -213,26 +189,21 @@ impl Deliverer {
     }
 
     async fn follow(&self, follow: Follow) -> Result<()> {
-        let ((follower, follower_user), followed_inbox) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let follower_info_fut = accounts::table
-                        .find(follow.follower_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn);
+        let ((follower, follower_user), followed_inbox) =
+            with_connection!(self.db_pool, |db_conn| {
+                let follower_info_fut = accounts::table
+                    .find(follow.follower_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(db_conn);
 
-                    let followed_inbox_fut = accounts::table
-                        .find(follow.account_id)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
+                let followed_inbox_fut = accounts::table
+                    .find(follow.account_id)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(db_conn);
 
-                    try_join!(follower_info_fut, followed_inbox_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(follower_info_fut, followed_inbox_fut)
+            })?;
 
         if let Some(followed_inbox) = followed_inbox {
             let follow_activity = follow.into_activity(self.mapping_state()).await?;
@@ -246,28 +217,23 @@ impl Deliverer {
     }
 
     async fn reject_follow(&self, follow: Follow) -> Result<()> {
-        let (follower_inbox_url, (followed_account, followed_user), _delete_result) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    let follower_inbox_url_fut = accounts::table
-                        .find(follow.follower_id)
-                        .select(accounts::inbox_url.assume_not_null())
-                        .get_result::<String>(db_conn);
+        let (follower_inbox_url, (followed_account, followed_user), _delete_result) =
+            with_connection!(self.db_pool, |db_conn| {
+                let follower_inbox_url_fut = accounts::table
+                    .find(follow.follower_id)
+                    .select(accounts::inbox_url.assume_not_null())
+                    .get_result::<String>(db_conn);
 
-                    let followed_info_fut = accounts::table
-                        .find(follow.account_id)
-                        .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn);
+                let followed_info_fut = accounts::table
+                    .find(follow.account_id)
+                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(db_conn);
 
-                    let delete_fut = diesel::delete(&follow).execute(db_conn);
+                let delete_fut = diesel::delete(&follow).execute(db_conn);
 
-                    try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(follower_inbox_url_fut, followed_info_fut, delete_fut)
+            })?;
 
         let followed_account_url = self.service.url.user_url(followed_account.id);
 
@@ -298,27 +264,21 @@ impl Deliverer {
     }
 
     async fn unfavourite(&self, favourite: Favourite) -> Result<()> {
-        let ((account, user), inbox_url) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_user_fut = accounts::table
-                        .find(favourite.account_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result(db_conn);
+        let ((account, user), inbox_url) = with_connection!(self.db_pool, |db_conn| {
+            let account_user_fut = accounts::table
+                .find(favourite.account_id)
+                .inner_join(users::table)
+                .select(<(Account, User)>::as_select())
+                .get_result(db_conn);
 
-                    let inbox_url_fut = posts::table
-                        .find(favourite.post_id)
-                        .inner_join(accounts::table)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
+            let inbox_url_fut = posts::table
+                .find(favourite.post_id)
+                .inner_join(accounts::table)
+                .select(accounts::inbox_url)
+                .get_result::<Option<String>>(db_conn);
 
-                    try_join!(account_user_fut, inbox_url_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_user_fut, inbox_url_fut)
+        })?;
 
         if let Some(ref inbox_url) = inbox_url {
             let activity = favourite.into_negate_activity(self.mapping_state()).await?;
@@ -331,26 +291,21 @@ impl Deliverer {
     }
 
     async fn unfollow(&self, follow: Follow) -> Result<()> {
-        let ((follower, follower_user), followed_account_inbox_url) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    let follower_info_fut = accounts::table
-                        .find(follow.follower_id)
-                        .inner_join(users::table)
-                        .select(<(Account, User)>::as_select())
-                        .get_result::<(Account, User)>(db_conn);
+        let ((follower, follower_user), followed_account_inbox_url) =
+            with_connection!(self.db_pool, |db_conn| {
+                let follower_info_fut = accounts::table
+                    .find(follow.follower_id)
+                    .inner_join(users::table)
+                    .select(<(Account, User)>::as_select())
+                    .get_result::<(Account, User)>(db_conn);
 
-                    let followed_account_inbox_url_fut = accounts::table
-                        .find(follow.account_id)
-                        .select(accounts::inbox_url)
-                        .get_result::<Option<String>>(db_conn);
+                let followed_account_inbox_url_fut = accounts::table
+                    .find(follow.account_id)
+                    .select(accounts::inbox_url)
+                    .get_result::<Option<String>>(db_conn);
 
-                    try_join!(follower_info_fut, followed_account_inbox_url_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(follower_info_fut, followed_account_inbox_url_fut)
+            })?;
 
         if let Some(ref followed_account_inbox_url) = followed_account_inbox_url {
             let follow_activity = follow.into_negate_activity(self.mapping_state()).await?;
@@ -369,20 +324,14 @@ impl Deliverer {
     }
 
     async fn update_account(&self, account: Account) -> Result<()> {
-        let user = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    users::table
-                        .filter(users::account_id.eq(account.id))
-                        .select(User::as_select())
-                        .get_result(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let user = with_connection!(self.db_pool, |db_conn| {
+            users::table
+                .filter(users::account_id.eq(account.id))
+                .select(User::as_select())
+                .get_result(db_conn)
+                .await
+                .optional()
+        })?;
 
         let Some(user) = user else {
             return Ok(());
@@ -404,22 +353,16 @@ impl Deliverer {
     }
 
     async fn update_post(&self, post: Post) -> Result<()> {
-        let post_account_user_data = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    posts::table
-                        .find(post.id)
-                        .inner_join(accounts::table)
-                        .inner_join(users::table.on(accounts::id.eq(users::account_id)))
-                        .select(<(Account, User)>::as_select())
-                        .get_result(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let post_account_user_data = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(post.id)
+                .inner_join(accounts::table)
+                .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                .select(<(Account, User)>::as_select())
+                .get_result(db_conn)
+                .await
+                .optional()
+        })?;
 
         let Some((account, user)) = post_account_user_data else {
             return Ok(());
@@ -447,7 +390,7 @@ impl Deliverer {
 
 #[async_trait]
 impl DelivererTrait for Deliverer {
-    async fn deliver(&self, action: Action) -> Result<(), BoxError> {
+    async fn deliver(&self, action: Action) -> eyre::Result<()> {
         match action {
             Action::AcceptFollow(follow) => self.accept_follow(follow).await,
             Action::Create(post) | Action::Repost(post) => self.create_or_repost(post).await,

@@ -83,7 +83,7 @@ mod tests {
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
-        PgPool,
+        with_connection_panicky, PgPool,
     };
     use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
@@ -169,12 +169,8 @@ mod tests {
     async fn basic() {
         database_test(|db_pool| {
             redis_test(|redis_pool| async move {
-                let account_id = db_pool
-                    .with_connection(|db_conn| {
-                        async move { Ok::<_, eyre::Report>(prepare_db(db_conn).await) }.scoped()
-                    })
-                    .await
-                    .unwrap();
+                let account_id =
+                    with_connection_panicky!(db_pool, |db_conn| { prepare_db(db_conn).await });
                 let account_url = format!("https://example.com/users/{account_id}");
 
                 let url_service = UrlService::builder()
@@ -236,16 +232,9 @@ mod tests {
     async fn custom_domain() {
         database_test(|db_pool| {
             redis_test(|redis_pool| async move {
-                db_pool
-                    .with_connection(|db_conn| {
-                        async move {
-                            prepare_db(db_conn).await;
-                            Ok::<_, eyre::Report>(())
-                        }
-                        .scoped()
-                    })
-                    .await
-                    .unwrap();
+                with_connection_panicky!(db_pool, |db_conn| {
+                    prepare_db(db_conn).await;
+                });
 
                 let url_service = UrlService::builder()
                     .scheme("https")

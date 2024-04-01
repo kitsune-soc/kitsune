@@ -16,6 +16,7 @@ use self::{
     state::{EventEmitter, Service, SessionConfig, Zustand, ZustandInner},
 };
 use athena::JobQueue;
+use color_eyre::eyre;
 use kitsune_config::Configuration;
 use kitsune_db::PgPool;
 use kitsune_email::MailingService;
@@ -50,7 +51,7 @@ pub async fn initialise_state(
     config: &Configuration,
     db_pool: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
-) -> miette::Result<Zustand> {
+) -> eyre::Result<Zustand> {
     let messaging_hub = prepare::messaging(&config.messaging).await?;
     let status_event_emitter = messaging_hub.emitter("event.status".into());
 

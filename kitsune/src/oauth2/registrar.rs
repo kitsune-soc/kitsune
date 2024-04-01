@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{model::oauth2, schema::oauth2_applications, PgPool};
+use kitsune_db::{model::oauth2, schema::oauth2_applications, with_connection, PgPool};
 use oxide_auth::{
     endpoint::{PreGrant, Scope},
     primitives::registrar::{BoundClient, ClientUrl, ExactUrl, RegisteredUrl, RegistrarError},
 };
 use oxide_auth_async::primitives::Registrar;
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::{
     borrow::Cow,
@@ -47,22 +46,16 @@ impl Registrar for OAuthRegistrar {
             .parse()
             .map_err(|_| RegistrarError::PrimitiveError)?;
 
-        let client = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    oauth2_applications::table
-                        .find(client_id)
-                        .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
-                        .get_result::<oauth2::Application>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await
-            .map_err(|_| RegistrarError::PrimitiveError)?
-            .ok_or(RegistrarError::Unspecified)?;
+        let client = with_connection!(self.db_pool, |db_conn| {
+            oauth2_applications::table
+                .find(client_id)
+                .filter(oauth2_applications::redirect_uri.eq(client.redirect_uri.as_str()))
+                .get_result::<oauth2::Application>(db_conn)
+                .await
+                .optional()
+        })
+        .map_err(|_| RegistrarError::PrimitiveError)?
+        .ok_or(RegistrarError::Unspecified)?;
 
         let client_id = client.id.to_string();
         let redirect_uri = ExactUrl::new(client.redirect_uri)
@@ -111,20 +104,15 @@ impl Registrar for OAuthRegistrar {
             client_query = client_query.filter(oauth2_applications::secret.eq(passphrase));
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    client_query
-                        .select(oauth2_applications::id)
-                        .execute(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await
-            .map_err(|_| RegistrarError::PrimitiveError)?
-            .map(|_| ())
-            .ok_or(RegistrarError::Unspecified)
+        with_connection!(self.db_pool, |db_conn| {
+            client_query
+                .select(oauth2_applications::id)
+                .execute(db_conn)
+                .await
+                .optional()
+        })
+        .map_err(|_| RegistrarError::PrimitiveError)?
+        .map(|_| ())
+        .ok_or(RegistrarError::Unspecified)
     }
 }

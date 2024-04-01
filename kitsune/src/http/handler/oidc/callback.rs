@@ -11,11 +11,10 @@ use diesel_async::RunQueryDsl;
 use kitsune_core::error::HttpError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_oidc::OidcService;
 use kitsune_service::user::{Register, UserService};
-use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -36,18 +35,13 @@ pub async fn get(
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
-    let user = db_pool
-        .with_connection(|db_conn| {
-            async {
-                users::table
-                    .filter(users::oidc_id.eq(&user_info.subject))
-                    .get_result(db_conn)
-                    .await
-                    .optional()
-            }
-            .scoped()
-        })
-        .await?;
+    let user = with_connection!(db_pool, |db_conn| {
+        users::table
+            .filter(users::oidc_id.eq(&user_info.subject))
+            .get_result(db_conn)
+            .await
+            .optional()
+    })?;
 
     let user = if let Some(user) = user {
         user
@@ -62,14 +56,12 @@ pub async fn get(
         user_service.register(register).await?
     };
 
-    let application = db_pool
-        .with_connection(|db_conn| {
-            oauth2_applications::table
-                .find(user_info.oauth2.application_id)
-                .get_result(db_conn)
-                .scoped()
-        })
-        .await?;
+    let application = with_connection!(db_pool, |db_conn| {
+        oauth2_applications::table
+            .find(user_info.oauth2.application_id)
+            .get_result(db_conn)
+            .await
+    })?;
 
     let authorisation_code = AuthorisationCode::builder()
         .application(application)

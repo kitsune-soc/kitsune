@@ -20,7 +20,6 @@ kitsune-type = { path = "../kitsune-type" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
-scoped-futures = "0.1.3"
 serde = "1.0.197"
 simd-json = "0.13.9"
 smol_str = "0.2.1"

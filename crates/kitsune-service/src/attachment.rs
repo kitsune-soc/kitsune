@@ -230,12 +230,9 @@ impl AttachmentService {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        attachment::{AttachmentService, Upload},
-        error::Error,
-    };
+    use crate::attachment::{AttachmentService, Upload};
     use bytes::{Bytes, BytesMut};
-    use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+    use diesel_async::{AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
     use http::{Request, Response};
     use http_body_util::Empty;
@@ -250,12 +247,12 @@ mod test {
             media_attachment::MediaAttachment,
         },
         schema::accounts,
+        with_connection_panicky,
     };
     use kitsune_http_client::Client;
     use kitsune_storage::fs::Storage;
     use kitsune_test::database_test;
     use kitsune_url::UrlService;
-    use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::convert::Infallible;
     use tempfile::TempDir;
@@ -266,12 +263,10 @@ mod test {
         database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
-            let account_id = db_pool
-                .with_connection(|db_conn| {
-                    async move { Ok::<_, eyre::Report>(prepare_db(db_conn).await) }.scoped()
-                })
-                .await
-                .unwrap();
+            let account_id = with_connection_panicky!(db_pool, |db_conn| {
+                Ok::<_, eyre::Report>(prepare_db(db_conn).await)
+            })
+            .unwrap();
 
             let temp_dir = TempDir::new().unwrap();
             let storage = Storage::new(temp_dir.path().to_owned());
@@ -339,38 +334,32 @@ mod test {
 
     async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {
         // Create a local user `@alice`
-        db_conn
-            .transaction(|tx| {
-                async move {
-                    let account_id = Uuid::now_v7();
-                    diesel::insert_into(accounts::table)
-                        .values(NewAccount {
-                            id: account_id,
-                            display_name: None,
-                            username: "alice",
-                            locked: false,
-                            note: None,
-                            local: true,
-                            domain: "example.com",
-                            actor_type: ActorType::Person,
-                            url: "https://example.com/users/alice",
-                            featured_collection_url: None,
-                            followers_url: None,
-                            following_url: None,
-                            inbox_url: None,
-                            outbox_url: None,
-                            shared_inbox_url: None,
-                            public_key_id: "https://example.com/users/alice#main-key",
-                            public_key: "",
-                            created_at: None,
-                        })
-                        .execute(tx)
-                        .await?;
-                    Ok::<_, Error>(account_id)
-                }
-                .scope_boxed()
+        let account_id = Uuid::now_v7();
+        diesel::insert_into(accounts::table)
+            .values(NewAccount {
+                id: account_id,
+                display_name: None,
+                username: "alice",
+                locked: false,
+                note: None,
+                local: true,
+                domain: "example.com",
+                actor_type: ActorType::Person,
+                url: "https://example.com/users/alice",
+                featured_collection_url: None,
+                followers_url: None,
+                following_url: None,
+                inbox_url: None,
+                outbox_url: None,
+                shared_inbox_url: None,
+                public_key_id: "https://example.com/users/alice#main-key",
+                public_key: "",
+                created_at: None,
             })
+            .execute(db_conn)
             .await
-            .unwrap()
+            .unwrap();
+
+        account_id
     }
 }

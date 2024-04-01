@@ -8,6 +8,7 @@ use kitsune_core::traits::Fetcher as _;
 use kitsune_db::{
     model::{account::Account, media_attachment::MediaAttachment},
     schema::{accounts, media_attachments},
+    with_connection_panicky,
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
@@ -15,7 +16,6 @@ use kitsune_search::NoopSearchService;
 use kitsune_test::{database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
-use scoped_futures::ScopedFutureExt;
 use std::sync::Arc;
 use tower::service_fn;
 
@@ -92,15 +92,14 @@ async fn fetch_emoji() {
         assert_eq!(emoji.shortcode, "Blobhaj");
         assert_eq!(emoji.domain, Some(String::from("corteximplant.com")));
 
-        let media_attachment = db_pool
-            .with_connection(|db_conn| {
+        let media_attachment =
+            with_connection_panicky!(db_pool, |db_conn| {
                 media_attachments::table
                     .find(emoji.media_attachment_id)
                     .select(MediaAttachment::as_select())
                     .get_result::<MediaAttachment>(db_conn)
-                    .scoped()
+                    .await
             })
-            .await
             .expect("Get media attachment");
 
         assert_eq!(
@@ -149,16 +148,14 @@ async fn fetch_note() {
             "https://corteximplant.com/users/0x0/statuses/109501674056556919"
         );
 
-        let author = db_pool
-            .with_connection(|db_conn| {
-                accounts::table
-                    .find(note.account_id)
-                    .select(Account::as_select())
-                    .get_result::<Account>(db_conn)
-                    .scoped()
-            })
-            .await
-            .expect("Get author");
+        let author = with_connection_panicky!(db_pool, |db_conn| {
+            accounts::table
+                .find(note.account_id)
+                .select(Account::as_select())
+                .get_result::<Account>(db_conn)
+                .await
+        })
+        .expect("Get author");
 
         assert_eq!(author.username, "0x0");
         assert_eq!(author.url, "https://corteximplant.com/users/0x0");

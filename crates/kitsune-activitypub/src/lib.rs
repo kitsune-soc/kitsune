@@ -20,14 +20,13 @@ use kitsune_db::{
     schema::{
         media_attachments, posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
     },
-    PgPool,
+    with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_language::Language;
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
 use kitsune_util::{convert::timestamp_to_uuid, process, sanitize::CleanHtmlExt, CowBox};
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -288,58 +287,53 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         search_backend,
     } = preprocess_object(process_data).await?;
 
-    let post = db_pool
-        .with_transaction(|tx| {
-            async move {
-                let new_post = diesel::insert_into(posts::table)
-                    .values(NewPost {
-                        id: timestamp_to_uuid(object.published),
-                        account_id: user.id,
-                        in_reply_to_id,
-                        reposted_post_id: None,
-                        subject: object.summary.as_deref(),
-                        content: object.content.as_str(),
-                        content_source: "",
-                        content_lang: content_lang.into(),
-                        link_preview_url: link_preview_url.as_deref(),
-                        is_sensitive: object.sensitive,
-                        visibility,
-                        is_local: false,
-                        url: object.id.as_str(),
-                        created_at: Some(object.published),
+    let post = with_transaction!(db_pool, |tx| {
+        let new_post = diesel::insert_into(posts::table)
+            .values(NewPost {
+                id: timestamp_to_uuid(object.published),
+                account_id: user.id,
+                in_reply_to_id,
+                reposted_post_id: None,
+                subject: object.summary.as_deref(),
+                content: object.content.as_str(),
+                content_source: "",
+                content_lang: content_lang.into(),
+                link_preview_url: link_preview_url.as_deref(),
+                is_sensitive: object.sensitive,
+                visibility,
+                is_local: false,
+                url: object.id.as_str(),
+                created_at: Some(object.published),
+            })
+            .on_conflict(posts::url)
+            .do_update()
+            .set(PostConflictChangeset {
+                subject: object.summary.as_deref(),
+                content: object.content.as_str(),
+            })
+            .returning(Post::as_returning())
+            .get_result::<Post>(tx)
+            .await?;
+
+        let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
+        diesel::insert_into(posts_media_attachments::table)
+            .values(
+                attachment_ids
+                    .into_iter()
+                    .map(|attachment_id| NewPostMediaAttachment {
+                        post_id: new_post.id,
+                        media_attachment_id: attachment_id,
                     })
-                    .on_conflict(posts::url)
-                    .do_update()
-                    .set(PostConflictChangeset {
-                        subject: object.summary.as_deref(),
-                        content: object.content.as_str(),
-                    })
-                    .returning(Post::as_returning())
-                    .get_result::<Post>(tx)
-                    .await?;
+                    .collect::<Vec<NewPostMediaAttachment>>(),
+            )
+            .execute(tx)
+            .await?;
 
-                let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
-                diesel::insert_into(posts_media_attachments::table)
-                    .values(
-                        attachment_ids
-                            .into_iter()
-                            .map(|attachment_id| NewPostMediaAttachment {
-                                post_id: new_post.id,
-                                media_attachment_id: attachment_id,
-                            })
-                            .collect::<Vec<NewPostMediaAttachment>>(),
-                    )
-                    .execute(tx)
-                    .await?;
+        handle_mentions(tx, &user, new_post.id, &object.tag).await?;
+        handle_custom_emojis(tx, new_post.id, fetcher, &object.tag).await?;
 
-                handle_mentions(tx, &user, new_post.id, &object.tag).await?;
-                handle_custom_emojis(tx, new_post.id, fetcher, &object.tag).await?;
-
-                Ok::<_, Error>(new_post)
-            }
-            .scoped()
-        })
-        .await?;
+        Ok::<_, Error>(new_post)
+    })?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
         search_backend.add_to_index(post.clone().into()).await?;
@@ -362,51 +356,46 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
         search_backend,
     } = preprocess_object(process_data).await?;
 
-    let post = db_pool
-        .with_transaction(|tx| {
-            async move {
-                let updated_post = diesel::update(posts::table)
-                    .filter(posts::url.eq(object.id.as_str()))
-                    .set(FullPostChangeset {
-                        account_id: user.id,
-                        in_reply_to_id,
-                        reposted_post_id: None,
-                        subject: object.summary.as_deref(),
-                        content: object.content.as_str(),
-                        content_source: "",
-                        content_lang: content_lang.into(),
-                        link_preview_url: link_preview_url.as_deref(),
-                        is_sensitive: object.sensitive,
-                        visibility,
-                        is_local: false,
-                        updated_at: Timestamp::now_utc(),
+    let post = with_transaction!(db_pool, |tx| {
+        let updated_post = diesel::update(posts::table)
+            .filter(posts::url.eq(object.id.as_str()))
+            .set(FullPostChangeset {
+                account_id: user.id,
+                in_reply_to_id,
+                reposted_post_id: None,
+                subject: object.summary.as_deref(),
+                content: object.content.as_str(),
+                content_source: "",
+                content_lang: content_lang.into(),
+                link_preview_url: link_preview_url.as_deref(),
+                is_sensitive: object.sensitive,
+                visibility,
+                is_local: false,
+                updated_at: Timestamp::now_utc(),
+            })
+            .returning(Post::as_returning())
+            .get_result::<Post>(tx)
+            .await?;
+
+        let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
+        diesel::insert_into(posts_media_attachments::table)
+            .values(
+                attachment_ids
+                    .into_iter()
+                    .map(|attachment_id| NewPostMediaAttachment {
+                        post_id: updated_post.id,
+                        media_attachment_id: attachment_id,
                     })
-                    .returning(Post::as_returning())
-                    .get_result::<Post>(tx)
-                    .await?;
+                    .collect::<Vec<NewPostMediaAttachment>>(),
+            )
+            .on_conflict_do_nothing()
+            .execute(tx)
+            .await?;
 
-                let attachment_ids = process_attachments(tx, &user, &object.attachment).await?;
-                diesel::insert_into(posts_media_attachments::table)
-                    .values(
-                        attachment_ids
-                            .into_iter()
-                            .map(|attachment_id| NewPostMediaAttachment {
-                                post_id: updated_post.id,
-                                media_attachment_id: attachment_id,
-                            })
-                            .collect::<Vec<NewPostMediaAttachment>>(),
-                    )
-                    .on_conflict_do_nothing()
-                    .execute(tx)
-                    .await?;
+        handle_mentions(tx, &user, updated_post.id, &object.tag).await?;
 
-                handle_mentions(tx, &user, updated_post.id, &object.tag).await?;
-
-                Ok::<_, Error>(updated_post)
-            }
-            .scoped()
-        })
-        .await?;
+        Ok::<_, Error>(updated_post)
+    })?;
 
     if post.visibility == Visibility::Public || post.visibility == Visibility::Unlisted {
         search_backend.update_in_index(post.clone().into()).await?;

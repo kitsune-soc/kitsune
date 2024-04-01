@@ -11,11 +11,11 @@ use kitsune_core::traits::fetcher::AccountFetchOptions;
 use kitsune_db::{
     model::account::{Account, AccountConflictChangeset, NewAccount, UpdateAccountMedia},
     schema::accounts,
+    with_connection, with_transaction,
 };
 use kitsune_search::SearchBackend;
 use kitsune_type::ap::actor::Actor;
 use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
-use scoped_futures::ScopedFutureExt;
 use url::Url;
 
 impl Fetcher {
@@ -36,20 +36,14 @@ impl Fetcher {
                 return Ok(Some(user));
             }
 
-            let user_data = self
-                .db_pool
-                .with_connection(|db_conn| {
-                    async move {
-                        accounts::table
-                            .filter(accounts::url.eq(opts.url))
-                            .select(Account::as_select())
-                            .first(db_conn)
-                            .await
-                            .optional()
-                    }
-                    .scoped()
-                })
-                .await?;
+            let user_data = with_connection!(self.db_pool, |db_conn| {
+                accounts::table
+                    .filter(accounts::url.eq(opts.url))
+                    .select(Account::as_select())
+                    .first(db_conn)
+                    .await
+                    .optional()
+            })?;
 
             if let Some(user) = user_data {
                 return Ok(Some(user));
@@ -96,93 +90,87 @@ impl Fetcher {
 
         actor.clean_html();
 
-        let account: Account = self
-            .db_pool
-            .with_transaction(|tx| {
-                async move {
-                    let account = diesel::insert_into(accounts::table)
-                        .values(NewAccount {
-                            id: timestamp_to_uuid(actor.published),
-                            display_name: actor.name.as_deref(),
-                            note: actor.subject.as_deref(),
-                            username: actor.preferred_username.as_str(),
-                            locked: actor.manually_approves_followers,
-                            local: false,
-                            domain,
-                            actor_type: actor.r#type.into(),
-                            url: actor.id.as_str(),
-                            featured_collection_url: actor.featured.as_deref(),
-                            followers_url: actor.followers.as_deref(),
-                            following_url: actor.following.as_deref(),
-                            inbox_url: Some(actor.inbox.as_str()),
-                            outbox_url: actor.outbox.as_deref(),
-                            shared_inbox_url: actor
-                                .endpoints
-                                .and_then(|endpoints| endpoints.shared_inbox)
-                                .as_deref(),
-                            public_key_id: actor.public_key.id.as_str(),
-                            public_key: actor.public_key.public_key_pem.as_str(),
-                            created_at: Some(actor.published),
-                        })
-                        .on_conflict(accounts::url)
-                        .do_update()
-                        .set(AccountConflictChangeset {
-                            display_name: actor.name.as_deref(),
-                            note: actor.subject.as_deref(),
-                            locked: actor.manually_approves_followers,
-                            public_key_id: actor.public_key.id.as_str(),
-                            public_key: actor.public_key.public_key_pem.as_str(),
-                        })
+        let account: Account = with_transaction!(self.db_pool, |tx| {
+            let account = diesel::insert_into(accounts::table)
+                .values(NewAccount {
+                    id: timestamp_to_uuid(actor.published),
+                    display_name: actor.name.as_deref(),
+                    note: actor.subject.as_deref(),
+                    username: actor.preferred_username.as_str(),
+                    locked: actor.manually_approves_followers,
+                    local: false,
+                    domain,
+                    actor_type: actor.r#type.into(),
+                    url: actor.id.as_str(),
+                    featured_collection_url: actor.featured.as_deref(),
+                    followers_url: actor.followers.as_deref(),
+                    following_url: actor.following.as_deref(),
+                    inbox_url: Some(actor.inbox.as_str()),
+                    outbox_url: actor.outbox.as_deref(),
+                    shared_inbox_url: actor
+                        .endpoints
+                        .and_then(|endpoints| endpoints.shared_inbox)
+                        .as_deref(),
+                    public_key_id: actor.public_key.id.as_str(),
+                    public_key: actor.public_key.public_key_pem.as_str(),
+                    created_at: Some(actor.published),
+                })
+                .on_conflict(accounts::url)
+                .do_update()
+                .set(AccountConflictChangeset {
+                    display_name: actor.name.as_deref(),
+                    note: actor.subject.as_deref(),
+                    locked: actor.manually_approves_followers,
+                    public_key_id: actor.public_key.id.as_str(),
+                    public_key: actor.public_key.public_key_pem.as_str(),
+                })
+                .returning(Account::as_returning())
+                .get_result::<Account>(tx)
+                .await?;
+
+            let avatar_id = if let Some(icon) = actor.icon {
+                process_attachments(tx, &account, &[icon]).await?.pop()
+            } else {
+                None
+            };
+
+            let header_id = if let Some(image) = actor.image {
+                process_attachments(tx, &account, &[image]).await?.pop()
+            } else {
+                None
+            };
+
+            let mut update_changeset = UpdateAccountMedia::default();
+            if let Some(avatar_id) = avatar_id {
+                update_changeset = UpdateAccountMedia {
+                    avatar_id: Some(avatar_id),
+                    ..update_changeset
+                };
+            }
+
+            if let Some(header_id) = header_id {
+                update_changeset = UpdateAccountMedia {
+                    header_id: Some(header_id),
+                    ..update_changeset
+                };
+            }
+
+            let account = match update_changeset {
+                UpdateAccountMedia {
+                    avatar_id: None,
+                    header_id: None,
+                } => account,
+                _ => {
+                    diesel::update(&account)
+                        .set(update_changeset)
                         .returning(Account::as_returning())
-                        .get_result::<Account>(tx)
-                        .await?;
-
-                    let avatar_id = if let Some(icon) = actor.icon {
-                        process_attachments(tx, &account, &[icon]).await?.pop()
-                    } else {
-                        None
-                    };
-
-                    let header_id = if let Some(image) = actor.image {
-                        process_attachments(tx, &account, &[image]).await?.pop()
-                    } else {
-                        None
-                    };
-
-                    let mut update_changeset = UpdateAccountMedia::default();
-                    if let Some(avatar_id) = avatar_id {
-                        update_changeset = UpdateAccountMedia {
-                            avatar_id: Some(avatar_id),
-                            ..update_changeset
-                        };
-                    }
-
-                    if let Some(header_id) = header_id {
-                        update_changeset = UpdateAccountMedia {
-                            header_id: Some(header_id),
-                            ..update_changeset
-                        };
-                    }
-
-                    let account = match update_changeset {
-                        UpdateAccountMedia {
-                            avatar_id: None,
-                            header_id: None,
-                        } => account,
-                        _ => {
-                            diesel::update(&account)
-                                .set(update_changeset)
-                                .returning(Account::as_returning())
-                                .get_result(tx)
-                                .await?
-                        }
-                    };
-
-                    Ok::<_, Error>(account)
+                        .get_result(tx)
+                        .await?
                 }
-                .scoped()
-            })
-            .await?;
+            };
+
+            Ok::<_, Error>(account)
+        })?;
 
         self.search_backend
             .add_to_index(account.clone().into())

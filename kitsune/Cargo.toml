@@ -125,6 +125,7 @@ kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
 
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
+color-eyre = "0.6.3"
 
 [build-dependencies]
 camino = "1.1.6"

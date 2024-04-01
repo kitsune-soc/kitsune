@@ -6,10 +6,10 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
     schema::{accounts, posts},
+    with_connection,
 };
 use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_util::try_join;
-use scoped_futures::ScopedFutureExt;
 use std::future::Future;
 
 pub trait IntoActivity {
@@ -50,25 +50,19 @@ impl IntoActivity for Favourite {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
-        let (account_url, post_url) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_url_fut = accounts::table
-                        .find(self.account_id)
-                        .select(accounts::url)
-                        .get_result::<String>(db_conn);
+        let (account_url, post_url) = with_connection!(state.db_pool, |db_conn| {
+            let account_url_fut = accounts::table
+                .find(self.account_id)
+                .select(accounts::url)
+                .get_result::<String>(db_conn);
 
-                    let post_url_fut = posts::table
-                        .find(self.post_id)
-                        .select(posts::url)
-                        .get_result(db_conn);
+            let post_url_fut = posts::table
+                .find(self.post_id)
+                .select(posts::url)
+                .get_result(db_conn);
 
-                    try_join!(account_url_fut, post_url_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_url_fut, post_url_fut)
+        })?;
 
         Ok(Activity {
             context: ap_context(),
@@ -81,16 +75,13 @@ impl IntoActivity for Favourite {
     }
 
     async fn into_negate_activity(self, state: State<'_>) -> Result<Self::NegateOutput> {
-        let account_url = state
-            .db_pool
-            .with_connection(|db_conn| {
-                accounts::table
-                    .find(self.account_id)
-                    .select(accounts::url)
-                    .get_result::<String>(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let account_url = with_connection!(state.db_pool, |db_conn| {
+            accounts::table
+                .find(self.account_id)
+                .select(accounts::url)
+                .get_result::<String>(db_conn)
+                .await
+        })?;
 
         Ok(Activity {
             context: ap_context(),
@@ -108,25 +99,19 @@ impl IntoActivity for Follow {
     type NegateOutput = Activity;
 
     async fn into_activity(self, state: State<'_>) -> Result<Self::Output> {
-        let (attributed_to, object) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let attributed_to_fut = accounts::table
-                        .find(self.follower_id)
-                        .select(accounts::url)
-                        .get_result::<String>(db_conn);
+        let (attributed_to, object) = with_connection!(state.db_pool, |db_conn| {
+            let attributed_to_fut = accounts::table
+                .find(self.follower_id)
+                .select(accounts::url)
+                .get_result::<String>(db_conn);
 
-                    let object_fut = accounts::table
-                        .find(self.account_id)
-                        .select(accounts::url)
-                        .get_result::<String>(db_conn);
+            let object_fut = accounts::table
+                .find(self.account_id)
+                .select(accounts::url)
+                .get_result::<String>(db_conn);
 
-                    try_join!(attributed_to_fut, object_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(attributed_to_fut, object_fut)
+        })?;
 
         Ok(Activity {
             context: ap_context(),
@@ -139,16 +124,13 @@ impl IntoActivity for Follow {
     }
 
     async fn into_negate_activity(self, state: State<'_>) -> Result<Self::NegateOutput> {
-        let attributed_to = state
-            .db_pool
-            .with_connection(|db_conn| {
-                accounts::table
-                    .find(self.follower_id)
-                    .select(accounts::url)
-                    .get_result::<String>(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let attributed_to = with_connection!(state.db_pool, |db_conn| {
+            accounts::table
+                .find(self.follower_id)
+                .select(accounts::url)
+                .get_result::<String>(db_conn)
+                .await
+        })?;
 
         Ok(Activity {
             context: ap_context(),
@@ -169,16 +151,13 @@ impl IntoActivity for Post {
         let account_url = state.service.url.user_url(self.account_id);
 
         if let Some(reposted_post_id) = self.reposted_post_id {
-            let reposted_post_url = state
-                .db_pool
-                .with_connection(|db_conn| {
-                    posts::table
-                        .find(reposted_post_id)
-                        .select(posts::url)
-                        .get_result(db_conn)
-                        .scoped()
-                })
-                .await?;
+            let reposted_post_url = with_connection!(state.db_pool, |db_conn| {
+                posts::table
+                    .find(reposted_post_id)
+                    .select(posts::url)
+                    .get_result(db_conn)
+                    .await
+            })?;
 
             Ok(Activity {
                 context: ap_context(),

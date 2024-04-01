@@ -6,9 +6,9 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
+use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
 use kitsune_config::server;
-use miette::{Context, IntoDiagnostic};
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tower_http::{
@@ -37,7 +37,7 @@ pub mod extractor;
 pub fn create_router(
     state: Zustand,
     server_config: &server::Configuration,
-) -> miette::Result<Router> {
+) -> eyre::Result<Router> {
     let frontend_dir = &server_config.frontend_dir;
     let frontend_index_path = {
         let mut tmp = frontend_dir.to_string();
@@ -111,7 +111,7 @@ pub async fn run(
     state: Zustand,
     server_config: server::Configuration,
     shutdown_signal: crate::signal::Receiver,
-) -> miette::Result<()> {
+) -> eyre::Result<()> {
     let router = create_router(state, &server_config)?;
     let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
 

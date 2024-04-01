@@ -7,10 +7,9 @@ use axum_extra::extract::Query;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::StreamExt;
-use kitsune_db::{model::account::Account, schema::accounts, PgPool};
+use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::relationship::Relationship;
-use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::IntoParams;
@@ -39,15 +38,13 @@ pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     Query(query): Query<RelationshipQuery>,
 ) -> Result<Json<Vec<Relationship>>> {
-    let mut account_stream = db_pool
-        .with_connection(|db_conn| {
-            accounts::table
-                .filter(accounts::id.eq_any(&query.id))
-                .select(Account::as_select())
-                .load_stream::<Account>(db_conn)
-                .scoped()
-        })
-        .await?;
+    let mut account_stream = with_connection!(db_pool, |db_conn| {
+        accounts::table
+            .filter(accounts::id.eq_any(&query.id))
+            .select(Account::as_select())
+            .load_stream::<Account>(db_conn)
+            .await
+    })?;
 
     let mut relationships = Vec::with_capacity(query.id.len());
     while let Some(account) = account_stream.next().await.transpose()? {

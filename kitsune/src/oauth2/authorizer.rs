@@ -5,12 +5,11 @@ use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_util::generate_secret;
 use oxide_auth::primitives::grant::{Extensions, Grant};
 use oxide_auth_async::primitives::Authorizer;
-use scoped_futures::ScopedFutureExt;
 
 #[derive(Clone)]
 pub struct OAuthAuthorizer {
@@ -26,40 +25,32 @@ impl Authorizer for OAuthAuthorizer {
         let secret = generate_secret();
         let expires_at = chrono_to_timestamp(grant.until);
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(oauth2_authorization_codes::table)
-                    .values(oauth2::NewAuthorizationCode {
-                        code: secret.as_str(),
-                        application_id,
-                        user_id,
-                        scopes: scopes.as_str(),
-                        expires_at,
-                    })
-                    .returning(oauth2_authorization_codes::code)
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await
-            .map_err(|_| ())
+        with_connection!(self.db_pool, |db_conn| {
+            diesel::insert_into(oauth2_authorization_codes::table)
+                .values(oauth2::NewAuthorizationCode {
+                    code: secret.as_str(),
+                    application_id,
+                    user_id,
+                    scopes: scopes.as_str(),
+                    expires_at,
+                })
+                .returning(oauth2_authorization_codes::code)
+                .get_result(db_conn)
+                .await
+        })
+        .map_err(|_| ())
     }
 
     async fn extract(&mut self, authorization_code: &str) -> Result<Option<Grant>, ()> {
-        let oauth_data = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    oauth2_authorization_codes::table
-                        .find(authorization_code)
-                        .inner_join(oauth2_applications::table)
-                        .first::<(oauth2::AuthorizationCode, oauth2::Application)>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await
-            .map_err(|_| ())?;
+        let oauth_data = with_connection!(self.db_pool, |db_conn| {
+            oauth2_authorization_codes::table
+                .find(authorization_code)
+                .inner_join(oauth2_applications::table)
+                .first::<(oauth2::AuthorizationCode, oauth2::Application)>(db_conn)
+                .await
+                .optional()
+        })
+        .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(code, app)| {
             let scope = app.scopes.parse().unwrap();

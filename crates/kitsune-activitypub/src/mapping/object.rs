@@ -12,6 +12,7 @@ use kitsune_db::{
         post::Post,
     },
     schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
+    with_connection,
 };
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
@@ -22,7 +23,6 @@ use kitsune_type::ap::{
 };
 use kitsune_util::try_join;
 use mime::Mime;
-use scoped_futures::ScopedFutureExt;
 use std::{future::Future, str::FromStr};
 
 pub trait IntoObject {
@@ -101,56 +101,51 @@ impl IntoObject for Post {
             return Err(Error::NotFound);
         }
 
-        let (account, in_reply_to, mentions, emojis, attachment_stream) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    let account_fut = accounts::table
-                        .find(self.account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+        let (account, in_reply_to, mentions, emojis, attachment_stream) =
+            with_connection!(state.db_pool, |db_conn| {
+                let account_fut = accounts::table
+                    .find(self.account_id)
+                    .select(Account::as_select())
+                    .get_result(db_conn);
 
-                    let in_reply_to_fut =
-                        OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
-                            posts::table
-                                .find(in_reply_to_id)
-                                .select(posts::url)
-                                .get_result(db_conn)
-                        }))
-                        .map(Option::transpose);
+                let in_reply_to_fut =
+                    OptionFuture::from(self.in_reply_to_id.map(|in_reply_to_id| {
+                        posts::table
+                            .find(in_reply_to_id)
+                            .select(posts::url)
+                            .get_result(db_conn)
+                    }))
+                    .map(Option::transpose);
 
-                    let mentions_fut = Mention::belonging_to(&self)
-                        .inner_join(accounts::table)
-                        .select((Mention::as_select(), Account::as_select()))
-                        .load::<(Mention, Account)>(db_conn);
+                let mentions_fut = Mention::belonging_to(&self)
+                    .inner_join(accounts::table)
+                    .select((Mention::as_select(), Account::as_select()))
+                    .load::<(Mention, Account)>(db_conn);
 
-                    let custom_emojis_fut = custom_emojis::table
-                        .inner_join(posts_custom_emojis::table)
-                        .inner_join(media_attachments::table)
-                        .filter(posts_custom_emojis::post_id.eq(self.id))
-                        .select((
-                            CustomEmoji::as_select(),
-                            PostCustomEmoji::as_select(),
-                            DbMediaAttachment::as_select(),
-                        ))
-                        .load::<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>(db_conn);
+                let custom_emojis_fut = custom_emojis::table
+                    .inner_join(posts_custom_emojis::table)
+                    .inner_join(media_attachments::table)
+                    .filter(posts_custom_emojis::post_id.eq(self.id))
+                    .select((
+                        CustomEmoji::as_select(),
+                        PostCustomEmoji::as_select(),
+                        DbMediaAttachment::as_select(),
+                    ))
+                    .load::<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>(db_conn);
 
-                    let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
-                        .inner_join(media_attachments::table)
-                        .select(DbMediaAttachment::as_select())
-                        .load_stream::<DbMediaAttachment>(db_conn);
+                let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
+                    .inner_join(media_attachments::table)
+                    .select(DbMediaAttachment::as_select())
+                    .load_stream::<DbMediaAttachment>(db_conn);
 
-                    try_join!(
-                        account_fut,
-                        in_reply_to_fut,
-                        mentions_fut,
-                        custom_emojis_fut,
-                        attachment_stream_fut
-                    )
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(
+                    account_fut,
+                    in_reply_to_fut,
+                    mentions_fut,
+                    custom_emojis_fut,
+                    attachment_stream_fut
+                )
+            })?;
 
         let attachment = attachment_stream
             .map_err(Error::from)
@@ -197,34 +192,28 @@ impl IntoObject for Account {
     type Output = Actor;
 
     async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
-        let (icon, image) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    // These calls also probably allocate two cocnnections. ugh.
-                    let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
-                        media_attachments::table
-                            .find(avatar_id)
-                            .get_result::<DbMediaAttachment>(db_conn)
-                            .map_err(Error::from)
-                            .and_then(|media_attachment| media_attachment.into_object(state))
-                    }))
-                    .map(Option::transpose);
+        let (icon, image) = with_connection!(state.db_pool, |db_conn| {
+            // These calls also probably allocate two cocnnections. ugh.
+            let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
+                media_attachments::table
+                    .find(avatar_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|media_attachment| media_attachment.into_object(state))
+            }))
+            .map(Option::transpose);
 
-                    let image_fut = OptionFuture::from(self.header_id.map(|header_id| {
-                        media_attachments::table
-                            .find(header_id)
-                            .get_result::<DbMediaAttachment>(db_conn)
-                            .map_err(Error::from)
-                            .and_then(|media_attachment| media_attachment.into_object(state))
-                    }))
-                    .map(Option::transpose);
+            let image_fut = OptionFuture::from(self.header_id.map(|header_id| {
+                media_attachments::table
+                    .find(header_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|media_attachment| media_attachment.into_object(state))
+            }))
+            .map(Option::transpose);
 
-                    try_join!(icon_fut, image_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(icon_fut, image_fut)
+        })?;
 
         let user_url = state.service.url.user_url(self.id);
         let inbox = state.service.url.inbox_url(self.id);
@@ -269,17 +258,14 @@ impl IntoObject for CustomEmoji {
             Some(_) => Err(Error::NotFound),
         }?;
 
-        let icon = state
-            .db_pool
-            .with_connection(|db_conn| {
-                media_attachments::table
-                    .find(self.media_attachment_id)
-                    .get_result::<DbMediaAttachment>(db_conn)
-                    .map_err(Error::from)
-                    .and_then(|media_attachment| media_attachment.into_object(state))
-                    .scoped()
-            })
-            .await?;
+        let icon = with_connection!(state.db_pool, |db_conn| {
+            media_attachments::table
+                .find(self.media_attachment_id)
+                .get_result::<DbMediaAttachment>(db_conn)
+                .map_err(Error::from)
+                .and_then(|media_attachment| media_attachment.into_object(state))
+                .await
+        })?;
 
         Ok(Emoji {
             context: ap_context(),
