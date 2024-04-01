@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
+    catch_error,
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
     with_connection, PgPool,
@@ -25,7 +26,7 @@ impl Authorizer for OAuthAuthorizer {
         let secret = generate_secret();
         let expires_at = chrono_to_timestamp(grant.until);
 
-        with_connection!(self.db_pool, |db_conn| {
+        catch_error!(with_connection!(self.db_pool, |db_conn| {
             diesel::insert_into(oauth2_authorization_codes::table)
                 .values(oauth2::NewAuthorizationCode {
                     code: secret.as_str(),
@@ -37,19 +38,21 @@ impl Authorizer for OAuthAuthorizer {
                 .returning(oauth2_authorization_codes::code)
                 .get_result(db_conn)
                 .await
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())
     }
 
     async fn extract(&mut self, authorization_code: &str) -> Result<Option<Grant>, ()> {
-        let oauth_data = with_connection!(self.db_pool, |db_conn| {
+        let oauth_data = catch_error!(with_connection!(self.db_pool, |db_conn| {
             oauth2_authorization_codes::table
                 .find(authorization_code)
                 .inner_join(oauth2_applications::table)
                 .first::<(oauth2::AuthorizationCode, oauth2::Application)>(db_conn)
                 .await
                 .optional()
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(code, app)| {

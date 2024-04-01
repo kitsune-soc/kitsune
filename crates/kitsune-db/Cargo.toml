@@ -26,7 +26,12 @@ kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.2"
 num-traits = "0.2.18"
-rustls = "0.23.4"
+rustls = { version = "0.23.4", default-features = false, features = [
+    "logging",
+    "ring",
+    "std",
+    "tls12",
+] }
 rustls-native-certs = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.9"

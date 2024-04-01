@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
+    catch_error,
     model::oauth2,
     schema::{oauth2_access_tokens, oauth2_applications, oauth2_refresh_tokens},
     with_connection, with_transaction, PgPool,
@@ -29,7 +30,7 @@ impl Issuer for OAuthIssuer {
         let scopes = grant.scope.to_string();
         let expires_at = chrono_to_timestamp(grant.until);
 
-        let (access_token, refresh_token) = with_transaction!(self.db_pool, |tx| {
+        let (access_token, refresh_token) = catch_error!(with_transaction!(self.db_pool, |tx| {
             let access_token = diesel::insert_into(oauth2_access_tokens::table)
                 .values(oauth2::NewAccessToken {
                     token: generate_secret().as_str(),
@@ -53,7 +54,8 @@ impl Issuer for OAuthIssuer {
                 .await?;
 
             Ok::<_, Error>((access_token, refresh_token))
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())?;
 
         Ok(IssuedToken {
@@ -65,17 +67,19 @@ impl Issuer for OAuthIssuer {
     }
 
     async fn refresh(&mut self, refresh_token: &str, grant: Grant) -> Result<RefreshedToken, ()> {
-        let (refresh_token, access_token) = with_connection!(self.db_pool, |db_conn| {
-            oauth2_refresh_tokens::table
-                .find(refresh_token)
-                .inner_join(oauth2_access_tokens::table)
-                .select(<(oauth2::RefreshToken, oauth2::AccessToken)>::as_select())
-                .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(db_conn)
-                .await
-        })
-        .map_err(|_| ())?;
+        let (refresh_token, access_token) =
+            catch_error!(with_connection!(self.db_pool, |db_conn| {
+                oauth2_refresh_tokens::table
+                    .find(refresh_token)
+                    .inner_join(oauth2_access_tokens::table)
+                    .select(<(oauth2::RefreshToken, oauth2::AccessToken)>::as_select())
+                    .get_result::<(oauth2::RefreshToken, oauth2::AccessToken)>(db_conn)
+                    .await
+            }))
+            .map_err(|_| ())?
+            .map_err(|_| ())?;
 
-        let (access_token, refresh_token) = with_transaction!(self.db_pool, |tx| {
+        let (access_token, refresh_token) = catch_error!(with_transaction!(self.db_pool, |tx| {
             let new_access_token = diesel::insert_into(oauth2_access_tokens::table)
                 .values(oauth2::NewAccessToken {
                     user_id: access_token.user_id,
@@ -95,7 +99,8 @@ impl Issuer for OAuthIssuer {
             diesel::delete(&access_token).execute(tx).await?;
 
             Ok::<_, Error>((new_access_token, refresh_token))
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())?;
 
         Ok(RefreshedToken {
@@ -107,7 +112,7 @@ impl Issuer for OAuthIssuer {
     }
 
     async fn recover_token(&mut self, access_token: &str) -> Result<Option<Grant>, ()> {
-        let oauth_data = with_connection!(self.db_pool, |db_conn| {
+        let oauth_data = catch_error!(with_connection!(self.db_pool, |db_conn| {
             oauth2_access_tokens::table
                 .find(access_token)
                 .inner_join(oauth2_applications::table)
@@ -115,7 +120,8 @@ impl Issuer for OAuthIssuer {
                 .get_result::<(oauth2::AccessToken, oauth2::Application)>(db_conn)
                 .await
                 .optional()
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(access_token, app)| {
@@ -141,7 +147,7 @@ impl Issuer for OAuthIssuer {
     }
 
     async fn recover_refresh(&mut self, refresh_token: &str) -> Result<Option<Grant>, ()> {
-        let oauth_data = with_connection!(self.db_pool, |db_conn| {
+        let oauth_data = catch_error!(with_connection!(self.db_pool, |db_conn| {
             oauth2_refresh_tokens::table
                 .find(refresh_token)
                 .inner_join(oauth2_access_tokens::table)
@@ -150,7 +156,8 @@ impl Issuer for OAuthIssuer {
                 .get_result::<(oauth2::AccessToken, oauth2::Application)>(db_conn)
                 .await
                 .optional()
-        })
+        }))
+        .map_err(|_| ())?
         .map_err(|_| ())?;
 
         let oauth_data = oauth_data.map(|(access_token, app)| {

@@ -1,9 +1,9 @@
 use clap::Parser;
+use color_eyre::eyre::{self, Context};
 use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
-use miette::{Context, IntoDiagnostic};
 use std::{env, path::PathBuf};
 
 #[global_allocator]
@@ -18,7 +18,7 @@ struct Args {
     config: PathBuf,
 }
 
-async fn boot() -> miette::Result<()> {
+async fn boot() -> eyre::Result<()> {
     println!("{STARTUP_FIGLET}");
 
     let args = Args::parse();
@@ -64,8 +64,8 @@ async fn boot() -> miette::Result<()> {
     Ok(())
 }
 
-fn main() -> miette::Result<()> {
-    miette::set_panic_hook();
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()

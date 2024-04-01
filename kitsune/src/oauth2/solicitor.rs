@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use cursiv::CsrfHandle;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{model::user::User, schema::oauth2_applications, with_connection, PgPool};
+use kitsune_db::{
+    catch_error, model::user::User, schema::oauth2_applications, with_connection, PgPool,
+};
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, QueryParameter, Solicitation, WebRequest};
 use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
@@ -79,14 +81,15 @@ impl OAuthOwnerSolicitor {
                     .parse()
                     .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
 
-                let app_name = with_connection!(self.db_pool, |db_conn| {
+                let app_name = catch_error!(with_connection!(self.db_pool, |db_conn| {
                     oauth2_applications::table
                         .find(client_id)
                         .select(oauth2_applications::name)
                         .get_result::<String>(db_conn)
                         .await
                         .optional()
-                })
+                }))
+                .map_err(|_| WebError::InternalError(None))?
                 .map_err(|_| WebError::InternalError(None))?
                 .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
 

@@ -11,6 +11,7 @@ use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
 use kitsune_db::{
+    catch_error,
     model::{account::Account, user::User},
     schema::{accounts, oauth2_access_tokens, users},
     with_connection,
@@ -62,13 +63,14 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
                 .filter(oauth2_access_tokens::expires_at.gt(OffsetDateTime::now_utc()));
         }
 
-        let (user, account) = with_connection!(state.db_pool, |db_conn| {
+        let (user, account) = catch_error!(with_connection!(state.db_pool, |db_conn| {
             user_account_query
                 .select(<(User, Account)>::as_select())
                 .get_result(db_conn)
                 .await
                 .map_err(Error::from)
-        })?;
+        }))
+        .map_err(Error::from)??;
 
         Ok(Self(UserData { account, user }))
     }
