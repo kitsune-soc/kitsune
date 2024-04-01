@@ -40,8 +40,8 @@ impl CsrfHandle {
     /// Keep the current signature and message inside the cookie
     #[inline]
     pub fn keep_cookie(&self) {
-        let mut guard = self.inner.lock().unwrap();
-        guard.set_data = guard.read_data.clone();
+        let inner = &mut *self.inner.lock().unwrap();
+        inner.set_data.clone_from(&inner.read_data);
     }
 
     /// Create a signature and store it inside a cookie

@@ -4,8 +4,7 @@ use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
-use kitsune_db::{model::post::Post, schema::posts};
-use scoped_futures::ScopedFutureExt;
+use kitsune_db::{model::post::Post, schema::posts, with_connection};
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.
 // Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
@@ -23,20 +22,14 @@ impl Fetcher {
             return Ok(Some(post));
         }
 
-        let post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    posts::table
-                        .filter(posts::url.eq(url))
-                        .select(Post::as_select())
-                        .first(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let post = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .filter(posts::url.eq(url))
+                .select(Post::as_select())
+                .first(db_conn)
+                .await
+                .optional()
+        })?;
 
         if let Some(post) = post {
             self.post_cache.set(url, &post).await?;

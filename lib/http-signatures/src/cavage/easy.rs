@@ -123,7 +123,7 @@ pub async fn sign<B>(
 /// You don't need to supply any more information. The library will figure out the rest.
 #[inline]
 #[instrument(skip_all)]
-pub async fn verify<'a, B, F, Fut, E>(req: &http::Request<B>, get_key: F) -> Result<(), Error>
+pub async fn verify<'a, B, F, Fut, E>(req: &'a http::Request<B>, get_key: F) -> Result<(), Error>
 where
     for<'k_id> F: Fn(&'k_id str) -> ScopedFutureWrapper<'k_id, 'a, Fut>,
     Fut: Future<Output = Result<String, E>>,

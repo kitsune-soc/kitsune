@@ -1,5 +1,4 @@
 use crate::{Manifest, SECTION_NAME};
-use miette::Diagnostic;
 use std::{io, ops::Range};
 use thiserror::Error;
 use wasmparser::Payload;
@@ -8,7 +7,7 @@ use wasmparser::Payload;
 pub type SectionRange = Range<usize>;
 
 /// Error while decoding the manifest from a WASM module
-#[derive(Debug, Diagnostic, Error)]
+#[derive(Debug, Error)]
 pub enum DecodeError {
     /// Parsing of the JSON manifest failed
     #[error(transparent)]

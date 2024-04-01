@@ -13,10 +13,9 @@ use kitsune_core::consts::MAX_EMOJI_SHORTCODE_LENGTH;
 use kitsune_db::{
     model::{custom_emoji::CustomEmoji, media_attachment::MediaAttachment},
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_url::UrlService;
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -80,12 +79,10 @@ impl CustomEmojiService {
             query = query.filter(custom_emojis::domain.eq(domain));
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move { query.first(db_conn).await.optional() }.scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            query.first(db_conn).await.optional()
+        })
+        .map_err(Error::from)
     }
 
     pub async fn get_by_id(&self, id: Uuid) -> Result<CustomEmoji> {
@@ -93,9 +90,7 @@ impl CustomEmojiService {
             .find(id)
             .select(CustomEmoji::as_select());
 
-        self.db_pool
-            .with_connection(|db_conn| async move { query.get_result(db_conn).await }.scoped())
-            .await
+        with_connection!(self.db_pool, |db_conn| { query.get_result(db_conn).await })
             .map_err(Error::from)
     }
 
@@ -132,13 +127,9 @@ impl CustomEmojiService {
             ))
             .limit(get_emoji_list.limit);
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move { Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from)) }
-                    .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 
     pub async fn add_emoji<S>(&self, emoji_upload: EmojiUpload<S>) -> Result<CustomEmoji>
@@ -158,24 +149,21 @@ impl CustomEmojiService {
         let id = Uuid::now_v7();
         let remote_id = self.url_service.custom_emoji_url(id);
 
-        let custom_emoji = self
-            .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(custom_emojis::table)
-                    .values(CustomEmoji {
-                        id,
-                        remote_id,
-                        shortcode: emoji_upload.shortcode,
-                        domain: None,
-                        media_attachment_id: attachment.id,
-                        endorsed: false,
-                        created_at: Timestamp::now_utc(),
-                        updated_at: Timestamp::now_utc(),
-                    })
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let custom_emoji = with_connection!(self.db_pool, |db_conn| {
+            diesel::insert_into(custom_emojis::table)
+                .values(CustomEmoji {
+                    id,
+                    remote_id,
+                    shortcode: emoji_upload.shortcode,
+                    domain: None,
+                    media_attachment_id: attachment.id,
+                    endorsed: false,
+                    created_at: Timestamp::now_utc(),
+                    updated_at: Timestamp::now_utc(),
+                })
+                .get_result(db_conn)
+                .await
+        })?;
 
         Ok(custom_emoji)
     }

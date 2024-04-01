@@ -1,6 +1,6 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::{scoped_futures::ScopedFutureExt, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
 use futures_util::TryStreamExt;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
@@ -9,7 +9,7 @@ use kitsune_db::{
     lang::LanguageIsoCode,
     model::post::Visibility,
     schema::{accounts, posts},
-    PgPool,
+    with_connection, PgPool,
 };
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -62,23 +62,17 @@ impl SearchBackend for SearchService {
                     query = query.filter(accounts::id.lt(max_id));
                 }
 
-                let results = self
-                    .db_pool
-                    .with_connection(move |db_conn| {
-                        async move {
-                            query
-                                .limit(max_results as i64)
-                                .offset(offset as i64)
-                                .select(accounts::id)
-                                .load_stream(db_conn)
-                                .await?
-                                .map_ok(|id| SearchResultReference { index, id })
-                                .try_collect()
-                                .await
-                        }
-                        .scoped()
-                    })
-                    .await?;
+                let results = with_connection!(self.db_pool, |db_conn| {
+                    query
+                        .limit(max_results as i64)
+                        .offset(offset as i64)
+                        .select(accounts::id)
+                        .load_stream(db_conn)
+                        .await?
+                        .map_ok(|id| SearchResultReference { index, id })
+                        .try_collect()
+                        .await
+                })?;
 
                 Ok(results)
             }
@@ -94,27 +88,20 @@ impl SearchBackend for SearchService {
                     query = query.filter(posts::id.lt(max_id));
                 }
 
-                let results = self
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        async move {
-                            query
-                                .filter(
-                                    posts::visibility
-                                        .eq_any([Visibility::Public, Visibility::Unlisted]),
-                                )
-                                .limit(max_results as i64)
-                                .offset(offset as i64)
-                                .select(posts::id)
-                                .load_stream(db_conn)
-                                .await?
-                                .map_ok(|id| SearchResultReference { index, id })
-                                .try_collect()
-                                .await
-                        }
-                        .scoped()
-                    })
-                    .await?;
+                let results = with_connection!(self.db_pool, |db_conn| {
+                    query
+                        .filter(
+                            posts::visibility.eq_any([Visibility::Public, Visibility::Unlisted]),
+                        )
+                        .limit(max_results as i64)
+                        .offset(offset as i64)
+                        .select(posts::id)
+                        .load_stream(db_conn)
+                        .await?
+                        .map_ok(|id| SearchResultReference { index, id })
+                        .try_collect()
+                        .await
+                })?;
 
                 Ok(results)
             }

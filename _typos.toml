@@ -1,3 +1,6 @@
+[default]
+extend-ignore-words-re = ["guid"]
+
 [files]
 extend-exclude = [
     "crates/kitsune-language/examples/basic.rs",
@@ -10,4 +13,7 @@ extend-exclude = [
 
     "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
+
+    # Exclude all snapshot files
+    "*.snap",
 ]

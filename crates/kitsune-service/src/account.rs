@@ -7,8 +7,8 @@ use crate::error::{Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl,
-    SelectableHelper,
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
+    OptionalExtension, QueryDsl, SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
@@ -16,17 +16,17 @@ use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher, Resolver};
 use kitsune_db::{
+    function::now,
     model::{
         account::{Account, UpdateAccount},
-        follower::Follow as DbFollow,
-        follower::NewFollow,
+        follower::{Follow as DbFollow, NewFollow},
         notification::NewNotification,
         post::Post,
         preference::Preferences,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_jobs::deliver::{
     accept::DeliverAccept,
@@ -37,7 +37,6 @@ use kitsune_jobs::deliver::{
 };
 use kitsune_url::UrlService;
 use kitsune_util::{sanitize::CleanHtmlExt, try_join};
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
@@ -196,25 +195,19 @@ impl AccountService {
     ///
     /// Tuple of two account models. First model is the account the followee account, the second model is the followed account
     pub async fn follow(&self, follow: Follow, notify: bool) -> Result<(Account, Account)> {
-        let (account, follower) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_fut = accounts::table
-                        .find(follow.account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+        let (account, follower) = with_connection!(self.db_pool, |db_conn| {
+            let account_fut = accounts::table
+                .find(follow.account_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    let follower_fut = accounts::table
-                        .find(follow.follower_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+            let follower_fut = accounts::table
+                .find(follow.follower_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    try_join!(account_fut, follower_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_fut, follower_fut)
+        })?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.follow_url(id);
@@ -232,28 +225,22 @@ impl AccountService {
             follow_model.approved_at = Some(Timestamp::now_utc());
         }
 
-        let follow_id = self
-            .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(accounts_follows::table)
-                    .values(follow_model)
-                    .returning(accounts_follows::id)
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let follow_id = with_connection!(self.db_pool, |db_conn| {
+            diesel::insert_into(accounts_follows::table)
+                .values(follow_model)
+                .returning(accounts_follows::id)
+                .get_result(db_conn)
+                .await
+        })?;
 
         if account.local {
-            let preferences = self
-                .db_pool
-                .with_connection(|db_conn| {
-                    accounts_preferences::table
-                        .find(follow.account_id)
-                        .select(Preferences::as_select())
-                        .get_result(db_conn)
-                        .scoped()
-                })
-                .await?;
+            let preferences = with_connection!(self.db_pool, |db_conn| {
+                accounts_preferences::table
+                    .find(follow.account_id)
+                    .select(Preferences::as_select())
+                    .get_result(db_conn)
+                    .await
+            })?;
 
             if (preferences.notify_on_follow && !account.locked)
                 || (preferences.notify_on_follow_request && account.locked)
@@ -268,15 +255,13 @@ impl AccountService {
                         .follow(follower.id)
                 };
 
-                self.db_pool
-                    .with_connection(|mut db_conn| {
-                        diesel::insert_into(notifications::table)
-                            .values(notification)
-                            .on_conflict_do_nothing()
-                            .execute(&mut db_conn)
-                            .scoped()
-                    })
-                    .await?;
+                with_connection!(self.db_pool, |db_conn| {
+                    diesel::insert_into(notifications::table)
+                        .values(notification)
+                        .on_conflict_do_nothing()
+                        .execute(db_conn)
+                        .await
+                })?;
             }
         }
 
@@ -292,24 +277,18 @@ impl AccountService {
     /// Get an account by its username and domain
     pub async fn get(&self, get_user: GetUser<'_>) -> Result<Option<Account>> {
         if let Some(domain) = get_user.domain {
-            let account = self
-                .db_pool
-                .with_connection(|db_conn| {
-                    async move {
-                        accounts::table
-                            .filter(
-                                accounts::username
-                                    .eq(get_user.username)
-                                    .and(accounts::domain.eq(domain)),
-                            )
-                            .select(Account::as_select())
-                            .get_result(db_conn)
-                            .await
-                            .optional()
-                    }
-                    .scoped()
-                })
-                .await?;
+            let account = with_connection!(self.db_pool, |db_conn| {
+                accounts::table
+                    .filter(
+                        accounts::username
+                            .eq(get_user.username)
+                            .and(accounts::domain.eq(domain)),
+                    )
+                    .select(Account::as_select())
+                    .get_result(db_conn)
+                    .await
+                    .optional()
+            })?;
 
             if let Some(account) = account {
                 return Ok(Some(account));
@@ -336,43 +315,33 @@ impl AccountService {
                 .await
                 .map_err(Error::Fetcher)
         } else {
-            self.db_pool
-                .with_connection(|db_conn| {
-                    async move {
-                        accounts::table
-                            .filter(
-                                accounts::username
-                                    .eq(get_user.username)
-                                    .and(accounts::local.eq(true)),
-                            )
-                            .select(Account::as_select())
-                            .first(db_conn)
-                            .await
-                            .optional()
-                    }
-                    .scoped()
-                })
-                .await
-                .map_err(Error::from)
+            with_connection!(self.db_pool, |db_conn| {
+                accounts::table
+                    .filter(
+                        accounts::username
+                            .eq(get_user.username)
+                            .and(accounts::local.eq(true)),
+                    )
+                    .select(Account::as_select())
+                    .first(db_conn)
+                    .await
+                    .optional()
+            })
+            .map_err(Error::from)
         }
     }
 
     /// Get an account by its ID
     pub async fn get_by_id(&self, account_id: Uuid) -> Result<Option<Account>> {
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts::table
-                        .find(account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            accounts::table
+                .find(account_id)
+                .select(Account::as_select())
+                .get_result(db_conn)
+                .await
+                .optional()
+        })
+        .map_err(Error::from)
     }
 
     /// Get a stream of posts owned by the user
@@ -408,14 +377,9 @@ impl AccountService {
             query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }.scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 
     /// Undo the follow of an account
@@ -424,43 +388,31 @@ impl AccountService {
     ///
     /// Tuple of two account models. First account is the account that was being followed, second account is the account that was following
     pub async fn unfollow(&self, unfollow: Unfollow) -> Result<(Account, Account)> {
-        let (account, follower) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_fut = accounts::table
-                        .find(unfollow.account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+        let (account, follower) = with_connection!(self.db_pool, |db_conn| {
+            let account_fut = accounts::table
+                .find(unfollow.account_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    let follower_fut = accounts::table
-                        .find(unfollow.follower_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+            let follower_fut = accounts::table
+                .find(unfollow.follower_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    try_join!(account_fut, follower_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_fut, follower_fut)
+        })?;
 
-        let follow = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts_follows::table
-                        .filter(
-                            accounts_follows::account_id
-                                .eq(account.id)
-                                .and(accounts_follows::follower_id.eq(follower.id)),
-                        )
-                        .get_result::<DbFollow>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let follow = with_connection!(self.db_pool, |db_conn| {
+            accounts_follows::table
+                .filter(
+                    accounts_follows::account_id
+                        .eq(account.id)
+                        .and(accounts_follows::follower_id.eq(follower.id)),
+                )
+                .get_result::<DbFollow>(db_conn)
+                .await
+                .optional()
+        })?;
 
         if let Some(follow) = follow {
             if !account.local {
@@ -505,73 +457,52 @@ impl AccountService {
             query = query.filter(accounts::id.lt(max_id));
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
+        .map_err(Error::from)
     }
 
     pub async fn accept_follow_request(
         &self,
         follow_request: FollowRequest,
     ) -> Result<Option<(Account, Account)>> {
-        let (account, follower) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_fut = accounts::table
-                        .find(follow_request.account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+        let (account, follower) = with_connection!(self.db_pool, |db_conn| {
+            let account_fut = accounts::table
+                .find(follow_request.account_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    let follower_fut = accounts::table
-                        .find(follow_request.follower_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+            let follower_fut = accounts::table
+                .find(follow_request.follower_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    try_join!(account_fut, follower_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_fut, follower_fut)
+        })?;
 
-        let follow = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts_follows::table
-                        .filter(
-                            accounts_follows::account_id
-                                .eq(account.id)
-                                .and(accounts_follows::follower_id.eq(follower.id)),
-                        )
-                        .get_result::<DbFollow>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let follow = with_connection!(self.db_pool, |db_conn| {
+            accounts_follows::table
+                .filter(
+                    accounts_follows::account_id
+                        .eq(account.id)
+                        .and(accounts_follows::follower_id.eq(follower.id)),
+                )
+                .get_result::<DbFollow>(db_conn)
+                .await
+                .optional()
+        })?;
 
-        if let Some(follow) = follow {
-            let now = Timestamp::now_utc();
-
-            self.db_pool
-                .with_connection(|db_conn| {
-                    diesel::update(&follow)
-                        .set((
-                            accounts_follows::approved_at.eq(now),
-                            accounts_follows::updated_at.eq(now),
-                        ))
-                        .execute(db_conn)
-                        .scoped()
-                })
-                .await?;
+        if let Some(ref follow) = follow {
+            with_connection!(self.db_pool, |db_conn| {
+                diesel::update(follow)
+                    .set((
+                        accounts_follows::approved_at.eq(now().nullable()),
+                        accounts_follows::updated_at.eq(now()),
+                    ))
+                    .execute(db_conn)
+                    .await
+            })?;
 
             if !account.local {
                 self.job_service
@@ -595,49 +526,37 @@ impl AccountService {
         &self,
         follow_request: FollowRequest,
     ) -> Result<Option<(Account, Account)>> {
-        let (account, follower) = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let account_fut = accounts::table
-                        .find(follow_request.account_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+        let (account, follower) = with_connection!(self.db_pool, |db_conn| {
+            let account_fut = accounts::table
+                .find(follow_request.account_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    let follower_fut = accounts::table
-                        .find(follow_request.follower_id)
-                        .select(Account::as_select())
-                        .get_result(db_conn);
+            let follower_fut = accounts::table
+                .find(follow_request.follower_id)
+                .select(Account::as_select())
+                .get_result(db_conn);
 
-                    try_join!(account_fut, follower_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(account_fut, follower_fut)
+        })?;
 
-        let follow = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts_follows::table
-                        .filter(
-                            accounts_follows::account_id
-                                .eq(account.id)
-                                .and(accounts_follows::follower_id.eq(follower.id)),
-                        )
-                        .get_result::<DbFollow>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let follow = with_connection!(self.db_pool, |db_conn| {
+            accounts_follows::table
+                .filter(
+                    accounts_follows::account_id
+                        .eq(account.id)
+                        .and(accounts_follows::follower_id.eq(follower.id)),
+                )
+                .get_result::<DbFollow>(db_conn)
+                .await
+                .optional()
+        })?;
 
         if let Some(follow) = follow {
             if account.local {
-                self.db_pool
-                    .with_connection(|db_conn| diesel::delete(&follow).execute(db_conn).scoped())
-                    .await?;
+                with_connection!(self.db_pool, |db_conn| {
+                    diesel::delete(&follow).execute(db_conn).await
+                })?;
             } else {
                 self.job_service
                     .enqueue(
@@ -704,16 +623,13 @@ impl AccountService {
             };
         }
 
-        let updated_account: Account = self
-            .db_pool
-            .with_connection(|db_conn| {
-                diesel::update(accounts::table.find(update.account_id))
-                    .set(changeset)
-                    .returning(Account::as_returning())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let updated_account: Account = with_connection!(self.db_pool, |db_conn| {
+            diesel::update(accounts::table.find(update.account_id))
+                .set(changeset)
+                .returning(Account::as_returning())
+                .get_result(db_conn)
+                .await
+        })?;
 
         self.job_service
             .enqueue(

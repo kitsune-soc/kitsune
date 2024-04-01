@@ -15,7 +15,7 @@ use kitsune_db::{
         user::{NewUser, User},
     },
     schema::{accounts, accounts_preferences, users},
-    PgPool,
+    with_transaction, PgPool,
 };
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_url::UrlService;
@@ -24,7 +24,6 @@ use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
 };
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use std::fmt::Write;
 use typed_builder::TypedBuilder;
@@ -167,67 +166,61 @@ impl UserService {
         let url = self.url_service.user_url(account_id);
         let public_key_id = self.url_service.public_key_id(account_id);
 
-        let new_user = self
-            .db_pool
-            .with_transaction(|tx| {
-                async move {
-                    let account_fut = diesel::insert_into(accounts::table)
-                        .values(NewAccount {
-                            id: account_id,
-                            display_name: None,
-                            username: register.username.as_str(),
-                            locked: false,
-                            note: None,
-                            local: true,
-                            domain: domain.as_str(),
-                            actor_type: ActorType::Person,
-                            url: url.as_str(),
-                            featured_collection_url: None,
-                            followers_url: None,
-                            following_url: None,
-                            inbox_url: None,
-                            outbox_url: None,
-                            shared_inbox_url: None,
-                            public_key_id: public_key_id.as_str(),
-                            public_key: public_key_str.as_str(),
-                            created_at: None,
-                        })
-                        .execute(tx);
+        let new_user = with_transaction!(self.db_pool, |tx| {
+            let account_fut = diesel::insert_into(accounts::table)
+                .values(NewAccount {
+                    id: account_id,
+                    display_name: None,
+                    username: register.username.as_str(),
+                    locked: false,
+                    note: None,
+                    local: true,
+                    domain: domain.as_str(),
+                    actor_type: ActorType::Person,
+                    url: url.as_str(),
+                    featured_collection_url: None,
+                    followers_url: None,
+                    following_url: None,
+                    inbox_url: None,
+                    outbox_url: None,
+                    shared_inbox_url: None,
+                    public_key_id: public_key_id.as_str(),
+                    public_key: public_key_str.as_str(),
+                    created_at: None,
+                })
+                .execute(tx);
 
-                    let confirmation_token = generate_secret();
-                    let user_fut = diesel::insert_into(users::table)
-                        .values(NewUser {
-                            id: Uuid::now_v7(),
-                            account_id,
-                            username: register.username.as_str(),
-                            oidc_id: register.oidc_id.as_deref(),
-                            email: register.email.as_str(),
-                            password: hashed_password.as_deref(),
-                            domain: domain.as_str(),
-                            private_key: private_key_str.as_str(),
-                            confirmation_token: confirmation_token.as_str(),
-                        })
-                        .get_result::<User>(tx);
+            let confirmation_token = generate_secret();
+            let user_fut = diesel::insert_into(users::table)
+                .values(NewUser {
+                    id: Uuid::now_v7(),
+                    account_id,
+                    username: register.username.as_str(),
+                    oidc_id: register.oidc_id.as_deref(),
+                    email: register.email.as_str(),
+                    password: hashed_password.as_deref(),
+                    domain: domain.as_str(),
+                    private_key: private_key_str.as_str(),
+                    confirmation_token: confirmation_token.as_str(),
+                })
+                .get_result::<User>(tx);
 
-                    let preferences_fut = diesel::insert_into(accounts_preferences::table)
-                        .values(Preferences {
-                            account_id,
-                            notify_on_follow: true,
-                            notify_on_follow_request: true,
-                            notify_on_repost: false,
-                            notify_on_favourite: false,
-                            notify_on_mention: true,
-                            notify_on_post_update: true,
-                        })
-                        .execute(tx);
+            let preferences_fut = diesel::insert_into(accounts_preferences::table)
+                .values(Preferences {
+                    account_id,
+                    notify_on_follow: true,
+                    notify_on_follow_request: true,
+                    notify_on_repost: false,
+                    notify_on_favourite: false,
+                    notify_on_mention: true,
+                    notify_on_post_update: true,
+                })
+                .execute(tx);
 
-                    let (_, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
+            let (_, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
 
-                    Ok::<_, Error>(user)
-                }
-                .scoped()
-            })
-            .await?;
+            Ok::<_, Error>(user)
+        })?;
 
         self.job_service
             .enqueue(

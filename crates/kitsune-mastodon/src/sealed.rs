@@ -24,7 +24,7 @@ use kitsune_db::{
         accounts, accounts_follows, custom_emojis, media_attachments, notifications, posts,
         posts_favourites,
     },
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
@@ -40,7 +40,6 @@ use kitsune_type::mastodon::{
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use mime::Mime;
-use scoped_futures::ScopedFutureExt;
 use serde::{de::DeserializeOwned, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
@@ -78,30 +77,25 @@ impl IntoMastodon for DbAccount {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (statuses_count, followers_count, following_count) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    let statuses_count_fut = posts::table
-                        .filter(posts::account_id.eq(self.id))
-                        .count()
-                        .get_result::<i64>(db_conn);
+        let (statuses_count, followers_count, following_count) =
+            with_connection!(state.db_pool, |db_conn| {
+                let statuses_count_fut = posts::table
+                    .filter(posts::account_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(db_conn);
 
-                    let followers_count_fut = accounts_follows::table
-                        .filter(accounts_follows::account_id.eq(self.id))
-                        .count()
-                        .get_result::<i64>(db_conn);
+                let followers_count_fut = accounts_follows::table
+                    .filter(accounts_follows::account_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(db_conn);
 
-                    let following_count_fut = accounts_follows::table
-                        .filter(accounts_follows::follower_id.eq(self.id))
-                        .count()
-                        .get_result::<i64>(db_conn);
+                let following_count_fut = accounts_follows::table
+                    .filter(accounts_follows::follower_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(db_conn);
 
-                    try_join!(statuses_count_fut, followers_count_fut, following_count_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(statuses_count_fut, followers_count_fut, following_count_fut)
+            })?;
 
         let mut acct = self.username.clone();
         if !self.local {
@@ -163,39 +157,34 @@ impl IntoMastodon for (&DbAccount, &DbAccount) {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let (requester, target) = self;
 
-        let ((following, follow_requested), followed_by) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let following_requested_fut = accounts_follows::table
-                        .filter(
-                            accounts_follows::account_id
-                                .eq(target.id)
-                                .and(accounts_follows::follower_id.eq(requester.id)),
-                        )
-                        .get_result::<Follow>(db_conn)
-                        .map(OptionalExtension::optional)
-                        .map_ok(|optional_follow| {
-                            optional_follow.map_or((false, false), |follow| {
-                                (follow.approved_at.is_some(), follow.approved_at.is_none())
-                            })
-                        });
+        let ((following, follow_requested), followed_by) =
+            with_connection!(state.db_pool, |db_conn| {
+                let following_requested_fut = accounts_follows::table
+                    .filter(
+                        accounts_follows::account_id
+                            .eq(target.id)
+                            .and(accounts_follows::follower_id.eq(requester.id)),
+                    )
+                    .get_result::<Follow>(db_conn)
+                    .map(OptionalExtension::optional)
+                    .map_ok(|optional_follow| {
+                        optional_follow.map_or((false, false), |follow| {
+                            (follow.approved_at.is_some(), follow.approved_at.is_none())
+                        })
+                    });
 
-                    let followed_by_fut = accounts_follows::table
-                        .filter(
-                            accounts_follows::account_id
-                                .eq(requester.id)
-                                .and(accounts_follows::follower_id.eq(target.id)),
-                        )
-                        .count()
-                        .get_result::<i64>(db_conn)
-                        .map_ok(|count| count != 0);
+                let followed_by_fut = accounts_follows::table
+                    .filter(
+                        accounts_follows::account_id
+                            .eq(requester.id)
+                            .and(accounts_follows::follower_id.eq(target.id)),
+                    )
+                    .count()
+                    .get_result::<i64>(db_conn)
+                    .map_ok(|count| count != 0);
 
-                    try_join!(following_requested_fut, followed_by_fut)
-                }
-                .scoped()
-            })
-            .await?;
+                try_join!(following_requested_fut, followed_by_fut)
+            })?;
 
         Ok(Relationship {
             id: target.id,
@@ -223,16 +212,13 @@ impl IntoMastodon for DbMention {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let account: DbAccount = state
-            .db_pool
-            .with_connection(|db_conn| {
-                accounts::table
-                    .find(self.account_id)
-                    .select(DbAccount::as_select())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let account: DbAccount = with_connection!(state.db_pool, |db_conn| {
+            accounts::table
+                .find(self.account_id)
+                .select(DbAccount::as_select())
+                .get_result(db_conn)
+                .await
+        })?;
 
         let mut acct = account.username.clone();
         if !account.local {
@@ -289,29 +275,23 @@ impl IntoMastodon for (&DbAccount, DbPost) {
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
         let (account, post) = self;
 
-        let (favourited, reblogged) = state
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    let favourited_fut = posts_favourites::table
-                        .filter(posts_favourites::account_id.eq(account.id))
-                        .filter(posts_favourites::post_id.eq(post.id))
-                        .count()
-                        .get_result::<i64>(db_conn)
-                        .map_ok(|count| count != 0);
+        let (favourited, reblogged) = with_connection!(state.db_pool, |db_conn| {
+            let favourited_fut = posts_favourites::table
+                .filter(posts_favourites::account_id.eq(account.id))
+                .filter(posts_favourites::post_id.eq(post.id))
+                .count()
+                .get_result::<i64>(db_conn)
+                .map_ok(|count| count != 0);
 
-                    let reblogged_fut = posts::table
-                        .filter(posts::account_id.eq(account.id))
-                        .filter(posts::reposted_post_id.eq(post.id))
-                        .count()
-                        .get_result::<i64>(db_conn)
-                        .map_ok(|count| count != 0);
+            let reblogged_fut = posts::table
+                .filter(posts::account_id.eq(account.id))
+                .filter(posts::reposted_post_id.eq(post.id))
+                .count()
+                .get_result::<i64>(db_conn)
+                .map_ok(|count| count != 0);
 
-                    try_join!(favourited_fut, reblogged_fut)
-                }
-                .scoped()
-            })
-            .await?;
+            try_join!(favourited_fut, reblogged_fut)
+        })?;
 
         let mut status = post.into_mastodon(state).await?;
         status.favourited = favourited;
@@ -341,62 +321,56 @@ impl IntoMastodon for DbPost {
                 media_attachments,
                 mentions_stream,
                 custom_emojis_stream,
-            ) = state
-                .db_pool
-                .with_connection(|db_conn| {
-                    async {
-                        let account_fut = accounts::table
-                            .find(self.account_id)
-                            .select(DbAccount::as_select())
-                            .get_result::<DbAccount>(db_conn)
+            ) = with_connection!(state.db_pool, |db_conn| {
+                let account_fut = accounts::table
+                    .find(self.account_id)
+                    .select(DbAccount::as_select())
+                    .get_result::<DbAccount>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|db_account| db_account.into_mastodon(state));
+
+                let reblog_count_fut = posts::table
+                    .filter(posts::reposted_post_id.eq(self.id))
+                    .count()
+                    .get_result::<i64>(db_conn)
+                    .map_err(Error::from);
+
+                let favourites_count_fut = DbFavourite::belonging_to(&self)
+                    .count()
+                    .get_result::<i64>(db_conn)
+                    .map_err(Error::from);
+
+                let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
+                    .inner_join(media_attachments::table)
+                    .select(DbMediaAttachment::as_select())
+                    .load_stream::<DbMediaAttachment>(db_conn)
+                    .map_err(Error::from)
+                    .and_then(|attachment_stream| {
+                        attachment_stream
                             .map_err(Error::from)
-                            .and_then(|db_account| db_account.into_mastodon(state));
+                            .and_then(|attachment| attachment.into_mastodon(state))
+                            .try_collect()
+                    });
 
-                        let reblog_count_fut = posts::table
-                            .filter(posts::reposted_post_id.eq(self.id))
-                            .count()
-                            .get_result::<i64>(db_conn)
-                            .map_err(Error::from);
+                let mentions_stream_fut = DbMention::belonging_to(&self)
+                    .load_stream::<DbMention>(db_conn)
+                    .map_err(Error::from);
 
-                        let favourites_count_fut = DbFavourite::belonging_to(&self)
-                            .count()
-                            .get_result::<i64>(db_conn)
-                            .map_err(Error::from);
+                let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
+                    .inner_join(custom_emojis::table.inner_join(media_attachments::table))
+                    .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
+                    .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
+                    .map_err(Error::from);
 
-                        let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-                            .inner_join(media_attachments::table)
-                            .select(DbMediaAttachment::as_select())
-                            .load_stream::<DbMediaAttachment>(db_conn)
-                            .map_err(Error::from)
-                            .and_then(|attachment_stream| {
-                                attachment_stream
-                                    .map_err(Error::from)
-                                    .and_then(|attachment| attachment.into_mastodon(state))
-                                    .try_collect()
-                            });
-
-                        let mentions_stream_fut = DbMention::belonging_to(&self)
-                            .load_stream::<DbMention>(db_conn)
-                            .map_err(Error::from);
-
-                        let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
-                            .inner_join(custom_emojis::table.inner_join(media_attachments::table))
-                            .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
-                            .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
-                            .map_err(Error::from);
-
-                        try_join!(
-                            account_fut,
-                            reblog_count_fut,
-                            favourites_count_fut,
-                            media_attachments_fut,
-                            mentions_stream_fut,
-                            custom_emojis_stream_fut
-                        )
-                    }
-                    .scoped()
-                })
-                .await?;
+                try_join!(
+                    account_fut,
+                    reblog_count_fut,
+                    favourites_count_fut,
+                    media_attachments_fut,
+                    mentions_stream_fut,
+                    custom_emojis_stream_fut
+                )
+            })?;
 
             let link_preview = OptionFuture::from(
                 self.link_preview_url
@@ -423,30 +397,24 @@ impl IntoMastodon for DbPost {
                 .try_collect()
                 .await?;
 
-            let reblog = state
-                .db_pool
-                .with_connection(|db_conn| {
-                    async {
-                        OptionFuture::from(
-                            OptionFuture::from(self.reposted_post_id.map(|id| {
-                                posts::table
-                                    .find(id)
-                                    .select(DbPost::as_select())
-                                    .get_result::<DbPost>(db_conn)
-                                    .map(OptionalExtension::optional)
-                            }))
-                            .await
-                            .transpose()?
-                            .flatten()
-                            .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
-                        )
-                        .await
-                        .transpose()
-                    }
-                    .scoped()
-                })
-                .await?
-                .map(Box::new);
+            let reblog = with_connection!(state.db_pool, |db_conn| {
+                OptionFuture::from(
+                    OptionFuture::from(self.reposted_post_id.map(|id| {
+                        posts::table
+                            .find(id)
+                            .select(DbPost::as_select())
+                            .get_result::<DbPost>(db_conn)
+                            .map(OptionalExtension::optional)
+                    }))
+                    .await
+                    .transpose()?
+                    .flatten()
+                    .map(|post| post.into_mastodon(state)), // This will allocate two database connections. Fuck.
+                )
+                .await
+                .transpose()
+            })?
+            .map(Box::new);
 
             let language = self.content_lang.to_639_1().map(str::to_string);
 
@@ -581,9 +549,8 @@ impl IntoMastodon for DbNotification {
     }
 
     async fn into_mastodon(self, state: MapperState<'_>) -> Result<Self::Output> {
-        let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) = state
-            .db_pool
-            .with_connection(|mut db_conn| {
+        let (notification, account, status): (DbNotification, DbAccount, Option<DbPost>) =
+            with_connection!(state.db_pool, |db_conn| {
                 notifications::table
                     .filter(notifications::receiving_account_id.eq(self.receiving_account_id))
                     .inner_join(
@@ -592,10 +559,9 @@ impl IntoMastodon for DbNotification {
                     )
                     .left_outer_join(posts::table)
                     .select(<(DbNotification, DbAccount, Option<DbPost>)>::as_select())
-                    .get_result(&mut db_conn)
-                    .scoped()
-            })
-            .await?;
+                    .get_result(db_conn)
+                    .await
+            })?;
 
         let status = OptionFuture::from(status.map(|status| status.into_mastodon(state)))
             .await

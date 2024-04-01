@@ -33,7 +33,7 @@ use kitsune_db::{
         posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
         users_roles,
     },
-    PgPool,
+    with_connection, with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_jobs::deliver::{
@@ -47,7 +47,6 @@ use kitsune_language::Language;
 use kitsune_search::SearchBackend;
 use kitsune_url::UrlService;
 use kitsune_util::{process, sanitize::CleanHtmlExt};
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -478,59 +477,48 @@ impl PostService {
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let post = self
-            .db_pool
-            .with_transaction(move |tx| {
-                async move {
-                    let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
-                        (posts::table
-                            .find(in_reply_to_id)
-                            .count()
-                            .get_result::<i64>(tx)
-                            .await?
-                            != 0)
-                            .then_some(in_reply_to_id)
-                    } else {
-                        None
-                    };
+        let post = with_transaction!(self.db_pool, |tx| {
+            let in_reply_to_id = if let Some(in_reply_to_id) = create_post.in_reply_to_id {
+                (posts::table
+                    .find(in_reply_to_id)
+                    .count()
+                    .get_result::<i64>(tx)
+                    .await?
+                    != 0)
+                    .then_some(in_reply_to_id)
+            } else {
+                None
+            };
 
-                    let post: Post = diesel::insert_into(posts::table)
-                        .values(NewPost {
-                            id,
-                            account_id: create_post.author_id,
-                            in_reply_to_id,
-                            reposted_post_id: None,
-                            subject: subject.as_deref(),
-                            content: resolved.content.as_str(),
-                            content_source: content_source.as_str(),
-                            content_lang: content_lang.into(),
-                            link_preview_url: link_preview_url.as_deref(),
-                            is_sensitive: create_post.sensitive,
-                            visibility: create_post.visibility,
-                            is_local: true,
-                            url: url.as_str(),
-                            created_at: None,
-                        })
-                        .returning(Post::as_returning())
-                        .get_result(tx)
-                        .await?;
+            let post: Post = diesel::insert_into(posts::table)
+                .values(NewPost {
+                    id,
+                    account_id: create_post.author_id,
+                    in_reply_to_id,
+                    reposted_post_id: None,
+                    subject: subject.as_deref(),
+                    content: resolved.content.as_str(),
+                    content_source: content_source.as_str(),
+                    content_lang: content_lang.into(),
+                    link_preview_url: link_preview_url.as_deref(),
+                    is_sensitive: create_post.sensitive,
+                    visibility: create_post.visibility,
+                    is_local: true,
+                    url: url.as_str(),
+                    created_at: None,
+                })
+                .returning(Post::as_returning())
+                .get_result(tx)
+                .await?;
 
-                    Self::process_mentions(
-                        tx,
-                        post.account_id,
-                        post.id,
-                        resolved.mentioned_accounts,
-                    )
-                    .await?;
-                    Self::process_custom_emojis(tx, post.id, resolved.custom_emojis).await?;
-                    Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
-                    NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
+            Self::process_mentions(tx, post.account_id, post.id, resolved.mentioned_accounts)
+                .await?;
+            Self::process_custom_emojis(tx, post.id, resolved.custom_emojis).await?;
+            Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
+            NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
-                    Ok::<_, Error>(post)
-                }
-                .scoped()
-            })
-            .await?;
+            Ok::<_, Error>(post)
+        })?;
 
         self.job_service
             .enqueue(
@@ -653,37 +641,29 @@ impl PostService {
             None
         };
 
-        let post = self
-            .db_pool
-            .with_transaction(move |tx| {
-                async move {
-                    let post: Post = diesel::update(posts::table)
-                        .set(PartialPostChangeset {
-                            id: update_post.post_id,
-                            subject: subject.as_deref(),
-                            content: content.as_deref(),
-                            content_source: update_post.content.as_deref(),
-                            content_lang: content_lang.map(Into::into),
-                            link_preview_url: link_preview_url.as_deref(),
-                            is_sensitive: update_post.sensitive,
-                            updated_at: Timestamp::now_utc(),
-                        })
-                        .returning(Post::as_returning())
-                        .get_result(tx)
-                        .await?;
+        let post = with_transaction!(self.db_pool, |tx| {
+            let post: Post = diesel::update(posts::table)
+                .set(PartialPostChangeset {
+                    id: update_post.post_id,
+                    subject: subject.as_deref(),
+                    content: content.as_deref(),
+                    content_source: update_post.content.as_deref(),
+                    content_lang: content_lang.map(Into::into),
+                    link_preview_url: link_preview_url.as_deref(),
+                    is_sensitive: update_post.sensitive,
+                    updated_at: Timestamp::now_utc(),
+                })
+                .returning(Post::as_returning())
+                .get_result(tx)
+                .await?;
 
-                    Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids)
-                        .await?;
-                    Self::process_custom_emojis(tx, post.id, custom_emojis).await?;
-                    Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
-                    NotificationService::notify_on_update_post(tx, post.account_id, post.id)
-                        .await?;
+            Self::process_mentions(tx, post.account_id, post.id, mentioned_account_ids).await?;
+            Self::process_custom_emojis(tx, post.id, custom_emojis).await?;
+            Self::process_media_attachments(tx, post.id, &update_post.media_ids).await?;
+            NotificationService::notify_on_update_post(tx, post.account_id, post.id).await?;
 
-                    Ok::<_, Error>(post)
-                }
-                .scoped()
-            })
-            .await?;
+            Ok::<_, Error>(post)
+        })?;
 
         self.job_service
             .enqueue(
@@ -723,83 +703,68 @@ impl PostService {
             .fetching_account_id(Some(repost_post.account_id))
             .build();
 
-        let existing_repost: Option<Post> = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    posts::table
-                        .filter(
-                            posts::reposted_post_id
-                                .eq(repost_post.post_id)
-                                .and(posts::account_id.eq(repost_post.account_id)),
-                        )
-                        .add_post_permission_check(permission_check)
-                        .select(Post::as_select())
-                        .first(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let existing_repost: Option<Post> = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .filter(
+                    posts::reposted_post_id
+                        .eq(repost_post.post_id)
+                        .and(posts::account_id.eq(repost_post.account_id)),
+                )
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .first(db_conn)
+                .await
+                .optional()
+        })?;
 
         if let Some(repost) = existing_repost {
             return Ok(repost);
         }
 
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(repost_post.post_id)
-                    .add_post_permission_check(permission_check)
-                    .select(Post::as_select())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let post: Post = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(repost_post.post_id)
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .get_result(db_conn)
+                .await
+        })?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.post_url(id);
 
-        let repost = self
-            .db_pool
-            .with_transaction(|tx| {
-                async move {
-                    let new_repost = diesel::insert_into(posts::table)
-                        .values(NewPost {
-                            id,
-                            account_id: repost_post.account_id,
-                            in_reply_to_id: None,
-                            reposted_post_id: Some(post.id),
-                            subject: None,
-                            content: "",
-                            content_source: "",
-                            content_lang: post.content_lang,
-                            link_preview_url: None,
-                            is_sensitive: post.is_sensitive,
-                            visibility: repost_post.visibility,
-                            is_local: true,
-                            url: url.as_str(),
-                            created_at: Some(Timestamp::now_utc()),
-                        })
-                        .returning(Post::as_returning())
-                        .get_result(tx)
-                        .await?;
+        let repost = with_transaction!(self.db_pool, |tx| {
+            let new_repost = diesel::insert_into(posts::table)
+                .values(NewPost {
+                    id,
+                    account_id: repost_post.account_id,
+                    in_reply_to_id: None,
+                    reposted_post_id: Some(post.id),
+                    subject: None,
+                    content: "",
+                    content_source: "",
+                    content_lang: post.content_lang,
+                    link_preview_url: None,
+                    is_sensitive: post.is_sensitive,
+                    visibility: repost_post.visibility,
+                    is_local: true,
+                    url: url.as_str(),
+                    created_at: Some(Timestamp::now_utc()),
+                })
+                .returning(Post::as_returning())
+                .get_result(tx)
+                .await?;
 
-                    NotificationService::notify_on_repost(
-                        tx,
-                        post.account_id,
-                        new_repost.account_id,
-                        post.id,
-                    )
-                    .await?;
-
-                    Ok::<_, Error>(new_repost)
-                }
-                .scoped()
-            })
+            NotificationService::notify_on_repost(
+                tx,
+                post.account_id,
+                new_repost.account_id,
+                post.id,
+            )
             .await?;
+
+            Ok::<_, Error>(new_repost)
+        })?;
 
         self.job_service
             .enqueue(
@@ -830,21 +795,18 @@ impl PostService {
             .fetching_account_id(Some(unrepost_post.account_id))
             .build();
 
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .filter(
-                        posts::account_id
-                            .eq(unrepost_post.account_id)
-                            .and(posts::reposted_post_id.eq(unrepost_post.post_id)),
-                    )
-                    .add_post_permission_check(permission_check)
-                    .select(Post::as_select())
-                    .first(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let post: Post = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .filter(
+                    posts::account_id
+                        .eq(unrepost_post.account_id)
+                        .and(posts::reposted_post_id.eq(unrepost_post.post_id)),
+                )
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .first(db_conn)
+                .await
+        })?;
 
         self.job_service
             .enqueue(
@@ -875,65 +837,57 @@ impl PostService {
             .fetching_account_id(Some(favouriting_account_id))
             .build();
 
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(post_id)
-                    .add_post_permission_check(permission_check)
-                    .select(Post::as_select())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let post: Post = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(post_id)
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .get_result(db_conn)
+                .await
+        })?;
 
         let id = Uuid::now_v7();
         let url = self.url_service.favourite_url(id);
-        let favourite_id = self
-            .db_pool
-            .with_transaction(|tx| {
-                async move {
-                    let favourite = diesel::insert_into(posts_favourites::table)
-                        .values(NewFavourite {
-                            id,
-                            account_id: favouriting_account_id,
-                            post_id: post.id,
-                            url,
-                            created_at: None,
-                        })
-                        .returning(posts_favourites::id)
-                        .get_result(tx)
-                        .await?;
 
-                    let account_id = accounts::table
-                        .inner_join(accounts_preferences::table)
-                        .filter(
-                            accounts::id
-                                .eq(post.account_id)
-                                .and(accounts_preferences::notify_on_favourite.eq(true)),
-                        )
-                        .select(accounts::id)
-                        .get_result::<Uuid>(tx)
-                        .await
-                        .optional()?;
+        let favourite_id = with_transaction!(self.db_pool, |tx| {
+            let favourite = diesel::insert_into(posts_favourites::table)
+                .values(NewFavourite {
+                    id,
+                    account_id: favouriting_account_id,
+                    post_id: post.id,
+                    url,
+                    created_at: None,
+                })
+                .returning(posts_favourites::id)
+                .get_result(tx)
+                .await?;
 
-                    if let Some(account_id) = account_id {
-                        diesel::insert_into(notifications::table)
-                            .values(
-                                NewNotification::builder()
-                                    .receiving_account_id(account_id)
-                                    .favourite(favouriting_account_id, post.id),
-                            )
-                            .on_conflict_do_nothing()
-                            .execute(tx)
-                            .await?;
-                    }
+            let account_id = accounts::table
+                .inner_join(accounts_preferences::table)
+                .filter(
+                    accounts::id
+                        .eq(post.account_id)
+                        .and(accounts_preferences::notify_on_favourite.eq(true)),
+                )
+                .select(accounts::id)
+                .get_result::<Uuid>(tx)
+                .await
+                .optional()?;
 
-                    Ok::<_, Error>(favourite)
-                }
-                .scoped()
-            })
-            .await?;
+            if let Some(account_id) = account_id {
+                diesel::insert_into(notifications::table)
+                    .values(
+                        NewNotification::builder()
+                            .receiving_account_id(account_id)
+                            .favourite(favouriting_account_id, post.id),
+                    )
+                    .on_conflict_do_nothing()
+                    .execute(tx)
+                    .await?;
+            }
+
+            Ok::<_, Error>(favourite)
+        })?;
 
         self.job_service
             .enqueue(
@@ -956,19 +910,13 @@ impl PostService {
             .get_by_id(post_id, Some(favouriting_account_id))
             .await?;
 
-        let favourite = self
-            .db_pool
-            .with_connection(|db_conn| {
-                async {
-                    Favourite::belonging_to(&post)
-                        .filter(posts_favourites::account_id.eq(favouriting_account_id))
-                        .get_result::<Favourite>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let favourite = with_connection!(self.db_pool, |db_conn| {
+            Favourite::belonging_to(&post)
+                .filter(posts_favourites::account_id.eq(favouriting_account_id))
+                .get_result::<Favourite>(db_conn)
+                .await
+                .optional()
+        })?;
 
         if let Some(favourite) = favourite {
             self.job_service
@@ -1018,15 +966,9 @@ impl PostService {
                 .order(posts_favourites::id.asc());
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 
     /// Get accounts that reblogged a post
@@ -1067,15 +1009,10 @@ impl PostService {
             .order(accounts::id.desc())
             .limit(get_reblogs.limit as i64);
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
+        .map_err(Error::from)
     }
 
     /// Get a post by its ID
@@ -1090,17 +1027,15 @@ impl PostService {
             .fetching_account_id(fetching_account_id)
             .build();
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(id)
-                    .add_post_permission_check(permission_check)
-                    .select(Post::as_select())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(id)
+                .add_post_permission_check(permission_check)
+                .select(Post::as_select())
+                .get_result(db_conn)
+                .await
+        })
+        .map_err(Error::from)
     }
 
     /// Get a post's source by its ID
@@ -1116,17 +1051,15 @@ impl PostService {
             .fetching_account_id(fetching_account_id)
             .build();
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(id)
-                    .add_post_permission_check(permission_check)
-                    .select(PostSource::as_select())
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(id)
+                .add_post_permission_check(permission_check)
+                .select(PostSource::as_select())
+                .get_result(db_conn)
+                .await
+        })
+        .map_err(Error::from)
     }
 
     /// Get the ancestors of the post
@@ -1139,6 +1072,19 @@ impl PostService {
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> impl Stream<Item = Result<Post>> + '_ {
+        let load_post = move |in_reply_to_id, permission_check| async move {
+            let post = with_connection!(self.db_pool, |db_conn| {
+                posts::table
+                    .find(in_reply_to_id)
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .get_result::<Post>(db_conn)
+                    .await
+            })?;
+
+            Ok::<_, Error>(post)
+        };
+
         try_stream! {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
@@ -1146,16 +1092,7 @@ impl PostService {
                 .build();
 
             while let Some(in_reply_to_id) = last_post.in_reply_to_id {
-                let post = self.db_pool
-                    .with_connection(|db_conn| {
-                        posts::table
-                            .find(in_reply_to_id)
-                            .add_post_permission_check(permission_check)
-                            .select(Post::as_select())
-                            .get_result::<Post>(db_conn)
-                            .scoped()
-                    })
-                    .await?;
+                let post = load_post(in_reply_to_id, permission_check).await?;
 
                 yield post.clone();
 
@@ -1175,22 +1112,25 @@ impl PostService {
         id: Uuid,
         fetching_account_id: Option<Uuid>,
     ) -> BoxStream<'_, Result<Post>> {
+        let load_post = move |id, permission_check| async move {
+            let post = with_connection!(self.db_pool, |db_conn| {
+                posts::table
+                    .filter(posts::in_reply_to_id.eq(id))
+                    .add_post_permission_check(permission_check)
+                    .select(Post::as_select())
+                    .load_stream::<Post>(db_conn)
+                    .await
+            })?;
+
+            Ok::<_, Error>(post)
+        };
+
         try_stream! {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build();
 
-            let descendant_stream = self.db_pool
-                .with_connection(|db_conn| {
-                    posts::table
-                        .filter(posts::in_reply_to_id.eq(id))
-                        .add_post_permission_check(permission_check)
-                        .select(Post::as_select())
-                        .load_stream::<Post>(db_conn)
-                        .scoped()
-                })
-                .await?;
-
+            let descendant_stream = load_post(id, permission_check).await?;
             for await descendant in descendant_stream {
                 let descendant = descendant?;
                 let descendant_id = descendant.id;
@@ -1212,33 +1152,27 @@ impl PostService {
         account_id: Uuid,
         user_id: Option<Uuid>,
     ) -> Result<Post> {
-        let post: Post = self
-            .db_pool
-            .with_connection(|db_conn| {
-                posts::table
-                    .find(post_id)
-                    .select(Post::as_select())
-                    .first(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let post: Post = with_connection!(self.db_pool, |db_conn| {
+            posts::table
+                .find(post_id)
+                .select(Post::as_select())
+                .first(db_conn)
+                .await
+        })?;
 
         if post.account_id != account_id {
             if let Some(user_id) = user_id {
-                let admin_role_count = self
-                    .db_pool
-                    .with_connection(|db_conn| {
-                        users_roles::table
-                            .filter(
-                                users_roles::user_id
-                                    .eq(user_id)
-                                    .and(users_roles::role.eq(Role::Administrator)),
-                            )
-                            .count()
-                            .get_result::<i64>(db_conn)
-                            .scoped()
-                    })
-                    .await?;
+                let admin_role_count = with_connection!(self.db_pool, |db_conn| {
+                    users_roles::table
+                        .filter(
+                            users_roles::user_id
+                                .eq(user_id)
+                                .and(users_roles::role.eq(Role::Administrator)),
+                        )
+                        .count()
+                        .get_result::<i64>(db_conn)
+                        .await
+                })?;
 
                 if admin_role_count == 0 {
                     return Err(PostError::Unauthorised.into());

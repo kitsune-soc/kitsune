@@ -12,9 +12,9 @@ use kitsune_db::{
         account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
     },
     schema::media_attachments,
+    with_connection,
 };
 use kitsune_service::account::GetPosts;
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -41,20 +41,15 @@ impl Account {
         let db_pool = &ctx.state().db_pool;
 
         if let Some(avatar_id) = self.avatar_id {
-            db_pool
-                .with_connection(|db_conn| {
-                    async move {
-                        media_attachments::table
-                            .find(avatar_id)
-                            .get_result::<DbMediaAttachment>(db_conn)
-                            .await
-                            .optional()
-                            .map(|attachment| attachment.map(Into::into))
-                    }
-                    .scoped()
-                })
-                .await
-                .map_err(Into::into)
+            with_connection!(db_pool, |db_conn| {
+                media_attachments::table
+                    .find(avatar_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .await
+                    .optional()
+                    .map(|attachment| attachment.map(Into::into))
+            })
+            .map_err(Into::into)
         } else {
             Ok(None)
         }
@@ -64,20 +59,15 @@ impl Account {
         let db_pool = &ctx.state().db_pool;
 
         if let Some(header_id) = self.header_id {
-            db_pool
-                .with_connection(|db_conn| {
-                    async move {
-                        media_attachments::table
-                            .find(header_id)
-                            .get_result::<DbMediaAttachment>(db_conn)
-                            .await
-                            .optional()
-                            .map(|attachment| attachment.map(Into::into))
-                    }
-                    .scoped()
-                })
-                .await
-                .map_err(Into::into)
+            with_connection!(db_pool, |db_conn| {
+                media_attachments::table
+                    .find(header_id)
+                    .get_result::<DbMediaAttachment>(db_conn)
+                    .await
+                    .optional()
+                    .map(|attachment| attachment.map(Into::into))
+            })
+            .map_err(Into::into)
         } else {
             Ok(None)
         }

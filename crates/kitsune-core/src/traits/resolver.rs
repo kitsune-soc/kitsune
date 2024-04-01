@@ -1,5 +1,5 @@
-use crate::error::BoxError;
 use async_trait::async_trait;
+use eyre::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -20,7 +20,7 @@ pub trait Resolver: Send + Sync + 'static {
         &self,
         username: &str,
         domain: &str,
-    ) -> Result<Option<AccountResource>, BoxError>;
+    ) -> Result<Option<AccountResource>>;
 }
 
 #[async_trait]
@@ -29,7 +29,7 @@ impl Resolver for Arc<dyn Resolver> {
         &self,
         username: &str,
         domain: &str,
-    ) -> Result<Option<AccountResource>, BoxError> {
+    ) -> Result<Option<AccountResource>> {
         (**self).resolve_account(username, domain).await
     }
 }
@@ -43,7 +43,7 @@ where
         &self,
         username: &str,
         domain: &str,
-    ) -> Result<Option<AccountResource>, BoxError> {
+    ) -> Result<Option<AccountResource>> {
         for resolver in self {
             if let Some(resource) = resolver.resolve_account(username, domain).await? {
                 return Ok(Some(resource));

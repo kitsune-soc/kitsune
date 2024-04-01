@@ -6,8 +6,8 @@ use diesel_async::RunQueryDsl;
 use kitsune_db::{
     model::{account::Account as DbAccount, user::User as DbUser},
     schema::{accounts, users},
+    with_connection,
 };
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -27,21 +27,16 @@ pub struct User {
 impl User {
     pub async fn account(&self, ctx: &Context<'_>) -> Result<Account> {
         let db_pool = &ctx.state().db_pool;
-        db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    users::table
-                        .find(self.id)
-                        .inner_join(accounts::table)
-                        .select(DbAccount::as_select())
-                        .get_result::<DbAccount>(db_conn)
-                        .await
-                        .map(Into::into)
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Into::into)
+        with_connection!(db_pool, |db_conn| {
+            users::table
+                .find(self.id)
+                .inner_join(accounts::table)
+                .select(DbAccount::as_select())
+                .get_result::<DbAccount>(db_conn)
+                .await
+                .map(Into::into)
+        })
+        .map_err(Into::into)
     }
 }
 

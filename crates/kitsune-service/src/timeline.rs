@@ -8,9 +8,8 @@ use kitsune_db::{
     model::post::{Post, Visibility},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_mentions},
-    PgPool,
+    with_connection, PgPool,
 };
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -121,15 +120,9 @@ impl TimelineService {
             query = query.filter(posts::id.gt(min_id)).order(posts::id.asc());
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 
     /// Get a stream of public posts
@@ -169,14 +162,8 @@ impl TimelineService {
             query = query.filter(posts::is_local.eq(false));
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 }

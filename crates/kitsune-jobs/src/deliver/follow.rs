@@ -3,8 +3,7 @@ use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
-use kitsune_db::{model::follower::Follow, schema::accounts_follows};
-use scoped_futures::ScopedFutureExt;
+use kitsune_db::{model::follower::Follow, schema::accounts_follows, with_connection};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -15,32 +14,23 @@ pub struct DeliverFollow {
 
 impl Runnable for DeliverFollow {
     type Context = JobRunnerContext;
-    type Error = miette::Report;
+    type Error = eyre::Report;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
-        let follow = ctx
-            .db_pool
-            .with_connection(|db_conn| {
-                async move {
-                    accounts_follows::table
-                        .find(self.follow_id)
-                        .get_result::<Follow>(db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await?;
+        let follow = with_connection!(ctx.db_pool, |db_conn| {
+            accounts_follows::table
+                .find(self.follow_id)
+                .get_result::<Follow>(db_conn)
+                .await
+                .optional()
+        })?;
 
         let Some(follow) = follow else {
             return Ok(());
         };
 
-        ctx.deliverer
-            .deliver(Action::Follow(follow))
-            .await
-            .map_err(|err| miette::Report::new_boxed(err.into()))?;
+        ctx.deliverer.deliver(Action::Follow(follow)).await?;
 
         Ok(())
     }

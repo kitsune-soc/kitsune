@@ -11,10 +11,11 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use kitsune_config::database::Configuration as DatabaseConfig;
 use tracing_log::LogTracer;
 
-pub use crate::{
-    error::{Error, Result},
-    pool::{PgPool, PoolError},
-};
+pub type PgPool = Pool<AsyncPgConnection>;
+
+pub use crate::error::{Error, Result};
+#[doc(hidden)]
+pub use diesel_async;
 
 mod error;
 mod pool;
@@ -75,5 +76,5 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
         .await?;
     }
 
-    Ok(pool.into())
+    Ok(pool)
 }

@@ -4,14 +4,12 @@ use axum::{
     extract::multipart::MultipartError,
     response::{IntoResponse, Response},
 };
+use color_eyre::eyre;
 use diesel_async::pooled_connection::bb8;
 use http::StatusCode;
-use kitsune_core::error::{BoxError, HttpError};
+use kitsune_core::error::HttpError;
 use kitsune_service::error::{Error as ServiceError, PostError};
-use std::{
-    fmt::{Debug, Display},
-    str::ParseBoolError,
-};
+use std::{fmt::Debug, str::ParseBoolError};
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -41,7 +39,7 @@ pub enum Error {
     Der(#[from] der::Error),
 
     #[error(transparent)]
-    Fetcher(BoxError),
+    Fetcher(eyre::Report),
 
     #[error(transparent)]
     Http(#[from] http::Error),
@@ -113,18 +111,6 @@ pub enum OAuth2Error {
 
     #[error(transparent)]
     Web(#[from] oxide_auth_axum::WebError),
-}
-
-impl<E> From<kitsune_db::PoolError<E>> for Error
-where
-    E: Into<Error> + Debug + Display,
-{
-    fn from(value: kitsune_db::PoolError<E>) -> Self {
-        match value {
-            kitsune_db::PoolError::Pool(err) => err.into(),
-            kitsune_db::PoolError::User(err) => err.into(),
-        }
-    }
 }
 
 impl From<Error> for Response {

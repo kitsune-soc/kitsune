@@ -1,10 +1,6 @@
 use diesel_async::pooled_connection::bb8;
-use kitsune_core::error::BoxError;
 use rsa::pkcs8::der;
-use std::{
-    convert::Infallible,
-    fmt::{Debug, Display},
-};
+use std::{convert::Infallible, fmt::Debug};
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -33,13 +29,13 @@ pub enum Error {
     FederationFilter(#[from] kitsune_federation_filter::error::Error),
 
     #[error(transparent)]
-    FetchAccount(BoxError),
+    FetchAccount(eyre::Report),
 
     #[error(transparent)]
-    FetchEmoji(BoxError),
+    FetchEmoji(eyre::Report),
 
     #[error(transparent)]
-    FetchPost(BoxError),
+    FetchPost(eyre::Report),
 
     #[error(transparent)]
     Http(#[from] http::Error),
@@ -66,7 +62,7 @@ pub enum Error {
     NotFound,
 
     #[error(transparent)]
-    Resolver(BoxError),
+    Resolver(eyre::Report),
 
     #[error(transparent)]
     Search(#[from] kitsune_search::Error),
@@ -87,17 +83,5 @@ pub enum Error {
 impl From<Infallible> for Error {
     fn from(err: Infallible) -> Self {
         match err {}
-    }
-}
-
-impl<E> From<kitsune_db::PoolError<E>> for Error
-where
-    E: Into<Error> + Debug + Display,
-{
-    fn from(value: kitsune_db::PoolError<E>) -> Self {
-        match value {
-            kitsune_db::PoolError::Pool(err) => err.into(),
-            kitsune_db::PoolError::User(err) => err.into(),
-        }
     }
 }

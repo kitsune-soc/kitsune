@@ -1,8 +1,7 @@
 use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
-use diesel_async::scoped_futures::ScopedFutureExt;
+use color_eyre::eyre::Result;
 use kitsune_config::database::Configuration as DatabaseConfig;
-use miette::{IntoDiagnostic, Result};
 
 mod config;
 mod role;
@@ -24,11 +23,11 @@ struct App {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    miette::set_panic_hook();
+    color_eyre::install()?;
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
-    let config: Configuration = envy::from_env().into_diagnostic()?;
+    let config: Configuration = envy::from_env()?;
     let db_conn = kitsune_db::connect(&DatabaseConfig {
         url: config.database_url.into(),
         max_connections: 1,
@@ -38,18 +37,10 @@ async fn main() -> Result<()> {
 
     let cmd = App::parse();
 
-    db_conn
-        .with_connection(|db_conn| {
-            async move {
-                match cmd.subcommand {
-                    AppSubcommand::Role(cmd) => self::role::handle(cmd, db_conn).await?,
-                }
-
-                Ok::<_, miette::Report>(())
-            }
-            .scoped()
-        })
-        .await?;
+    let mut db_conn = db_conn.get().await?;
+    match cmd.subcommand {
+        AppSubcommand::Role(cmd) => self::role::handle(cmd, &mut db_conn).await?,
+    }
 
     Ok(())
 }

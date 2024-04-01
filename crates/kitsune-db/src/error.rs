@@ -1,6 +1,5 @@
 use core::fmt;
 use diesel_async::pooled_connection::bb8;
-use miette::Diagnostic;
 use std::error::Error as StdError;
 use thiserror::Error;
 
@@ -37,7 +36,7 @@ impl fmt::Display for IsoCodeConversionError {
 
 impl StdError for IsoCodeConversionError {}
 
-#[derive(Debug, Diagnostic, Error)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     Blocking(#[from] blowocking::Error),

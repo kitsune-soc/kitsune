@@ -15,7 +15,7 @@ use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
-use kitsune_db::{model::account::Account, schema::accounts, PgPool};
+use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;
@@ -116,20 +116,18 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
 async fn verify_signature(
     req: &http::Request<()>,
-    db_conn: &PgPool,
+    db_pool: &PgPool,
     expected_account: Option<&Account>,
 ) -> Result<bool> {
     let is_valid = http_signatures::cavage::easy::verify(req, |key_id| {
         async move {
-            let remote_user: Account = db_conn
-                .with_connection(|db_conn| {
-                    accounts::table
-                        .filter(accounts::public_key_id.eq(key_id))
-                        .select(Account::as_select())
-                        .first(db_conn)
-                        .scoped()
-                })
-                .await?;
+            let remote_user: Account = with_connection!(db_pool, |db_conn| {
+                accounts::table
+                    .filter(accounts::public_key_id.eq(key_id))
+                    .select(Account::as_select())
+                    .first(db_conn)
+                    .await
+            })?;
 
             // If we have an expected account, which we have in the case of an incoming new activity,
             // then we do this comparison.

@@ -10,12 +10,11 @@ use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
-    PgPool,
+    with_connection, PgPool,
 };
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
 use kitsune_url::UrlService;
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -93,15 +92,10 @@ pub struct AttachmentService {
 
 impl AttachmentService {
     pub async fn get_by_id(&self, id: Uuid) -> Result<MediaAttachment> {
-        self.db_pool
-            .with_connection(|db_conn| {
-                media_attachments::table
-                    .find(id)
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            media_attachments::table.find(id).get_result(db_conn).await
+        })
+        .map_err(Error::from)
     }
 
     /// Get the URL to an attachment
@@ -161,21 +155,19 @@ impl AttachmentService {
             };
         }
 
-        self.db_pool
-            .with_connection(|db_conn| {
-                diesel::update(
-                    media_attachments::table.filter(
-                        media_attachments::id
-                            .eq(update.attachment_id)
-                            .and(media_attachments::account_id.eq(update.account_id)),
-                    ),
-                )
-                .set(changeset)
-                .get_result(db_conn)
-                .scoped()
-            })
+        with_connection!(self.db_pool, |db_conn| {
+            diesel::update(
+                media_attachments::table.filter(
+                    media_attachments::id
+                        .eq(update.attachment_id)
+                        .and(media_attachments::account_id.eq(update.account_id)),
+                ),
+            )
+            .set(changeset)
+            .get_result(db_conn)
             .await
-            .map_err(Error::from)
+        })
+        .map_err(Error::from)
     }
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
@@ -217,23 +209,20 @@ impl AttachmentService {
         }
         .map_err(Error::Storage)?;
 
-        let media_attachment = self
-            .db_pool
-            .with_connection(|db_conn| {
-                diesel::insert_into(media_attachments::table)
-                    .values(NewMediaAttachment {
-                        id: Uuid::now_v7(),
-                        content_type: upload.content_type.as_str(),
-                        account_id: upload.account_id,
-                        description: upload.description.as_deref(),
-                        blurhash: None,
-                        file_path: Some(upload.path.as_str()),
-                        remote_url: None,
-                    })
-                    .get_result(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let media_attachment = with_connection!(self.db_pool, |db_conn| {
+            diesel::insert_into(media_attachments::table)
+                .values(NewMediaAttachment {
+                    id: Uuid::now_v7(),
+                    content_type: upload.content_type.as_str(),
+                    account_id: upload.account_id,
+                    description: upload.description.as_deref(),
+                    blurhash: None,
+                    file_path: Some(upload.path.as_str()),
+                    remote_url: None,
+                })
+                .get_result(db_conn)
+                .await
+        })?;
 
         Ok(media_attachment)
     }
@@ -241,12 +230,9 @@ impl AttachmentService {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        attachment::{AttachmentService, Upload},
-        error::Error,
-    };
+    use crate::attachment::{AttachmentService, Upload};
     use bytes::{Bytes, BytesMut};
-    use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+    use diesel_async::{AsyncPgConnection, RunQueryDsl};
     use futures_util::{future, pin_mut, stream, StreamExt};
     use http::{Request, Response};
     use http_body_util::Empty;
@@ -261,12 +247,12 @@ mod test {
             media_attachment::MediaAttachment,
         },
         schema::accounts,
+        with_connection_panicky,
     };
     use kitsune_http_client::Client;
     use kitsune_storage::fs::Storage;
     use kitsune_test::database_test;
     use kitsune_url::UrlService;
-    use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::convert::Infallible;
     use tempfile::TempDir;
@@ -277,12 +263,10 @@ mod test {
         database_test(|db_pool| async move {
             let client = Client::builder().service(service_fn(handle));
 
-            let account_id = db_pool
-                .with_connection(|db_conn| {
-                    async move { Ok::<_, miette::Report>(prepare_db(db_conn).await) }.scoped()
-                })
-                .await
-                .unwrap();
+            let account_id = with_connection_panicky!(db_pool, |db_conn| {
+                Ok::<_, eyre::Report>(prepare_db(db_conn).await)
+            })
+            .unwrap();
 
             let temp_dir = TempDir::new().unwrap();
             let storage = Storage::new(temp_dir.path().to_owned());
@@ -350,38 +334,32 @@ mod test {
 
     async fn prepare_db(db_conn: &mut AsyncPgConnection) -> Uuid {
         // Create a local user `@alice`
-        db_conn
-            .transaction(|tx| {
-                async move {
-                    let account_id = Uuid::now_v7();
-                    diesel::insert_into(accounts::table)
-                        .values(NewAccount {
-                            id: account_id,
-                            display_name: None,
-                            username: "alice",
-                            locked: false,
-                            note: None,
-                            local: true,
-                            domain: "example.com",
-                            actor_type: ActorType::Person,
-                            url: "https://example.com/users/alice",
-                            featured_collection_url: None,
-                            followers_url: None,
-                            following_url: None,
-                            inbox_url: None,
-                            outbox_url: None,
-                            shared_inbox_url: None,
-                            public_key_id: "https://example.com/users/alice#main-key",
-                            public_key: "",
-                            created_at: None,
-                        })
-                        .execute(tx)
-                        .await?;
-                    Ok::<_, Error>(account_id)
-                }
-                .scope_boxed()
+        let account_id = Uuid::now_v7();
+        diesel::insert_into(accounts::table)
+            .values(NewAccount {
+                id: account_id,
+                display_name: None,
+                username: "alice",
+                locked: false,
+                note: None,
+                local: true,
+                domain: "example.com",
+                actor_type: ActorType::Person,
+                url: "https://example.com/users/alice",
+                featured_collection_url: None,
+                followers_url: None,
+                following_url: None,
+                inbox_url: None,
+                outbox_url: None,
+                shared_inbox_url: None,
+                public_key_id: "https://example.com/users/alice#main-key",
+                public_key: "",
+                created_at: None,
             })
+            .execute(db_conn)
             .await
-            .unwrap()
+            .unwrap();
+
+        account_id
     }
 }

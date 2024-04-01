@@ -8,6 +8,7 @@ use kitsune_db::{
     model::{account::Account, post::Post},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
+    with_connection,
 };
 use kitsune_service::account::GetPosts;
 use kitsune_type::ap::{
@@ -16,7 +17,6 @@ use kitsune_type::ap::{
     Activity,
 };
 use kitsune_url::UrlService;
-use scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
@@ -37,19 +37,16 @@ pub async fn get(
     Path(account_id): Path<Uuid>,
     Query(query): Query<OutboxQuery>,
 ) -> Result<Either<ActivityPubJson<CollectionPage<Activity>>, ActivityPubJson<Collection>>> {
-    let account = state
-        .db_pool
-        .with_connection(|db_conn| {
-            use diesel_async::RunQueryDsl;
+    let account = with_connection!(state.db_pool, |db_conn| {
+        use diesel_async::RunQueryDsl;
 
-            accounts::table
-                .find(account_id)
-                .filter(accounts::local.eq(true))
-                .select(Account::as_select())
-                .get_result::<Account>(db_conn)
-                .scoped()
-        })
-        .await?;
+        accounts::table
+            .find(account_id)
+            .filter(accounts::local.eq(true))
+            .select(Account::as_select())
+            .get_result::<Account>(db_conn)
+            .await
+    })?;
 
     let base_url = format!("{}{}", url_service.base_url(), original_uri.path());
 
@@ -93,18 +90,15 @@ pub async fn get(
             ordered_items,
         })))
     } else {
-        let public_post_count = state
-            .db_pool
-            .with_connection(|db_conn| {
-                use diesel_async::RunQueryDsl;
+        let public_post_count = with_connection!(state.db_pool, |db_conn| {
+            use diesel_async::RunQueryDsl;
 
-                Post::belonging_to(&account)
-                    .add_post_permission_check(PermissionCheck::default())
-                    .count()
-                    .get_result::<i64>(db_conn)
-                    .scoped()
-            })
-            .await?;
+            Post::belonging_to(&account)
+                .add_post_permission_check(PermissionCheck::default())
+                .count()
+                .get_result::<i64>(db_conn)
+                .await
+        })?;
 
         let first = format!("{base_url}?page=true");
         let last = format!("{base_url}?page=true&min_id={}", Uuid::nil());

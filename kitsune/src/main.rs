@@ -1,9 +1,9 @@
 use clap::Parser;
+use color_eyre::eyre::{self, Context};
 use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
-use miette::{Context, IntoDiagnostic};
 use std::{env, path::PathBuf};
 
 #[global_allocator]
@@ -18,7 +18,7 @@ struct Args {
     config: PathBuf,
 }
 
-async fn boot() -> miette::Result<()> {
+async fn boot() -> eyre::Result<()> {
     println!("{STARTUP_FIGLET}");
 
     let args = Args::parse();
@@ -31,7 +31,6 @@ async fn boot() -> miette::Result<()> {
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)
         .await
-        .into_diagnostic()
         .wrap_err("Failed to connect to the Redis instance for the job scheduler")?;
 
     let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
@@ -58,21 +57,20 @@ async fn boot() -> miette::Result<()> {
     ));
 
     tokio::select! {
-        res = server_fut => res.into_diagnostic()??,
-        res = job_runner_fut => res.into_diagnostic()?,
+        res = server_fut => res??,
+        res = job_runner_fut => res?,
     }
 
     Ok(())
 }
 
-fn main() -> miette::Result<()> {
-    miette::set_panic_hook();
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_stack_size(4 * 1024 * 1024) // Set the stack size to 4MiB
-        .build()
-        .into_diagnostic()?;
+        .build()?;
 
     runtime.block_on(boot())
 }

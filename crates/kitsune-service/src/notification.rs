@@ -10,9 +10,8 @@ use garde::Validate;
 use kitsune_db::{
     model::notification::{NewNotification, Notification, NotificationType},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
-    PgPool,
+    with_connection, PgPool,
 };
-use scoped_futures::ScopedFutureExt;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -104,15 +103,9 @@ impl NotificationService {
                 .order(notifications::id.asc());
         }
 
-        self.db_pool
-            .with_connection(|mut db_conn| {
-                async move {
-                    Ok::<_, Error>(query.load_stream(&mut db_conn).await?.map_err(Error::from))
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            Ok::<_, Error>(query.load_stream(db_conn).await?.map_err(Error::from))
+        })
     }
 
     pub async fn get_notification_by_id(
@@ -120,61 +113,45 @@ impl NotificationService {
         id: Uuid,
         account_id: Uuid,
     ) -> Result<Option<Notification>> {
-        self.db_pool
-            .with_connection(|mut db_conn| {
-                async move {
-                    notifications::table
-                        .filter(
-                            notifications::id
-                                .eq(id)
-                                .and(notifications::receiving_account_id.eq(account_id)),
-                        )
-                        .select(Notification::as_select())
-                        .first(&mut db_conn)
-                        .await
-                        .optional()
-                }
-                .scoped()
-            })
-            .await
-            .map_err(Error::from)
+        with_connection!(self.db_pool, |db_conn| {
+            notifications::table
+                .filter(
+                    notifications::id
+                        .eq(id)
+                        .and(notifications::receiving_account_id.eq(account_id)),
+                )
+                .select(Notification::as_select())
+                .first(db_conn)
+                .await
+                .optional()
+        })
+        .map_err(Error::from)
     }
 
     pub async fn dismiss(&self, id: Uuid, account_id: Uuid) -> Result<()> {
-        self.db_pool
-            .with_connection(|mut db_conn| {
-                async move {
-                    diesel::delete(
-                        notifications::table.filter(
-                            notifications::id
-                                .eq(id)
-                                .and(notifications::receiving_account_id.eq(account_id)),
-                        ),
-                    )
-                    .execute(&mut db_conn)
-                    .await
-                }
-                .scoped()
-            })
-            .await?;
+        with_connection!(self.db_pool, |db_conn| {
+            diesel::delete(
+                notifications::table.filter(
+                    notifications::id
+                        .eq(id)
+                        .and(notifications::receiving_account_id.eq(account_id)),
+                ),
+            )
+            .execute(db_conn)
+            .await
+        })?;
 
         Ok(())
     }
 
     pub async fn clear_all(&self, account_id: Uuid) -> Result<()> {
-        self.db_pool
-            .with_connection(|mut db_conn| {
-                async move {
-                    diesel::delete(
-                        notifications::table
-                            .filter(notifications::receiving_account_id.eq(account_id)),
-                    )
-                    .execute(&mut db_conn)
-                    .await
-                }
-                .scoped()
-            })
-            .await?;
+        with_connection!(self.db_pool, |db_conn| {
+            diesel::delete(
+                notifications::table.filter(notifications::receiving_account_id.eq(account_id)),
+            )
+            .execute(db_conn)
+            .await
+        })?;
 
         Ok(())
     }

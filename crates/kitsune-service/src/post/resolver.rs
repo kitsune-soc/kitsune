@@ -126,6 +126,7 @@ mod test {
             account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment,
         },
         schema::{accounts, custom_emojis, media_attachments},
+        with_connection_panicky,
     };
     use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
@@ -137,7 +138,6 @@ mod test {
     use kitsune_util::try_join;
     use kitsune_webfinger::Webfinger;
     use pretty_assertions::assert_eq;
-    use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::sync::Arc;
     use tower::service_fn;
@@ -221,69 +221,63 @@ mod test {
 
                 let emoji_ids = (Uuid::now_v7(), Uuid::now_v7());
                 let media_attachment_ids = (Uuid::now_v7(), Uuid::now_v7());
-                db_pool
-                    .with_connection(|db_conn| {
-                        async {
-                            let media_fut = diesel::insert_into(media_attachments::table)
-                                .values(NewMediaAttachment {
-                                    id: media_attachment_ids.0,
-                                    content_type: "image/jpeg",
-                                    account_id: None,
-                                    description: None,
-                                    blurhash: None,
-                                    file_path: None,
-                                    remote_url: None,
-                                })
-                                .execute(db_conn);
-                            let emoji_fut = diesel::insert_into(custom_emojis::table)
-                                .values(CustomEmoji {
-                                    id: emoji_ids.0,
-                                    shortcode: String::from("blobhaj_happy"),
-                                    domain: None,
-                                    remote_id: String::from("https://local.domain/emoji/blobhaj_happy"),
-                                    media_attachment_id: media_attachment_ids.0,
-                                    endorsed: false,
-                                    created_at: Timestamp::now_utc(),
-                                    updated_at: Timestamp::now_utc()
-                                })
-                                .execute(db_conn);
-                            try_join!(media_fut, emoji_fut)
-                        }.scoped()
-                    })
-                    .await
-                    .expect("Failed to insert the local emoji");
 
-                db_pool
-                    .with_connection(|db_conn| {
-                        async {
-                            let media_fut = diesel::insert_into(media_attachments::table)
-                                .values(NewMediaAttachment {
-                                    id: media_attachment_ids.1,
-                                    content_type: "image/jpeg",
-                                    account_id: None,
-                                    description: None,
-                                    blurhash: None,
-                                    file_path: None,
-                                    remote_url: Some("https://media.example.com/emojis/blobhaj.jpeg"),
-                                })
-                                .execute(db_conn);
-                            let emoji_fut = diesel::insert_into(custom_emojis::table)
-                                .values(CustomEmoji {
-                                    id: emoji_ids.1,
-                                    shortcode: String::from("blobhaj_sad"),
-                                    domain: Some(String::from("example.com")),
-                                    remote_id: String::from("https://example.com/emojis/1"),
-                                    media_attachment_id: media_attachment_ids.1,
-                                    endorsed: false,
-                                    created_at: Timestamp::now_utc(),
-                                    updated_at: Timestamp::now_utc(),
-                                })
-                                .execute(db_conn);
-                            try_join!(media_fut, emoji_fut)
-                        }.scoped()
-                    })
-                    .await
-                    .expect("Failed to insert the remote emoji");
+                with_connection_panicky!(db_pool, |db_conn| {
+                    let media_fut = diesel::insert_into(media_attachments::table)
+                        .values(NewMediaAttachment {
+                            id: media_attachment_ids.0,
+                            content_type: "image/jpeg",
+                            account_id: None,
+                            description: None,
+                            blurhash: None,
+                            file_path: None,
+                            remote_url: None,
+                        })
+                        .execute(db_conn);
+                    let emoji_fut = diesel::insert_into(custom_emojis::table)
+                        .values(CustomEmoji {
+                            id: emoji_ids.0,
+                            shortcode: String::from("blobhaj_happy"),
+                            domain: None,
+                            remote_id: String::from("https://local.domain/emoji/blobhaj_happy"),
+                            media_attachment_id: media_attachment_ids.0,
+                            endorsed: false,
+                            created_at: Timestamp::now_utc(),
+                            updated_at: Timestamp::now_utc()
+                        })
+                        .execute(db_conn);
+
+                    try_join!(media_fut, emoji_fut)
+                })
+                .expect("Failed to insert the local emoji");
+
+                with_connection_panicky!(db_pool, |db_conn| {
+                    let media_fut = diesel::insert_into(media_attachments::table)
+                        .values(NewMediaAttachment {
+                            id: media_attachment_ids.1,
+                            content_type: "image/jpeg",
+                            account_id: None,
+                            description: None,
+                            blurhash: None,
+                            file_path: None,
+                            remote_url: Some("https://media.example.com/emojis/blobhaj.jpeg"),
+                        })
+                        .execute(db_conn);
+                    let emoji_fut = diesel::insert_into(custom_emojis::table)
+                        .values(CustomEmoji {
+                            id: emoji_ids.1,
+                            shortcode: String::from("blobhaj_sad"),
+                            domain: Some(String::from("example.com")),
+                            remote_id: String::from("https://example.com/emojis/1"),
+                            media_attachment_id: media_attachment_ids.1,
+                            endorsed: false,
+                            created_at: Timestamp::now_utc(),
+                            updated_at: Timestamp::now_utc(),
+                        })
+                        .execute(db_conn);
+                    try_join!(media_fut, emoji_fut)
+                })
+                .expect("Failed to insert the remote emoji");
 
                 let post_resolver = PostResolver::builder()
                     .account(account_service)
@@ -300,16 +294,14 @@ mod test {
                 assert_eq!(resolved.custom_emojis.len(), 2);
 
                 let (account_id, _mention_text) = &resolved.mentioned_accounts[0];
-                let mentioned_account = db_pool
-                    .with_connection(|db_conn| {
-                        accounts::table
-                            .find(account_id)
-                            .select(Account::as_select())
-                            .get_result::<Account>(db_conn)
-                            .scoped()
-                    })
-                    .await
-                    .expect("Failed to fetch account");
+                let mentioned_account = with_connection_panicky!(db_pool, |db_conn| {
+                    accounts::table
+                        .find(account_id)
+                        .select(Account::as_select())
+                        .get_result::<Account>(db_conn)
+                        .await
+                })
+                .expect("Failed to fetch account");
 
                 assert_eq!(mentioned_account.username, "0x0");
                 assert_eq!(mentioned_account.domain, "corteximplant.com");

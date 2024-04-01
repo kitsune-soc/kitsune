@@ -1,11 +1,11 @@
 use async_trait::async_trait;
+use eyre::WrapErr;
 use http_body_util::BodyExt;
 use http_compat::Compat;
 use kitsune_config::{open_telemetry::Transport, Configuration};
 use metrics_opentelemetry::OpenTelemetryRecorder;
 use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
 use metrics_util::layers::Layer as _;
-use miette::{Context, IntoDiagnostic};
 use opentelemetry::{
     metrics::{noop::NoopMeterProvider, Meter, MeterProvider},
     trace::{noop::NoopTracer, Tracer},
@@ -67,18 +67,13 @@ macro_rules! build_exporter {
     }};
 }
 
-fn initialise_logging<T>(tracer: T) -> miette::Result<()>
+fn initialise_logging<T>(tracer: T) -> eyre::Result<()>
 where
     T: Tracer + PreSampledTracer + Send + Sync + 'static,
 {
     let env_filter = env::var("RUST_LOG")
-        .into_diagnostic()
-        .and_then(|targets| {
-            targets
-                .parse()
-                .into_diagnostic()
-                .wrap_err("Failed to parse RUST_LOG value")
-        })
+        .map_err(eyre::Report::from)
+        .and_then(|targets| targets.parse().wrap_err("Failed to parse RUST_LOG value"))
         .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
 
     let subscriber = Registry::default()
@@ -89,22 +84,20 @@ where
     let subscriber = subscriber.with(MetricsLayer::new());
 
     tracing::subscriber::set_global_default(subscriber)
-        .into_diagnostic()
         .wrap_err("Couldn't install the global tracing subscriber")?;
 
     Ok(())
 }
 
-fn initialise_metrics(meter: Meter) -> miette::Result<()> {
+fn initialise_metrics(meter: Meter) -> eyre::Result<()> {
     let recorder = TracingContextLayer::all().layer(OpenTelemetryRecorder::new(meter));
     metrics::set_global_recorder(recorder)
-        .into_diagnostic()
         .wrap_err("Couldn't install the global metrics recorder")?;
 
     Ok(())
 }
 
-pub fn initialise(app_name: &'static str, config: &Configuration) -> miette::Result<()> {
+pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Result<()> {
     if let Some(ref opentelemetry_config) = config.opentelemetry {
         let http_client = HttpClientAdapter {
             inner: kitsune_http_client::Client::default(),
@@ -120,8 +113,7 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> miette::Res
         let tracer = opentelemetry_otlp::new_pipeline()
             .tracing()
             .with_exporter(trace_exporter)
-            .install_batch(Tokio)
-            .into_diagnostic()?;
+            .install_batch(Tokio)?;
 
         initialise_logging(tracer)?;
 
@@ -135,8 +127,7 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> miette::Res
         let meter_provider = opentelemetry_otlp::new_pipeline()
             .metrics(Tokio)
             .with_exporter(metrics_exporter)
-            .build()
-            .into_diagnostic()?;
+            .build()?;
 
         initialise_metrics(meter_provider.meter(app_name))?;
     } else {

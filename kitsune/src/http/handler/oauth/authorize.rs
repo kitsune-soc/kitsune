@@ -19,10 +19,10 @@ use axum_flash::{Flash, IncomingFlashes};
 use cursiv::CsrfHandle;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
+use kitsune_db::with_connection;
 use kitsune_db::{model::user::User, schema::users, PgPool};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
-use scoped_futures::ScopedFutureExt;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 
@@ -69,15 +69,13 @@ pub async fn get(
 ) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
-        let application = db_pool
-            .with_connection(|db_conn| {
-                oauth2_applications::table
-                    .find(query.client_id)
-                    .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-                    .get_result::<oauth2::Application>(db_conn)
-                    .scoped()
-            })
-            .await?;
+        let application = with_connection!(db_pool, |db_conn| {
+            oauth2_applications::table
+                .find(query.client_id)
+                .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
+                .get_result::<oauth2::Application>(db_conn)
+                .await
+        })?;
 
         let auth_url = oidc_service
             .authorisation_url(application.id, query.scope, query.state)
@@ -88,10 +86,9 @@ pub async fn get(
 
     let authenticated_user = if let Some(user_id) = cookies.get("user_id") {
         let id = user_id.value().parse::<Uuid>()?;
-
-        db_pool
-            .with_connection(|db_conn| users::table.find(id).get_result(db_conn).scoped())
-            .await?
+        with_connection!(db_pool, |db_conn| {
+            users::table.find(id).get_result(db_conn).await
+        })?
     } else {
         return Ok(Either3::E2(LoginPage { flash_messages }));
     };
@@ -123,18 +120,13 @@ pub async fn post(
         original_url.path()
     };
 
-    let user = db_pool
-        .with_connection(|db_conn| {
-            async move {
-                users::table
-                    .filter(users::username.eq(form.username))
-                    .first::<User>(db_conn)
-                    .await
-                    .optional()
-            }
-            .scoped()
-        })
-        .await?;
+    let user = with_connection!(db_pool, |db_conn| {
+        users::table
+            .filter(users::username.eq(form.username))
+            .first::<User>(db_conn)
+            .await
+            .optional()
+    })?;
 
     let Some(user) = user else {
         return Ok(Either::E2((

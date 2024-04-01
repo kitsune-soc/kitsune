@@ -6,7 +6,6 @@ use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::{
     consts::USER_AGENT,
-    error::BoxError,
     traits::{
         fetcher::{AccountFetchOptions, PostFetchOptions},
         Fetcher as FetcherTrait, Resolver,
@@ -124,18 +123,15 @@ impl FetcherTrait for Fetcher {
         Arc::new(self.resolver.clone())
     }
 
-    async fn fetch_account(
-        &self,
-        opts: AccountFetchOptions<'_>,
-    ) -> Result<Option<Account>, BoxError> {
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> eyre::Result<Option<Account>> {
         Ok(self.fetch_actor(opts).await?)
     }
 
-    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>, BoxError> {
+    async fn fetch_emoji(&self, url: &str) -> eyre::Result<Option<CustomEmoji>> {
         Ok(self.fetch_emoji(url).await?)
     }
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>, BoxError> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> eyre::Result<Option<Post>> {
         Ok(self.fetch_object(opts.url, opts.call_depth).await?)
     }
 }

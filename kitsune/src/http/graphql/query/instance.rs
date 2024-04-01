@@ -1,7 +1,6 @@
 use crate::http::graphql::{types::Instance, ContextExt};
 use async_graphql::{Context, Object, Result};
 use kitsune_core::consts::VERSION;
-use std::convert::Into;
 
 #[derive(Default)]
 pub struct InstanceQuery;

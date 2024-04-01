@@ -117,3 +117,4 @@ install-updater = true
 
 [patch.crates-io]
 diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "017ebe2fb7a2709ab5db92148dea5ce812a35e09" }
+tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b3b59ac2fa1b5823f2426fef78a0fb74c004ec38" }
