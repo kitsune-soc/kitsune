@@ -38,58 +38,10 @@ pub enum UserError {
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
-    Attachment(#[from] AttachmentError),
-
-    #[error(transparent)]
-    Blocking(#[from] blowocking::Error),
-
-    #[error(transparent)]
-    Cache(#[from] kitsune_cache::Error),
-
-    #[error(transparent)]
-    Captcha(#[from] kitsune_captcha::Error),
-
-    #[error(transparent)]
-    DatabasePool(#[from] bb8::RunError),
-
-    #[error(transparent)]
-    Der(#[from] pkcs8::der::Error),
-
-    #[error(transparent)]
-    Diesel(#[from] diesel::result::Error),
-
-    #[error(transparent)]
-    Email(#[from] kitsune_email::error::Error),
-
-    #[error(transparent)]
-    Embed(#[from] kitsune_embed::Error),
-
-    #[error(transparent)]
     Event(kitsune_messaging::BoxError),
 
     #[error(transparent)]
     Fetcher(eyre::Report),
-
-    #[error(transparent)]
-    Http(#[from] http::Error),
-
-    #[error(transparent)]
-    HttpClient(#[from] kitsune_http_client::Error),
-
-    #[error(transparent)]
-    HttpHeaderToStr(#[from] http::header::ToStrError),
-
-    #[error(transparent)]
-    JobQueue(#[from] athena::Error),
-
-    #[error(transparent)]
-    Mime(#[from] mime::FromStrError),
-
-    #[error(transparent)]
-    PasswordHash(#[from] password_hash::Error),
-
-    #[error(transparent)]
-    Pkcs8(#[from] pkcs8::Error),
 
     #[error(transparent)]
     Post(#[from] PostError),
@@ -101,29 +53,49 @@ pub enum Error {
     Resolver(eyre::Report),
 
     #[error(transparent)]
-    Rsa(#[from] rsa::Error),
-
-    #[error(transparent)]
-    Search(#[from] kitsune_search::Error),
-
-    #[error(transparent)]
-    SimdJson(#[from] simd_json::Error),
-
-    #[error(transparent)]
-    Spki(#[from] pkcs8::spki::Error),
-
-    #[error(transparent)]
     Storage(kitsune_storage::BoxError),
 
     #[error(transparent)]
-    UriInvalid(#[from] http::uri::InvalidUri),
-
-    #[error(transparent)]
-    UrlParse(#[from] url::ParseError),
-
-    #[error(transparent)]
-    User(#[from] UserError),
-
-    #[error(transparent)]
     Validate(#[from] garde::Report),
+
+    #[error(transparent)]
+    Other(eyre::Report),
+}
+
+macro_rules! other_error {
+    ($($err_ty:path),+$(,)?) => {
+        $(
+            impl From<$err_ty> for Error {
+                fn from(err: $err_ty) -> Self {
+                    Self::Other(err.into())
+                }
+            }
+        )+
+    };
+}
+
+other_error! {
+    athena::Error,
+    AttachmentError,
+    bb8::RunError,
+    blowocking::Error,
+    diesel::result::Error,
+    http::Error,
+    http::header::ToStrError,
+    http::uri::InvalidUri,
+    kitsune_cache::Error,
+    kitsune_captcha::Error,
+    kitsune_email::error::Error,
+    kitsune_embed::Error,
+    kitsune_http_client::Error,
+    kitsune_search::Error,
+    mime::FromStrError,
+    password_hash::Error,
+    pkcs8::Error,
+    pkcs8::der::Error,
+    pkcs8::spki::Error,
+    rsa::Error,
+    simd_json::Error,
+    url::ParseError,
+    UserError,
 }

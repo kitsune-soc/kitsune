@@ -20,6 +20,7 @@ use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::ToSchema;
 
+#[allow(dead_code)]
 #[derive(ToSchema)]
 pub struct CreateAttachment {
     pub description: Option<String>,
