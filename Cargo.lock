@@ -3832,6 +3832,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune-error"
+version = "0.0.1-pre.6"
+dependencies = [
+ "axum-core 0.4.3",
+ "eyre",
+ "http 1.1.0",
+ "tracing",
+]
+
+[[package]]
 name = "kitsune-federation"
 version = "0.0.1-pre.6"
 dependencies = [

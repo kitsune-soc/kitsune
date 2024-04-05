@@ -24,6 +24,7 @@ members = [
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",
+    "crates/kitsune-error",
     "crates/kitsune-federation",
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",

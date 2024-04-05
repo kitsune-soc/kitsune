@@ -1,0 +1,15 @@
+[package]
+name = "kitsune-error"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+axum-core = "0.4.3"
+eyre = "0.6.12"
+http = "1.1.0"
+tracing = "0.1.40"
+
+[lints]
+workspace = true
