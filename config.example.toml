@@ -139,6 +139,10 @@ type = "in-process"
 [mrf]
 module-dir = "mrf-modules"
 
+[mrf.storage]
+type = "fs"
+path = "./mrf-storage"
+
 # OIDC configuration
 #
 # Kitsune can use an OIDC service to manage logins
@@ -184,8 +188,7 @@ frontend-dir = "./kitsune-fe/dist"
 # Maximum upload size
 #
 # This is the limit of data that the HTTP server accepts before it returns an HTTP 413 error
-# The unit is bytes
-max-upload-size = 5242880 # 5MB
+max-upload-size = "5MiB"
 # Enable the media proxy
 #
 # The media proxy will relay all of the media streams through the backend, enabling two important properties:

@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 eyre = "0.6.12"
+human-size = { version = "0.4.3", features = ["serde"] }
 isolang = { version = "2.4.0", features = ["serde"] }
 serde = { version = "1.0.197", features = ["derive"] }
 smol_str = { version = "0.2.1", features = ["serde"] }

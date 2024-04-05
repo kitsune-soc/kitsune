@@ -8,19 +8,23 @@ use crate::state::Zustand;
 use axum::{extract::DefaultBodyLimit, Router};
 use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
+use http::HeaderName;
 use kitsune_config::server;
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
+    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
     services::{ServeDir, ServeFile},
     timeout::TimeoutLayer,
-    trace::TraceLayer,
+    trace::{HttpMakeClassifier, MakeSpan, TraceLayer},
 };
 use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
 use utoipa_swagger_ui::SwaggerUi;
+
+static X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
 
 #[cfg(feature = "graphql-api")]
 mod graphql;
@@ -33,6 +37,19 @@ mod responder;
 mod util;
 
 pub mod extractor;
+
+#[inline]
+fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> {
+    TraceLayer::new_for_http().make_span_with(|request: &http::Request<B>| {
+        debug_span!(
+            "request",
+            method = %request.method(),
+            uri = %request.uri(),
+            version = ?request.version(),
+            request_id = ?request.headers().get(&X_REQUEST_ID).unwrap(),
+        )
+    })
+}
 
 pub fn create_router(
     state: Zustand,
@@ -98,11 +115,18 @@ pub fn create_router(
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
         .layer(CsrfLayer::generate()) // TODO: Make this configurable instead of random
-        .layer(DefaultBodyLimit::max(server_config.max_upload_size))
+        .layer(DefaultBodyLimit::max(
+            server_config.max_upload_size.to_bytes() as usize,
+        ))
         .layer(TimeoutLayer::new(Duration::from_secs(
             server_config.request_timeout_secs,
         )))
-        .layer(TraceLayer::new_for_http())
+        .layer(trace_layer())
+        .layer(PropagateRequestIdLayer::new(X_REQUEST_ID.clone()))
+        .layer(SetRequestIdLayer::new(
+            X_REQUEST_ID.clone(),
+            MakeRequestUuid,
+        ))
         .with_state(state))
 }
 
