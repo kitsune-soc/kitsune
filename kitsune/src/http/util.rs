@@ -1,9 +1,8 @@
-use crate::error::Result;
 use axum::extract::multipart;
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_core::error::HttpError;
-use kitsune_storage::BoxError;
+use kitsune_error::Result;
 use std::io::SeekFrom;
 use tempfile::tempfile;
 use tokio::{
@@ -15,7 +14,7 @@ use tokio_util::io::ReaderStream;
 #[allow(dead_code)] // Not used when the Mastodon API feature is deactivated
 pub async fn buffer_multipart_to_tempfile(
     field: &mut multipart::Field<'_>,
-) -> Result<impl Stream<Item = Result<Bytes, BoxError>> + Send + 'static> {
+) -> Result<impl Stream<Item = Result<Bytes>> + Send + 'static> {
     let tempfile = tempfile().unwrap();
     let mut tempfile = File::from_std(tempfile);
 

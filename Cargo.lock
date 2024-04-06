@@ -3824,7 +3824,9 @@ version = "0.0.1-pre.6"
 dependencies = [
  "axum-core 0.4.3",
  "eyre",
+ "garde",
  "http 1.1.0",
+ "simd-json",
  "tracing",
 ]
 
@@ -4112,6 +4114,7 @@ dependencies = [
  "rsa",
  "rusty-s3",
  "serde",
+ "simd-json",
  "smol_str",
  "speedy-uuid",
  "tempfile",

@@ -55,6 +55,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.197"
+simd-json = "0.13.9"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["macros", "sync"] }

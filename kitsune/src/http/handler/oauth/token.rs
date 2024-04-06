@@ -1,8 +1,6 @@
-use crate::{
-    error::{Error, OAuth2Error, Result},
-    oauth2::OAuthEndpoint,
-};
+use crate::oauth2::OAuthEndpoint;
 use axum::{debug_handler, extract::State};
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use oxide_auth::endpoint::QueryParameter;
 use oxide_auth_async::endpoint::{
     access_token::AccessTokenFlow, client_credentials::ClientCredentialsFlow, refresh::RefreshFlow,
@@ -18,7 +16,7 @@ pub async fn post(
     let grant_type = oauth_req
         .body()
         .and_then(|body| body.unique_value("grant_type"))
-        .ok_or(OAuth2Error::MissingGrantType)?;
+        .ok_or_else(|| kitsune_error!(type = ErrorType::BadRequest(None), "missing grant type"))?;
 
     match grant_type.as_ref() {
         "authorization_code" => {

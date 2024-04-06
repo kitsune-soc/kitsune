@@ -14,7 +14,7 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 #[macro_export]
 macro_rules! bail {
     ($(type = $type:expr,)? $msg:expr) => {
-        return Err($crate::kitsune_error!($(type = $type,)? $msg));
+        return Err($crate::kitsune_error!($(type = $type,)? $msg).into());
     };
 }
 

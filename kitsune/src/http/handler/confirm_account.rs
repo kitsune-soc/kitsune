@@ -1,10 +1,11 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{
     debug_handler,
     extract::{Path, State},
     routing, Router,
 };
 use kitsune_email::MailingService;
+use kitsune_error::Result;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

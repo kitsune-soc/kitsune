@@ -1,7 +1,4 @@
-use crate::{
-    error::{OAuth2Error, Result},
-    oauth2::{AuthorisationCode, OAuth2Service},
-};
+use crate::oauth2::{AuthorisationCode, OAuth2Service};
 use axum::{
     extract::{Query, State},
     response::Response,
@@ -13,6 +10,7 @@ use kitsune_db::{
     schema::{oauth2_applications, users},
     with_connection, PgPool,
 };
+use kitsune_error::Result;
 use kitsune_oidc::OidcService;
 use kitsune_service::user::{Register, UserService};
 use serde::Deserialize;
@@ -67,7 +65,7 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
-        .scopes(user_info.oauth2.scope.parse().map_err(OAuth2Error::from)?)
+        .scopes(user_info.oauth2.scope.parse()?)
         .build();
 
     oauth_service

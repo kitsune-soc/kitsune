@@ -24,6 +24,15 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         debug!(error = ?self.inner);
 
+        if let Some(garde_report) = self.inner.downcast_ref::<garde::Report>() {
+            let body = match simd_json::to_string(&garde_report) {
+                Ok(body) => body,
+                Err(error) => return Error::from(error).into_response(),
+            };
+
+            return to_response(StatusCode::BAD_REQUEST, Some(body));
+        }
+
         match self.ty {
             ErrorType::BadRequest(maybe_body) => to_response(StatusCode::BAD_REQUEST, maybe_body),
             ErrorType::Forbidden(maybe_body) => to_response(StatusCode::FORBIDDEN, maybe_body),

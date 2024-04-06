@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
@@ -21,6 +20,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::with_connection;
 use kitsune_db::{model::user::User, schema::users, PgPool};
+use kitsune_error::{Error, Result};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;

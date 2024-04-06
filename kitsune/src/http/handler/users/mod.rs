@@ -1,10 +1,11 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
+use crate::{http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     extract::{Path, State},
     routing, Router,
 };
 use kitsune_activitypub::mapping::IntoObject;
 use kitsune_core::error::HttpError;
+use kitsune_error::Result;
 use kitsune_service::account::AccountService;
 use kitsune_type::ap::actor::Actor;
 use speedy_uuid::Uuid;

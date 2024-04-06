@@ -1,4 +1,4 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -7,6 +7,7 @@ use kitsune_db::{
     schema::{posts, users},
     with_connection, PgPool,
 };
+use kitsune_error::Result;
 use kitsune_service::user::UserService;
 use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,

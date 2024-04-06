@@ -1,10 +1,11 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{
     extract::{Query, State},
     routing, Json, Router,
 };
 use axum_extra::either::Either;
 use http::StatusCode;
+use kitsune_error::Result;
 use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::webfinger::{Link, Resource};
 use kitsune_url::UrlService;
@@ -66,7 +67,6 @@ pub fn routes() -> Router<Zustand> {
 #[cfg(test)]
 mod tests {
     use super::{get, WebfingerQuery};
-    use crate::error::Error;
     use athena::JobQueue;
     use axum::{
         extract::{Query, State},
@@ -85,6 +85,7 @@ mod tests {
         schema::accounts,
         with_connection_panicky, PgPool,
     };
+    use kitsune_error::Error;
     use kitsune_federation_filter::FederationFilter;
     use kitsune_http_client::Client;
     use kitsune_jobs::KitsuneContextRepo;

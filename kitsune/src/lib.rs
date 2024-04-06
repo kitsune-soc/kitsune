@@ -12,7 +12,7 @@ pub mod state;
 
 use self::{
     oauth2::{OAuth2Service, OAuthEndpoint},
-    state::{EventEmitter, Service, SessionConfig, Zustand, ZustandInner},
+    state::{Service, SessionConfig, Zustand, ZustandInner},
 };
 use athena::JobQueue;
 use color_eyre::eyre;

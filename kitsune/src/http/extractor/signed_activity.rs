@@ -13,7 +13,7 @@ use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
-use kitsune_error::{Error, Result};
+use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;
@@ -77,13 +77,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         };
 
         let ap_id = activity.actor.as_str();
-        let Some(remote_user) = state
-            .fetcher
-            .fetch_account(ap_id.into())
-            .await
-            .map_err(Error::Fetcher)?
-        else {
-            return Err(Error::CoreHttp(HttpError::BadRequest).into());
+        let Some(remote_user) = state.fetcher.fetch_account(ap_id.into()).await? else {
+            bail!(type = ErrorType::BadRequest(None), "failed to fetch remote account");
         };
 
         let request = http::Request::from_parts(parts, ());
@@ -94,13 +89,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 .url(ap_id)
                 .build();
 
-            let Some(remote_user) = state
-                .fetcher
-                .fetch_account(opts)
-                .await
-                .map_err(Error::Fetcher)?
-            else {
-                return Err(Error::CoreHttp(HttpError::BadRequest).into());
+            let Some(remote_user) = state.fetcher.fetch_account(opts).await? else {
+                bail!(type = ErrorType::BadRequest(None), "failed to fetch remote account");
             };
 
             if !verify_signature(&request, &state.db_pool, Some(&remote_user)).await? {
