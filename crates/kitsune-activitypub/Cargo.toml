@@ -33,12 +33,10 @@ kitsune-util = { path = "../kitsune-util" }
 kitsune-wasm-mrf = { path = "../kitsune-wasm-mrf" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
-rsa = "0.9.6"
 serde = "1.0.197"
 sha2 = "0.10.8"
 simd-json = "0.13.9"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.58"
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 url = "2.5.0"

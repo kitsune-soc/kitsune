@@ -18,7 +18,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-type = { path = "../kitsune-type" }
 mrf-manifest = { path = "../../lib/mrf-manifest", features = ["decode"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
-redis = { version = "0.25.2", default-features = false, features = [
+redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
