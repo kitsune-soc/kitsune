@@ -9,7 +9,7 @@ pub struct Configuration {
     pub clacks_overhead: Vec<SmolStr>,
     pub deny_brave_browsers: bool,
     pub frontend_dir: SmolStr,
-    pub max_upload_size: usize,
+    pub max_upload_size: human_size::Size,
     pub media_proxy_enabled: bool,
     pub oidc: Option<oidc::Configuration>,
     pub port: u16,
