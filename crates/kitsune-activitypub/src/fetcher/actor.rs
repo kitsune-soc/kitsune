@@ -63,8 +63,7 @@ impl Fetcher {
             match self
                 .resolver
                 .resolve_account(&actor.preferred_username, domain)
-                .await
-                .map_err(Error::Resolver)?
+                .await?
             {
                 Some(resource) if resource.uri == actor.id => {
                     actor.preferred_username = resource.username;

@@ -34,7 +34,7 @@ use kitsune_db::{
     with_connection, with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{Error, ErrorType, Result};
+use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_jobs::deliver::{
     create::DeliverCreate,
     delete::DeliverDelete,
@@ -323,8 +323,7 @@ impl PostService {
             .await?
             != media_attachment_ids.len() as i64
         {
-            return Err(Error::msg("tried to attach unknown attachment ids")
-                .with_error_type(ErrorType::BadRequest(None)));
+            bail!(type = ErrorType::BadRequest(None), "tried to attach unknown attachment ids");
         }
 
         diesel::insert_into(posts_media_attachments::table)
@@ -1134,12 +1133,10 @@ impl PostService {
                 })?;
 
                 if admin_role_count == 0 {
-                    return Err(Error::msg("unauthorised (not an admin)")
-                        .with_error_type(ErrorType::Unauthorized));
+                    bail!(type = ErrorType::Unauthorized, "unauthorised (not an admin)");
                 }
             } else {
-                return Err(Error::msg("unauthorised (not logged in)")
-                    .with_error_type(ErrorType::Unauthorized));
+                bail!(type = ErrorType::Unauthorized, "unauthorised (not logged in)");
             }
         }
 

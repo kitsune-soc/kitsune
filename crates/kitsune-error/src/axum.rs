@@ -22,6 +22,7 @@ impl IntoResponse for Error {
             ErrorType::Forbidden(maybe_body) => to_response(StatusCode::FORBIDDEN, maybe_body),
             ErrorType::NotFound => StatusCode::NOT_FOUND.into_response(),
             ErrorType::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ErrorType::UnsupportedMediaType => StatusCode::UNSUPPORTED_MEDIA_TYPE.into_response(),
             ErrorType::Other(maybe_body) => {
                 to_response(StatusCode::INTERNAL_SERVER_ERROR, maybe_body)
             }

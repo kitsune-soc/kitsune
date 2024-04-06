@@ -11,12 +11,30 @@ mod ext;
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
+#[macro_export]
+macro_rules! bail {
+    ($(type = $type:expr,)? $msg:expr) => {
+        return Err($crate::kitsune_error!($(type = $type,)? $msg));
+    };
+}
+
+#[macro_export]
+macro_rules! kitsune_error {
+    (type = $type:expr, $msg:expr) => {
+        $crate::Error::msg($msg).with_error_type($type)
+    };
+    ($msg:expr) => {
+        $crate::kitsune_error!(type = $crate::ErrorType::Other(None), $msg)
+    };
+}
+
 #[derive(Clone, Debug)]
 pub enum ErrorType {
     BadRequest(Option<String>),
     Forbidden(Option<String>),
     NotFound,
     Unauthorized,
+    UnsupportedMediaType,
     Other(Option<String>),
 }
 

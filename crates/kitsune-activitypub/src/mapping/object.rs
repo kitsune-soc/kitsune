@@ -13,7 +13,7 @@ use kitsune_db::{
     schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
     with_connection,
 };
-use kitsune_error::{Error, Result};
+use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,
@@ -35,12 +35,19 @@ impl IntoObject for DbMediaAttachment {
     type Output = MediaAttachment;
 
     async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
-        let mime = Mime::from_str(&self.content_type).map_err(|_| Error::UnsupportedMediaType)?;
+        let mime = Mime::from_str(&self.content_type).map_err(
+            |_| kitsune_error!(type = ErrorType::UnsupportedMediaType, "unsupported media type"),
+        )?;
+
         let r#type = match mime.type_() {
             mime::AUDIO => MediaAttachmentType::Audio,
             mime::IMAGE => MediaAttachmentType::Image,
             mime::VIDEO => MediaAttachmentType::Video,
-            _ => return Err(Error::UnsupportedMediaType),
+            _ => {
+                return Err(
+                    kitsune_error!(type = ErrorType::UnsupportedMediaType, "unsupported media type"),
+                )
+            }
         };
         let url = state.service.attachment.get_url(self.id).await?;
 
@@ -98,7 +105,7 @@ impl IntoObject for Post {
         // Therefore it's also not an object
         // We just return en error here
         if self.reposted_post_id.is_some() {
-            return Err(Error::NotFound);
+            bail!("post not found");
         }
 
         let (account, in_reply_to, mentions, emojis, attachment_stream) =
@@ -255,7 +262,7 @@ impl IntoObject for CustomEmoji {
         // Let's pretend we're not home and do not answer
         let name = match self.domain {
             None => Ok(format!(":{}:", self.shortcode)),
-            Some(_) => Err(Error::NotFound),
+            Some(_) => Err(kitsune_error!("custom emoji not found")),
         }?;
 
         let icon = with_connection!(state.db_pool, |db_conn| {

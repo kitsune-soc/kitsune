@@ -123,15 +123,15 @@ impl FetcherTrait for Fetcher {
         Arc::new(self.resolver.clone())
     }
 
-    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> eyre::Result<Option<Account>> {
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {
         Ok(self.fetch_actor(opts).await?)
     }
 
-    async fn fetch_emoji(&self, url: &str) -> eyre::Result<Option<CustomEmoji>> {
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         Ok(self.fetch_emoji(url).await?)
     }
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> eyre::Result<Option<Post>> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>> {
         Ok(self.fetch_object(opts.url, opts.call_depth).await?)
     }
 }

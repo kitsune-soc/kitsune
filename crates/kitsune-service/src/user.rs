@@ -16,7 +16,7 @@ use kitsune_db::{
     schema::{accounts, accounts_preferences, users},
     with_transaction, PgPool,
 };
-use kitsune_error::{Error, ErrorType, Result};
+use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_url::UrlService;
 use kitsune_util::{generate_secret, try_join};
@@ -126,8 +126,7 @@ impl UserService {
     #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {
-            return Err(Error::msg("registrations closed")
-                .with_error_type(ErrorType::Forbidden(Some("registrations closed".into()))));
+            bail!(type = ErrorType::Forbidden(Some("registrations closed".into())), "registrations closed");
         }
 
         register.validate(&RegisterContext {
@@ -135,10 +134,7 @@ impl UserService {
         })?;
 
         if self.captcha_service.enabled() {
-            let invalid_captcha = || {
-                Error::msg("invalid captcha")
-                    .with_error_type(ErrorType::BadRequest(Some("invalid captcha".into())))
-            };
+            let invalid_captcha = || kitsune_error!(type = ErrorType::BadRequest(Some("invalid captcha".into())), "invalid captcha");
 
             let token = register.captcha_token.ok_or_else(invalid_captcha)?;
             let result = self.captcha_service.verify_token(&token).await?;

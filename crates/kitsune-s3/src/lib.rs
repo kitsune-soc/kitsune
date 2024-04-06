@@ -4,7 +4,7 @@ use http::{
     header::{CONTENT_LENGTH, ETAG},
     Request,
 };
-use kitsune_error::{Error, Result};
+use kitsune_error::{bail, Error, Result};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
@@ -47,7 +47,7 @@ async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Resp
         err_msg.push_str("\nbody: ");
         err_msg.push_str(&body);
 
-        return Err(Error::msg(err_msg));
+        bail!(err_msg);
     }
 
     Ok(response)
@@ -169,7 +169,7 @@ impl Client {
 
                 let response = execute_request(&self.http_client, request).await?;
                 let Some(etag_header) = response.headers().get(ETAG) else {
-                    return Err(Error::msg("missing etag header"));
+                    bail!("missing etag header");
                 };
 
                 etags.push(etag_header.to_str()?.to_string());
@@ -228,7 +228,7 @@ impl Client {
 mod test {
     use crate::CreateBucketConfiguration;
     use futures_util::{future, stream, TryStreamExt};
-    use kitsune_error::Error;
+    use kitsune_error::{kitsune_error, Error};
     use kitsune_test::minio_test;
 
     const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
@@ -286,7 +286,7 @@ mod test {
             let result = client
                 .put_object(
                     "this will break horribly",
-                    stream::once(future::err(Error::msg("hehe"))),
+                    stream::once(future::err(kitsune_error!("hehe"))),
                 )
                 .await;
 

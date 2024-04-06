@@ -11,7 +11,7 @@ use kitsune_db::{
     schema::media_attachments,
     with_connection, PgPool,
 };
-use kitsune_error::{Error, ErrorType, Result};
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
@@ -137,7 +137,7 @@ impl AttachmentService {
                 .map_err(Into::into)
                 .boxed())
         } else {
-            Err(Error::msg("attachment not found").with_error_type(ErrorType::NotFound))
+            Err(kitsune_error!(type = ErrorType::NotFound, "attachment not found"))
         }
     }
 

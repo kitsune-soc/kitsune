@@ -22,7 +22,7 @@ use kitsune_db::{
     with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{Error, Result};
+use kitsune_error::{kitsune_error, Error, Result};
 use kitsune_language::Language;
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
@@ -103,8 +103,7 @@ async fn handle_custom_emojis(
             emoji_text: emoji_tag.name.clone(),
         })
         .try_collect::<Vec<PostCustomEmoji>>()
-        .await
-        .map_err(Error::FetchEmoji)?;
+        .await?;
 
     diesel::insert_into(posts_custom_emojis::table)
         .values(emojis)
@@ -205,15 +204,14 @@ async fn preprocess_object(
         if Uri::try_from(&object.attributed_to)?.authority()
             != Uri::try_from(&object.id)?.authority()
         {
-            return Err(Error::InvalidDocument);
+            return Err(kitsune_error!("invalid document"));
         }
 
         let Some(author) = fetcher
             .fetch_account(object.attributed_to.as_str().into())
-            .await
-            .map_err(Error::FetchAccount)?
+            .await?
         else {
-            return Err(Error::NotFound);
+            return Err(kitsune_error!("account not found"));
         };
 
         CowBox::boxed(author)
@@ -228,8 +226,7 @@ async fn preprocess_object(
                     .call_depth(call_depth + 1)
                     .build(),
             )
-            .await
-            .map_err(Error::FetchPost)?
+            .await?
             .map(|post| post.id)
     } else {
         None
