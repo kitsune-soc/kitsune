@@ -67,21 +67,22 @@ where
         tmp
     };
 
-    let serve_frontend =
-        ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path));
+    let handle_response = |response: http::Response<_>| {
+        if response.status() == StatusCode::NOT_FOUND {
+            (StatusCode::NOT_FOUND, Html(FALLBACK_FALLBACK_INDEX))
+                .into_response()
+                .map(Either::Left)
+        } else {
+            response.map(Either::Right)
+        }
+    };
 
-    serve_frontend.map_future(|result_fut| async move {
-        let result = result_fut.await;
-        result.map(|response| {
-            if response.status() == StatusCode::NOT_FOUND {
-                (StatusCode::NOT_FOUND, Html(FALLBACK_FALLBACK_INDEX))
-                    .into_response()
-                    .map(Either::Left)
-            } else {
-                response.map(Either::Right)
-            }
+    ServeDir::new(frontend_dir.as_str())
+        .fallback(ServeFile::new(frontend_index_path))
+        .map_future(move |result_fut| async move {
+            let result = result_fut.await;
+            result.map(handle_response)
         })
-    })
 }
 
 #[inline]
