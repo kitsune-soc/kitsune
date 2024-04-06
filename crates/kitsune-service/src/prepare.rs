@@ -2,14 +2,11 @@ use eyre::WrapErr;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
-use kitsune_config::{cache, captcha, email, language_detection, messaging, search, storage};
+use kitsune_config::{cache, captcha, email, language_detection, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
     MailSender,
-};
-use kitsune_messaging::{
-    redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
@@ -125,23 +122,6 @@ pub fn mail_sender(
         .backend(transport)
         .from_mailbox(Mailbox::from_str(config.from_address.as_str())?)
         .build())
-}
-
-pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<MessagingHub> {
-    let backend = match config {
-        messaging::Configuration::InProcess => {
-            MessagingHub::new(TokioBroadcastMessagingBackend::default())
-        }
-        messaging::Configuration::Redis(ref redis_config) => {
-            let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
-                .await
-                .wrap_err("Failed to initialise Redis messaging backend")?;
-
-            MessagingHub::new(redis_messaging_backend)
-        }
-    };
-
-    Ok(backend)
 }
 
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in

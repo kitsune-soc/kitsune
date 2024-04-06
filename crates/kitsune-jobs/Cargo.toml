@@ -15,6 +15,7 @@ futures-util = "0.3.30"
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-email = { path = "../kitsune-email" }
+kitsune-error = { path = "../kitsune-error" }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tracing = "0.1.40"

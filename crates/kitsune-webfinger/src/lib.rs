@@ -10,6 +10,7 @@ use kitsune_core::{
     consts::USER_AGENT,
     traits::{resolver::AccountResource, Resolver},
 };
+use kitsune_error::Result;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
@@ -72,7 +73,7 @@ impl Resolver for Webfinger {
         &self,
         username: &str,
         domain: &str,
-    ) -> eyre::Result<Option<AccountResource>> {
+    ) -> Result<Option<AccountResource>> {
         // XXX: Assigning the arguments to local bindings because the `#[instrument]` attribute
         // desugars to an `async move {}` block, inside which mutating the function arguments would
         // upset the borrowck

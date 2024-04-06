@@ -1,8 +1,5 @@
 use super::Fetcher;
-use crate::{
-    error::{Error, Result},
-    process_attachments,
-};
+use crate::process_attachments;
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -13,6 +10,7 @@ use kitsune_db::{
     schema::accounts,
     with_connection, with_transaction,
 };
+use kitsune_error::{Error, Result};
 use kitsune_search::SearchBackend;
 use kitsune_type::ap::actor::Actor;
 use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};

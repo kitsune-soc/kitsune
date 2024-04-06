@@ -1,8 +1,8 @@
 use crate::{
     account::{AccountService, GetUser},
     custom_emoji::{CustomEmojiService, GetEmoji},
-    error::{Error, Result},
 };
+use kitsune_error::{Error, Result};
 use post_process::{BoxError, Element, Html, Render};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, sync::mpsc};
@@ -94,7 +94,7 @@ impl PostResolver {
             )
         })
         .await
-        .map_err(Error::PostProcessing)?;
+        .map_err(Error::msg)?;
 
         Ok(ResolvedPost {
             mentioned_accounts: mentioned_account_ids.try_iter().collect(),

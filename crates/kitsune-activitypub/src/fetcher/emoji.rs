@@ -1,5 +1,4 @@
 use super::Fetcher;
-use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -11,6 +10,7 @@ use kitsune_db::{
     schema::{custom_emojis, media_attachments},
     with_connection, with_transaction,
 };
+use kitsune_error::{Error, Result};
 use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 use url::Url;

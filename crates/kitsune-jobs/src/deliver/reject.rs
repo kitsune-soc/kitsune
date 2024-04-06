@@ -13,7 +13,7 @@ pub struct DeliverReject {
 
 impl Runnable for DeliverReject {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     #[instrument(skip_all, fields(follow_id = %self.follow_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

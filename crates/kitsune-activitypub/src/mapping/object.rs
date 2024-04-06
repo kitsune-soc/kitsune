@@ -1,5 +1,4 @@
 use super::{util::BaseToCc, State};
-use crate::error::{Error, Result};
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
@@ -14,6 +13,7 @@ use kitsune_db::{
     schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
     with_connection,
 };
+use kitsune_error::{Error, Result};
 use kitsune_type::ap::{
     actor::{Actor, PublicKey},
     ap_context,

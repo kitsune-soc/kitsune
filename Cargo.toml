@@ -31,7 +31,6 @@ members = [
     "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-mastodon",
-    "crates/kitsune-messaging",
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-s3",

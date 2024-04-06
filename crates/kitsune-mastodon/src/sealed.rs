@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
     OptionalExtension, QueryDsl, SelectableHelper,
@@ -28,6 +27,7 @@ use kitsune_db::{
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{embed_sdk::EmbedType, Embed};
+use kitsune_error::{Error, Result};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_type::mastodon::{
     account::Source,

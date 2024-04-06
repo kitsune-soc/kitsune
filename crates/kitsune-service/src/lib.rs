@@ -7,7 +7,6 @@ pub mod account;
 pub mod attachment;
 pub mod captcha;
 pub mod custom_emoji;
-pub mod error;
 pub mod instance;
 pub mod job;
 pub mod notification;

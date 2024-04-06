@@ -21,6 +21,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
+kitsune-error = { path = "../kitsune-error" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-language = { path = "../kitsune-language" }

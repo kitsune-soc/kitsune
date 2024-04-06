@@ -1,5 +1,4 @@
 use crate::{
-    error::Result,
     mapping::{self, IntoActivity},
     InboxResolver,
 };
@@ -17,6 +16,7 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     with_connection, PgPool,
 };
+use kitsune_error::Result;
 use kitsune_service::attachment::AttachmentService;
 use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_url::UrlService;
@@ -390,7 +390,7 @@ impl Deliverer {
 
 #[async_trait]
 impl DelivererTrait for Deliverer {
-    async fn deliver(&self, action: Action) -> eyre::Result<()> {
+    async fn deliver(&self, action: Action) -> Result<()> {
         match action {
             Action::AcceptFollow(follow) => self.accept_follow(follow).await,
             Action::Create(post) | Action::Repost(post) => self.create_or_repost(post).await,

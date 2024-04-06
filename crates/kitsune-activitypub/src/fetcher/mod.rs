@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
@@ -16,6 +15,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_error::{Error, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;

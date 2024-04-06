@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use diesel::{
     result::Error as DieselError, BelongingToDsl, BoolExpressionMethods, ExpressionMethods,
     JoinOnDsl, QueryDsl, SelectableHelper,
@@ -15,6 +14,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 
 pub struct InboxResolver {
     db_pool: PgPool,

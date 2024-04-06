@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate tracing;
 
-use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{stream, StreamExt, TryStreamExt};
@@ -23,6 +22,7 @@ use kitsune_db::{
     with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_error::{Error, Result};
 use kitsune_language::Language;
 use kitsune_search::{AnySearchBackend, SearchBackend};
 use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
@@ -31,7 +31,6 @@ use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
 pub mod deliverer;
-pub mod error;
 pub mod fetcher;
 pub mod inbox_resolver;
 pub mod mapping;

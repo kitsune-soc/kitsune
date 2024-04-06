@@ -9,10 +9,9 @@ build = "build.rs"
 [dependencies]
 async-trait = "0.1.79"
 const_format = "0.2.32"
-eyre = "0.6.12"
 http = "1.1.0"
 kitsune-db = { path = "../kitsune-db" }
-kitsune-messaging = { path = "../kitsune-messaging" }
+kitsune-error = { path = "../kitsune-error" }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 thiserror = "1.0.58"

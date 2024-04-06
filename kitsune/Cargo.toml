@@ -58,7 +58,6 @@ kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
 kitsune-jobs = { path = "../crates/kitsune-jobs" }
 kitsune-language = { path = "../crates/kitsune-language" }
-kitsune-messaging = { path = "../crates/kitsune-messaging" }
 kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-search = { path = "../crates/kitsune-search" }
 kitsune-service = { path = "../crates/kitsune-service" }

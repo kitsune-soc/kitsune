@@ -1,5 +1,5 @@
-use crate::error::Result;
 use kitsune_captcha::{AnyCaptcha, CaptchaBackend, ChallengeStatus};
+use kitsune_error::Result;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]

@@ -1,4 +1,3 @@
-use crate::error::{AttachmentError, Error, Result};
 use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
@@ -12,8 +11,9 @@ use kitsune_db::{
     schema::media_attachments,
     with_connection, PgPool,
 };
+use kitsune_error::{Error, ErrorType, Result};
 use kitsune_http_client::Client;
-use kitsune_storage::{AnyStorageBackend, BoxError, StorageBackend};
+use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -125,13 +125,9 @@ impl AttachmentService {
     ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
         // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
-            let stream = self
-                .storage_backend
-                .get(file_path.as_str())
-                .await
-                .map_err(Error::Storage)?;
+            let stream = self.storage_backend.get(file_path.as_str()).await?;
 
-            Ok(stream.map_err(Error::Storage).boxed())
+            Ok(stream.map_err(Error::from).boxed())
         } else if self.media_proxy_enabled {
             Ok(self
                 .client
@@ -141,7 +137,7 @@ impl AttachmentService {
                 .map_err(Into::into)
                 .boxed())
         } else {
-            Err(AttachmentError::NotFound.into())
+            Err(Error::msg("attachment not found").with_error_type(ErrorType::NotFound))
         }
     }
 
@@ -172,7 +168,7 @@ impl AttachmentService {
 
     pub async fn upload<S>(&self, upload: Upload<S>) -> Result<MediaAttachment>
     where
-        S: Stream<Item = Result<Bytes, BoxError>> + Send + Sync + 'static,
+        S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         upload.validate(&())?;
 
@@ -182,32 +178,26 @@ impl AttachmentService {
             pin_mut!(stream);
 
             let mut img_bytes = BytesMut::new();
-            while let Some(chunk) = stream
-                .next()
-                .await
-                .transpose()
-                .map_err(AttachmentError::StreamError)?
-            {
+            while let Some(chunk) = stream.next().await.transpose()? {
                 img_bytes.extend_from_slice(&chunk);
             }
 
             let img_bytes = img_bytes.freeze();
-            let final_bytes = DynImage::from_bytes(img_bytes)
-                .map_err(AttachmentError::ImageProcessingError)?
+            let final_bytes = DynImage::from_bytes(img_bytes)?
                 .ok_or(img_parts::Error::WrongSignature)
                 .map(|mut image| {
                     image.set_exif(None);
                     image.encoder().bytes()
-                })
-                .map_err(AttachmentError::ImageProcessingError)?;
+                })?;
 
             self.storage_backend
                 .put(&upload.path, stream::once(async { Ok(final_bytes) }))
-                .await
+                .await?;
         } else {
-            self.storage_backend.put(&upload.path, upload.stream).await
+            self.storage_backend
+                .put(&upload.path, upload.stream)
+                .await?;
         }
-        .map_err(Error::Storage)?;
 
         let media_attachment = with_connection!(self.db_pool, |db_conn| {
             diesel::insert_into(media_attachments::table)

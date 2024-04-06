@@ -14,7 +14,7 @@ pub struct DeliverFavourite {
 
 impl Runnable for DeliverFavourite {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     #[instrument(skip_all, fields(favourite_id = %self.favourite_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

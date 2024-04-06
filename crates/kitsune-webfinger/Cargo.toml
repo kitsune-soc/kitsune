@@ -13,6 +13,7 @@ futures-util = "0.3.30"
 http = "1.1.0"
 kitsune-cache = { path = "../kitsune-cache" }
 kitsune-core = { path = "../kitsune-core" }
+kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }

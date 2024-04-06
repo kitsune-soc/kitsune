@@ -1,4 +1,3 @@
-use crate::error::Result;
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -10,6 +9,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     with_connection, PgPool,
 };
+use kitsune_error::Result;
 use kitsune_search::{SearchBackend, SearchIndex};
 use speedy_uuid::Uuid;
 use std::sync::Arc;

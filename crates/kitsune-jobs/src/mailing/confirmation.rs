@@ -13,7 +13,7 @@ pub struct SendConfirmationMail {
 
 impl Runnable for SendConfirmationMail {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let mailing_service = &ctx.service.mailing;

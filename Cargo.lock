@@ -3589,7 +3589,6 @@ dependencies = [
  "kitsune-jobs",
  "kitsune-language",
  "kitsune-mastodon",
- "kitsune-messaging",
  "kitsune-observability",
  "kitsune-oidc",
  "kitsune-scss-compiler",
@@ -3658,6 +3657,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-error",
  "kitsune-federation-filter",
  "kitsune-http-client",
  "kitsune-language",
@@ -3754,10 +3754,9 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
  "const_format",
- "eyre",
  "http 1.1.0",
  "kitsune-db",
- "kitsune-messaging",
+ "kitsune-error",
  "serde",
  "speedy-uuid",
  "thiserror",
@@ -3934,6 +3933,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-email",
+ "kitsune-error",
  "serde",
  "speedy-uuid",
  "tracing",
@@ -3966,6 +3966,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-embed",
+ "kitsune-error",
  "kitsune-service",
  "kitsune-type",
  "kitsune-url",
@@ -3979,23 +3980,6 @@ dependencies = [
  "tokio",
  "tracing",
  "typed-builder",
-]
-
-[[package]]
-name = "kitsune-messaging"
-version = "0.0.1-pre.6"
-dependencies = [
- "ahash 0.8.11",
- "derive_more 1.0.0-beta.6",
- "futures-util",
- "just-retry",
- "pin-project-lite",
- "redis",
- "serde",
- "simd-json",
- "tokio",
- "tokio-stream",
- "tracing",
 ]
 
 [[package]]
@@ -4051,6 +4035,7 @@ dependencies = [
  "bytes",
  "futures-util",
  "http 1.1.0",
+ "kitsune-error",
  "kitsune-http-client",
  "kitsune-test",
  "quick-xml 0.31.0",
@@ -4122,11 +4107,11 @@ dependencies = [
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
+ "kitsune-error",
  "kitsune-federation-filter",
  "kitsune-http-client",
  "kitsune-jobs",
  "kitsune-language",
- "kitsune-messaging",
  "kitsune-search",
  "kitsune-storage",
  "kitsune-test",
@@ -4164,6 +4149,7 @@ dependencies = [
  "bytes",
  "derive_more 1.0.0-beta.6",
  "futures-util",
+ "kitsune-error",
  "kitsune-s3",
  "rusty-s3",
  "tempfile",
@@ -4276,6 +4262,7 @@ dependencies = [
  "hyper 1.2.0",
  "kitsune-cache",
  "kitsune-core",
+ "kitsune-error",
  "kitsune-http-client",
  "kitsune-type",
  "kitsune-util",
@@ -7925,7 +7912,6 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]

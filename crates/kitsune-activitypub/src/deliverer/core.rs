@@ -1,9 +1,9 @@
-use crate::error::{Error, Result};
 use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
 use kitsune_core::consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
+use kitsune_error::{Error, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::ap::Activity;

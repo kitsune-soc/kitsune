@@ -4,7 +4,6 @@ use super::{
     notification::NotificationService,
     LimitContext,
 };
-use crate::error::{Error, PostError, Result};
 use async_stream::try_stream;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
@@ -15,7 +14,6 @@ use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
-use kitsune_core::event::{post::EventType, PostEvent, PostEventEmitter};
 use kitsune_db::{
     model::{
         account::Account,
@@ -36,6 +34,7 @@ use kitsune_db::{
     with_connection, with_transaction, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_error::{Error, ErrorType, Result};
 use kitsune_jobs::deliver::{
     create::DeliverCreate,
     delete::DeliverDelete,
@@ -304,7 +303,6 @@ pub struct PostService {
     language_detection_config: LanguageDetectionConfig,
     post_resolver: PostResolver,
     search_backend: kitsune_search::AnySearchBackend,
-    status_event_emitter: PostEventEmitter,
     url_service: UrlService,
 }
 
@@ -325,7 +323,8 @@ impl PostService {
             .await?
             != media_attachment_ids.len() as i64
         {
-            return Err(PostError::BadRequest.into());
+            return Err(Error::msg("tried to attach unknown attachment ids")
+                .with_error_type(ErrorType::BadRequest(None)));
         }
 
         diesel::insert_into(posts_media_attachments::table)
@@ -534,14 +533,6 @@ impl PostService {
                 .await?;
         }
 
-        self.status_event_emitter
-            .emit(PostEvent {
-                r#type: EventType::Create,
-                post_id: post.id,
-            })
-            .await
-            .map_err(Error::Event)?;
-
         Ok(post)
     }
 
@@ -566,14 +557,6 @@ impl PostService {
                     .build(),
             )
             .await?;
-
-        self.status_event_emitter
-            .emit(PostEvent {
-                r#type: EventType::Delete,
-                post_id: post.id,
-            })
-            .await
-            .map_err(Error::Event)?;
 
         self.search_backend.remove_from_index(&post.into()).await?;
 
@@ -682,14 +665,6 @@ impl PostService {
                 .await?;
         }
 
-        self.status_event_emitter
-            .emit(PostEvent {
-                r#type: EventType::Update,
-                post_id: post.id,
-            })
-            .await
-            .map_err(Error::Event)?;
-
         Ok(post)
     }
 
@@ -774,14 +749,6 @@ impl PostService {
             )
             .await?;
 
-        self.status_event_emitter
-            .emit(PostEvent {
-                r#type: EventType::Create,
-                post_id: repost.id,
-            })
-            .await
-            .map_err(Error::Event)?;
-
         Ok(repost)
     }
 
@@ -815,14 +782,6 @@ impl PostService {
                     .build(),
             )
             .await?;
-
-        self.status_event_emitter
-            .emit(PostEvent {
-                r#type: EventType::Delete,
-                post_id: post.id,
-            })
-            .await
-            .map_err(Error::Event)?;
 
         Ok(post)
     }
@@ -1175,10 +1134,12 @@ impl PostService {
                 })?;
 
                 if admin_role_count == 0 {
-                    return Err(PostError::Unauthorised.into());
+                    return Err(Error::msg("unauthorised (not an admin)")
+                        .with_error_type(ErrorType::Unauthorized));
                 }
             } else {
-                return Err(PostError::Unauthorised.into());
+                return Err(Error::msg("unauthorised (not logged in)")
+                    .with_error_type(ErrorType::Unauthorized));
             }
         }
 
