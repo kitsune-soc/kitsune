@@ -6,17 +6,20 @@ use self::{
 };
 use crate::state::Zustand;
 use axum::{
+    body::HttpBody,
     extract::DefaultBodyLimit,
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse},
     Router,
 };
+use bytes::Bytes;
 use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
 use http::{HeaderName, StatusCode};
+use http_body_util::Either;
 use kitsune_config::server;
 use std::{convert::Infallible, time::Duration};
 use tokio::net::TcpListener;
-use tower::{Service, ServiceExt};
+use tower::{BoxError, Service, ServiceExt};
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
@@ -29,42 +32,9 @@ use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
 use utoipa_swagger_ui::SwaggerUi;
 
+const FALLBACK_FALLBACK_INDEX: &str = include_str!("../../templates/fallback-fallback.html");
+
 static X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
-
-const FALLBACK_FALLBACK_INDEX: &str = r##"
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Welcome to Kitsune!</title>
-    <style>
-      html {
-        color-scheme: light dark;
-      }
-      body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Welcome to Kitsune!</h1>
-    <p>
-      If you see this page, the Kitsune fediverse server is successfully
-      installed and working. Further configuration is required.
-    </p>
-
-    <p>
-      For online documentation and support please refer to
-      <a href="http://joinkitsune.org/">joinkitsune.org</a>.<br />
-      Commercial support is available at
-      <a href="#">fuckall nowhere</a>.
-    </p>
-
-    <p><em>Thank you for using Kitsune.</em></p>
-  </body>
-</html>
-"##;
 
 #[cfg(feature = "graphql-api")]
 mod graphql;
@@ -81,7 +51,12 @@ pub mod extractor;
 #[inline]
 fn serve_frontend<B>(
     server_config: &server::Configuration,
-) -> impl Service<http::Request<B>, Response = Response, Error = Infallible, Future = impl Send> + Clone
+) -> impl Service<
+    http::Request<B>,
+    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError>>,
+    Error = Infallible,
+    Future = impl Send,
+> + Clone
 where
     B: Send + 'static,
 {
@@ -99,9 +74,11 @@ where
         let result = result_fut.await;
         result.map(|response| {
             if response.status() == StatusCode::NOT_FOUND {
-                (StatusCode::NOT_FOUND, Html(FALLBACK_FALLBACK_INDEX)).into_response()
+                (StatusCode::NOT_FOUND, Html(FALLBACK_FALLBACK_INDEX))
+                    .into_response()
+                    .map(Either::Left)
             } else {
-                response.map(axum::body::Body::new)
+                response.map(Either::Right)
             }
         })
     })

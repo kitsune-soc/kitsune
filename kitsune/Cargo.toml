@@ -91,7 +91,7 @@ thiserror = "1.0.58"
 time = "0.3.34"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = { version = "0.7.10", features = ["compat"] }
-tower = "0.4.13"
+tower = { version = "0.4.13", features = ["util"] }
 tower-stop-using-brave = { path = "../lib/tower-stop-using-brave" }
 tower-x-clacks-overhead = { path = "../lib/tower-x-clacks-overhead" }
 tower-http = { version = "0.5.2", features = [
