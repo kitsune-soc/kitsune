@@ -5,13 +5,18 @@ use self::{
     openapi::api_docs,
 };
 use crate::state::Zustand;
-use axum::{extract::DefaultBodyLimit, Router};
+use axum::{
+    extract::DefaultBodyLimit,
+    response::{Html, IntoResponse, Response},
+    Router,
+};
 use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
-use http::HeaderName;
+use http::{HeaderName, StatusCode};
 use kitsune_config::server;
-use std::time::Duration;
+use std::{convert::Infallible, time::Duration};
 use tokio::net::TcpListener;
+use tower::{Service, ServiceExt};
 use tower_http::{
     catch_panic::CatchPanicLayer,
     cors::CorsLayer,
@@ -26,6 +31,41 @@ use utoipa_swagger_ui::SwaggerUi;
 
 static X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
 
+const FALLBACK_FALLBACK_INDEX: &str = r##"
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Welcome to Kitsune!</title>
+    <style>
+      html {
+        color-scheme: light dark;
+      }
+      body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to Kitsune!</h1>
+    <p>
+      If you see this page, the Kitsune fediverse server is successfully
+      installed and working. Further configuration is required.
+    </p>
+
+    <p>
+      For online documentation and support please refer to
+      <a href="http://joinkitsune.org/">joinkitsune.org</a>.<br />
+      Commercial support is available at
+      <a href="#">fuckall nowhere</a>.
+    </p>
+
+    <p><em>Thank you for using Kitsune.</em></p>
+  </body>
+</html>
+"##;
+
 #[cfg(feature = "graphql-api")]
 mod graphql;
 mod handler;
@@ -37,6 +77,35 @@ mod responder;
 mod util;
 
 pub mod extractor;
+
+#[inline]
+fn serve_frontend<B>(
+    server_config: &server::Configuration,
+) -> impl Service<http::Request<B>, Response = Response, Error = Infallible, Future = impl Send> + Clone
+where
+    B: Send + 'static,
+{
+    let frontend_dir = &server_config.frontend_dir;
+    let frontend_index_path = {
+        let mut tmp = frontend_dir.to_string();
+        tmp.push_str("/index.html");
+        tmp
+    };
+
+    let serve_frontend =
+        ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path));
+
+    serve_frontend.map_future(|result_fut| async move {
+        let result = result_fut.await;
+        result.map(|response| {
+            if response.status() == StatusCode::NOT_FOUND {
+                (StatusCode::NOT_FOUND, Html(FALLBACK_FALLBACK_INDEX)).into_response()
+            } else {
+                response.map(axum::body::Body::new)
+            }
+        })
+    })
+}
 
 #[inline]
 fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> {
@@ -55,13 +124,6 @@ pub fn create_router(
     state: Zustand,
     server_config: &server::Configuration,
 ) -> eyre::Result<Router> {
-    let frontend_dir = &server_config.frontend_dir;
-    let frontend_index_path = {
-        let mut tmp = frontend_dir.to_string();
-        tmp.push_str("/index.html");
-        tmp
-    };
-
     // This warning will come up if the server is compiled without the Mastodon API compatibility
     #[allow(unused_mut)]
     let mut router = Router::new()
@@ -95,9 +157,7 @@ pub fn create_router(
 
     router = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
-        .fallback_service(
-            ServeDir::new(frontend_dir.as_str()).fallback(ServeFile::new(frontend_index_path)),
-        );
+        .fallback_service(serve_frontend(server_config));
 
     if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
