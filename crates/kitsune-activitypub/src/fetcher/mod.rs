@@ -15,7 +15,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{Error, Result};
+use kitsune_error::{bail, Error, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
@@ -70,7 +70,7 @@ impl Fetcher {
     {
         let url = url.try_into()?;
         if !self.federation_filter.is_url_allowed(&url)? {
-            return Err(Error::BlockedInstance);
+            bail!("instance is blocked");
         }
 
         let response = self.client.get(url.as_str()).await?;
@@ -84,7 +84,7 @@ impl Fetcher {
             .typed_get::<ContentType>()
             .map(Mime::from)
         else {
-            return Err(Error::InvalidResponse);
+            bail!("invalid content-type header in response");
         };
 
         let is_json_ld_activitystreams = || {
@@ -108,7 +108,7 @@ impl Fetcher {
         };
 
         if !is_json_ld_activitystreams() && !is_activity_json() {
-            return Err(Error::InvalidResponse);
+            bail!("invalid content-type: isnt either ld+json or activity+json");
         }
 
         let response = response.jsonld().await?;

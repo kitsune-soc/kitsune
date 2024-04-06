@@ -10,7 +10,7 @@ use kitsune_db::{
     schema::accounts,
     with_connection, with_transaction,
 };
-use kitsune_error::{Error, Result};
+use kitsune_error::{kitsune_error, Error, Result};
 use kitsune_search::SearchBackend;
 use kitsune_type::ap::actor::Actor;
 use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
@@ -53,7 +53,10 @@ impl Fetcher {
             return Ok(None);
         };
 
-        let mut domain = url.host_str().ok_or(Error::MissingHost)?;
+        let mut domain = url
+            .host_str()
+            .ok_or_else(|| kitsune_error!("missing host component"))?;
+
         let domain_buf;
         let try_resolver = opts
             .acct
@@ -82,7 +85,9 @@ impl Fetcher {
 
         if !used_resolver && actor.id != url.as_str() {
             url = Url::parse(&actor.id)?;
-            domain = url.host_str().ok_or(Error::MissingHost)?;
+            domain = url
+                .host_str()
+                .ok_or_else(|| kitsune_error!("missing host component"))?;
         }
 
         actor.clean_html();

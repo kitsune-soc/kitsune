@@ -1,4 +1,4 @@
-use crate::{error::Error, state::Zustand};
+use crate::state::Zustand;
 use async_trait::async_trait;
 use axum::{
     extract::FromRequestParts,
@@ -16,6 +16,7 @@ use kitsune_db::{
     schema::{accounts, oauth2_access_tokens, users},
     with_connection,
 };
+use kitsune_error::Error;
 use time::OffsetDateTime;
 
 /// Mastodon-specific auth extractor alias

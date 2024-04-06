@@ -1,17 +1,23 @@
 use super::handle::handle;
 use http_body_util::Empty;
 use hyper::{body::Bytes, Request, Response};
-use kitsune_activitypub::{error::Error, Fetcher};
+use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::{database_test, language_detection_config};
+use kitsune_test::{assert_display_eq, database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
 use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
+
+macro_rules! assert_blocked {
+    ($error:expr) => {
+        assert_display_eq!($error, "instance is blocked")
+    };
+}
 
 #[tokio::test]
 async fn federation_allow() {
@@ -46,25 +52,15 @@ async fn federation_allow() {
             )))
             .build();
 
-        assert!(matches!(
-            *fetcher
-                .fetch_post("https://example.com/fakeobject".into())
-                .await
-                .unwrap_err()
-                .downcast_ref()
-                .unwrap(),
-            Error::BlockedInstance
-        ));
+        assert_blocked!(fetcher
+            .fetch_post("https://example.com/fakeobject".into())
+            .await
+            .unwrap_err());
 
-        assert!(matches!(
-            *fetcher
-                .fetch_post("https://other.badstuff.com/otherfake".into())
-                .await
-                .unwrap_err()
-                .downcast_ref()
-                .unwrap(),
-            Error::BlockedInstance
-        ));
+        assert_blocked!(fetcher
+            .fetch_post("https://other.badstuff.com/otherfake".into())
+            .await
+            .unwrap_err());
 
         let client = Client::builder().service(service_fn(handle));
         let fetcher = builder
@@ -118,24 +114,15 @@ async fn federation_deny() {
             .post_cache(Arc::new(NoopCache.into()))
             .build();
 
-        assert!(matches!(
-            fetcher
-                .fetch_post("https://example.com/fakeobject".into())
-                .await
-                .unwrap_err()
-                .downcast_ref()
-                .unwrap(),
-            Error::BlockedInstance
-        ));
-        assert!(matches!(
-            *fetcher
-                .fetch_post("https://other.badstuff.com/otherfake".into())
-                .await
-                .unwrap_err()
-                .downcast_ref()
-                .unwrap(),
-            Error::BlockedInstance
-        ));
+        assert_blocked!(fetcher
+            .fetch_post("https://example.com/fakeobject".into())
+            .await
+            .unwrap_err());
+
+        assert_blocked!(fetcher
+            .fetch_post("https://other.badstuff.com/otherfake".into())
+            .await
+            .unwrap_err());
     })
     .await;
 }

@@ -1,4 +1,3 @@
-use crate::error::Result;
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -9,6 +8,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use headers::ContentType;
 use http::StatusCode;
+use kitsune_error::Result;
 use mime::Mime;
 use serde::de::DeserializeOwned;
 

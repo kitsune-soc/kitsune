@@ -1,14 +1,14 @@
 use super::handle::handle;
 use http::{header::CONTENT_TYPE, uri::PathAndQuery};
 use hyper::Request;
-use kitsune_activitypub::{error::Error, Fetcher};
+use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_core::traits::Fetcher as _;
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
-use kitsune_test::{database_test, language_detection_config};
+use kitsune_test::{assert_display_eq, database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
 use std::{convert::Infallible, sync::Arc};
 use tower::service_fn;
@@ -108,15 +108,13 @@ async fn check_ap_content_type() {
             .post_cache(Arc::new(NoopCache.into()))
             .build();
 
-        assert!(matches!(
-            *fetcher
+        assert_display_eq!(
+            fetcher
                 .fetch_post("https://corteximplant.com/users/0x0".into())
                 .await
-                .unwrap_err()
-                .downcast_ref()
-                .unwrap(),
-            Error::InvalidResponse
-        ));
+                .unwrap_err(),
+            "invalid content-type: isnt either ld+json or activity+json"
+        );
     })
     .await;
 }

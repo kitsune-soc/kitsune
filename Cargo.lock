@@ -3573,6 +3573,7 @@ dependencies = [
  "kitsune-db",
  "kitsune-email",
  "kitsune-embed",
+ "kitsune-error",
  "kitsune-federation",
  "kitsune-federation-filter",
  "kitsune-http-client",

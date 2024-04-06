@@ -5,7 +5,6 @@ extern crate metrics;
 extern crate tracing;
 
 pub mod consts;
-pub mod error;
 pub mod http;
 pub mod oauth2;
 pub mod signal;
@@ -52,9 +51,6 @@ pub async fn initialise_state(
     db_pool: PgPool,
     job_queue: JobQueue<KitsuneContextRepo>,
 ) -> eyre::Result<Zustand> {
-    let messaging_hub = prepare::messaging(&config.messaging).await?;
-    let status_event_emitter = messaging_hub.emitter("event.status".into());
-
     let url_service = UrlService::builder()
         .domain(config.url.domain.clone())
         .scheme(config.url.scheme.clone())
@@ -141,18 +137,11 @@ pub async fn initialise_state(
     #[cfg(feature = "mastodon-api")]
     let mastodon_mapper = kitsune_mastodon::MastodonMapper::builder()
         .attachment_service(attachment_service.clone())
-        .cache_invalidator(
-            status_event_emitter
-                .consumer()
-                .await
-                .expect("Failed to register status event consumer"),
-        )
         .db_pool(db_pool.clone())
         .embed_client(embed_client.clone())
         .mastodon_cache(prepare::cache(&config.cache, "MASTODON-CACHE").await?)
         .url_service(url_service.clone())
-        .build()
-        .unwrap();
+        .build();
 
     let mrf_service = MrfService::from_config(&config.mrf).await?;
 
@@ -186,7 +175,6 @@ pub async fn initialise_state(
         .language_detection_config(config.language_detection)
         .post_resolver(post_resolver)
         .search_backend(search_backend.clone())
-        .status_event_emitter(status_event_emitter.clone())
         .url_service(url_service.clone())
         .build();
 
@@ -210,9 +198,6 @@ pub async fn initialise_state(
     Ok(ZustandInner {
         db_pool: db_pool.clone(),
         embed_client,
-        event_emitter: EventEmitter {
-            post: status_event_emitter,
-        },
         federation_filter,
         fetcher,
         language_detection_config: config.language_detection,

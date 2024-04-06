@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::state::Zustand;
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -16,6 +13,7 @@ use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
 use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
+use kitsune_error::{Error, Result};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;

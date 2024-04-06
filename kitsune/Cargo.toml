@@ -34,6 +34,7 @@ blowocking = { path = "../lib/blowocking" }
 bytes = "1.6.0"
 chrono = { version = "0.4.37", default-features = false }
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
+color-eyre = "0.6.3"
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
 der = { version = "0.7.9", features = ["std"] }
 diesel = "2.1.5"
@@ -53,6 +54,7 @@ kitsune-core = { path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-email = { path = "../crates/kitsune-email" }
 kitsune-embed = { path = "../crates/kitsune-embed" }
+kitsune-error = { path = "../crates/kitsune-error" }
 kitsune-federation = { path = "../crates/kitsune-federation" }
 kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
 kitsune-job-runner = { path = "../kitsune-job-runner" }
@@ -126,7 +128,6 @@ kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
 
 # "oidc" feature
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
-color-eyre = "0.6.3"
 
 [build-dependencies]
 camino = "1.1.6"

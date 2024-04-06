@@ -13,6 +13,13 @@ where
     )
 }
 
+impl From<Error> for Response {
+    #[inline]
+    fn from(value: Error) -> Self {
+        value.into_response()
+    }
+}
+
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         debug!(error = ?self.inner);

@@ -1,7 +1,7 @@
 use crate::oauth2::{OAuth2Service, OAuthEndpoint};
 use axum_extra::extract::cookie;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
-use kitsune_core::{event::PostEventEmitter, traits::Fetcher};
+use kitsune_core::traits::Fetcher;
 use kitsune_db::PgPool;
 use kitsune_email::MailingService;
 use kitsune_embed::Client as EmbedClient;
@@ -71,13 +71,6 @@ impl_from_ref! {
     ]
 }
 
-impl_from_ref! {
-    Zustand;
-    [
-        PostEventEmitter => |input: &Zustand| input.event_emitter.post.clone()
-    ]
-}
-
 #[derive(Clone)]
 pub struct SessionConfig {
     pub cookie_key: cookie::Key,
@@ -124,14 +117,6 @@ impl_from_ref! {
     ]
 }
 
-/// Emitter collection
-///
-/// This contains all the "emitters" that can emit events inside of Kitsune.
-/// Something like "a post has been created" or "an account has been followed".
-pub struct EventEmitter {
-    pub post: PostEventEmitter,
-}
-
 /// Service collection
 ///
 /// This contains all the "services" that Kitsune consists of.
@@ -156,7 +141,6 @@ pub struct Service {
 pub struct ZustandInner {
     pub db_pool: PgPool,
     pub embed_client: Option<EmbedClient>,
-    pub event_emitter: EventEmitter,
     pub federation_filter: FederationFilter,
     pub fetcher: Arc<dyn Fetcher>,
     pub language_detection_config: LanguageDetectionConfig,
