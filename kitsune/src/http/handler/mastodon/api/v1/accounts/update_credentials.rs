@@ -1,15 +1,13 @@
-use crate::{
-    error::Result,
-    http::{
-        extractor::{AuthExtractor, MastodonAuthExtractor},
-        util::buffer_multipart_to_tempfile,
-    },
+use crate::http::{
+    extractor::{AuthExtractor, MastodonAuthExtractor},
+    util::buffer_multipart_to_tempfile,
 };
 use axum::{
     extract::{Multipart, State},
     Json,
 };
 use kitsune_core::error::HttpError;
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::{
     account::{AccountService, Update},

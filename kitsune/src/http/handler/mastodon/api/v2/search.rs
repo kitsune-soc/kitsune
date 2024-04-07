@@ -1,6 +1,5 @@
 use crate::{
     consts::default_limit,
-    error::Result,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
@@ -8,6 +7,7 @@ use axum::{debug_handler, extract::State, routing, Json, Router};
 use axum_extra::{either::Either, extract::Query};
 use http::StatusCode;
 use kitsune_core::consts::API_MAX_LIMIT;
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_search::SearchIndex;
 use kitsune_service::search::{Search, SearchResult, SearchService};

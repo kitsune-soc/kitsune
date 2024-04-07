@@ -1,10 +1,7 @@
-use crate::{
-    error::{Error, Result},
-    http::extractor::MastodonAuthExtractor,
-    state::Zustand,
-};
+use crate::{http::extractor::MastodonAuthExtractor, state::Zustand};
 use axum::{debug_handler, extract::State, routing, Json, Router};
 use futures_util::{TryFutureExt, TryStreamExt};
+use kitsune_error::{Error, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::custom_emoji::{CustomEmojiService, GetEmojiList};
 use kitsune_type::mastodon::CustomEmoji;

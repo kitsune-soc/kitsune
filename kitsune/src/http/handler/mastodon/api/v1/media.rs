@@ -1,5 +1,4 @@
 use crate::{
-    error::{Error, Result},
     http::{
         extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
@@ -13,6 +12,7 @@ use axum::{
 };
 use futures_util::TryFutureExt;
 use kitsune_core::error::HttpError;
+use kitsune_error::{Error, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;

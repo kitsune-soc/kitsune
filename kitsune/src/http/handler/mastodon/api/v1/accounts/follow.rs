@@ -1,13 +1,11 @@
-use crate::{
-    error::Result,
-    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-};
+use crate::http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
 use kitsune_core::error::HttpError;
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;

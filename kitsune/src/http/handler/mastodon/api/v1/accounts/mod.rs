@@ -1,9 +1,10 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{
     extract::{Path, State},
     routing, Json, Router,
 };
 use kitsune_core::error::HttpError;
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::AccountService;
 use kitsune_type::mastodon;

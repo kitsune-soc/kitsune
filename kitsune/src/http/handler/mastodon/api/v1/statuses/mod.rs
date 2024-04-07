@@ -1,5 +1,4 @@
 use crate::{
-    error::Result,
     http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
     state::Zustand,
 };
@@ -9,6 +8,7 @@ use axum::{
     routing, Json, Router,
 };
 use http::StatusCode;
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::post::{CreatePost, DeletePost, PostService, UpdatePost};
 use kitsune_type::mastodon::{status::Visibility, Status};

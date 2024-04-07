@@ -1,5 +1,4 @@
 use super::{chrono_to_timestamp, timestamp_to_chrono};
-use crate::error::Error;
 use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
@@ -9,6 +8,7 @@ use kitsune_db::{
     schema::{oauth2_access_tokens, oauth2_applications, oauth2_refresh_tokens},
     with_connection, with_transaction, PgPool,
 };
+use kitsune_error::Error;
 use kitsune_util::generate_secret;
 use oxide_auth::primitives::{
     grant::{Extensions, Grant},
