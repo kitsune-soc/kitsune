@@ -33,7 +33,10 @@ pub async fn post(
             let mut flow = RefreshFlow::prepare(oauth_endpoint)?;
             RefreshFlow::execute(&mut flow, oauth_req).await
         }
-        _ => Err(OAuth2Error::UnknownGrantType),
+        _ => Err(kitsune_error!(
+            type = ErrorType::BadRequest(Some("unknown grant type".into())),
+            format!("unknown grant type: {grant_type}")
+        )),
     }
     .map_err(Error::from)
 }

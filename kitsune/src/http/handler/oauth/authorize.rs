@@ -25,6 +25,9 @@ use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 
+const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check your inbox!";
+const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
+
 #[cfg(feature = "oidc")]
 use {
     axum::extract::Query,
@@ -129,14 +132,14 @@ pub async fn post(
 
     let Some(user) = user else {
         return Ok(Either::E2((
-            flash.error(Error::PasswordMismatch.to_string()),
+            flash.error(WRONG_EMAIL_OR_PASSWORD),
             Redirect::to(redirect_to),
         )));
     };
 
     if user.confirmed_at.is_none() {
         return Ok(Either::E2((
-            flash.error(Error::UnconfirmedEmailAddress.to_string()),
+            flash.error(UNCONFIRMED_EMAIL_ADDRESS),
             Redirect::to(redirect_to),
         )));
     }
@@ -155,7 +158,7 @@ pub async fn post(
 
     if !is_valid {
         return Ok(Either::E2((
-            flash.error(Error::PasswordMismatch.to_string()),
+            flash.error(WRONG_EMAIL_OR_PASSWORD),
             Redirect::to(redirect_to),
         )));
     }
