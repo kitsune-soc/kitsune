@@ -5,12 +5,11 @@ use axum::{
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::error::HttpError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     with_connection, PgPool,
 };
-use kitsune_error::Result;
+use kitsune_error::{bail, ErrorType, Result};
 use kitsune_oidc::OidcService;
 use kitsune_service::user::{Register, UserService};
 use serde::Deserialize;
@@ -29,7 +28,7 @@ pub async fn get(
     Query(query): Query<CallbackQuery>,
 ) -> Result<Response> {
     let Some(oidc_service) = oidc_service else {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest(None), "oidc not configured");
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;

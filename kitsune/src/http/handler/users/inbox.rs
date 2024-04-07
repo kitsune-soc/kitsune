@@ -4,7 +4,6 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelpe
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_activitypub::{process_new_object, update_object, ProcessNewObject};
-use kitsune_core::error::HttpError;
 use kitsune_db::{
     model::{
         account::Account,
@@ -18,7 +17,7 @@ use kitsune_db::{
     schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
     with_connection,
 };
-use kitsune_error::{Error, Result};
+use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::deliver::accept::DeliverAccept;
 use kitsune_service::job::Enqueue;
@@ -40,7 +39,7 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
 
 async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let Some(reposted_post) = state.fetcher.fetch_post(activity.object().into()).await? else {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest(None), "announced post couldn't be fetched");
     };
 
     with_connection!(state.db_pool, |db_conn| {
@@ -105,7 +104,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         .fetch_account(activity.object().into())
         .await?
     else {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest(None), "followed account couldn't be fetched");
     };
 
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);

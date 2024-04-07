@@ -9,11 +9,9 @@ build = "build.rs"
 [dependencies]
 async-trait = "0.1.79"
 const_format = "0.2.32"
-http = "1.1.0"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-error = { path = "../kitsune-error" }
 serde = { version = "1.0.197", features = ["derive"] }
-thiserror = "1.0.58"
 typed-builder = "0.18.1"
 
 [build-dependencies]

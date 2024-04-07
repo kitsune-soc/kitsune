@@ -13,8 +13,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
-use kitsune_core::error::HttpError;
-use kitsune_error::{Error, Result};
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::notification::{GetNotifications, NotificationService};
 use kitsune_type::mastodon::{notification::NotificationType, Notification};
@@ -121,7 +120,7 @@ pub async fn get_by_id(
     let notification = notification_service
         .get_notification_by_id(id, user_data.account.id)
         .await?
-        .ok_or(HttpError::NotFound)?;
+        .ok_or_else(|| kitsune_error!(type = ErrorType::NotFound, "notification not found"))?;
 
     Ok(Json(mastodon_mapper.map(notification).await?))
 }

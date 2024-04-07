@@ -3741,11 +3741,9 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
  "const_format",
- "http 1.1.0",
  "kitsune-db",
  "kitsune-error",
  "serde",
- "thiserror",
  "typed-builder",
  "vergen",
 ]

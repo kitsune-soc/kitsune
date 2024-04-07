@@ -11,8 +11,7 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
-use kitsune_core::error::HttpError;
-use kitsune_error::{Error, Result};
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;
@@ -88,7 +87,13 @@ pub async fn post(
         }
     }
 
-    let upload = upload.build().map_err(|_| HttpError::BadRequest)?;
+    let upload = upload.build().map_err(|err| {
+        kitsune_error!(
+            type = ErrorType::BadRequest(Some(err.to_string())),
+            "not all fields were filled"
+        )
+    })?;
+
     let media_attachment = attachment_service.upload(upload).await?;
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }

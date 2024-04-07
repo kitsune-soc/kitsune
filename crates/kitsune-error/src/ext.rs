@@ -12,13 +12,10 @@ pub trait ResultExt<T>: sealed::Sealed {
 
 impl<T, E> ResultExt<T> for Result<T, E>
 where
-    E: Into<eyre::Report>,
+    E: Into<Error>,
 {
     #[inline]
     fn with_error_type(self, ty: ErrorType) -> Result<T, Error> {
-        self.map_err(|err| Error {
-            ty,
-            inner: err.into(),
-        })
+        self.map_err(|err| err.into().with_error_type(ty))
     }
 }

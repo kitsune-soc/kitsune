@@ -4,8 +4,7 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use kitsune_core::error::HttpError;
-use kitsune_error::Result;
+use kitsune_error::{bail, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::{AccountService, Unfollow};
 use kitsune_type::mastodon::relationship::Relationship;
@@ -19,7 +18,7 @@ pub async fn post(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest(None), "user tried to unfollow themselves");
     }
 
     let unfollow = Unfollow::builder()
