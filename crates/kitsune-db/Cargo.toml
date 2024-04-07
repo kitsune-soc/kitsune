@@ -22,6 +22,7 @@ futures-util = { version = "0.3.30", default-features = false, features = [
 ] }
 iso8601-timestamp = { version = "0.2.17", features = ["diesel-pg"] }
 kitsune-config = { path = "../kitsune-config" }
+kitsune-error = { path = "../kitsune-error" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.2"
@@ -36,12 +37,12 @@ rustls-native-certs = "0.7.0"
 serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.9"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
-thiserror = "1.0.58"
 tokio = { version = "1.37.0", features = ["rt"] }
 tokio-postgres = "0.7.10"
 tokio-postgres-rustls = "0.12.0"
 tracing = "0.1.40"
 tracing-log = "0.2.0"
+trials = { path = "../../lib/trials" }
 typed-builder = "0.18.1"
 
 [dev-dependencies]

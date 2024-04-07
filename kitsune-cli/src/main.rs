@@ -33,7 +33,8 @@ async fn main() -> Result<()> {
         max_connections: 1,
         use_tls: config.database_use_tls,
     })
-    .await?;
+    .await
+    .map_err(kitsune_error::Error::into_error)?;
 
     let cmd = App::parse();
 

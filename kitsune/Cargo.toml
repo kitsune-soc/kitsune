@@ -103,6 +103,7 @@ tower-http = { version = "0.5.2", features = [
 ] }
 tower-http-digest = { path = "../lib/tower-http-digest" }
 tracing = "0.1.40"
+trials = { path = "../lib/trials" }
 typed-builder = "0.18.1"
 url = "2.5.0"
 utoipa = { version = "4.2.0", features = ["axum_extras", "uuid"] }

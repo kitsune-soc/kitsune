@@ -30,7 +30,10 @@ async fn main() -> eyre::Result<()> {
 
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
 
-    let db_pool = kitsune_db::connect(&config.database).await?;
+    let db_pool = kitsune_db::connect(&config.database)
+        .await
+        .map_err(kitsune_error::Error::into_error)?;
+
     let job_queue =
         kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue).await?;
 

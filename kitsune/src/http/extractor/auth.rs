@@ -11,13 +11,13 @@ use diesel_async::RunQueryDsl;
 use headers::{authorization::Bearer, Authorization};
 use http::request::Parts;
 use kitsune_db::{
-    catch_error,
     model::{account::Account, user::User},
     schema::{accounts, oauth2_access_tokens, users},
     with_connection,
 };
-use kitsune_error::Error;
+use kitsune_error::{Error, Result};
 use time::OffsetDateTime;
+use trials::attempt;
 
 /// Mastodon-specific auth extractor alias
 ///
@@ -64,14 +64,17 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
                 .filter(oauth2_access_tokens::expires_at.gt(OffsetDateTime::now_utc()));
         }
 
-        let (user, account) = catch_error!(with_connection!(state.db_pool, |db_conn| {
-            user_account_query
-                .select(<(User, Account)>::as_select())
-                .get_result(db_conn)
-                .await
-                .map_err(Error::from)
-        }))
-        .map_err(Error::from)??;
+        let result: Result<(User, Account)> = attempt! { async
+            with_connection!(state.db_pool, |db_conn| {
+                user_account_query
+                    .select(<(User, Account)>::as_select())
+                    .get_result(db_conn)
+                    .await
+                    .map_err(Error::from)
+            })?
+        };
+
+        let (user, account) = result?;
 
         Ok(Self(UserData { account, user }))
     }

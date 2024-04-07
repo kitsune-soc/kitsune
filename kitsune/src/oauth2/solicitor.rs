@@ -4,15 +4,15 @@ use async_trait::async_trait;
 use cursiv::CsrfHandle;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{
-    catch_error, model::user::User, schema::oauth2_applications, with_connection, PgPool,
-};
+use kitsune_db::{model::user::User, schema::oauth2_applications, with_connection, PgPool};
+use kitsune_error::Result;
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, QueryParameter, Solicitation, WebRequest};
 use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use strum::EnumMessage;
+use trials::attempt;
 use typed_builder::TypedBuilder;
 
 #[derive(Template)]
@@ -55,6 +55,7 @@ pub struct OAuthOwnerSolicitor {
 }
 
 impl OAuthOwnerSolicitor {
+    #[instrument(skip_all)]
     async fn check_consent(
         &self,
         login_consent: Option<&str>,
@@ -81,17 +82,20 @@ impl OAuthOwnerSolicitor {
                     .parse()
                     .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
 
-                let app_name = catch_error!(with_connection!(self.db_pool, |db_conn| {
-                    oauth2_applications::table
-                        .find(client_id)
-                        .select(oauth2_applications::name)
-                        .get_result::<String>(db_conn)
-                        .await
-                        .optional()
-                }))
-                .map_err(|_| WebError::InternalError(None))?
-                .map_err(|_| WebError::InternalError(None))?
-                .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
+                let app_name_result: Result<Option<String>> = attempt! { async
+                    with_connection!(self.db_pool, |db_conn| {
+                        oauth2_applications::table
+                            .find(client_id)
+                            .select(oauth2_applications::name)
+                            .get_result::<String>(db_conn)
+                            .await
+                            .optional()
+                    })?
+                };
+
+                let app_name = app_name_result
+                    .map_err(|_| WebError::InternalError(None))?
+                    .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
 
                 let scopes = solicitation
                     .pre_grant()
@@ -129,6 +133,7 @@ impl OAuthOwnerSolicitor {
 
 #[async_trait]
 impl OwnerSolicitor<OAuthRequest> for OAuthOwnerSolicitor {
+    #[instrument(skip_all)]
     async fn check_consent(
         &mut self,
         req: &mut OAuthRequest,
