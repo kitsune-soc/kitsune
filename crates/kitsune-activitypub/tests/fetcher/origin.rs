@@ -113,7 +113,7 @@ async fn check_ap_content_type() {
                 .fetch_post("https://corteximplant.com/users/0x0".into())
                 .await
                 .unwrap_err(),
-            "invalid content-type: isnt either ld+json or activity+json"
+            "invalid content-type header in response"
         );
     })
     .await;
