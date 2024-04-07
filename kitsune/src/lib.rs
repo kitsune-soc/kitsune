@@ -64,7 +64,8 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build();
 
-    let federation_filter = FederationFilter::new(&config.instance.federation_filter)?;
+    let federation_filter = FederationFilter::new(&config.instance.federation_filter)
+        .map_err(kitsune_error::Error::into_error)?;
 
     let job_service = JobService::builder().job_queue(job_queue).build();
 
@@ -155,7 +156,8 @@ pub async fn initialise_state(
             OidcService::initialise(oidc_config, url_service.oidc_redirect_uri())
         }))
         .await
-        .transpose()?;
+        .transpose()
+        .map_err(kitsune_error::Error::into_error)?;
 
     let oauth2_service = OAuth2Service::builder()
         .db_pool(db_pool.clone())

@@ -1,4 +1,4 @@
-use crate::error::Result;
+use kitsune_error::Result;
 
 #[derive(Debug)]
 pub struct RenderedEmail {

@@ -73,6 +73,10 @@ impl Error {
         &self.inner
     }
 
+    pub fn into_error(self) -> eyre::Report {
+        self.inner
+    }
+
     #[must_use]
     pub fn with_error_type(self, ty: ErrorType) -> Self {
         Self { ty, ..self }

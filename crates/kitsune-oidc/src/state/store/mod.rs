@@ -1,6 +1,6 @@
 use super::LoginState;
-use crate::error::Result;
 use enum_dispatch::enum_dispatch;
+use kitsune_error::Result;
 
 pub use self::{in_memory::InMemory, redis::Redis};
 

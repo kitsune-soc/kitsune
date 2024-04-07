@@ -1,5 +1,6 @@
 use super::Store;
-use crate::{error::Result, state::LoginState};
+use crate::state::LoginState;
+use kitsune_error::Result;
 use redis::{aio::ConnectionManager, AsyncCommands};
 
 const REDIS_PREFIX: &str = "OIDC-LOGIN-STATE";

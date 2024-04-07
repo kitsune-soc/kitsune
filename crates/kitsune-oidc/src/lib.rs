@@ -1,11 +1,9 @@
-use crate::{
-    error::Result,
-    state::{
-        store::{InMemory as InMemoryStore, Redis as RedisStore},
-        LoginState, OAuth2LoginState, Store,
-    },
+use crate::state::{
+    store::{InMemory as InMemoryStore, Redis as RedisStore},
+    LoginState, OAuth2LoginState, Store,
 };
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
+use kitsune_error::{bail, kitsune_error, Result};
 use multiplex_pool::RoundRobinStrategy;
 use openidconnect::{
     core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
@@ -15,9 +13,6 @@ use openidconnect::{
 use speedy_uuid::Uuid;
 use url::Url;
 
-pub use self::error::Error;
-
-mod error;
 mod state;
 
 pub mod http;
@@ -135,7 +130,9 @@ impl OidcService {
             .request_async(self::http::async_client)
             .await?;
 
-        let id_token = token_response.id_token().ok_or(Error::MissingIdToken)?;
+        let id_token = token_response
+            .id_token()
+            .ok_or_else(|| kitsune_error!("missing id token"))?;
         let claims = id_token.claims(&self.client.id_token_verifier(), &nonce)?;
 
         if let Some(expected_hash) = claims.access_token_hash() {
@@ -145,7 +142,7 @@ impl OidcService {
             )?;
 
             if actual_hash != *expected_hash {
-                return Err(Error::MismatchingHash);
+                bail!("hash mismatch");
             }
         }
 
@@ -153,9 +150,12 @@ impl OidcService {
             subject: claims.subject().to_string(),
             username: claims
                 .preferred_username()
-                .ok_or(Error::MissingUsername)?
+                .ok_or_else(|| kitsune_error!("missing username"))?
                 .to_string(),
-            email: claims.email().ok_or(Error::MissingEmail)?.to_string(),
+            email: claims
+                .email()
+                .ok_or_else(|| kitsune_error!("missing email address"))?
+                .to_string(),
             oauth2: OAuth2Info {
                 application_id: oauth2.application_id,
                 scope: oauth2.scope,

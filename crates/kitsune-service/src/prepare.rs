@@ -141,6 +141,7 @@ pub async fn search(
 
                 kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
                     .await
+                    .map_err(kitsune_error::Error::into_error)
                     .wrap_err("Failed to connect to Meilisearch")?
                     .into()
             }

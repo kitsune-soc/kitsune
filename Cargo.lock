@@ -3677,12 +3677,12 @@ name = "kitsune-cache"
 version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
+ "kitsune-error",
  "moka",
  "multiplex-pool",
  "redis",
  "serde",
  "simd-json",
- "thiserror",
  "tokio",
  "tracing",
  "typed-builder",
@@ -3790,11 +3790,11 @@ dependencies = [
  "diesel",
  "diesel-async",
  "kitsune-db",
+ "kitsune-error",
  "kitsune-url",
  "lettre",
  "mrml",
  "speedy-uuid",
- "thiserror",
  "typed-builder",
 ]
 
@@ -3808,11 +3808,11 @@ dependencies = [
  "http 1.1.0",
  "iso8601-timestamp",
  "kitsune-db",
+ "kitsune-error",
  "kitsune-http-client",
  "once_cell",
  "scraper",
  "smol_str",
- "thiserror",
  "typed-builder",
 ]
 
@@ -3853,8 +3853,8 @@ version = "0.0.1-pre.6"
 dependencies = [
  "globset",
  "kitsune-config",
+ "kitsune-error",
  "kitsune-type",
- "thiserror",
  "url",
 ]
 
@@ -3893,6 +3893,7 @@ dependencies = [
  "kitsune-core",
  "kitsune-db",
  "kitsune-email",
+ "kitsune-error",
  "kitsune-federation",
  "kitsune-federation-filter",
  "kitsune-jobs",
@@ -3998,6 +3999,7 @@ dependencies = [
  "http 1.1.0",
  "http-compat",
  "kitsune-config",
+ "kitsune-error",
  "kitsune-http-client",
  "moka",
  "multiplex-pool",
@@ -4007,7 +4009,6 @@ dependencies = [
  "serde",
  "simd-json",
  "speedy-uuid",
- "thiserror",
  "url",
 ]
 
@@ -4050,12 +4051,12 @@ dependencies = [
  "isahc",
  "kitsune-config",
  "kitsune-db",
+ "kitsune-error",
  "kitsune-language",
  "meilisearch-sdk",
  "serde",
  "speedy-uuid",
  "strum",
- "thiserror",
  "tracing",
  "typed-builder",
 ]
@@ -4211,6 +4212,7 @@ dependencies = [
  "enum_dispatch",
  "futures-util",
  "kitsune-config",
+ "kitsune-error",
  "kitsune-type",
  "mrf-manifest",
  "multiplex-pool",
@@ -4220,7 +4222,6 @@ dependencies = [
  "sled",
  "smol_str",
  "tempfile",
- "thiserror",
  "tokio",
  "tracing",
  "tracing-subscriber",

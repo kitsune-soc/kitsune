@@ -1,5 +1,5 @@
 use diesel::{OptionalExtension, QueryDsl};
-use diesel_async::{pooled_connection::bb8, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
@@ -9,17 +9,15 @@ use kitsune_db::{
     schema::link_previews,
     with_connection, PgPool,
 };
+use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
-use std::fmt::Debug;
 use typed_builder::TypedBuilder;
 
 pub use embed_sdk;
 pub use embed_sdk::Embed;
-
-type Result<T, E = Error> = std::result::Result<T, E>;
 
 static LINK_SELECTOR: Lazy<Selector> = Lazy::new(|| {
     Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
@@ -32,18 +30,6 @@ fn first_link_from_fragment(fragment: &str) -> Option<String> {
         .select(&LINK_SELECTOR)
         .next()
         .and_then(|element| element.value().attr("href").map(ToString::to_string))
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error(transparent)]
-    Diesel(#[from] diesel::result::Error),
-
-    #[error(transparent)]
-    Http(#[from] kitsune_http_client::Error),
-
-    #[error(transparent)]
-    Pool(#[from] bb8::RunError),
 }
 
 #[derive(Clone, TypedBuilder)]

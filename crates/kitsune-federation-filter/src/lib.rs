@@ -1,11 +1,9 @@
-use crate::error::{Error, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_error::{kitsune_error, Result};
 use kitsune_type::ap::{actor::Actor, Activity, Object};
 use std::sync::Arc;
 use url::Url;
-
-pub mod error;
 
 pub trait Entity {
     fn id(&self) -> &str;
@@ -58,7 +56,9 @@ impl FederationFilter {
     }
 
     pub fn is_url_allowed(&self, url: &Url) -> Result<bool> {
-        let host = url.host_str().ok_or(Error::HostMissing)?;
+        let host = url
+            .host_str()
+            .ok_or_else(|| kitsune_error!("missing host component"))?;
 
         let allowed = match self.filter {
             FilterMode::Allow { .. } => self.domains.is_match(host),

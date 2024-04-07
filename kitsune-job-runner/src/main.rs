@@ -46,7 +46,8 @@ async fn main() -> eyre::Result<()> {
         .storage_backend(kitsune_service::prepare::storage(&config.storage)?)
         .url_service(url_service.clone())
         .build();
-    let federation_filter = FederationFilter::new(&config.instance.federation_filter)?;
+    let federation_filter = FederationFilter::new(&config.instance.federation_filter)
+        .map_err(kitsune_error::Error::into_error)?;
 
     let state = JobDispatcherState::builder()
         .attachment_service(attachment_service)
