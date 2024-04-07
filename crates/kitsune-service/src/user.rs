@@ -126,7 +126,7 @@ impl UserService {
     #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {
-            bail!(type = ErrorType::Forbidden(Some("registrations closed".into())), "registrations closed");
+            bail!(type = ErrorType::Forbidden.with_body("registrations closed"), "registrations closed");
         }
 
         register.validate(&RegisterContext {
@@ -134,7 +134,7 @@ impl UserService {
         })?;
 
         if self.captcha_service.enabled() {
-            let invalid_captcha = || kitsune_error!(type = ErrorType::BadRequest(Some("invalid captcha".into())), "invalid captcha");
+            let invalid_captcha = || kitsune_error!(type = ErrorType::BadRequest.with_body("invalid captcha"), "invalid captcha");
 
             let token = register.captcha_token.ok_or_else(invalid_captcha)?;
             let result = self.captcha_service.verify_token(&token).await?;

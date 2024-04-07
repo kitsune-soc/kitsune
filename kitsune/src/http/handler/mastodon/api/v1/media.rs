@@ -89,7 +89,7 @@ pub async fn post(
 
     let upload = upload.build().map_err(|err| {
         kitsune_error!(
-            type = ErrorType::BadRequest(Some(err.to_string())),
+            type = ErrorType::BadRequest.with_body(err),
             "not all fields were filled"
         )
     })?;

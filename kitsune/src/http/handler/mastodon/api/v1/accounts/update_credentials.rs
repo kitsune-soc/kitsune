@@ -42,7 +42,7 @@ pub async fn patch(
             "note" => update.note(field.text().await?),
             "avatar" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    bail!(type = ErrorType::BadRequest(None), "invalid content-type");
+                    bail!(type = ErrorType::BadRequest, "invalid content-type");
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -57,7 +57,7 @@ pub async fn patch(
             }
             "header" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    bail!(type = ErrorType::BadRequest(None), "invalid content-type");
+                    bail!(type = ErrorType::BadRequest, "invalid content-type");
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -77,7 +77,7 @@ pub async fn patch(
 
     let update = update.build().map_err(|err| {
         kitsune_error!(
-            type = ErrorType::BadRequest(Some(err.to_string())),
+            type = ErrorType::BadRequest.with_body(err),
             "missing upload field"
         )
     })?;

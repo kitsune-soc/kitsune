@@ -28,7 +28,7 @@ pub async fn get(
     Query(query): Query<CallbackQuery>,
 ) -> Result<Response> {
     let Some(oidc_service) = oidc_service else {
-        bail!(type = ErrorType::BadRequest(None), "oidc not configured");
+        bail!(type = ErrorType::BadRequest, "oidc not configured");
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;

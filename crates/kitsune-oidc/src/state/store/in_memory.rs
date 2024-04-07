@@ -18,9 +18,10 @@ impl InMemory {
 
 impl Store for InMemory {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
-        self.inner.remove(key).await.ok_or_else(
-            || kitsune_error!(type = ErrorType::BadRequest(None), "missing login state"),
-        )
+        self.inner
+            .remove(key)
+            .await
+            .ok_or_else(|| kitsune_error!(type = ErrorType::BadRequest, "missing login state"))
     }
 
     async fn set(&self, key: &str, value: LoginState) -> Result<()> {

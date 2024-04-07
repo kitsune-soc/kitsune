@@ -29,7 +29,7 @@ pub async fn post(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        bail!(type = ErrorType::BadRequest(None), "user tried to reject a follow to themselves");
+        bail!(type = ErrorType::BadRequest, "user tried to reject a follow to themselves");
     }
 
     let follow_request = FollowRequest::builder()
@@ -48,6 +48,6 @@ pub async fn post(
                 .await?,
         ))
     } else {
-        bail!(type = ErrorType::BadRequest(None), "follow request wasn't found in the database");
+        bail!(type = ErrorType::BadRequest, "follow request wasn't found in the database");
     }
 }

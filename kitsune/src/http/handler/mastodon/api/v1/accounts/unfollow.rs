@@ -18,7 +18,7 @@ pub async fn post(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        bail!(type = ErrorType::BadRequest(None), "user tried to unfollow themselves");
+        bail!(type = ErrorType::BadRequest, "user tried to unfollow themselves");
     }
 
     let unfollow = Unfollow::builder()

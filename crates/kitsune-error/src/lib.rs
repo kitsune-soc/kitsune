@@ -21,37 +21,66 @@ macro_rules! bail {
 #[macro_export]
 macro_rules! kitsune_error {
     (type = $type:expr, $msg:expr) => {
-        $crate::Error::msg($msg).with_error_type($type)
+        $crate::Error::msg($msg).with_context({ $type }.into())
     };
     ($msg:expr) => {
-        $crate::kitsune_error!(type = $crate::ErrorType::Other(None), $msg)
+        $crate::kitsune_error!(type = $crate::ErrorType::Other, $msg)
     };
 }
 
 #[derive(Clone, Debug)]
 pub enum ErrorType {
-    BadRequest(Option<String>),
-    Forbidden(Option<String>),
+    BadRequest,
+    Forbidden,
     NotFound,
     Unauthorized,
     UnsupportedMediaType,
-    Other(Option<String>),
+    Other,
+}
+
+impl ErrorType {
+    #[must_use]
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn with_body<B>(self, body: B) -> ErrorContext
+    where
+        B: ToString,
+    {
+        ErrorContext {
+            ty: self,
+            body: Some(body.to_string()),
+        }
+    }
+}
+
+impl From<ErrorType> for ErrorContext {
+    fn from(value: ErrorType) -> Self {
+        Self {
+            ty: value,
+            body: None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ErrorContext {
+    ty: ErrorType,
+    body: Option<String>,
 }
 
 #[derive(Debug)]
 pub struct Error {
-    ty: ErrorType,
+    ctx: ErrorContext,
     inner: eyre::Report,
 }
 
 impl Error {
     #[inline]
-    pub fn new<E>(ty: ErrorType, err: E) -> Self
+    pub fn new<E>(ctx: ErrorContext, err: E) -> Self
     where
         E: Into<eyre::Report>,
     {
         Self {
-            ty,
+            ctx,
             inner: err.into(),
         }
     }
@@ -65,8 +94,8 @@ impl Error {
     }
 
     #[must_use]
-    pub fn error_type(&self) -> &ErrorType {
-        &self.ty
+    pub fn context(&self) -> &ErrorContext {
+        &self.ctx
     }
 
     pub fn error(&self) -> &eyre::Report {
@@ -78,8 +107,8 @@ impl Error {
     }
 
     #[must_use]
-    pub fn with_error_type(self, ty: ErrorType) -> Self {
-        Self { ty, ..self }
+    pub fn with_context(self, ctx: ErrorContext) -> Self {
+        Self { ctx, ..self }
     }
 }
 
@@ -89,7 +118,7 @@ where
 {
     fn from(value: T) -> Self {
         Self {
-            ty: ErrorType::Other(None),
+            ctx: ErrorType::Other.into(),
             inner: value.into(),
         }
     }

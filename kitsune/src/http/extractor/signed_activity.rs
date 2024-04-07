@@ -78,7 +78,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
 
         let ap_id = activity.actor.as_str();
         let Some(remote_user) = state.fetcher.fetch_account(ap_id.into()).await? else {
-            bail!(type = ErrorType::BadRequest(None), "failed to fetch remote account");
+            bail!(type = ErrorType::BadRequest, "failed to fetch remote account");
         };
 
         let request = http::Request::from_parts(parts, ());
@@ -90,7 +90,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 .build();
 
             let Some(remote_user) = state.fetcher.fetch_account(opts).await? else {
-                bail!(type = ErrorType::BadRequest(None), "failed to fetch remote account");
+                bail!(type = ErrorType::BadRequest, "failed to fetch remote account");
             };
 
             if !verify_signature(&request, &state.db_pool, Some(&remote_user)).await? {

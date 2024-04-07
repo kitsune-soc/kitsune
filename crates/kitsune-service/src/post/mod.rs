@@ -323,7 +323,7 @@ impl PostService {
             .await?
             != media_attachment_ids.len() as i64
         {
-            bail!(type = ErrorType::BadRequest(None), "tried to attach unknown attachment ids");
+            bail!(type = ErrorType::BadRequest, "tried to attach unknown attachment ids");
         }
 
         diesel::insert_into(posts_media_attachments::table)

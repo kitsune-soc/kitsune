@@ -16,7 +16,7 @@ pub async fn post(
     let grant_type = oauth_req
         .body()
         .and_then(|body| body.unique_value("grant_type"))
-        .ok_or_else(|| kitsune_error!(type = ErrorType::BadRequest(None), "missing grant type"))?;
+        .ok_or_else(|| kitsune_error!(type = ErrorType::BadRequest, "missing grant type"))?;
 
     match grant_type.as_ref() {
         "authorization_code" => {
@@ -34,7 +34,7 @@ pub async fn post(
             RefreshFlow::execute(&mut flow, oauth_req).await
         }
         _ => Err(kitsune_error!(
-            type = ErrorType::BadRequest(Some("unknown grant type".into())),
+            type = ErrorType::BadRequest.with_body("unknown grant type"),
             format!("unknown grant type: {grant_type}")
         )),
     }

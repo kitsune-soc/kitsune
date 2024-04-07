@@ -38,7 +38,7 @@ pub async fn post(
     follow_body: Option<AgnosticForm<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        bail!(type = ErrorType::BadRequest(None), "user tried to follow themselves");
+        bail!(type = ErrorType::BadRequest, "user tried to follow themselves");
     }
 
     let follow = Follow::builder()

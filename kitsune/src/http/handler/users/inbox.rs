@@ -39,7 +39,7 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
 
 async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
     let Some(reposted_post) = state.fetcher.fetch_post(activity.object().into()).await? else {
-        bail!(type = ErrorType::BadRequest(None), "announced post couldn't be fetched");
+        bail!(type = ErrorType::BadRequest, "announced post couldn't be fetched");
     };
 
     with_connection!(state.db_pool, |db_conn| {
@@ -104,7 +104,7 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
         .fetch_account(activity.object().into())
         .await?
     else {
-        bail!(type = ErrorType::BadRequest(None), "followed account couldn't be fetched");
+        bail!(type = ErrorType::BadRequest, "followed account couldn't be fetched");
     };
 
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
