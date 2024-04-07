@@ -21,6 +21,7 @@ dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-db = { path = "../crates/kitsune-db" }
+kitsune-error = { path = "../crates/kitsune-error" }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["full"] }

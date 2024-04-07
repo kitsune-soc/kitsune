@@ -4,14 +4,12 @@ use http::{
     header::{CONTENT_LENGTH, ETAG},
     Request,
 };
+use kitsune_error::{bail, Error, Result};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
 use std::{ops::Deref, time::Duration};
 use typed_builder::TypedBuilder;
-
-type BoxError = Box<dyn std::error::Error + Send + Sync>;
-type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 const TWO_MINUTES: Duration = Duration::from_secs(2 * 60);
 
@@ -49,7 +47,7 @@ async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Resp
         err_msg.push_str("\nbody: ");
         err_msg.push_str(&body);
 
-        return Err(Box::from(err_msg));
+        bail!(err_msg);
     }
 
     Ok(response)
@@ -129,7 +127,7 @@ impl Client {
     pub async fn put_object<S, E>(&self, path: &str, stream: S) -> Result<()>
     where
         S: Stream<Item = Result<Bytes, E>> + Send + Sync + 'static,
-        E: Into<BoxError>,
+        E: Into<Error>,
     {
         let create_multipart_upload = self
             .bucket
@@ -171,7 +169,7 @@ impl Client {
 
                 let response = execute_request(&self.http_client, request).await?;
                 let Some(etag_header) = response.headers().get(ETAG) else {
-                    return Err(Box::from("missing etag header"));
+                    bail!("missing etag header");
                 };
 
                 etags.push(etag_header.to_str()?.to_string());
@@ -228,8 +226,9 @@ impl Client {
 
 #[cfg(test)]
 mod test {
-    use crate::{BoxError, CreateBucketConfiguration};
+    use crate::CreateBucketConfiguration;
     use futures_util::{future, stream, TryStreamExt};
+    use kitsune_error::{kitsune_error, Error};
     use kitsune_test::minio_test;
 
     const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
@@ -255,7 +254,7 @@ mod test {
             client
                 .put_object(
                     "good song",
-                    stream::once(future::ok::<_, BoxError>(TEST_DATA.into())),
+                    stream::once(future::ok::<_, Error>(TEST_DATA.into())),
                 )
                 .await
                 .unwrap();
@@ -287,7 +286,7 @@ mod test {
             let result = client
                 .put_object(
                     "this will break horribly",
-                    stream::once(future::err(BoxError::from("hehe"))),
+                    stream::once(future::err(kitsune_error!("hehe"))),
                 )
                 .await;
 

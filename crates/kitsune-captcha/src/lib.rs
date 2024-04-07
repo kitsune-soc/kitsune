@@ -2,15 +2,11 @@
 
 use self::error::CaptchaVerification;
 use enum_dispatch::enum_dispatch;
+use kitsune_error::Result;
 
 pub mod error;
 pub mod hcaptcha;
 pub mod mcaptcha;
-
-pub use self::error::Error;
-
-/// Result alias where the error defaults to [`BoxError`]
-pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Status of the captcha challenge verification
 #[derive(PartialEq)]

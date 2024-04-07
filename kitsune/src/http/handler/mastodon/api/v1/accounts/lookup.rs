@@ -1,10 +1,10 @@
-use crate::{error::Result, http::extractor::MastodonAuthExtractor};
+use crate::http::extractor::MastodonAuthExtractor;
 use axum::{
     debug_handler,
     extract::{Query, State},
     Json,
 };
-use kitsune_core::error::HttpError;
+use kitsune_error::{kitsune_error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::mastodon::Account;
@@ -49,7 +49,7 @@ pub async fn get(
     let account = account_service
         .get(get_user)
         .await?
-        .ok_or(HttpError::NotFound)?;
+        .ok_or_else(|| kitsune_error!(type = ErrorType::NotFound, "account not found"))?;
 
     Ok(Json(mastodon_mapper.map(account).await?))
 }

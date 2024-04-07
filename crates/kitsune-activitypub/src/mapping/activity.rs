@@ -1,5 +1,4 @@
 use super::{IntoObject, State};
-use crate::error::Result;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -8,6 +7,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     with_connection,
 };
+use kitsune_error::Result;
 use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_util::try_join;
 use std::future::Future;

@@ -1,4 +1,5 @@
-use super::{CacheBackend, CacheResult};
+use super::CacheBackend;
+use kitsune_error::Result;
 use redis::{aio::ConnectionManager, AsyncCommands};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
@@ -53,7 +54,7 @@ where
     V: Serialize + DeserializeOwned + Send + Sync,
 {
     #[instrument(skip_all, fields(%key))]
-    async fn delete(&self, key: &K) -> CacheResult<()> {
+    async fn delete(&self, key: &K) -> Result<()> {
         let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
 
@@ -64,7 +65,7 @@ where
     }
 
     #[instrument(skip_all, fields(%key))]
-    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
+    async fn get(&self, key: &K) -> Result<Option<V>> {
         let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
 
@@ -79,7 +80,7 @@ where
     }
 
     #[instrument(skip_all, fields(%key))]
-    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
+    async fn set(&self, key: &K, value: &V) -> Result<()> {
         let mut conn = self.redis_conn.get();
         let key = self.compute_key(key);
         let serialised = simd_json::to_string(value)?;

@@ -1,7 +1,6 @@
 use super::{
     authorizer::OAuthAuthorizer, issuer::OAuthIssuer, registrar::OAuthRegistrar, OAuthScope,
 };
-use crate::error::OAuth2Error;
 use kitsune_db::PgPool;
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, Scope, Scopes, Solicitation, WebRequest};
 use oxide_auth_async::{
@@ -65,7 +64,7 @@ impl<S> Endpoint<OAuthRequest> for OAuthEndpoint<S>
 where
     S: OwnerSolicitor<OAuthRequest> + Send,
 {
-    type Error = OAuth2Error;
+    type Error = kitsune_error::Error;
 
     fn registrar(&self) -> Option<&(dyn Registrar + Sync)> {
         Some(&self.registrar)
@@ -116,6 +115,7 @@ where
         _req: &mut T,
         _solicitation: Solicitation<'_>,
     ) -> OwnerConsent<T::Response> {
+        error!("called the \"vacant\" owner solicitor. this is most likely a bug!");
         OwnerConsent::Denied
     }
 }

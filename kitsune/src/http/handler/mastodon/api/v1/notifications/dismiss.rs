@@ -1,12 +1,10 @@
-use crate::{
-    error::Result,
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
-};
+use crate::http::extractor::{AuthExtractor, MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
 };
 use http::StatusCode;
+use kitsune_error::Result;
 use kitsune_service::notification::NotificationService;
 use speedy_uuid::Uuid;
 

@@ -1,7 +1,8 @@
-use crate::{error::Result, mails::confirm_account::ConfirmAccount, MailSender};
+use crate::{mails::confirm_account::ConfirmAccount, MailSender};
 use diesel::{ExpressionMethods, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{function::now, model::user::User, schema::users, with_connection, PgPool};
+use kitsune_error::Result;
 use kitsune_url::UrlService;
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use speedy_uuid::Uuid;

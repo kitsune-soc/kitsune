@@ -1,8 +1,6 @@
-use crate::{
-    error::Result,
-    traits::{RenderableEmail, RenderedEmail},
-};
+use crate::traits::{RenderableEmail, RenderedEmail};
 use askama::Template;
+use kitsune_error::Result;
 use mrml::{mjml::Mjml, prelude::render::RenderOptions};
 use typed_builder::TypedBuilder;
 

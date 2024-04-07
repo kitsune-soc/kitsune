@@ -10,6 +10,7 @@ enum_dispatch = "0.3.13"
 http = "1.1.0"
 http-compat = { path = "../../lib/http-compat" }
 kitsune-config = { path = "../kitsune-config" }
+kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 moka = { version = "0.12.5", features = ["future"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
@@ -19,14 +20,13 @@ openidconnect = { version = "3.5.0", default-features = false, features = [
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
 ] }
-redis = { version = "0.25.2", default-features = false, features = [
+redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
 serde = { version = "1.0.197", features = ["derive"] }
 simd-json = "0.13.9"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
-thiserror = "1.0.58"
 url = "2.5.0"
 
 [lints]

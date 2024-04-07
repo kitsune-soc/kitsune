@@ -1,5 +1,4 @@
 use super::attachment::{AttachmentService, Upload};
-use crate::error::{BoxError, Error, Result};
 use bytes::Bytes;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, JoinOnDsl, NullableExpressionMethods,
@@ -15,6 +14,7 @@ use kitsune_db::{
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -134,7 +134,7 @@ impl CustomEmojiService {
 
     pub async fn add_emoji<S>(&self, emoji_upload: EmojiUpload<S>) -> Result<CustomEmoji>
     where
-        S: Stream<Item = Result<Bytes, BoxError>> + Send + Sync + 'static,
+        S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         emoji_upload.validate(&())?;
 

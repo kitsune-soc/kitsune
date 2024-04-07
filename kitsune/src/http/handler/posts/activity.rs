@@ -1,9 +1,10 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
+use crate::{http::responder::ActivityPubJson, state::Zustand};
 use axum::{
     debug_handler,
     extract::{Path, State},
 };
 use kitsune_activitypub::mapping::IntoActivity;
+use kitsune_error::Result;
 use kitsune_type::ap::Activity;
 use speedy_uuid::Uuid;
 

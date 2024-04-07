@@ -1,6 +1,5 @@
 use crate::{
     consts::default_limit,
-    error::{Error, Result},
     http::{
         extractor::MastodonAuthExtractor,
         pagination::{LinkHeader, PaginatedJsonResponse},
@@ -13,6 +12,7 @@ use axum::{
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
+use kitsune_error::{Error, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::post::{GetAccountsInteractingWithPost, PostService};
 use kitsune_type::mastodon::Account;

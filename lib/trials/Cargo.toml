@@ -1,0 +1,18 @@
+[package]
+name = "trials"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+trials-macros = { path = "macros", optional = true }
+
+[features]
+proc-macro = ["dep:trials-macros"]
+
+[dev-dependencies]
+futures-test = "0.3.30"
+
+[lints]
+workspace = true

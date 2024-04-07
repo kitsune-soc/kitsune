@@ -1,15 +1,12 @@
-use crate::{
-    error::Result,
-    http::{
-        extractor::{AuthExtractor, MastodonAuthExtractor},
-        util::buffer_multipart_to_tempfile,
-    },
+use crate::http::{
+    extractor::{AuthExtractor, MastodonAuthExtractor},
+    util::buffer_multipart_to_tempfile,
 };
 use axum::{
     extract::{Multipart, State},
     Json,
 };
-use kitsune_core::error::HttpError;
+use kitsune_error::{bail, kitsune_error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::{
     account::{AccountService, Update},
@@ -45,7 +42,7 @@ pub async fn patch(
             "note" => update.note(field.text().await?),
             "avatar" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    return Err(HttpError::BadRequest.into());
+                    bail!(type = ErrorType::BadRequest, "invalid content-type");
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -54,13 +51,13 @@ pub async fn patch(
                     .content_type(content_type)
                     .stream(stream)
                     .build()
-                    .map_err(|_| HttpError::BadRequest)?;
+                    .unwrap();
 
                 update.avatar(upload)
             }
             "header" => {
                 let Some(content_type) = field.content_type().map(ToString::to_string) else {
-                    return Err(HttpError::BadRequest.into());
+                    bail!(type = ErrorType::BadRequest, "invalid content-type");
                 };
                 let stream = buffer_multipart_to_tempfile(&mut field).await?;
 
@@ -69,7 +66,7 @@ pub async fn patch(
                     .content_type(content_type)
                     .stream(stream)
                     .build()
-                    .map_err(|_| HttpError::BadRequest)?;
+                    .unwrap();
 
                 update.header(upload)
             }
@@ -78,7 +75,12 @@ pub async fn patch(
         };
     }
 
-    let update = update.build().map_err(|_| HttpError::BadRequest)?;
+    let update = update.build().map_err(|err| {
+        kitsune_error!(
+            type = ErrorType::BadRequest.with_body(err.to_string()),
+            "missing upload field"
+        )
+    })?;
     let account = account_service.update(update).await?;
 
     Ok(Json(mastodon_mapper.map(account).await?))

@@ -1,13 +1,10 @@
-use crate::{
-    error::Result,
-    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-};
+use crate::http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
     Json,
 };
-use kitsune_core::error::HttpError;
+use kitsune_error::{bail, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
@@ -41,7 +38,7 @@ pub async fn post(
     follow_body: Option<AgnosticForm<FollowBody>>,
 ) -> Result<Json<Relationship>> {
     if user_data.account.id == id {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest, "user tried to follow themselves");
     }
 
     let follow = Follow::builder()

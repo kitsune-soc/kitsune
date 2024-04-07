@@ -11,7 +11,6 @@ autometrics = { version = "1.0.1", default-features = false }
 base64-simd = "0.8.0"
 diesel = "2.1.5"
 diesel-async = "0.4.1"
-eyre = "0.6.12"
 futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.1.0"
@@ -21,6 +20,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-embed = { path = "../kitsune-embed" }
+kitsune-error = { path = "../kitsune-error" }
 kitsune-federation-filter = { path = "../kitsune-federation-filter" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-language = { path = "../kitsune-language" }
@@ -32,12 +32,10 @@ kitsune-util = { path = "../kitsune-util" }
 kitsune-wasm-mrf = { path = "../kitsune-wasm-mrf" }
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
-rsa = "0.9.6"
 serde = "1.0.197"
 sha2 = "0.10.8"
 simd-json = "0.13.9"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-thiserror = "1.0.58"
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 url = "2.5.0"

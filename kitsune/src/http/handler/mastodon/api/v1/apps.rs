@@ -1,10 +1,10 @@
 use crate::state::Zustand;
 use crate::{
-    error::Result,
     http::extractor::AgnosticForm,
     oauth2::{CreateApp, OAuth2Service},
 };
 use axum::{extract::State, routing, Json, Router};
+use kitsune_error::Result;
 use kitsune_type::mastodon::App;
 use serde::Deserialize;
 use utoipa::ToSchema;

@@ -24,13 +24,13 @@ members = [
     "crates/kitsune-db",
     "crates/kitsune-email",
     "crates/kitsune-embed",
+    "crates/kitsune-error",
     "crates/kitsune-federation",
     "crates/kitsune-federation-filter",
     "crates/kitsune-http-client",
     "crates/kitsune-jobs",
     "crates/kitsune-language",
     "crates/kitsune-mastodon",
-    "crates/kitsune-messaging",
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-s3",
@@ -65,6 +65,8 @@ members = [
     "lib/tower-http-digest",
     "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
+    "lib/trials",
+    "lib/trials/macros",
     "xtask",
 ]
 resolver = "2"
@@ -117,4 +119,3 @@ install-updater = true
 
 [patch.crates-io]
 diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "017ebe2fb7a2709ab5db92148dea5ce812a35e09" }
-tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b3b59ac2fa1b5823f2426fef78a0fb74c004ec38" }

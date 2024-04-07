@@ -1,19 +1,9 @@
-use crate::{
-    error::{Error, Result},
-    http::extractor::SignedActivity,
-    state::Zustand,
-};
+use crate::{http::extractor::SignedActivity, state::Zustand};
 use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_activitypub::{
-    error::Error as ApError, process_new_object, update_object, ProcessNewObject,
-};
-use kitsune_core::{
-    error::HttpError,
-    event::{post::EventType, PostEvent},
-};
+use kitsune_activitypub::{process_new_object, update_object, ProcessNewObject};
 use kitsune_db::{
     model::{
         account::Account,
@@ -27,6 +17,7 @@ use kitsune_db::{
     schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
     with_connection,
 };
+use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::deliver::accept::DeliverAccept;
 use kitsune_service::job::Enqueue;
@@ -47,13 +38,8 @@ async fn accept_activity(state: &Zustand, activity: Activity) -> Result<()> {
 }
 
 async fn announce_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let Some(reposted_post) = state
-        .fetcher
-        .fetch_post(activity.object().into())
-        .await
-        .map_err(Error::Fetcher)?
-    else {
-        return Err(HttpError::BadRequest.into());
+    let Some(reposted_post) = state.fetcher.fetch_post(activity.object().into()).await? else {
+        bail!(type = ErrorType::BadRequest, "announced post couldn't be fetched");
     };
 
     with_connection!(state.db_pool, |db_conn| {
@@ -92,47 +78,22 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
             .object(Box::new(object))
             .search_backend(state.service.search.backend())
             .build();
-        let new_post = process_new_object(process_data).await?;
-
-        state
-            .event_emitter
-            .post
-            .emit(PostEvent {
-                r#type: EventType::Create,
-                post_id: new_post.id,
-            })
-            .await
-            .map_err(Error::Messaging)?;
+        process_new_object(process_data).await?;
     }
 
     Ok(())
 }
 
 async fn delete_activity(state: &Zustand, author: Account, activity: Activity) -> Result<()> {
-    let post_id = with_connection!(state.db_pool, |db_conn| {
-        let post_id = posts::table
-            .filter(posts::account_id.eq(author.id))
-            .filter(posts::url.eq(activity.object()))
-            .select(posts::id)
-            .get_result(db_conn)
-            .await?;
-
-        diesel::delete(posts::table.find(post_id))
-            .execute(db_conn)
-            .await?;
-
-        Ok::<_, Error>(post_id)
-    })?;
-
-    state
-        .event_emitter
-        .post
-        .emit(PostEvent {
-            r#type: EventType::Delete,
-            post_id,
-        })
+    with_connection!(state.db_pool, |db_conn| {
+        diesel::delete(
+            posts::table
+                .filter(posts::account_id.eq(author.id))
+                .filter(posts::url.eq(activity.object())),
+        )
+        .execute(db_conn)
         .await
-        .map_err(Error::Messaging)?;
+    })?;
 
     Ok(())
 }
@@ -141,10 +102,9 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
     let Some(followed_user) = state
         .fetcher
         .fetch_account(activity.object().into())
-        .await
-        .map_err(Error::Fetcher)?
+        .await?
     else {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest, "followed account couldn't be fetched");
     };
 
     let approved_at = followed_user.locked.not().then(Timestamp::now_utc);
@@ -298,17 +258,8 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
             .object(Box::new(object))
             .search_backend(state.service.search.backend())
             .build();
-        let modified_post = update_object(process_data).await?;
 
-        state
-            .event_emitter
-            .post
-            .emit(PostEvent {
-                r#type: EventType::Update,
-                post_id: modified_post.id,
-            })
-            .await
-            .map_err(Error::Messaging)?;
+        update_object(process_data).await?;
     }
 
     Ok(())
@@ -329,10 +280,7 @@ pub async fn post(
     let counter = counter!("received_activities");
     counter.increment(1);
 
-    if !federation_filter
-        .is_entity_allowed(&activity)
-        .map_err(ApError::from)?
-    {
+    if !federation_filter.is_entity_allowed(&activity)? {
         return Ok(());
     }
 

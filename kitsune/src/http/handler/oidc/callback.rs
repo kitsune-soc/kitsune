@@ -1,18 +1,15 @@
-use crate::{
-    error::{OAuth2Error, Result},
-    oauth2::{AuthorisationCode, OAuth2Service},
-};
+use crate::oauth2::{AuthorisationCode, OAuth2Service};
 use axum::{
     extract::{Query, State},
     response::Response,
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_core::error::HttpError;
 use kitsune_db::{
     schema::{oauth2_applications, users},
     with_connection, PgPool,
 };
+use kitsune_error::{bail, ErrorType, Result};
 use kitsune_oidc::OidcService;
 use kitsune_service::user::{Register, UserService};
 use serde::Deserialize;
@@ -31,7 +28,7 @@ pub async fn get(
     Query(query): Query<CallbackQuery>,
 ) -> Result<Response> {
     let Some(oidc_service) = oidc_service else {
-        return Err(HttpError::BadRequest.into());
+        bail!(type = ErrorType::BadRequest, "oidc not configured");
     };
 
     let user_info = oidc_service.get_user_info(query.state, query.code).await?;
@@ -67,7 +64,7 @@ pub async fn get(
         .application(application)
         .state(user_info.oauth2.state)
         .user_id(user.id)
-        .scopes(user_info.oauth2.scope.parse().map_err(OAuth2Error::from)?)
+        .scopes(user_info.oauth2.scope.parse()?)
         .build();
 
     oauth_service

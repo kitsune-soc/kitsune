@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use askama::Template;
@@ -19,12 +18,15 @@ use axum_flash::{Flash, IncomingFlashes};
 use cursiv::CsrfHandle;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::with_connection;
-use kitsune_db::{model::user::User, schema::users, PgPool};
+use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
+use kitsune_error::{Error, Result};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
+
+const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check your inbox!";
+const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
 
 #[cfg(feature = "oidc")]
 use {
@@ -130,14 +132,14 @@ pub async fn post(
 
     let Some(user) = user else {
         return Ok(Either::E2((
-            flash.error(Error::PasswordMismatch.to_string()),
+            flash.error(WRONG_EMAIL_OR_PASSWORD),
             Redirect::to(redirect_to),
         )));
     };
 
     if user.confirmed_at.is_none() {
         return Ok(Either::E2((
-            flash.error(Error::UnconfirmedEmailAddress.to_string()),
+            flash.error(UNCONFIRMED_EMAIL_ADDRESS),
             Redirect::to(redirect_to),
         )));
     }
@@ -156,7 +158,7 @@ pub async fn post(
 
     if !is_valid {
         return Ok(Either::E2((
-            flash.error(Error::PasswordMismatch.to_string()),
+            flash.error(WRONG_EMAIL_OR_PASSWORD),
             Redirect::to(redirect_to),
         )));
     }

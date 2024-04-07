@@ -2,9 +2,10 @@
 //! File system backed implementation of the [`StorageBackend`] trait
 //!
 
-use crate::{Result, StorageBackend};
+use crate::StorageBackend;
 use bytes::Bytes;
 use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
+use kitsune_error::Result;
 use std::path::PathBuf;
 use tokio::{
     fs::{self, File},

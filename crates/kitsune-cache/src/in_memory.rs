@@ -1,4 +1,5 @@
-use crate::{CacheBackend, CacheResult};
+use crate::CacheBackend;
+use kitsune_error::Result;
 use moka::future::Cache;
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 
@@ -34,16 +35,16 @@ where
     K: Display + Send + Sync + ?Sized,
     V: Clone + Send + Sync + 'static,
 {
-    async fn delete(&self, key: &K) -> CacheResult<()> {
+    async fn delete(&self, key: &K) -> Result<()> {
         self.inner.remove(&key.to_string()).await;
         Ok(())
     }
 
-    async fn get(&self, key: &K) -> CacheResult<Option<V>> {
+    async fn get(&self, key: &K) -> Result<Option<V>> {
         Ok(self.inner.get(&key.to_string()).await)
     }
 
-    async fn set(&self, key: &K, value: &V) -> CacheResult<()> {
+    async fn set(&self, key: &K, value: &V) -> Result<()> {
         self.inner.insert(key.to_string(), value.clone()).await;
         Ok(())
     }

@@ -14,7 +14,7 @@ pub struct DeliverDelete {
 
 impl Runnable for DeliverDelete {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     #[instrument(skip_all, fields(post_id = %self.post_id))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {

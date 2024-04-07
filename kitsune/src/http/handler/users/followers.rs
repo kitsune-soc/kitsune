@@ -1,4 +1,4 @@
-use crate::{error::Result, http::responder::ActivityPubJson, state::Zustand};
+use crate::{http::responder::ActivityPubJson, state::Zustand};
 use axum::extract::{OriginalUri, Path, State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -6,6 +6,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows},
     with_connection,
 };
+use kitsune_error::Result;
 use kitsune_type::ap::{
     ap_context,
     collection::{Collection, CollectionType},

@@ -1,10 +1,5 @@
 use core::fmt;
-use diesel_async::pooled_connection::bb8;
 use std::error::Error as StdError;
-use thiserror::Error;
-
-pub type BoxError = Box<dyn StdError + Send + Sync>;
-pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug)]
 pub struct EnumConversionError(pub i32);
@@ -35,21 +30,3 @@ impl fmt::Display for IsoCodeConversionError {
 }
 
 impl StdError for IsoCodeConversionError {}
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error(transparent)]
-    Blocking(#[from] blowocking::Error),
-
-    #[error(transparent)]
-    Diesel(#[from] diesel::result::Error),
-
-    #[error(transparent)]
-    DieselConnection(#[from] diesel::result::ConnectionError),
-
-    #[error(transparent)]
-    Migration(BoxError),
-
-    #[error(transparent)]
-    Pool(#[from] bb8::RunError),
-}

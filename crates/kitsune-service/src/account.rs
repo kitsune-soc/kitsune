@@ -3,7 +3,6 @@ use super::{
     job::{Enqueue, JobService},
     LimitContext,
 };
-use crate::error::{Error, Result};
 use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{
@@ -28,6 +27,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 use kitsune_jobs::deliver::{
     accept::DeliverAccept,
     follow::DeliverFollow,
@@ -299,8 +299,7 @@ impl AccountService {
             let Some(webfinger_actor) = self
                 .resolver
                 .resolve_account(get_user.username, domain)
-                .await
-                .map_err(Error::Resolver)?
+                .await?
             else {
                 return Ok(None);
             };
@@ -310,10 +309,7 @@ impl AccountService {
                 .url(&webfinger_actor.uri)
                 .build();
 
-            self.fetcher
-                .fetch_account(opts)
-                .await
-                .map_err(Error::Fetcher)
+            self.fetcher.fetch_account(opts).await
         } else {
             with_connection!(self.db_pool, |db_conn| {
                 accounts::table
@@ -577,8 +573,8 @@ impl AccountService {
 
     pub async fn update<A, H>(&self, mut update: Update<A, H>) -> Result<Account>
     where
-        A: Stream<Item = kitsune_storage::Result<Bytes>> + Send + Sync + 'static,
-        H: Stream<Item = kitsune_storage::Result<Bytes>> + Send + Sync + 'static,
+        A: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
+        H: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
         update.validate(&())?;
 

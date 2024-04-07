@@ -1,5 +1,4 @@
 use crate::{
-    error::{Error, Result},
     http::{
         extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
         util::buffer_multipart_to_tempfile,
@@ -12,7 +11,7 @@ use axum::{
     routing, Json, Router,
 };
 use futures_util::TryFutureExt;
-use kitsune_core::error::HttpError;
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;
@@ -20,6 +19,7 @@ use serde::Deserialize;
 use speedy_uuid::Uuid;
 use utoipa::ToSchema;
 
+#[allow(dead_code)]
 #[derive(ToSchema)]
 pub struct CreateAttachment {
     pub description: Option<String>,
@@ -87,7 +87,13 @@ pub async fn post(
         }
     }
 
-    let upload = upload.build().map_err(|_| HttpError::BadRequest)?;
+    let upload = upload.build().map_err(|err| {
+        kitsune_error!(
+            type = ErrorType::BadRequest.with_body(err.to_string()),
+            "not all fields were filled"
+        )
+    })?;
+
     let media_attachment = attachment_service.upload(upload).await?;
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }

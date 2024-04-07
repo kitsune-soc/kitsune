@@ -1,7 +1,5 @@
-use crate::{
-    error::{BoxError, Error, Result},
-    traits::RenderableEmail,
-};
+use crate::traits::RenderableEmail;
+use kitsune_error::{Error, Result};
 use lettre::{
     message::{Mailbox, MultiPart},
     AsyncTransport, Message,
@@ -12,7 +10,6 @@ use typed_builder::TypedBuilder;
 pub use self::service::Mailing as MailingService;
 pub use lettre;
 
-pub mod error;
 pub mod mails;
 pub mod service;
 pub mod traits;
@@ -27,7 +24,7 @@ pub struct MailSender<B> {
 impl<B> MailSender<B>
 where
     B: AsyncTransport + Sync,
-    <B as AsyncTransport>::Error: Into<BoxError>,
+    Error: From<<B as AsyncTransport>::Error>,
 {
     pub async fn send<'a, I, M>(&self, mailboxes: I, email: &M) -> Result<()>
     where
@@ -46,10 +43,7 @@ where
                     rendered_email.body.clone(),
                 ))?;
 
-            self.backend
-                .send(message)
-                .await
-                .map_err(|err| Error::Transport(err.into()))?;
+            self.backend.send(message).await?;
         }
 
         Ok(())

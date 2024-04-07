@@ -2,13 +2,10 @@
 extern crate tracing;
 
 use self::sealed::{IntoMastodon, MapperState};
-use crate::error::Result;
-use derive_builder::Builder;
-use futures_util::StreamExt;
 use kitsune_cache::{ArcCache, CacheBackend};
-use kitsune_core::event::{post::EventType, PostEventConsumer};
 use kitsune_db::PgPool;
 use kitsune_embed::Client as EmbedClient;
+use kitsune_error::Result;
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
 use serde::Deserialize;
@@ -18,71 +15,12 @@ use typed_builder::TypedBuilder;
 
 mod sealed;
 
-pub mod error;
-
 pub trait MapperMarker: IntoMastodon {}
 
 impl<T> MapperMarker for T where T: IntoMastodon {}
 
-#[derive(TypedBuilder)]
-struct CacheInvalidationActor {
-    cache: ArcCache<Uuid, OwnedValue>,
-    event_consumer: PostEventConsumer,
-}
-
-impl CacheInvalidationActor {
-    async fn run(mut self) {
-        loop {
-            while let Some(event) = self.event_consumer.next().await {
-                let event = match event {
-                    Ok(event) => event,
-                    Err(err) => {
-                        error!(error = %err, "Failed to receive status event");
-                        continue;
-                    }
-                };
-
-                if matches!(event.r#type, EventType::Delete | EventType::Update) {
-                    if let Err(err) = self.cache.delete(&event.post_id).await {
-                        error!(error = %err, "Failed to remove entry from cache");
-                    }
-                }
-            }
-
-            if let Err(err) = self.event_consumer.reconnect().await {
-                error!(error = %err, "Failed to reconnect to event source");
-            }
-        }
-    }
-
-    pub fn spawn(self) {
-        tokio::spawn(self.run());
-    }
-}
-
-#[derive(Builder, Clone)]
-#[builder(pattern = "owned")]
-#[allow(clippy::used_underscore_binding)]
+#[derive(Clone, TypedBuilder)]
 pub struct MastodonMapper {
-    #[builder(
-        field(
-            ty = "Option<PostEventConsumer>",
-            build = "CacheInvalidationActor::builder()
-                .cache(
-                    self.mastodon_cache
-                        .clone()
-                        .ok_or(MastodonMapperBuilderError::UninitializedField(\"mastodon_cache\"))?
-                )
-                .event_consumer(
-                    self._cache_invalidator
-                        .ok_or(MastodonMapperBuilderError::UninitializedField(\"cache_invalidator\"))?
-                )
-                .build()
-                .spawn();",
-        ),
-        setter(name = "cache_invalidator", strip_option)
-    )]
-    _cache_invalidator: (),
     attachment_service: AttachmentService,
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
@@ -91,11 +29,6 @@ pub struct MastodonMapper {
 }
 
 impl MastodonMapper {
-    #[must_use]
-    pub fn builder() -> MastodonMapperBuilder {
-        MastodonMapperBuilder::default()
-    }
-
     /// Return a reference to a mapper state
     ///
     /// Passed down to the concrete mapping implementations

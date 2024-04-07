@@ -18,6 +18,7 @@ use uuid::Uuid;
 
 mod catch_panic;
 mod container;
+mod macros;
 mod redis;
 mod resource;
 

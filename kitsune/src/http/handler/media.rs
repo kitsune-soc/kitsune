@@ -1,4 +1,4 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{
     body::Body,
     extract::{Path, State},
@@ -6,6 +6,7 @@ use axum::{
     routing, Router,
 };
 use http::header::CONTENT_TYPE;
+use kitsune_error::Result;
 use kitsune_service::attachment::AttachmentService;
 use speedy_uuid::Uuid;
 

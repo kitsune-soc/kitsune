@@ -3,16 +3,11 @@
 use bytes::Bytes;
 use derive_more::From;
 use futures_util::{Stream, StreamExt};
-use std::{error::Error, future::Future};
+use kitsune_error::Result;
+use std::future::Future;
 
 pub mod fs;
 pub mod s3;
-
-/// Boxed error
-pub type BoxError = Box<dyn Error + Send + Sync>;
-
-/// Result alias where the error defaults to [`BoxError`]
-pub type Result<T, E = BoxError> = std::result::Result<T, E>;
 
 /// Trait abstraction over storage backends
 pub trait StorageBackend: Clone + Send + Sync {

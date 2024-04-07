@@ -1,8 +1,6 @@
-use crate::{
-    error::Result,
-    http::extractor::{AuthExtractor, MastodonAuthExtractor},
-};
+use crate::http::extractor::{AuthExtractor, MastodonAuthExtractor};
 use axum::{extract::State, Json};
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::Account;
 

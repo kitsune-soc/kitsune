@@ -1,5 +1,4 @@
 use super::LimitContext;
-use crate::error::{Error, Result};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
@@ -10,6 +9,7 @@ use kitsune_db::{
     schema::{accounts_follows, posts, posts_mentions},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 

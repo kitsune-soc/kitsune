@@ -55,7 +55,7 @@ pub enum Job {
 
 impl Runnable for Job {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         match self {
@@ -87,7 +87,7 @@ impl KitsuneContextRepo {
 
 impl JobContextRepository for KitsuneContextRepo {
     type JobContext = Job;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
@@ -103,7 +103,7 @@ impl JobContextRepository for KitsuneContextRepo {
 
         Ok(stream
             .map_ok(|ctx| (ctx.id, ctx.context.0))
-            .map_err(eyre::Report::from)
+            .map_err(kitsune_error::Error::from)
             .boxed())
     }
 

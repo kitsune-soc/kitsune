@@ -10,11 +10,11 @@ athena = { path = "../../lib/athena" }
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 diesel = "2.1.5"
 diesel-async = "0.4.1"
-eyre = "0.6.12"
 futures-util = "0.3.30"
 kitsune-core = { path = "../kitsune-core" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-email = { path = "../kitsune-email" }
+kitsune-error = { path = "../kitsune-error" }
 serde = { version = "1.0.197", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tracing = "0.1.40"

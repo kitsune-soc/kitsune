@@ -1,8 +1,6 @@
 use super::Store;
-use crate::{
-    error::{Error, Result},
-    state::LoginState,
-};
+use crate::state::LoginState;
+use kitsune_error::{kitsune_error, ErrorType, Result};
 use moka::future::Cache;
 
 #[derive(Clone)]
@@ -20,7 +18,10 @@ impl InMemory {
 
 impl Store for InMemory {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
-        self.inner.remove(key).await.ok_or(Error::MissingLoginState)
+        self.inner
+            .remove(key)
+            .await
+            .ok_or_else(|| kitsune_error!(type = ErrorType::BadRequest, "missing login state"))
     }
 
     async fn set(&self, key: &str, value: LoginState) -> Result<()> {

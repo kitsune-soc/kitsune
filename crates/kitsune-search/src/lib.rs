@@ -3,21 +3,18 @@ extern crate tracing;
 
 use enum_dispatch::enum_dispatch;
 use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
+use kitsune_error::Result;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use strum::{AsRefStr, EnumIter};
 
-mod error;
 #[cfg(feature = "meilisearch")]
 mod meilisearch;
 mod sql;
 
-pub use self::error::Error;
 #[cfg(feature = "meilisearch")]
 pub use self::meilisearch::MeiliSearchService;
 pub use self::sql::SearchService as SqlSearchService;
-
-type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]

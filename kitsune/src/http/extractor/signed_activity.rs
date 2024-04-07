@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    state::Zustand,
-};
+use crate::state::Zustand;
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -14,8 +11,9 @@ use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http_body_util::BodyExt;
-use kitsune_core::{error::HttpError, traits::fetcher::AccountFetchOptions};
+use kitsune_core::traits::fetcher::AccountFetchOptions;
 use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
+use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;
@@ -79,13 +77,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
         };
 
         let ap_id = activity.actor.as_str();
-        let Some(remote_user) = state
-            .fetcher
-            .fetch_account(ap_id.into())
-            .await
-            .map_err(Error::Fetcher)?
-        else {
-            return Err(Error::CoreHttp(HttpError::BadRequest).into());
+        let Some(remote_user) = state.fetcher.fetch_account(ap_id.into()).await? else {
+            bail!(type = ErrorType::BadRequest, "failed to fetch remote account");
         };
 
         let request = http::Request::from_parts(parts, ());
@@ -96,13 +89,8 @@ impl FromRequest<Zustand, Body> for SignedActivity {
                 .url(ap_id)
                 .build();
 
-            let Some(remote_user) = state
-                .fetcher
-                .fetch_account(opts)
-                .await
-                .map_err(Error::Fetcher)?
-            else {
-                return Err(Error::CoreHttp(HttpError::BadRequest).into());
+            let Some(remote_user) = state.fetcher.fetch_account(opts).await? else {
+                bail!(type = ErrorType::BadRequest, "failed to fetch remote account");
             };
 
             if !verify_signature(&request, &state.db_pool, Some(&remote_user)).await? {
@@ -135,7 +123,7 @@ async fn verify_signature(
             // Otherwise a random person with a key that's known to the database could start signing activities willy-nilly and the server would accept it.
             if let Some(expected_account) = expected_account {
                 if expected_account.url != remote_user.url {
-                    return Err(HttpError::Unauthorised.into());
+                    bail!(type = ErrorType::Unauthorized, "remote account isn't the author of the activity");
                 }
             }
 

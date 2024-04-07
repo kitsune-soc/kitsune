@@ -14,7 +14,7 @@ pub struct DeliverUnfollow {
 
 impl Runnable for DeliverUnfollow {
     type Context = JobRunnerContext;
-    type Error = eyre::Report;
+    type Error = kitsune_error::Error;
 
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let follow = with_connection!(ctx.db_pool, |db_conn| {

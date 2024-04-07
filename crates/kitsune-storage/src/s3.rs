@@ -2,9 +2,10 @@
 //! An S3 backed implementation of the [`StorageBackend`] trait
 //!
 
-use crate::{Result, StorageBackend};
+use crate::StorageBackend;
 use bytes::Bytes;
 use futures_util::{Stream, StreamExt};
+use kitsune_error::Result;
 use rusty_s3::{Bucket, Credentials};
 use std::sync::Arc;
 

@@ -2,7 +2,6 @@ use super::{
     captcha::CaptchaService,
     job::{Enqueue, JobService},
 };
-use crate::error::{Error, Result, UserError};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel_async::RunQueryDsl;
 use futures_util::future::OptionFuture;
@@ -17,6 +16,7 @@ use kitsune_db::{
     schema::{accounts, accounts_preferences, users},
     with_transaction, PgPool,
 };
+use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_url::UrlService;
 use kitsune_util::{generate_secret, try_join};
@@ -126,7 +126,7 @@ impl UserService {
     #[allow(clippy::too_many_lines)] // TODO: Refactor to get under the limit
     pub async fn register(&self, register: Register) -> Result<User> {
         if !self.registrations_open && !register.force_registration {
-            return Err(UserError::RegistrationsClosed.into());
+            bail!(type = ErrorType::Forbidden.with_body("registrations closed"), "registrations closed");
         }
 
         register.validate(&RegisterContext {
@@ -134,10 +134,12 @@ impl UserService {
         })?;
 
         if self.captcha_service.enabled() {
-            let token = register.captcha_token.ok_or(UserError::InvalidCaptcha)?;
+            let invalid_captcha = || kitsune_error!(type = ErrorType::BadRequest.with_body("invalid captcha"), "invalid captcha");
+
+            let token = register.captcha_token.ok_or_else(invalid_captcha)?;
             let result = self.captcha_service.verify_token(&token).await?;
             if result != ChallengeStatus::Verified {
-                return Err(UserError::InvalidCaptcha.into());
+                return Err(invalid_captcha());
             }
         }
 

@@ -18,13 +18,13 @@ kitsune-s3 = { path = "../kitsune-s3" }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 pin-project-lite = "0.2.14"
 rand = "0.8.5"
-redis = { version = "0.25.2", default-features = false, features = [
+redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
 rusty-s3 = { version = "0.5.0", default-features = false }
 testcontainers = "0.15.0"
-testcontainers-modules = { version = "0.3.6", features = [
+testcontainers-modules = { version = "0.3.7", features = [
     "minio",
     "postgres",
     "redis",

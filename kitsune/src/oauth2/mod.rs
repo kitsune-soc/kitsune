@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::response::{Redirect, Response};
@@ -10,6 +9,7 @@ use kitsune_db::{
     schema::{oauth2_applications, oauth2_authorization_codes},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
 use oxide_auth::endpoint::Scope;

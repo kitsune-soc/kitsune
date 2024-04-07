@@ -10,6 +10,7 @@ use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt}
 use kitsune_config::mrf::{
     Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
+use kitsune_error::Error;
 use kitsune_type::ap::Activity;
 use mrf_manifest::{Manifest, ManifestV1};
 use smol_str::SmolStr;
@@ -28,10 +29,7 @@ use wasmtime::{
     Config, Engine, InstanceAllocationStrategy,
 };
 
-pub use self::error::Error;
-
 mod ctx;
-mod error;
 mod logging;
 mod mrf_wit;
 
@@ -210,14 +208,14 @@ impl MrfService {
             let (mrf, _) =
                 mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
                     .await
-                    .map_err(Error::Runtime)?;
+                    .map_err(Error::msg)?;
 
             store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
 
             let result = mrf
                 .call_transform(&mut store, &module.config, direction, &activity)
                 .await
-                .map_err(Error::Runtime)?;
+                .map_err(Error::msg)?;
 
             match result {
                 Ok(transformed) => {

@@ -1,11 +1,9 @@
-use crate::{
-    error::Result,
-    http::extractor::{Json, MastodonAuthExtractor},
-};
+use crate::http::extractor::{Json, MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
 };
+use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::post::PostService;
 use kitsune_type::mastodon::status::StatusSource;

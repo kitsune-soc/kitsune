@@ -1,15 +1,11 @@
-use eyre::WrapErr;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
-use kitsune_config::{cache, captcha, email, language_detection, messaging, search, storage};
+use kitsune_config::{cache, captcha, email, language_detection, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
     lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
     MailSender,
-};
-use kitsune_messaging::{
-    redis::RedisMessagingBackend, tokio_broadcast::TokioBroadcastMessagingBackend, MessagingHub,
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
@@ -127,23 +123,6 @@ pub fn mail_sender(
         .build())
 }
 
-pub async fn messaging(config: &messaging::Configuration) -> eyre::Result<MessagingHub> {
-    let backend = match config {
-        messaging::Configuration::InProcess => {
-            MessagingHub::new(TokioBroadcastMessagingBackend::default())
-        }
-        messaging::Configuration::Redis(ref redis_config) => {
-            let redis_messaging_backend = RedisMessagingBackend::new(&redis_config.url)
-                .await
-                .wrap_err("Failed to initialise Redis messaging backend")?;
-
-            MessagingHub::new(redis_messaging_backend)
-        }
-    };
-
-    Ok(backend)
-}
-
 #[allow(clippy::unused_async)] // "async" is only unused when none of the more advanced searches are compiled in
 pub async fn search(
     search_config: &search::Configuration,
@@ -157,10 +136,15 @@ pub async fn search(
 
             #[cfg(feature = "meilisearch")]
             #[allow(clippy::used_underscore_binding)]
-            kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                .await
-                .wrap_err("Failed to connect to Meilisearch")?
-                .into()
+            {
+                use eyre::WrapErr;
+
+                kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                    .await
+                    .map_err(kitsune_error::Error::into_error)
+                    .wrap_err("Failed to connect to Meilisearch")?
+                    .into()
+            }
         }
         search::Configuration::Sql => SqlSearchService::builder()
             .db_pool(db_pool.clone())

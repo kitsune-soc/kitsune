@@ -1,10 +1,10 @@
-use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
     schema::{accounts, posts, users},
     with_connection, PgPool,
 };
+use kitsune_error::{Error, Result};
 use smol_str::SmolStr;
 use typed_builder::TypedBuilder;
 

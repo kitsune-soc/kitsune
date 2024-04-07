@@ -1,4 +1,3 @@
-use crate::error::{Error, Result};
 use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
 use http::HeaderValue;
@@ -16,6 +15,7 @@ use kitsune_db::{
     PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
+use kitsune_error::{bail, Error, Result};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
@@ -70,7 +70,7 @@ impl Fetcher {
     {
         let url = url.try_into()?;
         if !self.federation_filter.is_url_allowed(&url)? {
-            return Err(Error::BlockedInstance);
+            bail!("instance is blocked");
         }
 
         let response = self.client.get(url.as_str()).await?;
@@ -84,7 +84,7 @@ impl Fetcher {
             .typed_get::<ContentType>()
             .map(Mime::from)
         else {
-            return Err(Error::InvalidResponse);
+            bail!("invalid content-type header in response");
         };
 
         let is_json_ld_activitystreams = || {
@@ -108,7 +108,7 @@ impl Fetcher {
         };
 
         if !is_json_ld_activitystreams() && !is_activity_json() {
-            return Err(Error::InvalidResponse);
+            bail!("invalid content-type: isnt either ld+json or activity+json");
         }
 
         let response = response.jsonld().await?;
@@ -123,15 +123,15 @@ impl FetcherTrait for Fetcher {
         Arc::new(self.resolver.clone())
     }
 
-    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> eyre::Result<Option<Account>> {
+    async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {
         Ok(self.fetch_actor(opts).await?)
     }
 
-    async fn fetch_emoji(&self, url: &str) -> eyre::Result<Option<CustomEmoji>> {
+    async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
         Ok(self.fetch_emoji(url).await?)
     }
 
-    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> eyre::Result<Option<Post>> {
+    async fn fetch_post(&self, opts: PostFetchOptions<'_>) -> Result<Option<Post>> {
         Ok(self.fetch_object(opts.url, opts.call_depth).await?)
     }
 }

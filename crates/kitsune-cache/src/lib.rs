@@ -2,18 +2,15 @@
 extern crate tracing;
 
 use enum_dispatch::enum_dispatch;
+use kitsune_error::Result;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, sync::Arc};
 
-pub use self::error::Error;
 pub use self::in_memory::InMemory as InMemoryCache;
 pub use self::redis::Redis as RedisCache;
 
-mod error;
 mod in_memory;
 mod redis;
-
-type CacheResult<T, E = Error> = Result<T, E>;
 
 pub type ArcCache<K, V> = Arc<AnyCache<K, V>>;
 
@@ -34,9 +31,9 @@ pub trait CacheBackend<K, V>: Send + Sync
 where
     K: ?Sized,
 {
-    async fn delete(&self, key: &K) -> CacheResult<()>;
-    async fn get(&self, key: &K) -> CacheResult<Option<V>>;
-    async fn set(&self, key: &K, value: &V) -> CacheResult<()>;
+    async fn delete(&self, key: &K) -> Result<()>;
+    async fn get(&self, key: &K) -> Result<Option<V>>;
+    async fn set(&self, key: &K, value: &V) -> Result<()>;
 }
 
 #[derive(Clone)]
@@ -47,15 +44,15 @@ where
     K: Send + Sync + ?Sized,
     V: Send + Sync,
 {
-    async fn delete(&self, _key: &K) -> CacheResult<()> {
+    async fn delete(&self, _key: &K) -> Result<()> {
         Ok(())
     }
 
-    async fn get(&self, _key: &K) -> CacheResult<Option<V>> {
+    async fn get(&self, _key: &K) -> Result<Option<V>> {
         Ok(None)
     }
 
-    async fn set(&self, _key: &K, _value: &V) -> CacheResult<()> {
+    async fn set(&self, _key: &K, _value: &V) -> Result<()> {
         Ok(())
     }
 }

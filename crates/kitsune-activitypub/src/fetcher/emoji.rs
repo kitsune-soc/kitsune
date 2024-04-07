@@ -1,5 +1,4 @@
 use super::Fetcher;
-use crate::error::{Error, Result};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -11,6 +10,7 @@ use kitsune_db::{
     schema::{custom_emojis, media_attachments},
     with_connection, with_transaction,
 };
+use kitsune_error::{kitsune_error, Error, Result};
 use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 use url::Url;
@@ -35,11 +35,15 @@ impl Fetcher {
             return Ok(None);
         };
 
-        let mut domain = url.host_str().ok_or(Error::MissingHost)?;
+        let mut domain = url
+            .host_str()
+            .ok_or_else(|| kitsune_error!("missing host component"))?;
 
         if emoji.id != url.as_str() {
             url = Url::parse(&emoji.id)?;
-            domain = url.host_str().ok_or(Error::MissingHost)?;
+            domain = url
+                .host_str()
+                .ok_or_else(|| kitsune_error!("missing host component"))?;
         }
 
         let content_type = emoji
@@ -47,7 +51,7 @@ impl Fetcher {
             .media_type
             .as_deref()
             .or_else(|| mime_guess::from_path(&emoji.icon.url).first_raw())
-            .ok_or(Error::InvalidDocument)?;
+            .ok_or_else(|| kitsune_error!("failed to guess content-type"))?;
 
         let name_pure = emoji.name.replace(':', "");
 

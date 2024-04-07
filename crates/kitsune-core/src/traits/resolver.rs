@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use eyre::Result;
+use kitsune_error::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

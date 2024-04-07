@@ -1,6 +1,7 @@
-use crate::{error::Result, state::Zustand};
+use crate::state::Zustand;
 use axum::{extract::State, routing, Json, Router};
 use kitsune_core::consts::VERSION;
+use kitsune_error::Result;
 use kitsune_service::instance::InstanceService;
 use kitsune_type::mastodon::{
     instance::{Stats, Urls},

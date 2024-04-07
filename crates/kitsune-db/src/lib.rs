@@ -9,13 +9,13 @@ use diesel_async::{
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use kitsune_config::database::Configuration as DatabaseConfig;
+use kitsune_error::{Error, Result};
 use tracing_log::LogTracer;
 
 pub type PgPool = Pool<AsyncPgConnection>;
 
-pub use crate::error::{Error, Result};
 #[doc(hidden)]
-pub use diesel_async;
+pub use {diesel_async, trials};
 
 mod error;
 mod pool;
@@ -45,7 +45,7 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
 
             migration_conn
                 .run_pending_migrations(MIGRATIONS)
-                .map_err(Error::Migration)?;
+                .map_err(Error::msg)?;
 
             Ok::<_, Error>(())
         }

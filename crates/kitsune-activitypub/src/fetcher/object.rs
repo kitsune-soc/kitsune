@@ -1,10 +1,11 @@
 use super::Fetcher;
-use crate::{error::Result, process_new_object, ProcessNewObject};
+use crate::{process_new_object, ProcessNewObject};
 use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
 use kitsune_db::{model::post::Post, schema::posts, with_connection};
+use kitsune_error::Result;
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.
 // Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow

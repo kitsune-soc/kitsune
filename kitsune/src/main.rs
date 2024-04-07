@@ -27,6 +27,7 @@ async fn boot() -> eyre::Result<()> {
 
     let conn = kitsune_db::connect(&config.database)
         .await
+        .map_err(kitsune_error::Error::into_error)
         .wrap_err("Failed to connect to and migrate the database")?;
 
     let job_queue = kitsune_job_runner::prepare_job_queue(conn.clone(), &config.job_queue)

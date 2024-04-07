@@ -3,9 +3,8 @@ use axum::{
     Json,
 };
 use http::{Error as HttpError, HeaderValue};
+use kitsune_error::Error;
 use std::{borrow::Cow, fmt::Display};
-
-use crate::error::Error;
 
 pub type PaginatedJsonResponse<T> = (
     Option<LinkHeader<Vec<(&'static str, String)>>>,

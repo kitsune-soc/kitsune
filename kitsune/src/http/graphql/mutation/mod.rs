@@ -4,7 +4,6 @@ use async_graphql::{Context, Error, MergedObject, Result, Upload};
 use bytes::Bytes;
 use futures_util::{Stream, TryStreamExt};
 use kitsune_service::attachment;
-use kitsune_storage::BoxError;
 use mime::Mime;
 use std::str::FromStr;
 use tokio_util::{compat::FuturesAsyncReadCompatExt, io::ReaderStream};
@@ -18,7 +17,9 @@ fn handle_upload(
     ctx: &Context<'_>,
     file: Upload,
     description: Option<String>,
-) -> Result<attachment::Upload<impl Stream<Item = Result<Bytes, BoxError>> + Send + 'static>> {
+) -> Result<
+    attachment::Upload<impl Stream<Item = Result<Bytes, kitsune_error::Error>> + Send + 'static>,
+> {
     let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;
     let content_type = value

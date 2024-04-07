@@ -1,7 +1,7 @@
 use super::Resolver;
 use async_trait::async_trait;
-use eyre::Result;
 use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post};
+use kitsune_error::Result;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
