@@ -3694,12 +3694,12 @@ version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
  "http 1.1.0",
+ "kitsune-error",
  "kitsune-http-client",
  "serde",
  "serde_urlencoded",
  "simd-json",
  "strum",
- "thiserror",
  "typed-builder",
 ]
 
