@@ -33,15 +33,16 @@ impl IntoResponse for Error {
             return to_response(StatusCode::BAD_REQUEST, Some(body));
         }
 
+        let maybe_body = self.ctx.body.into_inner();
         match self.ctx.ty {
-            ErrorType::BadRequest => to_response(StatusCode::BAD_REQUEST, self.ctx.body),
-            ErrorType::Forbidden => to_response(StatusCode::FORBIDDEN, self.ctx.body),
-            ErrorType::NotFound => to_response(StatusCode::NOT_FOUND, self.ctx.body),
-            ErrorType::Unauthorized => to_response(StatusCode::UNAUTHORIZED, self.ctx.body),
+            ErrorType::BadRequest => to_response(StatusCode::BAD_REQUEST, maybe_body),
+            ErrorType::Forbidden => to_response(StatusCode::FORBIDDEN, maybe_body),
+            ErrorType::NotFound => to_response(StatusCode::NOT_FOUND, maybe_body),
+            ErrorType::Unauthorized => to_response(StatusCode::UNAUTHORIZED, maybe_body),
             ErrorType::UnsupportedMediaType => {
-                to_response(StatusCode::UNSUPPORTED_MEDIA_TYPE, self.ctx.body)
+                to_response(StatusCode::UNSUPPORTED_MEDIA_TYPE, maybe_body)
             }
-            ErrorType::Other => to_response(StatusCode::INTERNAL_SERVER_ERROR, self.ctx.body),
+            ErrorType::Other => to_response(StatusCode::INTERNAL_SERVER_ERROR, maybe_body),
         }
     }
 }

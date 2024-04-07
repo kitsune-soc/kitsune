@@ -1,7 +1,9 @@
 #[macro_use]
 extern crate tracing;
 
+use axum_core::response::{IntoResponse, Response};
 use std::fmt::{self, Debug, Display};
+use sync_wrapper::SyncWrapper;
 
 pub use self::ext::ResultExt;
 
@@ -40,14 +42,13 @@ pub enum ErrorType {
 
 impl ErrorType {
     #[must_use]
-    #[allow(clippy::needless_pass_by_value)]
     pub fn with_body<B>(self, body: B) -> ErrorContext
     where
-        B: ToString,
+        B: IntoResponse,
     {
         ErrorContext {
             ty: self,
-            body: Some(body.to_string()),
+            body: Some(body.into_response()).into(),
         }
     }
 }
@@ -56,7 +57,7 @@ impl From<ErrorType> for ErrorContext {
     fn from(value: ErrorType) -> Self {
         Self {
             ty: value,
-            body: None,
+            body: SyncWrapper::new(None),
         }
     }
 }
@@ -64,7 +65,7 @@ impl From<ErrorType> for ErrorContext {
 #[derive(Debug)]
 pub struct ErrorContext {
     ty: ErrorType,
-    body: Option<String>,
+    body: SyncWrapper<Option<Response>>,
 }
 
 #[derive(Debug)]

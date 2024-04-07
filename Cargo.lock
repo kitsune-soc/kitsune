@@ -3823,6 +3823,7 @@ dependencies = [
  "garde",
  "http 1.1.0",
  "simd-json",
+ "sync_wrapper 1.0.0",
  "tracing",
 ]
 

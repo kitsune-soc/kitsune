@@ -77,7 +77,7 @@ pub async fn patch(
 
     let update = update.build().map_err(|err| {
         kitsune_error!(
-            type = ErrorType::BadRequest.with_body(err),
+            type = ErrorType::BadRequest.with_body(err.to_string()),
             "missing upload field"
         )
     })?;
