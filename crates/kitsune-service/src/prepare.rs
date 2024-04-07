@@ -1,4 +1,3 @@
-use eyre::WrapErr;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
@@ -137,10 +136,14 @@ pub async fn search(
 
             #[cfg(feature = "meilisearch")]
             #[allow(clippy::used_underscore_binding)]
-            kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                .await
-                .wrap_err("Failed to connect to Meilisearch")?
-                .into()
+            {
+                use eyre::WrapErr;
+
+                kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
+                    .await
+                    .wrap_err("Failed to connect to Meilisearch")?
+                    .into()
+            }
         }
         search::Configuration::Sql => SqlSearchService::builder()
             .db_pool(db_pool.clone())
