@@ -3,19 +3,29 @@ extern crate tracing;
 
 use self::error::{BoxError, Result};
 use futures_util::{Future, Stream};
+use iso8601_timestamp::Timestamp;
 use speedy_uuid::Uuid;
+use typed_builder::TypedBuilder;
 
-pub use self::{
-    error::Error,
-    queue::{JobDetails, JobQueue},
-};
+pub use self::{error::Error, queue::JobQueue};
 pub use tokio_util::task::TaskTracker;
 
 mod error;
 mod macros;
 mod queue;
+mod redis;
 
-type RedisPool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
+#[derive(TypedBuilder)]
+pub struct JobDetails<C> {
+    #[builder(setter(into))]
+    context: C,
+    #[builder(default)]
+    fail_count: u32,
+    #[builder(default = Uuid::now_v7(), setter(into))]
+    job_id: Uuid,
+    #[builder(default, setter(into))]
+    run_at: Option<Timestamp>,
+}
 
 pub trait Runnable {
     /// User-defined context that is getting passed to the job when run

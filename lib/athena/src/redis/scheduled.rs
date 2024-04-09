@@ -1,4 +1,5 @@
-use crate::{error::Result, RedisPool};
+use super::Pool;
+use crate::error::Result;
 use once_cell::sync::Lazy;
 use rand::Rng;
 use redis::Script;
@@ -15,7 +16,7 @@ static SCHEDULE_SCRIPT: Lazy<Script> =
 
 #[derive(TypedBuilder)]
 pub struct ScheduledJobActor {
-    redis_pool: RedisPool,
+    redis_pool: Pool,
     scheduled_queue_name: SmolStr,
     queue_name: SmolStr,
 }

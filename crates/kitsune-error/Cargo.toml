@@ -11,7 +11,7 @@ eyre = "0.6.12"
 garde = { version = "0.18.0", default-features = false, features = ["serde"] }
 http = "1.1.0"
 simd-json = "0.13.9"
-sync_wrapper = "1.0.0"
+sync_wrapper = "1.0.1"
 tracing = "0.1.40"
 
 [lints]
