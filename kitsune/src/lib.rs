@@ -41,6 +41,7 @@ use kitsune_service::{
 };
 use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
+use std::sync::Arc;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
@@ -49,7 +50,7 @@ use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};
 pub async fn initialise_state(
     config: &Configuration,
     db_pool: PgPool,
-    job_queue: JobQueue<KitsuneContextRepo>,
+    job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>,
 ) -> eyre::Result<Zustand> {
     let url_service = UrlService::builder()
         .domain(config.url.domain.clone())

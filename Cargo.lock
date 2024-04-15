@@ -492,6 +492,7 @@ name = "athena"
 version = "0.0.1-pre.6"
 dependencies = [
  "ahash 0.8.11",
+ "async-trait",
  "either",
  "futures-util",
  "iso8601-timestamp",

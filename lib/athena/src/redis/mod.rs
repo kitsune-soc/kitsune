@@ -1,6 +1,7 @@
 use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
 use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, JobDetails, Runnable};
 use ahash::AHashMap;
+use async_trait::async_trait;
 use either::Either;
 use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
@@ -158,25 +159,6 @@ where
         Ok(cmd)
     }
 
-    pub async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
-        let job_meta = JobMeta {
-            job_id: job_details.job_id,
-            fail_count: job_details.fail_count,
-        };
-
-        self.context_repository
-            .store_context(job_meta.job_id, job_details.context)
-            .await
-            .map_err(|err| Error::ContextRepository(err.into()))?;
-
-        let mut redis_conn = self.redis_pool.get();
-        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
-            .query_async(&mut redis_conn)
-            .await?;
-
-        Ok(())
-    }
-
     async fn fetch_job_data(
         &self,
         max_jobs: usize,
@@ -305,8 +287,35 @@ where
 
         Ok(())
     }
+}
 
-    pub async fn spawn_jobs(
+#[async_trait]
+impl<CR> crate::JobQueue for JobQueue<CR>
+where
+    CR: JobContextRepository + Send + Sync + 'static,
+{
+    type ContextRepository = CR;
+
+    async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
+        let job_meta = JobMeta {
+            job_id: job_details.job_id,
+            fail_count: job_details.fail_count,
+        };
+
+        self.context_repository
+            .store_context(job_meta.job_id, job_details.context)
+            .await
+            .map_err(|err| Error::ContextRepository(err.into()))?;
+
+        let mut redis_conn = self.redis_pool.get();
+        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
+            .query_async(&mut redis_conn)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn spawn_jobs(
         &self,
         max_jobs: usize,
         run_ctx: Arc<<CR::JobContext as Runnable>::Context>,

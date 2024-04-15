@@ -2,17 +2,18 @@
 extern crate tracing;
 
 use self::error::{BoxError, Result};
+use async_trait::async_trait;
 use futures_util::{Future, Stream};
 use iso8601_timestamp::Timestamp;
 use speedy_uuid::Uuid;
+use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
-pub use self::{error::Error, queue::JobQueue};
+pub use self::{error::Error, redis::JobQueue as RedisJobQueue};
 pub use tokio_util::task::TaskTracker;
 
 mod error;
 mod macros;
-mod queue;
 mod redis;
 
 #[derive(TypedBuilder)]
@@ -25,6 +26,25 @@ pub struct JobDetails<C> {
     job_id: Uuid,
     #[builder(default, setter(into))]
     run_at: Option<Timestamp>,
+}
+
+#[async_trait]
+pub trait JobQueue: Send + Sync {
+    type ContextRepository: JobContextRepository;
+
+    async fn enqueue(
+        &self,
+        job_details: JobDetails<<Self::ContextRepository as JobContextRepository>::JobContext>,
+    ) -> Result<()>;
+
+    async fn spawn_jobs(
+        &self,
+        max_jobs: usize,
+        run_ctx: Arc<
+            <<Self::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context,
+        >,
+        join_set: &TaskTracker,
+    ) -> Result<()>;
 }
 
 pub trait Runnable {
@@ -45,7 +65,7 @@ pub trait JobContextRepository {
     /// To support multiple job types per repository, consider using the enum dispatch technique
     type JobContext: Runnable + Send + Sync + 'static;
     type Error: Into<BoxError>;
-    type Stream: Stream<Item = Result<(Uuid, Self::JobContext), Self::Error>>;
+    type Stream: Stream<Item = Result<(Uuid, Self::JobContext), Self::Error>> + Send;
 
     /// Batch fetch job contexts
     ///

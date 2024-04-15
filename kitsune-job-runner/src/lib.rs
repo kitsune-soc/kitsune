@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use athena::{JobQueue, TaskTracker};
+use athena::{JobQueue, RedisJobQueue, TaskTracker};
 use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
@@ -37,7 +37,7 @@ pub struct JobDispatcherState {
 pub async fn prepare_job_queue(
     db_pool: PgPool,
     config: &Configuration,
-) -> RedisResult<JobQueue<KitsuneContextRepo>> {
+) -> RedisResult<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
 
     let client = redis::Client::open(config.redis_url.as_str())?;
@@ -48,18 +48,18 @@ pub async fn prepare_job_queue(
     )
     .await?;
 
-    let queue = JobQueue::builder()
+    let queue = RedisJobQueue::builder()
         .context_repository(context_repo)
         .queue_name("kitsune-jobs")
         .redis_pool(redis_pool)
         .build();
 
-    Ok(queue)
+    Ok(Arc::new(queue))
 }
 
 #[instrument(skip(job_queue, state))]
 pub async fn run_dispatcher(
-    job_queue: JobQueue<KitsuneContextRepo>,
+    job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>,
     state: JobDispatcherState,
     num_job_workers: usize,
 ) {

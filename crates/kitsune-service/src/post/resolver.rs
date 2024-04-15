@@ -111,7 +111,7 @@ mod test {
         account::AccountService, attachment::AttachmentService, custom_emoji::CustomEmojiService,
         job::JobService,
     };
-    use athena::JobQueue;
+    use athena::RedisJobQueue;
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
@@ -184,13 +184,13 @@ mod test {
                     .build();
 
                 let context_repo = KitsuneContextRepo::builder().db_pool(db_pool.clone()).build();
-                let job_queue = JobQueue::builder()
+                let job_queue = RedisJobQueue::builder()
                     .context_repository(context_repo)
                     .queue_name("parse_mentions_test")
                     .redis_pool(redis_pool)
                     .build();
 
-                let job_service = JobService::builder().job_queue(job_queue).build();
+                let job_service = JobService::builder().job_queue(Arc::new(job_queue)).build();
 
                 let url_service = UrlService::builder()
                     .domain("example.com")
