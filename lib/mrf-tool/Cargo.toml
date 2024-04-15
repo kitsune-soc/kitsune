@@ -15,7 +15,7 @@ mrf-manifest = { path = "../mrf-manifest", features = [
     "serialise",
 ] }
 serde_json = "1.0.115"
-wasmparser = "0.202.0"
+wasmparser = "0.203.0"
 
 [lints]
 workspace = true

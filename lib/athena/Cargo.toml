@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 ahash = "0.8.11"
-either = { version = "1.10.0", default-features = false }
+either = { version = "1.11.0", default-features = false }
 futures-util = { version = "0.3.30", default-features = false }
 iso8601-timestamp = { version = "0.2.17", features = ["diesel-pg"] }
 just-retry = { path = "../just-retry" }
@@ -22,7 +22,7 @@ redis = { version = "0.25.3", default-features = false, features = [
     "tokio-comp",
 ] }
 serde = { version = "1.0.197", features = ["derive"] }
-simd-json = "0.13.9"
+simd-json = "0.13.10"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
 thiserror = "1.0.58"

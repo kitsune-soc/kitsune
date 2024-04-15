@@ -8,14 +8,14 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 kitsune-error = { path = "../kitsune-error" }
-moka = { version = "0.12.5", features = ["future"] }
+moka = { version = "0.12.6", features = ["future"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
 serde = "1.0.197"
-simd-json = "0.13.9"
+simd-json = "0.13.10"
 tracing = "0.1.40"
 typed-builder = "0.18.1"
 

@@ -6,11 +6,11 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.79"
+async-trait = "0.1.80"
 eyre = "0.6.12"
 http-body-util = "0.1.1"
 http-compat = { path = "../../lib/http-compat" }
-hyper = { version = "1.2.0", default-features = false }
+hyper = { version = "1.3.0", default-features = false }
 kitsune-config = { path = "../kitsune-config" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 metrics = "=0.22.0"

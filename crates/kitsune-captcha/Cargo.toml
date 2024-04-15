@@ -12,7 +12,7 @@ kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-simd-json = "0.13.9"
+simd-json = "0.13.10"
 strum = { version = "0.26.2", features = ["derive"] }
 typed-builder = "0.18.1"
 
