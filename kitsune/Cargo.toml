@@ -15,7 +15,7 @@ license = false
 eula = false
 
 [dependencies]
-athena = { path = "../lib/athena" }
+athena = { path = "../lib/athena", features = ["redis"] }
 argon2 = { version = "0.5.3", features = ["std"] }
 askama = { version = "0.12.1", features = [
     "with-axum",

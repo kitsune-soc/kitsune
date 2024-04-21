@@ -12,7 +12,7 @@ license = false
 eula = false
 
 [dependencies]
-athena = { path = "../lib/athena" }
+athena = { path = "../lib/athena", features = ["redis"] }
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 just-retry = { path = "../lib/just-retry" }

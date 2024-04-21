@@ -9,9 +9,11 @@ pub enum Error {
     #[error(transparent)]
     ContextRepository(BoxError),
 
+    #[cfg(feature = "redis")]
     #[error(transparent)]
     Redis(#[from] redis::RedisError),
 
+    #[cfg(feature = "redis")]
     #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
 

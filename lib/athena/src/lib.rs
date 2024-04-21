@@ -1,3 +1,4 @@
+#[cfg(feature = "redis")]
 #[macro_use]
 extern crate tracing;
 
@@ -9,23 +10,28 @@ use speedy_uuid::Uuid;
 use std::sync::Arc;
 use typed_builder::TypedBuilder;
 
-pub use self::{error::Error, redis::JobQueue as RedisJobQueue};
+pub use self::error::Error;
 pub use tokio_util::task::TaskTracker;
+
+#[cfg(feature = "redis")]
+pub use self::redis::JobQueue as RedisJobQueue;
 
 mod error;
 mod macros;
+#[cfg(feature = "redis")]
 mod redis;
 
 #[derive(TypedBuilder)]
+#[non_exhaustive]
 pub struct JobDetails<C> {
     #[builder(setter(into))]
-    context: C,
+    pub context: C,
     #[builder(default)]
-    fail_count: u32,
+    pub fail_count: u32,
     #[builder(default = Uuid::now_v7(), setter(into))]
-    job_id: Uuid,
+    pub job_id: Uuid,
     #[builder(default, setter(into))]
-    run_at: Option<Timestamp>,
+    pub run_at: Option<Timestamp>,
 }
 
 #[async_trait]
