@@ -29,7 +29,7 @@ pub struct JobDetails<C> {
 }
 
 #[async_trait]
-pub trait JobQueue: Send + Sync {
+pub trait JobQueue: Send + Sync + 'static {
     type ContextRepository: JobContextRepository;
 
     async fn enqueue(

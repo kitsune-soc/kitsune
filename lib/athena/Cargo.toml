@@ -22,15 +22,15 @@ redis = { version = "0.25.3", default-features = false, features = [
     "streams",
     "tokio-comp",
 ] }
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.198", features = ["derive"] }
 simd-json = "0.13.10"
 smol_str = "0.2.1"
 speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
-thiserror = "1.0.58"
+thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.10", features = ["rt"] }
 tracing = "0.1.40"
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 
 [dev-dependencies]
 redis = { version = "0.25.3", features = ["connection-manager"] }

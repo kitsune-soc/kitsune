@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-bubble-bath = "0.1.2"
+bubble-bath = "0.1.3"
 iso8601-timestamp = "0.2.17"
 kitsune-type = { path = "../kitsune-type" }
 once_cell = "1.19.0"

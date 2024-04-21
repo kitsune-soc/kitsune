@@ -8,7 +8,7 @@ build = "build.rs"
 
 [dependencies]
 blowocking = { path = "../../lib/blowocking" }
-diesel = { version = "2.1.5", features = ["uuid"] }
+diesel = { version = "2.1.6", features = ["uuid"] }
 diesel-async = { version = "0.4.1", features = [
     "async-connection-wrapper",
     "bb8",
@@ -27,14 +27,14 @@ kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.2"
 num-traits = "0.2.18"
-rustls = { version = "0.23.4", default-features = false, features = [
+rustls = { version = "0.23.5", default-features = false, features = [
     "logging",
     "ring",
     "std",
     "tls12",
 ] }
 rustls-native-certs = "0.7.0"
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.198", features = ["derive"] }
 simd-json = "0.13.10"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 tokio = { version = "1.37.0", features = ["rt"] }
@@ -43,7 +43,7 @@ tokio-postgres-rustls = "0.12.0"
 tracing = "0.1.40"
 tracing-log = "0.2.0"
 trials = { path = "../../lib/trials" }
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 
 [dev-dependencies]
 kitsune-test = { path = "../kitsune-test" }

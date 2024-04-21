@@ -9,7 +9,7 @@ license.workspace = true
 ignored = ["isahc"] # To make `meilisearch` builds static
 
 [dependencies]
-diesel = "2.1.5"
+diesel = "2.1.6"
 diesel-async = "0.4.1"
 diesel_full_text_search = { version = "2.1.1", default-features = false }
 enum_dispatch = "0.3.13"
@@ -18,11 +18,11 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-language = { path = "../kitsune-language" }
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.198", features = ["derive"] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.26.2", features = ["derive"] }
 tracing = "0.1.40"
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 
 # "meilisearch" feature
 isahc = { version = "1.7.2", default-features = false, features = [
