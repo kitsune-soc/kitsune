@@ -50,6 +50,7 @@ redis = [
 ]
 
 [dev-dependencies]
+kitsune-test = { path = "../../crates/kitsune-test" }
 redis = { version = "0.25.3", features = ["connection-manager"] }
 tracing-subscriber = "0.3.18"
 

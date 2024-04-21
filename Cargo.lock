@@ -497,6 +497,7 @@ dependencies = [
  "futures-util",
  "iso8601-timestamp",
  "just-retry",
+ "kitsune-test",
  "multiplex-pool",
  "once_cell",
  "rand 0.8.5",
