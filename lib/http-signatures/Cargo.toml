@@ -37,7 +37,6 @@ tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
-proptest = { version = "1.4.0", default-features = false, features = ["std"] }
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 
 [features]
