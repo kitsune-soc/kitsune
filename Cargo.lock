@@ -3958,6 +3958,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
  "http 1.1.0",
+ "http-body-util",
  "kitsune-config",
  "kitsune-error",
  "kitsune-http-client",

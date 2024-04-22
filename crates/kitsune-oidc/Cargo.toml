@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 http = "1.1.0"
+http-body-util = "0.1.1"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
