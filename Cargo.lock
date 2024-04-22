@@ -3958,12 +3958,12 @@ version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
  "http 1.1.0",
- "http-compat",
  "kitsune-config",
  "kitsune-error",
  "kitsune-http-client",
  "moka",
  "multiplex-pool",
+ "oauth2",
  "once_cell",
  "openidconnect",
  "redis",
@@ -5087,14 +5087,14 @@ dependencies = [
 
 [[package]]
 name = "oauth2"
-version = "4.4.2"
+version = "5.0.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38841cdd844847e3e7c8d29cef9dcfed8877f8f56f9071f77843ecf3baf937f"
+checksum = "098af5a5110b4deacf3200682963713b143ae9d28762b739bdb7b98429dfaf68"
 dependencies = [
- "base64 0.13.1",
+ "base64 0.22.0",
  "chrono",
  "getrandom 0.2.14",
- "http 0.2.12",
+ "http 1.1.0",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -5141,16 +5141,16 @@ checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
 
 [[package]]
 name = "openidconnect"
-version = "3.5.0"
+version = "4.0.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f47e80a9cfae4462dd29c41e987edd228971d6565553fbc14b8a11e666d91590"
+checksum = "6b38a873646c7f83bb723774220f68385bf39e10faafc2e2e51894882d9a5a0f"
 dependencies = [
- "base64 0.13.1",
+ "base64 0.21.7",
  "chrono",
  "dyn-clone",
  "ed25519-dalek",
  "hmac",
- "http 0.2.12",
+ "http 1.1.0",
  "itertools 0.10.5",
  "log",
  "oauth2",
@@ -5160,7 +5160,6 @@ dependencies = [
  "rsa",
  "serde",
  "serde-value",
- "serde_derive",
  "serde_json",
  "serde_path_to_error",
  "serde_plain",
