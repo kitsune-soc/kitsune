@@ -8,7 +8,7 @@ use futures_util::{
 use kitsune_test::redis_test;
 use speedy_uuid::Uuid;
 use std::{
-    io,
+    convert::Infallible,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -23,7 +23,7 @@ struct JobCtx;
 
 impl Runnable for JobCtx {
     type Context = ();
-    type Error = io::Error;
+    type Error = Infallible;
 
     async fn run(&self, _ctx: &Self::Context) -> Result<(), Self::Error> {
         DID_RUN.store(true, Ordering::Release);
@@ -35,7 +35,7 @@ struct ContextRepo;
 
 impl JobContextRepository for ContextRepo {
     type JobContext = JobCtx;
-    type Error = io::Error;
+    type Error = Infallible;
     type Stream = BoxStream<'static, Result<(Uuid, Self::JobContext), Self::Error>>;
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>

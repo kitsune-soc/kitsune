@@ -31,7 +31,7 @@ tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
 typed-builder = "0.18.2"
 walkdir = "2.5.0"
-wasmtime = { version = "19.0.2", default-features = false, features = [
+wasmtime = { version = "20.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -40,7 +40,7 @@ wasmtime = { version = "19.0.2", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "19.0.2", default-features = false }
+wasmtime-wasi = { version = "20.0.0", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"

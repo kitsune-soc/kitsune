@@ -3,6 +3,7 @@
 extern crate tracing;
 
 use self::error::{BoxError, Result};
+use ahash::AHashMap;
 use async_trait::async_trait;
 use futures_util::{Future, Stream};
 use iso8601_timestamp::Timestamp;
@@ -16,6 +17,7 @@ pub use tokio_util::task::TaskTracker;
 #[cfg(feature = "redis")]
 pub use self::redis::JobQueue as RedisJobQueue;
 
+mod common;
 mod error;
 mod macros;
 #[cfg(feature = "redis")]
@@ -38,18 +40,11 @@ pub struct JobDetails<C> {
 pub trait JobQueue: Send + Sync + 'static {
     type ContextRepository: JobContextRepository;
 
+    fn context_repository(&self) -> &Self::ContextRepository;
+
     async fn enqueue(
         &self,
         job_details: JobDetails<<Self::ContextRepository as JobContextRepository>::JobContext>,
-    ) -> Result<()>;
-
-    async fn spawn_jobs(
-        &self,
-        max_jobs: usize,
-        run_ctx: Arc<
-            <<Self::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context,
-        >,
-        join_set: &TaskTracker,
     ) -> Result<()>;
 }
 

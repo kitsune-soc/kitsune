@@ -1,0 +1,96 @@
+use crate::{
+    error::{Error, Result},
+    JobContextRepository, JobQueue, Runnable,
+};
+use ahash::AHashMap;
+use speedy_uuid::Uuid;
+use std::{sync::Arc, time::Duration};
+use tokio::time::Instant;
+use tokio_util::task::TaskTracker;
+
+const BLOCK_TIME: Duration = Duration::from_secs(2);
+const MAX_RETRIES: u32 = 10;
+const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
+
+type ContextFor<Queue: JobQueue> =
+    <<Queue::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context;
+
+pub async fn spawn_jobs<Q>(
+    queue: &Q,
+    max_jobs: usize,
+    run_ctx: Arc<ContextFor<Q>>,
+    task_tracker: &TaskTracker,
+) -> Result<()>
+where
+    Q: JobQueue + Clone,
+{
+    let job_data = queue.fetch_job_data(max_jobs).await?;
+    let context_stream = queue
+        .context_repository()
+        .fetch_context(job_data.clone().map(|data| data.meta.job_id))
+        .await
+        .map_err(|err| Error::ContextRepository(err.into()))?;
+
+    tokio::pin!(context_stream);
+
+    // Collect all the job data into a hashmap indexed by the job ID
+    // This is because we don't enforce an ordering with the batch fetching
+    let job_data = job_data
+        .map(|data| (data.meta.job_id, data))
+        .collect::<AHashMap<Uuid, JobData>>();
+    let job_data = Arc::new(job_data);
+
+    while let Some((job_id, job_ctx)) = context_stream
+        .next()
+        .await
+        .transpose()
+        .map_err(|err| Error::ContextRepository(err.into()))?
+    {
+        let queue = queue.clone();
+        let job_data = Arc::clone(&job_data);
+        let run_ctx = Arc::clone(&run_ctx);
+
+        task_tracker.spawn(async move {
+            let job_data = &job_data[&job_id];
+            let run_fut = job_ctx.run(&run_ctx);
+            tokio::pin!(run_fut);
+
+            let tick_period = MIN_IDLE_TIME - Duration::from_secs(2 * 60);
+            let mut tick_interval =
+                tokio::time::interval_at(Instant::now() + tick_period, tick_period);
+
+            let result = loop {
+                tokio::select! {
+                    result = &mut run_fut => break result,
+                    _ = tick_interval.tick() => {
+                        (|| queue.reclaim_job(job_data))
+                            .retry(just_retry::backoff_policy())
+                            .await
+                            .expect("Failed to reclaim job");
+                    }
+                }
+            };
+
+            let job_state = if let Err(error) = result {
+                error!(error = ?error.into(), "Failed run job");
+                JobState::Failed {
+                    fail_count: job_data.meta.fail_count,
+                    job_id,
+                    stream_id: &job_data.stream_id,
+                }
+            } else {
+                JobState::Succeeded {
+                    job_id,
+                    stream_id: &job_data.stream_id,
+                }
+            };
+
+            (|| queue.complete_job(&job_state))
+                .retry(just_retry::backoff_policy())
+                .await
+                .expect("Failed to mark job as completed");
+        });
+    }
+
+    Ok(())
+}

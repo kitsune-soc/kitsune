@@ -12,7 +12,7 @@ diesel = { version = "2.1.6", features = [
     "uuid",
 ], optional = true }
 redis = { version = "0.25.3", default-features = false, optional = true }
-serde = { version = "1.0.198", optional = true }
+serde = { version = "1.0.199", optional = true }
 thiserror = "1.0.59"
 uuid = { version = "1.8.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }

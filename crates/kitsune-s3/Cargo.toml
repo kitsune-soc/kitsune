@@ -13,7 +13,7 @@ kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 quick-xml = { version = "0.31.0", features = ["serialize"] }
 rusty-s3 = "0.5.0"
-serde = { version = "1.0.198", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 typed-builder = "0.18.2"
 
 [dev-dependencies]

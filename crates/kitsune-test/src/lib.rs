@@ -38,7 +38,7 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
-    let mut url = Url::parse(&resource_handle.url()).unwrap();
+    let mut url = Url::parse(&resource_handle.url().await).unwrap();
 
     // Create a new separate database for this test
     let id = Uuid::new_v4().as_simple().to_string();
@@ -85,7 +85,7 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("MINIO_URL", self::container::minio);
-    let endpoint = resource_handle.url().parse().unwrap();
+    let endpoint = resource_handle.url().await.parse().unwrap();
 
     // Create a new bucket with a random ID
     let bucket_id = Uuid::new_v4().as_simple().to_string();
@@ -117,7 +117,7 @@ where
     Fut: Future,
 {
     let resource_handle = get_resource!("REDIS_URL", self::container::redis);
-    let client = ::redis::Client::open(resource_handle.url().as_ref()).unwrap();
+    let client = ::redis::Client::open(resource_handle.url().await.as_ref()).unwrap();
 
     // Connect to a random Redis database
     let db_id = self::redis::find_unused_database(&client).await;

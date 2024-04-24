@@ -25,7 +25,7 @@ redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-comp",
 ] }
-serde = { version = "1.0.198", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 simd-json = "0.13.10"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 url = "2.5.0"
