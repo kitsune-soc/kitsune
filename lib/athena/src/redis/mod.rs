@@ -1,76 +1,31 @@
 use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
-use crate::{error::Result, impl_to_redis_args, Error, JobContextRepository, JobDetails, Runnable};
-use ahash::AHashMap;
+use crate::{
+    consts::{BLOCK_TIME, MAX_RETRIES, MIN_IDLE_TIME},
+    error::Result,
+    Error, JobContextRepository, JobData, JobDetails, JobResult, KeeperOfTheSecrets, Outcome,
+};
 use async_trait::async_trait;
 use either::Either;
-use futures_util::StreamExt;
 use iso8601_timestamp::Timestamp;
 use just_retry::{
     retry_policies::{policies::ExponentialBackoff, Jitter},
-    JustRetryPolicy, RetryExt, StartTime,
+    JustRetryPolicy, StartTime,
 };
 use redis::{
     aio::ConnectionLike,
     streams::{StreamReadOptions, StreamReadReply},
     AsyncCommands, RedisResult,
 };
-use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{
-    ops::ControlFlow,
-    pin::pin,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, SystemTime},
-};
-use tokio::{sync::OnceCell, time::Instant};
-use tokio_util::task::TaskTracker;
+use std::{ops::ControlFlow, str::FromStr, sync::Arc, time::SystemTime};
+use tokio::sync::OnceCell;
 use typed_builder::TypedBuilder;
 
 mod scheduled;
 mod util;
 
 type Pool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
-
-enum JobState<'a> {
-    Succeeded {
-        job_id: Uuid,
-        stream_id: &'a str,
-    },
-    Failed {
-        fail_count: u32,
-        job_id: Uuid,
-        stream_id: &'a str,
-    },
-}
-
-impl JobState<'_> {
-    fn job_id(&self) -> Uuid {
-        match self {
-            Self::Succeeded { job_id, .. } | Self::Failed { job_id, .. } => *job_id,
-        }
-    }
-
-    fn stream_id(&self) -> &str {
-        match self {
-            Self::Succeeded { stream_id, .. } | Self::Failed { stream_id, .. } => stream_id,
-        }
-    }
-}
-
-struct JobData {
-    stream_id: String,
-    meta: JobMeta,
-}
-
-impl_to_redis_args! {
-    #[derive(Deserialize, Serialize)]
-    struct JobMeta {
-        job_id: Uuid,
-        fail_count: u32,
-    }
-}
 
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
@@ -136,7 +91,7 @@ where
 
     fn enqueue_redis_cmd(
         &self,
-        job_meta: &JobMeta,
+        job_meta: &JobData,
         run_at: Option<Timestamp>,
     ) -> Result<redis::Cmd> {
         let cmd = if let Some(run_at) = run_at {
@@ -148,17 +103,53 @@ where
             )
         } else {
             let mut cmd = redis::cmd("XADD");
-            cmd.arg(self.queue_name.as_str()).arg("*").arg(job_meta);
+            cmd.arg(self.queue_name.as_str())
+                .arg("*")
+                .arg("job_id")
+                .arg(job_meta.job_id)
+                .arg("fail_count")
+                .arg(job_meta.fail_count);
+
             cmd
         };
 
         Ok(cmd)
     }
+}
 
-    async fn fetch_job_data(
-        &self,
-        max_jobs: usize,
-    ) -> Result<impl Iterator<Item = JobData> + Clone> {
+#[async_trait]
+impl<CR> crate::JobQueue for JobQueue<CR>
+where
+    CR: JobContextRepository + Send + Sync + 'static,
+{
+    type ContextRepository = CR;
+
+    #[inline]
+    fn context_repository(&self) -> &Self::ContextRepository {
+        &self.context_repository
+    }
+
+    async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
+        let job_data = JobData {
+            job_id: job_details.job_id,
+            fail_count: job_details.fail_count,
+            ctx: KeeperOfTheSecrets::empty(),
+        };
+
+        self.context_repository
+            .store_context(job_data.job_id, job_details.context)
+            .await
+            .map_err(|err| Error::ContextRepository(err.into()))?;
+
+        let mut redis_conn = self.redis_pool.get();
+        self.enqueue_redis_cmd(&job_data, job_details.run_at)?
+            .query_async(&mut redis_conn)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
         let mut redis_conn = self.redis_pool.get();
         self.initialise_group(&mut redis_conn).await?;
 
@@ -198,23 +189,31 @@ where
             Either::Right(claimed_ids.into_iter().chain(read_ids))
         };
 
-        let job_data_iterator = claimed_ids.map(|id| {
-            let job_id: String =
-                redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
-            let job_id = Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID");
-            let fail_count: u32 =
-                redis::from_redis_value(&id.map["fail_count"]).expect("[Bug] Malformed fail count");
+        let job_data = claimed_ids
+            .map(|id| {
+                let job_id: String =
+                    redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
+                let job_id = Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID");
+                let fail_count: u32 = redis::from_redis_value(&id.map["fail_count"])
+                    .expect("[Bug] Malformed fail count");
 
-            JobData {
-                stream_id: id.id,
-                meta: JobMeta { job_id, fail_count },
-            }
-        });
+                JobData {
+                    ctx: KeeperOfTheSecrets::new(id.id),
+                    job_id,
+                    fail_count,
+                }
+            })
+            .collect();
 
-        Ok(job_data_iterator)
+        Ok(job_data)
     }
 
-    async fn complete_job(&self, state: &JobState<'_>) -> Result<()> {
+    async fn complete_job(&self, state: &JobResult<'_>) -> Result<()> {
+        let stream_id = state
+            .ctx
+            .get::<String>()
+            .expect("[Bug] Not a string in the context");
+
         let mut pipeline = redis::pipe();
         pipeline
             .atomic()
@@ -222,28 +221,27 @@ where
             .xack(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
-                &[state.stream_id()],
+                &[stream_id],
             )
-            .xdel(self.queue_name.as_str(), &[state.stream_id()]);
+            .xdel(self.queue_name.as_str(), &[stream_id]);
 
-        let remove_context = match state {
-            JobState::Failed {
-                fail_count, job_id, ..
-            } => {
+        let remove_context = match state.outcome {
+            Outcome::Fail { fail_count } => {
                 let backoff = ExponentialBackoff::builder()
                     .jitter(Jitter::Bounded)
                     .build_with_max_retries(self.max_retries);
 
                 if let ControlFlow::Continue(delta) =
-                    backoff.should_retry(StartTime::Irrelevant, *fail_count)
+                    backoff.should_retry(StartTime::Irrelevant, fail_count)
                 {
-                    let job_meta = JobMeta {
-                        job_id: *job_id,
+                    let job_data = JobData {
+                        job_id: state.job_id,
                         fail_count: fail_count + 1,
+                        ctx: KeeperOfTheSecrets::empty(),
                     };
 
                     let backoff_timestamp = Timestamp::from(SystemTime::now() + delta);
-                    let enqueue_cmd = self.enqueue_redis_cmd(&job_meta, Some(backoff_timestamp))?;
+                    let enqueue_cmd = self.enqueue_redis_cmd(&job_data, Some(backoff_timestamp))?;
 
                     pipeline.add_command(enqueue_cmd);
 
@@ -252,7 +250,7 @@ where
                     true // We hit the maximum amount of retries, we won't re-enqueue the job, so we can just remove the context
                 }
             }
-            JobState::Succeeded { .. } => true, // Execution succeeded, we don't need the context anymore
+            Outcome::Success => true, // Execution succeeded, we don't need the context anymore
         };
 
         {
@@ -262,7 +260,7 @@ where
 
         if remove_context {
             self.context_repository
-                .remove_context(state.job_id())
+                .remove_context(state.job_id)
                 .await
                 .map_err(|err| Error::ContextRepository(err.into()))?;
         }
@@ -271,47 +269,20 @@ where
     }
 
     async fn reclaim_job(&self, job_data: &JobData) -> Result<()> {
+        let stream_id = job_data
+            .ctx
+            .get::<String>()
+            .expect("[Bug] Not a string in the context");
+
         let mut conn = self.redis_pool.get();
         conn.xclaim(
             self.queue_name.as_str(),
             self.consumer_group.as_str(),
             self.consumer_name.as_str(),
             0,
-            &[job_data.stream_id.as_str()],
+            &[stream_id],
         )
         .await?;
-
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl<CR> crate::JobQueue for JobQueue<CR>
-where
-    CR: JobContextRepository + Send + Sync + 'static,
-{
-    type ContextRepository = CR;
-
-    #[inline]
-    fn context_repository(&self) -> &Self::ContextRepository {
-        &self.context_repository
-    }
-
-    async fn enqueue(&self, job_details: JobDetails<CR::JobContext>) -> Result<()> {
-        let job_meta = JobMeta {
-            job_id: job_details.job_id,
-            fail_count: job_details.fail_count,
-        };
-
-        self.context_repository
-            .store_context(job_meta.job_id, job_details.context)
-            .await
-            .map_err(|err| Error::ContextRepository(err.into()))?;
-
-        let mut redis_conn = self.redis_pool.get();
-        self.enqueue_redis_cmd(&job_meta, job_details.run_at)?
-            .query_async(&mut redis_conn)
-            .await?;
 
         Ok(())
     }

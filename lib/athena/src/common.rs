@@ -1,19 +1,18 @@
 use crate::{
+    consts::MIN_IDLE_TIME,
     error::{Error, Result},
-    JobContextRepository, JobQueue, Runnable,
+    JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
 };
 use ahash::AHashMap;
+use futures_util::TryStreamExt;
+use just_retry::RetryExt;
 use speedy_uuid::Uuid;
 use std::{sync::Arc, time::Duration};
 use tokio::time::Instant;
 use tokio_util::task::TaskTracker;
 
-const BLOCK_TIME: Duration = Duration::from_secs(2);
-const MAX_RETRIES: u32 = 10;
-const MIN_IDLE_TIME: Duration = Duration::from_secs(10 * 60);
-
-type ContextFor<Queue: JobQueue> =
-    <<Queue::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context;
+type ContextFor<Queue> =
+    <<<Queue as JobQueue>::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context;
 
 pub async fn spawn_jobs<Q>(
     queue: &Q,
@@ -25,9 +24,11 @@ where
     Q: JobQueue + Clone,
 {
     let job_data = queue.fetch_job_data(max_jobs).await?;
+    let job_ids: Vec<Uuid> = job_data.iter().map(|data| data.job_id).collect();
+
     let context_stream = queue
         .context_repository()
-        .fetch_context(job_data.clone().map(|data| data.meta.job_id))
+        .fetch_context(job_ids.into_iter())
         .await
         .map_err(|err| Error::ContextRepository(err.into()))?;
 
@@ -36,14 +37,14 @@ where
     // Collect all the job data into a hashmap indexed by the job ID
     // This is because we don't enforce an ordering with the batch fetching
     let job_data = job_data
-        .map(|data| (data.meta.job_id, data))
+        .into_iter()
+        .map(|data| (data.job_id, data))
         .collect::<AHashMap<Uuid, JobData>>();
     let job_data = Arc::new(job_data);
 
     while let Some((job_id, job_ctx)) = context_stream
-        .next()
+        .try_next()
         .await
-        .transpose()
         .map_err(|err| Error::ContextRepository(err.into()))?
     {
         let queue = queue.clone();
@@ -73,15 +74,18 @@ where
 
             let job_state = if let Err(error) = result {
                 error!(error = ?error.into(), "Failed run job");
-                JobState::Failed {
-                    fail_count: job_data.meta.fail_count,
+                JobResult {
+                    outcome: Outcome::Fail {
+                        fail_count: job_data.fail_count,
+                    },
                     job_id,
-                    stream_id: &job_data.stream_id,
+                    ctx: &job_data.ctx,
                 }
             } else {
-                JobState::Succeeded {
+                JobResult {
+                    outcome: Outcome::Success,
                     job_id,
-                    stream_id: &job_data.stream_id,
+                    ctx: &job_data.ctx,
                 }
             };
 

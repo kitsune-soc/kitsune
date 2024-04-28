@@ -102,7 +102,7 @@ async fn main() {
     loop {
         if tokio::time::timeout(
             Duration::from_secs(5),
-            queue.spawn_jobs(20, Arc::new(()), &jobs),
+            athena::spawn_jobs(&queue, 20, Arc::new(()), &jobs),
         )
         .await
         .is_err()

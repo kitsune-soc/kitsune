@@ -1,6 +1,4 @@
 [profile.dev.package]
-backtrace = { opt-level = 3 }
-num-bigint-dig = { opt-level = 3 }
 taplo = { debug-assertions = false } # A debug assertion will make the xtask panic with too long trailing comments
 
 # The profile that 'cargo dist' will build with

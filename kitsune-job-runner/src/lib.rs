@@ -88,7 +88,6 @@ pub async fn run_dispatcher(
         },
     });
 
-    let job_queue = Arc::new(job_queue);
     let job_tracker = TaskTracker::new();
     job_tracker.close();
 
@@ -99,13 +98,13 @@ pub async fn run_dispatcher(
             let job_tracker = job_tracker.clone();
 
             async move {
-                job_queue
-                    .spawn_jobs(
-                        num_job_workers - job_tracker.len(),
-                        Arc::clone(&ctx),
-                        &job_tracker,
-                    )
-                    .await
+                athena::spawn_jobs(
+                    &job_queue,
+                    num_job_workers - job_tracker.len(),
+                    Arc::clone(&ctx),
+                    &job_tracker,
+                )
+                .await
             }
         })
         .retry(just_retry::backoff_policy())

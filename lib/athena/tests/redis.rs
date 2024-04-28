@@ -40,9 +40,10 @@ impl JobContextRepository for ContextRepo {
 
     async fn fetch_context<I>(&self, job_ids: I) -> Result<Self::Stream, Self::Error>
     where
-        I: Iterator<Item = Uuid> + Send + 'static,
+        I: Iterator<Item = Uuid> + Send,
     {
-        let stream = stream::iter(job_ids).map(|id| Ok((id, JobCtx)));
+        let vec: Vec<_> = job_ids.collect();
+        let stream = stream::iter(vec).map(|id| Ok((id, JobCtx)));
         Ok(stream.boxed())
     }
 
@@ -75,7 +76,11 @@ async fn basic_schedule() {
 
         let jobs = TaskTracker::new();
         jobs.close();
-        queue.spawn_jobs(1, Arc::new(()), &jobs).await.unwrap();
+
+        athena::spawn_jobs(&queue, 1, Arc::new(()), &jobs)
+            .await
+            .unwrap();
+
         jobs.wait().await;
 
         assert!(DID_RUN.load(Ordering::Acquire));
