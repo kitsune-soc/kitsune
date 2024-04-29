@@ -1,22 +1,15 @@
 use crate::{catch_panic::CatchPanic, container::Service};
-use std::{borrow::Cow, future::Future, panic, sync::OnceLock};
-
-pub static CONTAINER_CLIENT: OnceLock<testcontainers::clients::Cli> = OnceLock::new();
+use std::{borrow::Cow, future::Future, panic};
 
 #[macro_export]
 macro_rules! get_resource {
     ($env_name:literal, $container_fn:path) => {
-        ::std::env::var($env_name).map_or_else(
-            |_| {
-                // Only initialize client if we actually need it
-                let client = $crate::resource::CONTAINER_CLIENT.get_or_init(|| {
-                    ::testcontainers::clients::Cli::new::<::testcontainers::core::env::Os>()
-                });
-
-                $crate::resource::ResourceHandle::Container($container_fn(client))
-            },
-            $crate::resource::ResourceHandle::Url,
-        )
+        if let Ok(url) = ::std::env::var($env_name) {
+            $crate::resource::ResourceHandle::Url(url)
+        } else {
+            let container = $container_fn().await;
+            $crate::resource::ResourceHandle::Container(container)
+        }
     };
 }
 
@@ -32,9 +25,9 @@ impl<S> ResourceHandle<S>
 where
     S: Service,
 {
-    pub fn url(&self) -> Cow<'_, str> {
+    pub async fn url(&self) -> Cow<'_, str> {
         match self {
-            Self::Container(container) => Cow::Owned(container.url()),
+            Self::Container(container) => Cow::Owned(container.url().await),
             Self::Url(ref url) => Cow::Borrowed(url),
         }
     }

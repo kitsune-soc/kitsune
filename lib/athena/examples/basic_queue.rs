@@ -1,4 +1,4 @@
-use athena::{JobContextRepository, JobDetails, JobQueue, Runnable};
+use athena::{JobContextRepository, JobDetails, JobQueue, RedisJobQueue, Runnable};
 use futures_util::{
     stream::{self, BoxStream},
     StreamExt,
@@ -71,7 +71,7 @@ async fn main() {
     .await
     .unwrap();
 
-    let queue = JobQueue::builder()
+    let queue = RedisJobQueue::builder()
         .context_repository(ContextRepo)
         .queue_name("test_queue")
         .redis_pool(pool)
@@ -102,7 +102,7 @@ async fn main() {
     loop {
         if tokio::time::timeout(
             Duration::from_secs(5),
-            queue.spawn_jobs(20, Arc::new(()), &jobs),
+            athena::spawn_jobs(&queue, 20, Arc::new(()), &jobs),
         )
         .await
         .is_err()

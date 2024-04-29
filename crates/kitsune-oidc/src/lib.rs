@@ -13,6 +13,38 @@ use openidconnect::{
 use speedy_uuid::Uuid;
 use url::Url;
 
+type OidcClient = openidconnect::Client<
+    openidconnect::EmptyAdditionalClaims,
+    openidconnect::core::CoreAuthDisplay,
+    openidconnect::core::CoreGenderClaim,
+    openidconnect::core::CoreJweContentEncryptionAlgorithm,
+    openidconnect::core::CoreJsonWebKey,
+    openidconnect::core::CoreAuthPrompt,
+    openidconnect::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
+    openidconnect::StandardTokenResponse<
+        openidconnect::IdTokenFields<
+            openidconnect::EmptyAdditionalClaims,
+            openidconnect::EmptyExtraTokenFields,
+            openidconnect::core::CoreGenderClaim,
+            openidconnect::core::CoreJweContentEncryptionAlgorithm,
+            openidconnect::core::CoreJwsSigningAlgorithm,
+        >,
+        oauth2::basic::BasicTokenType,
+    >,
+    openidconnect::StandardTokenIntrospectionResponse<
+        openidconnect::EmptyExtraTokenFields,
+        oauth2::basic::BasicTokenType,
+    >,
+    oauth2::StandardRevocableToken,
+    openidconnect::StandardErrorResponse<openidconnect::RevocationErrorResponseType>,
+    openidconnect::EndpointSet,
+    openidconnect::EndpointNotSet,
+    openidconnect::EndpointNotSet,
+    openidconnect::EndpointNotSet,
+    openidconnect::EndpointMaybeSet,
+    openidconnect::EndpointMaybeSet,
+>;
+
 mod state;
 
 pub mod http;
@@ -36,7 +68,7 @@ pub struct UserInfo {
 
 #[derive(Clone)]
 pub struct OidcService {
-    client: CoreClient,
+    client: OidcClient,
     login_state_store: self::state::AnyStore,
 }
 
@@ -45,7 +77,7 @@ impl OidcService {
     pub async fn initialise(config: &Configuration, redirect_uri: String) -> Result<Self> {
         let provider_metadata = CoreProviderMetadata::discover_async(
             IssuerUrl::new(config.server_url.to_string())?,
-            self::http::async_client,
+            &self::http::async_client,
         )
         .await?;
 
@@ -125,20 +157,22 @@ impl OidcService {
 
         let token_response = self
             .client
-            .exchange_code(AuthorizationCode::new(authorization_code))
+            .exchange_code(AuthorizationCode::new(authorization_code))?
             .set_pkce_verifier(pkce_verifier)
-            .request_async(self::http::async_client)
+            .request_async(&self::http::async_client)
             .await?;
 
         let id_token = token_response
             .id_token()
             .ok_or_else(|| kitsune_error!("missing id token"))?;
+        let id_token_verifier = self.client.id_token_verifier();
         let claims = id_token.claims(&self.client.id_token_verifier(), &nonce)?;
 
         if let Some(expected_hash) = claims.access_token_hash() {
             let actual_hash = AccessTokenHash::from_token(
                 token_response.access_token(),
-                &id_token.signing_alg()?,
+                id_token.signing_alg()?,
+                id_token.signing_key(&id_token_verifier)?,
             )?;
 
             if actual_hash != *expected_hash {

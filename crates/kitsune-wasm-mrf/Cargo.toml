@@ -7,7 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.79"
+async-trait = "0.1.80"
 color-eyre = "0.6.3"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 enum_dispatch = "0.3.13"
@@ -23,15 +23,15 @@ redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",
     "tokio-rustls-comp",
 ] }
-simd-json = "0.13.9"
+simd-json = "0.13.10"
 slab = "0.4.9"
 sled = "0.34.7"
 smol_str = "0.2.1"
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 walkdir = "2.5.0"
-wasmtime = { version = "19.0.1", default-features = false, features = [
+wasmtime = { version = "20.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -40,7 +40,7 @@ wasmtime = { version = "19.0.1", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "19.0.1", default-features = false }
+wasmtime-wasi = { version = "20.0.0", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"

@@ -31,13 +31,12 @@ miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.3", default-features = false }
-thiserror = "1.0.58"
+thiserror = "1.0.59"
 tick-tock-mock = { path = "../tick-tock-mock" }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
-proptest = { version = "1.4.0", default-features = false, features = ["std"] }
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 
 [features]

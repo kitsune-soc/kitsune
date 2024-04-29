@@ -1,6 +1,4 @@
 [profile.dev.package]
-backtrace = { opt-level = 3 }
-num-bigint-dig = { opt-level = 3 }
 taplo = { debug-assertions = false } # A debug assertion will make the xtask panic with too long trailing comments
 
 # The profile that 'cargo dist' will build with
@@ -100,7 +98,7 @@ license = "AGPL-3.0-or-later"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.12.0"
+cargo-dist-version = "0.13.2"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
@@ -118,4 +116,4 @@ pr-run-mode = "plan"
 install-updater = true
 
 [patch.crates-io]
-diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "017ebe2fb7a2709ab5db92148dea5ce812a35e09" }
+diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d02798c67065d763154d7272dd0c09b39757d0f2" }

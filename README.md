@@ -8,6 +8,7 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kitsune-soc/kitsune/rust.yml?style=for-the-badge)
 [![dependency status](https://deps.rs/repo/github/kitsune-soc/kitsune/status.svg?style=for-the-badge)](https://deps.rs/repo/github/kitsune-soc/kitsune)
+[![Maintenance: Experimental](https://img.shields.io/badge/maintainance-experimental-blue?style=for-the-badge)](https://gist.github.com/taiki-e/ad73eaea17e2e0372efb76ef6b38f17b)
 
 </div>
 

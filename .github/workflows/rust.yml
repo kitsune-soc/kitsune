@@ -39,6 +39,13 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     services:
+      minio:
+        image: bitnami/minio
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
       postgres:
         image: postgres
         ports:
@@ -71,4 +78,5 @@ jobs:
       - run: nix develop --impure --command bash -c "unset LD_LIBRARY_PATH && cargo nextest run --all-features"
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
+          MINIO_URL: "http://127.0.0.1:9000"
           REDIS_URL: "redis://localhost"

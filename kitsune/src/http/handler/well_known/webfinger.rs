@@ -67,7 +67,7 @@ pub fn routes() -> Router<Zustand> {
 #[cfg(test)]
 mod tests {
     use super::{get, WebfingerQuery};
-    use athena::JobQueue;
+    use athena::RedisJobQueue;
     use axum::{
         extract::{Query, State},
         Json,
@@ -148,13 +148,13 @@ mod tests {
         let context_repo = KitsuneContextRepo::builder()
             .db_pool(db_pool.clone())
             .build();
-        let job_queue = JobQueue::builder()
+        let job_queue = RedisJobQueue::builder()
             .context_repository(context_repo)
             .queue_name("webfinger_test")
             .redis_pool(redis_pool)
             .build();
 
-        let job_service = JobService::builder().job_queue(job_queue).build();
+        let job_service = JobService::builder().job_queue(Arc::new(job_queue)).build();
 
         AccountService::builder()
             .attachment_service(attachment_service)

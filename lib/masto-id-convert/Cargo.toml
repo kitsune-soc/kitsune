@@ -22,7 +22,7 @@ std = []
 
 [dev-dependencies]
 criterion = "0.5.1"
-time = "0.3.34"
+time = "0.3.36"
 uuid = { version = "1.8.0", features = ["v7"] }
 
 [lints]

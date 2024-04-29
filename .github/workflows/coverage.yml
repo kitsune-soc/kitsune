@@ -12,6 +12,13 @@ jobs:
     name: Test coverage
     runs-on: ubuntu-latest
     services:
+      minio:
+        image: bitnami/minio
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
       postgres:
         image: postgres
         ports:
@@ -46,6 +53,7 @@ jobs:
         run: cargo llvm-cov nextest --all-features --workspace --lcov --output-path lcov.info
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
+          MINIO_URL: "http://127.0.0.1:9000"
           REDIS_URL: "redis://localhost"
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

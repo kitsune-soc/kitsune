@@ -6,19 +6,19 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-async-trait = "0.1.79"
-hickory-resolver = { version = "0.24.0", features = ["dns-over-rustls"] }
+async-trait = "0.1.80"
+hickory-resolver = { version = "0.24.1", features = ["dns-over-rustls"] }
 rand = "0.8.5"
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-thiserror = "1.0.58"
+thiserror = "1.0.59"
 tracing = "0.1.40"
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 
 [dev-dependencies]
 insta = { version = "1.38.0", features = ["json"] }
 rand_xorshift = "0.3.0"
-serde_json = "1.0.115"
+serde_json = "1.0.116"
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 
 [lints]

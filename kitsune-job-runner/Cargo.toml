@@ -12,7 +12,7 @@ license = false
 eula = false
 
 [dependencies]
-athena = { path = "../lib/athena" }
+athena = { path = "../lib/athena", features = ["redis"] }
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 just-retry = { path = "../lib/just-retry" }
@@ -28,7 +28,7 @@ kitsune-observability = { path = "../crates/kitsune-observability" }
 kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
 kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
-mimalloc = "0.1.39"
+mimalloc = "0.1.41"
 multiplex-pool = { path = "../lib/multiplex-pool" }
 redis = { version = "0.25.3", default-features = false, features = [
     "aio",
@@ -37,7 +37,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 ] }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
-typed-builder = "0.18.1"
+typed-builder = "0.18.2"
 
 [features]
 
