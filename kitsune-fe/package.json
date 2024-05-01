@@ -22,6 +22,8 @@
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0-next.4",
+		"houdini": "^0.0.0-20240429154814",
+		"houdini-svelte": "^0.0.0-20240429154814",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"sass": "^1.76.0",
