@@ -1,125 +1,134 @@
 <script lang="ts">
-	import AuthForm from '$lib/components/AuthForm.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import { onMount } from 'svelte';
 
-	/*import { onMounted } from 'vue';
-	import { useRouter } from 'vue-router';
-
-	import AuthForms from '../components/AuthForms.vue';
-	import { useInstanceInfo } from '../graphql/instance-info';
-	import { useAuthStore } from '../store/auth';
-
-	const authStore = useAuthStore();
-	const instanceInfo = useInstanceInfo();
-
-	onMounted(async () => {
-		if (authStore.isAuthenticated()) {
-			const router = useRouter();
-			router.replace('/timeline/home');
-		}
-	});*/
-
-	let instanceInfo = null;
+	onMount(() => {
+		// TODO: Authenticated check and redirect to home timeline
+	});
 </script>
 
-<div class="main-container">
-	<div class="main-intro">
-		<h2 class="main-intro-header">
-			<img src="/kitsune_vtuber.png" alt="Kitsune VTuber-style logo" style="max-width: 100%" />
-		</h2>
+<div class="landing-page">
+	<div class="left-section">
+		<img class="logo" alt="Kitsune VTuber-style logo" src="/kitsune_vtuber.png" />
+		<h1>Federated microblogging.</h1>
 
-		<div>
-			<span class="stat-highlight">
-				{instanceInfo?.name}
-			</span>
-			<!--{$t('stats-title')}:-->
-			<ul>
-				<li>
-					<span class="stat-highlight">
-						{instanceInfo?.userCount}
-					</span>
-					<!--{$t('stats-user', { count: instanceInfo?.userCount ?? 0 })}-->
-				</li>
-				<li>
-					<span class="stat-highlight">
-						{instanceInfo?.localPostCount}
-					</span>
-					<!--{$t('stats-post', { count: instanceInfo?.localPostCount ?? 0 })}-->
-				</li>
-			</ul>
-		</div>
+		Instance statistics:
 
-		<strong class="about-link">
-			<router-link to="/about">
-				<!--{$t('messages-mainPage-aboutInstance')}-->
-			</router-link>
-		</strong>
+		<ul>
+			<li>Registered users: 0</li>
+			<li>Published posts: 0</li>
+			<li>Known instances: 0</li>
+		</ul>
 	</div>
 
-	<AuthForm />
+	<div class="right-section">
+		<div class="login-form">
+			<Button class="login-button" onclick={() => alert('clicked')}>Login</Button>
+		</div>
+
+		<h2>-- OR --</h2>
+
+		<form
+			class="register-form"
+			onsubmit={(e) => {
+				e.preventDefault();
+				alert('submitted');
+			}}
+		>
+			<label>
+				Username
+				<input name="username" type="text" />
+			</label>
+
+			<label>
+				Email
+				<input name="email" type="email" />
+			</label>
+
+			<label>
+				Password
+				<input name="password" type="password" />
+			</label>
+
+			<label>
+				Confirm password
+				<input name="password-confirm" type="password" />
+			</label>
+
+			<p>
+				<Button>Register</Button>
+			</p>
+		</form>
+	</div>
 </div>
 
 <style lang="scss">
 	@use '../styles/colours' as *;
+	@use '../styles/mixins' as *;
 
-	.main {
-		&-container {
-			display: flex;
-			align-items: center;
-			margin: 0 auto;
-			padding: 0 4vw;
-			width: 95vw;
-			height: 80vh;
+	.landing-page {
+		display: flex;
+		flex-direction: row;
+		align-content: center;
 
-			@media only screen and (max-width: 1023px) {
-				flex-direction: column;
-				justify-content: center;
-				padding: 3vh 4vw;
-				height: auto;
-			}
+		padding: 5em 8em;
+
+		width: 100%;
+		height: 100%;
+
+		@include only-on-mobile {
+			flex-direction: column;
 		}
+	}
 
-		&-intro {
+	.left-section {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+
+		flex: 40%;
+
+		@include only-on-mobile {
+			align-items: center;
+		}
+	}
+
+	.right-section {
+		display: flex;
+		flex-direction: column;
+
+		flex: 10%;
+		padding: 1em;
+
+		justify-content: center;
+		align-items: center;
+	}
+
+	.logo {
+		width: 60%;
+	}
+
+	.login-form,
+	.register-form {
+		border: 1px solid $shade1dark;
+		border-radius: 0.5em;
+	}
+
+	.login-form {
+		padding: 2em 7em;
+		background-color: $dark3;
+	}
+
+	.register-form {
+		padding: 2em;
+		background-color: $dark3;
+
+		& label {
 			display: flex;
 			flex-direction: column;
-			justify-content: center;
-			padding: 1vh 2vw;
-			width: 60%;
-			height: auto;
+			width: 30ch;
 
-			@media only screen and (max-width: 1367px) {
-				width: 55%;
-			}
-
-			@media only screen and (max-width: 1023px) {
-				margin-bottom: 4vh;
-				width: 75%;
-				text-align: center;
-			}
-
-			& .stat-highlight {
-				display: inline;
-				color: $shade1dark;
-			}
-
-			&-header {
-				color: $shade2light;
-				font-weight: bold;
-				font-size: 42px;
-
-				&-logo {
-					width: 500px;
-					max-width: 100%;
-					color: $shade2light;
-				}
-			}
-
-			&-description,
-			&-more {
-				margin: 10px 0;
-				width: fit-content;
-				font-size: 18px;
-				line-height: 143%;
-			}
+			padding: 0.3em 0;
 		}
 	}
 </style>

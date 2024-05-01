@@ -1,15 +1,11 @@
 <script lang="ts">
 	import '../styles/root.scss';
 
-	import NavBar from '$lib/components/NavBar.svelte';
-
-	let { children } = $props();
+	const { children } = $props();
 </script>
 
-<svlete:head>
-	<title>Kitsune</title>
-</svlete:head>
-
-<NavBar />
+<svelte:head>
+	<title>Kitsune Ⓐ🏴</title>
+</svelte:head>
 
 {@render children()}
