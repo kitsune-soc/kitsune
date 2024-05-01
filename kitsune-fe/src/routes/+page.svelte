@@ -8,127 +8,137 @@
 </script>
 
 <div class="landing-page">
-	<div class="left-section">
-		<img class="logo" alt="Kitsune VTuber-style logo" src="/kitsune_vtuber.png" />
-		<h1>Federated microblogging.</h1>
+	<div class="top-section">
+		<div class="top-section-content">
+			<div class="top-section-left">
+				<img class="logo" src="/kitsune_vtuber.png" />
 
-		Instance statistics:
+				<h1>Federated microblogging</h1>
 
-		<ul>
-			<li>Registered users: 0</li>
-			<li>Published posts: 0</li>
-			<li>Known instances: 0</li>
-		</ul>
-	</div>
+				Statistics:
 
-	<div class="right-section">
-		<div class="login-form">
-			<Button class="login-button" onclick={() => alert('clicked')}>Login</Button>
+				<ul>
+					<li>1,000,000,000 registered users</li>
+					<li>96,000,000,000 posts</li>
+					<li>50,000,000 connected instances</li>
+				</ul>
+			</div>
+
+			<div class="top-section-right">
+				<form class="register-form">
+					<label>
+						Username
+						<br /><input type="text" name="username" />
+					</label>
+
+					<label>
+						Email
+						<br /><input type="email" name="email" />
+					</label>
+
+					<label>
+						Password
+						<br /><input type="password" name="password" />
+					</label>
+
+					<label>
+						Confirm Password
+						<br /><input type="password" name="confirm-password" />
+					</label>
+
+					<p>
+						<Button class="register-button" onclick={() => console.log('register')}>
+							Register
+						</Button>
+					</p>
+				</form>
+			</div>
 		</div>
-
-		<h2>-- OR --</h2>
-
-		<form
-			class="register-form"
-			onsubmit={(e) => {
-				e.preventDefault();
-				alert('submitted');
-			}}
-		>
-			<label>
-				Username
-				<input name="username" type="text" />
-			</label>
-
-			<label>
-				Email
-				<input name="email" type="email" />
-			</label>
-
-			<label>
-				Password
-				<input name="password" type="password" />
-			</label>
-
-			<label>
-				Confirm password
-				<input name="password-confirm" type="password" />
-			</label>
-
-			<p>
-				<Button>Register</Button>
-			</p>
-		</form>
 	</div>
+
+	<div class="bottom-section"></div>
 </div>
 
 <style lang="scss">
+	@use '../styles/breakpoints' as *;
 	@use '../styles/colours' as *;
 	@use '../styles/mixins' as *;
+	@use 'sass:map';
+
+	$top-percentage: 70%;
 
 	.landing-page {
 		display: flex;
-		flex-direction: row;
-		align-content: center;
-
-		padding: 5em 8em;
-
-		width: 100%;
+		flex-direction: column;
 		height: 100%;
+	}
 
-		@include only-on-mobile {
-			flex-direction: column;
+	.top-section {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: flex-end;
+
+		flex: $top-percentage;
+
+		&-content {
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+
+			width: 100%;
+			height: 80%;
+
+			max-width: map.get($breakpoints, lg);
+		}
+
+		&-right {
+			background-color: $dark2;
+			padding: 3em;
 		}
 	}
 
-	.left-section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-
-		flex: 40%;
-
-		@include only-on-mobile {
-			align-items: center;
-		}
-	}
-
-	.right-section {
-		display: flex;
-		flex-direction: column;
-
-		flex: 10%;
-		padding: 1em;
-
-		justify-content: center;
-		align-items: center;
+	.bottom-section {
+		background-color: $dark2;
+		flex: calc(100% - $top-percentage);
 	}
 
 	.logo {
-		width: 60%;
-	}
-
-	.login-form,
-	.register-form {
-		border: 1px solid $shade1dark;
-		border-radius: 0.5em;
-	}
-
-	.login-form {
-		padding: 2em 7em;
-		background-color: $dark3;
+		width: 65%;
 	}
 
 	.register-form {
-		padding: 2em;
-		background-color: $dark3;
+		display: flex;
+		flex-direction: column;
 
 		& label {
+			margin: 0.3em 0;
+
+			& input {
+				width: 40ch;
+			}
+		}
+
+		& :global(.register-button) {
+			width: 100%;
+			margin-top: 2em;
+		}
+	}
+
+	@include only-on-mobile {
+		.bottom-section {
+			display: none;
+		}
+
+		.top-section-content {
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.top-section-left {
 			display: flex;
 			flex-direction: column;
-			width: 30ch;
-
-			padding: 0.3em 0;
+			align-items: center;
 		}
 	}
 </style>
