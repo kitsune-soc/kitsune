@@ -1,10 +1,63 @@
 <script lang="ts">
+	import { graphql } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import { onMount } from 'svelte';
+
+	let registerButtonDisabled = $state(false);
 
 	onMount(() => {
 		// TODO: Authenticated check and redirect to home timeline
 	});
+
+	async function handleRegister(
+		event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }
+	) {
+		event.preventDefault();
+
+		const data = new FormData(event.currentTarget);
+
+		const username = data.get('username');
+		const email = data.get('email');
+		const password = data.get('password');
+		const passwordConfirmation = data.get('confirm-password');
+
+		if (!username) {
+			alert('Missing username');
+			return;
+		} else if (!email) {
+			alert('Missing email');
+			return;
+		} else if (!password) {
+			alert('Missing password');
+			return;
+		} else if (!passwordConfirmation || passwordConfirmation !== password) {
+			alert('Password mismatch');
+			return;
+		}
+
+		const register = graphql(`
+			mutation Register($username: String!, $email: String!, $password: String!) {
+				registerUser(username: $username, email: $email, password: $password) {
+					username
+					createdAt
+				}
+			}
+		`);
+
+		try {
+			const response = await register.mutate({
+				username: username as string,
+				email: email as string,
+				password: password as string
+			});
+
+			if (response.errors) {
+				alert('Failed to register:\n' + response.errors.map((error) => error.message).concat('\n'));
+			} else {
+				alert('Registered!');
+			}
+		} catch (ex: unknown) {}
+	}
 </script>
 
 <div class="landing-page">
@@ -25,7 +78,13 @@
 			</div>
 
 			<div class="top-section-right">
-				<form class="register-form">
+				<form
+					class="register-form"
+					onsubmit={(e) => {
+						registerButtonDisabled = true;
+						handleRegister(e).finally(() => (registerButtonDisabled = false));
+					}}
+				>
 					<label>
 						Username
 						<br /><input type="text" name="username" />
@@ -47,7 +106,11 @@
 					</label>
 
 					<p>
-						<Button class="register-button" onclick={() => console.log('register')}>
+						<Button
+							class="register-button"
+							onclick={() => console.log('register')}
+							disabled={registerButtonDisabled}
+						>
 							Register
 						</Button>
 					</p>
