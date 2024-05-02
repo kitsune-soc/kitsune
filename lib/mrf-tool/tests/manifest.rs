@@ -68,7 +68,7 @@ fn read() {
 
     let mut sink = Vec::new();
     mrf_tool::read_manifest(&mut sink, &module_with_manifest).unwrap();
-    sink.pop(); // Pop the newline from the output
+    assert_eq!(sink.pop(), Some(b'\n'));
     assert_eq!(sink, pretty_manifest);
 
     let mut fs = DummyFs::default();
@@ -82,7 +82,7 @@ fn read() {
     )
     .unwrap();
 
-    sink.pop(); // Pop the newline from the output
+    assert_eq!(sink.pop(), Some(b'\n'));
     assert_eq!(sink, pretty_manifest);
 }
 
