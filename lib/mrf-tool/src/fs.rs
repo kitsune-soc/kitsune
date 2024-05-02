@@ -1,4 +1,3 @@
-use polonius_the_crab::{polonius, polonius_return};
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -45,17 +44,7 @@ impl Filesystem for DummyFs {
 
     #[inline]
     fn create_or_truncate(&mut self, path: &Path) -> io::Result<Self::File<'_>> {
-        let mut this = self;
-        // TODO: Remove once we can FINALLY have polonius..
-        polonius!(|this| -> io::Result<&'polonius mut Vec<u8>> {
-            if let Some(value) = this.inner.get_mut(path) {
-                value.clear();
-                polonius_return!(Ok(value));
-            }
-        });
-
-        this.inner.insert(path.to_path_buf(), Vec::new());
-        this.create_or_truncate(path)
+        Ok(self.inner.entry(path.to_path_buf()).or_default())
     }
 
     #[inline]
