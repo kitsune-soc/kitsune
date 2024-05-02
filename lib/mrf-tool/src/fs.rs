@@ -2,8 +2,14 @@ use std::{
     collections::HashMap,
     fs::{self, File},
     io,
+    ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
+
+#[inline]
+fn file_not_found() -> io::Error {
+    io::Error::new(io::ErrorKind::NotFound, "file not found")
+}
 
 pub trait Filesystem {
     type File<'a>: io::Write
@@ -17,20 +23,23 @@ pub trait Filesystem {
     fn open_append(&mut self, path: &Path) -> io::Result<Self::File<'_>>;
 }
 
+#[derive(Default)]
 pub struct DummyFs {
     inner: HashMap<PathBuf, Vec<u8>>,
 }
 
-impl From<HashMap<PathBuf, Vec<u8>>> for DummyFs {
-    #[inline]
-    fn from(value: HashMap<PathBuf, Vec<u8>>) -> Self {
-        Self { inner: value }
+impl Deref for DummyFs {
+    type Target = HashMap<PathBuf, Vec<u8>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }
 
-#[inline]
-fn file_not_found() -> io::Error {
-    io::Error::new(io::ErrorKind::NotFound, "file not found")
+impl DerefMut for DummyFs {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
 }
 
 impl Filesystem for DummyFs {

@@ -1,12 +1,11 @@
 use mrf_tool::DummyFs;
-use std::{collections::HashMap, io};
+use std::io;
 
 #[test]
 fn validate() {
-    let mut value = HashMap::new();
-    value.insert("empty.wasm".into(), wat::parse_str("(module)").unwrap());
-    value.insert("empty.bin".into(), vec![0x00]);
-    let mut fs = DummyFs::from(value);
+    let mut fs = DummyFs::default();
+    fs.insert("empty.wasm".into(), wat::parse_str("(module)").unwrap());
+    fs.insert("empty.bin".into(), vec![0x00]);
 
     let result = mrf_tool::handle(
         &mut fs,
