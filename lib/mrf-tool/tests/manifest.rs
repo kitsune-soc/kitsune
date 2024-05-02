@@ -72,7 +72,7 @@ fn read() {
     assert_eq!(sink, pretty_manifest);
 
     let mut fs = DummyFs::default();
-    fs.insert("module.wasm".into(), module_with_manifest.clone());
+    fs.insert("module.wasm".into(), module_with_manifest);
 
     let mut sink = Vec::new();
     mrf_tool::handle(
@@ -87,6 +87,25 @@ fn read() {
 }
 
 #[test]
+fn read_errors() {
+    let empty_module = empty_module();
+
+    let error = mrf_tool::read_manifest(&mut io::sink(), &empty_module).unwrap_err();
+    assert_eq!(error.to_string(), "missing manifest in module");
+
+    let mut fs = DummyFs::default();
+    fs.insert("empty.wasm".into(), empty_module);
+
+    let error = mrf_tool::handle(
+        &mut fs,
+        &mut io::sink(),
+        ["mrf-tool", "manifest", "read", "empty.wasm"],
+    )
+    .unwrap_err();
+    assert_eq!(error.to_string(), "missing manifest in module");
+}
+
+#[test]
 fn remove() {
     let empty = empty_module();
     let module_with_manifest = module_with_manifest();
@@ -96,8 +115,8 @@ fn remove() {
 
     mrf_tool::remove_manifest(
         &mut fs,
-        Path::new("module.wasm"),
-        Path::new("module.removed.wasm"),
+        "module.wasm".as_ref(),
+        "module.removed.wasm".as_ref(),
     )
     .unwrap();
     assert_eq!(*fs.get(Path::new("module.removed.wasm")).unwrap(), empty);
@@ -118,4 +137,33 @@ fn remove() {
     )
     .unwrap();
     assert_eq!(*fs.get(Path::new("module.removed.wasm")).unwrap(), empty);
+}
+
+#[test]
+fn remove_errors() {
+    let mut fs = DummyFs::default();
+    fs.insert("empty.wasm".into(), empty_module());
+
+    let error = mrf_tool::remove_manifest(
+        &mut fs,
+        "empty.wasm".as_ref(),
+        "empty.removed.wasm".as_ref(),
+    )
+    .unwrap_err();
+    assert_eq!(error.to_string(), "missing manifest in module");
+
+    let error = mrf_tool::handle(
+        &mut fs,
+        &mut io::sink(),
+        [
+            "mrf-tool",
+            "manifest",
+            "remove",
+            "empty.wasm",
+            "--output",
+            "empty.removed.wasm",
+        ],
+    )
+    .unwrap_err();
+    assert_eq!(error.to_string(), "missing manifest in module");
 }
