@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use std::{
     any::{Any, TypeId},
+    ptr,
     sync::Arc,
 };
 use typed_builder::TypedBuilder;
@@ -56,7 +57,7 @@ where
     if obj.type_id() == TypeId::of::<T>() {
         #[allow(unsafe_code)]
         // SAFETY: the `TypeId` equality check ensures this type cast is correct
-        Some(unsafe { &*(obj as *const dyn Keepable).cast::<T>() })
+        Some(unsafe { &*ptr::from_ref::<dyn Keepable>(obj).cast::<T>() })
     } else {
         None
     }
