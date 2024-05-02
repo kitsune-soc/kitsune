@@ -61,7 +61,30 @@ fn add() {
 }
 
 #[test]
-fn read() {}
+fn read() {
+    let manifest: Manifest<'_> = serde_json::from_str(MANIFEST).unwrap();
+    let pretty_manifest = serde_json::to_vec_pretty(&manifest).unwrap();
+    let module_with_manifest = module_with_manifest();
+
+    let mut sink = Vec::new();
+    mrf_tool::read_manifest(&mut sink, &module_with_manifest).unwrap();
+    sink.pop(); // Pop the newline from the output
+    assert_eq!(sink, pretty_manifest);
+
+    let mut fs = DummyFs::default();
+    fs.insert("module.wasm".into(), module_with_manifest.clone());
+
+    let mut sink = Vec::new();
+    mrf_tool::handle(
+        &mut fs,
+        &mut sink,
+        ["mrf-tool", "manifest", "read", "module.wasm"],
+    )
+    .unwrap();
+
+    sink.pop(); // Pop the newline from the output
+    assert_eq!(sink, pretty_manifest);
+}
 
 #[test]
 fn remove() {
