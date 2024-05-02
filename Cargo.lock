@@ -5066,6 +5066,7 @@ dependencies = [
  "mrf-manifest",
  "serde_json",
  "wasmparser 0.206.0",
+ "wat",
 ]
 
 [[package]]

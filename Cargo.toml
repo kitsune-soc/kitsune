@@ -12,6 +12,9 @@ strip = true
 inherits = "dist"
 opt-level = "z"
 
+[profile.release]
+panic = "abort"
+
 [workspace]
 members = [
     "crates/kitsune-activitypub",

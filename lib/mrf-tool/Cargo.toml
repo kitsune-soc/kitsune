@@ -19,3 +19,6 @@ wasmparser = "0.206.0"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+wat = "1.206.0"

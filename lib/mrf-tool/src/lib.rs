@@ -3,7 +3,7 @@ use clap::Parser;
 use color_eyre::{eyre::bail, Result};
 use std::{ffi::OsString, io::Write, path::Path};
 
-pub use self::fs::{Filesystem, NativeFs};
+pub use self::fs::{DummyFs, Filesystem, NativeFs};
 
 mod args;
 mod fs;

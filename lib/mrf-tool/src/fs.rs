@@ -21,6 +21,13 @@ pub struct DummyFs {
     inner: HashMap<PathBuf, Vec<u8>>,
 }
 
+impl From<HashMap<PathBuf, Vec<u8>>> for DummyFs {
+    #[inline]
+    fn from(value: HashMap<PathBuf, Vec<u8>>) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[inline]
 fn file_not_found() -> io::Error {
     io::Error::new(io::ErrorKind::NotFound, "file not found")
