@@ -34,7 +34,7 @@ rustls = { version = "0.23.5", default-features = false, features = [
     "tls12",
 ] }
 rustls-native-certs = "0.7.0"
-serde = { version = "1.0.199", features = ["derive"] }
+serde = { version = "1.0.200", features = ["derive"] }
 simd-json = "0.13.10"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
 tokio = { version = "1.37.0", features = ["rt"] }
