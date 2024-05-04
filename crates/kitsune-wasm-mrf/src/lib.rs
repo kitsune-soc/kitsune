@@ -29,6 +29,7 @@ use wasmtime::{
     Config, Engine, InstanceAllocationStrategy,
 };
 
+mod cache;
 mod ctx;
 mod logging;
 mod mrf_wit;
@@ -149,6 +150,7 @@ impl MrfService {
 
                 async move { load_mrf_module(engine, &module_path, &wasm_data) }
             });
+
         tokio::pin!(wasm_data_stream);
 
         let mut modules = Vec::new();

@@ -26,7 +26,7 @@ kitsune-error = { path = "../kitsune-error" }
 kitsune-language = { path = "../kitsune-language" }
 kitsune-type = { path = "../kitsune-type" }
 num-derive = "0.4.2"
-num-traits = "0.2.18"
+num-traits = "0.2.19"
 rustls = { version = "0.23.5", default-features = false, features = [
     "logging",
     "ring",
