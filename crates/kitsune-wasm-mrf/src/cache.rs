@@ -19,8 +19,12 @@ impl Cache {
 
     #[inline]
     #[instrument(skip_all)]
-    pub fn load(&self, engine: &wasmtime::Engine, component: &[u8]) -> Result<Option<Component>> {
-        let hash = blake3::hash(component);
+    pub fn load(
+        &self,
+        engine: &wasmtime::Engine,
+        component_src: &[u8],
+    ) -> Result<Option<Component>> {
+        let hash = blake3::hash(component_src);
         let Some(precompiled) = self.inner.get(hash.as_bytes())? else {
             return Ok(None);
         };
@@ -36,8 +40,8 @@ impl Cache {
 
     #[inline]
     #[instrument(skip_all)]
-    pub fn store(&self, source: &[u8], component: &Component) -> Result<()> {
-        let hash = blake3::hash(source);
+    pub fn store(&self, component_src: &[u8], component: &Component) -> Result<()> {
+        let hash = blake3::hash(component_src);
         self.inner.insert(
             hash.as_bytes(),
             component.serialize().map_err(eyre::Report::msg)?,
@@ -46,5 +50,32 @@ impl Cache {
         debug!(hash = %hash.to_hex(), "stored component in cache");
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Cache;
+    use wasmtime::component::Component;
+
+    #[test]
+    fn roundtrip() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let cache = Cache::open(tempdir.path()).unwrap();
+
+        let mut config = wasmtime::Config::new();
+        config.wasm_component_model(true);
+        let engine = wasmtime::Engine::new(&config).unwrap();
+
+        let component_src = wat::parse_str("( component )").unwrap();
+        let component = Component::from_binary(&engine, &component_src).unwrap();
+
+        cache.store(&component_src, &component).unwrap();
+        let loaded_component = cache.load(&engine, &component_src).unwrap().unwrap();
+
+        assert_eq!(
+            loaded_component.serialize().unwrap(),
+            component.serialize().unwrap()
+        );
     }
 }

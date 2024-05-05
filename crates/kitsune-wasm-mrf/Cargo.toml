@@ -47,6 +47,7 @@ wasmtime-wasi = { version = "20.0.1", default-features = false }
 tempfile = "3.10.1"
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
+wat = "1.206.0"
 
 [lints]
 workspace = true
