@@ -41,6 +41,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    #[inline]
     pub async fn load<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,

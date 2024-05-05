@@ -24,7 +24,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 ] }
 rusty-s3 = { version = "0.5.0", default-features = false }
 testcontainers = "0.16.7"
-testcontainers-modules = { version = "0.4.1", features = [
+testcontainers-modules = { version = "0.4.2", features = [
     "minio",
     "postgres",
     "redis",

@@ -2,6 +2,7 @@
 extern crate tracing;
 
 use self::{
+    cache::Cache,
     ctx::{construct_store, Context},
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
@@ -29,6 +30,7 @@ use wasmtime::{
     Config, Engine, InstanceAllocationStrategy,
 };
 
+mod cache;
 mod ctx;
 mod logging;
 mod mrf_wit;
@@ -57,15 +59,31 @@ where
 }
 
 #[inline]
+#[instrument(skip_all, fields(module_path = %module_path.display()))]
 fn load_mrf_module(
+    cache: Option<&Cache>,
     engine: &Engine,
     module_path: &Path,
     bytes: &[u8],
 ) -> eyre::Result<Option<(ManifestV1<'static>, Component)>> {
-    let component = Component::new(engine, bytes)
-        .map_err(eyre::Report::msg)
-        .with_note(|| format!("path to the module: {}", module_path.display()))
-        .suggestion("Did you make the WASM file a component via `wasm-tools`?")?;
+    let compile_component = || {
+        Component::new(engine, bytes)
+            .map_err(eyre::Report::msg)
+            .with_note(|| format!("path to the module: {}", module_path.display()))
+            .suggestion("Did you make the WASM file a component via `wasm-tools`?")
+    };
+
+    let component = if let Some(cache) = cache {
+        if let Some(component) = cache.load(engine, bytes)? {
+            component
+        } else {
+            let component = compile_component()?;
+            cache.store(bytes, &component)?;
+            component
+        }
+    } else {
+        compile_component()?
+    };
 
     let Some((manifest, _section_range)) = mrf_manifest::decode(bytes)? else {
         error!("missing manifest. skipping load.");
@@ -123,6 +141,12 @@ impl MrfService {
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]
     pub async fn from_config(config: &MrfConfiguration) -> eyre::Result<Self> {
+        let cache = config
+            .artifact_cache
+            .as_ref()
+            .map(|cache_config| Cache::open(cache_config.path.as_str()))
+            .transpose()?;
+
         let storage = match config.storage {
             KvStorage::Fs(FsKvStorage { ref path }) => {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()
@@ -145,10 +169,12 @@ impl MrfService {
         let wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
             .map_err(eyre::Report::from)
             .and_then(|(module_path, wasm_data)| {
+                let cache = cache.as_ref();
                 let engine = &engine;
 
-                async move { load_mrf_module(engine, &module_path, &wasm_data) }
+                async move { load_mrf_module(cache, engine, &module_path, &wasm_data) }
             });
+
         tokio::pin!(wasm_data_stream);
 
         let mut modules = Vec::new();
