@@ -103,7 +103,6 @@
 			</form>
 		</div>
 	</div>
-
 </div>
 
 <style lang="scss">
@@ -170,10 +169,10 @@
 		}
 	}
 
-	h1, ul {
+	h1,
+	ul {
 		color: $text1;
 	}
-
 
 	@include only-on-mobile {
 		.bottom-section {
@@ -202,7 +201,7 @@
 			}
 		}
 
-		.register-form input { 
+		.register-form input {
 			background-color: $dark1;
 		}
 	}
