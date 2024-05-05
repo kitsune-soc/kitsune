@@ -23,12 +23,13 @@
 		cursor: pointer;
 
 		border: 0;
-		border-radius: 5px;
+		border-radius: 10px;
 
 		background-color: $shade1dark;
 
 		padding: 10px;
 		width: 100px;
+		height: 50px;
 		font-size: 16px;
 
 		&:hover {
