@@ -61,65 +61,49 @@
 </script>
 
 <div class="landing-page">
-	<div class="top-section">
-		<div class="top-section-content">
-			<div class="top-section-left">
-				<img class="logo" src="/kitsune_vtuber.png" />
+	<div class="section-left">
+		<div class="section-left-content">
+			<img class="logo" src="/kitsune_full.svg" />
 
-				<h1>Federated microblogging</h1>
+			<h1>Federated microblogging</h1>
 
-				Statistics:
+			Statistics:
 
-				<ul>
-					<li>1,000,000,000 registered users</li>
-					<li>96,000,000,000 posts</li>
-					<li>50,000,000 connected instances</li>
-				</ul>
-			</div>
-
-			<div class="top-section-right">
-				<form
-					class="register-form"
-					onsubmit={(e) => {
-						registerButtonDisabled = true;
-						handleRegister(e).finally(() => (registerButtonDisabled = false));
-					}}
-				>
-					<label>
-						Username
-						<br /><input type="text" name="username" />
-					</label>
-
-					<label>
-						Email
-						<br /><input type="email" name="email" />
-					</label>
-
-					<label>
-						Password
-						<br /><input type="password" name="password" />
-					</label>
-
-					<label>
-						Confirm Password
-						<br /><input type="password" name="confirm-password" />
-					</label>
-
-					<p>
-						<Button
-							class="register-button"
-							onclick={() => console.log('register')}
-							disabled={registerButtonDisabled}
-						>
-							Register
-						</Button>
-					</p>
-				</form>
-			</div>
+			<ul>
+				<li>1,000,000,000 registered users</li>
+				<li>96,000,000,000 posts</li>
+				<li>50,000,000 connected instances</li>
+			</ul>
 		</div>
 	</div>
 
-	<div class="bottom-section"></div>
+	<div class="section-right">
+		<div class="section-right-content">
+			<form
+				class="register-form"
+				onsubmit={(e) => {
+					registerButtonDisabled = true;
+					handleRegister(e).finally(() => (registerButtonDisabled = false));
+				}}
+			>
+				<input placeholder="Username" type="text" name="username" />
+				<input placeholder="Email" type="email" name="email" />
+				<input placeholder="Password" type="password" name="password" />
+				<input placeholder="Confirm Password" type="password" name="confirm-password" />
+
+				<p>
+					<Button
+						class="register-button"
+						onclick={() => console.log('register')}
+						disabled={registerButtonDisabled}
+					>
+						Register
+					</Button>
+				</p>
+			</form>
+		</div>
+	</div>
+
 </div>
 
 <style lang="scss">
@@ -128,42 +112,36 @@
 	@use '../styles/mixins' as *;
 	@use 'sass:map';
 
-	$top-percentage: 70%;
-
 	.landing-page {
 		display: flex;
-		flex-direction: column;
-		height: 100%;
-	}
-
-	.top-section {
-		display: flex;
 		flex-direction: row;
-		justify-content: center;
-		align-items: flex-end;
+		height: 100%;
+		width: 100%;
 
-		flex: $top-percentage;
-
-		&-content {
+		.section-right {
 			display: flex;
-			flex-direction: row;
+			flex-direction: column;
 			justify-content: center;
-
+			height: 100%;
 			width: 100%;
-			height: 80%;
-
-			max-width: map.get($breakpoints, lg);
-		}
-
-		&-right {
 			background-color: $dark2;
-			padding: 3em;
-		}
-	}
 
-	.bottom-section {
-		background-color: $dark2;
-		flex: calc(100% - $top-percentage);
+			&-content {
+				border-radius: 0px 30px 30px 0px;
+				background-color: $dark1;
+				padding: 2em;
+				max-width: 50ch;
+				width: 100%;
+			}
+		}
+
+		.section-left {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100%;
+			width: 100%;
+		}
 	}
 
 	.logo {
@@ -173,13 +151,17 @@
 	.register-form {
 		display: flex;
 		flex-direction: column;
+		height: 100%;
 
-		& label {
-			margin: 0.3em 0;
-
-			& input {
-				width: 40ch;
-			}
+		& input {
+			width: 100%;
+			border: none;
+			height: 50px;
+			border-radius: 10px;
+			background-color: $dark2;
+			margin-bottom: 0.75em;
+			margin-top: 0.75em;
+			padding-left: 1em;
 		}
 
 		& :global(.register-button) {
@@ -188,20 +170,40 @@
 		}
 	}
 
+	h1, ul {
+		color: $text1;
+	}
+
+
 	@include only-on-mobile {
 		.bottom-section {
 			display: none;
 		}
 
-		.top-section-content {
+		.section-left {
+			display: flex;
 			flex-direction: column;
 			align-items: center;
 		}
 
-		.top-section-left {
+		.landing-page {
 			display: flex;
 			flex-direction: column;
-			align-items: center;
+
+			.section-right {
+				flex-direction: row;
+				justify-content: center;
+
+				&-content {
+					max-width: 100%;
+					border-radius: 0px;
+					background-color: $dark2;
+				}
+			}
+		}
+
+		.register-form input { 
+			background-color: $dark1;
 		}
 	}
 </style>
