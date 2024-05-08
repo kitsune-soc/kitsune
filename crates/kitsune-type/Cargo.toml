@@ -7,12 +7,12 @@ license.workspace = true
 
 [dependencies]
 iso8601-timestamp = "0.2.17"
-serde = { version = "1.0.200", features = ["derive"] }
+serde = { version = "1.0.201", features = ["derive"] }
 simd-json = "0.13.10"
 smol_str = { version = "0.2.1", features = ["serde"] }
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
 strum = { version = "0.26.2", features = ["derive"] }
-utoipa = { version = "4.2.0", features = ["chrono", "uuid"] }
+utoipa = { version = "4.2.3", features = ["chrono", "uuid"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

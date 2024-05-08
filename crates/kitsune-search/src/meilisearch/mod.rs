@@ -1,8 +1,11 @@
+use self::http_client::HttpClient;
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
-use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
+use meilisearch_sdk::{client::Client, indexes::Index, settings::Settings};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use strum::IntoEnumIterator;
+
+mod http_client;
 
 #[derive(Deserialize)]
 struct MeilisearchResult {
@@ -11,7 +14,7 @@ struct MeilisearchResult {
 
 #[derive(Clone)]
 pub struct MeiliSearchService {
-    client: Client,
+    client: Client<HttpClient>,
 }
 
 impl MeiliSearchService {
@@ -21,9 +24,15 @@ impl MeiliSearchService {
     ///
     /// - Failed to connect to the instance
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
-        let service = Self {
-            client: Client::new(host, Some(api_key)),
+        let http_client = HttpClient {
+            inner: kitsune_http_client::Client::builder()
+                .content_length_limit(None)
+                .build(),
         };
+        let service = Self {
+            client: Client::new_with_client(host, Some(api_key), http_client),
+        };
+
         let settings = Settings::new()
             .with_filterable_attributes(["created_at"])
             .with_sortable_attributes(["id"]);
@@ -40,7 +49,7 @@ impl MeiliSearchService {
         Ok(service)
     }
 
-    fn get_index(&self, index: SearchIndex) -> Index {
+    fn get_index(&self, index: SearchIndex) -> Index<HttpClient> {
         self.client.index(index.as_ref())
     }
 }

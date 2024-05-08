@@ -11,7 +11,7 @@ async-trait = "0.1.80"
 const_format = "0.2.32"
 kitsune-db = { path = "../kitsune-db" }
 kitsune-error = { path = "../kitsune-error" }
-serde = { version = "1.0.200", features = ["derive"] }
+serde = { version = "1.0.201", features = ["derive"] }
 typed-builder = "0.18.2"
 
 [build-dependencies]

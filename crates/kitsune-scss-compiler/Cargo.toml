@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.83"
 glob = "0.3.1"
 rsass = "0.28.8"
 tracing = { version = "0.1.40", default-features = false }

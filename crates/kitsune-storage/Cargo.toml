@@ -13,7 +13,7 @@ kitsune-error = { path = "../kitsune-error" }
 kitsune-s3 = { path = "../kitsune-s3" }
 rusty-s3 = { version = "0.5.0", default-features = false }
 tokio = { version = "1.37.0", features = ["fs", "io-util"] }
-tokio-util = { version = "0.7.10", features = ["io"] }
+tokio-util = { version = "0.7.11", features = ["io"] }
 
 [dev-dependencies]
 tempfile = "3.10.1"

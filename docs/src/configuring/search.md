@@ -1,6 +1,6 @@
 # Search
 
-Kitsune has a number of search backends, each different from the other, to best fit your specific needs. 
+Kitsune has a number of search backends, each different from the other, to best fit your specific needs.
 We want to give you a brief overview over the available backends.
 
 ## No Search
@@ -22,8 +22,6 @@ type = "sql"
 This runs searches on your database directly. The quality is actually not too bad and uses automatic language detection to make full-text searches relevant.
 
 ## Meilisearch
-
-> You need to compile Kitsune with the `meilisearch` feature flag to enable this feature
 
 ```toml
 [search]
