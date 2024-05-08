@@ -6,7 +6,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.83"
 argh = "0.1.12"
 glob = "0.3.1"
 taplo = { version = "0.13.0", default-features = false }

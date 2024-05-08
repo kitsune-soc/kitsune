@@ -80,7 +80,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 ] }
 rust-embed = { version = "8.3.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.200", features = ["derive"] }
+serde = { version = "1.0.201", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.10"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
@@ -89,7 +89,7 @@ strum = { version = "0.26.2", features = ["derive", "phf"] }
 tempfile = "3.10.1"
 time = "0.3.36"
 tokio = { version = "1.37.0", features = ["full"] }
-tokio-util = { version = "0.7.10", features = ["compat"] }
+tokio-util = { version = "0.7.11", features = ["compat"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-stop-using-brave = { path = "../lib/tower-stop-using-brave" }
 tower-x-clacks-overhead = { path = "../lib/tower-x-clacks-overhead" }
@@ -106,7 +106,7 @@ tracing = "0.1.40"
 trials = { path = "../lib/trials" }
 typed-builder = "0.18.2"
 url = "2.5.0"
-utoipa = { version = "4.2.0", features = ["axum_extras", "uuid"] }
+utoipa = { version = "4.2.3", features = ["axum_extras", "uuid"] }
 utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
 
 # --- Optional dependencies ---
@@ -151,7 +151,6 @@ graphql-api = [
     "speedy-uuid/async-graphql",
 ]
 mastodon-api = ["dep:kitsune-mastodon"]
-meilisearch = ["kitsune-search/meilisearch", "kitsune-service/meilisearch"]
 oidc = ["dep:kitsune-oidc"]
 
 [lints]

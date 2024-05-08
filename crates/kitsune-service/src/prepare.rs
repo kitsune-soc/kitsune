@@ -1,3 +1,4 @@
+use eyre::WrapErr;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
@@ -130,21 +131,12 @@ pub async fn search(
     db_pool: &PgPool,
 ) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
-        search::Configuration::Meilisearch(_config) => {
-            #[cfg(not(feature = "meilisearch"))]
-            panic!("Server compiled without Meilisearch compatibility");
-
-            #[cfg(feature = "meilisearch")]
-            #[allow(clippy::used_underscore_binding)]
-            {
-                use eyre::WrapErr;
-
-                kitsune_search::MeiliSearchService::new(&_config.instance_url, &_config.api_key)
-                    .await
-                    .map_err(kitsune_error::Error::into_error)
-                    .wrap_err("Failed to connect to Meilisearch")?
-                    .into()
-            }
+        search::Configuration::Meilisearch(config) => {
+            kitsune_search::MeiliSearchService::new(&config.instance_url, &config.api_key)
+                .await
+                .map_err(kitsune_error::Error::into_error)
+                .wrap_err("Failed to connect to Meilisearch")?
+                .into()
         }
         search::Configuration::Sql => SqlSearchService::builder()
             .db_pool(db_pool.clone())

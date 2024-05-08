@@ -14,12 +14,12 @@ mrf-manifest = { path = "../mrf-manifest", features = [
     "encode",
     "serialise",
 ] }
-serde_json = "1.0.116"
-wasmparser = "0.206.0"
+serde_json = "1.0.117"
+wasmparser = "0.207.0"
 
 [lints]
 workspace = true
 
 [dev-dependencies]
-serde_json = "1.0.116"
-wat = "1.206.0"
+serde_json = "1.0.117"
+wat = "1.207.0"

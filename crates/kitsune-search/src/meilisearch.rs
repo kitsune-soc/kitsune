@@ -1,8 +1,128 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
-use meilisearch_sdk::{indexes::Index, settings::Settings, Client};
-use serde::Deserialize;
+use async_trait::async_trait;
+use bytes::Bytes;
+use futures_util::Stream;
+use http::header::CONTENT_TYPE;
+use meilisearch_sdk::{client::Client, indexes::Index, settings::Settings};
+use pin_project_lite::pin_project;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use speedy_uuid::Uuid;
+use std::{
+    io,
+    pin::Pin,
+    task::{self, ready, Poll},
+};
 use strum::IntoEnumIterator;
+
+const BUFFER_SIZE: usize = 1024;
+
+pin_project! {
+    struct AsyncReadBridge<R> {
+        #[pin]
+        inner: R,
+        buf: Vec<u8>,
+    }
+}
+
+impl<R> AsyncReadBridge<R> {
+    pub fn new(reader: R, buf_size: usize) -> Self {
+        Self {
+            inner: reader,
+            buf: vec![0; buf_size],
+        }
+    }
+}
+
+impl<R> Stream for AsyncReadBridge<R>
+where
+    R: futures_io::AsyncRead,
+{
+    type Item = io::Result<Bytes>;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
+        let this = self.project();
+        let amount_read = match ready!(this.inner.poll_read(cx, this.buf)) {
+            Ok(0) => return Poll::Ready(None),
+            Ok(amount_read) => amount_read,
+            Err(err) => return Poll::Ready(Some(Err(err))),
+        };
+
+        let bytes = Bytes::copy_from_slice(&this.buf[..amount_read]);
+        this.buf.clear();
+        this.buf.fill(0);
+
+        Poll::Ready(Some(Ok(bytes)))
+    }
+}
+
+#[derive(Clone)]
+struct HttpClient {
+    inner: kitsune_http_client::Client,
+}
+
+#[async_trait]
+impl meilisearch_sdk::request::HttpClient for HttpClient {
+    async fn stream_request<
+        Query: Serialize + Send + Sync,
+        Body: futures_io::AsyncRead + Send + Sync + 'static,
+        Output: DeserializeOwned + 'static,
+    >(
+        &self,
+        url: &str,
+        method: meilisearch_sdk::request::Method<Query, Body>,
+        content_type: &str,
+        expected_status_code: u16,
+    ) -> Result<Output, meilisearch_sdk::errors::Error> {
+        let url = format!(
+            "{url}?{}",
+            serde_urlencoded::to_string(method.query())
+                .map_err(|err| meilisearch_sdk::errors::Error::Other(err.into()))?
+        );
+
+        let request = http::Request::builder()
+            .uri(&url)
+            .header(CONTENT_TYPE, content_type);
+
+        let request = match method {
+            meilisearch_sdk::request::Method::Get { .. } => request.method(http::Method::GET),
+            meilisearch_sdk::request::Method::Post { .. } => request.method(http::Method::POST),
+            meilisearch_sdk::request::Method::Patch { .. } => request.method(http::Method::PATCH),
+            meilisearch_sdk::request::Method::Put { .. } => request.method(http::Method::PUT),
+            meilisearch_sdk::request::Method::Delete { .. } => request.method(http::Method::DELETE),
+        };
+
+        let body = method
+            .map_body(|body| {
+                kitsune_http_client::Body::stream(AsyncReadBridge::new(body, BUFFER_SIZE))
+            })
+            .into_body()
+            .unwrap_or_else(kitsune_http_client::Body::empty);
+
+        let request = request
+            .body(body)
+            .map_err(|err| meilisearch_sdk::errors::Error::Other(err.into()))?;
+
+        let response = self
+            .inner
+            .execute(request)
+            .await
+            .map_err(|err| meilisearch_sdk::errors::Error::Other(err.into()))?;
+
+        if response.status().as_u16() != expected_status_code {
+            return Err(meilisearch_sdk::errors::MeilisearchCommunicationError {
+                status_code: response.status().as_u16(),
+                message: response.text().await.ok(),
+                url,
+            }
+            .into());
+        }
+
+        response
+            .json()
+            .await
+            .map_err(|err| meilisearch_sdk::errors::Error::Other(err.into()))
+    }
+}
 
 #[derive(Deserialize)]
 struct MeilisearchResult {
@@ -11,7 +131,7 @@ struct MeilisearchResult {
 
 #[derive(Clone)]
 pub struct MeiliSearchService {
-    client: Client,
+    client: Client<HttpClient>,
 }
 
 impl MeiliSearchService {
@@ -21,9 +141,15 @@ impl MeiliSearchService {
     ///
     /// - Failed to connect to the instance
     pub async fn new(host: &str, api_key: &str) -> Result<Self> {
-        let service = Self {
-            client: Client::new(host, Some(api_key)),
+        let http_client = HttpClient {
+            inner: kitsune_http_client::Client::builder()
+                .content_length_limit(None)
+                .build(),
         };
+        let service = Self {
+            client: Client::new_with_client(host, Some(api_key), http_client),
+        };
+
         let settings = Settings::new()
             .with_filterable_attributes(["created_at"])
             .with_sortable_attributes(["id"]);
@@ -40,7 +166,7 @@ impl MeiliSearchService {
         Ok(service)
     }
 
-    fn get_index(&self, index: SearchIndex) -> Index {
+    fn get_index(&self, index: SearchIndex) -> Index<HttpClient> {
         self.client.index(index.as_ref())
     }
 }
