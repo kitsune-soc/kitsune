@@ -1,12 +1,12 @@
+use kitsune_derive::kitsune_service;
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use typed_builder::TypedBuilder;
 
 /// Small "service" to centralise the creation of URLs
 ///
 /// For some light deduplication purposes and to centralise the whole formatting story.
 /// Allows for easier adjustments of URLs.
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct UrlService {
     #[builder(setter(into))]
     scheme: SmolStr,

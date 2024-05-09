@@ -10,6 +10,7 @@ enum_dispatch = "0.3.13"
 http = "1.1.0"
 http-body-util = "0.1.1"
 kitsune-config = { path = "../kitsune-config" }
+kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 moka = { version = "0.12.7", features = ["future"] }

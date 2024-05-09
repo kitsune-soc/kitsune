@@ -27,6 +27,7 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_jobs::deliver::{
     accept::DeliverAccept,
@@ -178,7 +179,7 @@ impl<A, H> Update<A, H> {
     }
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct AccountService {
     attachment_service: AttachmentService,
     db_pool: PgPool,

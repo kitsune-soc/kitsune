@@ -4,11 +4,11 @@ use kitsune_db::{
     schema::{accounts, posts, users},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use smol_str::SmolStr;
-use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct InstanceService {
     db_pool: PgPool,
     #[builder(setter(into))]

@@ -11,6 +11,7 @@ use kitsune_db::{
     schema::media_attachments,
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
@@ -73,7 +74,7 @@ impl<S> Upload<S> {
     }
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct AttachmentService {
     #[builder(default =
         Client::builder()

@@ -3,6 +3,7 @@ use crate::state::{
     LoginState, OAuth2LoginState, Store,
 };
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
+use kitsune_derive::kitsune_service;
 use kitsune_error::{bail, kitsune_error, Result};
 use multiplex_pool::RoundRobinStrategy;
 use openidconnect::{
@@ -66,7 +67,7 @@ pub struct UserInfo {
     pub oauth2: OAuth2Info,
 }
 
-#[derive(Clone)]
+#[kitsune_service(omit_builder)]
 pub struct OidcService {
     client: OidcClient,
     login_state_store: self::state::AnyStore,
@@ -103,10 +104,11 @@ impl OidcService {
             }
         };
 
-        Ok(Self {
+        Ok(__OidcService__Inner {
             client,
             login_state_store,
-        })
+        }
+        .into())
     }
 
     pub async fn authorisation_url(

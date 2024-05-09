@@ -1,5 +1,6 @@
 use athena::{JobDetails, JobQueue};
 use iso8601_timestamp::Timestamp;
+use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_jobs::{Job, KitsuneContextRepo};
 use std::sync::Arc;
@@ -12,7 +13,7 @@ pub struct Enqueue<T> {
     run_at: Option<Timestamp>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct JobService {
     job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>,
 }

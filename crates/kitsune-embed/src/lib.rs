@@ -15,7 +15,6 @@ use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
-use typed_builder::TypedBuilder;
 
 pub use embed_sdk;
 pub use embed_sdk::Embed;
@@ -33,7 +32,7 @@ fn first_link_from_fragment(fragment: &str) -> Option<String> {
         .and_then(|element| element.value().attr("href").map(ToString::to_string))
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct Client {
     db_pool: PgPool,
     #[builder(setter(into))]

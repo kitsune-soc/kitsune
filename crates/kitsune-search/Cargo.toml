@@ -17,6 +17,7 @@ futures-util = "0.3.30"
 http = "1.1.0"
 kitsune-config = { path = "../kitsune-config" }
 kitsune-db = { path = "../kitsune-db" }
+kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-language = { path = "../kitsune-language" }
@@ -27,7 +28,6 @@ serde_urlencoded = "0.7.1"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.26.2", features = ["derive"] }
 tracing = "0.1.40"
-typed-builder = "0.18.2"
 
 [lints]
 workspace = true

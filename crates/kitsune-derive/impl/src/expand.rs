@@ -53,6 +53,7 @@ fn expand_builder(
     let attrs = quote! {
         #[derive(::kitsune_derive::typed_builder::TypedBuilder)]
         #[builder(build_method(into = #struct_name))]
+        #[builder(crate_module_path = ::kitsune_derive::typed_builder)]
     };
     let impls = quote! {
         impl #struct_name {

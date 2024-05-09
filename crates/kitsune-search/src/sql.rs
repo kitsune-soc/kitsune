@@ -11,10 +11,10 @@ use kitsune_db::{
     schema::{accounts, posts},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use speedy_uuid::Uuid;
-use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct SearchService {
     db_pool: PgPool,
     language_detection_config: LanguageDetectionConfig,

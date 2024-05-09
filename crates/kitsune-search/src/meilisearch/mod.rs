@@ -1,5 +1,6 @@
 use self::http_client::HttpClient;
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
+use kitsune_derive::kitsune_service;
 use meilisearch_sdk::{client::Client, indexes::Index, settings::Settings};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
@@ -12,7 +13,7 @@ struct MeilisearchResult {
     id: Uuid,
 }
 
-#[derive(Clone)]
+#[kitsune_service(omit_builder)]
 pub struct MeiliSearchService {
     client: Client<HttpClient>,
 }
@@ -29,9 +30,9 @@ impl MeiliSearchService {
                 .content_length_limit(None)
                 .build(),
         };
-        let service = Self {
+        let service = Self::from(__MeiliSearchService__Inner {
             client: Client::new_with_client(host, Some(api_key), http_client),
-        };
+        });
 
         let settings = Settings::new()
             .with_filterable_attributes(["created_at"])

@@ -3410,6 +3410,7 @@ dependencies = [
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-derive",
  "kitsune-email",
  "kitsune-embed",
  "kitsune-error",
@@ -3673,7 +3674,6 @@ dependencies = [
  "once_cell",
  "scraper",
  "smol_str",
- "typed-builder",
 ]
 
 [[package]]
@@ -3861,6 +3861,7 @@ dependencies = [
  "http 1.1.0",
  "http-body-util",
  "kitsune-config",
+ "kitsune-derive",
  "kitsune-error",
  "kitsune-http-client",
  "moka",
@@ -3917,6 +3918,7 @@ dependencies = [
  "http 1.1.0",
  "kitsune-config",
  "kitsune-db",
+ "kitsune-derive",
  "kitsune-error",
  "kitsune-http-client",
  "kitsune-language",
@@ -3927,7 +3929,6 @@ dependencies = [
  "speedy-uuid",
  "strum",
  "tracing",
- "typed-builder",
 ]
 
 [[package]]
@@ -3958,6 +3959,7 @@ dependencies = [
  "kitsune-config",
  "kitsune-core",
  "kitsune-db",
+ "kitsune-derive",
  "kitsune-email",
  "kitsune-embed",
  "kitsune-error",
@@ -4050,9 +4052,9 @@ dependencies = [
 name = "kitsune-url"
 version = "0.0.1-pre.6"
 dependencies = [
+ "kitsune-derive",
  "smol_str",
  "speedy-uuid",
- "typed-builder",
 ]
 
 [[package]]
@@ -4080,6 +4082,7 @@ dependencies = [
  "enum_dispatch",
  "futures-util",
  "kitsune-config",
+ "kitsune-derive",
  "kitsune-error",
  "kitsune-type",
  "mrf-manifest",
@@ -4093,7 +4096,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "typed-builder",
  "walkdir",
  "wasmtime",
  "wasmtime-wasi",

@@ -16,6 +16,7 @@ use kitsune_db::{
     schema::{accounts, accounts_preferences, users},
     with_transaction, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_url::UrlService;
@@ -112,7 +113,7 @@ pub struct Register {
     force_registration: bool,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct UserService {
     allow_non_ascii_usernames: bool,
     captcha_service: CaptchaService,

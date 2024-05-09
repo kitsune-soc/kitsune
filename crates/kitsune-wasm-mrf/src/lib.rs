@@ -11,6 +11,7 @@ use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt}
 use kitsune_config::mrf::{
     Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::Error;
 use kitsune_type::ap::Activity;
 use mrf_manifest::{Manifest, ManifestV1};
@@ -23,7 +24,6 @@ use std::{
     sync::Arc,
 };
 use tokio::fs;
-use typed_builder::TypedBuilder;
 use walkdir::WalkDir;
 use wasmtime::{
     component::{Component, Linker},
@@ -111,7 +111,7 @@ pub struct MrfModule {
     pub manifest: ManifestV1<'static>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct MrfService {
     engine: Engine,
     linker: Arc<Linker<Context>>,
@@ -131,12 +131,13 @@ impl MrfService {
         mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
         wasmtime_wasi::add_to_linker_async(&mut linker).map_err(eyre::Report::msg)?;
 
-        Ok(Self {
+        Ok(__MrfService__Inner {
             engine,
             linker: Arc::new(linker),
             modules: modules.into(),
             storage: Arc::new(storage),
-        })
+        }
+        .into())
     }
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]

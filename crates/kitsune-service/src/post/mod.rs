@@ -33,6 +33,7 @@ use kitsune_db::{
     },
     with_connection, with_transaction, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_error::{bail, Error, ErrorType, Result};
 use kitsune_jobs::deliver::{
@@ -294,7 +295,7 @@ pub struct GetAccountsInteractingWithPost {
     max_id: Option<Uuid>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct PostService {
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,

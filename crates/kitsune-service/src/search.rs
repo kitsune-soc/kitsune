@@ -9,6 +9,7 @@ use kitsune_db::{
     schema::{accounts, posts},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_search::{SearchBackend, SearchIndex};
 use speedy_uuid::Uuid;
@@ -37,7 +38,7 @@ pub struct Search<'a> {
     max_id: Option<Uuid>,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct SearchService {
     db_pool: PgPool,
     fetcher: Arc<dyn Fetcher>,
