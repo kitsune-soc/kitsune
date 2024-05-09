@@ -1,8 +1,8 @@
-use super::Resolver;
+use super::{coerce::CoerceResolver, Resolver};
 use async_trait::async_trait;
 use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post};
 use kitsune_error::Result;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, Copy, Debug, TypedBuilder)]
@@ -82,7 +82,7 @@ where
     T: Fetcher,
 {
     fn resolver(&self) -> Arc<dyn Resolver> {
-        Arc::new(self.iter().map(Fetcher::resolver).collect::<Vec<_>>())
+        Arc::new(self.iter().map(Fetcher::resolver).collect::<Vec<_>>()).coerce()
     }
 
     async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {

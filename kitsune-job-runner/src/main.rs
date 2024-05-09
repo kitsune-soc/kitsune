@@ -28,7 +28,7 @@ async fn main() -> eyre::Result<()> {
     let args = Args::parse();
     let config = Configuration::load(args.config).await?;
 
-    kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
+    kitsune_observability::initialise(&config)?;
 
     let db_pool = kitsune_db::connect(&config.database)
         .await

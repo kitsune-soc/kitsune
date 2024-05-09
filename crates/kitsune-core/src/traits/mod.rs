@@ -1,3 +1,4 @@
+pub mod coerce;
 pub mod deliverer;
 pub mod fetcher;
 pub mod resolver;

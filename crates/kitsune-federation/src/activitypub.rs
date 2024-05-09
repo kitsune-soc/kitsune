@@ -4,7 +4,11 @@ use kitsune_activitypub::{
 };
 use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
-use kitsune_core::traits::{resolver::AccountResource, Deliverer, Fetcher};
+use kitsune_core::traits::{
+    coerce::{CoerceDeliverer, CoerceFetcher, CoerceResolver},
+    resolver::AccountResource,
+    Deliverer, Fetcher,
+};
 use kitsune_db::{
     model::{account::Account, post::Post},
     PgPool,
@@ -15,7 +19,7 @@ use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
 use kitsune_webfinger::Webfinger;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(TypedBuilder)]
@@ -58,6 +62,7 @@ pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer>
         .inbox_resolver(inbox_resolver)
         .service(service)
         .build()
+        .coerce()
 }
 
 #[inline]
@@ -71,7 +76,8 @@ pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
         .federation_filter(prepare.federation_filter.clone())
         .language_detection_config(prepare.language_detection_config)
         .post_cache(prepare.post_cache)
-        .resolver(Arc::new(webfinger))
+        .resolver(Arc::new(webfinger).coerce())
         .search_backend(prepare.search_backend)
         .build()
+        .coerce()
 }

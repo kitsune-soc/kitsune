@@ -15,9 +15,11 @@ use rand::{
     RngCore,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{convert::Infallible, future::Future, ops::Deref, sync::Arc};
+use std::{convert::Infallible, future::Future, ops::Deref};
 use thiserror::Error;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
+use unsize::{CoerceUnsize, Coercion};
 
 mod util;
 
@@ -40,6 +42,25 @@ pub enum Error {
     /// The domain did not have the required TXT record
     #[error("The domain did not have a TXT record matching the requirements")]
     Unverified,
+}
+
+/// Helper trait for coercing the [`DnsResolver`] trait
+///
+/// Since we don't use the `Arc` provided in the standard library, automatic coersion to an unsized pointer is not possible.
+/// To make it easier for you to obtain a `Arc<dyn DnsResolver>` from some type `Arc<T>`, we provide this trait.
+pub trait Coerce {
+    /// Coerce a concrete type into its unsized counterpart
+    fn coerce(self) -> Arc<dyn DnsResolver>;
+}
+
+impl<T> Coerce for Arc<T>
+where
+    T: DnsResolver + 'static,
+{
+    #[inline]
+    fn coerce(self) -> Arc<dyn DnsResolver> {
+        self.unsize(Coercion!(to dyn DnsResolver))
+    }
 }
 
 /// DNS resolver
@@ -143,6 +164,7 @@ pub fn default_resolver() -> Arc<dyn DnsResolver> {
         ResolverConfig::default(),
         ResolverOpts::default(),
     ))
+    .unsize(Coercion!(to dyn DnsResolver))
 }
 
 /// Verifier for an arbitrary FQDN
@@ -211,11 +233,11 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{BoxError, DnsResolver, DummyStrategy, Error, KeyValueStrategy, Verifier};
+    use crate::{BoxError, Coerce, DnsResolver, DummyStrategy, Error, KeyValueStrategy, Verifier};
     use async_trait::async_trait;
     use rand::SeedableRng;
     use rand_xorshift::XorShiftRng;
-    use std::sync::Arc;
+    use triomphe::Arc;
 
     const RNG_SEED: [u8; 16] = *b"im breaking down";
 
@@ -257,7 +279,7 @@ mod test {
 
         let verifier = Verifier::builder()
             .fqdn("aumetra.xyz.".into())
-            .resolver(Arc::new(resolver))
+            .resolver(Arc::new(resolver).coerce())
             .strategy(dummy)
             .build();
 
@@ -275,7 +297,7 @@ mod test {
 
         let verifier = Verifier::builder()
             .fqdn("aumetra.xyz.".into())
-            .resolver(Arc::new(resolver.clone()))
+            .resolver(Arc::new(resolver.clone()).coerce())
             .strategy(kv_strategy.clone())
             .build();
         assert!(matches!(verifier.verify().await, Err(Error::Unverified)));
@@ -284,7 +306,7 @@ mod test {
 
         let verifier = Verifier::builder()
             .fqdn("aumetra.xyz.".into())
-            .resolver(Arc::new(resolver.clone()))
+            .resolver(Arc::new(resolver.clone()).coerce())
             .strategy(kv_strategy.clone())
             .build();
         assert!(matches!(verifier.verify().await, Err(Error::Unverified)));
@@ -302,7 +324,7 @@ mod test {
         };
         let verifier = Verifier::builder()
             .fqdn("aumetra.xyz.".into())
-            .resolver(Arc::new(resolver))
+            .resolver(Arc::new(resolver).coerce())
             .strategy(kv_strategy)
             .build();
 

@@ -14,7 +14,8 @@ use kitsune_service::{
 };
 use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
+use triomphe::Arc;
 
 #[cfg(feature = "mastodon-api")]
 use kitsune_mastodon::MastodonMapper;

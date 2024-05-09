@@ -111,7 +111,7 @@ mod test {
         account::AccountService, attachment::AttachmentService, custom_emoji::CustomEmojiService,
         job::JobService,
     };
-    use athena::RedisJobQueue;
+    use athena::{Coerce, RedisJobQueue};
     use core::convert::Infallible;
     use diesel::{QueryDsl, SelectableHelper};
     use diesel_async::RunQueryDsl;
@@ -121,6 +121,7 @@ mod test {
     use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
+    use kitsune_core::traits::coerce::{CoerceFetcher, CoerceResolver};
     use kitsune_db::{
         model::{
             account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment,
@@ -139,8 +140,8 @@ mod test {
     use kitsune_webfinger::Webfinger;
     use pretty_assertions::assert_eq;
     use speedy_uuid::Uuid;
-    use std::sync::Arc;
     use tower::service_fn;
+    use triomphe::Arc;
 
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
@@ -164,7 +165,7 @@ mod test {
                 });
                 let client = Client::builder().service(client);
 
-                let webfinger = Arc::new(Webfinger::with_client(client.clone(), Arc::new(NoopCache.into())));
+                let webfinger = Arc::new(Webfinger::with_client(client.clone(), Arc::new(NoopCache.into()))).coerce();
 
                 let fetcher = Fetcher::builder()
                     .client(client)
@@ -190,7 +191,7 @@ mod test {
                     .redis_pool(redis_pool)
                     .build();
 
-                let job_service = JobService::builder().job_queue(Arc::new(job_queue)).build();
+                let job_service = JobService::builder().job_queue(Arc::new(job_queue).coerce()).build();
 
                 let url_service = UrlService::builder()
                     .domain("example.com")
@@ -207,7 +208,7 @@ mod test {
                 let account_service = AccountService::builder()
                     .attachment_service(attachment_service.clone())
                     .db_pool(db_pool.clone())
-                    .fetcher(fetcher)
+                    .fetcher(fetcher.coerce())
                     .job_service(job_service)
                     .resolver(webfinger)
                     .url_service(url_service.clone())

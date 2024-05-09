@@ -501,8 +501,10 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-subscriber",
+ "triomphe",
  "typed-builder",
  "typetag",
+ "unsize",
 ]
 
 [[package]]
@@ -528,33 +530,6 @@ name = "autocfg"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
-
-[[package]]
-name = "autometrics"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10eaae539e7319a3813dc8cd53776a7128bdd6d82067275c12586f5a0fce9137"
-dependencies = [
- "autometrics-macros",
- "cfg_aliases",
- "linkme",
- "once_cell",
- "spez",
- "thiserror",
-]
-
-[[package]]
-name = "autometrics-macros"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdf7c9ebfee6425011c65788c746adf80fac99ba38957ba1cdb824b593cfc993"
-dependencies = [
- "percent-encoding",
- "proc-macro2",
- "quote",
- "regex",
- "syn 2.0.61",
-]
 
 [[package]]
 name = "axum"
@@ -1147,12 +1122,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "cfg_aliases"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
-
-[[package]]
 name = "chrono"
 version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1703,6 +1672,7 @@ dependencies = [
  "pin-project-lite",
  "rand 0.8.5",
  "tower",
+ "triomphe",
  "zeroize",
 ]
 
@@ -2090,12 +2060,6 @@ checksum = "b45de904aa0b010bce2ab45264d0631681847fa7b6f2eaa7dab7619943bc4f59"
 dependencies = [
  "cfg-if",
 ]
-
-[[package]]
-name = "endian-type"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c34f04666d835ff5d62e058c3995147c06f42fe86ff053337632bca83e42702d"
 
 [[package]]
 name = "enum-as-inner"
@@ -2540,7 +2504,9 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "triomphe",
  "typed-builder",
+ "unsize",
 ]
 
 [[package]]
@@ -2847,16 +2813,16 @@ dependencies = [
 
 [[package]]
 name = "html5ever"
-version = "0.26.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bea68cab48b8459f17cf1c944c67ddc572d272d9f2b274140f223ecb1da4a3b7"
+checksum = "c13771afe0e6e846f1e67d038d4cb29998a6779f93c809212e4e9c32efd244d4"
 dependencies = [
  "log",
  "mac",
  "markup5ever",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.61",
 ]
 
 [[package]]
@@ -3433,7 +3399,6 @@ dependencies = [
  "kitsune-util",
  "kitsune-wasm-mrf",
  "kitsune-webfinger",
- "metrics",
  "mimalloc",
  "mime",
  "mime_guess",
@@ -3462,6 +3427,7 @@ dependencies = [
  "tower-x-clacks-overhead",
  "tracing",
  "trials",
+ "triomphe",
  "typed-builder",
  "url",
  "utoipa",
@@ -3473,7 +3439,6 @@ name = "kitsune-activitypub"
 version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
- "autometrics",
  "base64-simd",
  "diesel",
  "diesel-async",
@@ -3510,6 +3475,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "triomphe",
  "typed-builder",
  "url",
 ]
@@ -3527,6 +3493,7 @@ dependencies = [
  "simd-json",
  "tokio",
  "tracing",
+ "triomphe",
  "typed-builder",
 ]
 
@@ -3586,8 +3553,11 @@ dependencies = [
  "const_format",
  "kitsune-db",
  "kitsune-error",
+ "paste",
  "serde",
+ "triomphe",
  "typed-builder",
+ "unsize",
  "vergen",
 ]
 
@@ -3650,11 +3620,13 @@ dependencies = [
  "diesel",
  "diesel-async",
  "kitsune-db",
+ "kitsune-derive",
  "kitsune-error",
  "kitsune-url",
  "lettre",
  "mrml",
  "speedy-uuid",
+ "triomphe",
  "typed-builder",
 ]
 
@@ -3705,6 +3677,7 @@ dependencies = [
  "kitsune-url",
  "kitsune-wasm-mrf",
  "kitsune-webfinger",
+ "triomphe",
  "typed-builder",
 ]
 
@@ -3768,6 +3741,7 @@ dependencies = [
  "redis",
  "tokio",
  "tracing",
+ "triomphe",
  "typed-builder",
 ]
 
@@ -3839,10 +3813,6 @@ dependencies = [
  "hyper 1.3.1",
  "kitsune-config",
  "kitsune-http-client",
- "metrics",
- "metrics-opentelemetry",
- "metrics-tracing-context",
- "metrics-util",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-otlp",
@@ -3990,6 +3960,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "triomphe",
  "typed-builder",
  "url",
  "zxcvbn",
@@ -4008,6 +3979,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-util",
+ "triomphe",
 ]
 
 [[package]]
@@ -4029,6 +4001,7 @@ dependencies = [
  "redis",
  "rusty-s3",
  "tokio",
+ "triomphe",
  "url",
  "uuid",
 ]
@@ -4096,6 +4069,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "triomphe",
  "walkdir",
  "wasmtime",
  "wasmtime-wasi",
@@ -4107,7 +4081,6 @@ name = "kitsune-webfinger"
 version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
- "autometrics",
  "futures-util",
  "http 1.1.0",
  "http-body-util",
@@ -4125,6 +4098,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "triomphe",
  "urlencoding",
 ]
 
@@ -4273,26 +4247,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
-name = "linkme"
-version = "0.3.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "833222afbfe72868ac8f9770c91a33673f0d5fefc37c9dbe94aa3548b571623f"
-dependencies = [
- "linkme-impl",
-]
-
-[[package]]
-name = "linkme-impl"
-version = "0.3.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39f0dea92dbea3271557cc2e1848723967bba81f722f95026860974ec9283f08"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.61",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4307,12 +4261,6 @@ dependencies = [
  "autocfg",
  "scopeguard",
 ]
-
-[[package]]
-name = "lockfree-object-pool"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a69c0481fc2424cb55795de7da41add33372ea75a94f9b6588ab6a2826dfebc"
 
 [[package]]
 name = "log"
@@ -4421,13 +4369,13 @@ dependencies = [
 
 [[package]]
 name = "markup5ever"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a2629bb1404f3d34c2e921f21fd34ba00b206124c81f65c50b43b6aaefeb016"
+checksum = "16ce3abbeba692c8b8441d036ef91aea6df8da2c6b6e21c7e14d3c18e526be45"
 dependencies = [
  "log",
- "phf 0.10.1",
- "phf_codegen 0.10.0",
+ "phf 0.11.2",
+ "phf_codegen 0.11.2",
  "string_cache",
  "string_cache_codegen",
  "tendril",
@@ -4537,62 +4485,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "metrics"
-version = "0.22.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2be3cbd384d4e955b231c895ce10685e3d8260c5ccffae898c96c723b0772835"
-dependencies = [
- "ahash 0.8.11",
- "portable-atomic",
-]
-
-[[package]]
-name = "metrics-opentelemetry"
-version = "0.1.0"
-source = "git+https://github.com/aumetra/metrics-opentelemetry.git?rev=95537b16370e595981e195be52f98ea5983a7a8e#95537b16370e595981e195be52f98ea5983a7a8e"
-dependencies = [
- "metrics",
- "opentelemetry",
- "tracing",
-]
-
-[[package]]
-name = "metrics-tracing-context"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb791d015f8947acf5a7f62bd28d00f289bb7ea98cfbe3ffec1d061eee12df12"
-dependencies = [
- "indexmap 2.2.6",
- "itoa 1.0.11",
- "lockfree-object-pool",
- "metrics",
- "metrics-util",
- "once_cell",
- "tracing",
- "tracing-core",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "metrics-util"
-version = "0.16.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b07a5eb561b8cbc16be2d216faf7757f9baf3bfb94dbb0fae3df8387a5bb47f"
-dependencies = [
- "aho-corasick",
- "crossbeam-epoch",
- "crossbeam-utils",
- "hashbrown 0.14.5",
- "indexmap 2.2.6",
- "metrics",
- "num_cpus",
- "ordered-float 4.2.0",
- "quanta",
- "radix_trie",
- "sketches-ddsketch",
 ]
 
 [[package]]
@@ -4816,6 +4708,9 @@ dependencies = [
 [[package]]
 name = "multiplex-pool"
 version = "0.0.1-pre.6"
+dependencies = [
+ "triomphe",
+]
 
 [[package]]
 name = "nanorand"
@@ -4828,15 +4723,6 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
-
-[[package]]
-name = "nibble_vec"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77a5d83df9f36fe23f0c3648c6bbb8b0298bb5f1939c8f2704431371f4b84d43"
-dependencies = [
- "smallvec",
-]
 
 [[package]]
 name = "nodrop"
@@ -5425,6 +5311,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "phf_codegen"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8d39688d359e6b34654d328e262234662d16cc0f60ec8dcbe5e718709342a5a"
+dependencies = [
+ "phf_generator 0.11.2",
+ "phf_shared 0.11.2",
+]
+
+[[package]]
 name = "phf_generator"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5619,12 +5515,6 @@ checksum = "38f6d39893cca0701371e3c27294f09797214b86f1fb951b89ade8ec04e2abab"
 dependencies = [
  "plotters-backend",
 ]
-
-[[package]]
-name = "portable-atomic"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7170ef9988bc169ba16dd36a7fa041e5c4cbeb6a35b76d4c03daded371eae7c0"
 
 [[package]]
 name = "post-process"
@@ -5888,16 +5778,6 @@ name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
-
-[[package]]
-name = "radix_trie"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c069c179fcdc6a2fe24d8d18305cf085fdbd4f922c041943e203685d6a1c58fd"
-dependencies = [
- "endian-type",
- "nibble_vec",
-]
 
 [[package]]
 name = "rand"
@@ -6575,8 +6455,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 [[package]]
 name = "scraper"
 version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b80b33679ff7a0ea53d37f3b39de77ea0c75b12c5805ac43ec0c33b3051af1b"
+source = "git+https://github.com/causal-agent/scraper.git?rev=d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b#d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b"
 dependencies = [
  "ahash 0.8.11",
  "cssparser 0.31.2",
@@ -6952,12 +6831,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38b58827f4464d87d377d175e90bf58eb00fd8716ff0a62f80356b5e61555d0d"
 
 [[package]]
-name = "sketches-ddsketch"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85636c14b73d81f541e525f585c0a2109e6744e1565b5c1668e31c70c10ed65c"
-
-[[package]]
 name = "slab"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7043,17 +6916,6 @@ dependencies = [
  "thiserror",
  "uuid",
  "uuid-simd",
-]
-
-[[package]]
-name = "spez"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c87e960f4dca2788eeb86bbdde8dd246be8948790b7618d656e68f9b720a86e8"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.61",
 ]
 
 [[package]]
@@ -7847,6 +7709,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "triomphe",
 ]
 
 [[package]]
@@ -7970,6 +7833,7 @@ checksum = "859eb650cfee7434994602c3a68b25d77ad9e68c8a6cd491616ef86661382eb3"
 dependencies = [
  "serde",
  "stable_deref_trait",
+ "unsize",
 ]
 
 [[package]]
@@ -8106,6 +7970,15 @@ name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
+
+[[package]]
+name = "unsize"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fa7a7a734c1a5664a662ddcea0b6c9472a21da8888c957c7f1eaa09dba7a939"
+dependencies = [
+ "autocfg",
+]
 
 [[package]]
 name = "untrusted"

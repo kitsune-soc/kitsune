@@ -3,11 +3,11 @@ use pin_project_lite::pin_project;
 use std::{
     future::Future,
     pin::Pin,
-    sync::Arc,
     task::{self, Poll},
 };
 use tower_layer::Layer;
 use tower_service::Service;
+use triomphe::Arc;
 
 static HEADER_NAME: HeaderName = HeaderName::from_static("x-clacks-overhead");
 

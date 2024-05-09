@@ -4,7 +4,8 @@ use lettre::{
     message::{Mailbox, MultiPart},
     AsyncTransport, Message,
 };
-use std::{iter, sync::Arc};
+use std::iter;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 pub use self::service::Mailing as MailingService;

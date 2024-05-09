@@ -21,7 +21,7 @@ use kitsune_service::attachment::AttachmentService;
 use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 pub mod core;

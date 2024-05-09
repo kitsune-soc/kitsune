@@ -1,7 +1,4 @@
 #[macro_use]
-extern crate metrics;
-
-#[macro_use]
 extern crate tracing;
 
 pub mod consts;
@@ -41,7 +38,7 @@ use kitsune_service::{
 };
 use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
-use std::sync::Arc;
+use triomphe::Arc;
 
 #[cfg(feature = "oidc")]
 use {futures_util::future::OptionFuture, kitsune_oidc::OidcService};

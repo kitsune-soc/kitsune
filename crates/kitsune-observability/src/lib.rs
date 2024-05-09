@@ -3,15 +3,9 @@ use eyre::WrapErr;
 use http_body_util::BodyExt;
 use http_compat::Compat;
 use kitsune_config::{open_telemetry::Transport, Configuration};
-use metrics_opentelemetry::OpenTelemetryRecorder;
-use metrics_tracing_context::{MetricsLayer, TracingContextLayer};
-use metrics_util::layers::Layer as _;
-use opentelemetry::{
-    metrics::{noop::NoopMeterProvider, Meter, MeterProvider},
-    trace::{noop::NoopTracer, Tracer},
-};
+use opentelemetry::trace::{noop::NoopTracer, Tracer};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
-use opentelemetry_otlp::{MetricsExporterBuilder, SpanExporterBuilder, WithExportConfig};
+use opentelemetry_otlp::{SpanExporterBuilder, WithExportConfig};
 use opentelemetry_sdk::runtime::Tokio;
 use std::{env, fmt};
 use tracing_error::ErrorLayer;
@@ -81,23 +75,13 @@ where
         .with(ErrorLayer::default())
         .with(OpenTelemetryLayer::new(tracer));
 
-    let subscriber = subscriber.with(MetricsLayer::new());
-
     tracing::subscriber::set_global_default(subscriber)
         .wrap_err("Couldn't install the global tracing subscriber")?;
 
     Ok(())
 }
 
-fn initialise_metrics(meter: Meter) -> eyre::Result<()> {
-    let recorder = TracingContextLayer::all().layer(OpenTelemetryRecorder::new(meter));
-    metrics::set_global_recorder(recorder)
-        .wrap_err("Couldn't install the global metrics recorder")?;
-
-    Ok(())
-}
-
-pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Result<()> {
+pub fn initialise(config: &Configuration) -> eyre::Result<()> {
     if let Some(ref opentelemetry_config) = config.opentelemetry {
         let http_client = HttpClientAdapter {
             inner: kitsune_http_client::Client::default(),
@@ -116,23 +100,8 @@ pub fn initialise(app_name: &'static str, config: &Configuration) -> eyre::Resul
             .install_batch(Tokio)?;
 
         initialise_logging(tracer)?;
-
-        let metrics_exporter = build_exporter!(
-            MetricsExporterBuilder:
-            opentelemetry_config.metrics_transport,
-            &http_client,
-            opentelemetry_config.tracing_endpoint.as_str(),
-        );
-
-        let meter_provider = opentelemetry_otlp::new_pipeline()
-            .metrics(Tokio)
-            .with_exporter(metrics_exporter)
-            .build()?;
-
-        initialise_metrics(meter_provider.meter(app_name))?;
     } else {
         initialise_logging(NoopTracer::new())?;
-        initialise_metrics(NoopMeterProvider::new().meter(app_name))?;
     }
 
     Ok(())

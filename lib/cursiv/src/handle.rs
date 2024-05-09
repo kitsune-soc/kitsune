@@ -1,10 +1,8 @@
 use crate::{CsrfData, HashRef, Message, MessageRef, RANDOM_DATA_LEN};
 use hex_simd::{AsOut, AsciiCase};
 use rand::{distributions::Alphanumeric, Rng};
-use std::{
-    fmt::Display,
-    sync::{Arc, Mutex},
-};
+use std::{fmt::Display, sync::Mutex};
+use triomphe::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 pub struct Shared {

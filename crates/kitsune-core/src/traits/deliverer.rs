@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use kitsune_db::model::{account::Account, favourite::Favourite, follower::Follow, post::Post};
 use kitsune_error::Result;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use triomphe::Arc;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Action {

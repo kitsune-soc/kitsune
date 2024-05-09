@@ -37,6 +37,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 ] }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
+triomphe = "0.1.11"
 typed-builder = "0.18.2"
 
 [features]

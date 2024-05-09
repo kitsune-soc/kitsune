@@ -3,7 +3,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_jobs::{Job, KitsuneContextRepo};
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(TypedBuilder)]

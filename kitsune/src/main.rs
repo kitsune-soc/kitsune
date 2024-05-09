@@ -3,7 +3,7 @@ use color_eyre::eyre::{self, Context};
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -20,7 +20,7 @@ struct Args {
 async fn boot() -> eyre::Result<()> {
     let args = Args::parse();
     let config = Configuration::load(args.config).await?;
-    kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
+    kitsune_observability::initialise(&config)?;
 
     let conn = kitsune_db::connect(&config.database)
         .await

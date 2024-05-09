@@ -2,13 +2,13 @@ use crate::{mails::confirm_account::ConfirmAccount, MailSender};
 use diesel::{ExpressionMethods, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{function::now, model::user::User, schema::users, with_connection, PgPool};
+use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_url::UrlService;
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use speedy_uuid::Uuid;
-use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct Mailing {
     db_pool: PgPool,
     sender: Option<MailSender<AsyncSmtpTransport<Tokio1Executor>>>,

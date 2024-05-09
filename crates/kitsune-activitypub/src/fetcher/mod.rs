@@ -6,6 +6,7 @@ use kitsune_config::language_detection::Configuration as LanguageDetectionConfig
 use kitsune_core::{
     consts::USER_AGENT,
     traits::{
+        coerce::CoerceResolver,
         fetcher::{AccountFetchOptions, PostFetchOptions},
         Fetcher as FetcherTrait, Resolver,
     },
@@ -21,7 +22,7 @@ use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;
 use mime::Mime;
 use serde::de::DeserializeOwned;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 use url::Url;
 
@@ -120,7 +121,7 @@ impl Fetcher {
 #[async_trait]
 impl FetcherTrait for Fetcher {
     fn resolver(&self) -> Arc<dyn Resolver> {
-        Arc::new(self.resolver.clone())
+        Arc::new(self.resolver.clone()).coerce()
     }
 
     async fn fetch_account(&self, opts: AccountFetchOptions<'_>) -> Result<Option<Account>> {
