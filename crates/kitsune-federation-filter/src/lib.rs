@@ -1,8 +1,8 @@
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;
+use kitsune_derive::kitsune_service;
 use kitsune_error::{kitsune_error, Result};
 use kitsune_type::ap::{actor::Actor, Activity, Object};
-use std::sync::Arc;
 use url::Url;
 
 pub trait Entity {
@@ -33,9 +33,9 @@ enum FilterMode {
     Deny,
 }
 
-#[derive(Clone)]
+#[kitsune_service(omit_builder)]
 pub struct FederationFilter {
-    domains: Arc<GlobSet>,
+    domains: GlobSet,
     filter: FilterMode,
 }
 
@@ -50,9 +50,12 @@ impl FederationFilter {
         for glob in globs {
             globset.add(Glob::new(glob)?);
         }
-        let domains = Arc::new(globset.build()?);
 
-        Ok(Self { domains, filter })
+        Ok(__FederationFilter__Inner {
+            domains: globset.build()?,
+            filter,
+        }
+        .into())
     }
 
     pub fn is_url_allowed(&self, url: &Url) -> Result<bool> {

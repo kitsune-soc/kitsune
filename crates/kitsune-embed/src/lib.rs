@@ -9,6 +9,7 @@ use kitsune_db::{
     schema::link_previews,
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
 use once_cell::sync::Lazy;

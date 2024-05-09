@@ -1,0 +1,17 @@
+[package]
+name = "kitsune-derive-impl"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.82"
+quote = "1.0.36"
+syn = { version = "2.0.61", features = ["full"] }
+
+[lints]
+workspace = true

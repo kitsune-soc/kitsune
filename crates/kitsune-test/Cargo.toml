@@ -23,12 +23,6 @@ redis = { version = "0.25.3", default-features = false, features = [
     "tokio-rustls-comp",
 ] }
 rusty-s3 = { version = "0.5.0", default-features = false }
-testcontainers = "0.16.7"
-testcontainers-modules = { version = "0.4.2", features = [
-    "minio",
-    "postgres",
-    "redis",
-] }
 tokio = { version = "1.37.0", features = ["time"] }
 url = "2.5.0"
 uuid = { version = "1.8.0", features = ["fast-rng", "v4"] }
