@@ -1,6 +1,5 @@
 use clap::Parser;
 use color_eyre::eyre::{self, Context};
-use kitsune::consts::STARTUP_FIGLET;
 use kitsune_config::Configuration;
 use kitsune_core::consts::VERSION;
 use kitsune_job_runner::JobDispatcherState;
@@ -19,8 +18,6 @@ struct Args {
 }
 
 async fn boot() -> eyre::Result<()> {
-    println!("{STARTUP_FIGLET}");
-
     let args = Args::parse();
     let config = Configuration::load(args.config).await?;
     kitsune_observability::initialise(env!("CARGO_PKG_NAME"), &config)?;
