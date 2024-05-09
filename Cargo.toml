@@ -125,3 +125,5 @@ install-updater = true
 [patch.crates-io]
 diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d02798c67065d763154d7272dd0c09b39757d0f2" }
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
+utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "9fc8e0050160c25d2b99667c6ba592250418cf8d" }
+utoipa-swagger-ui = { git = "https://github.com/juhaku/utoipa.git", rev = "9fc8e0050160c25d2b99667c6ba592250418cf8d" }
