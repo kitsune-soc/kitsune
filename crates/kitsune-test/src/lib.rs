@@ -12,12 +12,11 @@ use kitsune_config::{
 use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use resource::provide_resource;
-use std::sync::Arc;
+use std::{env, sync::Arc};
 use url::Url;
 use uuid::Uuid;
 
 mod catch_panic;
-mod container;
 mod macros;
 mod redis;
 mod resource;
@@ -37,8 +36,8 @@ where
     F: FnOnce(PgPool) -> Fut,
     Fut: Future,
 {
-    let resource_handle = get_resource!("DATABASE_URL", self::container::postgres);
-    let mut url = Url::parse(&resource_handle.url().await).unwrap();
+    let db_url = env::var("DATABASE_URL").unwrap();
+    let mut url = Url::parse(&db_url).unwrap();
 
     // Create a new separate database for this test
     let id = Uuid::new_v4().as_simple().to_string();
@@ -84,8 +83,8 @@ where
     F: FnOnce(Arc<kitsune_s3::Client>) -> Fut,
     Fut: Future,
 {
-    let resource_handle = get_resource!("MINIO_URL", self::container::minio);
-    let endpoint = resource_handle.url().await.parse().unwrap();
+    let endpoint = env::var("MINIO_URL").unwrap();
+    let endpoint = endpoint.parse().unwrap();
 
     // Create a new bucket with a random ID
     let bucket_id = Uuid::new_v4().as_simple().to_string();
@@ -116,8 +115,8 @@ where
     F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
     Fut: Future,
 {
-    let resource_handle = get_resource!("REDIS_URL", self::container::redis);
-    let client = ::redis::Client::open(resource_handle.url().await.as_ref()).unwrap();
+    let redis_url = env::var("REDIS_URL").unwrap();
+    let client = ::redis::Client::open(redis_url.as_ref()).unwrap();
 
     // Connect to a random Redis database
     let db_id = self::redis::find_unused_database(&client).await;

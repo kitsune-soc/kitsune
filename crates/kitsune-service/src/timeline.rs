@@ -9,6 +9,7 @@ use kitsune_db::{
     schema::{accounts_follows, posts, posts_mentions},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
@@ -62,7 +63,7 @@ pub struct GetPublic {
     only_remote: bool,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct TimelineService {
     db_pool: PgPool,
 }

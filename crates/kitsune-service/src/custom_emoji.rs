@@ -14,6 +14,7 @@ use kitsune_db::{
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use speedy_uuid::Uuid;
@@ -60,7 +61,7 @@ pub struct EmojiUpload<S> {
     stream: S,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct CustomEmojiService {
     attachment_service: AttachmentService,
     db_pool: PgPool,

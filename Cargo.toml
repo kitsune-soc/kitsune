@@ -25,6 +25,8 @@ members = [
     "crates/kitsune-config",
     "crates/kitsune-core",
     "crates/kitsune-db",
+    "crates/kitsune-derive",
+    "crates/kitsune-derive/impl",
     "crates/kitsune-email",
     "crates/kitsune-embed",
     "crates/kitsune-error",

@@ -1,8 +1,8 @@
 use kitsune_captcha::{AnyCaptcha, CaptchaBackend, ChallengeStatus};
+use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
-use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct CaptchaService {
     #[builder(setter(into))]
     pub backend: Option<AnyCaptcha>,

@@ -9,6 +9,7 @@ use kitsune_db::{
     schema::{oauth2_applications, oauth2_authorization_codes},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
@@ -84,7 +85,7 @@ struct ShowTokenPage {
     token: String,
 }
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct OAuth2Service {
     db_pool: PgPool,
     url_service: UrlService,

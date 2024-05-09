@@ -11,11 +11,12 @@ use kitsune_db::{
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     with_connection, PgPool,
 };
+use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
-#[derive(Clone, TypedBuilder)]
+#[kitsune_service]
 pub struct NotificationService {
     db_pool: PgPool,
 }

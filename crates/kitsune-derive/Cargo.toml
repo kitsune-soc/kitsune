@@ -1,14 +1,14 @@
 [package]
-name = "kitsune-url"
+name = "kitsune-derive"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
 license.workspace = true
 
 [dependencies]
-kitsune-derive = { path = "../kitsune-derive" }
-smol_str = "0.2.1"
-speedy-uuid = { path = "../../lib/speedy-uuid" }
+kitsune-derive-impl = { path = "impl" }
+triomphe = "0.1.11"
+typed-builder = "0.18.2"
 
 [lints]
 workspace = true
