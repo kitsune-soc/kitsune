@@ -46,7 +46,7 @@ pub enum Error {
 
 /// Helper trait for coercing the [`DnsResolver`] trait
 ///
-/// Since we don't use the `Arc` provided in the standard library, automatic coersion to an unsized pointer is not possible.
+/// Since we don't use the `Arc` provided in the standard library, automatic coercion to an unsized pointer is not possible.
 /// To make it easier for you to obtain a `Arc<dyn DnsResolver>` from some type `Arc<T>`, we provide this trait.
 pub trait Coerce {
     /// Coerce a concrete type into its unsized counterpart
