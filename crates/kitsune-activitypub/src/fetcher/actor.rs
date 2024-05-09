@@ -1,6 +1,5 @@
 use super::Fetcher;
 use crate::process_attachments;
-use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
@@ -23,7 +22,6 @@ impl Fetcher {
     ///
     /// - Panics if the URL doesn't contain a host section
     #[instrument(skip(self))]
-    #[autometrics(track_concurrency)]
     pub(crate) async fn fetch_actor(
         &self,
         opts: AccountFetchOptions<'_>,

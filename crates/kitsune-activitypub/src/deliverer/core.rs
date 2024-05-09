@@ -1,4 +1,3 @@
-use autometrics::autometrics;
 use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
 use http::{Method, Request};
 use kitsune_core::consts::USER_AGENT;
@@ -26,7 +25,6 @@ pub struct Deliverer {
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    #[autometrics(track_concurrency)]
     #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
     pub async fn deliver(
         &self,

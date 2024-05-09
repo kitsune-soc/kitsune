@@ -7,9 +7,10 @@ use ahash::AHashMap;
 use futures_util::TryStreamExt;
 use just_retry::RetryExt;
 use speedy_uuid::Uuid;
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 use tokio::time::Instant;
 use tokio_util::task::TaskTracker;
+use triomphe::Arc;
 
 type ContextFor<Queue> =
     <<<Queue as JobQueue>::ContextRepository as JobContextRepository>::JobContext as Runnable>::Context;

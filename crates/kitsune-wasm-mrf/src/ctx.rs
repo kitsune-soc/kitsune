@@ -1,6 +1,6 @@
 use crate::kv_storage;
 use slab::Slab;
-use std::sync::Arc;
+use triomphe::Arc;
 use wasmtime::{component::ResourceTable, Engine, Store};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 

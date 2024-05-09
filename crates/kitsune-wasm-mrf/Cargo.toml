@@ -31,6 +31,7 @@ sled = "0.34.7"
 smol_str = "0.2.1"
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
+triomphe = "0.1.11"
 walkdir = "2.5.0"
 wasmtime = { version = "20.0.2", default-features = false, features = [
     "addr2line",

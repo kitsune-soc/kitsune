@@ -4,7 +4,8 @@ extern crate tracing;
 use enum_dispatch::enum_dispatch;
 use kitsune_error::Result;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
+use triomphe::Arc;
 
 pub use self::in_memory::InMemory as InMemoryCache;
 pub use self::redis::Redis as RedisCache;

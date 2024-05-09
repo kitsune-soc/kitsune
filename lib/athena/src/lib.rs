@@ -10,9 +10,10 @@ use speedy_uuid::Uuid;
 use std::{
     any::{Any, TypeId},
     ptr,
-    sync::Arc,
 };
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
+use unsize::{CoerceUnsize, Coercion};
 
 pub use self::error::Error;
 pub use tokio_util::task::TaskTracker;
@@ -135,6 +136,32 @@ pub trait JobQueue: Send + Sync + 'static {
     async fn reclaim_job(&self, job_data: &JobData) -> Result<()>;
 
     async fn complete_job(&self, state: &JobResult<'_>) -> Result<()>;
+}
+
+pub trait Coerce<CR> {
+    fn coerce<'a>(self) -> Arc<dyn JobQueue<ContextRepository = CR> + 'a>;
+}
+
+impl<T> Coerce<T::ContextRepository> for Arc<T>
+where
+    T: JobQueue,
+{
+    fn coerce<'a>(self) -> Arc<dyn JobQueue<ContextRepository = T::ContextRepository> + 'a> {
+        #[allow(unsafe_code)]
+        let coercion: Coercion<T, _, _> = unsafe {
+            Coercion::new({
+                fn coerce<'lt, T: JobQueue + 'lt>(
+                    p: *const T,
+                ) -> *const (dyn JobQueue<ContextRepository = T::ContextRepository> + 'lt)
+                {
+                    p
+                }
+                coerce
+            })
+        };
+
+        self.unsize(coercion)
+    }
 }
 
 #[async_trait]

@@ -5,8 +5,9 @@ use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
-use std::{convert::Infallible, sync::Arc};
+use std::convert::Infallible;
 use tower::service_fn;
+use triomphe::Arc;
 
 #[tokio::test]
 async fn basic() {

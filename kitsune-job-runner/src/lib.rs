@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use athena::{JobQueue, RedisJobQueue, TaskTracker};
+use athena::{Coerce, JobQueue, RedisJobQueue, TaskTracker};
 use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
@@ -19,7 +19,8 @@ use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
 use multiplex_pool::RoundRobinStrategy;
 use redis::RedisResult;
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
@@ -54,7 +55,7 @@ pub async fn prepare_job_queue(
         .redis_pool(redis_pool)
         .build();
 
-    Ok(Arc::new(queue))
+    Ok(Arc::new(queue).coerce())
 }
 
 #[instrument(skip(job_queue, state))]

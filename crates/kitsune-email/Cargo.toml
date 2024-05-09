@@ -14,6 +14,7 @@ askama_axum = "0.4.0" # Damn it, cargo. Because "kitsune" uses "askama" with the
 diesel = "2.1.6"
 diesel-async = "0.4.1"
 kitsune-db = { path = "../kitsune-db" }
+kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-url = { path = "../kitsune-url" }
 lettre = { version = "0.11.7", default-features = false, features = [
@@ -31,6 +32,7 @@ mrml = { version = "3.1.5", default-features = false, features = [
     "render",
 ] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
+triomphe = "0.1.11"
 typed-builder = "0.18.2"
 
 [lints]

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use kitsune_error::Result;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use triomphe::Arc;
 
 /// Description of a resolved account
 #[derive(Clone, Debug, Deserialize, Serialize)]

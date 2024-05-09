@@ -12,7 +12,8 @@ use kitsune_config::{
 use kitsune_db::PgPool;
 use multiplex_pool::RoundRobinStrategy;
 use resource::provide_resource;
-use std::{env, sync::Arc};
+use std::env;
+use triomphe::Arc;
 use url::Url;
 use uuid::Uuid;
 

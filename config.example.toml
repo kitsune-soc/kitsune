@@ -155,15 +155,10 @@ path = "./mrf-storage"
 
 # OpenTelemetry configuration
 #
-# Kitsune supports exporting traces and metrics via the OpenTelemetry Protocol (OTLP, for short)
+# Kitsune supports exporting traces via the OpenTelemetry Protocol (OTLP, for short)
 # It's by now the de-facto standard wire protocol for exporting telemetry data
 #
-# As of now, you can only export all data to a single endpoint.
-# This configuration might become more granular in the future.
-#
 #[opentelemetry]
-#metrics-transport = "http" # "grpc" or "http"
-#metrics-endpoint = "http://localhost:4317"
 #tracing-transport = "http" # "grpc" or "http"
 #tracing-endpoint = "http://localhost:4317"
 

@@ -23,8 +23,6 @@ postgres://database-user:password-here@localhost:5432/db-name-here
 The `max-connections` setting defines how many connections the globally shared connection pool will open to the database server _at maximum_.  
 What you should set this value to depends on many factors.
 
-> We currently do not report any pool metrics via the Prometheus endpoint. This might be added in the future.
-
 ## TLS support
 
 If you want to connect to a database using TLS, set the parameter `use-tls` to `true`.  

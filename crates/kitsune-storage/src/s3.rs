@@ -7,7 +7,7 @@ use bytes::Bytes;
 use futures_util::{Stream, StreamExt};
 use kitsune_error::Result;
 use rusty_s3::{Bucket, Credentials};
-use std::sync::Arc;
+use triomphe::Arc;
 
 #[derive(Clone)]
 /// S3-backed storage

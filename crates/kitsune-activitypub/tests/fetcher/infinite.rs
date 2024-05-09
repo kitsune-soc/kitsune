@@ -4,7 +4,7 @@ use iso8601_timestamp::Timestamp;
 use kitsune_activitypub::{fetcher::MAX_FETCH_DEPTH, Fetcher};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::Fetcher as _;
+use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -16,12 +16,10 @@ use kitsune_type::ap::{
 use kitsune_webfinger::Webfinger;
 use std::{
     convert::Infallible,
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc,
-    },
+    sync::atomic::{AtomicU32, Ordering},
 };
 use tower::service_fn;
+use triomphe::Arc;
 
 #[tokio::test]
 async fn fetch_infinitely_long_reply_chain() {
@@ -104,7 +102,7 @@ async fn fetch_infinitely_long_reply_chain() {
                 )
                 .language_detection_config(language_detection_config())
                 .search_backend(NoopSearchService)
-                .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))))
+                .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
                 .account_cache(Arc::new(NoopCache.into()))
                 .post_cache(Arc::new(NoopCache.into()))
                 .build();

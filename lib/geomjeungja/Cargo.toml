@@ -13,7 +13,9 @@ serde = { version = "1.0.201", features = ["derive"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 thiserror = "1.0.60"
 tracing = "0.1.40"
+triomphe = { version = "0.1.11", features = ["unsize"] }
 typed-builder = "0.18.2"
+unsize = "1.1.0"
 
 [dev-dependencies]
 insta = { version = "1.38.0", features = ["json"] }

@@ -21,9 +21,9 @@ use std::{
     fmt::Debug,
     io,
     path::{Path, PathBuf},
-    sync::Arc,
 };
 use tokio::fs;
+use triomphe::Arc;
 use walkdir::WalkDir;
 use wasmtime::{
     component::{Component, Linker},

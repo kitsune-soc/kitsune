@@ -18,8 +18,9 @@ use redis::{
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{ops::ControlFlow, str::FromStr, sync::Arc, time::SystemTime};
+use std::{ops::ControlFlow, str::FromStr, time::SystemTime};
 use tokio::sync::OnceCell;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 mod scheduled;

@@ -39,7 +39,7 @@ use kitsune_jobs::deliver::{
 use kitsune_url::UrlService;
 use kitsune_util::{sanitize::CleanHtmlExt, try_join};
 use speedy_uuid::Uuid;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 #[derive(Clone, TypedBuilder)]

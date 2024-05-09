@@ -13,8 +13,9 @@ use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnySto
 use multiplex_pool::RoundRobinStrategy;
 use redis::aio::ConnectionManager;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fmt::Display, str::FromStr, sync::Arc, time::Duration};
+use std::{fmt::Display, str::FromStr, time::Duration};
 use tokio::sync::OnceCell;
+use triomphe::Arc;
 
 pub async fn cache<K, V>(
     config: &cache::Configuration,

@@ -4,14 +4,15 @@ use hyper::{body::Bytes, Request, Response};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::Fetcher as _;
+use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
 use kitsune_test::{assert_display_eq, database_test, language_detection_config};
 use kitsune_webfinger::Webfinger;
-use std::{convert::Infallible, sync::Arc};
+use std::convert::Infallible;
 use tower::service_fn;
+use triomphe::Arc;
 
 macro_rules! assert_blocked {
     ($error:expr) => {
@@ -46,10 +47,7 @@ async fn federation_allow() {
             .clone()
             .client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(
-                client,
-                Arc::new(NoopCache.into()),
-            )))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         assert_blocked!(fetcher
@@ -67,10 +65,7 @@ async fn federation_allow() {
             .clone()
             .client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(
-                client,
-                Arc::new(NoopCache.into()),
-            )))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         assert!(matches!(
@@ -106,10 +101,7 @@ async fn federation_deny() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(
-                client,
-                Arc::new(NoopCache.into()),
-            )))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

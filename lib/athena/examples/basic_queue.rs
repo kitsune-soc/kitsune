@@ -8,13 +8,11 @@ use multiplex_pool::{Pool, RoundRobinStrategy};
 use speedy_uuid::Uuid;
 use std::{
     io,
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc,
-    },
+    sync::atomic::{AtomicU32, Ordering},
     time::Duration,
 };
 use tokio_util::task::TaskTracker;
+use triomphe::Arc;
 
 #[derive(Clone)]
 struct JobCtx;

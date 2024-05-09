@@ -67,7 +67,7 @@ pub fn routes() -> Router<Zustand> {
 #[cfg(test)]
 mod tests {
     use super::{get, WebfingerQuery};
-    use athena::RedisJobQueue;
+    use athena::{Coerce, RedisJobQueue};
     use axum::{
         extract::{Query, State},
         Json,
@@ -80,6 +80,7 @@ mod tests {
     use kitsune_activitypub::Fetcher;
     use kitsune_cache::NoopCache;
     use kitsune_config::instance::FederationFilterConfiguration;
+    use kitsune_core::traits::coerce::{CoerceFetcher, CoerceResolver};
     use kitsune_db::{
         model::account::{ActorType, NewAccount},
         schema::accounts,
@@ -101,9 +102,10 @@ mod tests {
     use redis::aio::ConnectionManager;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
-    use std::{convert::Infallible, sync::Arc};
+    use std::convert::Infallible;
     use tempfile::TempDir;
     use tower::service_fn;
+    use triomphe::Arc;
 
     async fn handle(
         _req: Request<kitsune_http_client::Body>,
@@ -128,6 +130,8 @@ mod tests {
             .media_proxy_enabled(false)
             .build();
 
+        let resolver = Arc::new(Webfinger::new(Arc::new(NoopCache.into()))).coerce();
+
         let fetcher = Fetcher::builder()
             .client(client)
             .db_pool(db_pool.clone())
@@ -142,8 +146,9 @@ mod tests {
             .search_backend(NoopSearchService)
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
-            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
-            .build();
+            .resolver(resolver.clone())
+            .build()
+            .coerce();
 
         let context_repo = KitsuneContextRepo::builder()
             .db_pool(db_pool.clone())
@@ -154,7 +159,9 @@ mod tests {
             .redis_pool(redis_pool)
             .build();
 
-        let job_service = JobService::builder().job_queue(Arc::new(job_queue)).build();
+        let job_service = JobService::builder()
+            .job_queue(Arc::new(job_queue).coerce())
+            .build();
 
         AccountService::builder()
             .attachment_service(attachment_service)
@@ -162,7 +169,7 @@ mod tests {
             .fetcher(fetcher)
             .job_service(job_service)
             .url_service(url_service)
-            .resolver(Arc::new(Webfinger::new(Arc::new(NoopCache.into()))))
+            .resolver(resolver)
             .build()
     }
 

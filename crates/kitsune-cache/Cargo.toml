@@ -17,6 +17,7 @@ redis = { version = "0.25.3", default-features = false, features = [
 serde = "1.0.201"
 simd-json = "0.13.10"
 tracing = "0.1.40"
+triomphe = "0.1.11"
 typed-builder = "0.18.2"
 
 [dev-dependencies]

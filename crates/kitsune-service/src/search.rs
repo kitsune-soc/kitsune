@@ -13,7 +13,7 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_search::{SearchBackend, SearchIndex};
 use speedy_uuid::Uuid;
-use std::sync::Arc;
+use triomphe::Arc;
 use typed_builder::TypedBuilder;
 use url::Url;
 

@@ -1,6 +1,5 @@
 use super::Fetcher;
 use crate::{process_new_object, ProcessNewObject};
-use autometrics::autometrics;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
@@ -13,7 +12,6 @@ pub const MAX_FETCH_DEPTH: u32 = 15;
 
 impl Fetcher {
     #[instrument(skip(self))]
-    #[autometrics(track_concurrency)]
     pub(crate) async fn fetch_object(&self, url: &str, call_depth: u32) -> Result<Option<Post>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);

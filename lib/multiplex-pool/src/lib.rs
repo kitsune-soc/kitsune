@@ -1,10 +1,8 @@
 use std::{
     future::Future,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+    sync::atomic::{AtomicUsize, Ordering},
 };
+use triomphe::Arc;
 
 pub trait Strategy<Object>: Send + Sync {
     fn select<'a>(&self, obj: &'a [Object]) -> &'a Object;

@@ -2,10 +2,11 @@ use crate::{handle::Shared, CsrfData, CsrfHandle, ResponseFuture, CSRF_COOKIE_NA
 use cookie::Cookie;
 use http::{header, Request, Response};
 use std::{
-    sync::{Arc, Mutex},
+    sync::Mutex,
     task::{self, Poll},
 };
 use tower::Service;
+use triomphe::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Clone, Zeroize, ZeroizeOnDrop)]

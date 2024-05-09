@@ -9,12 +9,10 @@ use kitsune_test::redis_test;
 use speedy_uuid::Uuid;
 use std::{
     convert::Infallible,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::atomic::{AtomicBool, Ordering},
 };
 use tokio_util::task::TaskTracker;
+use triomphe::Arc;
 
 static DID_RUN: AtomicBool = AtomicBool::new(false);
 

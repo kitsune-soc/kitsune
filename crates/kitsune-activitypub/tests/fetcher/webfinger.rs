@@ -4,7 +4,7 @@ use hyper::{Request, Response};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::Fetcher as _;
+use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -12,8 +12,9 @@ use kitsune_test::{database_test, language_detection_config};
 use kitsune_type::webfinger::{Link, Resource};
 use kitsune_webfinger::Webfinger;
 use pretty_assertions::assert_eq;
-use std::{convert::Infallible, sync::Arc};
+use std::convert::Infallible;
 use tower::service_fn;
+use triomphe::Arc;
 
 #[tokio::test]
 async fn fetch_actor_with_custom_acct() {
@@ -57,10 +58,7 @@ async fn fetch_actor_with_custom_acct() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(
-                client,
-                Arc::new(NoopCache.into()),
-            )))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -138,10 +136,7 @@ async fn ignore_fake_webfinger_acct() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(
-                client,
-                Arc::new(NoopCache.into()),
-            )))
+            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
