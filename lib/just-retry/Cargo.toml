@@ -6,8 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-chrono = { version = "0.4.38", default-features = false, features = ["std"] }
-retry-policies = "0.3.0"
+retry-policies = "0.4.0"
 tokio = { version = "1.37.0", features = ["time"] }
 tracing = "0.1.40"
 

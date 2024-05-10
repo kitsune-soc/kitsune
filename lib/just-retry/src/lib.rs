@@ -48,11 +48,10 @@ where
         n_past_retries: u32,
     ) -> ControlFlow<(), Duration> {
         if let RetryDecision::Retry { execute_after } =
-            self.should_retry(request_start_time.as_time().into(), n_past_retries)
+            self.should_retry(request_start_time.as_time(), n_past_retries)
         {
-            let now = chrono::DateTime::from(SystemTime::now());
-            let delta = (execute_after - now)
-                .to_std()
+            let delta = execute_after
+                .duration_since(SystemTime::now())
                 .expect("Some major clock fuckery happened");
 
             ControlFlow::Continue(delta)
