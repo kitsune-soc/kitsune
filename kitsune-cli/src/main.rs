@@ -2,6 +2,7 @@ use self::{config::Configuration, role::RoleSubcommand};
 use clap::{Parser, Subcommand};
 use color_eyre::eyre::Result;
 use kitsune_config::database::Configuration as DatabaseConfig;
+use kitsune_core::consts::VERSION;
 
 mod config;
 mod role;
@@ -15,7 +16,7 @@ enum AppSubcommand {
 
 /// CLI for the Kitsune social media server
 #[derive(Parser)]
-#[command(about, author, version = concat!(env!("CARGO_PKG_VERSION"), "-", env!("VERGEN_GIT_SHA")))]
+#[command(about, author, version = VERSION)]
 struct App {
     #[clap(subcommand)]
     subcommand: AppSubcommand,

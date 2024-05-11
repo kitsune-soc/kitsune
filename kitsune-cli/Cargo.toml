@@ -4,7 +4,6 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
-build = "build.rs"
 
 [package.metadata.wix]
 upgrade-guid = "566D09AC-E247-4490-B8BB-A16DB4E225DF"
@@ -20,6 +19,7 @@ diesel-async = "0.4.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }
+kitsune-core = { version = "0.0.1-pre.6", path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-error = { path = "../crates/kitsune-error" }
 serde = { version = "1.0.201", features = ["derive"] }
