@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 async-trait = "0.1.80"
-hickory-resolver = { version = "0.24.1", features = ["dns-over-rustls"] }
+hickory-resolver = "0.24.1"
 rand = "0.8.5"
 serde = { version = "1.0.201", features = ["derive"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
