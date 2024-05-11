@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 kitsune-error = { path = "../kitsune-error" }
-moka = { version = "0.12.7", features = ["future"] }
+moka = { version = "0.12.7", features = ["sync"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 redis = { version = "0.25.3", default-features = false, features = [
     "connection-manager",

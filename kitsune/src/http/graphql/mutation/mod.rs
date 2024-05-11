@@ -6,7 +6,8 @@ use futures_util::{Stream, TryStreamExt};
 use kitsune_service::attachment;
 use mime::Mime;
 use std::str::FromStr;
-use tokio_util::{compat::FuturesAsyncReadCompatExt, io::ReaderStream};
+use tokio::fs::File;
+use tokio_util::io::ReaderStream;
 
 mod auth;
 mod post;
@@ -29,7 +30,7 @@ fn handle_upload(
         .or_else(|| mime_guess::from_path(&value.filename).first())
         .ok_or_else(|| Error::new("Failed to determine file type"))?;
 
-    let stream = ReaderStream::new(value.into_async_read().compat()).map_err(Into::into);
+    let stream = ReaderStream::new(File::from_std(value.content)).map_err(Into::into);
     let mut upload = attachment::Upload::builder()
         .account_id(user_data.account.id)
         .content_type(content_type.as_ref().into())
