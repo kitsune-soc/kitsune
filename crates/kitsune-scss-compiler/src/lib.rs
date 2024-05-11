@@ -1,4 +1,4 @@
-use anyhow::Result;
+use eyre::Result;
 use glob::glob;
 use grass_compiler::{Options, OutputStyle};
 use std::{fs, path::Path};

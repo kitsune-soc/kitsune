@@ -3707,7 +3707,7 @@ dependencies = [
 name = "kitsune-scss-compiler"
 version = "0.0.1-pre.6"
 dependencies = [
- "anyhow",
+ "eyre",
  "glob",
  "grass_compiler",
  "tracing",
