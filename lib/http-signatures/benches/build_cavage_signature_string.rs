@@ -2,6 +2,9 @@ use divan::Bencher;
 use http::{Method, Request, Uri};
 use std::hint::black_box;
 
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
+
 const CAVAGE_HEADER: &str =
     r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx""#;
 

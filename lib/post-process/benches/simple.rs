@@ -2,6 +2,9 @@ use divan::black_box;
 use futures_executor::block_on;
 use std::future;
 
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
+
 const SIMPLE_POST: &str = "Hello, #World! This is a benchmark for the post transformer of @kitsune";
 
 #[divan::bench]

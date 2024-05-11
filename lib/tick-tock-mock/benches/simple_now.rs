@@ -2,6 +2,9 @@ use divan::{black_box, Bencher};
 use std::time::{Duration, SystemTime};
 use tick_tock_mock::{Clock, DeltaDirection};
 
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
+
 #[divan::bench]
 fn std_systemtime_now() -> SystemTime {
     black_box(SystemTime::now())
