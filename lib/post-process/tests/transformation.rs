@@ -1,7 +1,7 @@
-use futures::{executor::block_on, future};
+use futures_executor::block_on;
 use post_process::{Element, Html};
 use pretty_assertions::assert_eq;
-use std::borrow::Cow;
+use std::{borrow::Cow, future};
 
 #[test]
 fn link_transformation() {
@@ -49,7 +49,10 @@ fn link_transformation() {
 #[test]
 fn noop_transformation() {
     let text = "@真島@goro.org how are you doing? :friday-night: #龍が如く0";
-    let transformed = block_on(post_process::transform(text, future::ok)).unwrap();
+    let transformed = block_on(post_process::transform(text, |item| {
+        future::ready(Ok(item))
+    }))
+    .unwrap();
 
     assert_eq!(text, transformed);
 }
