@@ -57,7 +57,6 @@ members = [
     "lib/blowocking",
     "lib/cursiv",
     "lib/geomjeungja",
-    "lib/http-compat",
     "lib/http-signatures",
     "lib/just-retry",
     "lib/masto-id-convert",
@@ -126,3 +125,11 @@ install-updater = true
 diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d02798c67065d763154d7272dd0c09b39757d0f2" }
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
+
+# Patch to make OpenTelemetry with with hyper 1
+opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
+opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
+opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
+opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
+tonic = { git = "https://github.com/hyperium/tonic.git", rev = "9b306af386528f11dbd022bc372d367adc4e96b5" }
+tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", branch = "v0.1.x-http1" }
