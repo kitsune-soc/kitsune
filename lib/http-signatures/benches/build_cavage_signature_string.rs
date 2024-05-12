@@ -1,11 +1,15 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use divan::Bencher;
 use http::{Method, Request, Uri};
 use std::hint::black_box;
+
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
 const CAVAGE_HEADER: &str =
     r#"keyId="Test",algorithm="rsa-sha256",headers="(request-target) host date",signature="qdx""#;
 
-fn build_cavage_signature_string1(c: &mut Criterion) {
+#[divan::bench]
+fn build_cavage_signature_string(bencher: Bencher<'_, '_>) {
     let signature_header = http_signatures::cavage::parse(CAVAGE_HEADER).unwrap();
     let request = Request::builder()
         .method(Method::GET)
@@ -21,18 +25,14 @@ fn build_cavage_signature_string1(c: &mut Criterion) {
         .body(())
         .unwrap();
 
-    c.bench_function("build_cavage_signature_string", |b| {
-        b.iter(|| {
-            let _ = black_box(http_signatures::cavage::signature_string::construct(
-                black_box(&request),
-                black_box(&signature_header),
-            ));
-        });
+    bencher.bench(|| {
+        http_signatures::cavage::signature_string::construct(
+            black_box(&request),
+            black_box(&signature_header),
+        )
     });
 }
 
-criterion_group!(
-    build_cavage_signature_string,
-    build_cavage_signature_string1
-);
-criterion_main!(build_cavage_signature_string);
+fn main() {
+    divan::main();
+}

@@ -1,33 +1,43 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use std::{
-    hint::black_box,
-    time::{Duration, SystemTime},
-};
-use tick_tock_mock::{Clock, DeltaDirection};
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
-fn simple_now_mock(c: &mut Criterion) {
-    let clock = Clock::new();
-    c.bench_function("simple_now_mock", |b| {
-        b.iter(|| black_box(clock.now()));
-    });
+#[divan::bench_group]
+mod std {
+    use divan::black_box;
+    use std::time::SystemTime;
 
-    c.bench_function("simple_now_mock_tl", |b| {
-        b.iter(|| black_box(tick_tock_mock::now()));
-    });
-
-    let (clock, mock) = Clock::mockable();
-    mock.adjust(DeltaDirection::Add, Duration::from_secs(1));
-
-    c.bench_function("simple_now_mock_adjust", |b| {
-        b.iter(|| black_box(clock.now()));
-    });
+    #[divan::bench]
+    fn systemtime_now() -> SystemTime {
+        black_box(SystemTime::now())
+    }
 }
 
-fn simple_now_std(c: &mut Criterion) {
-    c.bench_function("simple_now_std", |b| {
-        b.iter(|| black_box(SystemTime::now()));
-    });
+#[divan::bench_group]
+mod tick_tock_mock {
+    use divan::{black_box, Bencher};
+    use std::time::{Duration, SystemTime};
+    use tick_tock_mock::{Clock, DeltaDirection};
+
+    #[divan::bench]
+    fn now_thread_local() -> SystemTime {
+        black_box(tick_tock_mock::now())
+    }
+
+    #[divan::bench]
+    fn now(bencher: Bencher<'_, '_>) {
+        let clock = Clock::new();
+        bencher.bench(|| black_box(clock.now()));
+    }
+
+    #[divan::bench]
+    fn now_mocked(bencher: Bencher<'_, '_>) {
+        let (clock, mock) = Clock::mockable();
+        mock.adjust(DeltaDirection::Add, Duration::from_secs(1));
+
+        bencher.bench(|| black_box(clock.now()));
+    }
 }
 
-criterion_group!(simple_now, simple_now_mock, simple_now_std);
-criterion_main!(simple_now);
+fn main() {
+    divan::main();
+}

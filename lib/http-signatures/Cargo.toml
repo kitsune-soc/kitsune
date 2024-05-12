@@ -36,7 +36,7 @@ tick-tock-mock = { path = "../tick-tock-mock" }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+divan = "0.1.14"
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 
 [features]

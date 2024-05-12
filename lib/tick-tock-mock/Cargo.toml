@@ -12,7 +12,7 @@ harness = false
 [dependencies]
 
 [dev-dependencies]
-criterion = "0.5.1"
+divan = "0.1.14"
 
 [lints]
 workspace = true

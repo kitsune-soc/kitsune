@@ -3,7 +3,7 @@ use crate::{
     error::{Error, Result},
     JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
 };
-use ahash::AHashMap;
+use ahash::HashMap;
 use futures_util::TryStreamExt;
 use just_retry::RetryExt;
 use speedy_uuid::Uuid;
@@ -40,7 +40,7 @@ where
     let job_data = job_data
         .into_iter()
         .map(|data| (data.job_id, data))
-        .collect::<AHashMap<Uuid, JobData>>();
+        .collect::<HashMap<Uuid, JobData>>();
     let job_data = Arc::new(job_data);
 
     while let Some((job_id, job_ctx)) = context_stream

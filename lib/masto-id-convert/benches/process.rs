@@ -1,17 +1,20 @@
 #![allow(clippy::unreadable_literal)]
 
-use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
+use divan::black_box_drop;
 
-fn process_bench(c: &mut Criterion) {
-    c.bench_function("process integer 110368129515784116", |b| {
-        b.iter(|| masto_id_convert::process_u64(black_box(110368129515784116)));
-    });
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
-    c.bench_function("process ASCII 110368129515784116", |b| {
-        b.iter(|| masto_id_convert::process(black_box("110368129515784116")));
-    });
+#[divan::bench(name = "process integer", args = [110368129515784116])]
+fn process_u64(id: u64) {
+    black_box_drop(masto_id_convert::process_u64(id));
 }
 
-criterion_group!(benches, process_bench);
-criterion_main!(benches);
+#[divan::bench(name = "process ASCII", args = ["110368129515784116"])]
+fn process_ascii(id: &str) {
+    black_box_drop(masto_id_convert::process(id));
+}
+
+fn main() {
+    divan::main();
+}

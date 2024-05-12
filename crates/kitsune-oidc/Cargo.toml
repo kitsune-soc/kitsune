@@ -13,7 +13,7 @@ kitsune-config = { path = "../kitsune-config" }
 kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
-moka = { version = "0.12.7", features = ["future"] }
+moka = { version = "0.12.7", features = ["sync"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
 oauth2 = { version = "5.0.0-alpha.4", default-features = false }
 once_cell = "1.19.0"

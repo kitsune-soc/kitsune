@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use eyre::WrapErr;
 use http_body_util::BodyExt;
-use http_compat::Compat;
 use kitsune_config::{open_telemetry::Transport, Configuration};
 use opentelemetry::trace::{noop::NoopTracer, Tracer};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
@@ -34,12 +33,12 @@ impl HttpClient for HttpClientAdapter {
         let (parts, body) = request.into_parts();
         let request = Request::from_parts(parts, body.into());
 
-        let response = self.inner.execute(request.compat()).await?.into_inner();
+        let response = self.inner.execute(request).await?.into_inner();
 
         let (parts, body) = response.into_parts();
         let body = body.collect().await?.to_bytes();
 
-        Ok(hyper::http::Response::from_parts(parts, body).compat())
+        Ok(hyper::http::Response::from_parts(parts, body))
     }
 }
 
