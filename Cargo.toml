@@ -126,6 +126,9 @@ diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d0
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
+# Support XAUTOCLAIM
+redis = { git = "https://github.com/redis-rs/redis-rs.git", rev = "0c544b548b52180acda8e8394ab21b2761497e50" }
+
 # Patch to make OpenTelemetry with with hyper 1
 opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
 opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }

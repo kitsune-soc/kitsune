@@ -4478,6 +4478,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7"
+dependencies = [
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-bigint-dig"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5541,8 +5551,7 @@ dependencies = [
 [[package]]
 name = "redis"
 version = "0.25.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6472825949c09872e8f2c50bde59fcefc17748b6be5c90fd67cd8b4daca73bfd"
+source = "git+https://github.com/redis-rs/redis-rs.git?rev=0c544b548b52180acda8e8394ab21b2761497e50#0c544b548b52180acda8e8394ab21b2761497e50"
 dependencies = [
  "ahash 0.8.11",
  "arc-swap",
@@ -5552,6 +5561,7 @@ dependencies = [
  "futures",
  "futures-util",
  "itoa 1.0.11",
+ "num-bigint",
  "percent-encoding",
  "pin-project-lite",
  "rustls 0.22.4",

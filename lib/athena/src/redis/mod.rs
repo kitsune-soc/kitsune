@@ -1,4 +1,4 @@
-use self::{scheduled::ScheduledJobActor, util::StreamAutoClaimReply};
+use self::scheduled::ScheduledJobActor;
 use crate::{
     consts::{BLOCK_TIME, MAX_RETRIES, MIN_IDLE_TIME},
     error::Result,
@@ -13,7 +13,7 @@ use just_retry::{
 };
 use redis::{
     aio::ConnectionLike,
-    streams::{StreamReadOptions, StreamReadReply},
+    streams::{StreamAutoClaimOptions, StreamAutoClaimReply, StreamReadOptions, StreamReadReply},
     AsyncCommands, RedisResult,
 };
 use smol_str::SmolStr;
@@ -24,7 +24,6 @@ use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 mod scheduled;
-mod util;
 
 type Pool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
 
@@ -154,17 +153,19 @@ where
         let mut redis_conn = self.redis_pool.get();
         self.initialise_group(&mut redis_conn).await?;
 
-        let StreamAutoClaimReply { claimed_ids, .. }: StreamAutoClaimReply =
-            redis::cmd("XAUTOCLAIM")
-                .arg(self.queue_name.as_str())
-                .arg(self.consumer_group.as_str())
-                .arg(self.consumer_name.as_str())
-                .arg(MIN_IDLE_TIME.as_millis() as u64)
-                .arg("0-0")
-                .arg("COUNT")
-                .arg(max_jobs)
-                .query_async(&mut redis_conn)
-                .await?;
+        let StreamAutoClaimReply {
+            claimed: claimed_ids,
+            ..
+        } = redis_conn
+            .xautoclaim_options(
+                self.queue_name.as_str(),
+                self.consumer_group.as_str(),
+                self.consumer_name.as_str(),
+                MIN_IDLE_TIME.as_millis() as u64,
+                "0-0",
+                StreamAutoClaimOptions::default().count(max_jobs),
+            )
+            .await?;
 
         let claimed_ids = if claimed_ids.len() == max_jobs {
             Either::Left(claimed_ids.into_iter())
