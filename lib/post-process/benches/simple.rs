@@ -7,10 +7,10 @@ static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
 const SIMPLE_POST: &str = "Hello, #World! This is a benchmark for the post transformer of @kitsune";
 
-#[divan::bench]
-fn simple_bench() -> post_process::Result<String> {
+#[divan::bench(args = [SIMPLE_POST])]
+fn simple_bench(post: &str) -> post_process::Result<String> {
     block_on(post_process::transform(
-        black_box(SIMPLE_POST),
+        post,
         black_box(|item| future::ready(Ok(item))),
     ))
 }
