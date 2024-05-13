@@ -3839,6 +3839,7 @@ name = "kitsune-webfinger"
 version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
+ "fred",
  "futures-util",
  "http",
  "http-body-util",

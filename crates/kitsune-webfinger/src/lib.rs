@@ -2,6 +2,7 @@
 extern crate tracing;
 
 use async_trait::async_trait;
+use fred::clients::RedisPool;
 use futures_util::future::{FutureExt, OptionFuture};
 use http::{HeaderValue, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
@@ -13,7 +14,6 @@ use kitsune_error::Result;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
 use kitsune_util::try_join;
-use redis::aio::ConnectionManager;
 use std::{ptr, time::Duration};
 use triomphe::Arc;
 
@@ -32,9 +32,9 @@ pub struct Webfinger {
 
 impl Webfinger {
     #[must_use]
-    pub fn with_defaults(redis_conn: multiplex_pool::Pool<ConnectionManager>) -> Self {
+    pub fn with_defaults(redis_pool: RedisPool) -> Self {
         Self::new(Arc::new(
-            RedisCache::new(redis_conn, "webfinger", CACHE_DURATION).into(),
+            RedisCache::new(redis_pool, "webfinger", CACHE_DURATION).into(),
         ))
     }
 }

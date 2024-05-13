@@ -6,7 +6,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use either::Either;
-use fred::clients::RedisPool;
+use fred::{clients::RedisPool, interfaces::StreamsInterface};
 use iso8601_timestamp::Timestamp;
 use just_retry::{
     retry_policies::{policies::ExponentialBackoff, Jitter},
@@ -61,27 +61,15 @@ impl<CR> JobQueue<CR>
 where
     CR: JobContextRepository + Send + Sync + 'static,
 {
-    async fn initialise_group<C>(&self, redis_conn: &mut C) -> Result<()>
-    where
-        C: ConnectionLike + Send + Sized,
-    {
+    async fn initialise_group(&self) -> Result<()> {
         self.group_initialised
-            .get_or_try_init(|| async {
-                let result: RedisResult<()> = redis_conn
-                    .xgroup_create_mkstream(
-                        self.queue_name.as_str(),
-                        self.consumer_group.as_str(),
-                        "0",
-                    )
-                    .await;
-
-                if let Err(err) = result {
-                    if err.kind() != redis::ErrorKind::ExtensionError {
-                        return Err(err);
-                    }
-                }
-
-                Ok(())
+            .get_or_try_init(|| {
+                self.redis_pool.xgroup_create(
+                    self.queue_name.as_str(),
+                    self.consumer_group.as_str(),
+                    "0",
+                    true,
+                )
             })
             .await?;
 
@@ -150,7 +138,7 @@ where
 
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
         let mut redis_conn = self.redis_pool.get();
-        self.initialise_group(&mut redis_conn).await?;
+        self.initialise_group().await?;
 
         let StreamAutoClaimReply {
             claimed: claimed_ids,
@@ -215,16 +203,19 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        let mut pipeline = redis::pipe();
-        pipeline
-            .atomic()
-            .ignore()
+        let client = self.redis_pool.next();
+        let pipeline = client.pipeline();
+
+        () = pipeline
             .xack(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
-                &[stream_id],
+                stream_id.as_str(),
             )
-            .xdel(self.queue_name.as_str(), &[stream_id]);
+            .await?;
+        () = pipeline
+            .xdel(self.queue_name.as_str(), &[stream_id])
+            .await?;
 
         let remove_context = match state.outcome {
             Outcome::Fail { fail_count } => {
