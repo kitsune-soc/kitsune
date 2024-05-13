@@ -19,13 +19,6 @@ just-retry = { path = "../just-retry" }
 multiplex-pool = { path = "../multiplex-pool", optional = true }
 once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
-redis = { version = "0.25.3", default-features = false, features = [
-    "ahash",
-    "connection-manager",
-    "script",
-    "streams",
-    "tokio-comp",
-], optional = true }
 serde = { version = "1.0.201", features = ["derive"] }
 simd-json = { version = "0.13.10", optional = true }
 smol_str = "0.2.1"
@@ -45,13 +38,11 @@ redis = [
     "dep:multiplex-pool",
     "dep:once_cell",
     "dep:rand",
-    "dep:redis",
     "dep:simd-json",
 ]
 
 [dev-dependencies]
 kitsune-test = { path = "../../crates/kitsune-test" }
-redis = { version = "0.25.3", features = ["connection-manager"] }
 tracing-subscriber = "0.3.18"
 
 [lints]

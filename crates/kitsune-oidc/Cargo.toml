@@ -22,10 +22,6 @@ openidconnect = { version = "4.0.0-alpha.1", default-features = false, features 
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
 ] }
-redis = { version = "0.25.3", default-features = false, features = [
-    "connection-manager",
-    "tokio-comp",
-] }
 serde = { version = "1.0.201", features = ["derive"] }
 simd-json = "0.13.10"
 speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }

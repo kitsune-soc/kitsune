@@ -454,7 +454,6 @@ dependencies = [
  "multiplex-pool",
  "once_cell",
  "rand 0.8.5",
- "redis",
  "serde",
  "simd-json",
  "smol_str",
@@ -900,6 +899,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bytes-utils"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dafe3a8757b027e2be6e4e5601ed563c55989fcf1546e933c66c8eb3a058d35"
+dependencies = [
+ "bytes",
+ "either",
+]
+
+[[package]]
 name = "camino"
 version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1119,20 +1128,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 
 [[package]]
-name = "combine"
-version = "4.6.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
-dependencies = [
- "bytes",
- "futures-core",
- "memchr",
- "pin-project-lite",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
 name = "compact_str"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1226,6 +1221,12 @@ dependencies = [
  "time",
  "version_check",
 ]
+
+[[package]]
+name = "cookie-factory"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "396de984970346b0d9e93d1415082923c679e5ae5c3ee3dcbd104f5610af126b"
 
 [[package]]
 name = "core-foundation"
@@ -1368,6 +1369,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc16"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "338089f42c427b86394a5ee60ff321da23a5c89c9d89514c829687b26359fcff"
+
+[[package]]
 name = "crc32fast"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1400,6 +1407,15 @@ name = "crossbeam-epoch"
 version = "0.9.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df0346b5d5e76ac2fe4e327c5fd1118d6be7c51dfb18f9b7922923f287471e35"
 dependencies = [
  "crossbeam-utils",
 ]
@@ -2092,6 +2108,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "fred"
+version = "9.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "915e065b377f6e16d5c01eae96bf31eeaf81e1e300b76f938761b3c21307cad8"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "bytes",
+ "bytes-utils",
+ "crossbeam-queue",
+ "float-cmp",
+ "futures",
+ "log",
+ "parking_lot 0.12.2",
+ "rand 0.8.5",
+ "redis-protocol",
+ "semver",
+ "socket2",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
 name = "fs-set-times"
 version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2738,11 +2780,11 @@ dependencies = [
  "hyper",
  "hyper-util",
  "log",
- "rustls 0.23.5",
+ "rustls",
  "rustls-native-certs",
  "rustls-pki-types",
  "tokio",
- "tokio-rustls 0.26.0",
+ "tokio-rustls",
  "tower-service",
 ]
 
@@ -3129,7 +3171,6 @@ dependencies = [
  "oxide-auth-async",
  "oxide-auth-axum",
  "pretty_assertions",
- "redis",
  "rust-embed",
  "scoped-futures",
  "serde",
@@ -3210,7 +3251,6 @@ dependencies = [
  "kitsune-error",
  "moka",
  "multiplex-pool",
- "redis",
  "serde",
  "simd-json",
  "tokio",
@@ -3302,7 +3342,7 @@ dependencies = [
  "kitsune-type",
  "num-derive",
  "num-traits",
- "rustls 0.23.5",
+ "rustls",
  "rustls-native-certs",
  "serde",
  "simd-json",
@@ -3461,7 +3501,6 @@ dependencies = [
  "kitsune-wasm-mrf",
  "mimalloc",
  "multiplex-pool",
- "redis",
  "tokio",
  "tracing",
  "triomphe",
@@ -3561,7 +3600,6 @@ dependencies = [
  "oauth2",
  "once_cell",
  "openidconnect",
- "redis",
  "serde",
  "simd-json",
  "speedy-uuid",
@@ -3672,7 +3710,6 @@ dependencies = [
  "post-process",
  "pretty_assertions",
  "rand 0.8.5",
- "redis",
  "rsa",
  "rusty-s3",
  "serde",
@@ -3720,7 +3757,6 @@ dependencies = [
  "multiplex-pool",
  "pin-project-lite",
  "rand 0.8.5",
- "redis",
  "rusty-s3",
  "tokio",
  "triomphe",
@@ -3782,7 +3818,6 @@ dependencies = [
  "kitsune-type",
  "mrf-manifest",
  "multiplex-pool",
- "redis",
  "simd-json",
  "slab",
  "sled",
@@ -3815,7 +3850,6 @@ dependencies = [
  "kitsune-util",
  "multiplex-pool",
  "pretty_assertions",
- "redis",
  "simd-json",
  "tokio",
  "tower",
@@ -3875,11 +3909,11 @@ dependencies = [
  "nom",
  "percent-encoding",
  "quoted_printable",
- "rustls 0.23.5",
+ "rustls",
  "rustls-pemfile",
  "socket2",
  "tokio",
- "tokio-rustls 0.26.0",
+ "tokio-rustls",
  "tracing",
  "url",
  "webpki-roots",
@@ -4475,16 +4509,6 @@ checksum = "77a8165726e8236064dbb45459242600304b42a5ea24ee2948e18e023bf7ba84"
 dependencies = [
  "overload",
  "winapi",
-]
-
-[[package]]
-name = "num-bigint"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7"
-dependencies = [
- "num-integer",
- "num-traits",
 ]
 
 [[package]]
@@ -5549,33 +5573,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "redis"
-version = "0.25.3"
-source = "git+https://github.com/redis-rs/redis-rs.git?rev=0c544b548b52180acda8e8394ab21b2761497e50#0c544b548b52180acda8e8394ab21b2761497e50"
+name = "redis-protocol"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65deb7c9501fbb2b6f812a30d59c0253779480853545153a51d8e9e444ddc99f"
 dependencies = [
- "ahash 0.8.11",
- "arc-swap",
- "async-trait",
  "bytes",
- "combine",
- "futures",
- "futures-util",
- "itoa 1.0.11",
- "num-bigint",
- "percent-encoding",
- "pin-project-lite",
- "rustls 0.22.4",
- "rustls-native-certs",
- "rustls-pemfile",
- "rustls-pki-types",
- "ryu",
- "sha1_smol",
- "socket2",
- "tokio",
- "tokio-retry",
- "tokio-rustls 0.25.0",
- "tokio-util",
- "url",
+ "bytes-utils",
+ "cookie-factory",
+ "crc16",
+ "log",
+ "nom",
 ]
 
 [[package]]
@@ -5897,20 +5905,6 @@ dependencies = [
  "linux-raw-sys",
  "once_cell",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "rustls"
-version = "0.22.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf4ef73721ac7bcd79b2b315da7779d8fc09718c6b3d2d1b2d94850eb8c18432"
-dependencies = [
- "log",
- "ring",
- "rustls-pki-types",
- "rustls-webpki",
- "subtle",
- "zeroize",
 ]
 
 [[package]]
@@ -6338,12 +6332,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha1_smol"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae1a47186c03a32177042e55dbc5fd5aee900b8e0069a8d70fba96a9375cd012"
-
-[[package]]
 name = "sha2"
 version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6506,7 +6494,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-graphql",
  "diesel",
- "redis",
+ "fred",
  "serde",
  "serde_test",
  "thiserror",
@@ -7008,33 +6996,11 @@ source = "git+https://github.com/jbg/tokio-postgres-rustls.git?rev=b16c1bc0f5d4f
 dependencies = [
  "const-oid",
  "ring",
- "rustls 0.23.5",
+ "rustls",
  "tokio",
  "tokio-postgres",
- "tokio-rustls 0.26.0",
+ "tokio-rustls",
  "x509-cert",
-]
-
-[[package]]
-name = "tokio-retry"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f57eb36ecbe0fc510036adff84824dd3c24bb781e21bfa67b69d556aa85214f"
-dependencies = [
- "pin-project",
- "rand 0.8.5",
- "tokio",
-]
-
-[[package]]
-name = "tokio-rustls"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "775e0c0f0adb3a2f22a00c4745d728b479985fc15ee7ca6a2608388c5569860f"
-dependencies = [
- "rustls 0.22.4",
- "rustls-pki-types",
- "tokio",
 ]
 
 [[package]]
@@ -7043,7 +7009,7 @@ version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c7bc40d0e5a97695bb96e27995cd3a08538541b0a846f65bba7a359f36700d4"
 dependencies = [
- "rustls 0.23.5",
+ "rustls",
  "rustls-pki-types",
  "tokio",
 ]
@@ -7177,12 +7143,12 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "prost",
- "rustls 0.23.5",
+ "rustls",
  "rustls-native-certs",
  "rustls-pemfile",
  "socket2",
  "tokio",
- "tokio-rustls 0.26.0",
+ "tokio-rustls",
  "tokio-stream",
  "tower",
  "tower-layer",

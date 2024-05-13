@@ -10,10 +10,6 @@ enum_dispatch = "0.3.13"
 kitsune-error = { path = "../kitsune-error" }
 moka = { version = "0.12.7", features = ["sync"] }
 multiplex-pool = { path = "../../lib/multiplex-pool" }
-redis = { version = "0.25.3", default-features = false, features = [
-    "connection-manager",
-    "tokio-comp",
-] }
 serde = "1.0.201"
 simd-json = "0.13.10"
 tracing = "0.1.40"
