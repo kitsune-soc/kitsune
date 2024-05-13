@@ -29,7 +29,6 @@ kitsune-service = { path = "../crates/kitsune-service" }
 kitsune-url = { path = "../crates/kitsune-url" }
 kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
 mimalloc = "0.1.41"
-multiplex-pool = { path = "../lib/multiplex-pool" }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 triomphe = "0.1.11"

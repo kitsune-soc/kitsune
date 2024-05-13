@@ -447,11 +447,11 @@ dependencies = [
  "ahash 0.8.11",
  "async-trait",
  "either",
+ "fred",
  "futures-util",
  "iso8601-timestamp",
  "just-retry",
  "kitsune-test",
- "multiplex-pool",
  "once_cell",
  "rand 0.8.5",
  "serde",
@@ -2124,11 +2124,17 @@ dependencies = [
  "parking_lot 0.12.2",
  "rand 0.8.5",
  "redis-protocol",
+ "rustls",
+ "rustls-native-certs",
  "semver",
+ "sha-1",
  "socket2",
  "tokio",
+ "tokio-rustls",
  "tokio-stream",
  "tokio-util",
+ "tracing",
+ "tracing-futures",
  "url",
  "urlencoding",
 ]
@@ -3166,7 +3172,6 @@ dependencies = [
  "mimalloc",
  "mime",
  "mime_guess",
- "multiplex-pool",
  "oxide-auth",
  "oxide-auth-async",
  "oxide-auth-axum",
@@ -3248,9 +3253,9 @@ name = "kitsune-cache"
 version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
+ "fred",
  "kitsune-error",
  "moka",
- "multiplex-pool",
  "serde",
  "simd-json",
  "tokio",
@@ -3500,7 +3505,6 @@ dependencies = [
  "kitsune-url",
  "kitsune-wasm-mrf",
  "mimalloc",
- "multiplex-pool",
  "tokio",
  "tracing",
  "triomphe",
@@ -3596,7 +3600,6 @@ dependencies = [
  "kitsune-error",
  "kitsune-http-client",
  "moka",
- "multiplex-pool",
  "oauth2",
  "once_cell",
  "openidconnect",
@@ -3704,7 +3707,6 @@ dependencies = [
  "kitsune-util",
  "kitsune-webfinger",
  "mime",
- "multiplex-pool",
  "password-hash",
  "pkcs8",
  "post-process",
@@ -3754,7 +3756,6 @@ dependencies = [
  "kitsune-config",
  "kitsune-db",
  "kitsune-s3",
- "multiplex-pool",
  "pin-project-lite",
  "rand 0.8.5",
  "rusty-s3",
@@ -3811,13 +3812,13 @@ dependencies = [
  "color-eyre",
  "derive_more 1.0.0-beta.6",
  "enum_dispatch",
+ "fred",
  "futures-util",
  "kitsune-config",
  "kitsune-derive",
  "kitsune-error",
  "kitsune-type",
  "mrf-manifest",
- "multiplex-pool",
  "simd-json",
  "slab",
  "sled",
@@ -3848,7 +3849,6 @@ dependencies = [
  "kitsune-http-client",
  "kitsune-type",
  "kitsune-util",
- "multiplex-pool",
  "pretty_assertions",
  "simd-json",
  "tokio",
@@ -6318,6 +6318,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d036d71a959e00c77a63538b90a6c2390969f9772b096ea837205c6bd0491a44"
 dependencies = [
  "stable_deref_trait",
+]
+
+[[package]]
+name = "sha-1"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5058ada175748e33390e40e872bd0fe59a19f265d0158daa551c5a88a76009c"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest",
 ]
 
 [[package]]

@@ -1,8 +1,7 @@
-use super::Pool;
 use crate::error::Result;
+use fred::{clients::RedisPool, types::Script, util::NONE};
 use once_cell::sync::Lazy;
 use rand::Rng;
-use redis::Script;
 use smol_str::SmolStr;
 use std::{ops::RangeInclusive, time::Duration};
 use typed_builder::TypedBuilder;
@@ -12,22 +11,24 @@ use typed_builder::TypedBuilder;
 const SCHEDULE_PAUSE_RANGE: RangeInclusive<u64> = 5..=10;
 // This functionality is expressed as a script since scripts are executed transactionally
 static SCHEDULE_SCRIPT: Lazy<Script> =
-    Lazy::new(|| Script::new(include_str!("../../lua/copy_scheduled.lua")));
+    Lazy::new(|| Script::from_lua(include_str!("../../lua/copy_scheduled.lua")));
 
 #[derive(TypedBuilder)]
 pub struct ScheduledJobActor {
-    redis_pool: Pool,
+    redis_pool: RedisPool,
     scheduled_queue_name: SmolStr,
     queue_name: SmolStr,
 }
 
 impl ScheduledJobActor {
     async fn run(&mut self) -> Result<()> {
-        let mut conn = self.redis_pool.get();
+        let client = self.redis_pool.next();
         SCHEDULE_SCRIPT
-            .key(self.queue_name.as_str())
-            .key(self.scheduled_queue_name.as_str())
-            .invoke_async(&mut conn)
+            .evalsha_with_reload(
+                client,
+                (self.queue_name.as_str(), self.scheduled_queue_name.as_str()),
+                NONE,
+            )
             .await?;
 
         Ok(())

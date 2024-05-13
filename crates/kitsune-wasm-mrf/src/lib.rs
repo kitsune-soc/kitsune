@@ -153,7 +153,7 @@ impl MrfService {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()
             }
             KvStorage::Redis(RedisKvStorage { ref url, pool_size }) => {
-                let client = redis::Client::open(url.as_str())?;
+                let pool = fred:: 
                 kv_storage::RedisBackend::from_client(client, pool_size.get())
                     .await?
                     .into()

@@ -6,6 +6,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use either::Either;
+use fred::clients::RedisPool;
 use iso8601_timestamp::Timestamp;
 use just_retry::{
     retry_policies::{policies::ExponentialBackoff, Jitter},
@@ -25,8 +26,6 @@ use typed_builder::TypedBuilder;
 
 mod scheduled;
 
-type Pool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
-
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
     #[builder(default = "athena-job-runners".into(), setter(into))]
@@ -39,7 +38,7 @@ pub struct JobQueue<CR> {
     max_retries: u32,
     #[builder(setter(into))]
     queue_name: SmolStr,
-    redis_pool: Pool,
+    redis_pool: RedisPool,
     #[builder(default = SmolStr::from(format!("{queue_name}:scheduled")))]
     scheduled_queue_name: SmolStr,
 

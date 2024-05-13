@@ -75,6 +75,14 @@ members = [
 ]
 resolver = "2"
 
+[workspace.dependencies]
+fred = { version = "9.0.3", features = [
+    "enable-rustls-ring",
+    "i-scripts",
+    "partial-tracing",
+    "sha-1",
+] }
+
 [workspace.lints.clippy]
 all = "warn"
 pedantic = "warn"

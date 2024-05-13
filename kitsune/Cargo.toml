@@ -133,7 +133,6 @@ kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 [dev-dependencies]
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
-multiplex-pool = { path = "../lib/multiplex-pool" }
 pretty_assertions = "1.4.0"
 
 [features]

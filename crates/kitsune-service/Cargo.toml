@@ -44,7 +44,6 @@ kitsune-storage = { path = "../kitsune-storage" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
-multiplex-pool = { path = "../../lib/multiplex-pool" }
 password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"
 post-process = { path = "../../lib/post-process" }
