@@ -4468,13 +4468,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "multiplex-pool"
-version = "0.0.1-pre.6"
-dependencies = [
- "triomphe",
-]
-
-[[package]]
 name = "nanorand"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

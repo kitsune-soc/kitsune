@@ -62,7 +62,6 @@ members = [
     "lib/masto-id-convert",
     "lib/mrf-manifest",
     "lib/mrf-tool",
-    "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
     "lib/tick-tock-mock",
