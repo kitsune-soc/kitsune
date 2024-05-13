@@ -8,8 +8,8 @@ use async_trait::async_trait;
 use either::Either;
 use fred::{
     clients::RedisPool,
-    interfaces::{ClientLike, SortedSetsInterface, StreamsInterface},
-    types::RedisValue,
+    interfaces::{SortedSetsInterface, StreamsInterface},
+    types::{RedisValue, XID},
 };
 use iso8601_timestamp::Timestamp;
 use just_retry::{
@@ -102,7 +102,7 @@ where
                     self.queue_name.as_str(),
                     true,
                     None,
-                    "*",
+                    XID::Auto,
                     vec![
                         ("job_id", RedisValue::from(job_meta.job_id)),
                         ("fail_count", RedisValue::from(job_meta.fail_count)),
@@ -146,38 +146,41 @@ where
     }
 
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
-        let mut redis_conn = self.redis_pool.get();
         self.initialise_group().await?;
 
-        let StreamAutoClaimReply {
-            claimed: claimed_ids,
-            ..
-        } = redis_conn
-            .xautoclaim_options(
+        let (_start, claimed_ids) = self
+            .redis_pool
+            .xautoclaim_values(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
                 self.consumer_name.as_str(),
                 MIN_IDLE_TIME.as_millis() as u64,
                 "0-0",
-                StreamAutoClaimOptions::default().count(max_jobs),
+                Some(max_jobs as u64),
+                false,
             )
             .await?;
 
         let claimed_ids = if claimed_ids.len() == max_jobs {
             Either::Left(claimed_ids.into_iter())
         } else {
-            let mut read_opts = StreamReadOptions::default()
-                .count(max_jobs - claimed_ids.len())
-                .group(self.consumer_group.as_str(), self.consumer_name.as_str());
-
-            read_opts = if claimed_ids.is_empty() {
-                read_opts.block(0)
+            let block_time = if claimed_ids.is_empty() {
+                0
             } else {
-                read_opts.block(BLOCK_TIME.as_millis() as usize)
+                BLOCK_TIME.as_millis()
             };
 
-            let read_reply: Option<StreamReadReply> = redis_conn
-                .xread_options(&[self.queue_name.as_str()], &[">"], &read_opts)
+            let read_reply = self
+                .redis_pool
+                .xreadgroup_map(
+                    self.consumer_group.as_str(),
+                    self.consumer_name.as_str(),
+                    Some((max_jobs - claimed_ids.len()) as u64),
+                    Some(block_time as u64),
+                    false,
+                    self.queue_name.as_str(),
+                    XID::NewInGroup,
+                )
                 .await?;
 
             let read_ids = read_reply
@@ -215,14 +218,14 @@ where
         let client = self.redis_pool.next();
         let pipeline = client.pipeline();
 
-        () = pipeline
+        pipeline
             .xack(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
                 stream_id.as_str(),
             )
             .await?;
-        () = pipeline
+        pipeline
             .xdel(self.queue_name.as_str(), &[stream_id])
             .await?;
 
@@ -253,7 +256,7 @@ where
             Outcome::Success => true, // Execution succeeded, we don't need the context anymore
         };
 
-        () = pipeline.last().await?;
+        pipeline.last().await?;
 
         if remove_context {
             self.context_repository

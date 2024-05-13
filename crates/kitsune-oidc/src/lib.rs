@@ -2,10 +2,10 @@ use crate::state::{
     store::{InMemory as InMemoryStore, Redis as RedisStore},
     LoginState, OAuth2LoginState, Store,
 };
+use fred::{clients::RedisPool, types::RedisConfig};
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
 use kitsune_derive::kitsune_service;
 use kitsune_error::{bail, kitsune_error, Result};
-use multiplex_pool::RoundRobinStrategy;
 use openidconnect::{
     core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
     AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
@@ -92,13 +92,9 @@ impl OidcService {
         let login_state_store = match config.store {
             StoreConfiguration::InMemory => InMemoryStore::new(LOGIN_STATE_STORE_SIZE).into(),
             StoreConfiguration::Redis(ref redis_config) => {
-                let client = redis::Client::open(redis_config.url.as_str())?;
-                let pool = multiplex_pool::Pool::from_producer(
-                    || client.get_connection_manager(),
-                    10,
-                    RoundRobinStrategy::default(),
-                )
-                .await?;
+                let config = RedisConfig::from_url(redis_config.url.as_str())?;
+                // TODO: Make pool size configurable
+                let pool = RedisPool::new(config, None, None, None, 10)?;
 
                 RedisStore::new(pool).into()
             }

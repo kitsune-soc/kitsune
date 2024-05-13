@@ -3593,6 +3593,7 @@ name = "kitsune-oidc"
 version = "0.0.1-pre.6"
 dependencies = [
  "enum_dispatch",
+ "fred",
  "http",
  "http-body-util",
  "kitsune-config",
