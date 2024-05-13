@@ -6,16 +6,15 @@ use crate::{
 };
 use async_trait::async_trait;
 use either::Either;
-use fred::{clients::RedisPool, interfaces::StreamsInterface};
+use fred::{
+    clients::RedisPool,
+    interfaces::{ClientLike, SortedSetsInterface, StreamsInterface},
+    types::RedisValue,
+};
 use iso8601_timestamp::Timestamp;
 use just_retry::{
     retry_policies::{policies::ExponentialBackoff, Jitter},
     JustRetryPolicy, StartTime,
-};
-use redis::{
-    aio::ConnectionLike,
-    streams::{StreamAutoClaimOptions, StreamAutoClaimReply, StreamReadOptions, StreamReadReply},
-    AsyncCommands, RedisResult,
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
@@ -76,28 +75,40 @@ where
         Ok(())
     }
 
-    fn enqueue_redis_cmd(
+    async fn enqueue_ops<C>(
         &self,
+        client: &C,
         job_meta: &JobData,
         run_at: Option<Timestamp>,
-    ) -> Result<redis::Cmd> {
+    ) -> Result<()>
+    where
+        C: SortedSetsInterface + StreamsInterface,
+    {
         let cmd = if let Some(run_at) = run_at {
             let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
-            redis::Cmd::zadd(
-                self.scheduled_queue_name.as_str(),
-                simd_json::to_string(job_meta)?,
-                score,
-            )
+            client
+                .zadd(
+                    self.scheduled_queue_name.as_str(),
+                    None,
+                    None,
+                    true,
+                    false,
+                    (score as f64, simd_json::to_string(job_meta)?),
+                )
+                .await?;
         } else {
-            let mut cmd = redis::cmd("XADD");
-            cmd.arg(self.queue_name.as_str())
-                .arg("*")
-                .arg("job_id")
-                .arg(job_meta.job_id)
-                .arg("fail_count")
-                .arg(job_meta.fail_count);
-
-            cmd
+            client
+                .xadd(
+                    self.queue_name.as_str(),
+                    true,
+                    None,
+                    "*",
+                    vec![
+                        ("job_id", RedisValue::from(job_meta.job_id)),
+                        ("fail_count", RedisValue::from(job_meta.fail_count)),
+                    ],
+                )
+                .await?;
         };
 
         Ok(cmd)
@@ -128,9 +139,7 @@ where
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
-        let mut redis_conn = self.redis_pool.get();
-        self.enqueue_redis_cmd(&job_data, job_details.run_at)?
-            .query_async(&mut redis_conn)
+        self.enqueue_ops(&self.redis_pool, &job_data, job_details.run_at)
             .await?;
 
         Ok(())
@@ -233,9 +242,8 @@ where
                     };
 
                     let backoff_timestamp = Timestamp::from(SystemTime::now() + delta);
-                    let enqueue_cmd = self.enqueue_redis_cmd(&job_data, Some(backoff_timestamp))?;
-
-                    pipeline.add_command(enqueue_cmd);
+                    self.enqueue_ops(&pipeline, &job_data, Some(backoff_timestamp))
+                        .await?;
 
                     false // Do not delete the context if we were able to retry the job one more time
                 } else {
@@ -245,10 +253,7 @@ where
             Outcome::Success => true, // Execution succeeded, we don't need the context anymore
         };
 
-        {
-            let mut conn = self.redis_pool.get();
-            pipeline.query_async::<_, ()>(&mut conn).await?;
-        }
+        () = pipeline.last().await?;
 
         if remove_context {
             self.context_repository
@@ -266,15 +271,20 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        let mut conn = self.redis_pool.get();
-        conn.xclaim(
-            self.queue_name.as_str(),
-            self.consumer_group.as_str(),
-            self.consumer_name.as_str(),
-            0,
-            &[stream_id],
-        )
-        .await?;
+        self.redis_pool
+            .xclaim(
+                self.queue_name.as_str(),
+                self.consumer_group.as_str(),
+                self.consumer_name.as_str(),
+                0,
+                stream_id.as_str(),
+                None,
+                None,
+                None,
+                true,
+                false,
+            )
+            .await?;
 
         Ok(())
     }
