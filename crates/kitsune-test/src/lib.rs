@@ -1,6 +1,6 @@
-use ::redis::aio::ConnectionManager;
 use bytes::Bytes;
 use diesel_async::{AsyncConnection, AsyncPgConnection, SimpleAsyncConnection};
+use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
 use futures_util::Future;
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
@@ -10,7 +10,6 @@ use kitsune_config::{
     language_detection::{self, DetectionBackend},
 };
 use kitsune_db::PgPool;
-use multiplex_pool::RoundRobinStrategy;
 use resource::provide_resource;
 use std::env;
 use triomphe::Arc;
@@ -113,35 +112,20 @@ where
 
 pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
 where
-    F: FnOnce(multiplex_pool::Pool<ConnectionManager>) -> Fut,
+    F: FnOnce(RedisPool) -> Fut,
     Fut: Future,
 {
     let redis_url = env::var("REDIS_URL").unwrap();
-    let client = ::redis::Client::open(redis_url.as_ref()).unwrap();
+    let mut config = RedisConfig::from_url(&redis_url).unwrap();
 
     // Connect to a random Redis database
-    let db_id = self::redis::find_unused_database(&client).await;
-    let pool = multiplex_pool::Pool::from_producer(
-        || async {
-            let mut conn = client.get_connection_manager().await?;
-            let (): () = ::redis::cmd("SELECT")
-                .arg(db_id)
-                .query_async(&mut conn)
-                .await
-                .unwrap();
-
-            Ok::<_, ::redis::RedisError>(conn)
-        },
-        5,
-        RoundRobinStrategy::default(),
-    )
-    .await
-    .unwrap();
+    let db_id = self::redis::find_unused_database(&config).await;
+    config.database = Some(db_id);
+    let pool = RedisPool::new(config, None, None, None, 5).unwrap();
+    pool.init().await.unwrap();
 
     provide_resource(pool, func, |pool| async move {
-        let mut conn = pool.get();
-        let (): () = ::redis::cmd("FLUSHDB")
-            .query_async(&mut conn)
+        pool.custom::<(), ()>(fred::cmd!("FLUSHDB"), vec![])
             .await
             .unwrap();
     })

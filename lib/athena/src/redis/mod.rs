@@ -9,7 +9,7 @@ use either::Either;
 use fred::{
     clients::RedisPool,
     interfaces::{SortedSetsInterface, StreamsInterface},
-    types::{RedisValue, XID},
+    types::{FromRedis, RedisValue, XID},
 };
 use iso8601_timestamp::Timestamp;
 use just_retry::{
@@ -18,7 +18,7 @@ use just_retry::{
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{ops::ControlFlow, str::FromStr, time::SystemTime};
+use std::{collections::HashMap, mem, ops::ControlFlow, str::FromStr, time::SystemTime};
 use tokio::sync::OnceCell;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
@@ -84,7 +84,7 @@ where
     where
         C: SortedSetsInterface + StreamsInterface,
     {
-        let cmd = if let Some(run_at) = run_at {
+        if let Some(run_at) = run_at {
             let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
             client
                 .zadd(
@@ -93,6 +93,7 @@ where
                     None,
                     true,
                     false,
+                    #[allow(clippy::cast_precision_loss)]
                     (score as f64, simd_json::to_string(job_meta)?),
                 )
                 .await?;
@@ -111,7 +112,7 @@ where
                 .await?;
         };
 
-        Ok(cmd)
+        Ok(())
     }
 }
 
@@ -148,7 +149,7 @@ where
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
         self.initialise_group().await?;
 
-        let (_start, claimed_ids) = self
+        let (_start, claimed_ids): (_, Vec<(String, HashMap<String, RedisValue>)>) = self
             .redis_pool
             .xautoclaim_values(
                 self.queue_name.as_str(),
@@ -170,7 +171,7 @@ where
                 BLOCK_TIME.as_millis()
             };
 
-            let read_reply = self
+            let read_reply: HashMap<String, Vec<(String, HashMap<String, RedisValue>)>> = self
                 .redis_pool
                 .xreadgroup_map(
                     self.consumer_group.as_str(),
@@ -183,23 +184,27 @@ where
                 )
                 .await?;
 
-            let read_ids = read_reply
-                .into_iter()
-                .flat_map(|reply| reply.keys.into_iter().flat_map(|key| key.ids));
+            let read_ids = read_reply.into_values().flatten();
 
             Either::Right(claimed_ids.into_iter().chain(read_ids))
         };
 
         let job_data = claimed_ids
-            .map(|id| {
+            .map(|(id, mut map)| {
+                let mut raw_job_id = RedisValue::Null;
+                let mut raw_fail_count = RedisValue::Null;
+
+                mem::swap(map.get_mut("job_id").unwrap(), &mut raw_job_id);
+                mem::swap(map.get_mut("fail_count").unwrap(), &mut raw_fail_count);
+
                 let job_id: String =
-                    redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
+                    String::from_value(raw_job_id).expect("[Bug] Malformed Job ID");
                 let job_id = Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID");
-                let fail_count: u32 = redis::from_redis_value(&id.map["fail_count"])
-                    .expect("[Bug] Malformed fail count");
+                let fail_count: u32 =
+                    u32::from_value(raw_fail_count).expect("[Bug] Malformed fail count");
 
                 JobData {
-                    ctx: KeeperOfTheSecrets::new(id.id),
+                    ctx: KeeperOfTheSecrets::new(id),
                     job_id,
                     fail_count,
                 }

@@ -1,4 +1,7 @@
 use eyre::WrapErr;
+use fred::clients::RedisPool;
+use fred::interfaces::ClientLike;
+use fred::types::RedisConfig;
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
 use kitsune_captcha::AnyCaptcha;
 use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
@@ -10,8 +13,6 @@ use kitsune_email::{
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
 use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
-use multiplex_pool::RoundRobinStrategy;
-use redis::aio::ConnectionManager;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Display, str::FromStr, time::Duration};
 use tokio::sync::OnceCell;
@@ -29,19 +30,15 @@ where
         cache::Configuration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         cache::Configuration::None => NoopCache.into(),
         cache::Configuration::Redis(ref redis_config) => {
-            static REDIS_POOL: OnceCell<multiplex_pool::Pool<ConnectionManager>> =
-                OnceCell::const_new();
+            static REDIS_POOL: OnceCell<RedisPool> = OnceCell::const_new();
 
             let pool = REDIS_POOL
                 .get_or_try_init(|| async {
-                    let client = redis::Client::open(redis_config.url.as_str())?;
+                    let config = RedisConfig::from_url(redis_config.url.as_str())?;
+                    let pool = RedisPool::new(config, None, None, None, 10)?;
+                    pool.init().await?;
 
-                    multiplex_pool::Pool::from_producer(
-                        || client.get_connection_manager(),
-                        10,
-                        RoundRobinStrategy::default(),
-                    )
-                    .await
+                    eyre::Ok(pool)
                 })
                 .await?;
 

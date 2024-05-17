@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 bytes = "1.6.0"
 diesel-async = "0.4.1"
+fred = { workspace = true }
 futures-util = "0.3.30"
 http = "1.1.0"
 http-body-util = "0.1.1"

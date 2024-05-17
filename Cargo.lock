@@ -3679,6 +3679,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "eyre",
+ "fred",
  "futures-util",
  "garde",
  "hex-simd",
@@ -3750,6 +3751,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "bytes",
  "diesel-async",
+ "fred",
  "futures-util",
  "http",
  "http-body-util",
