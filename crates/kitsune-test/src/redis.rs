@@ -1,7 +1,7 @@
 use fred::{
     clients::RedisClient,
-    interfaces::{ClientLike, RedisResult},
-    types::{RedisConfig, RedisValue},
+    interfaces::{ClientLike, KeysInterface, RedisResult, ServerInterface},
+    types::{RedisConfig, RedisValue, SetOptions},
 };
 use rand::Rng;
 use std::{ops::RangeInclusive, time::Duration};
@@ -12,16 +12,13 @@ const LOCK_VALUE: &str = "LOCKED";
 const SLEEP_DURATION: Duration = Duration::from_millis(100);
 
 async fn switch_and_try_lock(conn: &RedisClient, id: u8) -> bool {
-    conn.custom::<(), _>(fred::cmd!("SELECT"), vec![id])
-        .await
-        .unwrap();
-
+    conn.select(id).await.unwrap();
     try_lock(conn).await
 }
 
 async fn try_lock(conn: &RedisClient) -> bool {
     let result: RedisResult<RedisValue> = conn
-        .custom(fred::cmd!("SELECT"), vec![LOCK_KEY, LOCK_VALUE, "NX"])
+        .set(LOCK_KEY, LOCK_VALUE, None, Some(SetOptions::NX), true)
         .await;
 
     if let Ok(val) = result {
