@@ -19,9 +19,9 @@ kitsune-type = { path = "../kitsune-type" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
-serde = "1.0.201"
+serde = "1.0.202"
 simd-json = "0.13.10"
-smol_str = "0.2.1"
+smol_str = "0.2.2"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tracing = "0.1.40"
 typed-builder = "0.18.2"

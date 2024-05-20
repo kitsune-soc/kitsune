@@ -7,6 +7,7 @@ use self::{
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use color_eyre::{eyre, Section};
+use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
 use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
 use kitsune_config::mrf::{
     Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
@@ -153,9 +154,19 @@ impl MrfService {
                 kv_storage::FsBackend::from_path(path.as_str())?.into()
             }
             KvStorage::Redis(RedisKvStorage { ref url, pool_size }) => {
-                let client = redis::Client::open(url.as_str())?;
-                kv_storage::RedisBackend::from_client(client, pool_size.get())
-                    .await?
+                let pool = RedisPool::new(
+                    RedisConfig::from_url(url.as_str())?,
+                    None,
+                    None,
+                    None,
+                    pool_size.get(),
+                )?;
+
+                pool.init().await?;
+
+                kv_storage::RedisBackend::builder()
+                    .pool(pool)
+                    .build()
                     .into()
             }
         };

@@ -75,6 +75,7 @@ mod tests {
     use axum_extra::either::Either;
     use bytes::Bytes;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+    use fred::clients::RedisPool;
     use http::{Request, Response, StatusCode};
     use http_body_util::Empty;
     use kitsune_activitypub::Fetcher;
@@ -99,7 +100,6 @@ mod tests {
     use kitsune_type::webfinger::Link;
     use kitsune_url::UrlService;
     use kitsune_webfinger::Webfinger;
-    use redis::aio::ConnectionManager;
     use scoped_futures::ScopedFutureExt;
     use speedy_uuid::Uuid;
     use std::convert::Infallible;
@@ -115,7 +115,7 @@ mod tests {
 
     fn build_account_service(
         db_pool: PgPool,
-        redis_pool: multiplex_pool::Pool<ConnectionManager>,
+        redis_pool: RedisPool,
         url_service: UrlService,
     ) -> AccountService {
         let temp_dir = TempDir::new().unwrap();

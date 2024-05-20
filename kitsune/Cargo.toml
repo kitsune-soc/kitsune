@@ -44,7 +44,7 @@ http = "1.1.0"
 http-body-util = "0.1.1"
 http-signatures = { path = "../lib/http-signatures" }
 iso8601-timestamp = "0.2.17"
-itertools = { version = "0.12.1", default-features = false }
+itertools = { version = "0.13.0", default-features = false }
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
@@ -69,18 +69,15 @@ kitsune-url = { path = "../crates/kitsune-url" }
 kitsune-util = { path = "../crates/kitsune-util" }
 kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "../crates/kitsune-webfinger" }
-mimalloc = "0.1.41"
+mimalloc = "0.1.42"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 oxide-auth = "0.5.4"
 oxide-auth-async = "0.1.1"
 oxide-auth-axum = "0.4.0"
-redis = { version = "0.25.3", default-features = false, features = [
-    "tokio-rustls-comp",
-] }
 rust-embed = { version = "8.4.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 simd-json = "0.13.10"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
@@ -129,19 +126,15 @@ kitsune-mastodon = { path = "../crates/kitsune-mastodon", optional = true }
 kitsune-oidc = { path = "../crates/kitsune-oidc", optional = true }
 
 [build-dependencies]
-camino = "1.1.6"
+camino = "1.1.7"
 fs_extra = "1.3.0"
 kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 
 [dev-dependencies]
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
-multiplex-pool = { path = "../lib/multiplex-pool" }
 pretty_assertions = "1.4.0"
-redis = { version = "0.25.3", default-features = false, features = [
-    "connection-manager",
-    "tokio-comp",
-] }
+fred = { workspace = true }
 
 [features]
 default = ["graphql-api", "mastodon-api"]

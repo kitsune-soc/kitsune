@@ -6,26 +6,24 @@ use crate::{
 };
 use async_trait::async_trait;
 use either::Either;
+use fred::{
+    clients::RedisPool,
+    interfaces::{SortedSetsInterface, StreamsInterface},
+    types::{FromRedis, RedisValue, XReadResponse, XReadValue, XID},
+};
 use iso8601_timestamp::Timestamp;
 use just_retry::{
     retry_policies::{policies::ExponentialBackoff, Jitter},
     JustRetryPolicy, StartTime,
 };
-use redis::{
-    aio::ConnectionLike,
-    streams::{StreamAutoClaimOptions, StreamAutoClaimReply, StreamReadOptions, StreamReadReply},
-    AsyncCommands, RedisResult,
-};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{ops::ControlFlow, str::FromStr, time::SystemTime};
+use std::{mem, ops::ControlFlow, str::FromStr, time::SystemTime};
 use tokio::sync::OnceCell;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
 mod scheduled;
-
-type Pool = multiplex_pool::Pool<redis::aio::ConnectionManager>;
 
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
@@ -39,7 +37,7 @@ pub struct JobQueue<CR> {
     max_retries: u32,
     #[builder(setter(into))]
     queue_name: SmolStr,
-    redis_pool: Pool,
+    redis_pool: RedisPool,
     #[builder(default = SmolStr::from(format!("{queue_name}:scheduled")))]
     scheduled_queue_name: SmolStr,
 
@@ -62,58 +60,61 @@ impl<CR> JobQueue<CR>
 where
     CR: JobContextRepository + Send + Sync + 'static,
 {
-    async fn initialise_group<C>(&self, redis_conn: &mut C) -> Result<()>
-    where
-        C: ConnectionLike + Send + Sized,
-    {
+    async fn initialise_group(&self) -> Result<()> {
         self.group_initialised
-            .get_or_try_init(|| async {
-                let result: RedisResult<()> = redis_conn
-                    .xgroup_create_mkstream(
-                        self.queue_name.as_str(),
-                        self.consumer_group.as_str(),
-                        "0",
-                    )
-                    .await;
-
-                if let Err(err) = result {
-                    if err.kind() != redis::ErrorKind::ExtensionError {
-                        return Err(err);
-                    }
-                }
-
-                Ok(())
+            .get_or_try_init(|| {
+                self.redis_pool.xgroup_create(
+                    self.queue_name.as_str(),
+                    self.consumer_group.as_str(),
+                    "0",
+                    true,
+                )
             })
             .await?;
 
         Ok(())
     }
 
-    fn enqueue_redis_cmd(
+    async fn enqueue_ops<C>(
         &self,
+        client: &C,
         job_meta: &JobData,
         run_at: Option<Timestamp>,
-    ) -> Result<redis::Cmd> {
-        let cmd = if let Some(run_at) = run_at {
-            let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
-            redis::Cmd::zadd(
-                self.scheduled_queue_name.as_str(),
-                simd_json::to_string(job_meta)?,
-                score,
-            )
-        } else {
-            let mut cmd = redis::cmd("XADD");
-            cmd.arg(self.queue_name.as_str())
-                .arg("*")
-                .arg("job_id")
-                .arg(job_meta.job_id)
-                .arg("fail_count")
-                .arg(job_meta.fail_count);
+    ) -> Result<()>
+    where
+        C: SortedSetsInterface + StreamsInterface,
+    {
+        if let Some(run_at) = run_at {
+            let score = run_at
+                .duration_since(Timestamp::UNIX_EPOCH)
+                .as_seconds_f64();
 
-            cmd
+            client
+                .zadd(
+                    self.scheduled_queue_name.as_str(),
+                    None,
+                    None,
+                    true,
+                    false,
+                    (score, simd_json::to_string(job_meta)?),
+                )
+                .await?;
+        } else {
+            client
+                .xadd(
+                    self.queue_name.as_str(),
+                    false,
+                    None,
+                    XID::Auto,
+                    vec![
+                        ("job_id", RedisValue::from(job_meta.job_id)),
+                        ("fail_count", RedisValue::from(job_meta.fail_count)),
+                    ],
+                )
+                .await?;
         };
 
-        Ok(cmd)
+        Ok(())
     }
 }
 
@@ -141,66 +142,71 @@ where
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
-        let mut redis_conn = self.redis_pool.get();
-        self.enqueue_redis_cmd(&job_data, job_details.run_at)?
-            .query_async(&mut redis_conn)
+        self.enqueue_ops(&self.redis_pool, &job_data, job_details.run_at)
             .await?;
 
         Ok(())
     }
 
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
-        let mut redis_conn = self.redis_pool.get();
-        self.initialise_group(&mut redis_conn).await?;
+        self.initialise_group().await?;
 
-        let StreamAutoClaimReply {
-            claimed: claimed_ids,
-            ..
-        } = redis_conn
-            .xautoclaim_options(
+        let (_start, claimed_ids): (_, Vec<XReadValue<String, String, RedisValue>>) = self
+            .redis_pool
+            .xautoclaim_values(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
                 self.consumer_name.as_str(),
                 MIN_IDLE_TIME.as_millis() as u64,
                 "0-0",
-                StreamAutoClaimOptions::default().count(max_jobs),
+                Some(max_jobs as u64),
+                false,
             )
             .await?;
 
         let claimed_ids = if claimed_ids.len() == max_jobs {
             Either::Left(claimed_ids.into_iter())
         } else {
-            let mut read_opts = StreamReadOptions::default()
-                .count(max_jobs - claimed_ids.len())
-                .group(self.consumer_group.as_str(), self.consumer_name.as_str());
-
-            read_opts = if claimed_ids.is_empty() {
-                read_opts.block(0)
+            let block_time = if claimed_ids.is_empty() {
+                0
             } else {
-                read_opts.block(BLOCK_TIME.as_millis() as usize)
+                BLOCK_TIME.as_millis()
             };
 
-            let read_reply: Option<StreamReadReply> = redis_conn
-                .xread_options(&[self.queue_name.as_str()], &[">"], &read_opts)
+            let read_reply: XReadResponse<String, String, String, RedisValue> = self
+                .redis_pool
+                .xreadgroup_map(
+                    self.consumer_group.as_str(),
+                    self.consumer_name.as_str(),
+                    Some((max_jobs - claimed_ids.len()) as u64),
+                    Some(block_time as u64),
+                    false,
+                    self.queue_name.as_str(),
+                    XID::NewInGroup,
+                )
                 .await?;
 
-            let read_ids = read_reply
-                .into_iter()
-                .flat_map(|reply| reply.keys.into_iter().flat_map(|key| key.ids));
+            let read_ids = read_reply.into_values().flatten();
 
             Either::Right(claimed_ids.into_iter().chain(read_ids))
         };
 
         let job_data = claimed_ids
-            .map(|id| {
+            .map(|(id, mut map)| {
+                let mut raw_job_id = RedisValue::Null;
+                let mut raw_fail_count = RedisValue::Null;
+
+                mem::swap(map.get_mut("job_id").unwrap(), &mut raw_job_id);
+                mem::swap(map.get_mut("fail_count").unwrap(), &mut raw_fail_count);
+
                 let job_id: String =
-                    redis::from_redis_value(&id.map["job_id"]).expect("[Bug] Malformed Job ID");
+                    String::from_value(raw_job_id).expect("[Bug] Malformed Job ID");
                 let job_id = Uuid::from_str(&job_id).expect("[Bug] Job ID is not a UUID");
-                let fail_count: u32 = redis::from_redis_value(&id.map["fail_count"])
-                    .expect("[Bug] Malformed fail count");
+                let fail_count: u32 =
+                    u32::from_value(raw_fail_count).expect("[Bug] Malformed fail count");
 
                 JobData {
-                    ctx: KeeperOfTheSecrets::new(id.id),
+                    ctx: KeeperOfTheSecrets::new(id),
                     job_id,
                     fail_count,
                 }
@@ -216,16 +222,19 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        let mut pipeline = redis::pipe();
+        let client = self.redis_pool.next();
+        let pipeline = client.pipeline();
+
         pipeline
-            .atomic()
-            .ignore()
             .xack(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
-                &[stream_id],
+                stream_id.as_str(),
             )
-            .xdel(self.queue_name.as_str(), &[stream_id]);
+            .await?;
+        pipeline
+            .xdel(self.queue_name.as_str(), &[stream_id])
+            .await?;
 
         let remove_context = match state.outcome {
             Outcome::Fail { fail_count } => {
@@ -243,9 +252,8 @@ where
                     };
 
                     let backoff_timestamp = Timestamp::from(SystemTime::now() + delta);
-                    let enqueue_cmd = self.enqueue_redis_cmd(&job_data, Some(backoff_timestamp))?;
-
-                    pipeline.add_command(enqueue_cmd);
+                    self.enqueue_ops(&pipeline, &job_data, Some(backoff_timestamp))
+                        .await?;
 
                     false // Do not delete the context if we were able to retry the job one more time
                 } else {
@@ -255,10 +263,7 @@ where
             Outcome::Success => true, // Execution succeeded, we don't need the context anymore
         };
 
-        {
-            let mut conn = self.redis_pool.get();
-            pipeline.query_async::<_, ()>(&mut conn).await?;
-        }
+        pipeline.last().await?;
 
         if remove_context {
             self.context_repository
@@ -276,15 +281,20 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        let mut conn = self.redis_pool.get();
-        conn.xclaim(
-            self.queue_name.as_str(),
-            self.consumer_group.as_str(),
-            self.consumer_name.as_str(),
-            0,
-            &[stream_id],
-        )
-        .await?;
+        self.redis_pool
+            .xclaim(
+                self.queue_name.as_str(),
+                self.consumer_group.as_str(),
+                self.consumer_name.as_str(),
+                0,
+                stream_id.as_str(),
+                None,
+                None,
+                None,
+                true,
+                false,
+            )
+            .await?;
 
         Ok(())
     }

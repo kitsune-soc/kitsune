@@ -8,7 +8,7 @@ use kitsune_error::Result;
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.
 // Setting this to >=40 would cause the `fetch_infinitely_long_reply_chain` test to run into stack overflow
-pub const MAX_FETCH_DEPTH: u32 = 15;
+pub const MAX_FETCH_DEPTH: u32 = 10;
 
 impl Fetcher {
     #[instrument(skip(self))]

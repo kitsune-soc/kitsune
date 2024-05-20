@@ -62,7 +62,6 @@ members = [
     "lib/masto-id-convert",
     "lib/mrf-manifest",
     "lib/mrf-tool",
-    "lib/multiplex-pool",
     "lib/post-process",
     "lib/speedy-uuid",
     "lib/tick-tock-mock",
@@ -74,6 +73,14 @@ members = [
     "xtask",
 ]
 resolver = "2"
+
+[workspace.dependencies]
+fred = { version = "9.0.3", features = [
+    "enable-rustls-ring",
+    "i-scripts",
+    "partial-tracing",
+    "sha-1",
+] }
 
 [workspace.lints.clippy]
 all = "warn"
@@ -126,13 +133,10 @@ diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d0
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
-# Support XAUTOCLAIM
-redis = { git = "https://github.com/redis-rs/redis-rs.git", rev = "0c544b548b52180acda8e8394ab21b2761497e50" }
-
 # Patch to make OpenTelemetry with with hyper 1
-opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
-opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
-opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
-opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "b44cb130e4a102b0d676289e91c003f4b1008d08" }
+opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
+opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
+opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
+opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
 tonic = { git = "https://github.com/hyperium/tonic.git", rev = "9b306af386528f11dbd022bc372d367adc4e96b5" }
 tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", branch = "v0.1.x-http1" }

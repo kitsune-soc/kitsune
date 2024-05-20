@@ -16,6 +16,7 @@ derive_builder = "0.20.0"
 diesel = "2.1.6"
 diesel-async = "0.4.1"
 eyre = "0.6.12"
+fred = { workspace = true }
 futures-util = "0.3.30"
 garde = { version = "0.18.0", default-features = false, features = [
     "derive",
@@ -44,19 +45,14 @@ kitsune-storage = { path = "../kitsune-storage" }
 kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
-multiplex-pool = { path = "../../lib/multiplex-pool" }
 password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"
 post-process = { path = "../../lib/post-process" }
 rand = "0.8.5"
-redis = { version = "0.25.3", default-features = false, features = [
-    "connection-manager",
-    "tokio-comp",
-] }
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.201"
-smol_str = "0.2.1"
+serde = "1.0.202"
+smol_str = "0.2.2"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["macros", "sync"] }
 tracing = "0.1.40"

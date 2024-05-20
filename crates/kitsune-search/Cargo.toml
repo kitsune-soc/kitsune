@@ -21,9 +21,9 @@ kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
 kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-language = { path = "../kitsune-language" }
-meilisearch-sdk = { version = "0.26.0", default-features = false }
+meilisearch-sdk = { version = "0.26.1", default-features = false }
 pin-project-lite = "0.2.14"
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 strum = { version = "0.26.2", features = ["derive"] }
