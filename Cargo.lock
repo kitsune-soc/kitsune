@@ -4705,8 +4705,8 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "opentelemetry"
-version = "0.22.0"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
+version = "0.23.0"
+source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=40fb924215c84d6e3818351b2c0e3d2ba01a7db9#40fb924215c84d6e3818351b2c0e3d2ba01a7db9"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -4718,8 +4718,8 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-http"
-version = "0.11.1"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
+version = "0.12.0"
+source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=40fb924215c84d6e3818351b2c0e3d2ba01a7db9#40fb924215c84d6e3818351b2c0e3d2ba01a7db9"
 dependencies = [
  "async-trait",
  "bytes",
@@ -4729,8 +4729,8 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-otlp"
-version = "0.15.0"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
+version = "0.16.0"
+source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=40fb924215c84d6e3818351b2c0e3d2ba01a7db9#40fb924215c84d6e3818351b2c0e3d2ba01a7db9"
 dependencies = [
  "async-trait",
  "futures-core",
@@ -4738,7 +4738,6 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-proto",
- "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
  "prost",
  "serde_json",
@@ -4749,8 +4748,8 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-proto"
-version = "0.5.0"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
+version = "0.6.0"
+source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=40fb924215c84d6e3818351b2c0e3d2ba01a7db9#40fb924215c84d6e3818351b2c0e3d2ba01a7db9"
 dependencies = [
  "hex",
  "opentelemetry",
@@ -4761,14 +4760,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "opentelemetry-semantic-conventions"
-version = "0.14.0"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
-
-[[package]]
 name = "opentelemetry_sdk"
-version = "0.22.1"
-source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=b44cb130e4a102b0d676289e91c003f4b1008d08#b44cb130e4a102b0d676289e91c003f4b1008d08"
+version = "0.23.0"
+source = "git+https://github.com/open-telemetry/opentelemetry-rust.git?rev=40fb924215c84d6e3818351b2c0e3d2ba01a7db9#40fb924215c84d6e3818351b2c0e3d2ba01a7db9"
 dependencies = [
  "async-trait",
  "futures-channel",
@@ -7356,7 +7350,7 @@ dependencies = [
 [[package]]
 name = "tracing-opentelemetry"
 version = "0.23.0"
-source = "git+https://github.com/aumetra/tracing-opentelemetry.git?branch=v0.1.x-http1#6f438815e556f95ac15f67c1fe2de395e70a30c3"
+source = "git+https://github.com/aumetra/tracing-opentelemetry.git?branch=v0.1.x-http1#e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1"
 dependencies = [
  "js-sys",
  "once_cell",
