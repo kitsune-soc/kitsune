@@ -134,6 +134,7 @@ kitsune-scss-compiler = { path = "../crates/kitsune-scss-compiler" }
 kitsune-http-client = { path = "../crates/kitsune-http-client" }
 kitsune-test = { path = "../crates/kitsune-test" }
 pretty_assertions = "1.4.0"
+fred = { workspace = true }
 
 [features]
 default = ["graphql-api", "mastodon-api"]

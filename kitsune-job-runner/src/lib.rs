@@ -2,6 +2,11 @@
 extern crate tracing;
 
 use athena::{Coerce, JobQueue, RedisJobQueue, TaskTracker};
+use fred::{
+    clients::RedisPool,
+    interfaces::{ClientLike, RedisResult},
+    types::RedisConfig,
+};
 use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
@@ -17,8 +22,6 @@ use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
 use kitsune_wasm_mrf::MrfService;
-use multiplex_pool::RoundRobinStrategy;
-use redis::RedisResult;
 use std::time::Duration;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
@@ -41,13 +44,10 @@ pub async fn prepare_job_queue(
 ) -> RedisResult<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
 
-    let client = redis::Client::open(config.redis_url.as_str())?;
-    let redis_pool = multiplex_pool::Pool::from_producer(
-        || client.get_connection_manager(),
-        10,
-        RoundRobinStrategy::default(),
-    )
-    .await?;
+    let config = RedisConfig::from_url(config.redis_url.as_str())?;
+    // TODO: Make pool size configurable
+    let redis_pool = RedisPool::new(config, None, None, None, 10)?;
+    redis_pool.init().await?;
 
     let queue = RedisJobQueue::builder()
         .context_repository(context_repo)
