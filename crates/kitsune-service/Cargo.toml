@@ -51,8 +51,8 @@ post-process = { path = "../../lib/post-process" }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.201"
-smol_str = "0.2.1"
+serde = "1.0.202"
+smol_str = "0.2.2"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["macros", "sync"] }
 tracing = "0.1.40"

@@ -24,7 +24,7 @@ mrf-manifest = { path = "../../lib/mrf-manifest", features = ["decode"] }
 simd-json = "0.13.10"
 slab = "0.4.9"
 sled = "0.34.7"
-smol_str = "0.2.1"
+smol_str = "0.2.2"
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
 triomphe = "0.1.11"
@@ -44,7 +44,7 @@ wasmtime-wasi = { version = "20.0.2", default-features = false }
 tempfile = "3.10.1"
 tokio = { version = "1.37.0", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
-wat = "1.207.0"
+wat = "1.208.0"
 
 [lints]
 workspace = true

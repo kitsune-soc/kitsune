@@ -1382,9 +1382,9 @@ checksum = "338089f42c427b86394a5ee60ff321da23a5c89c9d89514c829687b26359fcff"
 
 [[package]]
 name = "crc32fast"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58ebf8d6963185c7625d2c3c3962d99eb8936637b1427536d21dc36ae402ebad"
+checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
 dependencies = [
  "cfg-if",
 ]
@@ -2719,7 +2719,7 @@ dependencies = [
  "divan",
  "http",
  "httpdate",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "logos 0.14.0",
  "miette",
  "pkcs8",
@@ -3074,6 +3074,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3147,7 +3156,7 @@ dependencies = [
  "http-body-util",
  "http-signatures",
  "iso8601-timestamp",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "kitsune-activitypub",
  "kitsune-cache",
  "kitsune-captcha",
@@ -4409,8 +4418,8 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "wasm-encoder 0.207.0",
- "wasmparser 0.207.0",
+ "wasm-encoder 0.208.0",
+ "wasmparser 0.208.0",
  "wat",
 ]
 
@@ -4422,7 +4431,7 @@ dependencies = [
  "color-eyre",
  "mrf-manifest",
  "serde_json",
- "wasmparser 0.207.0",
+ "wasmparser 0.208.0",
  "wat",
 ]
 
@@ -5375,9 +5384,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.10.3"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76979bea66e7875e7509c4ec5300112b316af87fa7a252ca91c448b32dfe3993"
+checksum = "8746739f11d39ce5ad5c2520a9b75285310dbfe78c541ccf832d38615765aec0"
 dependencies = [
  "bitflags 2.5.0",
  "memchr",
@@ -5387,9 +5396,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark-escape"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd348ff538bc9caeda7ee8cad2d1d48236a1f443c1fa3913c6a02fe0043b1dd3"
+checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
 
 [[package]]
 name = "quanta"
@@ -7270,7 +7279,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "futures-test",
  "http",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "pin-project-lite",
  "tower",
  "tower-layer",
@@ -7809,9 +7818,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-encoder"
-version = "0.207.0"
+version = "0.208.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d996306fb3aeaee0d9157adbe2f670df0236caf19f6728b221e92d0f27b3fe17"
+checksum = "bbc0fb39838056aeb096b2e7dd94bb2f0c2df3c9fb4d1055f2cb3c35c286ee71"
 dependencies = [
  "leb128",
 ]
@@ -7845,9 +7854,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.207.0"
+version = "0.208.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e19bb9f8ab07616da582ef8adb24c54f1424c7ec876720b7da9db8ec0626c92c"
+checksum = "5d20bf2b2d07ec86bab7a05ae4e3a290e5b333319cd73253bc79bfedb6c59c83"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.5.0",
@@ -8129,22 +8138,22 @@ dependencies = [
 
 [[package]]
 name = "wast"
-version = "207.0.0"
+version = "208.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e40be9fd494bfa501309487d2dc0b3f229be6842464ecbdc54eac2679c84c93"
+checksum = "0450a853119b35441264ca99bd90be37d6f85f99decc4d993795ad396ed56b97"
 dependencies = [
  "bumpalo",
  "leb128",
  "memchr",
  "unicode-width",
- "wasm-encoder 0.207.0",
+ "wasm-encoder 0.208.0",
 ]
 
 [[package]]
 name = "wat"
-version = "1.207.0"
+version = "1.208.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eb2b15e2d5f300f5e1209e7dc237f2549edbd4203655b6c6cab5cf180561ee7"
+checksum = "72fd5b4d1e1fb745f2eb6e8004563ffbf0858681c11a79f4ec663ee31907080d"
 dependencies = [
  "wast",
 ]

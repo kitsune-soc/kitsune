@@ -22,7 +22,7 @@ kitsune-config = { path = "../crates/kitsune-config" }
 kitsune-core = { version = "0.0.1-pre.6", path = "../crates/kitsune-core" }
 kitsune-db = { path = "../crates/kitsune-db" }
 kitsune-error = { path = "../crates/kitsune-error" }
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing-subscriber = "0.3.18"
