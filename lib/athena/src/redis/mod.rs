@@ -85,7 +85,10 @@ where
         C: SortedSetsInterface + StreamsInterface,
     {
         if let Some(run_at) = run_at {
-            let score = run_at.duration_since(Timestamp::UNIX_EPOCH).whole_seconds();
+            let score = run_at
+                .duration_since(Timestamp::UNIX_EPOCH)
+                .as_seconds_f64();
+
             client
                 .zadd(
                     self.scheduled_queue_name.as_str(),
@@ -93,8 +96,7 @@ where
                     None,
                     true,
                     false,
-                    #[allow(clippy::cast_precision_loss)]
-                    (score as f64, simd_json::to_string(job_meta)?),
+                    (score, simd_json::to_string(job_meta)?),
                 )
                 .await?;
         } else {
@@ -166,9 +168,9 @@ where
             Either::Left(claimed_ids.into_iter())
         } else {
             let block_time = if claimed_ids.is_empty() {
-                0
+                None
             } else {
-                BLOCK_TIME.as_millis()
+                Some(BLOCK_TIME.as_millis() as u64)
             };
 
             let read_reply: HashMap<String, Vec<(String, HashMap<String, RedisValue>)>> = self
@@ -177,7 +179,7 @@ where
                     self.consumer_group.as_str(),
                     self.consumer_name.as_str(),
                     Some((max_jobs - claimed_ids.len()) as u64),
-                    Some(block_time as u64),
+                    block_time,
                     false,
                     self.queue_name.as_str(),
                     XID::NewInGroup,
