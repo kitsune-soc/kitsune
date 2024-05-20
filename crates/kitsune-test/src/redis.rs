@@ -17,15 +17,14 @@ async fn switch_and_try_lock(conn: &RedisClient, id: u8) -> bool {
 }
 
 async fn try_lock(conn: &RedisClient) -> bool {
-    let result: RedisResult<RedisValue> = conn
+    let Ok(value): RedisResult<RedisValue> = conn
         .set(LOCK_KEY, LOCK_VALUE, None, Some(SetOptions::NX), true)
-        .await;
+        .await
+    else {
+        return false;
+    };
 
-    if let Ok(val) = result {
-        return val.is_ok();
-    }
-
-    false
+    value.is_ok()
 }
 
 /// Find and claim one of the 16 database slots on the Redis instance
