@@ -9,7 +9,7 @@ use either::Either;
 use fred::{
     clients::RedisPool,
     interfaces::{SortedSetsInterface, StreamsInterface},
-    types::{FromRedis, RedisValue, XID},
+    types::{FromRedis, RedisValue, XReadResponse, XReadValue, XID},
 };
 use iso8601_timestamp::Timestamp;
 use just_retry::{
@@ -18,7 +18,7 @@ use just_retry::{
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{collections::HashMap, mem, ops::ControlFlow, str::FromStr, time::SystemTime};
+use std::{mem, ops::ControlFlow, str::FromStr, time::SystemTime};
 use tokio::sync::OnceCell;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
@@ -103,7 +103,7 @@ where
             client
                 .xadd(
                     self.queue_name.as_str(),
-                    true,
+                    false,
                     None,
                     XID::Auto,
                     vec![
@@ -151,7 +151,7 @@ where
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
         self.initialise_group().await?;
 
-        let (_start, claimed_ids): (_, Vec<(String, HashMap<String, RedisValue>)>) = self
+        let (_start, claimed_ids): (_, Vec<XReadValue<String, String, RedisValue>>) = self
             .redis_pool
             .xautoclaim_values(
                 self.queue_name.as_str(),
@@ -168,18 +168,18 @@ where
             Either::Left(claimed_ids.into_iter())
         } else {
             let block_time = if claimed_ids.is_empty() {
-                None
+                0
             } else {
-                Some(BLOCK_TIME.as_millis() as u64)
+                BLOCK_TIME.as_millis()
             };
 
-            let read_reply: HashMap<String, Vec<(String, HashMap<String, RedisValue>)>> = self
+            let read_reply: XReadResponse<String, String, String, RedisValue> = self
                 .redis_pool
                 .xreadgroup_map(
                     self.consumer_group.as_str(),
                     self.consumer_name.as_str(),
                     Some((max_jobs - claimed_ids.len()) as u64),
-                    block_time,
+                    Some(block_time as u64),
                     false,
                     self.queue_name.as_str(),
                     XID::NewInGroup,

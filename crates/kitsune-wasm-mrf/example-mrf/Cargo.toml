@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rand = "0.8.5"
-wit-bindgen = "0.24.0"
+wit-bindgen = "0.25.0"
 
 [lints]
 workspace = true
