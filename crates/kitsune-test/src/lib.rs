@@ -46,7 +46,9 @@ where
     let mut admin_conn = AsyncPgConnection::establish(url.as_str()).await.unwrap();
 
     admin_conn
-        .batch_execute(&format!("CREATE DATABASE {db_name}"))
+        .batch_execute(&format!(
+            "CREATE DATABASE {db_name} ENCODING 'UTF8' TEMPLATE template0"
+        ))
         .await
         .unwrap();
 
