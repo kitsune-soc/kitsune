@@ -53,6 +53,7 @@ use typed_builder::TypedBuilder;
 mod resolver;
 
 pub use self::resolver::PostResolver;
+use self::resolver::ResolvedPost;
 
 macro_rules! min_character_limit {
     ($self:ident) => {{
@@ -442,16 +443,22 @@ impl PostService {
             character_limit: self.instance_service.character_limit(),
         })?;
 
+        let content_source = create_post.content.clone();
         let subject = create_post.subject.map(|mut subject| {
             subject.clean_html();
             subject
         });
 
-        let content_source = create_post.content.clone();
+        let ResolvedPost {
+            mentioned_accounts,
+            custom_emojis,
+            content,
+        } = self.post_resolver.resolve(&create_post.content).await?;
+
         let mut content = if create_post.process_markdown {
-            process::markdown(&create_post.content)
+            process::markdown(&content)
         } else {
-            create_post.content
+            content
         };
 
         content.clean_html();
@@ -463,7 +470,6 @@ impl PostService {
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
         );
 
-        let resolved = self.post_resolver.resolve(&content).await?;
         let link_preview_url = if let Some(ref embed_client) = self.embed_client {
             embed_client
                 .fetch_embed_for_fragment(&content)
@@ -496,7 +502,7 @@ impl PostService {
                     in_reply_to_id,
                     reposted_post_id: None,
                     subject: subject.as_deref(),
-                    content: resolved.content.as_str(),
+                    content: content.as_str(),
                     content_source: content_source.as_str(),
                     content_lang: content_lang.into(),
                     link_preview_url: link_preview_url.as_deref(),
@@ -510,10 +516,10 @@ impl PostService {
                 .get_result(tx)
                 .await?;
 
-            Self::process_mentions(tx, post.account_id, post.id, resolved.mentioned_accounts)
-                .await?;
-            Self::process_custom_emojis(tx, post.id, resolved.custom_emojis).await?;
+            Self::process_mentions(tx, post.account_id, post.id, mentioned_accounts).await?;
+            Self::process_custom_emojis(tx, post.id, custom_emojis).await?;
             Self::process_media_attachments(tx, post.id, &create_post.media_ids).await?;
+
             NotificationService::notify_on_new_post(tx, post.account_id, post.id).await?;
 
             Ok::<_, Error>(post)

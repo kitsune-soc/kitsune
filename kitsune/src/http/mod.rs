@@ -178,6 +178,7 @@ pub async fn run(
     let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
 
     axum::serve(listener, router)
+        .tcp_nodelay(true)
         .with_graceful_shutdown(shutdown_signal.wait())
         .await?;
 
