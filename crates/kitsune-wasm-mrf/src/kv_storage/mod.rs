@@ -1,8 +1,9 @@
 use crate::mrf_wit::v1::fep::mrf::keyvalue;
 use async_trait::async_trait;
+use color_eyre::eyre;
 use derive_more::From;
 use enum_dispatch::enum_dispatch;
-use std::{error::Error, future::Future};
+use std::future::Future;
 use wasmtime::component::Resource;
 
 pub use self::{
@@ -12,8 +13,6 @@ pub use self::{
 
 mod fs;
 mod redis;
-
-type BoxError = Box<dyn Error + Send + Sync>;
 
 #[inline]
 fn get_bucket<'a>(
@@ -30,16 +29,16 @@ pub trait Backend {
         &self,
         module_name: &str,
         name: &str,
-    ) -> impl Future<Output = Result<Self::Bucket, BoxError>> + Send;
+    ) -> impl Future<Output = eyre::Result<Self::Bucket>> + Send;
 }
 
 #[enum_dispatch]
 #[allow(async_fn_in_trait)]
 pub trait BucketBackend {
-    async fn exists(&self, key: &str) -> Result<bool, BoxError>;
-    async fn delete(&self, key: &str) -> Result<(), BoxError>;
-    async fn get(&self, key: &str) -> Result<Option<Vec<u8>>, BoxError>;
-    async fn set(&self, key: &str, value: &[u8]) -> Result<(), BoxError>;
+    async fn exists(&self, key: &str) -> eyre::Result<bool>;
+    async fn delete(&self, key: &str) -> eyre::Result<()>;
+    async fn get(&self, key: &str) -> eyre::Result<Option<Vec<u8>>>;
+    async fn set(&self, key: &str, value: &[u8]) -> eyre::Result<()>;
 }
 
 #[derive(From)]
@@ -51,7 +50,7 @@ pub enum BackendDispatch {
 impl Backend for BackendDispatch {
     type Bucket = BucketBackendDispatch;
 
-    async fn open(&self, module_name: &str, name: &str) -> Result<Self::Bucket, BoxError> {
+    async fn open(&self, module_name: &str, name: &str) -> eyre::Result<Self::Bucket> {
         match self {
             Self::Fs(fs) => fs.open(module_name, name).await.map(Into::into),
             Self::Redis(redis) => redis.open(module_name, name).await.map(Into::into),
