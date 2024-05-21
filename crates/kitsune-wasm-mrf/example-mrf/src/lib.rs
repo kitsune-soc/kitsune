@@ -1,7 +1,7 @@
 #![allow(clippy::missing_safety_doc, clippy::transmute_int_to_bool, unsafe_code)]
 
 use self::{
-    fep::mrf::keyvalue::{self, Bucket},
+    fep::mrf::keyvalue::Bucket,
     wasi::logging::logging::{self, Level},
 };
 use rand::{distributions::Alphanumeric, Rng};
@@ -32,11 +32,14 @@ impl Guest for Mrf {
 
         // We even have a key-value store! Check this out:
         let key = generate_random_key();
-        let bucket = Bucket::open_bucket("example-bucket").unwrap();
+        let bucket = Bucket::open("example-bucket").unwrap();
 
-        keyvalue::set(&bucket, &key, b"world").unwrap();
-        assert!(keyvalue::exists(&bucket, &key).unwrap());
-        keyvalue::delete(&bucket, &key).unwrap();
+        bucket.set(&key, b"world").unwrap();
+
+        assert!(bucket.exists(&key).unwrap());
+        assert_eq!(bucket.get(&key).unwrap(), Some(b"world".to_vec()));
+
+        bucket.delete(&key).unwrap();
 
         Ok(activity)
     }

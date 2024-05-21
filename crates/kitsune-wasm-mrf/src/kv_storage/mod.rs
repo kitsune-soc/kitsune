@@ -67,7 +67,7 @@ pub enum BucketBackendDispatch {
 
 #[async_trait]
 impl keyvalue::HostBucket for crate::ctx::Context {
-    async fn open_bucket(
+    async fn open(
         &mut self,
         name: String,
     ) -> Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>> {
@@ -80,7 +80,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         let bucket = match self.kv_ctx.storage.open(&name, module_name).await {
             Ok(bucket) => bucket,
             Err(error) => {
-                error!(?error, "failed to open bucket");
+                error!(?error, %module_name, %name, "failed to open bucket");
                 return Err(Resource::new_own(0));
             }
         };
@@ -89,21 +89,6 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         Ok(Resource::new_own(idx as u32))
     }
 
-    fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
-        self.kv_ctx.buckets.remove(rep.rep() as usize);
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl keyvalue::HostError for crate::ctx::Context {
-    fn drop(&mut self, _rep: Resource<keyvalue::Error>) -> wasmtime::Result<()> {
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl keyvalue::Host for crate::ctx::Context {
     async fn get(
         &mut self,
         bucket: Resource<keyvalue::Bucket>,
@@ -160,4 +145,19 @@ impl keyvalue::Host for crate::ctx::Context {
             }
         }
     }
+
+    fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
+        self.kv_ctx.buckets.remove(rep.rep() as usize);
+        Ok(())
+    }
 }
+
+#[async_trait]
+impl keyvalue::HostError for crate::ctx::Context {
+    fn drop(&mut self, _rep: Resource<keyvalue::Error>) -> wasmtime::Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl keyvalue::Host for crate::ctx::Context {}
