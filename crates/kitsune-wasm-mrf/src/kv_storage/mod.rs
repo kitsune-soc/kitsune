@@ -15,6 +15,14 @@ mod redis;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
+#[inline]
+fn get_bucket<'a>(
+    ctx: &'a crate::ctx::Context,
+    rep: &Resource<keyvalue::Bucket>,
+) -> &'a BucketBackendDispatch {
+    &ctx.kv_ctx.buckets[rep.rep() as usize]
+}
+
 pub trait Backend {
     type Bucket: BucketBackend;
 
@@ -62,7 +70,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
     async fn open_bucket(
         &mut self,
         name: String,
-    ) -> wasmtime::Result<Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>>> {
+    ) -> Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>> {
         let module_name = self
             .kv_ctx
             .module_name
@@ -73,12 +81,12 @@ impl keyvalue::HostBucket for crate::ctx::Context {
             Ok(bucket) => bucket,
             Err(error) => {
                 error!(?error, "failed to open bucket");
-                return Ok(Err(Resource::new_own(0)));
+                return Err(Resource::new_own(0));
             }
         };
 
         let idx = self.kv_ctx.buckets.insert(bucket);
-        Ok(Ok(Resource::new_own(idx as u32)))
+        Ok(Resource::new_own(idx as u32))
     }
 
     fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
@@ -100,13 +108,12 @@ impl keyvalue::Host for crate::ctx::Context {
         &mut self,
         bucket: Resource<keyvalue::Bucket>,
         key: String,
-    ) -> wasmtime::Result<Result<Option<Vec<u8>>, Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.get(&key).await {
-            Ok(val) => Ok(Ok(val)),
+    ) -> Result<Option<Vec<u8>>, Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).get(&key).await {
+            Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to get key from storage");
-                Ok(Err(Resource::new_own(0)))
+                Err(Resource::new_own(0))
             }
         }
     }
@@ -116,13 +123,12 @@ impl keyvalue::Host for crate::ctx::Context {
         bucket: Resource<keyvalue::Bucket>,
         key: String,
         value: Vec<u8>,
-    ) -> wasmtime::Result<Result<(), Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.set(&key, &value).await {
-            Ok(()) => Ok(Ok(())),
+    ) -> Result<(), Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).set(&key, &value).await {
+            Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to set key in storage");
-                Ok(Err(Resource::new_own(0)))
+                Err(Resource::new_own(0))
             }
         }
     }
@@ -131,13 +137,12 @@ impl keyvalue::Host for crate::ctx::Context {
         &mut self,
         bucket: Resource<keyvalue::Bucket>,
         key: String,
-    ) -> wasmtime::Result<Result<(), Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.delete(&key).await {
-            Ok(()) => Ok(Ok(())),
+    ) -> Result<(), Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).delete(&key).await {
+            Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to delete key from storage");
-                Ok(Err(Resource::new_own(0)))
+                Err(Resource::new_own(0))
             }
         }
     }
@@ -146,13 +151,12 @@ impl keyvalue::Host for crate::ctx::Context {
         &mut self,
         bucket: Resource<keyvalue::Bucket>,
         key: String,
-    ) -> wasmtime::Result<Result<bool, Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.exists(&key).await {
-            Ok(exists) => Ok(Ok(exists)),
+    ) -> Result<bool, Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).exists(&key).await {
+            Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to check existence of key in storage");
-                Ok(Err(Resource::new_own(0)))
+                Err(Resource::new_own(0))
             }
         }
     }
