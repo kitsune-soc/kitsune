@@ -1,8 +1,9 @@
 use crate::mrf_wit::v1::fep::mrf::keyvalue;
 use async_trait::async_trait;
+use color_eyre::eyre;
 use derive_more::From;
 use enum_dispatch::enum_dispatch;
-use std::{error::Error, future::Future};
+use std::future::Future;
 use wasmtime::component::Resource;
 
 pub use self::{
@@ -13,7 +14,13 @@ pub use self::{
 mod fs;
 mod redis;
 
-type BoxError = Box<dyn Error + Send + Sync>;
+#[inline]
+fn get_bucket<'a>(
+    ctx: &'a crate::ctx::Context,
+    rep: &Resource<keyvalue::Bucket>,
+) -> &'a BucketBackendDispatch {
+    &ctx.kv_ctx.buckets[rep.rep() as usize]
+}
 
 pub trait Backend {
     type Bucket: BucketBackend;
@@ -22,16 +29,16 @@ pub trait Backend {
         &self,
         module_name: &str,
         name: &str,
-    ) -> impl Future<Output = Result<Self::Bucket, BoxError>> + Send;
+    ) -> impl Future<Output = eyre::Result<Self::Bucket>> + Send;
 }
 
 #[enum_dispatch]
 #[allow(async_fn_in_trait)]
 pub trait BucketBackend {
-    async fn exists(&self, key: &str) -> Result<bool, BoxError>;
-    async fn delete(&self, key: &str) -> Result<(), BoxError>;
-    async fn get(&self, key: &str) -> Result<Option<Vec<u8>>, BoxError>;
-    async fn set(&self, key: &str, value: &[u8]) -> Result<(), BoxError>;
+    async fn exists(&self, key: &str) -> eyre::Result<bool>;
+    async fn delete(&self, key: &str) -> eyre::Result<()>;
+    async fn get(&self, key: &str) -> eyre::Result<Option<Vec<u8>>>;
+    async fn set(&self, key: &str, value: &[u8]) -> eyre::Result<()>;
 }
 
 #[derive(From)]
@@ -43,7 +50,7 @@ pub enum BackendDispatch {
 impl Backend for BackendDispatch {
     type Bucket = BucketBackendDispatch;
 
-    async fn open(&self, module_name: &str, name: &str) -> Result<Self::Bucket, BoxError> {
+    async fn open(&self, module_name: &str, name: &str) -> eyre::Result<Self::Bucket> {
         match self {
             Self::Fs(fs) => fs.open(module_name, name).await.map(Into::into),
             Self::Redis(redis) => redis.open(module_name, name).await.map(Into::into),
@@ -59,10 +66,10 @@ pub enum BucketBackendDispatch {
 
 #[async_trait]
 impl keyvalue::HostBucket for crate::ctx::Context {
-    async fn open_bucket(
+    async fn open(
         &mut self,
         name: String,
-    ) -> wasmtime::Result<Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>>> {
+    ) -> Result<Resource<keyvalue::Bucket>, Resource<keyvalue::Error>> {
         let module_name = self
             .kv_ctx
             .module_name
@@ -72,13 +79,70 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         let bucket = match self.kv_ctx.storage.open(&name, module_name).await {
             Ok(bucket) => bucket,
             Err(error) => {
-                error!(?error, "failed to open bucket");
-                return Ok(Err(Resource::new_own(0)));
+                error!(?error, %module_name, %name, "failed to open bucket");
+                return Err(Resource::new_own(0));
             }
         };
 
         let idx = self.kv_ctx.buckets.insert(bucket);
-        Ok(Ok(Resource::new_own(idx as u32)))
+        Ok(Resource::new_own(idx as u32))
+    }
+
+    async fn get(
+        &mut self,
+        bucket: Resource<keyvalue::Bucket>,
+        key: String,
+    ) -> Result<Option<Vec<u8>>, Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).get(&key).await {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                error!(?error, %key, "failed to get key from storage");
+                Err(Resource::new_own(0))
+            }
+        }
+    }
+
+    async fn set(
+        &mut self,
+        bucket: Resource<keyvalue::Bucket>,
+        key: String,
+        value: Vec<u8>,
+    ) -> Result<(), Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).set(&key, &value).await {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                error!(?error, %key, "failed to set key in storage");
+                Err(Resource::new_own(0))
+            }
+        }
+    }
+
+    async fn delete(
+        &mut self,
+        bucket: Resource<keyvalue::Bucket>,
+        key: String,
+    ) -> Result<(), Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).delete(&key).await {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                error!(?error, %key, "failed to delete key from storage");
+                Err(Resource::new_own(0))
+            }
+        }
+    }
+
+    async fn exists(
+        &mut self,
+        bucket: Resource<keyvalue::Bucket>,
+        key: String,
+    ) -> Result<bool, Resource<keyvalue::Error>> {
+        match get_bucket(self, &bucket).exists(&key).await {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                error!(?error, %key, "failed to check existence of key in storage");
+                Err(Resource::new_own(0))
+            }
+        }
     }
 
     fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
@@ -95,65 +159,4 @@ impl keyvalue::HostError for crate::ctx::Context {
 }
 
 #[async_trait]
-impl keyvalue::Host for crate::ctx::Context {
-    async fn get(
-        &mut self,
-        bucket: Resource<keyvalue::Bucket>,
-        key: String,
-    ) -> wasmtime::Result<Result<Option<Vec<u8>>, Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.get(&key).await {
-            Ok(val) => Ok(Ok(val)),
-            Err(error) => {
-                error!(?error, %key, "failed to get key from storage");
-                Ok(Err(Resource::new_own(0)))
-            }
-        }
-    }
-
-    async fn set(
-        &mut self,
-        bucket: Resource<keyvalue::Bucket>,
-        key: String,
-        value: Vec<u8>,
-    ) -> wasmtime::Result<Result<(), Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.set(&key, &value).await {
-            Ok(()) => Ok(Ok(())),
-            Err(error) => {
-                error!(?error, %key, "failed to set key in storage");
-                Ok(Err(Resource::new_own(0)))
-            }
-        }
-    }
-
-    async fn delete(
-        &mut self,
-        bucket: Resource<keyvalue::Bucket>,
-        key: String,
-    ) -> wasmtime::Result<Result<(), Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.delete(&key).await {
-            Ok(()) => Ok(Ok(())),
-            Err(error) => {
-                error!(?error, %key, "failed to delete key from storage");
-                Ok(Err(Resource::new_own(0)))
-            }
-        }
-    }
-
-    async fn exists(
-        &mut self,
-        bucket: Resource<keyvalue::Bucket>,
-        key: String,
-    ) -> wasmtime::Result<Result<bool, Resource<keyvalue::Error>>> {
-        let bucket = &self.kv_ctx.buckets[bucket.rep() as usize];
-        match bucket.exists(&key).await {
-            Ok(exists) => Ok(Ok(exists)),
-            Err(error) => {
-                error!(?error, %key, "failed to check existence of key in storage");
-                Ok(Err(Resource::new_own(0)))
-            }
-        }
-    }
-}
+impl keyvalue::Host for crate::ctx::Context {}

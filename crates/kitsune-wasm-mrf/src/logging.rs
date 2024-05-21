@@ -15,12 +15,7 @@ macro_rules! event_dispatch {
 
 #[async_trait]
 impl logging::Host for crate::ctx::Context {
-    async fn log(
-        &mut self,
-        level: Level,
-        context: String,
-        message: String,
-    ) -> wasmtime::Result<()> {
+    async fn log(&mut self, level: Level, context: String, message: String) {
         event_dispatch!(level, context, message, {
             Level::Trace => tracing::Level::TRACE,
             Level::Debug => tracing::Level::DEBUG,
@@ -29,7 +24,5 @@ impl logging::Host for crate::ctx::Context {
             Level::Error => tracing::Level::ERROR,
             Level::Critical => tracing::Level::ERROR,
         });
-
-        Ok(())
     }
 }

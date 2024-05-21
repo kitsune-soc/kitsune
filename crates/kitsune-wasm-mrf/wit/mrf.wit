@@ -10,22 +10,22 @@ interface keyvalue {
     /// Logical collection of Key-Value pairs
     resource bucket {
         /// Open or create a new bucket
-        open-bucket: static func(name: string) -> result<bucket, error>;
+        open: static func(name: string) -> result<bucket, error>;
+
+         /// Get a value from a bucket
+        get: func(key: string) -> result<option<list<u8>>, error>;
+
+        /// Set the value inside a bucket
+        /// 
+        /// Overwrites existing values silently
+        set: func(key: string, value: list<u8>) -> result<_, error>;
+
+        /// Delete the value from a bucket
+        delete: func(key: string) -> result<_, error>;
+
+        /// Check if a key exists in the bucket
+        exists: func(key: string) -> result<bool, error>;
     }
-
-    /// Get a value from a bucket
-    get: func(bucket: borrow<bucket>, key: string) -> result<option<list<u8>>, error>;
-
-    /// Set the value inside a bucket
-    /// 
-    /// Overwrites existing values
-    set: func(bucket: borrow<bucket>, key: string, value: list<u8>) -> result<_, error>;
-
-    /// Delete the value from a bucket
-    delete: func(bucket: borrow<bucket>, key: string) -> result<_, error>;
-
-    /// Check if a key exists in the bucket
-    exists: func(bucket: borrow<bucket>, key: string) -> result<bool, error>;
 }
 
 interface types {

@@ -15,11 +15,11 @@ mrf-manifest = { path = "../mrf-manifest", features = [
     "serialise",
 ] }
 serde_json = "1.0.117"
-wasmparser = "0.208.0"
+wasmparser = "0.208.1"
 
 [lints]
 workspace = true
 
 [dev-dependencies]
 serde_json = "1.0.117"
-wat = "1.208.0"
+wat = "1.208.1"
