@@ -17,7 +17,10 @@ pub enum Error {
     Uuid(#[from] uuid::Error),
 }
 
-#[cfg_attr(feature = "diesel", derive(diesel::AsExpression, diesel::FromSqlRow))]
+#[cfg_attr(
+    feature = "diesel",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
 #[cfg_attr(feature = "diesel", diesel(sql_type = diesel::sql_types::Uuid))]
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
