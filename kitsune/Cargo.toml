@@ -17,9 +17,7 @@ eula = false
 [dependencies]
 athena = { path = "../lib/athena", features = ["redis"] }
 argon2 = { version = "0.5.3", features = ["std"] }
-askama = { version = "0.12.1", features = [
-    "with-axum",
-], default-features = false }
+askama = { workspace = true }
 askama_axum = "0.4.0"
 async-trait = "0.1.80"
 axum = { version = "0.7.5", features = ["macros", "multipart"] }
@@ -36,15 +34,15 @@ chrono = { version = "0.4.38", default-features = false }
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 cursiv = { path = "../lib/cursiv", features = ["axum"] }
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.1.0"
 http-body-util = "0.1.1"
 http-signatures = { path = "../lib/http-signatures" }
 iso8601-timestamp = "0.2.17"
-itertools = { version = "0.13.0", default-features = false }
+itertools = { workspace = true }
 kitsune-activitypub = { path = "../crates/kitsune-activitypub" }
 kitsune-cache = { path = "../crates/kitsune-cache" }
 kitsune-captcha = { path = "../crates/kitsune-captcha" }
@@ -79,8 +77,8 @@ rust-embed = { version = "8.4.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
 serde = { version = "1.0.202", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-simd-json = "0.13.10"
-simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
+simd-json = { workspace = true }
+simdutf8 = { workspace = true }
 speedy-uuid = { path = "../lib/speedy-uuid" }
 strum = { version = "0.26.2", features = ["derive", "phf"] }
 tempfile = "3.10.1"
@@ -101,7 +99,7 @@ tower-http = { version = "0.5.2", features = [
 tower-http-digest = { path = "../lib/tower-http-digest" }
 tracing = "0.1.40"
 trials = { path = "../lib/trials" }
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 url = "2.5.0"
 
@@ -109,7 +107,7 @@ url = "2.5.0"
 
 # "graphql" feature
 async-graphql = { version = "7.0.5", default-features = false, features = [
-    "playground",
+    "graphiql",
     "tempfile",
     "time",
     "tracing",

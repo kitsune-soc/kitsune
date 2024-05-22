@@ -32,7 +32,7 @@ kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
 mimalloc = "0.1.42"
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 
 [features]

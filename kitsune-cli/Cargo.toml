@@ -14,8 +14,8 @@ eula = false
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 dotenvy = "0.15.7"
 envy = "0.4.2"
 kitsune-config = { path = "../crates/kitsune-config" }

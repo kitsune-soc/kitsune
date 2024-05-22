@@ -13,18 +13,12 @@ athena = { path = "../../lib/athena" }
 blowocking = { path = "../../lib/blowocking" }
 bytes = "1.6.0"
 derive_builder = "0.20.0"
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 eyre = "0.6.12"
 fred = { workspace = true }
 futures-util = "0.3.30"
-garde = { version = "0.18.0", default-features = false, features = [
-    "derive",
-    "email",
-    "email-idna",
-    "regex",
-    "serde",
-] }
+garde = { workspace = true }
 http = "1.1.0"
 img-parts = "0.3.0"
 iso8601-timestamp = "0.2.17"
@@ -56,7 +50,7 @@ smol_str = "0.2.2"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tokio = { version = "1.37.0", features = ["macros", "sync"] }
 tracing = "0.1.40"
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 url = "2.5.0"
 zxcvbn = { version = "2.2.2", default-features = false }

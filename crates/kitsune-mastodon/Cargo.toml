@@ -6,8 +6,8 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 futures-util = "0.3.30"
 iso8601-timestamp = "0.2.17"
 kitsune-cache = { path = "../kitsune-cache" }
@@ -20,7 +20,7 @@ kitsune-url = { path = "../kitsune-url" }
 kitsune-util = { path = "../kitsune-util" }
 mime = "0.3.17"
 serde = "1.0.202"
-simd-json = "0.13.10"
+simd-json = { workspace = true }
 smol_str = "0.2.2"
 speedy-uuid = { path = "../../lib/speedy-uuid" }
 tracing = "0.1.40"

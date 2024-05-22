@@ -9,10 +9,10 @@ license.workspace = true
 ignored = ["askama_axum"] # See reason below.
 
 [dependencies]
-askama = "0.12.1"
+askama = { workspace = true }
 askama_axum = "0.4.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 kitsune-db = { path = "../kitsune-db" }
 kitsune-derive = { path = "../kitsune-derive" }
 kitsune-error = { path = "../kitsune-error" }
@@ -32,7 +32,7 @@ mrml = { version = "3.1.5", default-features = false, features = [
     "render",
 ] }
 speedy-uuid = { path = "../../lib/speedy-uuid" }
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 
 [lints]

@@ -6,8 +6,8 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = "2.1.6"
-diesel-async = "0.4.1"
+diesel = { workspace = true }
+diesel-async = { workspace = true }
 embed-sdk = { git = "https://github.com/Lantern-chat/embed-service.git", rev = "f46ea95ca89775a6c35d0d5cef9172cbc931258a" }
 http = "1.1.0"
 iso8601-timestamp = "0.2.17"

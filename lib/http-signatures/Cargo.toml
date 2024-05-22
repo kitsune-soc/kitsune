@@ -25,7 +25,7 @@ const-oid = { version = "0.9.6", features = ["db"] }
 derive_builder = "0.20.0"
 http = "1.1.0"
 httpdate = "1.0.3"
-itertools = { version = "0.13.0", default-features = false }
+itertools = { workspace = true }
 logos = "0.14.0"
 miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }

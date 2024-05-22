@@ -17,14 +17,14 @@ kitsune-http-client = { path = "../kitsune-http-client" }
 kitsune-type = { path = "../kitsune-type" }
 kitsune-util = { path = "../kitsune-util" }
 tracing = "0.1.40"
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 urlencoding = "2.1.3"
 
 [dev-dependencies]
 http-body-util = "0.1.1"
 hyper = "1.3.1"
 pretty_assertions = "1.4.0"
-simd-json = "0.13.10"
+simd-json = { workspace = true }
 tokio = { version = "1.37.0", features = ["macros"] }
 tower = { version = "0.4.13", default-features = false, features = ["util"] }
 

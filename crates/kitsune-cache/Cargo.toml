@@ -9,11 +9,11 @@ license.workspace = true
 enum_dispatch = "0.3.13"
 fred = { workspace = true }
 kitsune-error = { path = "../kitsune-error" }
-moka = { version = "0.12.7", features = ["sync"] }
+moka = { workspace = true }
 serde = "1.0.202"
-simd-json = "0.13.10"
+simd-json = { workspace = true }
 tracing = "0.1.40"
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 
 [dev-dependencies]

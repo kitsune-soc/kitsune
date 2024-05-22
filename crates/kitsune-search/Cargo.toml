@@ -8,9 +8,9 @@ license.workspace = true
 [dependencies]
 async-trait = "0.1.80"
 bytes = "1.6.0"
-diesel = "2.1.6"
-diesel-async = "0.4.1"
-diesel_full_text_search = { version = "2.1.1", default-features = false }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+diesel_full_text_search = { workspace = true }
 enum_dispatch = "0.3.13"
 futures-io = "0.3.30"
 futures-util = "0.3.30"

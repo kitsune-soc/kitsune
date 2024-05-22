@@ -75,11 +75,38 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
+askama = { version = "0.12.1", default-features = false, features = [
+    "with-axum",
+] }
+diesel = { version = "2.1.6", default-features = false, features = [
+    "32-column-tables",
+] }
+diesel-async = { version = "0.4.1", features = [
+    "async-connection-wrapper",
+    "bb8",
+    "postgres",
+    "tokio",
+] }
+diesel_full_text_search = { version = "2.1.1", default-features = false }
 fred = { version = "9.0.3", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
     "sha-1",
+] }
+garde = { version = "0.18.0", default-features = false, features = [
+    "derive",
+    "email",
+    "email-idna",
+    "regex",
+    "serde",
+] }
+itertools = { version = "0.13.0", default-features = false }
+moka = { version = "0.12.7", features = ["sync"] }
+simd-json = "0.13.10"
+simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
+triomphe = { version = "0.1.11", default-features = false, features = [
+    "unsize",
 ] }
 
 [workspace.lints.clippy]
