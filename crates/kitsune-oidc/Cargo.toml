@@ -24,7 +24,7 @@ openidconnect = { version = "4.0.0-alpha.1", default-features = false, features 
 ] }
 serde = { version = "1.0.202", features = ["derive"] }
 simd-json = { workspace = true }
-speedy-uuid = { workspace = true, features = ["serde"] }
+speedy-uuid = { workspace = true }
 url = "2.5.0"
 
 [lints]

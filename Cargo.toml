@@ -111,7 +111,7 @@ triomphe = { version = "0.1.11", default-features = false, features = [
     "unsize",
 ] }
 
-# Local workspace dependencies (so we don't have to specify the path in every crate)
+# Local workspace dependencies (crate directory)
 kitsune-activitypub = { path = "crates/kitsune-activitypub" }
 kitsune-cache = { path = "crates/kitsune-cache" }
 kitsune-captcha = { path = "crates/kitsune-captcha" }
@@ -143,7 +143,9 @@ kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "crates/kitsune-webfinger" }
 kitsune = { path = "kitsune" }
 kitsune-job-runner = { path = "kitsune-job-runner" }
-athena = { path = "lib/athena" }
+
+# Local workspace dependences (lib directory)
+athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv" }
 geomjeungja = { path = "lib/geomjeungja" }
@@ -152,7 +154,7 @@ just-retry = { path = "lib/just-retry" }
 masto-id-convert = { path = "lib/masto-id-convert" }
 mrf-manifest = { path = "lib/mrf-manifest" }
 post-process = { path = "lib/post-process" }
-speedy-uuid = { path = "lib/speedy-uuid" }
+speedy-uuid = { path = "lib/speedy-uuid", features = ["serde"] }
 tick-tock-mock = { path = "lib/tick-tock-mock" }
 tower-http-digest = { path = "lib/tower-http-digest" }
 tower-stop-using-brave = { path = "lib/tower-stop-using-brave" }

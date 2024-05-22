@@ -22,7 +22,7 @@ mime = "0.3.17"
 serde = "1.0.202"
 simd-json = { workspace = true }
 smol_str = "0.2.2"
-speedy-uuid = { workspace = true, features = ["serde"] }
+speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 typed-builder = "0.18.2"
 

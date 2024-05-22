@@ -12,7 +12,7 @@ license = false
 eula = false
 
 [dependencies]
-athena = { workspace = true, features = ["redis"] }
+athena = { workspace = true }
 clap = { workspace = true }
 color-eyre = "0.6.3"
 fred = { workspace = true }

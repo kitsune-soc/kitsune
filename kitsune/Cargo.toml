@@ -15,7 +15,7 @@ license = false
 eula = false
 
 [dependencies]
-athena = { workspace = true, features = ["redis"] }
+athena = { workspace = true }
 argon2 = { version = "0.5.3", features = ["std"] }
 askama = { workspace = true }
 askama_axum = "0.4.0"
