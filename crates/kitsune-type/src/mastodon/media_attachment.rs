@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
-#[derive(Clone, Copy, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum MediaType {
     Unknown,
@@ -12,7 +11,7 @@ pub enum MediaType {
     Audio,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct MediaAttachment {
     pub id: Uuid,
     pub r#type: MediaType,

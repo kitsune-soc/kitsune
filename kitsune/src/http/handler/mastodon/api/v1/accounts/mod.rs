@@ -17,14 +17,6 @@ pub mod unfollow;
 pub mod update_credentials;
 pub mod verify_credentials;
 
-#[utoipa::path(
-    get,
-    path = "/api/v1/accounts/{id}",
-    responses(
-        (status = 200, description = "Account information", body = Account),
-        (status = StatusCode::NOT_FOUND, description = "No account with that ID exists"),
-    )
-)]
 async fn get(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

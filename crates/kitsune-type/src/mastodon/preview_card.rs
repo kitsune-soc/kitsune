@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use utoipa::ToSchema;
 
-#[derive(Clone, Copy, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PreviewType {
     Link,
@@ -10,7 +9,7 @@ pub enum PreviewType {
     Video,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct PreviewCard {
     pub url: String,
     pub title: SmolStr,

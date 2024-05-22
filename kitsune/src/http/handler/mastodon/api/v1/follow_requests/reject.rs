@@ -11,17 +11,6 @@ use kitsune_type::mastodon::relationship::Relationship;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    post,
-    path = "/api/v1/follow_requests/{id}/reject",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "Follow request rejected", body = Relationship),
-        (status = 404, description = "No pending follow request from that account ID")
-    ),
-)]
 pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

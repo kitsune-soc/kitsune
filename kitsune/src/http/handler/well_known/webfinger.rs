@@ -10,22 +10,12 @@ use kitsune_service::account::{AccountService, GetUser};
 use kitsune_type::webfinger::{Link, Resource};
 use kitsune_url::UrlService;
 use serde::Deserialize;
-use utoipa::IntoParams;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 struct WebfingerQuery {
     resource: String,
 }
 
-#[utoipa::path(
-    get,
-    path = "/.well-known/webfinger",
-    params(WebfingerQuery),
-    responses(
-        (status = 200, description = "Response with the location of the user's profile", body = Resource),
-        (status = StatusCode::NOT_FOUND, description = "The service doesn't know this user"),
-    )
-)]
 async fn get(
     State(account_service): State<AccountService>,
     State(url_service): State<UrlService>,

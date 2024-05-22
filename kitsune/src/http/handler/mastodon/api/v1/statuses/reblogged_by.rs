@@ -19,9 +19,8 @@ use kitsune_type::mastodon::Account;
 use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::IntoParams;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 pub struct GetQuery {
     min_id: Option<Uuid>,
     max_id: Option<Uuid>,
@@ -31,17 +30,6 @@ pub struct GetQuery {
 }
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/statuses/{id}/reblogged_by",
-    security(
-        ("oauth_token" = [])
-    ),
-    params(GetQuery),
-    responses(
-        (status = 200, description = "List of accounts that reblogged the status", body = Vec<Account>)
-    ),
-)]
 pub async fn get(
     State(post_service): State<PostService>,
     State(mastodon_mapper): State<MastodonMapper>,

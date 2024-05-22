@@ -15,9 +15,8 @@ use kitsune_type::mastodon::SearchResult as MastodonSearchResult;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 use std::cmp::min;
-use utoipa::{IntoParams, ToSchema};
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SearchType {
     Accounts,
@@ -25,7 +24,7 @@ pub enum SearchType {
     Statuses,
 }
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 struct SearchQuery {
     #[serde(rename = "q")]
     query: String,
@@ -41,17 +40,6 @@ struct SearchQuery {
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v2/search",
-    security(
-        ("oauth_token" = [])
-    ),
-    params(SearchQuery),
-    responses(
-        (status = 200, description = "Search results", body = SearchResult),
-    ),
-)]
 async fn get(
     State(search_service): State<SearchService>,
     State(mastodon_mapper): State<MastodonMapper>,

@@ -11,17 +11,6 @@ use kitsune_type::mastodon::Status;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    delete,
-    path = "/api/v1/statuses/{id}/unreblog",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = StatusCode::OK, description = "Status was unboosted or was already not boosted", body = Status),
-        (status = StatusCode::NOT_FOUND, description = "Status does not exist or is private")
-    )
-)]
 pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

@@ -14,16 +14,6 @@ use kitsune_service::{
 };
 use kitsune_type::mastodon::Account;
 
-#[utoipa::path(
-    patch,
-    path = "/api/v1/accounts/update_credentials",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "Updated account of the user", body = Account),
-    )
-)]
 pub async fn patch(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

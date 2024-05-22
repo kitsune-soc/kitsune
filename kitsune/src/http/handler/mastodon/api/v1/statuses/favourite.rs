@@ -11,16 +11,6 @@ use kitsune_type::mastodon::Status;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    post,
-    path = "/api/v1/statuses/{id}/favourite",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "The status with updated information regarding like status"),
-    )
-)]
 pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

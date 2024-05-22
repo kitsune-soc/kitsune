@@ -10,26 +10,14 @@ use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct FollowBody {
     #[serde(default)]
     notify: bool,
 }
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    post,
-    path = "/api/v1/accounts/{id}/follow",
-    security(
-        ("oauth_token" = [])
-    ),
-    request_body = FollowBody,
-    responses(
-        (status = 200, description = "Followed user successfully", body = Relationship)
-    ),
-)]
 pub async fn post(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

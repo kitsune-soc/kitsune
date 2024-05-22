@@ -4,17 +4,6 @@ use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::Account;
 
-#[utoipa::path(
-    get,
-    path = "/api/v1/accounts/verify_credentials",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "Account of the logged in user", body = Account),
-        (status = StatusCode::BAD_REQUEST, description = "The request was invalid"),
-    )
-)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user): MastodonAuthExtractor,

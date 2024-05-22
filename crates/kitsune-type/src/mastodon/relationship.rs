@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
-#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize, ToSchema)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Relationship {
     pub id: Uuid,

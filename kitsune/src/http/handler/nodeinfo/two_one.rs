@@ -16,13 +16,6 @@ use kitsune_util::try_join;
 use simd_json::{OwnedValue, ValueBuilder};
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    get,
-    path = "/nodeinfo/2.1",
-    responses(
-        (status = 200, description = "Get response following the Nodeinfo 2.1 schema", body = TwoOne)
-    ),
-)]
 async fn get(
     State(db_pool): State<PgPool>,
     State(user_service): State<UserService>,

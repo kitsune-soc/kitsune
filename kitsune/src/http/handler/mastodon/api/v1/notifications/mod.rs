@@ -20,12 +20,11 @@ use kitsune_type::mastodon::{notification::NotificationType, Notification};
 use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::IntoParams;
 
 pub mod clear;
 pub mod dismiss;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 pub struct GetQuery {
     #[serde(default)]
     max_id: Option<Uuid>,
@@ -44,17 +43,6 @@ pub struct GetQuery {
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/notifications",
-    security(
-        ("oauth_token" = [])
-    ),
-    params(GetQuery),
-    responses(
-        (status = StatusCode::OK, description = "List of notifications concerning the user", body = Vec<Notification>)
-    ),
-)]
 pub async fn get(
     State(notification_service): State<NotificationService>,
     State(mastodon_mapper): State<MastodonMapper>,
@@ -101,16 +89,6 @@ pub async fn get(
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/notifications/{id}",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = StatusCode::OK, description = "A single notification", body = Notification)
-    ),
-)]
 pub async fn get_by_id(
     State(notification_service): State<NotificationService>,
     State(mastodon_mapper): State<MastodonMapper>,

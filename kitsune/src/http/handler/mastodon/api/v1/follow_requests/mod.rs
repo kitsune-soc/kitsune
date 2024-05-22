@@ -20,12 +20,11 @@ use kitsune_type::mastodon::Account;
 use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::IntoParams;
 
 pub mod accept;
 pub mod reject;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 pub struct GetQuery {
     max_id: Option<Uuid>,
     since_id: Option<Uuid>,
@@ -34,17 +33,6 @@ pub struct GetQuery {
 }
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/follow_requests",
-    security(
-        ("oauth_token" = [])
-    ),
-    params(GetQuery),
-    responses(
-        (status = 200, description = "List of accounts requesting a follow", body = Vec<Account>)
-    ),
-)]
 pub async fn get(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,

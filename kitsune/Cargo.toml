@@ -104,8 +104,6 @@ trials = { path = "../lib/trials" }
 triomphe = "0.1.11"
 typed-builder = "0.18.2"
 url = "2.5.0"
-utoipa = { version = "4.2.3", features = ["axum_extras", "uuid"] }
-utoipa-swagger-ui = { version = "=6.0.0", features = ["axum"] }
 
 # --- Optional dependencies ---
 
