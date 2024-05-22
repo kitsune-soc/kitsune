@@ -13,9 +13,9 @@ futures-util = "0.3.30"
 http = "1.1.0"
 http-body-util = "0.1.1"
 isolang = "2.4.0"
-kitsune-config = { path = "../kitsune-config" }
-kitsune-db = { path = "../kitsune-db" }
-kitsune-s3 = { path = "../kitsune-s3" }
+kitsune-config = { workspace = true }
+kitsune-db = { workspace = true }
+kitsune-s3 = { workspace = true }
 pin-project-lite = "0.2.14"
 rand = "0.8.5"
 rusty-s3 = { version = "0.5.0", default-features = false }

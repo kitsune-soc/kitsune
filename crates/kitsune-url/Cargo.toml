@@ -6,9 +6,9 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-kitsune-derive = { path = "../kitsune-derive" }
+kitsune-derive = { workspace = true }
 smol_str = "0.2.2"
-speedy-uuid = { path = "../../lib/speedy-uuid" }
+speedy-uuid = { workspace = true }
 
 [lints]
 workspace = true

@@ -78,6 +78,7 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
+clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
 diesel = { version = "2.1.6", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -109,6 +110,54 @@ simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 triomphe = { version = "0.1.11", default-features = false, features = [
     "unsize",
 ] }
+
+# Local workspace dependencies (so we don't have to specify the path in every crate)
+kitsune-activitypub = { path = "crates/kitsune-activitypub" }
+kitsune-cache = { path = "crates/kitsune-cache" }
+kitsune-captcha = { path = "crates/kitsune-captcha" }
+kitsune-config = { path = "crates/kitsune-config" }
+kitsune-core = { path = "crates/kitsune-core" }
+kitsune-db = { path = "crates/kitsune-db" }
+kitsune-derive = { path = "crates/kitsune-derive" }
+kitsune-email = { path = "crates/kitsune-email" }
+kitsune-embed = { path = "crates/kitsune-embed" }
+kitsune-error = { path = "crates/kitsune-error" }
+kitsune-federation = { path = "crates/kitsune-federation" }
+kitsune-federation-filter = { path = "crates/kitsune-federation-filter" }
+kitsune-http-client = { path = "crates/kitsune-http-client" }
+kitsune-jobs = { path = "crates/kitsune-jobs" }
+kitsune-language = { path = "crates/kitsune-language" }
+kitsune-mastodon = { path = "crates/kitsune-mastodon" }
+kitsune-observability = { path = "crates/kitsune-observability" }
+kitsune-oidc = { path = "crates/kitsune-oidc" }
+kitsune-s3 = { path = "crates/kitsune-s3" }
+kitsune-scss-compiler = { path = "crates/kitsune-scss-compiler" }
+kitsune-search = { path = "crates/kitsune-search" }
+kitsune-service = { path = "crates/kitsune-service" }
+kitsune-storage = { path = "crates/kitsune-storage" }
+kitsune-test = { path = "crates/kitsune-test" }
+kitsune-type = { path = "crates/kitsune-type" }
+kitsune-url = { path = "crates/kitsune-url" }
+kitsune-util = { path = "crates/kitsune-util" }
+kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
+kitsune-webfinger = { path = "crates/kitsune-webfinger" }
+kitsune = { path = "kitsune" }
+kitsune-job-runner = { path = "kitsune-job-runner" }
+athena = { path = "lib/athena" }
+blowocking = { path = "lib/blowocking" }
+cursiv = { path = "lib/cursiv" }
+geomjeungja = { path = "lib/geomjeungja" }
+http-signatures = { path = "lib/http-signatures" }
+just-retry = { path = "lib/just-retry" }
+masto-id-convert = { path = "lib/masto-id-convert" }
+mrf-manifest = { path = "lib/mrf-manifest" }
+post-process = { path = "lib/post-process" }
+speedy-uuid = { path = "lib/speedy-uuid" }
+tick-tock-mock = { path = "lib/tick-tock-mock" }
+tower-http-digest = { path = "lib/tower-http-digest" }
+tower-stop-using-brave = { path = "lib/tower-stop-using-brave" }
+tower-x-clacks-overhead = { path = "lib/tower-x-clacks-overhead" }
+trials = { path = "lib/trials" }
 
 [workspace.lints.clippy]
 all = "warn"

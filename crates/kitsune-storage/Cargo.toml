@@ -9,8 +9,8 @@ license.workspace = true
 bytes = "1.6.0"
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 futures-util = "0.3.30"
-kitsune-error = { path = "../kitsune-error" }
-kitsune-s3 = { path = "../kitsune-s3" }
+kitsune-error = { workspace = true }
+kitsune-s3 = { workspace = true }
 rusty-s3 = { version = "0.5.0", default-features = false }
 tokio = { version = "1.37.0", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.11", features = ["io"] }

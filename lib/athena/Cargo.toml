@@ -16,13 +16,13 @@ either = { version = "1.12.0", default-features = false, optional = true }
 futures-util = { version = "0.3.30", default-features = false }
 iso8601-timestamp = "0.2.17"
 fred = { workspace = true, optional = true }
-just-retry = { path = "../just-retry" }
+just-retry = { workspace = true }
 once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.202", features = ["derive"] }
 simd-json = { workspace = true, optional = true }
 smol_str = "0.2.2"
-speedy-uuid = { path = "../speedy-uuid", features = ["redis", "serde"] }
+speedy-uuid = { workspace = true, features = ["redis", "serde"] }
 thiserror = "1.0.61"
 tokio = { version = "1.37.0", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.11", features = ["rt"] }
@@ -36,7 +36,7 @@ unsize = "1.1.0"
 redis = ["dep:either", "dep:fred", "dep:once_cell", "dep:rand", "dep:simd-json"]
 
 [dev-dependencies]
-kitsune-test = { path = "../../crates/kitsune-test" }
+kitsune-test = { workspace = true }
 tracing-subscriber = "0.3.18"
 
 [lints]

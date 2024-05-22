@@ -6,17 +6,17 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-athena = { path = "../../lib/athena" }
+athena = { workspace = true }
 derive_more = { version = "1.0.0-beta.6", features = ["from"] }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 futures-util = "0.3.30"
-kitsune-core = { path = "../kitsune-core" }
-kitsune-db = { path = "../kitsune-db" }
-kitsune-email = { path = "../kitsune-email" }
-kitsune-error = { path = "../kitsune-error" }
+kitsune-core = { workspace = true }
+kitsune-db = { workspace = true }
+kitsune-email = { workspace = true }
+kitsune-error = { workspace = true }
 serde = { version = "1.0.202", features = ["derive"] }
-speedy-uuid = { path = "../../lib/speedy-uuid" }
+speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 typed-builder = "0.18.2"
 

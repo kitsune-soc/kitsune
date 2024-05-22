@@ -12,23 +12,23 @@ license = false
 eula = false
 
 [dependencies]
-athena = { path = "../lib/athena", features = ["redis"] }
-clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
+athena = { workspace = true, features = ["redis"] }
+clap = { workspace = true }
 color-eyre = "0.6.3"
 fred = { workspace = true }
-just-retry = { path = "../lib/just-retry" }
-kitsune-config = { path = "../crates/kitsune-config" }
-kitsune-core = { path = "../crates/kitsune-core" }
-kitsune-db = { path = "../crates/kitsune-db" }
-kitsune-email = { path = "../crates/kitsune-email" }
-kitsune-error = { path = "../crates/kitsune-error" }
-kitsune-federation = { path = "../crates/kitsune-federation" }
-kitsune-federation-filter = { path = "../crates/kitsune-federation-filter" }
-kitsune-jobs = { path = "../crates/kitsune-jobs" }
-kitsune-observability = { path = "../crates/kitsune-observability" }
-kitsune-service = { path = "../crates/kitsune-service" }
-kitsune-url = { path = "../crates/kitsune-url" }
-kitsune-wasm-mrf = { path = "../crates/kitsune-wasm-mrf" }
+just-retry = { workspace = true }
+kitsune-config = { workspace = true }
+kitsune-core = { workspace = true }
+kitsune-db = { workspace = true }
+kitsune-email = { workspace = true }
+kitsune-error = { workspace = true }
+kitsune-federation = { workspace = true }
+kitsune-federation-filter = { workspace = true }
+kitsune-jobs = { workspace = true }
+kitsune-observability = { workspace = true }
+kitsune-service = { workspace = true }
+kitsune-url = { workspace = true }
+kitsune-wasm-mrf = { workspace = true }
 mimalloc = "0.1.42"
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"

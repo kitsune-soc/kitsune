@@ -10,7 +10,7 @@ iso8601-timestamp = "0.2.17"
 serde = { version = "1.0.202", features = ["derive"] }
 simd-json = { workspace = true }
 smol_str = { version = "0.2.2", features = ["serde"] }
-speedy-uuid = { path = "../../lib/speedy-uuid", features = ["serde"] }
+speedy-uuid = { workspace = true, features = ["diesel"] }
 strum = { version = "0.26.2", features = ["derive"] }
 
 [dev-dependencies]
