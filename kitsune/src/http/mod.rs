@@ -1,8 +1,5 @@
-use self::{
-    handler::{
-        confirm_account, custom_emojis, media, nodeinfo, oauth, posts, public, users, well_known,
-    },
-    openapi::api_docs,
+use self::handler::{
+    confirm_account, custom_emojis, media, nodeinfo, oauth, posts, public, users, well_known,
 };
 use crate::state::Zustand;
 use axum::{
@@ -30,7 +27,6 @@ use tower_http::{
 };
 use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
-use utoipa_swagger_ui::SwaggerUi;
 
 const FALLBACK_FALLBACK_INDEX: &str = include_str!("../../templates/fallback-fallback.html");
 
@@ -40,7 +36,6 @@ static X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
 mod graphql;
 mod handler;
 mod middleware;
-mod openapi;
 #[cfg(feature = "mastodon-api")]
 mod pagination;
 mod responder;
@@ -133,9 +128,7 @@ pub fn create_router(
         router = router.merge(handler::mastodon::routes());
     }
 
-    router = router
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", api_docs()))
-        .fallback_service(serve_frontend(server_config));
+    router = router.fallback_service(serve_frontend(server_config));
 
     if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
@@ -178,6 +171,7 @@ pub async fn run(
     let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
 
     axum::serve(listener, router)
+        .tcp_nodelay(true)
         .with_graceful_shutdown(shutdown_signal.wait())
         .await?;
 

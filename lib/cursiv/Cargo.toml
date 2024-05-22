@@ -14,7 +14,7 @@ http = "1.1.0"
 pin-project-lite = "0.2.14"
 rand = "0.8.5"
 tower = { version = "0.4.13", default-features = false }
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 zeroize = { version = "1.7.0", features = ["derive"] }
 
 # `axum` feature

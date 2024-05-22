@@ -17,9 +17,8 @@ use kitsune_type::mastodon::Status;
 use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::IntoParams;
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize)]
 pub struct GetQuery {
     #[serde(default)]
     local: bool,
@@ -32,14 +31,6 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[utoipa::path(
-    get,
-    path = "/api/v1/timelines/public",
-    params(GetQuery),
-    responses(
-        (status = 200, description = "Current public timeline", body = Vec<Status>),
-    ),
-)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(timeline): State<TimelineService>,

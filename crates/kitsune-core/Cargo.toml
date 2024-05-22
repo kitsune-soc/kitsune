@@ -9,11 +9,11 @@ build = "build.rs"
 [dependencies]
 async-trait = "0.1.80"
 const_format = "0.2.32"
-kitsune-db = { path = "../kitsune-db" }
-kitsune-error = { path = "../kitsune-error" }
+kitsune-db = { workspace = true }
+kitsune-error = { workspace = true }
 paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }
-triomphe = { version = "0.1.11", features = ["unsize"] }
+triomphe = { workspace = true }
 typed-builder = "0.18.2"
 unsize = "1.1.0"
 

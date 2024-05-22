@@ -8,24 +8,24 @@ license.workspace = true
 [dependencies]
 async-trait = "0.1.80"
 bytes = "1.6.0"
-diesel = "2.1.6"
-diesel-async = "0.4.1"
-diesel_full_text_search = { version = "2.1.1", default-features = false }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+diesel_full_text_search = { workspace = true }
 enum_dispatch = "0.3.13"
 futures-io = "0.3.30"
 futures-util = "0.3.30"
 http = "1.1.0"
-kitsune-config = { path = "../kitsune-config" }
-kitsune-db = { path = "../kitsune-db" }
-kitsune-derive = { path = "../kitsune-derive" }
-kitsune-error = { path = "../kitsune-error" }
-kitsune-http-client = { path = "../kitsune-http-client" }
-kitsune-language = { path = "../kitsune-language" }
+kitsune-config = { workspace = true }
+kitsune-db = { workspace = true }
+kitsune-derive = { workspace = true }
+kitsune-error = { workspace = true }
+kitsune-http-client = { workspace = true }
+kitsune-language = { workspace = true }
 meilisearch-sdk = { version = "0.26.1", default-features = false }
 pin-project-lite = "0.2.14"
 serde = { version = "1.0.202", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-speedy-uuid = { path = "../../lib/speedy-uuid" }
+speedy-uuid = { workspace = true }
 strum = { version = "0.26.2", features = ["derive"] }
 tracing = "0.1.40"
 

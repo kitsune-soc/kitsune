@@ -9,16 +9,6 @@ use kitsune_service::notification::NotificationService;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    post,
-    path = "/api/v1/notifications/{id}/dismiss",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = StatusCode::OK, description = "Notification has been dismissed"),
-    )
-)]
 pub async fn post(
     State(notification_service): State<NotificationService>,
     AuthExtractor(user_data): MastodonAuthExtractor,

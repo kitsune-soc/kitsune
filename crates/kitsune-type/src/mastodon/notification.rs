@@ -1,9 +1,7 @@
+use super::{Account, Status};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
-
-use super::{Account, Status};
 
 #[derive(Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -17,7 +15,7 @@ pub enum NotificationType {
     Update,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Notification {
     pub id: Uuid,
     pub r#type: NotificationType,

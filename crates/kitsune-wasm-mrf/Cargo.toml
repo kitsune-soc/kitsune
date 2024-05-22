@@ -16,20 +16,20 @@ fred = { workspace = true }
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
-kitsune-config = { path = "../kitsune-config" }
-kitsune-derive = { path = "../kitsune-derive" }
-kitsune-error = { path = "../kitsune-error" }
-kitsune-type = { path = "../kitsune-type" }
-mrf-manifest = { path = "../../lib/mrf-manifest", features = ["decode"] }
-simd-json = "0.13.10"
+kitsune-config = { workspace = true }
+kitsune-derive = { workspace = true }
+kitsune-error = { workspace = true }
+kitsune-type = { workspace = true }
+mrf-manifest = { workspace = true, features = ["decode"] }
+simd-json = { workspace = true }
 slab = "0.4.9"
 sled = "0.34.7"
 smol_str = "0.2.2"
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
-triomphe = "0.1.11"
+triomphe = { workspace = true }
 walkdir = "2.5.0"
-wasmtime = { version = "21.0.0", default-features = false, features = [
+wasmtime = { version = "21.0.1", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -38,7 +38,7 @@ wasmtime = { version = "21.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "21.0.0", default-features = false }
+wasmtime-wasi = { version = "21.0.1", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"

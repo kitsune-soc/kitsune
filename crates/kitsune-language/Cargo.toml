@@ -6,9 +6,9 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = "2.1.6"
-diesel-async = { version = "0.4.1", features = ["postgres"] }
-kitsune-config = { path = "../kitsune-config" }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+kitsune-config = { workspace = true }
 isolang = { version = "2.4.0", features = [
     "english_names",
     "list_languages",

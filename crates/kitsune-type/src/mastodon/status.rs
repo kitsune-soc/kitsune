@@ -3,16 +3,14 @@ use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use std::collections::VecDeque;
-use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize, ToSchema)]
+#[derive(Deserialize, Serialize)]
 pub struct Context {
-    #[schema(value_type = Vec<Status>)]
     pub ancestors: VecDeque<Status>,
     pub descendants: Vec<Status>,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Mention {
     pub id: Uuid,
     pub username: String,
@@ -20,7 +18,7 @@ pub struct Mention {
     pub acct: String,
 }
 
-#[derive(Clone, Copy, Default, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Visibility {
     #[default]
@@ -30,7 +28,7 @@ pub enum Visibility {
     Direct,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Status {
     pub id: Uuid,
     pub created_at: Timestamp,
@@ -56,7 +54,7 @@ pub struct Status {
     pub card: Option<PreviewCard>,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct StatusSource {
     pub id: Uuid,
     pub text: String,

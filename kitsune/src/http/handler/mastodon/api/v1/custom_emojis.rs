@@ -7,16 +7,6 @@ use kitsune_service::custom_emoji::{CustomEmojiService, GetEmojiList};
 use kitsune_type::mastodon::CustomEmoji;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/custom_emojis",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "List of custom emojis available on the server", body = Vec<CustomEmoji>)
-    ),
-)]
 pub async fn get(
     State(custom_emoji_service): State<CustomEmojiService>,
     State(mastodon_mapper): State<MastodonMapper>,

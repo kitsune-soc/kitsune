@@ -1,16 +1,15 @@
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Field {
     pub name: String,
     pub value: String,
     pub verified_at: Option<Timestamp>,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Source {
     pub privacy: String,
     pub sensitive: bool,
@@ -19,7 +18,7 @@ pub struct Source {
     pub fields: Vec<Field>,
 }
 
-#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Account {
     pub id: Uuid,
     pub acct: String,

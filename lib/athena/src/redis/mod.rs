@@ -62,13 +62,29 @@ where
 {
     async fn initialise_group(&self) -> Result<()> {
         self.group_initialised
-            .get_or_try_init(|| {
-                self.redis_pool.xgroup_create(
-                    self.queue_name.as_str(),
-                    self.consumer_group.as_str(),
-                    "0",
-                    true,
-                )
+            .get_or_try_init(|| async move {
+                let result = self
+                    .redis_pool
+                    .xgroup_create(
+                        self.queue_name.as_str(),
+                        self.consumer_group.as_str(),
+                        "0",
+                        true,
+                    )
+                    .await;
+
+                result.or_else(|err| {
+                    if err.details().starts_with("BUSYGROUP") {
+                        debug!(
+                            recv_error = err.details(),
+                            "Consumer group already exists, skipping creation",
+                        );
+
+                        Ok(())
+                    } else {
+                        Err(err)
+                    }
+                })
             })
             .await?;
 

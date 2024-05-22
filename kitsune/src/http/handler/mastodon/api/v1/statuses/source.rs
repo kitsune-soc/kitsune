@@ -10,16 +10,6 @@ use kitsune_type::mastodon::status::StatusSource;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = crate::state::Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/statuses/{id}/source",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = StatusCode::OK, description = "Source of the status", body = StatusSource),
-    )
-)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post_service): State<PostService>,

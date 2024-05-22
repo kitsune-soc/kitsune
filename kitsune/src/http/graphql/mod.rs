@@ -2,9 +2,7 @@ use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
-    extensions::Tracing,
-    http::{playground_source, GraphQLPlaygroundConfig},
-    Context, EmptySubscription, Error, Result, Schema,
+    extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
 use axum::{
@@ -52,10 +50,12 @@ async fn graphql_route(
 
 #[allow(clippy::unused_async)]
 async fn graphiql_route() -> Html<String> {
-    let config = GraphQLPlaygroundConfig::new("/graphql")
-        .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"));
+    let source = GraphiQLSource::build()
+        .endpoint("/graphql")
+        .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"))
+        .finish();
 
-    Html(playground_source(config))
+    Html(source)
 }
 
 pub fn routes(state: Zustand) -> Router<Zustand> {

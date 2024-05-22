@@ -7,24 +7,19 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-blowocking = { path = "../../lib/blowocking" }
-diesel = { version = "2.1.6", features = ["uuid"] }
-diesel-async = { version = "0.4.1", features = [
-    "async-connection-wrapper",
-    "bb8",
-    "postgres",
-    "tokio",
-] }
-diesel_full_text_search = { version = "2.1.1", default-features = false }
+blowocking = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+diesel_full_text_search = { workspace = true }
 diesel_migrations = "2.1.0"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
 iso8601-timestamp = { version = "0.2.17", features = ["diesel-pg"] }
-kitsune-config = { path = "../kitsune-config" }
-kitsune-error = { path = "../kitsune-error" }
-kitsune-language = { path = "../kitsune-language" }
-kitsune-type = { path = "../kitsune-type" }
+kitsune-config = { workspace = true }
+kitsune-error = { workspace = true }
+kitsune-language = { workspace = true }
+kitsune-type = { workspace = true }
 num-derive = "0.4.2"
 num-traits = "0.2.19"
 rustls = { version = "0.23.7", default-features = false, features = [
@@ -35,18 +30,18 @@ rustls = { version = "0.23.7", default-features = false, features = [
 ] }
 rustls-native-certs = "0.7.0"
 serde = { version = "1.0.202", features = ["derive"] }
-simd-json = "0.13.10"
-speedy-uuid = { path = "../../lib/speedy-uuid", features = ["diesel"] }
+simd-json = { workspace = true }
+speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { version = "1.37.0", features = ["rt"] }
 tokio-postgres = "0.7.10"
 tokio-postgres-rustls = "0.12.0"
 tracing = "0.1.40"
 tracing-log = "0.2.0"
-trials = { path = "../../lib/trials" }
+trials = { workspace = true }
 typed-builder = "0.18.2"
 
 [dev-dependencies]
-kitsune-test = { path = "../kitsune-test" }
+kitsune-test = { workspace = true }
 tokio = { version = "1.37.0", features = ["macros"] }
 
 [lints]

@@ -7,22 +7,13 @@ use axum::{extract::State, routing, Json, Router};
 use kitsune_error::Result;
 use kitsune_type::mastodon::App;
 use serde::Deserialize;
-use utoipa::ToSchema;
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct AppForm {
     client_name: String,
     redirect_uris: String,
 }
 
-#[utoipa::path(
-    post,
-    path = "/api/v1/apps",
-    request_body = AppForm,
-    responses(
-        (status = 200, description = "Newly created application", body = App),
-    ),
-)]
 async fn post(
     State(oauth2): State<OAuth2Service>,
     AgnosticForm(form): AgnosticForm<AppForm>,

@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
 pub mod account;
 pub mod custom_emoji;
@@ -21,7 +20,7 @@ pub use self::preview_card::PreviewCard;
 pub use self::search::SearchResult;
 pub use self::status::Status;
 
-#[derive(Deserialize, Serialize, ToSchema)]
+#[derive(Deserialize, Serialize)]
 pub struct App {
     pub id: Uuid,
     pub name: String,

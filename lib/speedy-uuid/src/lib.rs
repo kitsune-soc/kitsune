@@ -6,6 +6,9 @@ use std::{
 use thiserror::Error;
 use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
 
+#[cfg(feature = "diesel")]
+use diesel::{deserialize::FromSqlRow, expression::AsExpression};
+
 pub use uuid;
 
 #[derive(Debug, Error)]
@@ -17,7 +20,7 @@ pub enum Error {
     Uuid(#[from] uuid::Error),
 }
 
-#[cfg_attr(feature = "diesel", derive(diesel::AsExpression, diesel::FromSqlRow))]
+#[cfg_attr(feature = "diesel", derive(AsExpression, FromSqlRow))]
 #[cfg_attr(feature = "diesel", diesel(sql_type = diesel::sql_types::Uuid))]
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]

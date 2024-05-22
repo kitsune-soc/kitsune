@@ -14,7 +14,6 @@ use kitsune_service::post::{CreatePost, DeletePost, PostService, UpdatePost};
 use kitsune_type::mastodon::{status::Visibility, Status};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use utoipa::ToSchema;
 
 pub mod context;
 pub mod favourite;
@@ -25,7 +24,7 @@ pub mod source;
 pub mod unfavourite;
 pub mod unreblog;
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct CreateForm {
     #[serde(default)]
     media_ids: Vec<Uuid>,
@@ -38,7 +37,7 @@ pub struct CreateForm {
     visibility: Visibility,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 pub struct UpdateForm {
     #[serde(default)]
     media_ids: Vec<Uuid>,
@@ -51,16 +50,6 @@ pub struct UpdateForm {
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    delete,
-    path = "/api/v1/statuses/{id}",
-    security(
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = StatusCode::OK, description = "Status was deleted"),
-    )
-)]
 async fn delete(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -78,18 +67,6 @@ async fn delete(
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    get,
-    path = "/api/v1/statuses/{id}",
-    security(
-        (),
-        ("oauth_token" = [])
-    ),
-    responses(
-        (status = 200, description = "The requested status", body = Status),
-        (status = 404, description = "Requested status doesn't exist"),
-    )
-)]
 async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
@@ -109,17 +86,6 @@ async fn get(
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    post,
-    path = "/api/v1/statuses",
-    security(
-        ("oauth_token" = [])
-    ),
-    request_body = CreateForm,
-    responses(
-        (status = 200, description = "Newly created post", body = Status),
-    )
-)]
 async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post_service): State<PostService>,
@@ -142,18 +108,6 @@ async fn post(
 }
 
 #[debug_handler(state = Zustand)]
-#[utoipa::path(
-    put,
-    path = "/api/v1/statuses/{id}",
-    security(
-        ("oauth_token" = [])
-    ),
-    request_body = UpdateForm,
-    responses(
-        (status = StatusCode::OK, description = "Status has been successfully edited", body = Status),
-        (status = StatusCode::NOT_FOUND, description = "Requested status doesn't exist"),
-    )
-)]
 async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,

@@ -7,10 +7,10 @@ license.workspace = true
 
 [dependencies]
 globset = "0.4.14"
-kitsune-config = { path = "../kitsune-config" }
-kitsune-derive = { path = "../kitsune-derive" }
-kitsune-error = { path = "../kitsune-error" }
-kitsune-type = { path = "../kitsune-type" }
+kitsune-config = { workspace = true }
+kitsune-derive = { workspace = true }
+kitsune-error = { workspace = true }
+kitsune-type = { workspace = true }
 url = "2.5.0"
 
 [lints]

@@ -20,19 +20,19 @@ path = "bin/parse_header.rs"
 [dependencies]
 atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
-blowocking = { path = "../blowocking", default-features = false, optional = true }
+blowocking = { workspace = true, default-features = false, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
 derive_builder = "0.20.0"
 http = "1.1.0"
 httpdate = "1.0.3"
-itertools = { version = "0.13.0", default-features = false }
+itertools = { workspace = true }
 logos = "0.14.0"
 miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.3", default-features = false }
 thiserror = "1.0.61"
-tick-tock-mock = { path = "../tick-tock-mock" }
+tick-tock-mock = { workspace = true }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
