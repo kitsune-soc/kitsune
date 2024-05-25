@@ -45,7 +45,7 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.202"
+serde = "1.0.203"
 smol_str = "0.2.2"
 speedy-uuid = { workspace = true }
 tokio = { version = "1.37.0", features = ["macros", "sync"] }
@@ -53,7 +53,7 @@ tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
 url = "2.5.0"
-zxcvbn = { version = "2.2.2", default-features = false }
+zxcvbn = { version = "3.0.1", default-features = false }
 
 [dev-dependencies]
 hex-simd = "0.8.0"

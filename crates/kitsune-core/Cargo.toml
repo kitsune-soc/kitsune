@@ -12,7 +12,7 @@ const_format = "0.2.32"
 kitsune-db = { workspace = true }
 kitsune-error = { workspace = true }
 paste = "1.0.15"
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.203", features = ["derive"] }
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
 unsize = "1.1.0"

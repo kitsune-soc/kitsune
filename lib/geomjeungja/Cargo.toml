@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 async-trait = "0.1.80"
 hickory-resolver = "0.24.1"
 rand = "0.8.5"
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.203", features = ["derive"] }
 simdutf8 = { workspace = true }
 thiserror = "1.0.61"
 tracing = "0.1.40"

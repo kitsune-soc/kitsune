@@ -22,14 +22,14 @@ kitsune-language = { workspace = true }
 kitsune-type = { workspace = true }
 num-derive = "0.4.2"
 num-traits = "0.2.19"
-rustls = { version = "0.23.7", default-features = false, features = [
+rustls = { version = "0.23.8", default-features = false, features = [
     "logging",
     "ring",
     "std",
     "tls12",
 ] }
 rustls-native-certs = "0.7.0"
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.203", features = ["derive"] }
 simd-json = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { version = "1.37.0", features = ["rt"] }

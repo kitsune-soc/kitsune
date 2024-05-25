@@ -15,7 +15,7 @@ pin-project-lite = "0.2.14"
 rand = "0.8.5"
 tower = { version = "0.4.13", default-features = false }
 triomphe = { workspace = true }
-zeroize = { version = "1.7.0", features = ["derive"] }
+zeroize = { version = "1.8.1", features = ["derive"] }
 
 # `axum` feature
 async-trait = { version = "0.1.80", optional = true }
