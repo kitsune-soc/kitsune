@@ -2,6 +2,7 @@ use kitsune_wasm_mrf::{MrfModule, MrfService, Outcome};
 use mrf_manifest::{ActivitySet, ApiVersion, ManifestV1};
 use smol_str::SmolStr;
 use std::{borrow::Cow, collections::BTreeSet};
+use tempfile::NamedTempFile;
 use wasmtime::{component::Component, Config, Engine};
 
 const WASM_COMPONENT: &[u8] = include_bytes!("example_mrf.component.wasm");
@@ -22,8 +23,8 @@ fn dummy_manifest() -> ManifestV1<'static> {
 async fn basic() {
     tracing_subscriber::fmt::init();
 
-    let dir = tempfile::tempdir().unwrap();
-    let fs_backend = kitsune_wasm_mrf::kv_storage::FsBackend::from_path(dir.path()).unwrap();
+    let db_file = NamedTempFile::new().unwrap();
+    let fs_backend = kitsune_wasm_mrf::kv_storage::FsBackend::from_path(db_file.path()).unwrap();
 
     let mut config = Config::new();
     config.async_support(true).wasm_component_model(true);
