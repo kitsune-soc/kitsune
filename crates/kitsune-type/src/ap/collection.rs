@@ -1,6 +1,6 @@
 use crate::jsonld;
 use serde::{Deserialize, Serialize};
-use simd_json::OwnedValue;
+use sonic_rs::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum CollectionType {
@@ -11,7 +11,7 @@ pub enum CollectionType {
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
     #[serde(default, rename = "@context")]
-    pub context: OwnedValue,
+    pub context: Value,
     pub id: String,
     #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: CollectionType,
@@ -29,7 +29,7 @@ pub enum PageType {
 #[serde(rename_all = "camelCase")]
 pub struct CollectionPage<T> {
     #[serde(default, rename = "@context")]
-    pub context: OwnedValue,
+    pub context: Value,
     pub id: String,
     #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: PageType,

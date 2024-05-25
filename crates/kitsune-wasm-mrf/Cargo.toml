@@ -22,9 +22,9 @@ kitsune-error = { workspace = true }
 kitsune-type = { workspace = true }
 mrf-manifest = { workspace = true, features = ["decode"] }
 redb = { version = "2.1.0", features = ["logging"] }
-simd-json = { workspace = true }
 slab = "0.4.9"
 smol_str = "0.2.2"
+sonic-rs = { workspace = true }
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }

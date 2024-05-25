@@ -25,7 +25,7 @@ impl IntoResponse for Error {
         debug!(error = ?self.inner);
 
         if let Some(garde_report) = self.inner.downcast_ref::<garde::Report>() {
-            let body = match simd_json::to_string(&garde_report) {
+            let body = match sonic_rs::to_string(&garde_report) {
                 Ok(body) => body,
                 Err(error) => return Error::from(error).into_response(),
             };

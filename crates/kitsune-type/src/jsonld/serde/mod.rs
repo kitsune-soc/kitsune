@@ -431,7 +431,7 @@ mod tests {
             to: vec!["https://example.com/actors/2".to_owned()],
             cc: vec!["https://www.w3.org/ns/activitystreams#Public".to_owned()],
         };
-        assert_eq!(simd_json::from_slice(&mut object.to_owned()), Ok(expected));
+        assert_eq!(sonic_rs::from_slice::<Object>(object).unwrap(), expected);
 
         let object = br#"
         {
@@ -463,6 +463,6 @@ mod tests {
             // Absent `serde(default)` field:
             cc: vec![],
         };
-        assert_eq!(simd_json::from_slice(&mut object.to_owned()), Ok(expected));
+        assert_eq!(sonic_rs::from_slice::<Object>(object).unwrap(), expected);
     }
 }

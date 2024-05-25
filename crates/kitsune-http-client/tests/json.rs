@@ -3,7 +3,7 @@ use core::convert::Infallible;
 use http_body_util::Full;
 use hyper::{Request, Response};
 use kitsune_http_client::{Body, Client};
-use simd_json::{base::ValueAsScalar, OwnedValue};
+use sonic_rs::{JsonValueTrait, Value};
 use tower::service_fn;
 
 #[tokio::test]
@@ -28,6 +28,6 @@ async fn json_request() {
     let response = client.execute(req).await.unwrap();
     assert!(response.status().is_success());
 
-    let body: OwnedValue = response.json().await.unwrap();
+    let body: Value = response.json().await.unwrap();
     assert_eq!(body["preferredUsername"].as_str(), Some("0x0"));
 }

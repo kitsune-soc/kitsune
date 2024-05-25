@@ -105,8 +105,8 @@ garde = { version = "0.18.0", default-features = false, features = [
 ] }
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "0.12.7", features = ["sync"] }
-simd-json = "0.13.10"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
+sonic-rs = "0.3.6"
 triomphe = { version = "0.1.11", default-features = false, features = [
     "unsize",
 ] }

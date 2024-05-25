@@ -33,7 +33,7 @@ mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 serde = "1.0.203"
 sha2 = "0.10.8"
-simd-json = { workspace = true }
+sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 triomphe = { workspace = true }

@@ -76,11 +76,11 @@ async fn fetch_infinitely_long_reply_chain() {
                             cc: Vec::new(),
                         };
 
-                        let body = simd_json::to_string(&note).unwrap();
+                        let body = sonic_rs::to_string(&note).unwrap();
 
                         Ok::<_, Infallible>(build_ap_response(body))
                     } else if req.uri().path_and_query().unwrap() == Uri::try_from(&author.id).unwrap().path_and_query().unwrap() {
-                        let body = simd_json::to_string(&author).unwrap();
+                        let body = sonic_rs::to_string(&author).unwrap();
 
                         Ok::<_, Infallible>(build_ap_response(body))
                     } else {

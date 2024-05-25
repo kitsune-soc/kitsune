@@ -6,7 +6,6 @@ use axum::{
     response::{IntoResponse, Response},
     RequestExt,
 };
-use bytes::Buf;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -50,8 +49,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             }
         };
 
-        let activity: Activity =
-            simd_json::from_reader(aggregated_body.clone().reader()).map_err(Error::from)?;
+        let activity: Activity = sonic_rs::from_slice(&aggregated_body).map_err(Error::from)?;
         let Ok(str_body) = simdutf8::basic::from_utf8(&aggregated_body) else {
             debug!("Malformed body. Not UTF-8");
             return Err(StatusCode::BAD_REQUEST.into_response());
@@ -68,7 +66,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             return Err(StatusCode::BAD_REQUEST.into_response());
         };
 
-        let activity: Activity = match simd_json::from_reader(str_body.as_ref().as_bytes()) {
+        let activity: Activity = match sonic_rs::from_slice(str_body.as_ref().as_bytes()) {
             Ok(activity) => activity,
             Err(error) => {
                 debug!(?error, "Malformed activity");

@@ -11,7 +11,7 @@ fred = { workspace = true }
 kitsune-error = { workspace = true }
 moka = { workspace = true }
 serde = "1.0.203"
-simd-json = { workspace = true }
+sonic-rs = { workspace = true }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.18.2"

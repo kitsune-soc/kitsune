@@ -456,8 +456,8 @@ dependencies = [
  "once_cell",
  "rand 0.8.5",
  "serde",
- "simd-json",
  "smol_str",
+ "sonic-rs",
  "speedy-uuid",
  "thiserror",
  "tokio",
@@ -2039,6 +2039,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fc0510504f03c51ada170672ac806f1f105a88aa97a5281117e1ddc3368e51a"
 
 [[package]]
+name = "faststr"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f375fcf41ec4dac873a8028fba4210dbda5c86bba13d2d741e651b474f7c05a4"
+dependencies = [
+ "bytes",
+ "serde",
+ "simdutf8",
+]
+
+[[package]]
 name = "fd-lock"
 version = "4.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2448,16 +2459,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
-]
-
-[[package]]
-name = "halfbrown"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8588661a8607108a5ca69cab034063441a0413a0b041c13618a7dd348021ef6f"
-dependencies = [
- "hashbrown 0.14.5",
- "serde",
 ]
 
 [[package]]
@@ -3181,8 +3182,8 @@ dependencies = [
  "scoped-futures",
  "serde",
  "serde_urlencoded",
- "simd-json",
  "simdutf8",
+ "sonic-rs",
  "speedy-uuid",
  "strum",
  "tempfile",
@@ -3237,7 +3238,7 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "sha2",
- "simd-json",
+ "sonic-rs",
  "speedy-uuid",
  "tokio",
  "tower",
@@ -3256,7 +3257,7 @@ dependencies = [
  "kitsune-error",
  "moka",
  "serde",
- "simd-json",
+ "sonic-rs",
  "tokio",
  "tracing",
  "triomphe",
@@ -3273,7 +3274,7 @@ dependencies = [
  "kitsune-http-client",
  "serde",
  "serde_urlencoded",
- "simd-json",
+ "sonic-rs",
  "strum",
  "typed-builder",
 ]
@@ -3349,7 +3350,7 @@ dependencies = [
  "rustls",
  "rustls-native-certs",
  "serde",
- "simd-json",
+ "sonic-rs",
  "speedy-uuid",
  "tokio",
  "tokio-postgres",
@@ -3423,7 +3424,7 @@ dependencies = [
  "eyre",
  "garde",
  "http",
- "simd-json",
+ "sonic-rs",
  "sync_wrapper",
  "tracing",
 ]
@@ -3476,8 +3477,8 @@ dependencies = [
  "kitsune-type",
  "pin-project",
  "serde",
- "simd-json",
  "simdutf8",
+ "sonic-rs",
  "tokio",
  "tower",
  "tower-http",
@@ -3561,8 +3562,8 @@ dependencies = [
  "kitsune-util",
  "mime",
  "serde",
- "simd-json",
  "smol_str",
+ "sonic-rs",
  "speedy-uuid",
  "tracing",
  "typed-builder",
@@ -3605,7 +3606,7 @@ dependencies = [
  "once_cell",
  "openidconnect",
  "serde",
- "simd-json",
+ "sonic-rs",
  "speedy-uuid",
  "url",
 ]
@@ -3776,8 +3777,8 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "serde_test",
- "simd-json",
  "smol_str",
+ "sonic-rs",
  "speedy-uuid",
  "strum",
 ]
@@ -3822,9 +3823,9 @@ dependencies = [
  "kitsune-type",
  "mrf-manifest",
  "redb",
- "simd-json",
  "slab",
  "smol_str",
+ "sonic-rs",
  "tempfile",
  "tokio",
  "tracing",
@@ -3853,7 +3854,7 @@ dependencies = [
  "kitsune-type",
  "kitsune-util",
  "pretty_assertions",
- "simd-json",
+ "sonic-rs",
  "tokio",
  "tower",
  "tracing",
@@ -3920,70 +3921,6 @@ dependencies = [
  "tracing",
  "url",
  "webpki-roots",
-]
-
-[[package]]
-name = "lexical-core"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cde5de06e8d4c2faabc400238f9ae1c74d5412d03a7bd067645ccbc47070e46"
-dependencies = [
- "lexical-parse-float",
- "lexical-parse-integer",
- "lexical-util",
- "lexical-write-float",
- "lexical-write-integer",
-]
-
-[[package]]
-name = "lexical-parse-float"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683b3a5ebd0130b8fb52ba0bdc718cc56815b6a097e28ae5a6997d0ad17dc05f"
-dependencies = [
- "lexical-parse-integer",
- "lexical-util",
- "static_assertions",
-]
-
-[[package]]
-name = "lexical-parse-integer"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d0994485ed0c312f6d965766754ea177d07f9c00c9b82a5ee62ed5b47945ee9"
-dependencies = [
- "lexical-util",
- "static_assertions",
-]
-
-[[package]]
-name = "lexical-util"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5255b9ff16ff898710eb9eb63cb39248ea8a5bb036bea8085b1a767ff6c4e3fc"
-dependencies = [
- "static_assertions",
-]
-
-[[package]]
-name = "lexical-write-float"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accabaa1c4581f05a3923d1b4cfd124c329352288b7b9da09e766b0668116862"
-dependencies = [
- "lexical-util",
- "lexical-write-integer",
- "static_assertions",
-]
-
-[[package]]
-name = "lexical-write-integer"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1b6f3d1f4422866b68192d62f77bc5c700bee84f3069f2469d7bc8c77852446"
-dependencies = [
- "lexical-util",
- "static_assertions",
 ]
 
 [[package]]
@@ -4871,6 +4808,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "page_size"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d5b2194ed13191c1999ae0704b7839fb18384fa22e49b57eeaa97d79ce40da"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5592,26 +5539,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "469052894dcb553421e483e4209ee581a45100d31b4018de03e5a7ad86374a7e"
 dependencies = [
  "bitflags 2.5.0",
-]
-
-[[package]]
-name = "ref-cast"
-version = "1.0.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccf0a6f84d5f1d581da8b41b47ec8600871962f2a528115b542b362d4b744931"
-dependencies = [
- "ref-cast-impl",
-]
-
-[[package]]
-name = "ref-cast-impl"
-version = "1.0.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcc303e793d3734489387d205e9b186fac9c6cfacedd98cbb2e8a5943595f3e6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.66",
 ]
 
 [[package]]
@@ -6372,22 +6299,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simd-json"
-version = "0.13.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "570c430b3d902ea083097e853263ae782dfe40857d93db019a12356c8e8143fa"
-dependencies = [
- "getrandom 0.2.15",
- "halfbrown",
- "lexical-core",
- "ref-cast",
- "serde",
- "serde_json",
- "simdutf8",
- "value-trait",
-]
-
-[[package]]
 name = "simdutf8"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6452,6 +6363,27 @@ checksum = "ce305eb0b4296696835b71df73eb912e0f1ffd2556a501fcede6e0c50349191c"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "sonic-rs"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "244d3cdf9dd4e2a5c63991a6ed4ecd768959204d5e4a839181ee997e8c149407"
+dependencies = [
+ "arrayref",
+ "bumpalo",
+ "bytes",
+ "cfg-if",
+ "faststr",
+ "itoa 1.0.11",
+ "page_size",
+ "parking_lot",
+ "ryu",
+ "serde",
+ "simdutf8",
+ "smallvec",
+ "thiserror",
 ]
 
 [[package]]
@@ -7572,18 +7504,6 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
-
-[[package]]
-name = "value-trait"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad8db98c1e677797df21ba03fca7d3bf9bec3ca38db930954e4fe6e1ea27eb4"
-dependencies = [
- "float-cmp",
- "halfbrown",
- "itoa 1.0.11",
- "ryu",
-]
 
 [[package]]
 name = "vergen"

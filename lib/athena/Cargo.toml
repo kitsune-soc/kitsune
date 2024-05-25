@@ -20,8 +20,8 @@ just-retry = { workspace = true }
 once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.203", features = ["derive"] }
-simd-json = { workspace = true, optional = true }
 smol_str = "0.2.2"
+sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
 thiserror = "1.0.61"
 tokio = { version = "1.37.0", features = ["macros", "rt", "sync"] }
@@ -33,7 +33,7 @@ typetag = "0.2.16"
 unsize = "1.1.0"
 
 [features]
-redis = ["dep:either", "dep:fred", "dep:once_cell", "dep:rand", "dep:simd-json"]
+redis = ["dep:either", "dep:fred", "dep:once_cell", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
 kitsune-test = { workspace = true }

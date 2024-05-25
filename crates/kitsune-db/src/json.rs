@@ -53,7 +53,7 @@ where
         if bytes[0] != 1 {
             return Err(JsonError("Unsupported JSONB encoding version").into());
         }
-        Ok(simd_json::from_reader(&bytes[1..])?)
+        Ok(sonic_rs::from_slice(&bytes[1..])?)
     }
 }
 
@@ -63,8 +63,12 @@ where
 {
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(&[1])?;
-        simd_json::to_writer(out, self)
-            .map(|()| IsNull::No)
-            .map_err(Into::into)
+
+        // TODO: Intermediate buffering for now. Remove once sonic-rs gets the ability to skip this
+        // See: <https://github.com/cloudwego/sonic-rs/issues/54>
+        let vec = sonic_rs::to_vec(self)?;
+        out.write_all(&vec)?;
+
+        Ok(IsNull::No)
     }
 }

@@ -49,9 +49,8 @@ mod test {
 
     #[test]
     fn deserialise_gargron() {
-        let mut webfinger_resource = GARGRON_WEBFINGER_RESOURCE.to_vec();
-        let deserialised: Resource =
-            simd_json::from_slice(&mut webfinger_resource).expect("Failed to deserialise resource");
+        let deserialised: Resource = sonic_rs::from_slice(GARGRON_WEBFINGER_RESOURCE)
+            .expect("Failed to deserialise resource");
 
         assert_eq!(deserialised.subject, "acct:Gargron@mastodon.social");
         assert_eq!(

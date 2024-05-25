@@ -34,7 +34,7 @@ impl CaptchaBackend for Captcha {
             .token(token.to_string())
             .key(self.site_key.to_string())
             .build();
-        let body = simd_json::to_string(&body)?;
+        let body = sonic_rs::to_string(&body)?;
 
         let request = Request::post(self.verify_url.clone())
             .header("Content-Type", "application/json")

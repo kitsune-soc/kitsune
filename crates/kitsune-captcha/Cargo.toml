@@ -12,7 +12,7 @@ kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-simd-json = { workspace = true }
+sonic-rs = { workspace = true }
 strum = { version = "0.26.2", features = ["derive"] }
 typed-builder = "0.18.2"
 

@@ -2,7 +2,7 @@ use self::{actor::Actor, object::MediaAttachment};
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use simd_json::{json, OwnedValue};
+use sonic_rs::{json, Value};
 use strum::AsRefStr;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
@@ -16,7 +16,7 @@ pub mod object;
 pub use self::helper::Privacy;
 
 #[must_use]
-pub fn ap_context() -> OwnedValue {
+pub fn ap_context() -> Value {
     json!([
         "https://www.w3.org/ns/activitystreams",
         "https://w3id.org/security/v1",
@@ -105,7 +105,7 @@ impl ObjectField {
 #[serde(rename_all = "camelCase")]
 pub struct Activity {
     #[serde(default, rename = "@context")]
-    pub context: OwnedValue,
+    pub context: Value,
     pub id: String,
     #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: ActivityType,
@@ -148,7 +148,7 @@ pub enum ObjectType {
 #[serde(rename_all = "camelCase")]
 pub struct Object {
     #[serde(default, rename = "@context")]
-    pub context: OwnedValue,
+    pub context: Value,
     pub id: String,
     #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
     pub r#type: ObjectType,

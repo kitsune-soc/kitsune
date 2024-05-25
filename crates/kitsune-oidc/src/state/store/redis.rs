@@ -24,13 +24,11 @@ impl Redis {
 impl Store for Redis {
     async fn get_and_remove(&self, key: &str) -> Result<LoginState> {
         let raw_value: String = self.pool.getdel(Self::format_key(key)).await?;
-
-        let mut raw_value = raw_value.into_bytes();
-        Ok(simd_json::from_slice(&mut raw_value)?)
+        Ok(sonic_rs::from_slice(raw_value.as_bytes())?)
     }
 
     async fn set(&self, key: &str, value: LoginState) -> Result<()> {
-        let raw_value = simd_json::to_string(&value)?;
+        let raw_value = sonic_rs::to_string(&value)?;
         self.pool
             .set(Self::format_key(key), raw_value, None, None, false)
             .await?;
