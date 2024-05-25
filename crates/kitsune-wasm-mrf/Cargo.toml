@@ -21,9 +21,9 @@ kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-type = { workspace = true }
 mrf-manifest = { workspace = true, features = ["decode"] }
+redb = { version = "2.1.0", features = ["logging"] }
 simd-json = { workspace = true }
 slab = "0.4.9"
-sled = "0.34.7"
 smol_str = "0.2.2"
 tokio = { version = "1.37.0", features = ["fs"] }
 tracing = "0.1.40"

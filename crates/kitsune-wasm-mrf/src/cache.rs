@@ -2,8 +2,11 @@ use color_eyre::eyre::{self, Result};
 use std::path::Path;
 use wasmtime::component::Component;
 
+const CACHE_TABLE: redb::TableDefinition<'static, [u8; blake3::OUT_LEN], &'static [u8]> =
+    redb::TableDefinition::new("wasm_cache");
+
 pub struct Cache {
-    inner: sled::Db,
+    inner: redb::Database,
 }
 
 impl Cache {
@@ -12,9 +15,12 @@ impl Cache {
     where
         P: AsRef<Path>,
     {
-        Ok(Self {
-            inner: sled::open(path)?,
-        })
+        let database = redb::Database::create(path)?;
+        let transaction = database.begin_write()?;
+        transaction.open_table(CACHE_TABLE)?;
+        transaction.commit()?;
+
+        Ok(Self { inner: database })
     }
 
     #[inline]
@@ -24,8 +30,11 @@ impl Cache {
         engine: &wasmtime::Engine,
         component_src: &[u8],
     ) -> Result<Option<Component>> {
+        let transaction = self.inner.begin_read()?;
+        let table = transaction.open_table(CACHE_TABLE)?;
+
         let hash = blake3::hash(component_src);
-        let Some(precompiled) = self.inner.get(hash.as_bytes())? else {
+        let Some(precompiled) = table.get(hash.as_bytes())? else {
             return Ok(None);
         };
 
@@ -35,21 +44,31 @@ impl Cache {
         //         But since we source our cache from disk, we can assume that the files are fine. If they aren't, the user has tempered with them or they were otherwise corrupted.
         //         If that's the case the user has bigger issues than a little memory unsafety here. And it's also nothing we can really protect against.
         #[allow(unsafe_code)]
-        Ok(unsafe { Component::deserialize(engine, precompiled).ok() })
+        Ok(unsafe { Component::deserialize(engine, precompiled.value()).ok() })
     }
 
     #[inline]
     #[instrument(skip_all)]
     pub fn store(&self, component_src: &[u8], component: &Component) -> Result<()> {
         let hash = blake3::hash(component_src);
-        self.inner.insert(
-            hash.as_bytes(),
-            component.serialize().map_err(eyre::Report::msg)?,
-        )?;
+        let serialized_component = component.serialize().map_err(eyre::Report::msg)?;
+
+        let transaction = self.inner.begin_write()?;
+        {
+            let mut table = transaction.open_table(CACHE_TABLE)?;
+            table.insert(hash.as_bytes(), serialized_component.as_slice())?;
+        }
+        transaction.commit()?;
 
         debug!(hash = %hash.to_hex(), "stored component in cache");
 
         Ok(())
+    }
+}
+
+impl Drop for Cache {
+    fn drop(&mut self) {
+        self.inner.compact().expect("Failed to compact database");
     }
 }
 

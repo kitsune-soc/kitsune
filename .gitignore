@@ -21,6 +21,7 @@ target-analyzer
 # MRF directory
 /mrf-modules
 /mrf-storage
+/mrf-cache
 
 # Devenv stuff
 /result
