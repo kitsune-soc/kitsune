@@ -7230,7 +7230,7 @@ dependencies = [
 [[package]]
 name = "tracing-opentelemetry"
 version = "0.23.0"
-source = "git+https://github.com/aumetra/tracing-opentelemetry.git?branch=v0.1.x-http1#e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1"
+source = "git+https://github.com/aumetra/tracing-opentelemetry.git?rev=e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1#e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1"
 dependencies = [
  "js-sys",
  "once_cell",
