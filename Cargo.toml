@@ -190,17 +190,17 @@ license = "AGPL-3.0-or-later"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.13.2"
+cargo-dist-version = "0.14.1"
 # CI backends to support
-ci = ["github"]
+ci = "github"
 # The installers to generate for each app
-installers = ["powershell", "shell"]
+installers = ["shell", "powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = [
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
+    "x86_64-unknown-linux-musl",
     "x86_64-pc-windows-msvc",
-    "x86_64-unknown-linux-gnu",
 ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
