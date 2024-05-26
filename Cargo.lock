@@ -6368,7 +6368,7 @@ dependencies = [
 [[package]]
 name = "sonic-rs"
 version = "0.3.6"
-source = "git+https://github.com/cloudwego/sonic-rs.git?rev=8808ec64ce198a65b525cba07306aef499862777#8808ec64ce198a65b525cba07306aef499862777"
+source = "git+https://github.com/cloudwego/sonic-rs.git?rev=d1f172d75e7c9386fde169673d2666e0cfd5d32c#d1f172d75e7c9386fde169673d2666e0cfd5d32c"
 dependencies = [
  "arrayref",
  "bumpalo",

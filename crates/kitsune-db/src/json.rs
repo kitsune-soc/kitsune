@@ -7,6 +7,7 @@ use diesel::{
     AsExpression, FromSqlRow,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use sonic_rs::writer::BufferedWriter;
 use std::{
     error::Error,
     fmt::{self, Debug},
@@ -48,6 +49,7 @@ impl<T> FromSql<Jsonb, Pg> for Json<T>
 where
     T: DeserializeOwned,
 {
+    #[inline]
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let bytes = bytes.as_bytes();
         if bytes[0] != 1 {
@@ -61,14 +63,11 @@ impl<T> ToSql<Jsonb, Pg> for Json<T>
 where
     T: Debug + Serialize,
 {
+    #[inline]
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(&[1])?;
-
-        // TODO: Intermediate buffering for now. Remove once sonic-rs gets the ability to skip this
-        // See: <https://github.com/cloudwego/sonic-rs/issues/54>
-        let vec = sonic_rs::to_vec(self)?;
-        out.write_all(&vec)?;
-
-        Ok(IsNull::No)
+        sonic_rs::to_writer(BufferedWriter::new(out), self)
+            .map(|()| IsNull::No)
+            .map_err(Into::into)
     }
 }

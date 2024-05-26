@@ -213,7 +213,7 @@ scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
 # SIMD runtime detection
-sonic-rs = { git = "https://github.com/cloudwego/sonic-rs.git", rev = "8808ec64ce198a65b525cba07306aef499862777" }
+sonic-rs = { git = "https://github.com/cloudwego/sonic-rs.git", rev = "d1f172d75e7c9386fde169673d2666e0cfd5d32c" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
