@@ -1,9 +1,12 @@
 use super::{Backend, BucketBackend};
 use color_eyre::eyre;
 use std::path::Path;
+use triomphe::Arc;
+
+type TableDefinition<'a> = redb::TableDefinition<'a, &'static str, &'static [u8]>;
 
 pub struct FsBackend {
-    inner: sled::Db,
+    inner: Arc<redb::Database>,
 }
 
 impl FsBackend {
@@ -12,7 +15,7 @@ impl FsBackend {
         P: AsRef<Path>,
     {
         Ok(Self {
-            inner: sled::open(path)?,
+            inner: Arc::new(redb::Database::create(path)?),
         })
     }
 }
@@ -21,36 +24,63 @@ impl Backend for FsBackend {
     type Bucket = FsBucketBackend;
 
     async fn open(&self, module_name: &str, name: &str) -> eyre::Result<Self::Bucket> {
-        self.inner
-            .open_tree(format!("{module_name}:{name}"))
-            .map(|tree| FsBucketBackend { inner: tree })
-            .map_err(Into::into)
+        let table_name = format!("{module_name}:{name}");
+        let transaction = self.inner.begin_write()?;
+        transaction.open_table(TableDefinition::new(&table_name))?;
+        transaction.commit()?;
+
+        Ok(FsBucketBackend {
+            inner: self.inner.clone(),
+            table_name,
+        })
     }
 }
 
 pub struct FsBucketBackend {
-    inner: sled::Tree,
+    inner: Arc<redb::Database>,
+    table_name: String,
 }
 
 impl BucketBackend for FsBucketBackend {
     async fn exists(&self, key: &str) -> eyre::Result<bool> {
-        self.inner.contains_key(key).map_err(Into::into)
+        let transaction = self.inner.begin_read()?;
+        let table = transaction.open_table(TableDefinition::new(&self.table_name))?;
+
+        match table.get(key) {
+            Ok(val) => Ok(val.is_some()),
+            Err(err) => Err(err.into()),
+        }
     }
 
     async fn delete(&self, key: &str) -> eyre::Result<()> {
-        self.inner.remove(key)?;
+        let transaction = self.inner.begin_write()?;
+        {
+            let mut table = transaction.open_table(TableDefinition::new(&self.table_name))?;
+            table.remove(key)?;
+        }
+        transaction.commit()?;
+
         Ok(())
     }
 
     async fn get(&self, key: &str) -> eyre::Result<Option<Vec<u8>>> {
-        self.inner
+        let transaction = self.inner.begin_read()?;
+        let table = transaction.open_table(TableDefinition::new(&self.table_name))?;
+
+        table
             .get(key)
-            .map(|maybe_val| maybe_val.map(|val| val.to_vec()))
+            .map(|maybe_val| maybe_val.map(|val| val.value().to_vec()))
             .map_err(Into::into)
     }
 
     async fn set(&self, key: &str, value: &[u8]) -> eyre::Result<()> {
-        self.inner.insert(key, value)?;
+        let transaction = self.inner.begin_write()?;
+        {
+            let mut table = transaction.open_table(TableDefinition::new(&self.table_name))?;
+            table.insert(key, value)?;
+        }
+        transaction.commit()?;
+
         Ok(())
     }
 }

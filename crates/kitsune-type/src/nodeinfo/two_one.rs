@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use simd_json::OwnedValue;
+use sonic_rs::Value;
 
 #[derive(Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -114,7 +114,7 @@ pub struct TwoOne {
     pub services: Services,
     pub open_registrations: bool,
     pub usage: Usage,
-    pub metadata: OwnedValue,
+    pub metadata: Value,
 }
 
 #[cfg(test)]
@@ -125,8 +125,8 @@ mod test {
 
     #[test]
     fn deserialize_akkoma_nodeinfo() {
-        let mut raw = include_bytes!("../../tests/nodeinfo_2.1.json").to_vec();
-        let two_one: TwoOne = simd_json::from_slice(&mut raw).unwrap();
+        let raw = include_bytes!("../../tests/nodeinfo_2.1.json");
+        let two_one: TwoOne = sonic_rs::from_slice(raw).unwrap();
 
         assert_str_eq!(two_one.software.name, "akkoma");
         assert_eq!(two_one.protocols, [Protocol::ActivityPub]);

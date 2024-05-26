@@ -1,7 +1,7 @@
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
 use axum::{body::Body, extract::FromRequest, response::Response};
-use bytes::{Buf, BufMut, Bytes, BytesMut};
+use bytes::{BufMut, Bytes, BytesMut};
 use http::{header, HeaderMap, HeaderValue, Request, StatusCode};
 use serde::{de::DeserializeOwned, Serialize};
 use std::ops::{Deref, DerefMut};
@@ -24,7 +24,7 @@ where
                 .await
                 .map_err(IntoResponse::into_response)?;
 
-            let value = match simd_json::from_reader(bytes.reader()) {
+            let value = match sonic_rs::from_slice(&bytes) {
                 Ok(value) => value,
                 Err(error) => {
                     debug!(?error, "Failed to parse JSON payload");
@@ -86,7 +86,7 @@ where
         // Use a small initial capacity of 128 bytes like serde_json::to_vec
         // https://docs.rs/serde_json/1.0.82/src/serde_json/ser.rs.html#2189
         let mut buf = BytesMut::with_capacity(128).writer();
-        match simd_json::to_writer(&mut buf, &self.0) {
+        match sonic_rs::to_writer(&mut buf, &self.0) {
             Ok(()) => (
                 [(
                     header::CONTENT_TYPE,

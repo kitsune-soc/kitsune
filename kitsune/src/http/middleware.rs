@@ -4,11 +4,10 @@ use axum::{
     response::{IntoResponse, Response},
     RequestExt,
 };
-use bytes::Buf;
 use headers::{ContentType, HeaderMapExt};
 use http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use simd_json::OwnedValue;
+use sonic_rs::Value;
 
 /// Some clients send their OAuth credentials as JSON payloads. This against the OAuth2 RFC but alas, we want high compatibility with Mastodon clients
 ///
@@ -23,7 +22,7 @@ pub async fn json_to_urlencoded(req: Request<Body>, next: Next) -> Response {
     let json_value = match body
         .collect()
         .await
-        .map(|bytes| simd_json::from_reader::<_, OwnedValue>(bytes.aggregate().reader()))
+        .map(|bytes| sonic_rs::from_slice::<Value>(&bytes.to_bytes()))
     {
         Ok(Ok(value)) => value,
         Ok(Err(error)) => {

@@ -12,10 +12,10 @@ use triomphe::Arc;
 
 #[tokio::test]
 async fn follow_jrd_redirect() {
-    let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-    let body = simd_json::to_string(&Resource {
+    let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+    let body = sonic_rs::to_string(&Resource {
         subject: "acct:0x0@joinkitsune.org".into(),
-        ..simd_json::from_slice(&mut base).unwrap()
+        ..sonic_rs::from_slice(base).unwrap()
     })
     .unwrap();
 
@@ -60,10 +60,10 @@ async fn reject_fake_jrd_redirect() {
             req.uri().path_and_query().unwrap().as_str(),
         ) {
             ("corteximplant.com", "/.well-known/webfinger?resource=acct:0x0@corteximplant.com") => {
-                let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-                let body = simd_json::to_string(&Resource {
+                let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+                let body = sonic_rs::to_string(&Resource {
                     subject: "acct:0x0@whitehouse.gov".into(),
-                    ..simd_json::from_slice(&mut base).unwrap()
+                    ..sonic_rs::from_slice(base).unwrap()
                 })
                 .unwrap();
                 Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))
@@ -106,10 +106,10 @@ async fn reject_unbounded_number_of_jrd_redirects() {
             );
         };
         assert!(count <= MAX_JRD_REDIRECTS);
-        let mut base = include_bytes!("../../../test-fixtures/0x0_jrd.json").to_owned();
-        let body = simd_json::to_string(&Resource {
+        let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+        let body = sonic_rs::to_string(&Resource {
             subject: format!("acct:0x{:x}@corteximplant.com", count + 1),
-            ..simd_json::from_slice(&mut base).unwrap()
+            ..sonic_rs::from_slice(base).unwrap()
         })
         .unwrap();
         Ok::<_, Infallible>(Response::new(Full::new(Bytes::from(body))))

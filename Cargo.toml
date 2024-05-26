@@ -105,8 +105,8 @@ garde = { version = "0.18.0", default-features = false, features = [
 ] }
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "0.12.7", features = ["sync"] }
-simd-json = "0.13.10"
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
+sonic-rs = "0.3.6"
 triomphe = { version = "0.1.11", default-features = false, features = [
     "unsize",
 ] }
@@ -146,7 +146,7 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
-blowocking = { path = "lib/blowocking" }
+blowocking = { path = "lib/blowocking", default-features = false }
 cursiv = { path = "lib/cursiv" }
 geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
@@ -212,6 +212,9 @@ diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "d0
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
+# SIMD runtime detection
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "d1f172d75e7c9386fde169673d2666e0cfd5d32c" }
+
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
 axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
@@ -221,5 +224,5 @@ opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.gi
 opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
 opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
 opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-tonic = { git = "https://github.com/hyperium/tonic.git", rev = "9b306af386528f11dbd022bc372d367adc4e96b5" }
-tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", branch = "v0.1.x-http1" }
+tonic = { git = "https://github.com/hyperium/tonic.git", rev = "a90adf27ef389a9c9d891c3f5696e6245589c479" }
+tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", rev = "e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1" }

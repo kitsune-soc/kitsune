@@ -30,7 +30,7 @@ use std::fmt::Write;
 use typed_builder::TypedBuilder;
 use zxcvbn::zxcvbn;
 
-const MIN_PASSWORD_STRENGTH: u8 = 3;
+const MIN_PASSWORD_STRENGTH: zxcvbn::Score = zxcvbn::Score::Three;
 
 #[inline]
 fn conditional_ascii_check(value: &str, ctx: &RegisterContext) -> garde::Result {
@@ -46,10 +46,7 @@ fn is_strong_password<T>(value: &Option<String>, _context: &T) -> garde::Result 
         return Ok(());
     };
 
-    let Ok(entropy) = zxcvbn(value, &[]) else {
-        return Err(garde::Error::new("Password strength validation failed"));
-    };
-
+    let entropy = zxcvbn(value, &[]);
     if entropy.score() < MIN_PASSWORD_STRENGTH {
         let feedback_str = entropy.feedback().as_ref().map_or_else(
             || "Password too weak".into(),

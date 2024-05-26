@@ -20,7 +20,7 @@ path = "bin/parse_header.rs"
 [dependencies]
 atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
-blowocking = { workspace = true, default-features = false, optional = true }
+blowocking = { workspace = true, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
 derive_builder = "0.20.0"
 http = "1.1.0"

@@ -288,7 +288,7 @@ impl MrfService {
 
     #[inline]
     pub async fn handle_outgoing(&self, activity: &Activity) -> Result<Outcome<'static>, Error> {
-        let serialised = simd_json::to_string(activity)?;
+        let serialised = sonic_rs::to_string(activity)?;
         let outcome = self
             .handle(Direction::Outgoing, activity.r#type.as_ref(), &serialised)
             .await?;

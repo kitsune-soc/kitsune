@@ -354,7 +354,7 @@ impl Response {
         T: DeserializeOwned,
     {
         let bytes = self.bytes().await?;
-        simd_json::from_reader(bytes.reader()).map_err(Error::new)
+        sonic_rs::from_slice(&bytes).map_err(Error::new)
     }
 
     /// Read the body and deserialise it as JSON-LD node and verify the returned node's `@id`

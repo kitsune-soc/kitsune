@@ -13,7 +13,7 @@ use kitsune_type::nodeinfo::two_one::{
     Protocol, Services, Software, TwoOne, Usage, UsageUsers, Version,
 };
 use kitsune_util::try_join;
-use simd_json::{OwnedValue, ValueBuilder};
+use sonic_rs::Value;
 
 #[debug_handler(state = crate::state::Zustand)]
 async fn get(
@@ -53,7 +53,7 @@ async fn get(
             local_comments: None,
             local_posts: local_posts as u64,
         },
-        metadata: OwnedValue::null(),
+        metadata: Value::new(),
     }))
 }
 

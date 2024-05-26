@@ -10,8 +10,8 @@ enum_dispatch = "0.3.13"
 fred = { workspace = true }
 kitsune-error = { workspace = true }
 moka = { workspace = true }
-serde = "1.0.202"
-simd-json = { workspace = true }
+serde = "1.0.203"
+sonic-rs = { workspace = true }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.18.2"

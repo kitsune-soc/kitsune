@@ -9,7 +9,7 @@ use kitsune_error::Result;
 use kitsune_service::attachment::AttachmentService;
 use kitsune_url::UrlService;
 use serde::Deserialize;
-use simd_json::OwnedValue;
+use sonic_rs::Value;
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -24,7 +24,7 @@ pub struct MastodonMapper {
     attachment_service: AttachmentService,
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
-    mastodon_cache: ArcCache<Uuid, OwnedValue>,
+    mastodon_cache: ArcCache<Uuid, Value>,
     url_service: UrlService,
 }
 
@@ -57,6 +57,7 @@ impl MastodonMapper {
                 .mastodon_cache
                 .get(&id)
                 .await?
+                .as_ref()
                 .map(<T::Output as Deserialize>::deserialize)
             {
                 Some(Ok(entity)) => return Ok(entity),
@@ -67,7 +68,7 @@ impl MastodonMapper {
 
         let entity = input.into_mastodon(self.mapper_state()).await?;
         if let Some(id) = input_id {
-            let entity = simd_json::serde::to_owned_value(&entity).unwrap();
+            let entity = sonic_rs::to_value(&entity).unwrap();
             self.mastodon_cache.set(&id, &entity).await?;
         }
 

@@ -112,7 +112,7 @@ where
                     None,
                     true,
                     false,
-                    (score, simd_json::to_string(job_meta)?),
+                    (score, sonic_rs::to_string(job_meta)?),
                 )
                 .await?;
         } else {

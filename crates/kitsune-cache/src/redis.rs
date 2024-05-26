@@ -65,8 +65,7 @@ where
 
         debug!(%key, "Fetching cache entry");
         if let Some(serialised) = self.redis_conn.get::<Option<String>, _>(&key).await? {
-            let mut serialised_bytes = serialised.into_bytes();
-            let deserialised = simd_json::from_slice(&mut serialised_bytes)?;
+            let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
             Ok(Some(deserialised))
         } else {
             Ok(None)
@@ -76,7 +75,7 @@ where
     #[instrument(skip_all, fields(%key))]
     async fn set(&self, key: &K, value: &V) -> Result<()> {
         let key = self.compute_key(key);
-        let serialised = simd_json::to_string(value)?;
+        let serialised = sonic_rs::to_string(value)?;
 
         debug!(%key, ttl = ?self.ttl, "Setting cache entry");
         self.redis_conn

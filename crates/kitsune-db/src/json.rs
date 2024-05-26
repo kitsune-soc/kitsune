@@ -7,6 +7,7 @@ use diesel::{
     AsExpression, FromSqlRow,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use sonic_rs::writer::BufferedWriter;
 use std::{
     error::Error,
     fmt::{self, Debug},
@@ -48,12 +49,13 @@ impl<T> FromSql<Jsonb, Pg> for Json<T>
 where
     T: DeserializeOwned,
 {
+    #[inline]
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let bytes = bytes.as_bytes();
         if bytes[0] != 1 {
             return Err(JsonError("Unsupported JSONB encoding version").into());
         }
-        Ok(simd_json::from_reader(&bytes[1..])?)
+        Ok(sonic_rs::from_slice(&bytes[1..])?)
     }
 }
 
@@ -61,9 +63,10 @@ impl<T> ToSql<Jsonb, Pg> for Json<T>
 where
     T: Debug + Serialize,
 {
+    #[inline]
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
         out.write_all(&[1])?;
-        simd_json::to_writer(out, self)
+        sonic_rs::to_writer(BufferedWriter::new(out), self)
             .map(|()| IsNull::No)
             .map_err(Into::into)
     }

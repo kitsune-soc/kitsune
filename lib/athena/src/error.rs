@@ -15,7 +15,7 @@ pub enum Error {
 
     #[cfg(feature = "redis")]
     #[error(transparent)]
-    SimdJson(#[from] simd_json::Error),
+    SonicRs(#[from] sonic_rs::Error),
 
     #[error(transparent)]
     Uuid(#[from] speedy_uuid::Error),

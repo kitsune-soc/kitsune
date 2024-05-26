@@ -19,9 +19,9 @@ kitsune-type = { workspace = true }
 kitsune-url = { workspace = true }
 kitsune-util = { workspace = true }
 mime = "0.3.17"
-serde = "1.0.202"
-simd-json = { workspace = true }
+serde = "1.0.203"
 smol_str = "0.2.2"
+sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 typed-builder = "0.18.2"

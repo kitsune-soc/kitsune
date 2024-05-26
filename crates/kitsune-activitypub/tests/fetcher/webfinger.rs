@@ -19,10 +19,10 @@ use triomphe::Arc;
 #[tokio::test]
 async fn fetch_actor_with_custom_acct() {
     database_test(|db_pool| async move {
-        let mut jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json").to_owned();
-        let jrd_body = simd_json::to_string(&Resource {
+        let jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json");
+        let jrd_body = sonic_rs::to_string(&Resource {
             subject: "acct:0x0@joinkitsune.org".into(),
-            ..simd_json::from_slice(&mut jrd_base).unwrap()
+            ..sonic_rs::from_slice(jrd_base).unwrap()
         })
         .unwrap();
         let client = service_fn(move |req: Request<_>| {
@@ -108,14 +108,14 @@ async fn ignore_fake_webfinger_acct() {
                             }],
                             ..jrd
                         };
-                        let body = simd_json::to_string(&fake_jrd).unwrap();
+                        let body = sonic_rs::to_string(&fake_jrd).unwrap();
                         Ok::<_, Infallible>(Response::new(Full::from(body)))
                     }
                     (
                         "whitehouse.gov",
                         "/.well-known/webfinger?resource=acct:POTUS@whitehouse.gov",
                     ) => {
-                        let body = simd_json::to_string(&jrd).unwrap();
+                        let body = sonic_rs::to_string(&jrd).unwrap();
                         Ok(Response::new(Full::from(body)))
                     }
                     _ => handle(req).await,
