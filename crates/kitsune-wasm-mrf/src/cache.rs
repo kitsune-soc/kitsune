@@ -75,12 +75,13 @@ impl Drop for Cache {
 #[cfg(test)]
 mod test {
     use super::Cache;
+    use tempfile::NamedTempFile;
     use wasmtime::component::Component;
 
     #[test]
     fn roundtrip() {
-        let tempdir = tempfile::tempdir().unwrap();
-        let cache = Cache::open(tempdir.path()).unwrap();
+        let db_file = NamedTempFile::new().unwrap();
+        let cache = Cache::open(db_file.path()).unwrap();
 
         let mut config = wasmtime::Config::new();
         config.wasm_component_model(true);

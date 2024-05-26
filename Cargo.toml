@@ -146,7 +146,7 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
-blowocking = { path = "lib/blowocking" }
+blowocking = { path = "lib/blowocking", default-features = false }
 cursiv = { path = "lib/cursiv" }
 geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
