@@ -213,7 +213,7 @@ scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
 # SIMD runtime detection
-sonic-rs = { git = "https://github.com/cloudwego/sonic-rs.git", rev = "d1f172d75e7c9386fde169673d2666e0cfd5d32c" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "d1f172d75e7c9386fde169673d2666e0cfd5d32c" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
@@ -224,5 +224,5 @@ opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.gi
 opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
 opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
 opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-tonic = { git = "https://github.com/hyperium/tonic.git", rev = "9b306af386528f11dbd022bc372d367adc4e96b5" }
+tonic = { git = "https://github.com/hyperium/tonic.git", rev = "a90adf27ef389a9c9d891c3f5696e6245589c479" }
 tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", rev = "e6e16057f6e3b2a11f6f8e7c86a1c17e4f7a07f1" }

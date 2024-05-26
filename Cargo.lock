@@ -6368,7 +6368,7 @@ dependencies = [
 [[package]]
 name = "sonic-rs"
 version = "0.3.6"
-source = "git+https://github.com/cloudwego/sonic-rs.git?rev=d1f172d75e7c9386fde169673d2666e0cfd5d32c#d1f172d75e7c9386fde169673d2666e0cfd5d32c"
+source = "git+https://github.com/aumetra/sonic-rs.git?rev=d1f172d75e7c9386fde169673d2666e0cfd5d32c#d1f172d75e7c9386fde169673d2666e0cfd5d32c"
 dependencies = [
  "arrayref",
  "bumpalo",
@@ -7020,12 +7020,12 @@ dependencies = [
 [[package]]
 name = "tonic"
 version = "0.11.0"
-source = "git+https://github.com/hyperium/tonic.git?rev=9b306af386528f11dbd022bc372d367adc4e96b5#9b306af386528f11dbd022bc372d367adc4e96b5"
+source = "git+https://github.com/hyperium/tonic.git?rev=a90adf27ef389a9c9d891c3f5696e6245589c479#a90adf27ef389a9c9d891c3f5696e6245589c479"
 dependencies = [
  "async-stream",
  "async-trait",
  "axum",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bytes",
  "h2",
  "http",
@@ -7037,7 +7037,6 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "prost",
- "rustls",
  "rustls-native-certs",
  "rustls-pemfile",
  "socket2",
