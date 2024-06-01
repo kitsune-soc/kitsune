@@ -275,7 +275,6 @@ CREATE TABLE media_attachments
     account_id   UUID,
     content_type TEXT        NOT NULL,
     description  TEXT,
-    blurhash     TEXT,
     file_path    TEXT,
     remote_url   TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
