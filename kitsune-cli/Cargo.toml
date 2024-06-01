@@ -24,7 +24,7 @@ kitsune-db = { workspace = true }
 kitsune-error = { workspace = true }
 serde = { version = "1.0.203", features = ["derive"] }
 speedy-uuid = { workspace = true }
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.38.0", features = ["full"] }
 tracing-subscriber = "0.3.18"
 
 [build-dependencies]

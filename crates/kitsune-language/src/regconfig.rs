@@ -1,8 +1,7 @@
 use crate::supported_languages;
-use diesel::{deserialize, pg::Pg, row::NamedRow, QueryableByName};
+use diesel::{deserialize, pg::Pg, row::NamedRow, sql_types, QueryableByName};
 use diesel_async::{AsyncConnection, RunQueryDsl};
-use std::collections::HashSet;
-use std::fmt::Write;
+use std::{collections::HashSet, fmt::Write};
 
 #[derive(Debug)]
 struct PgCatalogResult {
@@ -12,7 +11,7 @@ struct PgCatalogResult {
 impl QueryableByName<Pg> for PgCatalogResult {
     fn build<'a>(row: &impl NamedRow<'a, Pg>) -> deserialize::Result<Self> {
         Ok(Self {
-            cfgname: NamedRow::get(row, "cfgname")?,
+            cfgname: NamedRow::get::<sql_types::Text, _>(row, "cfgname")?,
         })
     }
 }
