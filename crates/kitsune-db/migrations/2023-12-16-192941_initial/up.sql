@@ -565,6 +565,8 @@ CREATE INDEX "idx-custom_emojis-remote_id" ON custom_emojis (remote_id);
 CREATE INDEX "idx-custom_emojis-shortcode" ON custom_emojis (shortcode);
 CREATE INDEX "idx-custom_emojis-domain" ON custom_emojis (domain);
 
+-- Register all the tables to be automatically updated on insertion or updates
+
 SELECT diesel_manage_updated_at('accounts');
 SELECT diesel_manage_updated_at('accounts_follows');
 SELECT diesel_manage_updated_at('posts');
