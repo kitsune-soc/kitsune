@@ -73,9 +73,9 @@ CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
 
 CREATE TABLE cryptographic_keys
 (
-    key_id          TEXT PRIMARY KEY,
-    public_key_pem  TEXT        NOT NULL,
-    private_key_pem TEXT,
+    key_id          BYTEA PRIMARY KEY,
+    public_key_der  BYTEA       NOT NULL,
+    private_key_der BYTEA,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
