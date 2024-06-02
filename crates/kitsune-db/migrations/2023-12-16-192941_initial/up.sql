@@ -43,24 +43,28 @@ CREATE TABLE accounts
     note         TEXT,
 
     -- Use special collation to ignore case and accent differences
-    username     TEXT                                                                  NOT NULL COLLATE kitsune.ignore_accent_case,
-    locked       BOOLEAN                                                               NOT NULL,
-    local        BOOLEAN                                                               NOT NULL,
-    domain       TEXT                                                                  NOT NULL,
-    account_type INTEGER                                                               NOT NULL,
-    url          TEXT UNIQUE                                                           NOT NULL,
+    username     TEXT                                                     NOT NULL COLLATE kitsune.ignore_accent_case,
+    locked       BOOLEAN                                                  NOT NULL,
+    local        BOOLEAN                                                  NOT NULL,
+    domain       TEXT                                                     NOT NULL,
+    account_type INTEGER                                                  NOT NULL,
+    url          TEXT                                                     NOT NULL,
 
-    created_at   TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ                                                           NOT NULL DEFAULT NOW(),
+    created_at   TIMESTAMPTZ                                              NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ                                              NOT NULL DEFAULT NOW(),
 
     -- Generated full-text search column
     account_ts   TSVECTOR GENERATED ALWAYS AS (
-                     setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
-                               to_tsvector('simple', username), 'A') ||
-                     setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
+        setweight(to_tsvector('simple', COALESCE(display_name, '')) ||
+                  to_tsvector('simple', username), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(note, '')), 'B')) STORED NOT NULL
 );
 
--- Unique constraints
+-- UNIQUE constraints
+ALTER TABLE accounts
+    ADD CONSTRAINT "uk-accounts-url"
+        UNIQUE (url);
+
 ALTER TABLE accounts
     ADD CONSTRAINT "uk-accounts-username-domain"
         UNIQUE (username, domain);
@@ -120,13 +124,17 @@ CREATE TABLE accounts_follows
     account_id  UUID        NOT NULL,
     follower_id UUID        NOT NULL,
     approved_at TIMESTAMPTZ,
-    url         TEXT        NOT NULL UNIQUE,
+    url         TEXT        NOT NULL,
     notify      BOOLEAN     NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- UNIQUE constraints
+ALTER TABLE accounts_follows
+    ADD CONSTRAINT "uk-accounts_follows-url"
+        UNIQUE (url);
+
 ALTER TABLE accounts_follows
     ADD CONSTRAINT "uk-accounts_follows-account_id-follower_id"
         UNIQUE (account_id, follower_id);
@@ -165,12 +173,12 @@ ALTER TABLE accounts_preferences
 CREATE TABLE users
 (
     id                 UUID PRIMARY KEY,
-    oidc_id            TEXT UNIQUE,
+    oidc_id            TEXT,
 
     -- Use special collation to ignore case and accent differences
     username           TEXT        NOT NULL COLLATE kitsune.ignore_accent_case,
-    email              TEXT        NOT NULL UNIQUE,
-    password           TEXT UNIQUE,
+    email              TEXT        NOT NULL,
+    password           TEXT,
     domain             TEXT        NOT NULL,
 
     -- Email confirmation
@@ -182,6 +190,18 @@ CREATE TABLE users
 );
 
 -- UNIQUE constraints
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-oidc_id"
+        UNIQUE (oidc_id);
+
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-email"
+        UNIQUE (email);
+
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-password"
+        UNIQUE (password);
+
 ALTER TABLE users
     ADD CONSTRAINT "uk-users-username-domain"
         UNIQUE (username, domain);
@@ -233,7 +253,7 @@ CREATE TABLE posts
 
     visibility       INTEGER                                                                                                NOT NULL,
     is_local         BOOLEAN                                                                                                NOT NULL,
-    url              TEXT                                                                                                   NOT NULL UNIQUE,
+    url              TEXT                                                                                                   NOT NULL,
 
     created_at       TIMESTAMPTZ                                                                                            NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ                                                                                            NOT NULL DEFAULT NOW(),
@@ -243,6 +263,11 @@ CREATE TABLE posts
                                                                COALESCE(subject, '')) ||
                                                    to_tsvector(kitsune.iso_code_to_language(content_lang), content)) STORED NOT NULL
 );
+
+-- UNIQUE constraints
+ALTER TABLE posts
+    ADD CONSTRAINT "uk-posts-url"
+        UNIQUE (url);
 
 -- Foreign key constraints
 ALTER TABLE posts
@@ -320,11 +345,15 @@ CREATE TABLE posts_favourites
     id         UUID PRIMARY KEY,
     account_id UUID        NOT NULL,
     post_id    UUID        NOT NULL,
-    url        TEXT        NOT NULL UNIQUE,
+    url        TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- UNIQUE constraints
+ALTER TABLE posts_favourites
+    ADD CONSTRAINT "uk-posts_favourites-url"
+        UNIQUE (url);
+
 ALTER TABLE posts_favourites
     ADD CONSTRAINT "uk-posts_favourites-account_id-post_id"
         UNIQUE (account_id, post_id);
@@ -367,13 +396,18 @@ CREATE TABLE oauth2_applications
 (
     id           UUID PRIMARY KEY,
     name         TEXT        NOT NULL,
-    secret       TEXT        NOT NULL UNIQUE,
+    secret       TEXT        NOT NULL,
     scopes       TEXT        NOT NULL,
     redirect_uri TEXT        NOT NULL,
     website      TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- UNIQUE constraints
+ALTER TABLE oauth2_applications
+    ADD CONSTRAINT "uk-oauth2_applications-secret"
+        UNIQUE (secret);
 
 CREATE TABLE oauth2_authorization_codes
 (
@@ -416,10 +450,15 @@ ALTER TABLE oauth2_access_tokens
 CREATE TABLE oauth2_refresh_tokens
 (
     token          TEXT PRIMARY KEY,
-    access_token   TEXT        NOT NULL UNIQUE,
+    access_token   TEXT        NOT NULL,
     application_id UUID        NOT NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- UNIQUE constraints
+ALTER TABLE oauth2_refresh_tokens
+    ADD CONSTRAINT "uk-oauth2_refresh_tokens-access_token"
+        UNIQUE (access_token);
 
 -- Foreign key constraint
 ALTER TABLE oauth2_refresh_tokens
@@ -483,7 +522,7 @@ CREATE TABLE custom_emojis
     id                  UUID PRIMARY KEY,
     shortcode           TEXT        NOT NULL,
     domain              TEXT,
-    remote_id           TEXT        NOT NULL UNIQUE,
+    remote_id           TEXT        NOT NULL,
     media_attachment_id UUID        NOT NULL,
     endorsed            BOOLEAN     NOT NULL DEFAULT FALSE,
 
@@ -491,7 +530,11 @@ CREATE TABLE custom_emojis
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Unique constraints
+-- UNIQUE constraints
+ALTER TABLE custom_emojis
+    ADD CONSTRAINT "uk-custom_emojis-remote_id"
+        UNIQUE (remote_id);
+
 ALTER TABLE custom_emojis
     ADD CONSTRAINT "uk-custom_emojis-shortcode-domain"
         UNIQUE (shortcode, domain);
