@@ -140,6 +140,13 @@ ALTER TABLE accounts
     ADD CONSTRAINT "uk-accounts-username-domain"
         UNIQUE (username, domain);
 
+-- Foreign key constraints
+ALTER TABLE accounts
+    ADD CONSTRAINT "uk-accounts-domains-domain"
+        FOREIGN KEY (domain) REFERENCES domains (domain)
+            ON DELETE SET NULL
+            ON UPDATE CASCADE;
+
 -- Create indexes
 
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
