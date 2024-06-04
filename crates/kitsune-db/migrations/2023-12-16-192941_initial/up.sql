@@ -107,6 +107,9 @@ CREATE TABLE accounts
 (
     id           UUID PRIMARY KEY,
 
+    account_type INTEGER                                                  NOT NULL,
+    protocol     INTEGER                                                  NOT NULL,
+
     avatar_id    UUID,
     header_id    UUID,
     display_name TEXT,
@@ -118,7 +121,6 @@ CREATE TABLE accounts
     locked       BOOLEAN                                                  NOT NULL,
     local        BOOLEAN                                                  NOT NULL,
     domain       TEXT                                                     NOT NULL,
-    account_type INTEGER                                                  NOT NULL,
     url          TEXT                                                     NOT NULL,
 
     created_at   TIMESTAMPTZ                                              NOT NULL DEFAULT NOW(),
