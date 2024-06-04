@@ -7,6 +7,8 @@ ALTER TABLE posts
 DROP TABLE link_previews;
 
 DROP TABLE users_roles;
+DROP TABLE roles;
+
 DROP TABLE posts_media_attachments;
 
 ALTER TABLE accounts

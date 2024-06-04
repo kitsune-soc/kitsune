@@ -625,25 +625,42 @@ SELECT diesel_manage_updated_at('oauth2_refresh_tokens');
 
 -- END "oauth2_refresh_tokens" TABLE
 
+-- BEGIN "roles" TABLE
+
+CREATE TABLE roles
+(
+    id           UUID PRIMARY KEY,
+    name         TEXT        NOT NULL,
+    capabilities INTEGER[]   NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+SELECT diesel_manage_updated_at('roles');
+
+-- END "roles" TABLE
+
 -- BEGIN "users_roles" TABLE
 
 CREATE TABLE users_roles
 (
-    id         UUID PRIMARY KEY,
-    user_id    UUID        NOT NULL,
-    role       INTEGER     NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
+    PRIMARY KEY (user_id, role_id)
 );
-
--- UNIQUE constraints
-ALTER TABLE users_roles
-    ADD CONSTRAINT "uk-users_roles-user_id-role"
-        UNIQUE (user_id, role);
 
 -- Foreign key constraints
 ALTER TABLE users_roles
     ADD CONSTRAINT "fk-users_roles-user_id"
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
+
+ALTER TABLE users_roles
+    ADD CONSTRAINT "fk-users_roles-role_id"
+        FOREIGN KEY (role_id) REFERENCES roles (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
 
 -- END "users_roles" TABLE
 
