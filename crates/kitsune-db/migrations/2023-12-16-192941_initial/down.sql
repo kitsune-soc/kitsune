@@ -27,7 +27,6 @@ DROP TABLE posts_favourites;
 DROP TABLE posts;
 
 DROP TABLE users_accounts;
-DROP TABLE users;
 
 DROP TABLE accounts_preferences;
 DROP TABLE accounts_follows;
@@ -35,5 +34,8 @@ DROP TABLE accounts_activitypub;
 DROP TABLE accounts_cryptographic_keys;
 DROP TABLE cryptographic_keys;
 DROP TABLE accounts;
+
+DROP TABLE domains;
+DROP TABLE users;
 
 DROP SCHEMA kitsune CASCADE;

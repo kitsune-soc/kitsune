@@ -33,6 +33,76 @@ $$
 -- Now follow the actual table creation routines
 --
 
+-- BEGIN "users" TABLE
+
+CREATE TABLE users
+(
+    id                 UUID PRIMARY KEY,
+    oidc_id            TEXT,
+
+    -- Use special collation to ignore case and accent differences
+    username           TEXT        NOT NULL COLLATE kitsune.ignore_accent_case,
+    email              TEXT        NOT NULL,
+    password           TEXT,
+
+    -- Email confirmation
+    confirmed_at       TIMESTAMPTZ,
+    confirmation_token TEXT        NOT NULL,
+
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- UNIQUE constraints
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-oidc_id"
+        UNIQUE (oidc_id);
+
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-email"
+        UNIQUE (email);
+
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-password"
+        UNIQUE (password);
+
+ALTER TABLE users
+    ADD CONSTRAINT "uk-users-confirmation_token"
+        UNIQUE (confirmation_token);
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('users');
+
+-- END "users" TABLE
+
+-- BEGIN "domains" TABLE
+
+CREATE TABLE domains
+(
+    domain             TEXT PRIMARY KEY,
+    owner_id           UUID REFERENCES users (id),
+    challenge_value    TEXT,
+    globally_available BOOLEAN     NOT NULL DEFAULT FALSE,
+    verified_at        TIMESTAMPTZ,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE domains
+    ADD CONSTRAINT "fk-domains-owner_id"
+        FOREIGN KEY (owner_id) REFERENCES users (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('domains');
+
+-- END "domains" TABLE
+
+-- BEGIN "accounts" TABLE
+
 CREATE TABLE accounts
 (
     id           UUID PRIMARY KEY,
@@ -44,6 +114,7 @@ CREATE TABLE accounts
 
     -- Use special collation to ignore case and accent differences
     username     TEXT                                                     NOT NULL COLLATE kitsune.ignore_accent_case,
+
     locked       BOOLEAN                                                  NOT NULL,
     local        BOOLEAN                                                  NOT NULL,
     domain       TEXT                                                     NOT NULL,
@@ -69,15 +140,29 @@ ALTER TABLE accounts
     ADD CONSTRAINT "uk-accounts-username-domain"
         UNIQUE (username, domain);
 
+-- Create indexes
+
 CREATE INDEX "idx-accounts-account_ts" ON accounts USING GIN (account_ts);
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('accounts');
+
+-- END "accounts" TABLE
+
+-- BEGIN "cryptographic_keys" TABLE
 
 CREATE TABLE cryptographic_keys
 (
-    key_id          BYTEA PRIMARY KEY,
+    key_id          TEXT PRIMARY KEY,
     public_key_der  BYTEA       NOT NULL,
     private_key_der BYTEA,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- END "cryptographic_keys" TABLE
+
+-- BEGIN "accounts_cryptographic_keys" TABLE
 
 CREATE TABLE accounts_cryptographic_keys
 (
@@ -98,6 +183,10 @@ ALTER TABLE accounts_cryptographic_keys
             ON DELETE CASCADE
             ON UPDATE CASCADE;
 
+-- END "accounts_cryptographic_keys" TABLE
+
+-- BEGIN "accounts_activitypub" TABLE
+
 CREATE TABLE accounts_activitypub
 (
     account_id              UUID PRIMARY KEY,
@@ -117,6 +206,10 @@ ALTER TABLE accounts_activitypub
 ALTER TABLE accounts_activitypub
     ADD CONSTRAINT "fk-accounts_activitypub-key_id"
         FOREIGN KEY (key_id) REFERENCES cryptographic_keys (key_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- END "accounts_activitypub" TABLE
+
+-- BEGIN "accounts_follows" TABLE
 
 CREATE TABLE accounts_follows
 (
@@ -148,8 +241,18 @@ ALTER TABLE accounts_follows
     ADD CONSTRAINT "fk-accounts_follows-follower_id"
         FOREIGN KEY (follower_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Create indexes
+
 CREATE INDEX "idx-accounts_follows-account_id" ON accounts_follows (account_id);
 CREATE INDEX "idx-accounts_follows-follower_id" ON accounts_follows (follower_id);
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('accounts_follows');
+
+-- END "accounts_follows" TABLE
+
+-- BEGIN "accounts_preferences" TABLE
 
 CREATE TABLE accounts_preferences
 (
@@ -170,45 +273,9 @@ ALTER TABLE accounts_preferences
             ON DELETE CASCADE
             ON UPDATE CASCADE;
 
-CREATE TABLE users
-(
-    id                 UUID PRIMARY KEY,
-    oidc_id            TEXT,
+-- END "accounts_preferences" TABLE
 
-    -- Use special collation to ignore case and accent differences
-    username           TEXT        NOT NULL COLLATE kitsune.ignore_accent_case,
-    email              TEXT        NOT NULL,
-    password           TEXT,
-    domain             TEXT        NOT NULL,
-
-    -- Email confirmation
-    confirmed_at       TIMESTAMPTZ,
-    confirmation_token TEXT        NOT NULL,
-
-    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- UNIQUE constraints
-ALTER TABLE users
-    ADD CONSTRAINT "uk-users-oidc_id"
-        UNIQUE (oidc_id);
-
-ALTER TABLE users
-    ADD CONSTRAINT "uk-users-email"
-        UNIQUE (email);
-
-ALTER TABLE users
-    ADD CONSTRAINT "uk-users-password"
-        UNIQUE (password);
-
-ALTER TABLE users
-    ADD CONSTRAINT "uk-users-username-domain"
-        UNIQUE (username, domain);
-
-ALTER TABLE users
-    ADD CONSTRAINT "uk-users-confirmation_token"
-        UNIQUE (confirmation_token);
+-- BEGIN "users_accounts" TABLE
 
 CREATE TABLE users_accounts
 (
@@ -226,6 +293,10 @@ ALTER TABLE users_accounts
     ADD CONSTRAINT "fk-users_accounts-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- END "users_accounts" TABLE
+
+-- BEGIN "link_previews" TABLE
+
 CREATE TABLE link_previews
 (
     url        TEXT PRIMARY KEY,
@@ -234,6 +305,14 @@ CREATE TABLE link_previews
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('link_previews');
+
+-- END "link_previews" TABLE
+
+-- BEGIN "posts" TABLE
 
 CREATE TABLE posts
 (
@@ -288,11 +367,21 @@ ALTER TABLE posts
             ON DELETE SET NULL
             ON UPDATE CASCADE;
 
+-- Create indexes
+
 CREATE INDEX "idx-posts-account_id" ON posts (account_id);
 CREATE INDEX "idx-posts-in_reply_to_id" ON posts (in_reply_to_id);
 CREATE INDEX "idx-posts-reposted_post_id" ON posts (reposted_post_id);
 CREATE INDEX "idx-posts-visibility" ON posts (visibility);
 CREATE INDEX "idx-posts-post_ts" ON posts USING GIN (post_ts);
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('posts');
+
+-- END "posts" TABLE
+
+-- BEGIN "media_attachments" TABLE
 
 CREATE TABLE media_attachments
 (
@@ -324,6 +413,14 @@ ALTER TABLE accounts
             ON DELETE CASCADE
             ON UPDATE CASCADE;
 
+-- Register triggers
+
+SELECT diesel_manage_updated_at('media_attachments');
+
+-- END "media_attachments" TABLE
+
+-- BEGIN "posts_media_attachments" TABLE
+
 CREATE TABLE posts_media_attachments
 (
     post_id             UUID NOT NULL,
@@ -339,6 +436,10 @@ ALTER TABLE posts_media_attachments
 ALTER TABLE posts_media_attachments
     ADD CONSTRAINT "fk-posts_media_attachments-media_attachment_id"
         FOREIGN KEY (media_attachment_id) REFERENCES media_attachments (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- END "posts_media_attachments" TABLE
+
+-- BEGIN "posts_favourites" TABLE
 
 CREATE TABLE posts_favourites
 (
@@ -367,6 +468,10 @@ ALTER TABLE posts_favourites
     ADD CONSTRAINT "fk-posts_favourites-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- END "posts_favourites" TABLE
+
+-- BEGIN "posts_mentions" TABLE
+
 CREATE TABLE posts_mentions
 (
     post_id      UUID NOT NULL,
@@ -384,6 +489,10 @@ ALTER TABLE posts_mentions
     ADD CONSTRAINT "fk-posts_mentions-account_id"
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- END "posts_mentions" TABLE
+
+-- BEGIN "job_context" TABLE
+
 CREATE TABLE job_context
 (
     id         UUID PRIMARY KEY,
@@ -391,6 +500,14 @@ CREATE TABLE job_context
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('job_context');
+
+-- END "job_context" TABLE
+
+-- BEGIN "oauth2_applications" TABLE
 
 CREATE TABLE oauth2_applications
 (
@@ -408,6 +525,14 @@ CREATE TABLE oauth2_applications
 ALTER TABLE oauth2_applications
     ADD CONSTRAINT "uk-oauth2_applications-secret"
         UNIQUE (secret);
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('oauth2_applications');
+
+-- END "oauth2_applications" TABLE
+
+-- BEGIN "oauth2_authorization_codes" TABLE
 
 CREATE TABLE oauth2_authorization_codes
 (
@@ -428,6 +553,14 @@ ALTER TABLE oauth2_authorization_codes
     ADD CONSTRAINT "fk-oauth2_authorization_codes-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Register triggers
+
+SELECT diesel_manage_updated_at('oauth2_authorization_codes');
+
+-- END "oauth2_authorization_codes" TABLE
+
+-- BEGIN "oauth2_access_tokens" TABLE
+
 CREATE TABLE oauth2_access_tokens
 (
     token          TEXT PRIMARY KEY,
@@ -446,6 +579,14 @@ ALTER TABLE oauth2_access_tokens
 ALTER TABLE oauth2_access_tokens
     ADD CONSTRAINT "fk-oauth2_access_tokens-application_id"
         FOREIGN KEY (application_id) REFERENCES oauth2_applications (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Register triggers
+
+SELECT diesel_manage_updated_at('oauth2_access_tokens');
+
+-- END "oauth2_access_tokens" TABLE
+
+-- BEGIN "oauth2_refresh_tokens" TABLE
 
 CREATE TABLE oauth2_refresh_tokens
 (
@@ -469,6 +610,14 @@ ALTER TABLE oauth2_refresh_tokens
     ADD CONSTRAINT "fk-oauth2_refresh_tokens-application_id"
         FOREIGN KEY (application_id) REFERENCES oauth2_applications (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Register triggers
+
+SELECT diesel_manage_updated_at('oauth2_refresh_tokens');
+
+-- END "oauth2_refresh_tokens" TABLE
+
+-- BEGIN "users_roles" TABLE
+
 CREATE TABLE users_roles
 (
     id         UUID PRIMARY KEY,
@@ -486,6 +635,10 @@ ALTER TABLE users_roles
 ALTER TABLE users_roles
     ADD CONSTRAINT "fk-users_roles-user_id"
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- END "users_roles" TABLE
+
+-- BEGIN "notifications" TABLE
 
 CREATE TABLE notifications
 (
@@ -515,7 +668,13 @@ ALTER TABLE notifications
     ADD CONSTRAINT "fk-notifications-post_id"
         FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Create indexes
+
 CREATE INDEX "idx-notifications-receiving_account_id" ON notifications (receiving_account_id);
+
+-- END "notifications" table
+
+-- CREATE "custom_emojis" table
 
 CREATE TABLE custom_emojis
 (
@@ -544,6 +703,14 @@ ALTER TABLE custom_emojis
     ADD CONSTRAINT "fk-custom_emojis-media_attachment_id"
         FOREIGN KEY (media_attachment_id) REFERENCES media_attachments (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Register triggers
+
+SELECT diesel_manage_updated_at('custom_emojis');
+
+-- END "custom_emojis" TABLE
+
+-- CREATE "posts_custom_emojis" TABLE
+
 CREATE TABLE posts_custom_emojis
 (
     post_id         UUID NOT NULL,
@@ -561,18 +728,10 @@ ALTER TABLE posts_custom_emojis
     ADD CONSTRAINT "fk-posts_custom_emojis-custom_emoji_id"
         FOREIGN KEY (custom_emoji_id) REFERENCES custom_emojis (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Create indexes
+
 CREATE INDEX "idx-custom_emojis-remote_id" ON custom_emojis (remote_id);
 CREATE INDEX "idx-custom_emojis-shortcode" ON custom_emojis (shortcode);
 CREATE INDEX "idx-custom_emojis-domain" ON custom_emojis (domain);
 
--- Register all the tables to be automatically updated on insertion or updates
-
-SELECT diesel_manage_updated_at('accounts');
-SELECT diesel_manage_updated_at('accounts_follows');
-SELECT diesel_manage_updated_at('posts');
-SELECT diesel_manage_updated_at('users');
-SELECT diesel_manage_updated_at('job_context');
-SELECT diesel_manage_updated_at('oauth2_applications');
-SELECT diesel_manage_updated_at('media_attachments');
-SELECT diesel_manage_updated_at('link_previews');
-SELECT diesel_manage_updated_at('custom_emojis');
+-- END "custom_emojis" TABLE
