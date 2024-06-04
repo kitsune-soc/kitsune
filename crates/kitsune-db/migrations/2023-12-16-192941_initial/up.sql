@@ -630,10 +630,10 @@ SELECT diesel_manage_updated_at('oauth2_refresh_tokens');
 CREATE TABLE roles
 (
     id           UUID PRIMARY KEY,
-    name         TEXT        NOT NULL,
-    capabilities INTEGER[]   NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    name         TEXT          NOT NULL,
+    capabilities INTEGER ARRAY NOT NULL,
+    created_at   TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
 -- UNIQUE constraints
