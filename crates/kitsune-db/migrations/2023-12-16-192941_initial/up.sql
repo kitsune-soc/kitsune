@@ -636,6 +636,14 @@ CREATE TABLE roles
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- UNIQUE constraints
+
+ALTER TABLE roles
+    ADD CONSTRAINT "uk-roles-name"
+        UNIQUE (name);
+
+-- Register triggers
+
 SELECT diesel_manage_updated_at('roles');
 
 -- END "roles" TABLE
