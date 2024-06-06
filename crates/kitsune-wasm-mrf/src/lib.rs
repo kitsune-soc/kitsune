@@ -10,7 +10,7 @@ use color_eyre::{eyre, Section};
 use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
 use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
 use kitsune_config::mrf::{
-    Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
+    AllocationStrategy, Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::Error;
@@ -171,9 +171,14 @@ impl MrfService {
             }
         };
 
+        let allocation_strategy = match config.allocation_strategy {
+            AllocationStrategy::OnDemand => InstanceAllocationStrategy::OnDemand,
+            AllocationStrategy::Pooling => InstanceAllocationStrategy::pooling(),
+        };
+
         let mut engine_config = Config::new();
         engine_config
-            .allocation_strategy(InstanceAllocationStrategy::pooling())
+            .allocation_strategy(allocation_strategy)
             .async_support(true)
             .wasm_component_model(true);
 

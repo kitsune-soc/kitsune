@@ -14,6 +14,19 @@ For example, you can use it to:
 
 ## Configuration
 
+### `allocation-strategy`
+
+⚠ You usually don't need to touch this setting!
+
+It has two possible values:
+
+- `on-demand`
+- `pooling`
+
+By default it is set to `pooling` which will offer the best throughput since Kitsune instantiates short-lived WASM modules, where pooled allocation can improve performance.
+
+If Kitsune crashes on startup complaining about `failed to create stack pool mapping`, you might want to try changing this setting to `on-demand`.
+
 ### `module-dir`
 
 This configuration option tells Kitsune where to scan for WASM modules to load and compile.
@@ -40,7 +53,7 @@ path = "./artifact-cache"
 
 ### `storage`
 
-Kitsune provides MRF modules with scoped key-value storages to allow them to persist data across runs for things like counters or spam lists.  
+Kitsune provides MRF modules with scoped key-value storages to allow them to persist data across runs for things like counters or spam lists.
 
 We provide multiple backends here:
 
