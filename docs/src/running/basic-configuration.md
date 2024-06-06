@@ -40,7 +40,7 @@ type = "in-process"
 
 [server]
 frontend-dir = "./kitsune-fe/dist"
-max-upload-size = 20242880          # 5MB
+max-upload-size = "5MiB"
 media-proxy-enabled = false
 port = 5000
 request-timeout-secs = 60
