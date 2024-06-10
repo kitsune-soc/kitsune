@@ -78,7 +78,7 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.6", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.0", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -96,7 +96,7 @@ fred = { version = "9.0.3", features = [
     "i-scripts",
     "sha-1",
 ] }
-garde = { version = "0.18.0", default-features = false, features = [
+garde = { version = "0.19.0", features = [
     "derive",
     "email",
     "email-idna",

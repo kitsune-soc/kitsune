@@ -143,7 +143,7 @@ impl AttachmentService {
     }
 
     pub async fn update(&self, update: Update) -> Result<MediaAttachment> {
-        update.validate(&())?;
+        update.validate()?;
 
         let mut changeset = UpdateMediaAttachment::default();
         if let Some(ref description) = update.description {
@@ -171,7 +171,7 @@ impl AttachmentService {
     where
         S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
-        upload.validate(&())?;
+        upload.validate()?;
 
         // remove exif info from image uploads
         if is_image_type_with_supported_metadata(&upload.content_type) {

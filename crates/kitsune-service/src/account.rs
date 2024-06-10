@@ -350,7 +350,7 @@ impl AccountService {
         &self,
         get_posts: GetPosts,
     ) -> Result<impl Stream<Item = Result<Post>> + '_> {
-        get_posts.validate(&LimitContext::default())?;
+        get_posts.validate_with(&LimitContext::default())?;
 
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_posts.fetching_account_id)
@@ -432,7 +432,7 @@ impl AccountService {
         &self,
         get_follow_requests: GetFollowRequests,
     ) -> Result<impl Stream<Item = Result<Account>> + '_> {
-        get_follow_requests.validate(&LimitContext::default())?;
+        get_follow_requests.validate_with(&LimitContext::default())?;
 
         let mut query = accounts_follows::table
             .inner_join(accounts::table.on(accounts_follows::follower_id.eq(accounts::id)))
@@ -577,7 +577,7 @@ impl AccountService {
         A: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
         H: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
-        update.validate(&())?;
+        update.validate()?;
 
         let mut changeset = UpdateAccount::default();
 

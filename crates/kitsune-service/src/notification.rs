@@ -72,7 +72,7 @@ impl NotificationService {
         &self,
         get_notifications: GetNotifications,
     ) -> Result<impl Stream<Item = Result<Notification>> + '_> {
-        get_notifications.validate(&LimitContext::default())?;
+        get_notifications.validate_with(&LimitContext::default())?;
 
         let mut query = notifications::table
             .filter(

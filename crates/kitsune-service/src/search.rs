@@ -52,7 +52,7 @@ impl SearchService {
     }
 
     pub async fn search(&self, search: Search<'_>) -> Result<Vec<SearchResult>> {
-        search.validate(&())?;
+        search.validate()?;
 
         let mut results = Vec::new();
 

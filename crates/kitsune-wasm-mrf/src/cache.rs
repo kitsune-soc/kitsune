@@ -34,17 +34,28 @@ impl Cache {
         let table = transaction.open_table(CACHE_TABLE)?;
 
         let hash = blake3::hash(component_src);
+        let hash_hex = hash.to_hex();
         let Some(precompiled) = table.get(hash.as_bytes())? else {
             return Ok(None);
         };
 
-        debug!(hash = %hash.to_hex(), "hit component cache");
+        debug!(hash = %hash_hex, "hit component cache");
 
         // SAFETY: The function is defined as unsafe since it is only doing very simple checks whether the precompiled component inside is actually valid
         //         But since we source our cache from disk, we can assume that the files are fine. If they aren't, the user has tempered with them or they were otherwise corrupted.
         //         If that's the case the user has bigger issues than a little memory unsafety here. And it's also nothing we can really protect against.
         #[allow(unsafe_code)]
-        Ok(unsafe { Component::deserialize(engine, precompiled.value()).ok() })
+        Ok(unsafe {
+            Component::deserialize(engine, precompiled.value())
+                .inspect_err(|error| {
+                    debug!(
+                        hash = %hash_hex,
+                        %error,
+                        "failed to deserialize component. pretending that we don't have a component in cache",
+                    );
+                })
+                .ok()
+        })
     }
 
     #[inline]

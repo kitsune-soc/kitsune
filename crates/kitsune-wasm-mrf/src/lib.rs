@@ -21,6 +21,7 @@ use std::{
     borrow::Cow,
     fmt::Debug,
     io,
+    ops::ControlFlow,
     path::{Path, PathBuf},
 };
 use tokio::fs;
@@ -28,7 +29,7 @@ use triomphe::Arc;
 use walkdir::WalkDir;
 use wasmtime::{
     component::{Component, Linker},
-    Config, Engine, InstanceAllocationStrategy,
+    Config, Engine, InstanceAllocationStrategy, Store,
 };
 
 mod cache;
@@ -233,6 +234,49 @@ impl MrfService {
         self.modules.len()
     }
 
+    #[instrument(
+        skip_all,
+        fields(module_name = %module.manifest.name),
+    )]
+    async fn invoke_module<'a>(
+        &self,
+        mut store: &mut Store<Context>,
+        module: &MrfModule,
+        direction: Direction,
+        activity: Cow<'a, str>,
+    ) -> Result<ControlFlow<(), Cow<'a, str>>, Error> {
+        let (mrf, _) =
+            mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
+                .await
+                .map_err(Error::msg)?;
+
+        store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
+
+        let result = mrf
+            .call_transform(store, &module.config, direction, &activity)
+            .await
+            .map_err(Error::msg)?;
+
+        match result {
+            Ok(transformed) => {
+                return Ok(ControlFlow::Continue(Cow::Owned(transformed)));
+            }
+            Err(MrfError::ErrorContinue(msg)) => {
+                error!(%msg, "MRF errored out. Continuing.");
+            }
+            Err(MrfError::ErrorReject(msg)) => {
+                error!(%msg, "MRF errored out. Aborting.");
+                return Ok(ControlFlow::Break(()));
+            }
+            Err(MrfError::Reject) => {
+                error!("MRF rejected activity. Aborting.");
+                return Ok(ControlFlow::Break(()));
+            }
+        }
+
+        Ok(ControlFlow::Continue(activity))
+    }
+
     async fn handle<'a>(
         &self,
         direction: Direction,
@@ -248,33 +292,13 @@ impl MrfService {
                 continue;
             }
 
-            let (mrf, _) =
-                mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
-                    .await
-                    .map_err(Error::msg)?;
+            let outcome = self
+                .invoke_module(&mut store, module, direction, activity)
+                .await?;
 
-            store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
-
-            let result = mrf
-                .call_transform(&mut store, &module.config, direction, &activity)
-                .await
-                .map_err(Error::msg)?;
-
-            match result {
-                Ok(transformed) => {
-                    activity = Cow::Owned(transformed);
-                }
-                Err(MrfError::ErrorContinue(msg)) => {
-                    error!(%msg, "MRF errored out. Continuing.");
-                }
-                Err(MrfError::ErrorReject(msg)) => {
-                    error!(%msg, "MRF errored out. Aborting.");
-                    return Ok(Outcome::Reject);
-                }
-                Err(MrfError::Reject) => {
-                    error!("MRF rejected activity. Aborting.");
-                    return Ok(Outcome::Reject);
-                }
+            match outcome {
+                ControlFlow::Break(()) => return Ok(Outcome::Reject),
+                ControlFlow::Continue(transformed_activity) => activity = transformed_activity,
             }
         }
 
