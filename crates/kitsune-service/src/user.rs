@@ -127,7 +127,7 @@ impl UserService {
             bail!(type = ErrorType::Forbidden.with_body("registrations closed"), "registrations closed");
         }
 
-        register.validate(&RegisterContext {
+        register.validate_with(&RegisterContext {
             allow_non_ascii: self.allow_non_ascii_usernames,
         })?;
 
@@ -266,7 +266,7 @@ mod test {
 
             assert!(
                 register
-                    .validate(&RegisterContext {
+                    .validate_with(&RegisterContext {
                         allow_non_ascii: true
                     })
                     .is_ok(),
@@ -285,7 +285,7 @@ mod test {
 
             assert!(
                 register
-                    .validate(&RegisterContext {
+                    .validate_with(&RegisterContext {
                         allow_non_ascii: true,
                     })
                     .is_err(),
@@ -303,7 +303,7 @@ mod test {
             .build();
 
         assert!(register
-            .validate(&RegisterContext {
+            .validate_with(&RegisterContext {
                 allow_non_ascii: false
             })
             .is_err());

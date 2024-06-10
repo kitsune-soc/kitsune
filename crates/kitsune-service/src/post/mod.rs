@@ -439,7 +439,7 @@ impl PostService {
     /// This should never ever panic. If it does, create a bug report.
     #[allow(clippy::too_many_lines)]
     pub async fn create(&self, create_post: CreatePost) -> Result<Post> {
-        create_post.validate(&PostValidationContext {
+        create_post.validate_with(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
         })?;
 
@@ -579,7 +579,7 @@ impl PostService {
             .get_post_with_access_guard(update_post.post_id, update_post.account_id, None)
             .await?;
 
-        update_post.validate(&PostValidationContext {
+        update_post.validate_with(&PostValidationContext {
             character_limit: self.instance_service.character_limit(),
         })?;
 
@@ -909,7 +909,7 @@ impl PostService {
         &self,
         get_favourites: GetAccountsInteractingWithPost,
     ) -> Result<impl Stream<Item = Result<Account>> + '_> {
-        get_favourites.validate(&LimitContext::default())?;
+        get_favourites.validate_with(&LimitContext::default())?;
 
         let mut query = posts_favourites::table
             .inner_join(accounts::table.on(posts_favourites::account_id.eq(accounts::id)))
@@ -947,7 +947,7 @@ impl PostService {
         &self,
         get_reblogs: GetAccountsInteractingWithPost,
     ) -> Result<impl Stream<Item = Result<Account>> + '_> {
-        get_reblogs.validate(&LimitContext::default())?;
+        get_reblogs.validate_with(&LimitContext::default())?;
 
         let permission_check = PermissionCheck::builder()
             .fetching_account_id(get_reblogs.fetching_account_id)
@@ -1166,17 +1166,17 @@ mod test {
             .build();
 
         assert!(create_post
-            .validate(&PostValidationContext {
+            .validate_with(&PostValidationContext {
                 character_limit: 20,
             })
             .is_ok());
 
         assert!(create_post
-            .validate(&PostValidationContext { character_limit: 5 })
+            .validate_with(&PostValidationContext { character_limit: 5 })
             .is_err());
 
         assert!(create_post
-            .validate(&PostValidationContext { character_limit: 2 })
+            .validate_with(&PostValidationContext { character_limit: 2 })
             .is_err());
 
         let create_post = CreatePost::builder()
@@ -1185,7 +1185,7 @@ mod test {
             .build();
 
         assert!(create_post
-            .validate(&PostValidationContext {
+            .validate_with(&PostValidationContext {
                 character_limit: 25
             })
             .is_err());
@@ -1197,7 +1197,7 @@ mod test {
             .build();
 
         assert!(create_post
-            .validate(&PostValidationContext {
+            .validate_with(&PostValidationContext {
                 character_limit: 25
             })
             .is_ok());
@@ -1213,17 +1213,17 @@ mod test {
             .build();
 
         assert!(update_post
-            .validate(&PostValidationContext {
+            .validate_with(&PostValidationContext {
                 character_limit: 20,
             })
             .is_ok());
 
         assert!(update_post
-            .validate(&PostValidationContext { character_limit: 5 })
+            .validate_with(&PostValidationContext { character_limit: 5 })
             .is_err());
 
         assert!(update_post
-            .validate(&PostValidationContext { character_limit: 2 })
+            .validate_with(&PostValidationContext { character_limit: 2 })
             .is_err());
     }
 }

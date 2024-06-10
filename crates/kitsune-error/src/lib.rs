@@ -94,19 +94,23 @@ impl Error {
         eyre::Report::msg(msg).into()
     }
 
+    #[inline]
     #[must_use]
     pub fn context(&self) -> &ErrorContext {
         &self.ctx
     }
 
+    #[inline]
     pub fn error(&self) -> &eyre::Report {
         &self.inner
     }
 
+    #[inline]
     pub fn into_error(self) -> eyre::Report {
         self.inner
     }
 
+    #[inline]
     #[must_use]
     pub fn with_context(self, ctx: ErrorContext) -> Self {
         Self { ctx, ..self }

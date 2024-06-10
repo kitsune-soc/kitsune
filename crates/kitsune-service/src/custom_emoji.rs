@@ -137,7 +137,7 @@ impl CustomEmojiService {
     where
         S: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
-        emoji_upload.validate(&())?;
+        emoji_upload.validate()?;
 
         let attachment_upload = Upload::builder()
             .content_type(emoji_upload.content_type)

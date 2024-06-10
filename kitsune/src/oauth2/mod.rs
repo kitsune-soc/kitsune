@@ -38,6 +38,7 @@ fn timestamp_to_chrono(ts: iso8601_timestamp::Timestamp) -> chrono::DateTime<Utc
     let secs = ts
         .duration_since(iso8601_timestamp::Timestamp::UNIX_EPOCH)
         .whole_seconds();
+
     chrono::DateTime::from_timestamp(secs, ts.nanosecond()).unwrap()
 }
 
