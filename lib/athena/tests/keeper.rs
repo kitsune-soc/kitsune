@@ -21,12 +21,10 @@ fn roundtrip() {
 
 #[test]
 fn downcasting_into_other() {
-    let keeper = KeeperOfTheSecrets::new(CustomStruct { number: 161 });
+    let value = CustomStruct { number: 161 };
+    let keeper = KeeperOfTheSecrets::new(value.clone());
 
-    assert_eq!(
-        keeper.get::<CustomStruct>(),
-        Some(CustomStruct { number: 161 }).as_ref()
-    );
+    assert_eq!(keeper.get::<CustomStruct>(), Some(&value));
 
     assert!(keeper.get::<()>().is_none());
     assert!(keeper.get::<u32>().is_none());
