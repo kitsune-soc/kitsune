@@ -29,7 +29,7 @@ tokio = { version = "1.38.0", features = ["fs"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 walkdir = "2.5.0"
-wasmtime = { version = "21.0.1", default-features = false, features = [
+wasmtime = { version = "22.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -38,13 +38,13 @@ wasmtime = { version = "21.0.1", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "21.0.1", default-features = false }
+wasmtime-wasi = { version = "22.0.0", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"
 tokio = { version = "1.38.0", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
-wat = "1.210.0"
+wat = "1.211.1"
 
 [lints]
 workspace = true

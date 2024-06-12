@@ -96,7 +96,7 @@ fred = { version = "9.0.3", features = [
     "i-scripts",
     "sha-1",
 ] }
-garde = { version = "0.19.1", features = [
+garde = { version = "0.19.2", features = [
     "derive",
     "email",
     "email-idna",
@@ -107,7 +107,7 @@ itertools = { version = "0.13.0", default-features = false }
 moka = { version = "0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
 sonic-rs = "0.3.7"
-triomphe = { version = "0.1.12", default-features = false, features = [
+triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
 
@@ -212,7 +212,7 @@ diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "3b
 scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
-# SIMD runtime detection
+# SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "317ff37a8ab88e653ee01bbc00a974d41f3b151a" }
 
 # TCP nodelay for `axum::serve`
