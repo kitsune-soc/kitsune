@@ -1,5 +1,8 @@
 use either::Either;
-use http::{header::USER_AGENT, HeaderValue, Request, Response, StatusCode};
+use http::{
+    header::{LOCATION, USER_AGENT},
+    HeaderValue, Request, Response, StatusCode,
+};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::{
@@ -43,8 +46,8 @@ where
             if USER_AGENT_REGEX.is_match(user_agent) {
                 let response = Response::builder()
                     .status(StatusCode::FOUND)
-                    .header("Location", REDIRECT_URL)
-                    .body(Default::default())
+                    .header(LOCATION, REDIRECT_URL)
+                    .body(ResBody::default())
                     .unwrap();
 
                 return Either::Right(future::ready(Ok(response)));

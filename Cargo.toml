@@ -78,8 +78,8 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.6", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.0", default-features = false, features = [
+clap = { version = "4.5.7", features = ["derive", "wrap_help"] }
+diesel = { version = "2.2.1", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
@@ -96,7 +96,7 @@ fred = { version = "9.0.3", features = [
     "i-scripts",
     "sha-1",
 ] }
-garde = { version = "0.19.0", features = [
+garde = { version = "0.19.1", features = [
     "derive",
     "email",
     "email-idna",
@@ -106,7 +106,7 @@ garde = { version = "0.19.0", features = [
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.6"
+sonic-rs = "0.3.7"
 triomphe = { version = "0.1.12", default-features = false, features = [
     "unsize",
 ] }
@@ -213,7 +213,7 @@ scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
 # SIMD runtime detection
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "a5ac253f8389a34257dae2da79db3f535311ed65" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "317ff37a8ab88e653ee01bbc00a974d41f3b151a" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }

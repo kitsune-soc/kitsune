@@ -1,6 +1,5 @@
-use divan::Bencher;
+use divan::{black_box, Bencher};
 use http::{Method, Request, Uri};
-use std::hint::black_box;
 
 #[global_allocator]
 static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();

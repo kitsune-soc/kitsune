@@ -39,7 +39,7 @@ diesel-async = { workspace = true }
 futures-util = "0.3.30"
 headers = "0.4.0"
 http = "1.1.0"
-http-body-util = "0.1.1"
+http-body-util = "0.1.2"
 http-signatures = { workspace = true }
 iso8601-timestamp = "0.2.17"
 itertools = { workspace = true }
@@ -101,7 +101,7 @@ tracing = "0.1.40"
 trials = { workspace = true }
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
-url = "2.5.0"
+url = "2.5.1"
 
 # --- Optional dependencies ---
 
