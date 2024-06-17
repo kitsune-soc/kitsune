@@ -53,7 +53,7 @@ pub trait Keepable: Any + Send + Sync + 'static {}
 #[inline]
 fn downcast_to<T>(obj: &dyn Keepable) -> Option<&T>
 where
-    T: 'static,
+    T: Keepable + 'static,
 {
     if obj.type_id() == TypeId::of::<T>() {
         #[allow(unsafe_code)]
@@ -94,7 +94,7 @@ impl KeeperOfTheSecrets {
     #[must_use]
     pub fn get<T>(&self) -> Option<&T>
     where
-        T: 'static,
+        T: Keepable + 'static,
     {
         self.inner
             .as_ref()

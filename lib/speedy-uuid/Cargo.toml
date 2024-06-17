@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 async-graphql = { version = "7.0.6", default-features = false, optional = true }
-diesel = { version = "2.2.0", default-features = false, features = [
+diesel = { version = "2.2.1", default-features = false, features = [
     "postgres_backend",
     "uuid",
 ], optional = true }
