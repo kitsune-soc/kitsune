@@ -52,7 +52,7 @@ tokio = { version = "1.38.0", features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
-url = "2.5.1"
+url = "2.5.2"
 zxcvbn = { version = "3.0.1", default-features = false }
 
 [dev-dependencies]

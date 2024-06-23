@@ -13,10 +13,6 @@ harness = false
 name = "parse_cavage_header"
 harness = false
 
-[[bin]]
-name = "parse_header"
-path = "bin/parse_header.rs"
-
 [dependencies]
 atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
@@ -41,7 +37,6 @@ tokio = { version = "1.38.0", features = ["macros", "rt"] }
 
 [features]
 default = ["easy"]
-cli = ["miette/fancy"]
 easy = ["dep:blowocking", "dep:tracing"]
 
 [lints]
