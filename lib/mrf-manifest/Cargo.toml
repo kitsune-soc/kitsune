@@ -13,13 +13,13 @@ semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = { version = "1.0.117", optional = true }
 thiserror = { version = "1.0.61", optional = true }
-wasm-encoder = { version = "0.210.0", optional = true }
-wasmparser = { version = "0.210.0", optional = true }
+wasm-encoder = { version = "0.211.1", optional = true }
+wasmparser = { version = "0.211.1", optional = true }
 
 [dev-dependencies]
 serde_json = "1.0.117"
 insta = { version = "1.39.0", default-features = false, features = ["json"] }
-wat = "1.210.0"
+wat = "1.211.1"
 
 [features]
 decode = ["dep:leb128", "dep:serde_json", "dep:thiserror", "dep:wasmparser"]

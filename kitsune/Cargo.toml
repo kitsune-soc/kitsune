@@ -101,7 +101,7 @@ tracing = "0.1.40"
 trials = { workspace = true }
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
-url = "2.5.1"
+url = "2.5.2"
 
 # --- Optional dependencies ---
 

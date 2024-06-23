@@ -11,7 +11,7 @@ kitsune-config = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-type = { workspace = true }
-url = "2.5.1"
+url = "2.5.2"
 
 [lints]
 workspace = true
