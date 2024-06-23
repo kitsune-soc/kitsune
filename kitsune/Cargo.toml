@@ -67,7 +67,7 @@ kitsune-url = { workspace = true }
 kitsune-util = { workspace = true }
 kitsune-wasm-mrf = { workspace = true }
 kitsune-webfinger = { workspace = true }
-mimalloc = "0.1.42"
+mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.4", default-features = false }
 oxide-auth = "0.6.1"
@@ -101,7 +101,7 @@ tracing = "0.1.40"
 trials = { workspace = true }
 triomphe = { workspace = true }
 typed-builder = "0.18.2"
-url = "2.5.1"
+url = "2.5.2"
 
 # --- Optional dependencies ---
 
