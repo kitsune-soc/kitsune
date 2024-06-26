@@ -26,7 +26,7 @@ pin-project-lite = "0.2.14"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 speedy-uuid = { workspace = true }
-strum = { version = "0.26.2", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
 tracing = "0.1.40"
 
 [lints]
