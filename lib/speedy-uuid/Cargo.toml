@@ -14,7 +14,7 @@ diesel = { version = "2.2.1", default-features = false, features = [
 fred = { version = "9.0.3", default-features = false, optional = true }
 serde = { version = "1.0.203", optional = true }
 thiserror = "1.0.61"
-uuid = { version = "1.8.0", features = ["fast-rng", "v7"] }
+uuid = { version = "1.9.1", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 
 [dev-dependencies]

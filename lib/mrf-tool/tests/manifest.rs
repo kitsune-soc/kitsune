@@ -63,8 +63,11 @@ fn add() {
 #[test]
 fn read() {
     let manifest: Manifest<'_> = serde_json::from_str(MANIFEST).unwrap();
-    let pretty_manifest = serde_json::to_vec_pretty(&manifest).unwrap();
     let module_with_manifest = module_with_manifest();
+
+    let pretty_manifest = colored_json::to_colored_json_auto(&manifest)
+        .unwrap()
+        .into_bytes();
 
     let mut sink = Vec::new();
     mrf_tool::read_manifest(&mut sink, &module_with_manifest).unwrap();

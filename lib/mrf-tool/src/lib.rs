@@ -16,8 +16,8 @@ where
         bail!("missing manifest in module");
     };
 
-    let prettified = serde_json::to_string_pretty(&manifest)?;
-    writeln!(sink, "{prettified}")?;
+    colored_json::write_colored_json(&manifest, sink)?;
+    writeln!(sink)?;
 
     Ok(())
 }

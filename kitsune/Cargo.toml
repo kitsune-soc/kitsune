@@ -80,7 +80,7 @@ serde_urlencoded = "0.7.1"
 sonic-rs = { workspace = true }
 simdutf8 = { workspace = true }
 speedy-uuid = { workspace = true }
-strum = { version = "0.26.2", features = ["derive", "phf"] }
+strum = { version = "0.26.3", features = ["derive", "phf"] }
 tempfile = "3.10.1"
 time = "0.3.36"
 tokio = { version = "1.38.0", features = ["full"] }
