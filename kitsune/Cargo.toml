@@ -19,7 +19,7 @@ athena = { workspace = true }
 argon2 = { version = "0.5.3", features = ["std"] }
 askama = { workspace = true }
 askama_axum = "0.4.0"
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 axum = { version = "0.7.5", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.3", features = [
     "cookie",
@@ -69,13 +69,13 @@ kitsune-wasm-mrf = { workspace = true }
 kitsune-webfinger = { workspace = true }
 mimalloc = "0.1.43"
 mime = "0.3.17"
-mime_guess = { version = "2.0.4", default-features = false }
+mime_guess = { version = "2.0.5", default-features = false }
 oxide-auth = "0.6.1"
 oxide-auth-async = "0.2.1"
 oxide-auth-axum = "0.5.0"
-rust-embed = { version = "8.4.0", features = ["include-exclude"] }
+rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 scoped-futures = "0.1.3"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sonic-rs = { workspace = true }
 simdutf8 = { workspace = true }

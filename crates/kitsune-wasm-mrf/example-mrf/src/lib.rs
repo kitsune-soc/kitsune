@@ -6,7 +6,11 @@ use self::{
 };
 use rand::{distributions::Alphanumeric, Rng};
 
-wit_bindgen::generate!();
+wit_bindgen::generate!({
+    with: {
+        "wasi:logging/logging": generate
+    }
+});
 
 fn generate_random_key() -> String {
     rand::thread_rng()

@@ -145,6 +145,8 @@
                   packages = with pkgs; [
                     cargo-insta
                     diesel-cli
+                    diesel-cli-ext
+                    pgformatter
                     rust-bin.stable.latest.default
                   ]
                   ++

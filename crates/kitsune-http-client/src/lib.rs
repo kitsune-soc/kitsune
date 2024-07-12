@@ -2,11 +2,8 @@
 #![deny(missing_docs)]
 
 use self::util::BoxCloneService;
-use async_stream::try_stream;
-use bytes::Buf;
 use futures_util::Stream;
-use http_body::Body as HttpBody;
-use http_body_util::{BodyExt, BodyStream, Limited};
+use http_body_util::{BodyStream, Limited};
 use hyper::{
     body::Bytes,
     header::{HeaderName, USER_AGENT},
@@ -171,7 +168,7 @@ impl ClientBuilder {
         S: Service<Request<Body>, Response = HyperResponse<B>> + Clone + Send + Sync + 'static,
         S::Error: StdError + Send + Sync + 'static,
         S::Future: Send,
-        B: HttpBody + Default + Send + Sync + 'static,
+        B: http_body::Body + Default + Send + Sync + 'static,
         B::Data: Send + Sync,
         B::Error: StdError + Send + Sync + 'static,
     {
@@ -319,6 +316,8 @@ impl Response {
     ///
     /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
+        use http_body_util::BodyExt;
+
         Ok(self.inner.collect().await.map_err(Error::new)?.to_bytes())
     }
 
@@ -406,19 +405,18 @@ impl Response {
 
     /// Stream the body
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
-        let body_stream = BodyStream::new(self.inner.into_body());
+        use futures_util::TryStreamExt;
 
-        try_stream! {
-            for await frame in body_stream {
-                match frame.map_err(Error::new)?.into_data() {
-                    Ok(val) if val.has_remaining() => yield val,
-                    Ok(..) | Err(..) => {
-                        // There was either no remaining data or the frame was no data frame.
-                        // Therefore we just discard it.
-                    }
+        BodyStream::new(self.inner.into_body())
+            .map_err(Error::new)
+            .map_ok(|value| match value.into_data() {
+                Ok(val) => val,
+                Err(..) => {
+                    // There was either no remaining data or the frame was no data frame.
+                    // Therefore we just discard it.
+                    Bytes::new()
                 }
-            }
-        }
+            })
     }
 
     /// Get the HTTP version the client used
