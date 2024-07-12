@@ -1090,11 +1090,11 @@ impl PostService {
             Ok::<_, Error>(post)
         };
 
-        try_stream! {
-            let permission_check = PermissionCheck::builder()
-                .fetching_account_id(fetching_account_id)
-                .build();
+        let permission_check = PermissionCheck::builder()
+            .fetching_account_id(fetching_account_id)
+            .build();
 
+        try_stream! {
             let descendant_stream = load_post(id, permission_check).await?;
             for await descendant in descendant_stream {
                 let descendant = descendant?;
