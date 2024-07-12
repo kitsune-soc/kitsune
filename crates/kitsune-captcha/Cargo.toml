@@ -13,7 +13,7 @@ kitsune-http-client = { workspace = true }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sonic-rs = { workspace = true }
-strum = { version = "0.26.2", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
 typed-builder = "0.18.2"
 
 [lints]

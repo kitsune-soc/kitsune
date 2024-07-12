@@ -58,6 +58,7 @@ members = [
     "lib/cursiv",
     "lib/geomjeungja",
     "lib/http-signatures",
+    "lib/http-signatures-cli",
     "lib/just-retry",
     "lib/masto-id-convert",
     "lib/mrf-manifest",

@@ -11,7 +11,7 @@ pub type SectionRange = Range<usize>;
 pub enum DecodeError {
     /// Parsing of the JSON manifest failed
     #[error(transparent)]
-    Parse(#[from] serde_json::Error),
+    Parse(#[from] sonic_rs::Error),
 
     /// Parsing of the WASM component failed
     #[error(transparent)]
@@ -43,7 +43,7 @@ pub fn decode(module: &[u8]) -> Result<Option<(Manifest<'_>, SectionRange)>, Dec
     let mut section_range = payload.range();
     section_range.start -= start_offset;
 
-    let manifest = serde_json::from_slice(payload.data())?;
+    let manifest = sonic_rs::from_slice(payload.data())?;
 
     Ok(Some((manifest, section_range)))
 }
