@@ -79,12 +79,12 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.7", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.1", default-features = false, features = [
+clap = { version = "4.5.9", features = ["derive", "wrap_help"] }
+diesel = { version = "2.2.2", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
-diesel-async = { version = "0.4.1", features = [
+diesel-async = { version = "0.5.0", features = [
     "async-connection-wrapper",
     "bb8",
     "postgres",
@@ -97,7 +97,7 @@ fred = { version = "9.0.3", features = [
     "i-scripts",
     "sha-1",
 ] }
-garde = { version = "0.19.2", features = [
+garde = { version = "0.20.0", features = [
     "derive",
     "email",
     "email-idna",
@@ -105,9 +105,9 @@ garde = { version = "0.19.2", features = [
     "serde",
 ] }
 itertools = { version = "0.13.0", default-features = false }
-moka = { version = "0.12.7", features = ["sync"] }
+moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.7"
+sonic-rs = "0.3.8"
 triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
@@ -191,7 +191,7 @@ license = "AGPL-3.0-or-later"
 # Whether to pass --all-features to cargo build
 all-features = true
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.14.1"
+cargo-dist-version = "0.19.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -207,23 +207,18 @@ targets = [
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = true
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
 
 [patch.crates-io]
-diesel-async = { git = "https://github.com/weiznich/diesel_async.git", rev = "3bc6789daf73563d59ed4f174241a23e9cb86686" }
-scraper = { git = "https://github.com/causal-agent/scraper.git", rev = "d67111f5cc0b7da6e6ff10e4549d87cf09ba3e5b" }
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
-# SIMD runtime detection
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "317ff37a8ab88e653ee01bbc00a974d41f3b151a" }
+# Patch potential unsoundness. Scary...
+async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40a8deb7d41d3ac0e563f9a0fd7f600c23189987" }
+
+# SIMD runtime detection and generic I/O wrapper
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "7e3bd236d82c5ccf85b3506f5a8cd2794e53451a" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
 axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
-
-# Patch to make OpenTelemetry with with hyper 1
-opentelemetry = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-opentelemetry-http = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-opentelemetry-otlp = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-opentelemetry_sdk = { git = "https://github.com/open-telemetry/opentelemetry-rust.git", rev = "40fb924215c84d6e3818351b2c0e3d2ba01a7db9" }
-tonic = { git = "https://github.com/hyperium/tonic.git", rev = "a90adf27ef389a9c9d891c3f5696e6245589c479" }
-tracing-opentelemetry = { git = "https://github.com/aumetra/tracing-opentelemetry.git", rev = "b7fe8d5d056e43f913a85eac1e6a661226b49c43" }

@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use eyre::WrapErr;
 use http_body_util::BodyExt;
 use kitsune_config::{open_telemetry::Transport, Configuration};
-use opentelemetry::trace::{noop::NoopTracer, Tracer};
+use kitsune_core::consts::PROJECT_IDENTIFIER;
+use opentelemetry::trace::{noop::NoopTracer, Tracer, TracerProvider};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::{SpanExporterBuilder, WithExportConfig};
 use opentelemetry_sdk::runtime::Tokio;
@@ -96,7 +97,8 @@ pub fn initialise(config: &Configuration) -> eyre::Result<()> {
         let tracer = opentelemetry_otlp::new_pipeline()
             .tracing()
             .with_exporter(trace_exporter)
-            .install_batch(Tokio)?;
+            .install_batch(Tokio)?
+            .tracer(PROJECT_IDENTIFIER);
 
         initialise_logging(tracer)?;
     } else {

@@ -6,8 +6,8 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.80"
-bytes = "1.6.0"
+async-trait = "0.1.81"
+bytes = "1.6.1"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 diesel_full_text_search = { workspace = true }
@@ -21,9 +21,9 @@ kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
 kitsune-language = { workspace = true }
-meilisearch-sdk = { version = "0.26.1", default-features = false }
+meilisearch-sdk = { version = "0.27.0", default-features = false }
 pin-project-lite = "0.2.14"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive"] }

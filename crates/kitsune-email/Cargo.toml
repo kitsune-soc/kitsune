@@ -26,13 +26,13 @@ lettre = { version = "0.11.7", default-features = false, features = [
     "tokio1-rustls-tls",
     "tracing",
 ] }
-mrml = { version = "4.0.0", default-features = false, features = [
+mrml = { version = "4.0.1", default-features = false, features = [
     "parse",
     "render",
 ] }
 speedy-uuid = { workspace = true }
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
+typed-builder = "0.19.1"
 
 [lints]
 workspace = true
