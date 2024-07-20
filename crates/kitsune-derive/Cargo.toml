@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 kitsune-derive-impl = { path = "impl" }
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
+typed-builder = "0.19.1"
 
 [lints]
 workspace = true

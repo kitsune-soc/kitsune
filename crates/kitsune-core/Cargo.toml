@@ -7,18 +7,18 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 const_format = "0.2.32"
 kitsune-db = { workspace = true }
 kitsune-error = { workspace = true }
 paste = "1.0.15"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
+typed-builder = "0.19.1"
 unsize = "1.1.0"
 
 [build-dependencies]
-vergen = { version = "8.3.1", features = ["build", "git", "gitcl"] }
+vergen-gitcl = { version = "1.0.0", features = ["build"] }
 
 [lints]
 workspace = true

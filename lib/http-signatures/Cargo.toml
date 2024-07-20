@@ -27,13 +27,13 @@ miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.3", default-features = false }
-thiserror = "1.0.61"
+thiserror = "1.0.63"
 tick-tock-mock = { workspace = true }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 divan = "0.1.14"
-tokio = { version = "1.38.0", features = ["macros", "rt"] }
+tokio = { version = "1.38.1", features = ["macros", "rt"] }
 
 [features]
 default = ["easy"]

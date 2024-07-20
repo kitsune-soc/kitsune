@@ -6,22 +6,22 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 hickory-resolver = "0.24.1"
 rand = "0.8.5"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 simdutf8 = { workspace = true }
-thiserror = "1.0.61"
+thiserror = "1.0.63"
 tracing = "0.1.40"
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
+typed-builder = "0.19.1"
 unsize = "1.1.0"
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["json"] }
 rand_xorshift = "0.3.0"
-serde_json = "1.0.118"
-tokio = { version = "1.38.0", features = ["macros", "rt"] }
+serde_json = "1.0.120"
+tokio = { version = "1.38.1", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

@@ -16,7 +16,7 @@ pulldown-cmark = { version = "0.11.0", default-features = false, features = [
 ] }
 rand = "0.8.5"
 speedy-uuid = { workspace = true }
-tokio = { version = "1.38.0", features = ["macros"] }
+tokio = { version = "1.38.1", features = ["macros"] }
 
 [lints]
 workspace = true
