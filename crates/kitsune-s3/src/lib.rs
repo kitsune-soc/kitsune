@@ -31,11 +31,11 @@ const fn s3_method_to_http(method: rusty_s3::Method) -> http::Method {
 }
 
 #[inline]
-const fn http_method_by_value<'a, T>(_: &T) -> http::Method
+fn http_method_by_value<'a, T>(_: &T) -> http::Method
 where
     T: S3Action<'a> + ?Sized,
 {
-    s3_method_to_http(T::METHOD)
+    const { s3_method_to_http(T::METHOD) }
 }
 
 async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Response> {
