@@ -33,7 +33,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { version = "1.38.1", features = ["rt"] }
-tokio-postgres = "0.7.10"
+tokio-postgres = "0.7.11"
 tokio-postgres-rustls = "0.12.0"
 tracing = "0.1.40"
 tracing-log = "0.2.0"

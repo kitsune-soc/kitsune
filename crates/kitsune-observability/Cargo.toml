@@ -30,8 +30,7 @@ opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
 ] }
 tracing = "0.1.40"
 tracing-error = "0.2.0"
-# ToDo: Remove the git dependency once the next version of tracing-opentelemetry is released
-tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "6fb2ba4c8b5b5b00e2566256c3ce80d7ebbe59ec", default-features = false }
+tracing-opentelemetry = { version = "0.25.0", default-features = false }
 tracing-subscriber = "0.3.18"
 
 [lints]
