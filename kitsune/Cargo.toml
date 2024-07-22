@@ -133,7 +133,7 @@ pretty_assertions = "1.4.0"
 fred = { workspace = true }
 
 [features]
-default = ["graphql-api", "mastodon-api"]
+default = ["graphql-api", "mastodon-api", "oidc"]
 graphql-api = [
     "dep:async-graphql",
     "dep:async-graphql-axum",
