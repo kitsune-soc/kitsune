@@ -245,10 +245,9 @@ impl MrfService {
         direction: Direction,
         activity: Cow<'a, str>,
     ) -> Result<ControlFlow<(), Cow<'a, str>>, Error> {
-        let (mrf, _) =
-            mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
-                .await
-                .map_err(Error::msg)?;
+        let mrf = mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
+            .await
+            .map_err(Error::msg)?;
 
         store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
 
