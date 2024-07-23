@@ -7430,16 +7430,6 @@ name = "trials"
 version = "0.0.1-pre.6"
 dependencies = [
  "futures-test",
- "trials-macros",
-]
-
-[[package]]
-name = "trials-macros"
-version = "0.0.1-pre.6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.72",
 ]
 
 [[package]]

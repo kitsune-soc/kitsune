@@ -11,14 +11,14 @@ futures-util = { version = "0.3.30", default-features = false }
 http = "1.1.0"
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
-quick-xml = { version = "0.36.0", features = ["serialize"] }
+quick-xml = { version = "0.36.1", features = ["serialize"] }
 rusty-s3 = "0.5.0"
 serde = { version = "1.0.204", features = ["derive"] }
 typed-builder = "0.19.1"
 
 [dev-dependencies]
 kitsune-test = { workspace = true }
-tokio = { version = "1.38.1", features = ["macros", "rt"] }
+tokio = { version = "1.39.1", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

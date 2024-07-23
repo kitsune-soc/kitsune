@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
-use std::{collections::HashMap, num::NonZeroUsize};
+use std::{collections::HashMap, num::NonZero};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -25,7 +25,7 @@ pub struct FsKvStorage {
 #[serde(rename_all = "kebab-case")]
 pub struct RedisKvStorage {
     pub url: SmolStr,
-    pub pool_size: NonZeroUsize,
+    pub pool_size: NonZero<usize>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

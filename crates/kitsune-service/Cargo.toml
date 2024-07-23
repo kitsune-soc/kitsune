@@ -48,7 +48,7 @@ rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.204"
 smol_str = "0.2.2"
 speedy-uuid = { workspace = true }
-tokio = { version = "1.38.1", features = ["macros", "sync"] }
+tokio = { version = "1.39.1", features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.19.1"
