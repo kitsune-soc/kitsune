@@ -69,7 +69,6 @@ members = [
     "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
     "lib/trials",
-    "lib/trials/macros",
     "xtask",
 ]
 resolver = "2"
