@@ -3,17 +3,17 @@ use http::{
     header::{LOCATION, USER_AGENT},
     HeaderValue, Request, Response, StatusCode,
 };
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::{
     future::{self, Ready},
+    sync::LazyLock,
     task::{self, Poll},
 };
 use tower_layer::Layer;
 use tower_service::Service;
 
 static REDIRECT_URL: &str = "https://www.spacebar.news/stop-using-brave-browser/";
-static USER_AGENT_REGEX: Lazy<Regex> = Lazy::new(|| {
+static USER_AGENT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)Brave(/|\s)").expect("[Bug] Failed to compile User-Agent regex")
 });
 

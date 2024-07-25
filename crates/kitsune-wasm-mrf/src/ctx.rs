@@ -1,13 +1,26 @@
-use crate::kv_storage;
+use crate::{kv_storage, mrf_wit::v1::fep::mrf::keyvalue};
 use slab::Slab;
 use triomphe::Arc;
-use wasmtime::{component::ResourceTable, Engine, Store};
+use wasmtime::{
+    component::{Resource, ResourceTable},
+    Engine, Store,
+};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 
 pub struct KvContext {
     pub module_name: Option<String>,
     pub storage: Arc<kv_storage::BackendDispatch>,
     pub buckets: Slab<kv_storage::BucketBackendDispatch>,
+}
+
+impl KvContext {
+    #[inline]
+    pub fn get_bucket(
+        &self,
+        rep: &Resource<keyvalue::Bucket>,
+    ) -> &kv_storage::BucketBackendDispatch {
+        &self.buckets[rep.rep() as usize]
+    }
 }
 
 pub struct Context {

@@ -77,7 +77,7 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.10", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.11", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.2", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -162,8 +162,8 @@ tower-x-clacks-overhead = { path = "lib/tower-x-clacks-overhead" }
 trials = { path = "lib/trials" }
 
 [workspace.lints.clippy]
-all = "warn"
-pedantic = "warn"
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 
 cast_lossless = "allow"
 cast_possible_truncation = "allow"
@@ -176,7 +176,7 @@ no_effect_underscore_binding = "allow"
 
 [workspace.lints.rust]
 forbidden_lint_groups = "allow"
-rust_2018_idioms = "forbid"
+rust_2018_idioms = { level = "forbid", priority = -1 }
 unsafe_code = "deny"
 
 [workspace.package]

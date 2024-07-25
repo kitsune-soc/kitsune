@@ -12,14 +12,14 @@ use kitsune_db::{
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
-use once_cell::sync::Lazy;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
+use std::sync::LazyLock;
 
 pub use embed_sdk;
 pub use embed_sdk::Embed;
 
-static LINK_SELECTOR: Lazy<Selector> = Lazy::new(|| {
+static LINK_SELECTOR: LazyLock<Selector> = LazyLock::new(|| {
     Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
 });
 
@@ -29,7 +29,8 @@ fn first_link_from_fragment(fragment: &str) -> Option<String> {
     parsed_fragment
         .select(&LINK_SELECTOR)
         .next()
-        .and_then(|element| element.value().attr("href").map(ToString::to_string))
+        .and_then(|element| element.value().attr("href"))
+        .map(ToString::to_string)
 }
 
 #[kitsune_service]

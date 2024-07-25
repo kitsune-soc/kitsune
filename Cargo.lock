@@ -451,7 +451,6 @@ dependencies = [
  "iso8601-timestamp",
  "just-retry",
  "kitsune-test",
- "once_cell",
  "postcard",
  "rand 0.8.5",
  "serde",
@@ -778,7 +777,6 @@ dependencies = [
 name = "blowocking"
 version = "0.0.1-pre.6"
 dependencies = [
- "once_cell",
  "rayon",
  "thiserror",
  "tokio",
@@ -3598,7 +3596,6 @@ dependencies = [
  "kitsune-derive",
  "kitsune-error",
  "kitsune-http-client",
- "once_cell",
  "scraper",
  "smol_str",
 ]
@@ -3791,7 +3788,6 @@ dependencies = [
  "kitsune-http-client",
  "moka",
  "oauth2",
- "once_cell",
  "openidconnect",
  "serde",
  "sonic-rs",
@@ -3989,7 +3985,6 @@ dependencies = [
  "bubble-bath",
  "iso8601-timestamp",
  "kitsune-type",
- "once_cell",
  "pulldown-cmark",
  "rand 0.8.5",
  "speedy-uuid",
@@ -7308,7 +7303,6 @@ dependencies = [
  "either",
  "futures",
  "http",
- "once_cell",
  "regex",
  "tower",
  "tower-layer",

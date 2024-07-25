@@ -1,17 +1,16 @@
 use crate::error::Result;
 use fred::{clients::RedisPool, types::Script, util::NONE};
-use once_cell::sync::Lazy;
 use rand::Rng;
 use smol_str::SmolStr;
-use std::{ops::RangeInclusive, time::Duration};
+use std::{ops::RangeInclusive, sync::LazyLock, time::Duration};
 use typed_builder::TypedBuilder;
 
 // The unit of this is seconds. The actor will wait between [START] and [END] seconds after executing the script.
 // This is to prevent a bunch of blocking the server when multiple instances of this job server are running.
 const SCHEDULE_PAUSE_RANGE: RangeInclusive<u64> = 5..=10;
 // This functionality is expressed as a script since scripts are executed transactionally
-static SCHEDULE_SCRIPT: Lazy<Script> =
-    Lazy::new(|| Script::from_lua(include_str!("../../lua/copy_scheduled.lua")));
+static SCHEDULE_SCRIPT: LazyLock<Script> =
+    LazyLock::new(|| Script::from_lua(include_str!("../../lua/copy_scheduled.lua")));
 
 #[derive(TypedBuilder)]
 pub struct ScheduledJobActor {
