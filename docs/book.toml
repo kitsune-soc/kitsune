@@ -1,6 +1,0 @@
-[book]
-authors = ["aumetra"]
-language = "en"
-multilingual = false
-src = "src"
-title = "Kitsune documentation"

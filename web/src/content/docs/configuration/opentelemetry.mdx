@@ -1,0 +1,15 @@
+---
+title: OpenTelemetry
+description: Configure the OpenTelemetry support of Kitsune
+---
+
+Kitsune can export its traces via the OpenTelemetry Protocol (or OTLP, for short).
+
+To push the data to an endpoint, add the following to your configuration:
+
+```toml
+[opentelemetry]
+# Where Kitsune pushes traces (eg. Jaeger)
+tracing-transport = "http" # "http" or "grpc"
+tracing-endpoint = "https://localhost:5050/tracing-endpoint"
+```
