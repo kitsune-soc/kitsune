@@ -21,6 +21,7 @@ fn is_delimiter(c: u8) -> bool {
 #[inline]
 fn enforce_postfix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
     let end = lexer.span().end;
+
     if end == lexer.source().len() {
         true
     } else {
@@ -203,6 +204,7 @@ pub struct Emote<'a> {
 impl Render for Emote<'_> {
     fn render(&self, out: &mut impl fmt::Write) {
         let _ = match &self.domain {
+            // Needed since other software (like Mastodon or Misskey) don't support characters such as '.', '-' or '@'
             Some(domain) => write!(
                 out,
                 ":{}__{}:",
@@ -247,7 +249,9 @@ impl Render for Html<'_> {
             let _ = write!(out, " {name}=\"{value}\"");
         }
         let _ = out.write_char('>');
+
         self.content.render(out);
+
         let _ = write!(out, "</{}>", self.tag);
     }
 }
