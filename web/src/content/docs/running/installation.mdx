@@ -3,6 +3,8 @@ title: Installation
 description: Install Kitsune on your own server
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 At the moment, the only way to install Kitsune is to compile it from source.  
 Don't worry, that sounds way more scary than it actually is. In this guide we will step you through it.
 
@@ -35,7 +37,10 @@ The name of the package(s) containing these tools might differ between distribut
 
 First, grab yourself a copy of the source code. You can either download the [main branch ZIP archive](https://github.com/kitsune-soc/kitsune/archive/refs/heads/main.zip) or clone it via Git. Both ways will work just fine.
 
-> The recommended way to download the source is via Git since it makes updating and doing a rollback way easier.
+<Aside type="tip">
+  The recommended way to download the source is via Git since it makes updating
+  and doing a rollback way easier.
+</Aside>
 
 To download a Git repository, just run the following command (this assumes you have [Git](https://git-scm.com/) installed):
 
@@ -43,7 +48,7 @@ To download a Git repository, just run the following command (this assumes you h
 git clone https://github.com/kitsune-soc/kitsune.git
 ```
 
-> If you downloaded the ZIP, just unzip the archive
+<Aside>If you downloaded the ZIP, just unzip the archive</Aside>
 
 Next, move into the newly created directory and then into the `kitsune-fe` directory and build the frontend.
 To do this run:
