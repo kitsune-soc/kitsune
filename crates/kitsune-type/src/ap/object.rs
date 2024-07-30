@@ -7,7 +7,11 @@ pub enum MediaAttachmentType {
     Audio,
     Document,
     Image,
+    Link,
     Video,
+
+    #[serde(other)]
+    Other,
 }
 
 #[serde_as]
@@ -16,13 +20,13 @@ pub enum MediaAttachmentType {
 pub struct MediaAttachment {
     #[serde_as(as = "jsonld::serde::FirstOk")]
     pub r#type: MediaAttachmentType,
-    #[serde(default)]
     #[serde_as(as = "Option<jsonld::serde::First>")]
     pub name: Option<String>,
     pub media_type: Option<String>,
-    #[serde(default)]
     #[serde_as(as = "Option<jsonld::serde::First>")]
     pub blurhash: Option<String>,
+
+    #[serde(alias = "href")]
     #[serde_as(as = "jsonld::serde::First")]
     pub url: String,
 }

@@ -157,15 +157,13 @@ pub struct Object {
     pub r#type: ObjectType,
     #[serde_as(as = "jsonld::serde::First<jsonld::serde::Id>")]
     pub attributed_to: String,
-    #[serde(default)]
     #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub in_reply_to: Option<String>,
-    #[serde(default)]
     #[serde_as(as = "Option<jsonld::serde::First>")]
     pub name: Option<String>,
-    #[serde(default)]
     #[serde_as(as = "Option<jsonld::serde::First>")]
     pub summary: Option<String>,
+    #[serde(default)]
     #[serde_as(as = "jsonld::serde::First")]
     pub content: String,
     pub media_type: Option<String>,
