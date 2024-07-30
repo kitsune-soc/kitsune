@@ -1,3 +1,4 @@
+use crate::jsonld;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sonic_rs::Value;
@@ -14,7 +15,7 @@ pub struct Collection {
     #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
-    #[serde_with(as = "jsonld::serde::FirstOk")]
+    #[serde_as(as = "jsonld::serde::FirstOk")]
     pub r#type: CollectionType,
     pub total_items: u64,
     pub first: Option<String>,
@@ -33,7 +34,7 @@ pub struct CollectionPage<T> {
     #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
-    #[serde_with(as = "jsonld::serde::FirstOk")]
+    #[serde_as(as = "jsonld::serde::FirstOk")]
     pub r#type: PageType,
     pub next: String,
     pub prev: String,

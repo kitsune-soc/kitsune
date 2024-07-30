@@ -7,15 +7,13 @@ use serde::{
         self, value::SeqAccessDeserializer, DeserializeSeed, Deserializer, IgnoredAny, MapAccess,
         SeqAccess,
     },
-    Deserialize,
+    Deserialize, Serialize,
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs};
+use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
 
 /// Deserialises a single node identifier string or a set of node identifier strings.
 #[allow(dead_code)] // Used inside `serde_as` macro.
 pub struct Id;
-
-struct Visitor<T>(PhantomData<T>);
 
 impl<'de, T> DeserializeAs<'de, T> for Id
 where
@@ -28,6 +26,20 @@ where
         deserializer.deserialize_any(Visitor(PhantomData::<T>))
     }
 }
+
+impl<T> SerializeAs<T> for Id
+where
+    T: Serialize,
+{
+    fn serialize_as<S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        value.serialize(serializer)
+    }
+}
+
+struct Visitor<T>(PhantomData<T>);
 
 impl<'de, T> de::Visitor<'de> for Visitor<T>
 where
@@ -152,7 +164,7 @@ mod tests {
         #[derive(Debug, Deserialize, PartialEq)]
         #[serde(transparent)]
         struct Test {
-            #[serde_with(as = "Id")]
+            #[serde_as(as = "Id")]
             term: Vec<String>,
         }
 

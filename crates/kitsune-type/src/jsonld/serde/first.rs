@@ -2,8 +2,11 @@ use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess};
-use serde_with::DeserializeAs;
+use serde::{
+    de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
+    Serialize,
+};
+use serde_with::{DeserializeAs, SerializeAs};
 
 /// Deserialises the first element of a JSON-LD set.
 #[allow(dead_code)] // Used inside `serde_as` macro.
@@ -19,6 +22,18 @@ where
         D: Deserializer<'de>,
     {
         deserializer.deserialize_any(Visitor(PhantomData::<T>, PhantomData::<U>))
+    }
+}
+
+impl<T, U> SerializeAs<T> for First<U>
+where
+    T: Serialize,
+{
+    fn serialize_as<S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        value.serialize(serializer)
     }
 }
 

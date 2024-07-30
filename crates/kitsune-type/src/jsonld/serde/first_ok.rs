@@ -3,12 +3,15 @@ use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{
-    self,
-    value::{EnumAccessDeserializer, MapAccessDeserializer},
-    Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
+use serde::{
+    de::{
+        self,
+        value::{EnumAccessDeserializer, MapAccessDeserializer},
+        Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
+    },
+    Serialize,
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs};
+use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
 
 // XXX: Conceptually, we could decompose it into `First` and a helper type that filters successfully
 // deserialised elements in a JSON-LD set. In practice, however, the latter type cannot be
@@ -37,6 +40,18 @@ where
         D: Deserializer<'de>,
     {
         deserializer.deserialize_any(Visitor(PhantomData::<T>, PhantomData::<U>))
+    }
+}
+
+impl<T, U> SerializeAs<T> for FirstOk<U>
+where
+    T: Serialize,
+{
+    fn serialize_as<S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        value.serialize(serializer)
     }
 }
 

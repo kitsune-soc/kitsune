@@ -152,6 +152,8 @@ mod first;
 mod first_ok;
 mod id;
 
+pub use self::{first::First, first_ok::FirstOk, id::Id};
+
 use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
@@ -305,8 +307,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::{First, FirstOk, Id};
     use serde::Deserialize;
-    use serde_with::serde_as;
+    use serde_with::{serde_as, OneOrMany};
 
     /// Checks that the types work for some random real-world-ish use cases.
     #[test]
@@ -321,21 +324,21 @@ mod tests {
         #[serde(rename_all = "camelCase")]
         struct Object {
             id: String,
-            #[serde_with(as = "FirstOk")]
+            #[serde_as(as = "FirstOk")]
             r#type: Type,
-            #[serde_with(as = "First<Id>")]
+            #[serde_as(as = "First<Id>")]
             attributed_to: String,
             #[serde(default)]
-            #[serde_with(as = "Option<First>")]
+            #[serde_as(as = "Option<First>")]
             summary: Option<String>,
             #[serde(default)]
-            #[serde_with(as = "Option<First>")]
+            #[serde_as(as = "Option<First>")]
             content: Option<String>,
             #[serde(default)]
-            #[serde_with(as = "OneOrMany<Id>")]
+            #[serde_as(as = "OneOrMany<Id>")]
             to: Vec<String>,
             #[serde(default)]
-            #[serde_with(as = "OneOrMany<Id>")]
+            #[serde_as(as = "OneOrMany<Id>")]
             cc: Vec<String>,
         }
 
