@@ -2,7 +2,7 @@ use self::{actor::Actor, object::MediaAttachment};
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, OneOrMany};
+use serde_with::{serde_as, DefaultOnNull, OneOrMany};
 use sonic_rs::{json, Value};
 use strum::AsRefStr;
 
@@ -176,7 +176,7 @@ pub struct Object {
     #[serde_as(as = "OneOrMany<_>")]
     pub tag: Vec<Tag>,
     #[serde(default)]
-    #[serde_as(as = "jsonld::serde::First")]
+    #[serde_as(as = "DefaultOnNull<jsonld::serde::First>")]
     pub sensitive: bool,
     pub published: Timestamp,
     #[serde(default)]
