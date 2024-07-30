@@ -8,7 +8,7 @@ use serde::de::{
     value::{EnumAccessDeserializer, MapAccessDeserializer},
     Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
 };
-use serde_with::DeserializeAs;
+use serde_with::{de::DeserializeAsWrap, DeserializeAs};
 
 // XXX: Conceptually, we could decompose it into `First` and a helper type that filters successfully
 // deserialised elements in a JSON-LD set. In practice, however, the latter type cannot be
@@ -70,7 +70,10 @@ where
         A: SeqAccess<'de>,
     {
         loop {
-            match seq.next_element_seed(CatchError::<_, A::Error>::new(PhantomData))? {
+            match seq
+                .next_element::<DeserializeAsWrap<_, CatchError<_, A::Error>>>()?
+                .map(DeserializeAsWrap::into_inner)
+            {
                 Some(Ok(value)) => {
                     while let Some(IgnoredAny) = seq.next_element()? {}
                     return Ok(value);

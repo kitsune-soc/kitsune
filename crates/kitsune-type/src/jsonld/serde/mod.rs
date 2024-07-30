@@ -156,45 +156,37 @@ use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{
-    self,
-    value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
-    DeserializeSeed, Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+use serde::{
+    de::{
+        self,
+        value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+        Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+    },
+    Deserialize,
 };
+use serde_with::DeserializeAs;
 
 const EXPECTING_SET: &str = "a JSON-LD set";
 
 /// A `DeserializeSeed` that catches a recoverable error and returns it as a successful value.
 struct CatchError<T, E> {
-    seed: T,
+    target: PhantomData<T>,
     marker: PhantomData<fn() -> E>,
 }
 
-impl<'de, T, E> CatchError<T, E>
+impl<'de, T, E> DeserializeAs<'de, Result<T, E>> for CatchError<T, E>
 where
-    T: DeserializeSeed<'de>,
+    T: Deserialize<'de>,
     E: de::Error,
 {
-    pub fn new(seed: T) -> Self {
-        Self {
-            seed,
-            marker: PhantomData,
-        }
-    }
-}
-
-impl<'de, T, E> DeserializeSeed<'de> for CatchError<T, E>
-where
-    T: DeserializeSeed<'de>,
-    E: de::Error,
-{
-    type Value = Result<T::Value, E>;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    fn deserialize_as<D>(deserializer: D) -> Result<Result<T, E>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_any(self)
+        deserializer.deserialize_any(CatchError {
+            target: PhantomData,
+            marker: PhantomData,
+        })
     }
 }
 
@@ -203,17 +195,17 @@ macro_rules! catch_error_forward_to_into_deserializer {
         fn $name<E2>(self, v: $T) -> Result<Self::Value, E2> {
             // We can tell that the error isn't fatal to the deserialiser because it's originated
             // from the already deserialised value `$t` rather than the deserialiser.
-            Ok(self.seed.deserialize(serde::de::IntoDeserializer::into_deserializer(v)))
+            Ok(T::deserialize(serde::de::IntoDeserializer::into_deserializer(v)))
         }
     )*};
 }
 
 impl<'de, T, E> Visitor<'de> for CatchError<T, E>
 where
-    T: DeserializeSeed<'de>,
+    T: Deserialize<'de>,
     E: de::Error,
 {
-    type Value = Result<T::Value, E>;
+    type Value = Result<T, E>;
 
     fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str("a value")
@@ -223,40 +215,36 @@ where
     where
         E: de::Error,
     {
-        Ok(self
-            .seed
-            .deserialize(de::value::BorrowedStrDeserializer::new(v)))
+        Ok(T::deserialize(de::value::BorrowedStrDeserializer::new(v)))
     }
 
     fn visit_borrowed_bytes<E2>(self, v: &'de [u8]) -> Result<Self::Value, E2>
     where
         E: de::Error,
     {
-        Ok(self
-            .seed
-            .deserialize(de::value::BorrowedBytesDeserializer::new(v)))
+        Ok(T::deserialize(de::value::BorrowedBytesDeserializer::new(v)))
     }
 
     fn visit_none<E2>(self) -> Result<Self::Value, E2> {
-        Ok(self.seed.deserialize(().into_deserializer()))
+        Ok(T::deserialize(().into_deserializer()))
     }
 
     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.deserialize(deserializer)
+        Self::deserialize_as(deserializer)
     }
 
     fn visit_unit<E2>(self) -> Result<Self::Value, E2> {
-        Ok(self.seed.deserialize(().into_deserializer()))
+        Ok(T::deserialize(().into_deserializer()))
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.deserialize(deserializer)
+        Self::deserialize_as(deserializer)
     }
 
     // XXX: The following methods cannot determine whether an error is recoverable. While we might
@@ -268,27 +256,21 @@ where
     where
         A: SeqAccess<'de>,
     {
-        self.seed
-            .deserialize(SeqAccessDeserializer::new(seq))
-            .map(Ok)
+        Self::deserialize_as(SeqAccessDeserializer::new(seq))
     }
 
     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
-        self.seed
-            .deserialize(MapAccessDeserializer::new(map))
-            .map(Ok)
+        Self::deserialize_as(MapAccessDeserializer::new(map))
     }
 
     fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
     where
         A: EnumAccess<'de>,
     {
-        self.seed
-            .deserialize(EnumAccessDeserializer::new(data))
-            .map(Ok)
+        Self::deserialize_as(EnumAccessDeserializer::new(data))
     }
 
     catch_error_forward_to_into_deserializer! {
