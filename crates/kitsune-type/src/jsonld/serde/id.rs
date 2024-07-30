@@ -185,5 +185,23 @@ mod tests {
                 Token::SeqEnd,
             ],
         );
+
+        assert_de_tokens(
+            &Test {
+                term: vec![
+                    "http://example.com/2".to_owned(),
+                    "http://example.com/1".to_owned(),
+                ],
+            },
+            &[
+                Token::Seq { len: Some(2) },
+                Token::Map { len: None },
+                Token::Str("id"),
+                Token::Str("http://example.com/2"),
+                Token::MapEnd,
+                Token::Str("http://example.com/1"),
+                Token::SeqEnd,
+            ],
+        );
     }
 }

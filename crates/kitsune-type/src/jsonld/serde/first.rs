@@ -6,7 +6,7 @@ use serde::{
     de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
     Serialize,
 };
-use serde_with::{DeserializeAs, SerializeAs};
+use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
 
 /// Deserialises the first element of a JSON-LD set.
 #[allow(dead_code)] // Used inside `serde_as` macro.
@@ -54,9 +54,9 @@ where
     where
         A: SeqAccess<'de>,
     {
-        let value = if let Some(value) = seq.next_element::<T>()? {
+        let value = if let Some(value) = seq.next_element::<DeserializeAsWrap<_, U>>()? {
             while let Some(IgnoredAny) = seq.next_element()? {}
-            value
+            value.into_inner()
         } else {
             U::deserialize_as(().into_deserializer())?
         };
