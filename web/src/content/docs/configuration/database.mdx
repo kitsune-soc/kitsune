@@ -3,11 +3,16 @@ title: Database
 description: Configure the database used by Kitsune
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 Kitsune requires a PostgreSQL installation that it can connect to since we make usage of Postgres-specific features, such as their full-text search.
 
 You can find instructions on creating a database (along with password-protected user) [here](https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e).
 
-> We supported SQLite in the past (before v0.0.1-pre.1), but the support has been dropped due to a high maintenance burden and rather little expected usage.
+<Aside>
+  We supported SQLite in the past (before v0.0.1-pre.1) but the support has been
+  dropped due to a high maintenance burden and rather little expected usage.
+</Aside>
 
 ## Database URL structure
 

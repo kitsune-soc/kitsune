@@ -96,6 +96,7 @@ fred = { version = "9.0.3", features = [
     "full-tracing",
     "i-scripts",
     "sha-1",
+    "unix-sockets",
 ] }
 garde = { version = "0.20.0", features = [
     "derive",

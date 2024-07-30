@@ -3,6 +3,8 @@ title: Language detection
 description: Configure the language detection of Kitsune
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 In order to classify posts better, Kitsune attempts to automatically guess the language a post is written in to improve the search experience by using language-specific tokenization.
 
 It can do that through a number of language detection backends.  
@@ -12,14 +14,15 @@ The currently supported backends are:
 - `whatlang`: Use the [whatlang](https://github.com/greyblake/whatlang-rs) library (recommended)
 - `whichlang`: Use the [whichlang](https://github.com/quickwit-oss/whichlang) library
 
-### Note on the backends
+<Aside>
+    In general you should prefer the `whatlang` backend as it offers reliability calculations and covers a wide range of languages.
 
-In general you should prefer the `whatlang` backend as it offers reliability calculations and covers a wide range of languages.
+    `whichlang` is generally _faster_ than `whatlang` but has less supported languages and doesn't offer any reliability calculations, meaning the classifications might be _way off_
+    and won't ever fall back on the default language.
 
-`whichlang` is generally _faster_ than `whatlang` but has less supported languages and doesn't offer any reliability calculations, meaning the classifications might be _way off_
-and won't ever fall back on the default language.
+    You probably don't want to use the `none` backend unless you are 100% confident that the language detection is too resource intensive for your installation (which is extremely unlikely!)
 
-You probably don't want to use the `none` backend unless you are 100% confident that the language detection is too resource intensive for your installation (which is extremely unlikely!)
+</Aside>
 
 ## Configuration
 

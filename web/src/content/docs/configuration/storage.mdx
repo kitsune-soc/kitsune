@@ -3,11 +3,16 @@ title: Storage
 description: Configure the storage used by Kitsune
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 As a microblogging platform, Kitsune also offers users the ability to attach images, videos, and audio to their posts.
 We offer multiple different storage backends to store the attachments to.
 
-> **Note**: You might want to increase the upload limit by tweaking the `max-upload-size` parameter in your configuration; the number is the upload limit in bytes.
-> The default set by the example configuration is 5MiB.
+<Aside type="tip">
+  You might want to increase the upload limit by tweaking the `max-upload-size`
+  parameter in your configuration. The default set by the example configuration
+  is 5MiB.
+</Aside>
 
 ## File System
 
@@ -63,10 +68,12 @@ These keys are given to you when creating your bucket. Make sure you keep these 
 
 ### Notes on "get_object" requests
 
+<Aside type="caution">
+  This is not final, we might change how S3 uploads are handled
+</Aside>
+
 Currently Kitsune proxies all the S3 accesses, meaning each media access results in a "get object" request.  
 For example, Cloudflare R2 has a "no egress fee policy" which, due to this implementation detail, doesn't apply to Kitsune.
-
-> This is not final, we might change how S3 uploads are handled
 
 ### Migrating from file-system storage to S3
 

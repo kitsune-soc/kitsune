@@ -3,6 +3,8 @@ title: Instance
 description: Configure miscellaneous aspects of your instance
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 Kitsune has a number of configurations that change how your instance works.
 
 ```toml
@@ -32,7 +34,11 @@ For example, getting the username `äumeträ` would automatically reserve these 
 
 and so on..
 
-> **Note**: This doesn't allow you to sign up with emoji, such as 🎈. It will still require your name to be alphanumeric, just in any alphabet that unicode supports!
+<Aside>
+  This doesn't allow you to sign up with emoji, such as 🎈. It will still
+  require your name to be alphanumeric, just in any alphabet that unicode
+  supports!
+</Aside>
 
 This is opt-in, since we aren't quite sure yet how other fediverse software, such as Mastodon, handles non-ASCII usernames.
 
@@ -42,9 +48,9 @@ This changes the name of the instance displayed on the landing page and returned
 
 ## `description`
 
-Similar to `name`, this setting adjusts the description on the landing page and the one returned via the metadata endpoints.
+<Aside type="tip">This field is interpreted as raw HTML</Aside>
 
-> **Note**: This field is interpreted as raw HTML
+Similar to `name`, this setting adjusts the description on the landing page and the one returned via the metadata endpoints.
 
 ## `character-limit`
 

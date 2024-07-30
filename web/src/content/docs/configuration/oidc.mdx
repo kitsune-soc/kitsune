@@ -3,7 +3,12 @@ title: OIDC (OpenID Connect)
 description: Configure the OpenID Connect support of Kitsune
 ---
 
-> This feature is gated behind the `oidc` compile-time feature (enabled by default)
+import { Aside } from "@astrojs/starlight/components";
+
+<Aside type="tip">
+  This feature is gated behind the `oidc` compile-time feature (enabled by
+  default)
+</Aside>
 
 OpenID Connect (OIDC) is a technology to provide Single Sign-On (SSO) that it shared across multiple services.
 This is useful if you, for example, want to run Kitsune together with a bunch of other services and don't want to maintain multiple logins.
