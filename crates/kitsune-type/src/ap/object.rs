@@ -1,5 +1,5 @@
-use crate::jsonld;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
@@ -9,18 +9,19 @@ pub enum MediaAttachmentType {
     Video,
 }
 
+#[serde_as]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaAttachment {
-    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
+    #[serde_with(as = "jsonld::serde::FirstOk")]
     pub r#type: MediaAttachmentType,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+    #[serde_with(as = "Option<jsonld::serde::First>")]
     pub name: Option<String>,
     pub media_type: Option<String>,
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+    #[serde_with(as = "Option<jsonld::serde::First>")]
     pub blurhash: Option<String>,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde_with(as = "jsonld::serde::First")]
     pub url: String,
 }

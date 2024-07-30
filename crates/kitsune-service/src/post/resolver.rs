@@ -153,11 +153,11 @@ mod test {
                 let client = service_fn(|req: Request<_>| async move {
                     match req.uri().path_and_query().unwrap().as_str() {
                         "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"=> {
-                            let body = include_str!("../../../../test-fixtures/0x0_jrd.json");
+                            let body = include_str!("../../../../test-fixtures/activitypub/0x0_jrd.json");
                             Ok::<_, Infallible>(Response::new(Full::new(body.as_bytes().into())))
                         }
                         "/users/0x0" => {
-                            let body = include_str!("../../../../test-fixtures/0x0_actor.json");
+                            let body = include_str!("../../../../test-fixtures/activitypub/0x0_actor.json");
                             Ok::<_, Infallible>(build_ap_response(body.as_bytes()))
                         }
                         path => panic!("HTTP client hit unexpected route: {path}"),

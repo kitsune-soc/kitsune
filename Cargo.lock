@@ -3957,8 +3957,10 @@ version = "0.0.1-pre.6"
 dependencies = [
  "iso8601-timestamp",
  "pretty_assertions",
+ "rust-embed",
  "serde",
  "serde_test",
+ "serde_with",
  "smol_str",
  "sonic-rs",
  "speedy-uuid",

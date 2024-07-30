@@ -9,68 +9,31 @@ use serde::{
     },
     Deserialize,
 };
+use serde_with::{de::DeserializeAsWrap, DeserializeAs};
 
 /// Deserialises a single node identifier string or a set of node identifier strings.
-pub struct Id<T> {
-    seed: T,
-}
+#[allow(dead_code)] // Used inside `serde_as` macro.
+pub struct Id;
 
-struct Visitor<T>(T);
+struct Visitor<T>(PhantomData<T>);
 
-#[cfg_attr(not(test), allow(dead_code))]
-impl<'de, T> Id<PhantomData<T>>
+impl<'de, T> DeserializeAs<'de, T> for Id
 where
     T: Deserialize<'de>,
 {
-    pub fn new() -> Self {
-        Self::with_seed(PhantomData)
-    }
-
-    pub fn deserialize<D>(deserializer: D) -> Result<T, D::Error>
+    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Self::new().deserialize(deserializer)
-    }
-}
-
-impl<'de, T> Id<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    pub fn with_seed(seed: T) -> Self {
-        Self { seed }
-    }
-}
-
-impl<'de, T> Default for Id<PhantomData<T>>
-where
-    T: Deserialize<'de>,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for Id<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    type Value = T::Value;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_any(Visitor(self.seed))
+        deserializer.deserialize_any(Visitor(PhantomData::<T>))
     }
 }
 
 impl<'de, T> de::Visitor<'de> for Visitor<T>
 where
-    T: DeserializeSeed<'de>,
+    T: Deserialize<'de>,
 {
-    type Value = T::Value;
+    type Value = T;
 
     fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str("a JSON-LD node")
@@ -92,7 +55,7 @@ where
         while let Some(key) = map.next_key()? {
             match key {
                 Key::Id => {
-                    let value = map.next_value_seed(self.0)?;
+                    let value = map.next_value()?;
                     while let Some((IgnoredAny, IgnoredAny)) = map.next_entry()? {}
                     return Ok(value);
                 }
@@ -117,11 +80,19 @@ where
         {
             type Error = A::Error;
 
-            fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
+            fn next_element<T>(&mut self) -> Result<Option<T>, Self::Error>
+            where
+                T: Deserialize<'de>,
+            {
+                let value = self.0.next_element::<DeserializeAsWrap<_, Id>>()?;
+                Ok(value.map(DeserializeAsWrap::into_inner))
+            }
+
+            fn next_element_seed<T>(&mut self, _seed: T) -> Result<Option<T::Value>, Self::Error>
             where
                 T: DeserializeSeed<'de>,
             {
-                self.0.next_element_seed(Id::with_seed(seed))
+                unimplemented!();
             }
 
             fn size_hint(&self) -> Option<usize> {
@@ -129,8 +100,7 @@ where
             }
         }
 
-        self.0
-            .deserialize(SeqAccessDeserializer::new(SeqAccess(seq)))
+        T::deserialize(SeqAccessDeserializer::new(SeqAccess(seq)))
     }
 
     forward_to_into_deserializer! {
@@ -146,16 +116,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::{super::into_deserializer, Id};
-    use core::marker::PhantomData;
     use serde::Deserialize;
     use serde_test::{assert_de_tokens, Token};
+    use serde_with::{serde_as, DeserializeAs};
     use std::collections::HashMap;
 
     #[test]
     fn single() {
         let data = "http://example.com/";
         assert_eq!(
-            Id::deserialize(into_deserializer(data)),
+            Id::deserialize_as(into_deserializer(data)),
             Ok(data.to_owned())
         );
     }
@@ -164,7 +134,7 @@ mod tests {
     fn single_embedded() {
         let data: HashMap<_, _> = [("id", "http://example.com/")].into_iter().collect();
         assert_eq!(
-            Id::deserialize(into_deserializer(data)),
+            Id::deserialize_as(into_deserializer(data)),
             Ok("http://example.com/".to_owned())
         );
     }
@@ -172,15 +142,17 @@ mod tests {
     #[test]
     fn embedded_missing_id() {
         let data: HashMap<_, _> = [("foo", "http://example.com/")].into_iter().collect();
-        assert!(Id::<PhantomData<String>>::deserialize(into_deserializer(data)).is_err());
+        let result: Result<String, _> = Id::deserialize_as(into_deserializer(data));
+        assert!(result.is_err());
     }
 
     #[test]
     fn seq() {
+        #[serde_as]
         #[derive(Debug, Deserialize, PartialEq)]
         #[serde(transparent)]
         struct Test {
-            #[serde(deserialize_with = "Id::deserialize")]
+            #[serde_with(as = "Id")]
             term: Vec<String>,
         }
 

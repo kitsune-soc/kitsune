@@ -1,74 +1,35 @@
-use super::OptionSeed;
 use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{
-    self, Deserialize, DeserializeSeed, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess,
-};
+use serde::de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess};
+use serde_with::DeserializeAs;
 
 /// Deserialises the first element of a JSON-LD set.
-pub struct First<T> {
-    seed: T,
-}
+#[allow(dead_code)] // Used inside `serde_as` macro.
+pub struct First<U = serde_with::Same>(PhantomData<U>);
 
-struct Visitor<T>(T);
-
-impl<'de, T> First<PhantomData<T>>
+impl<'de, T, U> DeserializeAs<'de, T> for First<U>
 where
     T: Deserialize<'de>,
+    U: DeserializeAs<'de, T>,
 {
-    pub fn new() -> Self {
-        Self::with_seed(PhantomData)
-    }
-
-    pub fn deserialize<D>(deserializer: D) -> Result<T, D::Error>
+    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Self::new().deserialize(deserializer)
+        deserializer.deserialize_any(Visitor(PhantomData::<T>, PhantomData::<U>))
     }
 }
 
-impl<'de, T> First<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    pub fn with_seed(seed: T) -> Self {
-        Self { seed }
-    }
-}
+struct Visitor<T, U>(PhantomData<T>, PhantomData<U>);
 
-// XXX: Intentionally limiting to `First<PhantomData<_>>` rather than `First<_>` to help inference
-// of the type parameter of `Optional::<First<_>>::deserialize`.
-impl<'de, T> Default for First<PhantomData<T>>
+impl<'de, T, U> de::Visitor<'de> for Visitor<T, U>
 where
     T: Deserialize<'de>,
+    U: DeserializeAs<'de, T>,
 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for First<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    type Value = T::Value;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_any(Visitor(self.seed))
-    }
-}
-
-impl<'de, T> de::Visitor<'de> for Visitor<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    type Value = T::Value;
+    type Value = T;
 
     fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(super::EXPECTING_SET)
@@ -78,19 +39,11 @@ where
     where
         A: SeqAccess<'de>,
     {
-        let mut seed = OptionSeed(Some(self.0));
-        let value = if let Some(value) = seq.next_element_seed(&mut seed)? {
-            // Unwrapping is fine here because the first call to `OptionSeed::deserialize` always
-            // returns a `Some` and `next_element_seed` can only call it at most once because its
-            // signature takes the seed by value.
-            let value = value.unwrap();
+        let value = if let Some(value) = seq.next_element::<T>()? {
             while let Some(IgnoredAny) = seq.next_element()? {}
             value
-        } else if let Some(seed) = seed.0 {
-            seed.deserialize(().into_deserializer())?
         } else {
-            // Weirdly, the `SeqAccess` has consumed the seed yet it didn't return a value.
-            return Err(de::Error::invalid_length(0, &super::EXPECTING_SET));
+            U::deserialize_as(().into_deserializer())?
         };
 
         Ok(value)
@@ -129,26 +82,30 @@ where
 #[cfg(test)]
 mod tests {
     use super::{super::into_deserializer, First};
-    use core::marker::PhantomData;
+    use serde_with::{DeserializeAs, Same};
 
     #[test]
     fn single() {
         let data = 42;
-        assert_eq!(First::deserialize(into_deserializer(data)), Ok(data));
+        assert_eq!(
+            First::<Same>::deserialize_as(into_deserializer(data)),
+            Ok(data)
+        );
     }
 
     #[test]
     fn seq() {
         let data = vec![42, 21];
-        assert_eq!(First::deserialize(into_deserializer(data)), Ok(42));
+        assert_eq!(
+            First::<Same>::deserialize_as(into_deserializer(data)),
+            Ok(42)
+        );
     }
 
     #[test]
     fn empty() {
         let data: Vec<u32> = Vec::new();
-        assert_eq!(
-            First::<PhantomData<Option<u32>>>::deserialize(into_deserializer(data)),
-            Ok(None)
-        );
+        let first: Result<Option<u32>, _> = First::<Same>::deserialize_as(into_deserializer(data));
+        assert_eq!(first, Ok(None));
     }
 }

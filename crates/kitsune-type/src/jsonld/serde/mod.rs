@@ -8,15 +8,10 @@
 //! - A non-array value (`"value"`) and a single-value array of the same value (`["value"]`)
 //! - An empty array (`[]`), `null` and an absent entry
 //!
-//! The following helpers in the module deserialise a set as a sequence:
-//!
-//! - [`Set`]
-//! - [`IdSet`]
 //!
 //! The following helpers deserialise a single value or `null` from a set:
 //!
 //! - [`First`]
-//! - [`FirstId`]
 //! - [`FirstOk`]
 //!
 //! ## JSON-LD `@id`
@@ -28,8 +23,6 @@
 //! The following helpers deserialise the node identifier string(s):
 //!
 //! - [`Id`]
-//! - [`FirstId`]
-//! - [`IdSet`]
 
 macro_rules! forward_to_into_deserializer {
     (
@@ -40,7 +33,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::value::BorrowedStrDeserializer::new(v))
+            T::deserialize(serde::de::value::BorrowedStrDeserializer::new(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -52,7 +45,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::value::BorrowedBytesDeserializer::new(v))
+            T::deserialize(serde::de::value::BorrowedBytesDeserializer::new(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -64,7 +57,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(()))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(()))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -76,7 +69,7 @@ macro_rules! forward_to_into_deserializer {
         where
             D: serde::Deserializer<'de>,
         {
-            self.0.deserialize(deserializer)
+            T::deserialize(deserializer)
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -88,7 +81,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(()))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(()))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -100,7 +93,7 @@ macro_rules! forward_to_into_deserializer {
         where
             D: serde::Deserializer<'de>,
         {
-            self.0.deserialize(deserializer)
+            T::deserialize(deserializer)
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -112,7 +105,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::SeqAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::SeqAccessDeserializer::new(seq))
+            T::deserialize(serde::de::value::SeqAccessDeserializer::new(seq))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -124,7 +117,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::MapAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::MapAccessDeserializer::new(map))
+            T::deserialize(serde::de::value::MapAccessDeserializer::new(map))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -136,7 +129,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::EnumAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::EnumAccessDeserializer::new(data))
+            T::deserialize(serde::de::value::EnumAccessDeserializer::new(data))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -148,7 +141,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(v))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -156,20 +149,8 @@ macro_rules! forward_to_into_deserializer {
 }
 
 mod first;
-mod first_id;
 mod first_ok;
 mod id;
-mod id_set;
-mod optional;
-mod set;
-
-pub use self::first::First;
-pub use self::first_id::FirstId;
-pub use self::first_ok::FirstOk;
-pub use self::id::Id;
-pub use self::id_set::IdSet;
-pub use self::optional::Optional;
-pub use self::set::Set;
 
 use core::{
     fmt::{self, Formatter},
@@ -183,45 +164,10 @@ use serde::de::{
 
 const EXPECTING_SET: &str = "a JSON-LD set";
 
-/// A wrapper to implement `IntoDeserializer` for an `impl Deserializer`, because Serde somehow
-/// doesn't provide a blanket impl.
-struct DeserializerIntoDeserializer<D>(D);
-
 /// A `DeserializeSeed` that catches a recoverable error and returns it as a successful value.
 struct CatchError<T, E> {
     seed: T,
     marker: PhantomData<fn() -> E>,
-}
-
-struct OptionSeed<T>(Option<T>);
-
-impl<'de, D> IntoDeserializer<'de, D::Error> for DeserializerIntoDeserializer<D>
-where
-    D: Deserializer<'de>,
-{
-    type Deserializer = D;
-
-    fn into_deserializer(self) -> Self::Deserializer {
-        self.0
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for &mut OptionSeed<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    type Value = Option<T::Value>;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        if let Some(seed) = self.0.take() {
-            seed.deserialize(deserializer).map(Some)
-        } else {
-            Ok(None)
-        }
-    }
 }
 
 impl<'de, T, E> CatchError<T, E>
@@ -377,8 +323,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{First, FirstId, FirstOk, IdSet, Optional};
     use serde::Deserialize;
+    use serde_with::serde_as;
 
     /// Checks that the types work for some random real-world-ish use cases.
     #[test]
@@ -388,25 +334,26 @@ mod tests {
             Note,
         }
 
+        #[serde_as]
         #[derive(Debug, Deserialize, PartialEq)]
         #[serde(rename_all = "camelCase")]
         struct Object {
             id: String,
-            #[serde(deserialize_with = "FirstOk::deserialize")]
+            #[serde_with(as = "FirstOk")]
             r#type: Type,
-            #[serde(deserialize_with = "FirstId::deserialize")]
+            #[serde_with(as = "First<Id>")]
             attributed_to: String,
             #[serde(default)]
-            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
+            #[serde_with(as = "Option<First>")]
             summary: Option<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
+            #[serde_with(as = "Option<First>")]
             content: Option<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "IdSet::deserialize")]
+            #[serde_with(as = "OneOrMany<Id>")]
             to: Vec<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "IdSet::deserialize")]
+            #[serde_with(as = "OneOrMany<Id>")]
             cc: Vec<String>,
         }
 

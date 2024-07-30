@@ -1,20 +1,22 @@
 use super::object::MediaAttachment;
-use crate::jsonld::{self, RdfNode};
+use crate::jsonld::RdfNode;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use sonic_rs::Value;
 
+#[serde_as]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Emoji {
     #[serde(default, rename = "@context")]
     pub context: Value,
     pub id: String,
-    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
+    #[serde_with(as = "jsonld::serde::FirstOk")]
     pub r#type: String,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde_with(as = "jsonld::serde::First")]
     pub name: String,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde_with(as = "jsonld::serde::First")]
     pub icon: MediaAttachment,
     #[serde(default = "Timestamp::now_utc")]
     pub updated: Timestamp,
