@@ -104,7 +104,7 @@ where
             where
                 T: DeserializeSeed<'de>,
             {
-                unimplemented!();
+                unreachable!();
             }
 
             fn size_hint(&self) -> Option<usize> {
