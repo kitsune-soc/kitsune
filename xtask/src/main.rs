@@ -4,6 +4,7 @@ extern crate tracing;
 use argh::FromArgs;
 
 mod clean;
+mod download_ap_fixture;
 mod fmt_toml;
 mod util;
 mod watch;
@@ -12,6 +13,14 @@ mod watch;
 #[argh(subcommand, name = "clean")]
 /// Clean all target directories
 struct Clean {}
+
+#[derive(FromArgs)]
+#[argh(subcommand, name = "download-ap-fixture")]
+/// Download ActivityPub fixtures
+struct DownloadApFixture {
+    #[argh(positional)]
+    url: String,
+}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "fmt-toml")]
@@ -35,6 +44,7 @@ struct Watch {
 #[argh(subcommand)]
 enum Subcommand {
     Clean(Clean),
+    DownloadApFixture(DownloadApFixture),
     FmtToml(FmtToml),
     Watch(Watch),
 }
@@ -52,6 +62,9 @@ fn main() -> anyhow::Result<()> {
     let command: Command = argh::from_env();
     match command.subcommand {
         Subcommand::Clean(..) => clean::clean()?,
+        Subcommand::DownloadApFixture(DownloadApFixture { url }) => {
+            download_ap_fixture::download(&url)?;
+        }
         Subcommand::FmtToml(..) => fmt_toml::fmt()?,
         Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
