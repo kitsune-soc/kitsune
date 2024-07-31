@@ -138,8 +138,8 @@
                     diesel-cli
                     rust-bin.stable.latest.default
                   ]
-                  ++
-                  buildInputs ++ nativeBuildInputs;
+                  ++ buildInputs
+                  ++ nativeBuildInputs;
 
                   enterShell = ''
                     export PG_HOST=127.0.0.1
