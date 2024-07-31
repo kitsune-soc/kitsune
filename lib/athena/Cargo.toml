@@ -17,23 +17,22 @@ futures-util = { version = "0.3.30", default-features = false }
 iso8601-timestamp = "0.2.17"
 fred = { workspace = true, optional = true }
 just-retry = { workspace = true }
-once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.204", features = ["derive"] }
 smol_str = "0.2.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
 thiserror = "1.0.63"
-tokio = { version = "1.38.1", features = ["macros", "rt", "sync"] }
+tokio = { version = "1.39.2", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.11", features = ["rt"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.19.1"
-typetag = "0.2.16"
+typetag = "0.2.17"
 unsize = "1.1.0"
 
 [features]
-redis = ["dep:either", "dep:fred", "dep:once_cell", "dep:rand", "dep:sonic-rs"]
+redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
 kitsune-test = { workspace = true }

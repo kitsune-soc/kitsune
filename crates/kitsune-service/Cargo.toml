@@ -11,7 +11,7 @@ argon2 = "0.5.3"
 async-stream = "0.3.5"
 athena = { workspace = true }
 blowocking = { workspace = true }
-bytes = "1.6.1"
+bytes = "1.7.0"
 derive_builder = "0.20.0"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
@@ -48,12 +48,12 @@ rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.204"
 smol_str = "0.2.2"
 speedy-uuid = { workspace = true }
-tokio = { version = "1.38.1", features = ["macros", "sync"] }
+tokio = { version = "1.39.2", features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.19.1"
 url = "2.5.2"
-zxcvbn = { version = "3.0.1", default-features = false }
+zxcvbn = { version = "3.1.0", default-features = false }
 
 [dev-dependencies]
 hex-simd = "0.8.0"

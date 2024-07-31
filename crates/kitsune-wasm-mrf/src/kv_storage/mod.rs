@@ -14,14 +14,6 @@ pub use self::{
 mod fs;
 mod redis;
 
-#[inline]
-fn get_bucket<'a>(
-    ctx: &'a crate::ctx::Context,
-    rep: &Resource<keyvalue::Bucket>,
-) -> &'a BucketBackendDispatch {
-    &ctx.kv_ctx.buckets[rep.rep() as usize]
-}
-
 pub trait Backend {
     type Bucket: BucketBackend;
 
@@ -93,7 +85,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         bucket: Resource<keyvalue::Bucket>,
         key: String,
     ) -> Result<Option<Vec<u8>>, Resource<keyvalue::Error>> {
-        match get_bucket(self, &bucket).get(&key).await {
+        match self.kv_ctx.get_bucket(&bucket).get(&key).await {
             Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to get key from storage");
@@ -108,7 +100,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         key: String,
         value: Vec<u8>,
     ) -> Result<(), Resource<keyvalue::Error>> {
-        match get_bucket(self, &bucket).set(&key, &value).await {
+        match self.kv_ctx.get_bucket(&bucket).set(&key, &value).await {
             Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to set key in storage");
@@ -122,7 +114,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         bucket: Resource<keyvalue::Bucket>,
         key: String,
     ) -> Result<(), Resource<keyvalue::Error>> {
-        match get_bucket(self, &bucket).delete(&key).await {
+        match self.kv_ctx.get_bucket(&bucket).delete(&key).await {
             Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to delete key from storage");
@@ -136,7 +128,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         bucket: Resource<keyvalue::Bucket>,
         key: String,
     ) -> Result<bool, Resource<keyvalue::Error>> {
-        match get_bucket(self, &bucket).exists(&key).await {
+        match self.kv_ctx.get_bucket(&bucket).exists(&key).await {
             Ok(value) => Ok(value),
             Err(error) => {
                 error!(?error, %key, "failed to check existence of key in storage");

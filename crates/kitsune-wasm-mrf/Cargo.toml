@@ -25,11 +25,11 @@ redb = { version = "2.1.1", features = ["logging"] }
 slab = "0.4.9"
 smol_str = "0.2.2"
 sonic-rs = { workspace = true }
-tokio = { version = "1.38.1", features = ["fs"] }
+tokio = { version = "1.39.2", features = ["fs"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 walkdir = "2.5.0"
-wasmtime = { version = "22.0.0", default-features = false, features = [
+wasmtime = { version = "23.0.1", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -38,11 +38,11 @@ wasmtime = { version = "22.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "22.0.0", default-features = false }
+wasmtime-wasi = { version = "23.0.1", default-features = false }
 
 [dev-dependencies]
 tempfile = "3.10.1"
-tokio = { version = "1.38.1", features = ["macros", "rt"] }
+tokio = { version = "1.39.2", features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
 wat = "1.214.0"
 

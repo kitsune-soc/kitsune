@@ -45,9 +45,9 @@ macro_rules! define_rayon_pool {
             F: FnOnce() -> O + Send + 'static,
             O: Send + 'static,
         {
-            use once_cell::sync::Lazy;
+            use std::sync::LazyLock;
 
-            static POOL: Lazy<rayon::ThreadPool> = Lazy::new(|| {
+            static POOL: LazyLock<rayon::ThreadPool> = LazyLock::new(|| {
                 rayon::ThreadPoolBuilder::new()
                     .build()
                     .expect("Failed to build rayon threadpool")

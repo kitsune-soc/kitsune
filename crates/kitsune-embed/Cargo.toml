@@ -15,7 +15,6 @@ kitsune-db = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
-once_cell = "1.19.0"
 scraper = { version = "0.19.1", default-features = false }
 smol_str = "0.2.2"
 

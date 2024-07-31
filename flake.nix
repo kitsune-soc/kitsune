@@ -10,7 +10,6 @@
 
     rust-overlay = {
       inputs = {
-        flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
       };
       url = "github:oxalica/rust-overlay";

@@ -3,17 +3,17 @@ use http::{
     header::{LOCATION, USER_AGENT},
     HeaderValue, Request, Response, StatusCode,
 };
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::{
     future::{self, Ready},
+    sync::LazyLock,
     task::{self, Poll},
 };
 use tower_layer::Layer;
 use tower_service::Service;
 
 static REDIRECT_URL: &str = "https://www.spacebar.news/stop-using-brave-browser/";
-static USER_AGENT_REGEX: Lazy<Regex> = Lazy::new(|| {
+static USER_AGENT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)Brave(/|\s)").expect("[Bug] Failed to compile User-Agent regex")
 });
 
@@ -23,6 +23,7 @@ pub struct StopUsingBraveService<S> {
 }
 
 impl<S> StopUsingBraveService<S> {
+    #[inline]
     pub fn new(inner: S) -> Self {
         Self { inner }
     }
@@ -37,10 +38,12 @@ where
     type Response = S::Response;
     type Future = Either<S::Future, Ready<Result<S::Response, S::Error>>>;
 
+    #[inline]
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
     }
 
+    #[inline]
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         if let Some(Ok(user_agent)) = req.headers().get(USER_AGENT).map(HeaderValue::to_str) {
             if USER_AGENT_REGEX.is_match(user_agent) {
@@ -66,6 +69,7 @@ pub struct StopUsingBraveLayer {
 impl<S> Layer<S> for StopUsingBraveLayer {
     type Service = StopUsingBraveService<S>;
 
+    #[inline]
     fn layer(&self, inner: S) -> Self::Service {
         StopUsingBraveService::new(inner)
     }
