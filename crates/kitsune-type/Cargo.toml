@@ -16,7 +16,7 @@ strum = { version = "0.26.3", features = ["derive"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
-rust-embed = "8.5.0"
+rstest = { version = "0.21.0", default-features = false }
 serde_test = "1"
 
 [lints]
