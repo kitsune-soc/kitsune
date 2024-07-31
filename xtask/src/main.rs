@@ -5,7 +5,6 @@ use argh::FromArgs;
 
 mod clean;
 mod download_ap_fixture;
-mod fmt_toml;
 mod util;
 mod watch;
 
@@ -21,11 +20,6 @@ struct DownloadApFixture {
     #[argh(positional)]
     url: String,
 }
-
-#[derive(FromArgs)]
-#[argh(subcommand, name = "fmt-toml")]
-/// Format TOML across the workspace
-struct FmtToml {}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "watch")]
@@ -45,7 +39,6 @@ struct Watch {
 enum Subcommand {
     Clean(Clean),
     DownloadApFixture(DownloadApFixture),
-    FmtToml(FmtToml),
     Watch(Watch),
 }
 
@@ -65,7 +58,6 @@ fn main() -> anyhow::Result<()> {
         Subcommand::DownloadApFixture(DownloadApFixture { url }) => {
             download_ap_fixture::download(&url)?;
         }
-        Subcommand::FmtToml(..) => fmt_toml::fmt()?,
         Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
 
