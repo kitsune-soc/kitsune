@@ -9,12 +9,13 @@ publish = false
 anyhow = "1.0.86"
 argh = "0.1.12"
 glob = "0.3.1"
-taplo = { version = "0.13.0", default-features = false }
+sonic-rs = { workspace = true }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "ansi",
     "fmt",
 ] }
+ureq = "2.10.0"
 
 [lints]
 workspace = true

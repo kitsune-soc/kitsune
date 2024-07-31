@@ -1,0 +1,31 @@
+{
+  "@context": [
+    "https://join-lemmy.org/context.json",
+    "https://www.w3.org/ns/activitystreams"
+  ],
+  "type": "Person",
+  "id": "https://lemmy.zip/u/ves",
+  "preferredUsername": "ves",
+  "inbox": "https://lemmy.zip/u/ves/inbox",
+  "outbox": "https://lemmy.zip/u/ves/outbox",
+  "publicKey": {
+    "id": "https://lemmy.zip/u/ves#main-key",
+    "owner": "https://lemmy.zip/u/ves",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArvCIDo0d5Wod9ywjISv0\nPeeXObqE8WYzMghiwWLSPWtSe4UP5nHC6kFLeeYJCisSnknV3VgYfJ8knOa39yKQ\nVwUgD9h/by2c6eEep5YqBEv6/ue41pcr/+fAQx/OrxF+3cXBGiYoieQtFUNkAUVo\nIiR0kBJymQlzPvD5WbNObV+a4phmbs2zS12ug2X7rH3ngWCuHbzFC4odQY6PQmWP\n5hSWASgLF80oKKuCbBth5Okn5aXstQhIO3akgOn0Kw2ctgAw59v2+Vi5suzoer68\nPn/rZxKNarwdoRY5oUfa323NJFnBKtjt48UcSpfPzRkbwE1Ra6zWEGtTI7emcxoM\nuQIDAQAB\n-----END PUBLIC KEY-----\n"
+  },
+  "name": "ves",
+  "summary": "<p>forsen</p>\n",
+  "source": {
+    "content": "forsen",
+    "mediaType": "text/markdown"
+  },
+  "icon": {
+    "type": "Image",
+    "url": "https://lemmy.zip/pictrs/image/80deacc8-7b86-4552-babb-f68172a183f7.webp"
+  },
+  "matrixUserId": "@ves:nitro.chat",
+  "endpoints": {
+    "sharedInbox": "https://lemmy.zip/inbox"
+  },
+  "published": "2024-03-20T08:18:06.619577Z"
+}

@@ -12,7 +12,7 @@ use triomphe::Arc;
 
 #[tokio::test]
 async fn follow_jrd_redirect() {
-    let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+    let base = include_bytes!("../../../test-fixtures/activitypub/0x0_jrd.json");
     let body = sonic_rs::to_string(&Resource {
         subject: "acct:0x0@joinkitsune.org".into(),
         ..sonic_rs::from_slice(base).unwrap()
@@ -60,7 +60,7 @@ async fn reject_fake_jrd_redirect() {
             req.uri().path_and_query().unwrap().as_str(),
         ) {
             ("corteximplant.com", "/.well-known/webfinger?resource=acct:0x0@corteximplant.com") => {
-                let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+                let base = include_bytes!("../../../test-fixtures/activitypub/0x0_jrd.json");
                 let body = sonic_rs::to_string(&Resource {
                     subject: "acct:0x0@whitehouse.gov".into(),
                     ..sonic_rs::from_slice(base).unwrap()
@@ -106,7 +106,7 @@ async fn reject_unbounded_number_of_jrd_redirects() {
             );
         };
         assert!(count <= MAX_JRD_REDIRECTS);
-        let base = include_bytes!("../../../test-fixtures/0x0_jrd.json");
+        let base = include_bytes!("../../../test-fixtures/activitypub/0x0_jrd.json");
         let body = sonic_rs::to_string(&Resource {
             subject: format!("acct:0x{:x}@corteximplant.com", count + 1),
             ..sonic_rs::from_slice(base).unwrap()

@@ -1,0 +1,33 @@
+{
+  "@context": [
+    "https://join-lemmy.org/context.json",
+    "https://www.w3.org/ns/activitystreams"
+  ],
+  "type": "Group",
+  "id": "https://lemmy.world/c/politicalmemes",
+  "preferredUsername": "politicalmemes",
+  "inbox": "https://lemmy.world/c/politicalmemes/inbox",
+  "followers": "https://lemmy.world/c/politicalmemes/followers",
+  "publicKey": {
+    "id": "https://lemmy.world/c/politicalmemes#main-key",
+    "owner": "https://lemmy.world/c/politicalmemes",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw9GrsV1Kw1iZU/6i35P3\nL8qw15ZO1hg0Tcsbwk8PewKVCcU57SKZO87fDvNkQ4vxmnjxIgffzD+n0j3Ls34Y\nNFrK3V12dEBdrQLhvKQg3y6qblxh5V3BMhgJLZLntu90l8WO4FmJAWy8tFMmZa74\nBlzUBj2YFCreTefPF0zWNz4vswd+8CL4KKdypHy1R0qNocZJh6xFrjm5qE43bYW9\n0uCX9qEITY1rPugs2cnJaDonQLcd6NnUvGHunIcmygGxWT5LTpJwu0nmRO5eJOnz\n9PFR76HZn+9/mydRM9wJZ/0TxNUZhU6XNxF3irkTlB8+D2ZIpt+2CPBOzG6OBBAV\n+wIDAQAB\n-----END PUBLIC KEY-----\n"
+  },
+  "name": "Political Memes",
+  "summary": "<p>Welcome to politcal memes!</p>\n<p>These are our rules:</p>\n<details><summary>Be civil</summary><p>Jokes are okay, but don’t intentionally harass or disturb any member of our community. Sexism, racism and bigotry are not allowed. Good faith argumentation only. No posts discouraging people to vote or shaming people for voting.\n</p></details>\n<details><summary>No misinformation</summary><p>Don’t post any intentional misinformation. When asked by mods, provide sources for any claims you make.\n</p></details>\n<details><summary>Posts should be memes</summary><p>Random pictures do not qualify as memes. Relevance to politics is required.\n</p></details>\n<details><summary>No bots, spam or self-promotion</summary><p>Follow instance rules, ask for your bot to be allowed on this community.\n</p></details>\n",
+  "source": {
+    "content": "Welcome to politcal memes! \n\nThese are our rules:\n\n::: spoiler Be civil\nJokes are okay, but don’t intentionally harass or disturb any member of our community. Sexism, racism and bigotry are not allowed. Good faith argumentation only. No posts discouraging people to vote or shaming people for voting. \n:::\n\n::: spoiler No misinformation\nDon’t post any intentional misinformation. When asked by mods, provide sources for any claims you make. \n:::\n\n::: spoiler Posts should be memes\nRandom pictures do not qualify as memes. Relevance to politics is required.\n:::\n\n::: spoiler No bots, spam or self-promotion\nFollow instance rules, ask for your bot to be allowed on this community.\n:::\n\n",
+    "mediaType": "text/markdown"
+  },
+  "sensitive": false,
+  "attributedTo": "https://lemmy.world/c/politicalmemes/moderators",
+  "postingRestrictedToMods": false,
+  "outbox": "https://lemmy.world/c/politicalmemes/outbox",
+  "endpoints": {
+    "sharedInbox": "https://lemmy.world/inbox"
+  },
+  "featured": "https://lemmy.world/c/politicalmemes/featured",
+  "language": [],
+  "published": "2023-06-09T20:47:11.035608Z",
+  "updated": "2024-02-27T17:15:40.354410Z"
+}

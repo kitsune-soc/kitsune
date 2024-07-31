@@ -1,0 +1,26 @@
+{
+  "@context": [
+    "https://join-lemmy.org/context.json",
+    "https://www.w3.org/ns/activitystreams"
+  ],
+  "type": "Page",
+  "id": "https://lemmy.blahaj.zone/post/13466452",
+  "attributedTo": "https://lemmy.blahaj.zone/u/Mr_Mofu",
+  "to": [
+    "https://lemmy.blahaj.zone/c/catposting",
+    "https://www.w3.org/ns/activitystreams#Public"
+  ],
+  "name": "Thumbs up?",
+  "cc": [],
+  "mediaType": "text/html",
+  "attachment": [
+    {
+      "href": "https://i.imgur.com/soWL0AI.png",
+      "type": "Link"
+    }
+  ],
+  "commentsEnabled": true,
+  "sensitive": false,
+  "published": "2024-06-20T10:00:49.893382Z",
+  "audience": "https://lemmy.blahaj.zone/c/catposting"
+}

@@ -3,6 +3,11 @@ extend-ignore-words-re = ["guid"]
 
 [files]
 extend-exclude = [
+    # Exclude all test fixtures
+    "crates/kitsune-type/tests/actors/*",
+    "crates/kitsune-type/tests/objects/*",
+    "test-fixtures/*",
+
     "crates/kitsune-language/examples/basic.rs",
     "crates/kitsune-language/src/map.rs",
 
