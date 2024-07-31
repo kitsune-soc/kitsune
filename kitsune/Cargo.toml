@@ -29,7 +29,7 @@ axum-extra = { version = "0.9.3", features = [
 ] }
 axum-flash = "0.8.0"
 blowocking = { workspace = true }
-bytes = "1.6.1"
+bytes = "1.7.0"
 chrono = { version = "0.4.38", default-features = false }
 clap = { workspace = true }
 color-eyre = "0.6.3"
@@ -83,7 +83,7 @@ speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive", "phf"] }
 tempfile = "3.10.1"
 time = "0.3.36"
-tokio = { version = "1.39.1", features = ["full"] }
+tokio = { version = "1.39.2", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-stop-using-brave = { workspace = true }

@@ -11,8 +11,8 @@ human-size = { version = "0.4.3", features = ["serde"] }
 isolang = { version = "2.4.0", features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive"] }
 smol_str = { version = "0.2.2", features = ["serde"] }
-tokio = { version = "1.39.1", features = ["fs"] }
-toml = { version = "0.8.15", default-features = false, features = ["parse"] }
+tokio = { version = "1.39.2", features = ["fs"] }
+toml = { version = "0.8.18", default-features = false, features = ["parse"] }
 
 [lints]
 workspace = true

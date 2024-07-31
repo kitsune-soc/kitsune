@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-trait = "0.1.81"
-bytes = "1.6.1"
+bytes = "1.7.0"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 diesel_full_text_search = { workspace = true }

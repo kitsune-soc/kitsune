@@ -6548,8 +6548,8 @@ dependencies = [
 
 [[package]]
 name = "sonic-rs"
-version = "0.3.8"
-source = "git+https://github.com/aumetra/sonic-rs.git?rev=7e3bd236d82c5ccf85b3506f5a8cd2794e53451a#7e3bd236d82c5ccf85b3506f5a8cd2794e53451a"
+version = "0.3.9"
+source = "git+https://github.com/aumetra/sonic-rs.git?rev=6737bb6bcc32baffc91b1223643b0b6953db0a48#6737bb6bcc32baffc91b1223643b0b6953db0a48"
 dependencies = [
  "arrayref",
  "bumpalo",

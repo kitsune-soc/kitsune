@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 retry-policies = "0.4.0"
-tokio = { version = "1.39.1", features = ["time"] }
+tokio = { version = "1.39.2", features = ["time"] }
 tracing = "0.1.40"
 
 [lints]

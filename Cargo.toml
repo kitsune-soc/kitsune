@@ -77,7 +77,7 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.11", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.12", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.2", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -106,7 +106,7 @@ garde = { version = "0.20.0", features = [
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.8"
+sonic-rs = "0.3.9"
 triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
@@ -216,7 +216,7 @@ tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.gi
 async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40a8deb7d41d3ac0e563f9a0fd7f600c23189987" }
 
 # SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "7e3bd236d82c5ccf85b3506f5a8cd2794e53451a" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6737bb6bcc32baffc91b1223643b0b6953db0a48" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
