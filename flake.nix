@@ -9,9 +9,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     rust-overlay = {
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-      };
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:oxalica/rust-overlay";
     };
 
@@ -42,16 +40,10 @@
           };
 
           craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.stable.latest.minimal;
-          buildInputs = with pkgs; [
-            openssl
-            sqlite
-            zlib
-          ];
 
+          buildInputs = with pkgs; [
+          ];
           nativeBuildInputs = with pkgs; [
-            protobuf
-            pkg-config
-            rustPlatform.bindgenHook
           ];
 
           src = pkgs.lib.cleanSourceWith {
