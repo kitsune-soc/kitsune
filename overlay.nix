@@ -10,7 +10,7 @@ in
       mkdir -p $out
       cp -R ${packages.main}/bin $out
       cp -R ${packages.main.src}/kitsune/assets $out/public
-      cp -R ${packages.frontend}/dist $out/kitsune-fe
+      cp -R ${packages.frontend} $out/kitsune-fe
     '';
   };
 
