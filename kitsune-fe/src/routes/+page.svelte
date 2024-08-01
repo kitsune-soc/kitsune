@@ -101,8 +101,11 @@
 					</Button>
 				</p>
 			</form>
+
+			<Button class="sign-in-button" type="secondary" href="/login"
+				>Already have an account? Sign in</Button
+			>
 		</div>
-		<Button class="sign-up-button" href="/login">Already have an account? Sign in</Button>
 	</div>
 </div>
 
@@ -126,16 +129,16 @@
 			width: 100%;
 			background-color: $dark2;
 
-			.sign-up-button {
-				display: none;
-			}
-
 			&-content {
 				border-radius: 0px 30px 30px 0px;
 				background-color: $dark1;
 				padding: 2em;
 				max-width: 50ch;
 				width: 100%;
+
+				& :global(.sign-in-button) {
+					width: 100%;
+				}
 			}
 		}
 
@@ -155,7 +158,6 @@
 	.register-form {
 		display: flex;
 		flex-direction: column;
-		height: 100%;
 
 		& input {
 			width: 100%;
