@@ -6,6 +6,8 @@
 
 <svelte:head>
 	<title>Kitsune Ⓐ🏴</title>
+	<!-- Disable dark reader -->
+	<meta name="darkreader-lock" />
 </svelte:head>
 
 {@render children()}
