@@ -135,23 +135,19 @@
                 }
               );
 
-              frontend = pkgs.mkYarnPackage {
+              frontend = pkgs.buildNpmPackage {
+                pname = "kitsune-fe";
                 inherit version;
-                packageJSON = "${src}/kitsune-fe/package.json";
-                yarnLock = "${src}/kitsune-fe/yarn.lock";
-                src = "${src}/kitsune-fe";
 
-                buildPhase = ''
-                  export HOME=$(mktemp -d)
-                  yarn --offline build
-                '';
+                src = "${src}/kitsune-fe";
+                npmDepsHash = "sha256-jC9zB68BKGEEJhPCprvmQDl5WV0bzm9ZaIfO+K9O+wc=";
+
+                npmFlags = [ "--legacy-peer-deps" ];
 
                 installPhase = ''
                   mkdir -p $out
-                  cp -R deps/kitsune-fe/dist $out
+                  cp -R build/* $out
                 '';
-
-                distPhase = "true";
               };
             };
 
