@@ -102,6 +102,7 @@
 				</p>
 			</form>
 		</div>
+		<Button class="sign-up-button" href="/login">Already have an account? Sign in</Button>
 	</div>
 </div>
 
@@ -124,6 +125,10 @@
 			height: 100%;
 			width: 100%;
 			background-color: $dark2;
+
+			.sign-up-button {
+				display: none;
+			}
 
 			&-content {
 				border-radius: 0px 30px 30px 0px;
