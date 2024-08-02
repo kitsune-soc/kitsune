@@ -6,7 +6,9 @@ const config = {
 		url: 'http://localhost:5000/graphql'
 	},
 	plugins: {
-		'houdini-svelte': {}
+		'houdini-svelte': {
+			static: true
+		}
 	},
 	scalars: {
 		DateTime: {
