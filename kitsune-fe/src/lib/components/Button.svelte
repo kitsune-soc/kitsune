@@ -37,6 +37,10 @@
 		&:global(.primary) {
 			background-color: $shade1dark;
 
+			&:not(:hover) {
+				color: $dark1;
+			}
+
 			&:hover {
 				background-color: $shade2dark;
 			}

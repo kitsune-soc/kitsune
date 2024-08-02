@@ -63,7 +63,7 @@
 <div class="landing-page">
 	<div class="section-left">
 		<div class="section-left-content">
-			<img class="logo" src="/kitsune_full.svg" />
+			<img class="logo" src="/kitsune_full.svg" alt="Kitsune logo" />
 
 			<h1>Federated microblogging</h1>
 
@@ -92,13 +92,7 @@
 				<input placeholder="Confirm Password" type="password" name="confirm-password" />
 
 				<p>
-					<Button
-						class="register-button"
-						onclick={() => console.log('register')}
-						disabled={registerButtonDisabled}
-					>
-						Register
-					</Button>
+					<Button class="register-button" disabled={registerButtonDisabled}>Register</Button>
 				</p>
 			</form>
 
