@@ -1,18 +1,24 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	let {
 		class: classNames = '',
 		children,
-		type = 'primary',
+		buttonType = 'primary',
 		...rest
 	}: {
 		class: string;
-		type?: string;
+		/**
+		 * The type of button to render.
+		 *
+		 * @default 'primary'
+		 */
+		buttonType?: string;
 		children: Snippet;
-	} & any = $props();
+	} & HTMLButtonAttributes = $props();
 
-	classNames += ` ${type}`;
+	classNames += ` ${buttonType}`;
 </script>
 
 <button class={classNames} {...rest}>

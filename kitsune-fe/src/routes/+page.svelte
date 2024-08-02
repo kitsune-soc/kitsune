@@ -56,7 +56,9 @@
 			} else {
 				alert('Registered!');
 			}
-		} catch (ex: unknown) {}
+		} catch {
+			/* Do nothing. We don't care. */
+		}
 	}
 </script>
 
@@ -96,9 +98,9 @@
 				</p>
 			</form>
 
-			<Button class="sign-in-button" type="secondary" href="/login"
-				>Already have an account? Sign in</Button
-			>
+			<Button buttonType="secondary" class="sign-in-button">
+				Already have an account? Sign in
+			</Button>
 		</div>
 	</div>
 </div>
@@ -176,10 +178,6 @@
 	}
 
 	@include only-on-mobile {
-		.bottom-section {
-			display: none;
-		}
-
 		.section-left {
 			display: flex;
 			flex-direction: column;
