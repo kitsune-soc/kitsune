@@ -28,3 +28,7 @@
   --sl-color-gray-7: #f9f4ff;
   --sl-color-black: #ffffff;
 }
+
+.hero img {
+  transform: rotateY(180deg);
+}
