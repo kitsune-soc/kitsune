@@ -27,8 +27,12 @@
 			Statistics:
 
 			<ul>
-				<li>{stats.registeredUsers} registered users</li>
-				<li>{stats.postCount} posts</li>
+				<li>
+					<strong>{stats.registeredUsers}</strong> registered users
+				</li>
+				<li>
+					<strong>{stats.postCount}</strong> posts
+				</li>
 			</ul>
 		</div>
 	</div>
