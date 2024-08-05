@@ -1,0 +1,8 @@
+query stats {
+	instance {
+		description
+		localPostCount
+		userCount
+		version
+	}
+}
