@@ -25,6 +25,7 @@ export default defineConfig({
       ],
       social: {
         github: 'https://github.com/kitsune-soc/kitsune',
+        mastodon: 'https://floss.social/@kitsune',
       },
       title: 'Kitsune',
     }),
