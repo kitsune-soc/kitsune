@@ -2,11 +2,12 @@
 	import type { Snippet } from 'svelte';
 	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
+	import { version as frontendVersion } from '$app/environment';
 
 	const { children, data }: { children: Snippet; data: PageData } = $props();
 
-	let versionStore = $derived(data.version);
-	let version = $derived($versionStore.data?.instance.version ?? '[unknown]');
+	let backendVersionStore = $derived(data.version);
+	let backendVersion = $derived($backendVersionStore.data?.instance.version ?? '[unknown]');
 </script>
 
 <svelte:head>
@@ -22,8 +23,8 @@
 	<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
 
 	<p>
-		Backend version: {version}
-		<br />Frontend version: 0.0.1
+		Backend version: {backendVersion}
+		<br />Frontend version: {frontendVersion}
 	</p>
 </footer>
 
