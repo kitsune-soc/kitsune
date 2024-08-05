@@ -1,64 +1,19 @@
 <script lang="ts">
-	import { graphql } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
-	import { onMount } from 'svelte';
+	import type { PageData } from './$houdini';
+
+	const { data }: { data: PageData } = $props();
+
+	let statsStore = $derived(data.stats);
+	let stats = $derived({
+		postCount: $statsStore.data?.instance.localPostCount ?? 0,
+		registeredUsers: $statsStore.data?.instance.userCount ?? 0
+	});
 
 	let registerButtonDisabled = $state(false);
 
-	onMount(() => {
-		// TODO: Authenticated check and redirect to home timeline
-	});
-
-	async function handleRegister(
-		event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }
-	) {
-		event.preventDefault();
-
-		const data = new FormData(event.currentTarget);
-
-		const username = data.get('username');
-		const email = data.get('email');
-		const password = data.get('password');
-		const passwordConfirmation = data.get('confirm-password');
-
-		if (!username) {
-			alert('Missing username');
-			return;
-		} else if (!email) {
-			alert('Missing email');
-			return;
-		} else if (!password) {
-			alert('Missing password');
-			return;
-		} else if (!passwordConfirmation || passwordConfirmation !== password) {
-			alert('Password mismatch');
-			return;
-		}
-
-		const register = graphql(`
-			mutation Register($username: String!, $email: String!, $password: String!) {
-				registerUser(username: $username, email: $email, password: $password) {
-					username
-					createdAt
-				}
-			}
-		`);
-
-		try {
-			const response = await register.mutate({
-				username: username as string,
-				email: email as string,
-				password: password as string
-			});
-
-			if (response.errors) {
-				alert('Failed to register:\n' + response.errors.map((error) => error.message).concat('\n'));
-			} else {
-				alert('Registered!');
-			}
-		} catch {
-			/* Do nothing. We don't care. */
-		}
+	function initiateLogin() {
+		alert('logging in wwowowowowowo');
 	}
 </script>
 
@@ -72,33 +27,33 @@
 			Statistics:
 
 			<ul>
-				<li>1,000,000,000 registered users</li>
-				<li>96,000,000,000 posts</li>
-				<li>50,000,000 connected instances</li>
+				<li>{stats.registeredUsers} registered users</li>
+				<li>{stats.postCount} posts</li>
 			</ul>
 		</div>
 	</div>
 
 	<div class="section-right">
 		<div class="section-right-content">
-			<form
-				class="register-form"
-				onsubmit={(e) => {
-					registerButtonDisabled = true;
-					handleRegister(e).finally(() => (registerButtonDisabled = false));
-				}}
-			>
-				<input placeholder="Username" type="text" name="username" />
-				<input placeholder="Email" type="email" name="email" />
-				<input placeholder="Password" type="password" name="password" />
-				<input placeholder="Confirm Password" type="password" name="confirm-password" />
+			<form class="register-form" method="post">
+				<label for="username">Username</label>
+				<input placeholder="hangaku" type="text" name="username" />
+
+				<label for="email">Email address</label>
+				<input placeholder="hangaku@joinkitsune.org" type="email" name="email" />
+
+				<label for="password">Password</label>
+				<input type="password" name="password" />
+
+				<label for="confirm-password">Confirm Password</label>
+				<input type="password" name="confirm-password" />
 
 				<p>
 					<Button class="register-button" disabled={registerButtonDisabled}>Register</Button>
 				</p>
 			</form>
 
-			<Button buttonType="secondary" class="sign-in-button">
+			<Button buttonType="secondary" class="sign-in-button" onclick={initiateLogin}>
 				Already have an account? Sign in
 			</Button>
 		</div>
@@ -155,20 +110,23 @@
 		display: flex;
 		flex-direction: column;
 
+		& label {
+			margin-top: 0.5em;
+		}
+
 		& input {
 			width: 100%;
 			border: none;
-			height: 50px;
+			height: 40px;
 			border-radius: 10px;
 			background-color: $dark2;
 			margin-bottom: 0.75em;
-			margin-top: 0.75em;
 			padding-left: 1em;
 		}
 
 		& :global(.register-button) {
 			width: 100%;
-			margin-top: 2em;
+			margin-top: 1.5em;
 		}
 	}
 
