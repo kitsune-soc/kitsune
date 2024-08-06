@@ -37,7 +37,7 @@
 
 		padding: 10px;
 		width: 100px;
-		height: 50px;
+		min-height: 50px;
 		font-size: 16px;
 
 		&:global(.primary) {

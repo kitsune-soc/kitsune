@@ -19,26 +19,38 @@
 {@render children()}
 
 <footer>
-	Powered by
-	<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
-
-	<p>
+	<p class="version">
 		Backend version: {backendVersion}
 		<br />Frontend version: {frontendVersion}
 	</p>
+
+	<span>
+		Powered by
+		<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
+	</span>
 </footer>
 
 <style lang="scss">
-	@use '../styles/breakpoints' as *;
+	@use '../styles/mixins' as *;
 
 	footer {
-		position: fixed;
-
-		bottom: 0;
-		left: 0;
-		padding: 1em;
-
 		font-size: small;
 		line-height: normal;
+	}
+
+	@include only-on-mobile {
+		footer {
+			text-align: center;
+			margin: 3em 0;
+		}
+	}
+
+	@include not-on-mobile {
+		footer {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			padding: 1em;
+		}
 	}
 </style>

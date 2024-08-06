@@ -1,6 +1,6 @@
 schema {
-	query: RootQuery
-	mutation: RootMutation
+  query: RootQuery
+  mutation: RootMutation
 }
 
 """
@@ -10,27 +10,27 @@ Indicates that an Input Object is a OneOf Input Object (and thus requires
 directive @oneOf on INPUT_OBJECT
 
 type Account {
-	avatar: MediaAttachment
-	createdAt: DateTime!
-	displayName: String
-	header: MediaAttachment
-	id: UUID!
-	locked: Boolean!
-	note: String
-	posts(after: String, before: String, first: Int, last: Int): PostConnection!
-	updatedAt: DateTime!
-	url: String!
-	username: String!
+  avatar: MediaAttachment
+  createdAt: DateTime!
+  displayName: String
+  header: MediaAttachment
+  id: UUID!
+  locked: Boolean!
+  note: String
+  posts(after: String, before: String, first: Int, last: Int): PostConnection!
+  updatedAt: DateTime!
+  url: String!
+  username: String!
 }
 
 enum CaptchaBackend {
-	H_CAPTCHA
-	M_CAPTCHA
+  H_CAPTCHA
+  M_CAPTCHA
 }
 
 type CaptchaInfo {
-	backend: CaptchaBackend!
-	key: String!
+  backend: CaptchaBackend!
+  key: String!
 }
 
 """
@@ -44,133 +44,99 @@ format, but it is always normalized to the UTC (Z) offset, e.g.
 scalar DateTime
 
 type Instance {
-	captcha: CaptchaInfo
-	characterLimit: Int!
-	description: String!
-	domain: String!
-	localPostCount: Int!
-	name: String!
-	registrationsOpen: Boolean!
-	userCount: Int!
-	version: String!
+  captcha: CaptchaInfo
+  characterLimit: Int!
+  description: String!
+  domain: String!
+  localPostCount: Int!
+  name: String!
+  registrationsOpen: Boolean!
+  userCount: Int!
+  version: String!
 }
 
 type MediaAttachment {
-	blurhash: String
-	contentType: String!
-	createdAt: DateTime!
-	description: String
-	id: UUID!
-	uploader: Account!
-	url: String!
+  blurhash: String
+  contentType: String!
+  createdAt: DateTime!
+  description: String
+  id: UUID!
+  uploader: Account!
+  url: String!
 }
 
 type OAuth2Application {
-	createdAt: DateTime!
-	id: UUID!
-	name: String!
-	redirectUri: String!
-	secret: String!
-	updatedAt: DateTime!
+  createdAt: DateTime!
+  id: UUID!
+  name: String!
+  redirectUri: String!
+  secret: String!
+  updatedAt: DateTime!
 }
 
-"""
-Information about pagination in a connection
-"""
+"""Information about pagination in a connection"""
 type PageInfo {
-	"""
-	When paginating forwards, the cursor to continue.
-	"""
-	endCursor: String
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
 
-	"""
-	When paginating forwards, are there more items?
-	"""
-	hasNextPage: Boolean!
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
 
-	"""
-	When paginating backwards, are there more items?
-	"""
-	hasPreviousPage: Boolean!
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
 
-	"""
-	When paginating backwards, the cursor to continue.
-	"""
-	startCursor: String
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
 }
 
 type Post {
-	account: Account!
-	attachments: [MediaAttachment!]!
-	content: String!
-	createdAt: DateTime!
-	id: UUID!
-	isSensitive: Boolean!
-	subject: String
-	updatedAt: DateTime!
-	url: String!
-	visibility: Visibility!
+  account: Account!
+  attachments: [MediaAttachment!]!
+  content: String!
+  createdAt: DateTime!
+  id: UUID!
+  isSensitive: Boolean!
+  subject: String
+  updatedAt: DateTime!
+  url: String!
+  visibility: Visibility!
 }
 
 type PostConnection {
-	"""
-	A list of edges.
-	"""
-	edges: [PostEdge!]!
+  """A list of edges."""
+  edges: [PostEdge!]!
 
-	"""
-	A list of nodes.
-	"""
-	nodes: [Post!]!
+  """A list of nodes."""
+  nodes: [Post!]!
 
-	"""
-	Information to aid in pagination.
-	"""
-	pageInfo: PageInfo!
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
 }
 
-"""
-An edge in a connection.
-"""
+"""An edge in a connection."""
 type PostEdge {
-	"""
-	A cursor for use in pagination
-	"""
-	cursor: String!
+  """A cursor for use in pagination"""
+  cursor: String!
 
-	"""
-	The item at the end of the edge
-	"""
-	node: Post!
+  """The item at the end of the edge"""
+  node: Post!
 }
 
 type RootMutation {
-	createPost(content: String!, isSensitive: Boolean!, visibility: Visibility!): Post!
-	deletePost(id: UUID!): UUID!
-	registerOauthApplication(name: String!, redirectUri: String!): OAuth2Application!
-	registerUser(captchaToken: String, email: String!, password: String!, username: String!): User!
-	updateUser(
-		avatar: Upload
-		displayName: String
-		header: Upload
-		locked: Boolean
-		note: String
-	): Account!
+  createPost(content: String!, isSensitive: Boolean!, visibility: Visibility!): Post!
+  deletePost(id: UUID!): UUID!
+  registerOauthApplication(name: String!, redirectUri: String!): OAuth2Application!
+  registerUser(captchaToken: String, email: String!, password: String!, username: String!): User!
+  updateUser(avatar: Upload, displayName: String, header: Upload, locked: Boolean, note: String): Account!
 }
 
 type RootQuery {
-	getAccountById(id: UUID!): Account
-	getPostById(id: UUID!): Post!
-	homeTimeline(after: String, before: String, first: Int, last: Int): PostConnection!
-	instance: Instance!
-	myAccount: Account!
-	publicTimeline(
-		after: String
-		before: String
-		first: Int
-		last: Int
-		onlyLocal: Boolean! = true
-	): PostConnection!
+  getAccountById(id: UUID!): Account
+  getPostById(id: UUID!): Post!
+  homeTimeline(after: String, before: String, first: Int, last: Int): PostConnection!
+  instance: Instance!
+  myAccount: Account!
+  publicTimeline(after: String, before: String, first: Int, last: Int, onlyLocal: Boolean! = true): PostConnection!
 }
 
 """
@@ -188,17 +154,17 @@ scalar UUID
 scalar Upload
 
 type User {
-	account: Account!
-	createdAt: DateTime!
-	email: String!
-	id: UUID!
-	updatedAt: DateTime!
-	username: String!
+  account: Account!
+  createdAt: DateTime!
+  email: String!
+  id: UUID!
+  updatedAt: DateTime!
+  username: String!
 }
 
 enum Visibility {
-	FOLLOWER_ONLY
-	MENTION_ONLY
-	PUBLIC
-	UNLISTED
+  FOLLOWER_ONLY
+  MENTION_ONLY
+  PUBLIC
+  UNLISTED
 }

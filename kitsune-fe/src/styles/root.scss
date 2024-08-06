@@ -1,7 +1,6 @@
 @use 'colours' as *;
 
 * {
-	box-sizing: inherit;
 	font-family: 'Courier New', Courier, monospace;
 }
 
@@ -18,8 +17,6 @@
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-text-size-adjust: 100%;
-
-	box-sizing: border-box;
 }
 
 a {
@@ -29,11 +26,18 @@ a {
 }
 
 body {
-	margin: 0;
 	width: 100vw;
 	height: 100vh;
 
+	margin: 0;
+
 	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+h1,
+ul {
+	color: $text1;
 }
 
 ::-webkit-scrollbar {
