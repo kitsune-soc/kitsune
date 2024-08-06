@@ -1,16 +1,24 @@
 <script lang="ts">
+	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import type { PageData } from './$houdini';
 
 	const { data }: { data: PageData } = $props();
 
-	let statsStore = $derived(data.stats);
-	let stats = $derived({
+	const registerButtonDisabled = $state(false);
+	const statsStore = $derived(data.stats);
+	const stats = $derived({
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
 		registeredUsers: $statsStore.data?.instance.userCount ?? 0
 	});
 
-	let registerButtonDisabled = $state(false);
+	const register = new RegisterUserStore();
+
+	function doRegister(event: SubmitEvent) {
+		event.preventDefault();
+
+		alert('registering');
+	}
 
 	function initiateLogin() {
 		alert('logging in wwowowowowowo');
@@ -39,7 +47,7 @@
 
 	<div class="section-right">
 		<div class="section-right-content">
-			<form class="register-form" method="post">
+			<form class="register-form" onsubmit={doRegister}>
 				<label for="username">Username</label>
 				<input placeholder="hangaku" type="text" name="username" />
 
