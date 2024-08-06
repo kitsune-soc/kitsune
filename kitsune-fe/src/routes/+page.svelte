@@ -70,17 +70,30 @@
 	@use '../styles/mixins' as *;
 	@use 'sass:map';
 
+	ul {
+		list-style-type: none;
+		padding: 0;
+	}
+
 	.landing-page {
 		display: flex;
 		flex-direction: row;
-		height: 100%;
-		width: 100%;
+
+		@include not-on-mobile {
+			height: 100%;
+		}
+
+		.section-left {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+		}
 
 		.section-right {
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-			height: 100%;
 			width: 100%;
 			background-color: $dark2;
 
@@ -88,21 +101,12 @@
 				border-radius: 0px 30px 30px 0px;
 				background-color: $dark1;
 				padding: 2em;
-				max-width: 50ch;
-				width: 100%;
+				max-width: 40ch;
 
 				& :global(.sign-in-button) {
 					width: 100%;
 				}
 			}
-		}
-
-		.section-left {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			height: 100%;
-			width: 100%;
 		}
 	}
 
@@ -119,7 +123,6 @@
 		}
 
 		& input {
-			width: 100%;
 			border: none;
 			height: 40px;
 			border-radius: 10px;
@@ -134,31 +137,23 @@
 		}
 	}
 
-	h1,
-	ul {
-		color: $text1;
-	}
-
 	@include only-on-mobile {
-		.section-left {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-
 		.landing-page {
-			display: flex;
 			flex-direction: column;
 
-			.section-right {
-				flex-direction: row;
-				justify-content: center;
+			margin: auto;
+			margin-top: 3em;
+			max-width: 80vw;
 
-				&-content {
-					max-width: 100%;
-					border-radius: 0px;
-					background-color: $dark2;
-				}
+			.section-left {
+				text-align: center;
+			}
+
+			.section-right-content {
+				border-radius: 10px;
+				background-color: $dark2;
+
+				max-width: 100%;
 			}
 		}
 
