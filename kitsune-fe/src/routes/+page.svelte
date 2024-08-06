@@ -150,9 +150,7 @@
 			}
 
 			.section-right-content {
-				border-radius: 10px;
 				background-color: $dark2;
-
 				max-width: 100%;
 			}
 		}
