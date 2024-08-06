@@ -13,6 +13,9 @@ const config = {
 	scalars: {
 		DateTime: {
 			type: 'Date'
+		},
+		UUID: {
+			type: 'string'
 		}
 	}
 };
