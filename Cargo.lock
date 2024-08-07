@@ -981,9 +981,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.7"
+version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26a5c3fd7bfa1ce3897a3a3501d362b2d87b7f2583ebcb4a949ec25911025cbc"
+checksum = "504bdec147f2cc13c8b57ed9401fd8a147cc66b67ad5cb241394244f2c947549"
 
 [[package]]
 name = "cfg-if"
@@ -1658,18 +1658,18 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "1.0.0-beta.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3249c0372e72f5f93b5c0ca54c0ab76bbf6216b6f718925476fd9bc4ffabb4fe"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
 dependencies = [
  "derive_more-impl",
 ]
 
 [[package]]
 name = "derive_more-impl"
-version = "1.0.0-beta.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27d919ced7590fc17b5d5a3c63b662e8a7d2324212c4e4dbbed975cafd22d16d"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3701,7 +3701,7 @@ name = "kitsune-jobs"
 version = "0.0.1-pre.6"
 dependencies = [
  "athena",
- "derive_more 1.0.0-beta.7",
+ "derive_more 1.0.0",
  "diesel",
  "diesel-async",
  "futures-util",
@@ -3919,7 +3919,7 @@ name = "kitsune-storage"
 version = "0.0.1-pre.6"
 dependencies = [
  "bytes",
- "derive_more 1.0.0-beta.7",
+ "derive_more 1.0.0",
  "futures-util",
  "kitsune-error",
  "kitsune-s3",
@@ -3998,7 +3998,7 @@ dependencies = [
  "async-trait",
  "blake3",
  "color-eyre",
- "derive_more 1.0.0-beta.7",
+ "derive_more 1.0.0",
  "enum_dispatch",
  "fred",
  "futures-util",
@@ -4687,9 +4687,9 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.36.2"
+version = "0.36.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f203fa8daa7bb185f760ae12bd8e097f63d17041dcdcaf675ac54cdf863170e"
+checksum = "27b64972346851a39438c60b341ebc01bba47464ae329e55cf343eb93964efd9"
 dependencies = [
  "crc32fast",
  "hashbrown 0.14.5",
@@ -7935,7 +7935,7 @@ dependencies = [
  "log",
  "mach2",
  "memfd",
- "object 0.36.2",
+ "object 0.36.3",
  "once_cell",
  "paste",
  "postcard",
@@ -8008,7 +8008,7 @@ dependencies = [
  "cranelift-wasm",
  "gimli",
  "log",
- "object 0.36.2",
+ "object 0.36.3",
  "target-lexicon",
  "thiserror",
  "wasmparser 0.212.0",
@@ -8028,7 +8028,7 @@ dependencies = [
  "gimli",
  "indexmap 2.3.0",
  "log",
- "object 0.36.2",
+ "object 0.36.3",
  "postcard",
  "semver",
  "serde",
@@ -8138,7 +8138,7 @@ dependencies = [
  "anyhow",
  "cranelift-codegen",
  "gimli",
- "object 0.36.2",
+ "object 0.36.3",
  "target-lexicon",
  "wasmparser 0.212.0",
  "wasmtime-cranelift",
