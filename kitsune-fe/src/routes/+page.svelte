@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import type { PageData } from './$houdini';
 
 	const { data }: { data: PageData } = $props();
 
-	const registerButtonDisabled = $state(false);
 	const statsStore = $derived(data.stats);
 	const stats = $derived({
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
@@ -14,16 +14,61 @@
 
 	const register = new RegisterUserStore();
 
-	function doRegister(event: SubmitEvent) {
-		event.preventDefault();
+	let registerButtonDisabled = $state(false);
+	let registerError = $state();
+	let registerErrorDialogOpen = $state(false);
 
-		alert('registering');
+	function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
+		event.preventDefault();
+		registerButtonDisabled = true;
+
+		const formData = new FormData(event.currentTarget);
+
+		const username = formData.get('username')!.toString();
+		const email = formData.get('email')!.toString();
+		const password = formData.get('password')!.toString();
+		const confirmPassword = formData.get('confirm-password')!.toString();
+
+		if (password !== confirmPassword) {
+			registerError = 'Passwords do not match';
+			registerErrorDialogOpen = true;
+			registerButtonDisabled = false;
+			return;
+		}
+
+		register
+			.mutate({ username, email, password })
+			.then((result) => {
+				if (result.errors) {
+					registerError = result.errors.map((error) => error.message).join(', ');
+					registerErrorDialogOpen = true;
+				} else {
+					initiateLogin();
+				}
+			})
+			.catch((reason) => {
+				registerError = reason.message;
+				registerErrorDialogOpen = true;
+			})
+			.finally(() => {
+				registerButtonDisabled = false;
+			});
 	}
 
 	function initiateLogin() {
 		alert('logging in wwowowowowowo');
 	}
 </script>
+
+<Dialog isOpen={registerErrorDialogOpen}>
+	<h2>Registration failed!</h2>
+
+	<p>
+		{registerError}
+	</p>
+
+	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
+</Dialog>
 
 <div class="landing-page">
 	<div class="section-left">
