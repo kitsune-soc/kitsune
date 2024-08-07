@@ -27,14 +27,13 @@
 	@use '../../styles/colours' as *;
 
 	dialog {
-		background-color: $dark1;
-
 		border-width: 0px;
 		border-radius: 5px;
+		background-color: $dark1;
 	}
 
 	::backdrop {
-		background-color: black;
 		opacity: 50%;
+		background-color: black;
 	}
 </style>

@@ -53,8 +53,8 @@
 		}
 
 		&:global(.secondary) {
-			background-color: transparent;
 			border: 1px solid;
+			background-color: transparent;
 		}
 	}
 </style>
