@@ -124,8 +124,8 @@
 	@use 'sass:map';
 
 	ul {
-		list-style-type: none;
 		padding: 0;
+		list-style-type: none;
 	}
 
 	.landing-page {
@@ -147,8 +147,8 @@
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-			width: 100%;
 			background-color: $dark2;
+			width: 100%;
 
 			&-content {
 				border-radius: 0px 30px 30px 0px;
@@ -176,17 +176,17 @@
 		}
 
 		& input {
+			margin-bottom: 0.75em;
 			border: none;
-			height: 40px;
 			border-radius: 10px;
 			background-color: $dark2;
-			margin-bottom: 0.75em;
 			padding-left: 1em;
+			height: 40px;
 		}
 
 		& :global(.register-button) {
-			width: 100%;
 			margin-top: 1.5em;
+			width: 100%;
 		}
 	}
 

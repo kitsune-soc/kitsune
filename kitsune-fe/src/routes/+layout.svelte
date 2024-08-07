@@ -40,8 +40,8 @@
 
 	@include only-on-mobile {
 		footer {
-			text-align: center;
 			margin: 3em 0;
+			text-align: center;
 		}
 	}
 
