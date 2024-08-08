@@ -37,7 +37,8 @@
 		"typescript": "^5.5.4",
 		"unplugin-icons": "^0.19.1",
 		"vite": "^5.3.5",
-		"vitest": "^2.0.5"
+		"vitest": "^2.0.5",
+		"zod": "^3.23.8"
 	},
 	"type": "module"
 }
