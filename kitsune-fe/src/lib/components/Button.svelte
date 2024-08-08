@@ -47,7 +47,7 @@
 				color: $dark1;
 			}
 
-			&:hover {
+			&:hover:not([disabled]) {
 				background-color: $shade2dark;
 			}
 		}
