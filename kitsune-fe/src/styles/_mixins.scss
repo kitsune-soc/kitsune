@@ -8,7 +8,7 @@
 }
 
 @mixin not-on-mobile {
-	@media only screen and (min-width: map.get($breakpoints, md)) {
+	@media not screen and (max-width: map.get($breakpoints, md)) {
 		@content;
 	}
 }
