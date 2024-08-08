@@ -4,6 +4,7 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import type { PageData } from './$houdini';
 	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading?raw&width=2em&height=2em';
+	import { _registerSchema } from './+page';
 
 	const { data }: { data: PageData } = $props();
 
@@ -16,7 +17,7 @@
 	const register = new RegisterUserStore();
 
 	let registerButtonDisabled = $state(false);
-	let registerError = $state();
+	let registerErrors: string[] = $state([]);
 	let registerErrorDialogOpen = $state(false);
 
 	async function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
@@ -24,24 +25,28 @@
 		registerButtonDisabled = true;
 
 		const formData = new FormData(event.currentTarget);
-		const [username, email, password, confirmPassword] = [
-			formData.get('username')!.toString(),
-			formData.get('email')!.toString(),
-			formData.get('password')!.toString(),
-			formData.get('confirm-password')!.toString()
-		];
+		const validatedData = await _registerSchema.safeParseAsync(
+			Object.fromEntries(formData.entries())
+		);
 
-		if (password !== confirmPassword) {
-			registerError = 'Passwords do not match';
+		if (!validatedData.success) {
+			const formattedErrors = validatedData.error.format(
+				(issue) => `${issue.path.join(', ')}: ${issue.message}`
+			);
+
+			registerErrors = Object.values(formattedErrors).flatMap((error) =>
+				'_errors' in error ? error._errors : error
+			);
 			registerErrorDialogOpen = true;
 			registerButtonDisabled = false;
+
 			return;
 		}
 
 		try {
-			const result = await register.mutate({ username, email, password });
+			const result = await register.mutate(validatedData.data);
 			if (result.errors) {
-				registerError = result.errors.map((error) => error.message).join(', ');
+				registerErrors = result.errors.map((error) => error.message);
 				registerErrorDialogOpen = true;
 			} else {
 				event.currentTarget.reset();
@@ -49,7 +54,7 @@
 			}
 		} catch (reason: unknown) {
 			if (reason instanceof Error) {
-				registerError = reason.message;
+				registerErrors = [reason.message];
 			}
 
 			registerErrorDialogOpen = true;
@@ -66,9 +71,11 @@
 <Dialog isOpen={registerErrorDialogOpen}>
 	<h2>Registration failed!</h2>
 
-	<p>
-		{registerError}
-	</p>
+	<ol>
+		{#each registerErrors as error}
+			<li>{error}</li>
+		{/each}
+	</ol>
 
 	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
 </Dialog>
