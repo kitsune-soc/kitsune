@@ -19,16 +19,17 @@
 	let registerError = $state();
 	let registerErrorDialogOpen = $state(false);
 
-	function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
+	async function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
 		event.preventDefault();
 		registerButtonDisabled = true;
 
 		const formData = new FormData(event.currentTarget);
-
-		const username = formData.get('username')!.toString();
-		const email = formData.get('email')!.toString();
-		const password = formData.get('password')!.toString();
-		const confirmPassword = formData.get('confirm-password')!.toString();
+		const [username, email, password, confirmPassword] = [
+			formData.get('username')!.toString(),
+			formData.get('email')!.toString(),
+			formData.get('password')!.toString(),
+			formData.get('confirm-password')!.toString()
+		];
 
 		if (password !== confirmPassword) {
 			registerError = 'Passwords do not match';
@@ -37,24 +38,24 @@
 			return;
 		}
 
-		register
-			.mutate({ username, email, password })
-			.then((result) => {
-				if (result.errors) {
-					registerError = result.errors.map((error) => error.message).join(', ');
-					registerErrorDialogOpen = true;
-				} else {
-					event.currentTarget.reset();
-					initiateLogin();
-				}
-			})
-			.catch((reason) => {
-				registerError = reason.message;
+		try {
+			const result = await register.mutate({ username, email, password });
+			if (result.errors) {
+				registerError = result.errors.map((error) => error.message).join(', ');
 				registerErrorDialogOpen = true;
-			})
-			.finally(() => {
-				registerButtonDisabled = false;
-			});
+			} else {
+				event.currentTarget.reset();
+				initiateLogin();
+			}
+		} catch (reason: unknown) {
+			if (reason instanceof Error) {
+				registerError = reason.message;
+			}
+
+			registerErrorDialogOpen = true;
+		} finally {
+			registerButtonDisabled = false;
+		}
 	}
 
 	function initiateLogin() {
