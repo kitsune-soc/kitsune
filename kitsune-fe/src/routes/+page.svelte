@@ -3,6 +3,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import type { PageData } from './$houdini';
+	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading?raw&width=2em&height=2em';
 
 	const { data }: { data: PageData } = $props();
 
@@ -43,6 +44,7 @@
 					registerError = result.errors.map((error) => error.message).join(', ');
 					registerErrorDialogOpen = true;
 				} else {
+					event.currentTarget.reset();
 					initiateLogin();
 				}
 			})
@@ -106,7 +108,14 @@
 				<input type="password" name="confirm-password" />
 
 				<p>
-					<Button class="register-button" disabled={registerButtonDisabled}>Register</Button>
+					<Button class="register-button" disabled={registerButtonDisabled}>
+						{#if registerButtonDisabled}
+							<!-- Work around unplugin-icons bug: <https://github.com/unplugin/unplugin-icons/issues/242> -->
+							{@html IconThreeDotsLoading}
+						{:else}
+							Register
+						{/if}
+					</Button>
 				</p>
 			</form>
 
