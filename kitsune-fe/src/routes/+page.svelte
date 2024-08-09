@@ -119,6 +119,7 @@
 					<Button class="register-button" disabled={registerButtonDisabled}>
 						{#if registerButtonDisabled}
 							<!-- Work around unplugin-icons bug: <https://github.com/unplugin/unplugin-icons/issues/242> -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							{@html IconThreeDotsLoading}
 						{:else}
 							Register
