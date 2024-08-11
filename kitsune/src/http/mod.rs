@@ -83,7 +83,7 @@ where
 #[inline]
 fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> {
     TraceLayer::new_for_http().make_span_with(|request: &http::Request<B>| {
-        debug_span!(
+        info_span!(
             "request",
             method = %request.method(),
             uri = %request.uri(),
@@ -97,9 +97,7 @@ pub fn create_router(
     state: Zustand,
     server_config: &server::Configuration,
 ) -> eyre::Result<Router> {
-    // This warning will come up if the server is compiled without the Mastodon API compatibility
-    #[allow(unused_mut)]
-    let mut router = Router::new()
+    let router = Router::new()
         .nest("/confirm-account", confirm_account::routes())
         .nest("/emojis", custom_emojis::routes())
         .nest("/media", media::routes())
@@ -114,33 +112,31 @@ pub fn create_router(
         .nest("/public", public::routes());
 
     #[cfg(feature = "oidc")]
-    {
-        router = router.nest("/oidc", handler::oidc::routes());
-    }
+    let router = router.nest("/oidc", handler::oidc::routes());
 
     #[cfg(feature = "graphql-api")]
-    {
-        router = router.merge(graphql::routes(state.clone()));
-    }
+    let router = router.merge(graphql::routes(state.clone()));
 
     #[cfg(feature = "mastodon-api")]
-    {
-        router = router.merge(handler::mastodon::routes());
-    }
+    let router = router.merge(handler::mastodon::routes());
 
-    router = router.fallback_service(serve_frontend(server_config));
+    let router = router.fallback_service(serve_frontend(server_config));
 
-    if !server_config.clacks_overhead.is_empty() {
+    let router = if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
             XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
                 .wrap_err("Invalid clacks overhead values")?;
 
-        router = router.layer(clacks_overhead_layer);
-    }
+        router.layer(clacks_overhead_layer)
+    } else {
+        router
+    };
 
-    if server_config.deny_brave_browsers {
-        router = router.layer(StopUsingBraveLayer::default());
-    }
+    let router = if server_config.deny_brave_browsers {
+        router.layer(StopUsingBraveLayer::default())
+    } else {
+        router
+    };
 
     Ok(router
         .layer(CatchPanicLayer::new())

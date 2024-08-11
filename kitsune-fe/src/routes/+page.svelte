@@ -104,10 +104,10 @@
 		<div class="section-right-content">
 			<form class="register-form" onsubmit={doRegister}>
 				<label for="username">Username</label>
-				<input placeholder="hangaku" type="text" name="username" />
+				<input type="text" name="username" placeholder="hangaku" />
 
 				<label for="email">Email address</label>
-				<input placeholder="hangaku@joinkitsune.org" type="email" name="email" />
+				<input type="email" name="email" placeholder="hangaku@joinkitsune.org" />
 
 				<label for="password">Password</label>
 				<input type="password" name="password" />
