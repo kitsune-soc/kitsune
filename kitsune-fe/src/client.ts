@@ -1,15 +1,15 @@
-import { HoudiniClient } from '$houdini';
+import { HoudiniClient, getClientSession } from '$houdini';
+import { houdiniPlugin as authPlugin } from '$lib/oauth/auth.svelte';
 
 export default new HoudiniClient({
-	url: `${import.meta.env.VITE_BACKEND_URL ?? ''}/graphql`
-
-	// uncomment this to configure the network call (for things like authentication)
-	// for more information, please visit here: https://www.houdinigraphql.com/guides/authentication
-	// fetchParams({ session }) {
-	//     return {
-	//         headers: {
-	//             Authentication: `Bearer ${session.token}`,
-	//         }
-	//     }
-	// }
+	url: `${import.meta.env.VITE_BACKEND_URL ?? ''}/graphql`,
+	plugins: [authPlugin],
+	fetchParams(wha) {
+		const session = getClientSession();
+		return {
+			headers: {
+				...session.headers
+			}
+		};
+	}
 });

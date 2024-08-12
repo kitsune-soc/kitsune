@@ -105,6 +105,8 @@
             packages = rec {
               default = main;
 
+              devenv-up = self.devShells.${system}.default.config.procfileScript;
+
               cli = craneLib.buildPackage (
                 commonArgs
                 // {
