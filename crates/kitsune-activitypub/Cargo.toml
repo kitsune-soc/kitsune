@@ -31,7 +31,7 @@ kitsune-util = { workspace = true }
 kitsune-wasm-mrf = { workspace = true }
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
-serde = "1.0.204"
+serde = "1.0.207"
 sha2 = "0.10.8"
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
@@ -51,7 +51,7 @@ kitsune-test = { workspace = true }
 kitsune-webfinger = { workspace = true }
 pretty_assertions = "1.4.0"
 tokio = { version = "1.39.2", features = ["macros"] }
-tower = { version = "0.4.13", default-features = false, features = ["util"] }
+tower = { version = "0.5.0", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

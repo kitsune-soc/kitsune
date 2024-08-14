@@ -49,11 +49,14 @@ members = [
     "crates/kitsune-wasm-mrf",
     "crates/kitsune-wasm-mrf/example-mrf",
     "crates/kitsune-webfinger",
+
     "kitsune",
     "kitsune-cli",
     "kitsune-job-runner",
+
     "lib/athena",
     "lib/blowocking",
+    "lib/cjson",
     "lib/cursiv",
     "lib/geomjeungja",
     "lib/http-signatures",
@@ -69,6 +72,7 @@ members = [
     "lib/tower-stop-using-brave",
     "lib/tower-x-clacks-overhead",
     "lib/trials",
+
     "xtask",
 ]
 resolver = "2"
@@ -77,7 +81,7 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.12", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.15", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.2", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -106,7 +110,7 @@ garde = { version = "0.20.0", features = [
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.9"
+sonic-rs = "0.3.10"
 triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
@@ -147,6 +151,7 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking", default-features = false }
+cjson = { path = "lib/cjson" }
 cursiv = { path = "lib/cursiv" }
 geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
@@ -216,7 +221,7 @@ tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.gi
 async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40a8deb7d41d3ac0e563f9a0fd7f600c23189987" }
 
 # SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6737bb6bcc32baffc91b1223643b0b6953db0a48" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "737ce92662b2ef973d0d1986f72837b7df714f23" }
 
 # TCP nodelay for `axum::serve`
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }

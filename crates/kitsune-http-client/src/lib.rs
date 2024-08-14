@@ -176,16 +176,16 @@ impl ClientBuilder {
         B::Error: StdError + Send + Sync + 'static,
     {
         let content_length_limit = self.content_length_limit.map_or_else(
-            || Either::B(MapResponseBodyLayer::new(BoxBody::new)),
+            || Either::Left(MapResponseBodyLayer::new(BoxBody::new)),
             |limit| {
-                Either::A(MapResponseBodyLayer::new(move |body| {
+                Either::Right(MapResponseBodyLayer::new(move |body| {
                     BoxBody::new(Limited::new(body, limit))
                 }))
             },
         );
         let timeout = self.timeout.map_or_else(
-            || Either::B(Identity::new()),
-            |duration| Either::A(TimeoutLayer::new(duration)),
+            || Either::Left(Identity::new()),
+            |duration| Either::Right(TimeoutLayer::new(duration)),
         );
 
         Client {
@@ -196,7 +196,8 @@ impl ClientBuilder {
                     .layer(FollowRedirectLayer::new())
                     .layer(DecompressionLayer::default())
                     .layer(timeout)
-                    .service(client),
+                    .service(client)
+                    .map_err(BoxError::from),
             ),
         }
     }

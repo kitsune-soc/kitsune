@@ -12,13 +12,13 @@ diesel = { version = "2.2.2", default-features = false, features = [
     "uuid",
 ], optional = true }
 fred = { version = "9.0.3", default-features = false, optional = true }
-serde = { version = "1.0.204", optional = true }
+serde = { version = "1.0.207", optional = true }
 thiserror = "1.0.63"
 uuid = { version = "1.10.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 
 [dev-dependencies]
-serde_test = "1.0.176"
+serde_test = "1.0.177"
 
 [features]
 redis = ["dep:fred"]

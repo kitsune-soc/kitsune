@@ -8,15 +8,15 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 either = "1.13.0"
 http = "1.1.0"
-regex = "1.10.5"
-tower-layer = "0.3.2"
-tower-service = "0.3.2"
+regex = "1.10.6"
+tower-layer = "0.3.3"
+tower-service = "0.3.3"
 
 [dev-dependencies]
 futures = { version = "0.3.30", default-features = false, features = [
     "executor",
 ] }
-tower = { version = "0.4.13", default-features = false, features = ["util"] }
+tower = { version = "0.5.0", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

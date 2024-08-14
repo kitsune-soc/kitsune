@@ -14,7 +14,7 @@ tracing-subscriber = { version = "0.3.18", default-features = false, features = 
     "ansi",
     "fmt",
 ] }
-ureq = "2.10.0"
+ureq = "2.10.1"
 
 [lints]
 workspace = true
