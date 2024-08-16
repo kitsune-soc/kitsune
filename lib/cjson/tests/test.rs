@@ -133,6 +133,7 @@ fn ordered_nested_object() -> Result<()> {
 /// out the same.
 #[test]
 fn actual_tuf_signed() {
+    #[allow(clippy::unreadable_literal)]
     let encode_result = encode!(
     {
       "signed": {

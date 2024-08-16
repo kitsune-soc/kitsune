@@ -45,6 +45,8 @@ pub struct CanonicalFormatter {
 
 impl CanonicalFormatter {
     /// Create a new `CanonicalFormatter` object.
+    #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -163,7 +165,7 @@ impl Formatter for CanonicalFormatter {
         let normalizer = const { ComposingNormalizer::new_nfc() };
         for ch in normalizer.normalize_iter(value.chars()) {
             // CJSON wants us to escape backslashes and double quotes.
-            // But only backslashes and double quotes.
+            // And only backslashes and double quotes.
             if matches!(ch, '\\' | '"') {
                 self.writer(writer).write_all(&[b'\\'])?;
             }
