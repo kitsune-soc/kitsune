@@ -138,10 +138,10 @@ impl Formatter for CanonicalFormatter {
     #[inline]
     fn write_number_str<W: Write + ?Sized>(&mut self, writer: &mut W, value: &str) -> Result<()> {
         if memchr3(b'.', b'e', b'E', value.as_bytes()).is_some() {
-            return float_err!();
+            float_err!()
+        } else {
+            CompactFormatter.write_number_str(&mut self.writer(writer), value)
         }
-
-        CompactFormatter.write_number_str(&mut self.writer(writer), value)
     }
 
     wrapper!(begin_string);

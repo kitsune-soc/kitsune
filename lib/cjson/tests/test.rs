@@ -5,15 +5,15 @@ use std::io::Result;
 
 /// Small wrapper around the `sonic_rs` json! macro to encode the value as canonical JSON.
 macro_rules! encode {
-        ($($tt:tt)+) => {
-            (|v: sonic_rs::Value| -> Result<Vec<u8>> {
-                let mut buf = Vec::new();
-                let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
-                v.serialize(&mut ser)?;
-                Ok(buf)
-            })(sonic_rs::json!($($tt)+))
-        };
-    }
+    ($($tt:tt)+) => {
+        (|v: sonic_rs::Value| -> Result<Vec<u8>> {
+            let mut buf = Vec::new();
+            let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
+            v.serialize(&mut ser)?;
+            Ok(buf)
+        })(sonic_rs::json!($($tt)+))
+    };
+}
 
 /// These smoke tests come from securesystemslib, the library used by the TUF reference
 /// implementation.
