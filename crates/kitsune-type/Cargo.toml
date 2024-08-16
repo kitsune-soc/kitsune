@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 iso8601-timestamp = "0.2.17"
-serde = { version = "1.0.207", features = ["derive"] }
+serde = { version = "1.0.208", features = ["derive"] }
 serde_with = "3.9.0"
 smol_str = { version = "0.2.2", features = ["serde"] }
 sonic-rs = { workspace = true }

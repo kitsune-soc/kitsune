@@ -10,7 +10,7 @@ enum_dispatch = "0.3.13"
 http = "1.1.0"
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
-serde = { version = "1.0.207", features = ["derive"] }
+serde = { version = "1.0.208", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sonic-rs = { workspace = true }
 strum = { version = "0.26.3", features = ["derive"] }
