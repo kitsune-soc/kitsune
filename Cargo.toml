@@ -223,6 +223,6 @@ async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "737ce92662b2ef973d0d1986f72837b7df714f23" }
 
-# TCP nodelay for `axum::serve`
-axum = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
-axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "8d0c5c05eb75eb779591c8000705e785123868a0" }
+# TCP nodelay for `axum::serve` and cloning improvements
+axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
+axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
