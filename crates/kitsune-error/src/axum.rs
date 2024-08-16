@@ -20,6 +20,18 @@ impl From<Error> for Response {
     }
 }
 
+macro_rules! dispatch_response {
+    ($value:expr, $body:expr; {
+        $($error_ty:pat => $status_code:expr),* $(,)?
+    }) => {{
+        match $value {
+            $(
+                $error_ty => to_response($status_code, $body),
+            )*
+        }
+    }};
+}
+
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         debug!(error = ?self.inner);
@@ -33,16 +45,13 @@ impl IntoResponse for Error {
             return to_response(StatusCode::BAD_REQUEST, Some(body));
         }
 
-        let maybe_body = self.ctx.body.into_inner();
-        match self.ctx.ty {
-            ErrorType::BadRequest => to_response(StatusCode::BAD_REQUEST, maybe_body),
-            ErrorType::Forbidden => to_response(StatusCode::FORBIDDEN, maybe_body),
-            ErrorType::NotFound => to_response(StatusCode::NOT_FOUND, maybe_body),
-            ErrorType::Unauthorized => to_response(StatusCode::UNAUTHORIZED, maybe_body),
-            ErrorType::UnsupportedMediaType => {
-                to_response(StatusCode::UNSUPPORTED_MEDIA_TYPE, maybe_body)
-            }
-            ErrorType::Other => to_response(StatusCode::INTERNAL_SERVER_ERROR, maybe_body),
-        }
+        dispatch_response!(self.ctx.ty, self.ctx.body.into_inner(); {
+            ErrorType::BadRequest => StatusCode::BAD_REQUEST,
+            ErrorType::Forbidden => StatusCode::FORBIDDEN,
+            ErrorType::NotFound => StatusCode::NOT_FOUND,
+            ErrorType::Unauthorized => StatusCode::UNAUTHORIZED,
+            ErrorType::UnsupportedMediaType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            ErrorType::Other => StatusCode::INTERNAL_SERVER_ERROR,
+        })
     }
 }
