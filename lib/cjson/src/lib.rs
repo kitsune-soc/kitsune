@@ -97,6 +97,15 @@ macro_rules! wrapper {
             CompactFormatter.$f(&mut self.writer(writer), arg)
         }
     };
+
+    ($( $f:ident $(, $t:ty)?);* $(;)?) => {
+        $(
+            wrapper!(
+                $f
+                $(, $t)?
+            );
+        )*
+    };
 }
 
 macro_rules! float_err {
@@ -109,16 +118,30 @@ macro_rules! float_err {
 }
 
 impl Formatter for CanonicalFormatter {
-    wrapper!(write_null);
-    wrapper!(write_bool, bool);
-    wrapper!(write_i8, i8);
-    wrapper!(write_i16, i16);
-    wrapper!(write_i32, i32);
-    wrapper!(write_i64, i64);
-    wrapper!(write_u8, u8);
-    wrapper!(write_u16, u16);
-    wrapper!(write_u32, u32);
-    wrapper!(write_u64, u64);
+    wrapper! {
+        write_null;
+        write_bool, bool;
+        write_i8, i8;
+        write_i16, i16;
+        write_i32, i32;
+        write_i64, i64;
+        write_u8, u8;
+        write_u16, u16;
+        write_u32, u32;
+        write_u64, u64;
+    }
+
+    wrapper! {
+        begin_string;
+        end_string;
+    }
+
+    wrapper! {
+        begin_array;
+        end_array;
+        begin_array_value, bool;
+        end_array_value;
+    }
 
     #[inline]
     fn write_f32<W: Write + ?Sized>(&mut self, _writer: &mut W, _value: f32) -> Result<()> {
@@ -142,9 +165,6 @@ impl Formatter for CanonicalFormatter {
         }
     }
 
-    wrapper!(begin_string);
-    wrapper!(end_string);
-
     fn write_string_fast<W>(
         &mut self,
         writer: &mut W,
@@ -152,7 +172,7 @@ impl Formatter for CanonicalFormatter {
         need_quote: bool,
     ) -> std::io::Result<()>
     where
-        W: sonic_rs::writer::WriteExt + ?Sized,
+        W: WriteExt + ?Sized,
     {
         if need_quote {
             self.writer(writer).write_all(&[b'"'])?;
@@ -177,11 +197,6 @@ impl Formatter for CanonicalFormatter {
         Ok(())
     }
 
-    wrapper!(begin_array);
-    wrapper!(end_array);
-    wrapper!(begin_array_value, bool); // hack: this passes through the `first` argument
-    wrapper!(end_array_value);
-
     // Here are the object methods. Because keys must be sorted, we serialize the object's keys and
     // values in memory as a `BTreeMap`, then write it all out when `end_object_value` is called.
 
@@ -201,8 +216,9 @@ impl Formatter for CanonicalFormatter {
                  without calling begin_object first",
             )
         })?;
-        let mut writer = self.writer(writer);
+
         let mut first = true;
+        let mut writer = self.writer(writer);
 
         for (key, value) in object.obj {
             CompactFormatter.begin_object_key(&mut writer, first)?;
