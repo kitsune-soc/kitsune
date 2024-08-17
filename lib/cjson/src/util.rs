@@ -1,5 +1,5 @@
 use sonic_rs::writer::WriteExt;
-use std::io;
+use std::{fmt, io, mem::MaybeUninit};
 
 macro_rules! for_both {
     ($owner:ident, $matcher:pat => $impl:expr) => {{
@@ -31,7 +31,7 @@ where
     }
 
     #[inline]
-    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()> {
+    fn write_fmt(&mut self, fmt: fmt::Arguments<'_>) -> io::Result<()> {
         for_both!(self, inner => inner.write_fmt(fmt))
     }
 
@@ -47,16 +47,13 @@ where
     R: WriteExt + io::Write,
 {
     #[inline]
-    fn reserve_with(
-        &mut self,
-        additional: usize,
-    ) -> std::io::Result<&mut [std::mem::MaybeUninit<u8>]> {
+    fn reserve_with(&mut self, additional: usize) -> io::Result<&mut [MaybeUninit<u8>]> {
         for_both!(self, inner => inner.reserve_with(additional))
     }
 
     #[inline]
     #[allow(unsafe_code)] // We just dispatch over already unsafe implementations
-    unsafe fn flush_len(&mut self, additional: usize) -> std::io::Result<()> {
+    unsafe fn flush_len(&mut self, additional: usize) -> io::Result<()> {
         for_both!(self, inner => inner.flush_len(additional))
     }
 }

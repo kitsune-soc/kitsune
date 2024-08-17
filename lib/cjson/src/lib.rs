@@ -33,11 +33,7 @@ impl Default for Collecting {
     }
 }
 
-/// A [`Formatter`] that produces canonical JSON.
-///
-/// See the [crate-level documentation](../index.html) for more detail.
-///
-/// [`Formatter`]: ../sonic_rs/ser/trait.Formatter.html
+/// A [`Formatter`](sonic_rs::format::Formatter) that produces canonical JSON.
 #[derive(Debug, Default)]
 pub struct CanonicalFormatter {
     object_stack: Vec<Object>,
