@@ -9,7 +9,7 @@ use sonic_rs::{
 };
 use std::{
     collections::BTreeMap,
-    io::{Error, ErrorKind, Result, Write},
+    io::{self, Write as _},
     mem,
 };
 
@@ -55,7 +55,7 @@ impl CanonicalFormatter {
     ///
     /// If we are not currently writing an object, pass through `writer`.
     #[inline]
-    fn writer<'a, W: Write + ?Sized>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a {
+    fn writer<'a, W: io::Write + ?Sized>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a {
         self.object_stack.last_mut().map_or_else(
             || Either::Right(BufferedWriter::new(writer)),
             |object| {
@@ -71,10 +71,10 @@ impl CanonicalFormatter {
 
     /// Returns a mutable reference to the top of the object stack.
     #[inline]
-    fn obj_mut(&mut self) -> Result<&mut Object> {
+    fn obj_mut(&mut self) -> io::Result<&mut Object> {
         self.object_stack.last_mut().ok_or_else(|| {
-            Error::new(
-                ErrorKind::Other,
+            io::Error::new(
+                io::ErrorKind::Other,
                 "Serializer called an object method without calling begin_object first",
             )
         })
@@ -86,14 +86,14 @@ impl CanonicalFormatter {
 macro_rules! wrapper {
     ($f:ident) => {
         #[inline]
-        fn $f<W: Write + ?Sized>(&mut self, writer: &mut W) -> Result<()> {
+        fn $f<W: io::Write + ?Sized>(&mut self, writer: &mut W) -> io::Result<()> {
             CompactFormatter.$f(&mut self.writer(writer))
         }
     };
 
     ($f:ident, $t:ty) => {
         #[inline]
-        fn $f<W: Write + ?Sized>(&mut self, writer: &mut W, arg: $t) -> Result<()> {
+        fn $f<W: io::Write + ?Sized>(&mut self, writer: &mut W, arg: $t) -> io::Result<()> {
             CompactFormatter.$f(&mut self.writer(writer), arg)
         }
     };
@@ -110,8 +110,8 @@ macro_rules! wrapper {
 
 macro_rules! float_err {
     () => {
-        Err(Error::new(
-            ErrorKind::InvalidInput,
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
             "floating point numbers are not allowed",
         ))
     };
@@ -144,12 +144,12 @@ impl Formatter for CanonicalFormatter {
     }
 
     #[inline]
-    fn write_f32<W: Write + ?Sized>(&mut self, _writer: &mut W, _value: f32) -> Result<()> {
+    fn write_f32<W: io::Write + ?Sized>(&mut self, _writer: &mut W, _value: f32) -> io::Result<()> {
         float_err!()
     }
 
     #[inline]
-    fn write_f64<W: Write + ?Sized>(&mut self, _writer: &mut W, _value: f64) -> Result<()> {
+    fn write_f64<W: io::Write + ?Sized>(&mut self, _writer: &mut W, _value: f64) -> io::Result<()> {
         float_err!()
     }
 
@@ -157,7 +157,11 @@ impl Formatter for CanonicalFormatter {
     // enabled, all numbers are internally stored as strings, and this method is always used (even
     // for floating point values).
     #[inline]
-    fn write_number_str<W: Write + ?Sized>(&mut self, writer: &mut W, value: &str) -> Result<()> {
+    fn write_number_str<W: io::Write + ?Sized>(
+        &mut self,
+        writer: &mut W,
+        value: &str,
+    ) -> io::Result<()> {
         if memchr3(b'.', b'e', b'E', value.as_bytes()).is_some() {
             float_err!()
         } else {
@@ -170,7 +174,7 @@ impl Formatter for CanonicalFormatter {
         writer: &mut W,
         value: &str,
         need_quote: bool,
-    ) -> std::io::Result<()>
+    ) -> io::Result<()>
     where
         W: WriteExt + ?Sized,
     {
@@ -201,17 +205,17 @@ impl Formatter for CanonicalFormatter {
     // values in memory as a `BTreeMap`, then write it all out when `end_object_value` is called.
 
     #[inline]
-    fn begin_object<W: Write + ?Sized>(&mut self, writer: &mut W) -> Result<()> {
+    fn begin_object<W: io::Write + ?Sized>(&mut self, writer: &mut W) -> io::Result<()> {
         CompactFormatter.begin_object(&mut self.writer(writer))?;
         self.object_stack.push(Object::default());
         Ok(())
     }
 
     #[inline]
-    fn end_object<W: Write + ?Sized>(&mut self, writer: &mut W) -> Result<()> {
+    fn end_object<W: io::Write + ?Sized>(&mut self, writer: &mut W) -> io::Result<()> {
         let object = self.object_stack.pop().ok_or_else(|| {
-            Error::new(
-                ErrorKind::Other,
+            io::Error::new(
+                io::ErrorKind::Other,
                 "sonic_rs called Formatter::end_object object method
                  without calling begin_object first",
             )
@@ -236,7 +240,11 @@ impl Formatter for CanonicalFormatter {
     }
 
     #[inline]
-    fn begin_object_key<W: Write + ?Sized>(&mut self, _writer: &mut W, _first: bool) -> Result<()> {
+    fn begin_object_key<W: io::Write + ?Sized>(
+        &mut self,
+        _writer: &mut W,
+        _first: bool,
+    ) -> io::Result<()> {
         let object = self.obj_mut()?;
         object.state = Collecting::Key(Vec::new());
 
@@ -244,7 +252,7 @@ impl Formatter for CanonicalFormatter {
     }
 
     #[inline]
-    fn end_object_key<W: Write + ?Sized>(&mut self, _writer: &mut W) -> Result<()> {
+    fn end_object_key<W: io::Write + ?Sized>(&mut self, _writer: &mut W) -> io::Result<()> {
         let object = self.obj_mut()?;
 
         let Collecting::Key(key) = &mut object.state else {
@@ -260,12 +268,12 @@ impl Formatter for CanonicalFormatter {
     }
 
     #[inline]
-    fn begin_object_value<W: Write + ?Sized>(&mut self, _writer: &mut W) -> Result<()> {
+    fn begin_object_value<W: io::Write + ?Sized>(&mut self, _writer: &mut W) -> io::Result<()> {
         Ok(())
     }
 
     #[inline]
-    fn end_object_value<W: Write + ?Sized>(&mut self, _writer: &mut W) -> Result<()> {
+    fn end_object_value<W: io::Write + ?Sized>(&mut self, _writer: &mut W) -> io::Result<()> {
         let object = self.obj_mut()?;
         let Collecting::Value { key, value } = &mut object.state else {
             unreachable!();
@@ -277,7 +285,11 @@ impl Formatter for CanonicalFormatter {
     }
 
     #[inline]
-    fn write_raw_value<W: Write + ?Sized>(&mut self, writer: &mut W, fragment: &str) -> Result<()> {
+    fn write_raw_value<W: io::Write + ?Sized>(
+        &mut self,
+        writer: &mut W,
+        fragment: &str,
+    ) -> io::Result<()> {
         let mut ser = Serializer::with_formatter(self.writer(writer), Self::new());
         sonic_rs::from_str::<sonic_rs::Value>(fragment)?.serialize(&mut ser)?;
         Ok(())

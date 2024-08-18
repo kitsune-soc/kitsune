@@ -17,7 +17,7 @@ triomphe = { workspace = true }
 typed-builder = "0.19.1"
 
 [dev-dependencies]
-tokio = { version = "1.39.2", features = ["macros", "rt"] }
+tokio = { version = "1.39.3", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

@@ -23,7 +23,7 @@ smol_str = "0.2.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
 thiserror = "1.0.63"
-tokio = { version = "1.39.2", features = ["macros", "rt", "sync"] }
+tokio = { version = "1.39.3", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.11", features = ["rt"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
