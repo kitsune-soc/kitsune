@@ -16,6 +16,7 @@ extend-exclude = [
     "crates/kitsune-wasm-mrf/wit/wasi-keyvalue",
     "crates/kitsune-wasm-mrf/wit/wasi-logging",
 
+    "lib/fast-cjson/benches/*.json",
     "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
 
