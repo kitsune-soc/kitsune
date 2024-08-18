@@ -22,7 +22,7 @@ derive_builder = "0.20.0"
 http = "1.1.0"
 httpdate = "1.0.3"
 itertools = { workspace = true }
-logos = "0.14.0"
+logos = "0.14.1"
 miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
@@ -33,7 +33,7 @@ tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 divan = "0.1.14"
-tokio = { version = "1.39.2", features = ["macros", "rt"] }
+tokio = { version = "1.39.3", features = ["macros", "rt"] }
 
 [features]
 default = ["easy"]

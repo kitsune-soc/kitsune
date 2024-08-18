@@ -6,7 +6,7 @@ use wasm_encoder::{ComponentSection, CustomSection};
 ///
 /// The manifest is encoded in canonical JSON.
 /// The emitted byte vector can directly be appended to a WASM component
-pub fn encode(manifest: &Manifest<'_>) -> Result<Vec<u8>, serde_json::Error> {
+pub fn encode(manifest: &Manifest<'_>) -> Result<Vec<u8>, sonic_rs::Error> {
     let canonical_manifest = crate::serialise(manifest)?;
     let custom_section = CustomSection {
         name: Cow::Borrowed(SECTION_NAME),

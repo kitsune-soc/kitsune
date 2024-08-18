@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 rayon = "1.10.0"
 thiserror = "1.0.63"
-tokio = { version = "1.39.2", features = ["sync"] }
+tokio = { version = "1.39.3", features = ["sync"] }
 tracing = "0.1.40"
 
 [features]

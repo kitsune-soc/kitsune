@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-stream = "0.3.5"
-bytes = "1.7.0"
+bytes = "1.7.1"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
@@ -15,7 +15,7 @@ http-body = "1.0.1"
 http-body-util = "0.1.2"
 http-signatures = { workspace = true }
 hyper = "1.4.1"
-hyper-util = { version = "0.1.6", features = [
+hyper-util = { version = "0.1.7", features = [
     "client-legacy",
     "http1",
     "http2",
@@ -31,10 +31,10 @@ hyper-rustls = { version = "0.27.2", default-features = false, features = [
 ] }
 kitsune-type = { workspace = true }
 pin-project = "1.1.5"
-serde = "1.0.204"
+serde = "1.0.208"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
-tower = { version = "0.4.13", features = ["util"] }
+tower = { version = "0.5.0", features = ["util"] }
 tower-http = { version = "0.5.2", features = [
     # Explicitly exclude `zstd`
     # It's not widely adopted and takes a long time to build
@@ -48,7 +48,7 @@ tower-http = { version = "0.5.2", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.39.2", features = ["macros", "rt"] }
+tokio = { version = "1.39.3", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

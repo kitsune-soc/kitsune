@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 athena = { workspace = true }
-derive_more = { version = "1.0.0-beta.6", features = ["from"] }
+derive_more = { version = "1.0.0", features = ["from"] }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 futures-util = "0.3.30"
@@ -15,7 +15,7 @@ kitsune-core = { workspace = true }
 kitsune-db = { workspace = true }
 kitsune-email = { workspace = true }
 kitsune-error = { workspace = true }
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.208", features = ["derive"] }
 speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 typed-builder = "0.19.1"

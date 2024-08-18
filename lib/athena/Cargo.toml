@@ -18,17 +18,17 @@ iso8601-timestamp = "0.2.17"
 fred = { workspace = true, optional = true }
 just-retry = { workspace = true }
 rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.208", features = ["derive"] }
 smol_str = "0.2.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
 thiserror = "1.0.63"
-tokio = { version = "1.39.2", features = ["macros", "rt", "sync"] }
+tokio = { version = "1.39.3", features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.11", features = ["rt"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.19.1"
-typetag = "0.2.17"
+typetag = "0.2.18"
 unsize = "1.1.0"
 
 [features]

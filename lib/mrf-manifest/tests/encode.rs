@@ -6,11 +6,11 @@ const MANIFEST: &str = include_str!("test-manifest.json");
 
 #[test]
 fn encode_works() {
-    let manifest = serde_json::from_str(MANIFEST).unwrap();
+    let manifest = sonic_rs::from_str(MANIFEST).unwrap();
     let canonical_manifest =
         String::from_utf8(mrf_manifest::serialise(&manifest).unwrap()).unwrap();
     let encoded_manifest = mrf_manifest::encode(&manifest).unwrap();
-    let escaped_manifest = serde_json::to_string(&canonical_manifest).unwrap();
+    let escaped_manifest = sonic_rs::to_string(&canonical_manifest).unwrap();
 
     let from_scratch = wat::parse_str(format!(
         r#"(module (@custom "{SECTION_NAME}" {escaped_manifest} ) )"#,
