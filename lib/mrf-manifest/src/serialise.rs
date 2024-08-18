@@ -1,5 +1,5 @@
 use crate::Manifest;
-use cjson::CanonicalFormatter;
+use fast_cjson::CanonicalFormatter;
 use serde::Serialize;
 
 /// Serialise a manifest into its canonical JSON representation

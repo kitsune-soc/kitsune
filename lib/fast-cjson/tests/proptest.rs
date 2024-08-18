@@ -18,7 +18,7 @@ proptest! {
         data.serialize(&mut olpc_cjson_ser).unwrap();
 
         let mut our_cjson = Vec::new();
-        let mut our_cjson_ser = sonic_rs::Serializer::with_formatter(&mut our_cjson, cjson::CanonicalFormatter::new());
+        let mut our_cjson_ser = sonic_rs::Serializer::with_formatter(&mut our_cjson, fast_cjson::CanonicalFormatter::new());
         data.serialize(&mut our_cjson_ser).unwrap();
 
         prop_assert_eq!(olpc_cjson, our_cjson);

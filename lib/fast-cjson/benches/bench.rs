@@ -18,7 +18,7 @@ fn canonicalize(b: divan::Bencher<'_, '_>) {
     b.bench(|| {
         let mut buf = Vec::new();
         let mut ser =
-            sonic_rs::Serializer::with_formatter(&mut buf, cjson::CanonicalFormatter::new());
+            sonic_rs::Serializer::with_formatter(&mut buf, fast_cjson::CanonicalFormatter::new());
         black_box(&data).serialize(&mut ser).unwrap();
         buf
     });

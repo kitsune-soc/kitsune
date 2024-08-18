@@ -6,7 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-cjson = { workspace = true, optional = true }
+fast-cjson = { workspace = true, optional = true }
 leb128 = { version = "0.2.5", optional = true }
 schemars = { version = "0.8.21", features = ["impl_json_schema", "semver"] }
 semver = { version = "1.0.23", features = ["serde"] }
@@ -24,7 +24,7 @@ wat = "1.215.0"
 [features]
 decode = ["dep:leb128", "dep:sonic-rs", "dep:thiserror", "dep:wasmparser"]
 encode = ["dep:wasm-encoder", "serialise"]
-serialise = ["dep:cjson", "dep:sonic-rs"]
+serialise = ["dep:fast-cjson", "dep:sonic-rs"]
 
 [lints]
 workspace = true

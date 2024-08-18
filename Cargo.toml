@@ -56,8 +56,8 @@ members = [
 
     "lib/athena",
     "lib/blowocking",
-    "lib/cjson",
     "lib/cursiv",
+    "lib/fast-cjson",
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
@@ -151,8 +151,8 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking", default-features = false }
-cjson = { path = "lib/cjson" }
 cursiv = { path = "lib/cursiv" }
+fast-cjson = { path = "lib/fast-cjson" }
 geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }

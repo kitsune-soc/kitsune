@@ -1,4 +1,4 @@
-use cjson::CanonicalFormatter;
+use fast_cjson::CanonicalFormatter;
 use serde::Serialize;
 use sonic_rs::Serializer;
 use std::io::Result;

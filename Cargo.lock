@@ -1019,22 +1019,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cjson"
-version = "0.0.1-pre.6"
-dependencies = [
- "divan",
- "icu_normalizer",
- "memchr",
- "mimalloc",
- "olpc-cjson",
- "proptest",
- "proptest-derive",
- "serde",
- "serde_json",
- "sonic-rs",
-]
-
-[[package]]
 name = "clap"
 version = "4.5.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2081,6 +2065,22 @@ dependencies = [
  "bit-set",
  "regex-automata",
  "regex-syntax",
+]
+
+[[package]]
+name = "fast-cjson"
+version = "0.0.1-pre.6"
+dependencies = [
+ "divan",
+ "icu_normalizer",
+ "memchr",
+ "mimalloc",
+ "olpc-cjson",
+ "proptest",
+ "proptest-derive",
+ "serde",
+ "serde_json",
+ "sonic-rs",
 ]
 
 [[package]]
@@ -4512,7 +4512,7 @@ dependencies = [
 name = "mrf-manifest"
 version = "0.0.1-pre.6"
 dependencies = [
- "cjson",
+ "fast-cjson",
  "insta",
  "leb128",
  "schemars",

@@ -1,5 +1,5 @@
 [package]
-name = "cjson"
+name = "fast-cjson"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
