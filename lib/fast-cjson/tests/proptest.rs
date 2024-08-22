@@ -8,6 +8,7 @@ pub struct Data {
     int_array: Vec<i32>,
     string: String,
     string_array: Vec<String>,
+    big_int: i128,
 }
 
 proptest! {

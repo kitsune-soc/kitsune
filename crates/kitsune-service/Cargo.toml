@@ -51,7 +51,7 @@ speedy-uuid = { workspace = true }
 tokio = { version = "1.39.3", features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
-typed-builder = "0.19.1"
+typed-builder = "0.20.0"
 url = "2.5.2"
 zxcvbn = { version = "3.1.0", default-features = false }
 
