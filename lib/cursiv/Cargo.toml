@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 aliri_braid = "0.4.0"
-blake3 = "1.5.3"
+blake3 = "1.5.4"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 hex-simd = "0.8.0"
 http = "1.1.0"

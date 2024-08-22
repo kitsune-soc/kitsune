@@ -100,7 +100,7 @@ tower-http-digest = { workspace = true }
 tracing = "0.1.40"
 trials = { workspace = true }
 triomphe = { workspace = true }
-typed-builder = "0.19.1"
+typed-builder = "0.20.0"
 url = "2.5.2"
 
 # --- Optional dependencies ---

@@ -14,7 +14,7 @@ kitsune-http-client = { workspace = true }
 quick-xml = { version = "0.36.1", features = ["serialize"] }
 rusty-s3 = "0.5.0"
 serde = { version = "1.0.208", features = ["derive"] }
-typed-builder = "0.19.1"
+typed-builder = "0.20.0"
 
 [dev-dependencies]
 kitsune-test = { workspace = true }

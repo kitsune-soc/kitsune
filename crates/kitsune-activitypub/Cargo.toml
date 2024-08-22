@@ -37,7 +37,7 @@ sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 tracing = "0.1.40"
 triomphe = { workspace = true }
-typed-builder = "0.19.1"
+typed-builder = "0.20.0"
 url = "2.5.2"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
