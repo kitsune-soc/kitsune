@@ -82,7 +82,7 @@ askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
 clap = { version = "4.5.16", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.2", default-features = false, features = [
+diesel = { version = "2.2.3", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }

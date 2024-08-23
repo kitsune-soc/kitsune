@@ -1,12 +1,12 @@
 use fast_cjson::CanonicalFormatter;
 use serde::Serialize;
 use sonic_rs::Serializer;
-use std::io::Result;
+use std::io;
 
 /// Small wrapper around the `sonic_rs` json! macro to encode the value as canonical JSON.
 macro_rules! encode {
     ($($tt:tt)+) => {
-        (|v: sonic_rs::Value| -> Result<Vec<u8>> {
+        (|v: sonic_rs::Value| -> io::Result<Vec<u8>> {
             let mut buf = Vec::new();
             let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
             v.serialize(&mut ser)?;
@@ -20,7 +20,7 @@ macro_rules! encode {
 ///
 /// `<https://github.com/secure-systems-lab/securesystemslib/blob/f466266014aff529510216b8c2f8c8f39de279ec/tests/test_formats.py#L354-L389>`
 #[test]
-fn securesystemslib_asserts() -> Result<()> {
+fn securesystemslib_asserts() -> io::Result<()> {
     assert_eq!(encode!([1, 2, 3])?, b"[1,2,3]");
     assert_eq!(encode!([1, 2, 3])?, b"[1,2,3]");
     assert_eq!(encode!([])?, b"[]");
@@ -61,7 +61,7 @@ fn securesystemslib_asserts() -> Result<()> {
 /// True
 /// ```
 #[test]
-fn ascii_control_characters() -> Result<()> {
+fn ascii_control_characters() -> io::Result<()> {
     assert_eq!(encode!("\x00")?, b"\"\x00\"");
     assert_eq!(encode!("\x01")?, b"\"\x01\"");
     assert_eq!(encode!("\x02")?, b"\"\x02\"");
@@ -105,7 +105,7 @@ fn ascii_control_characters() -> Result<()> {
 /// A more involved test than any of the above for olpc-cjson's core competency: ordering
 /// things.
 #[test]
-fn ordered_nested_object() -> Result<()> {
+fn ordered_nested_object() -> io::Result<()> {
     assert_eq!(
             encode!({
                 "nested": {

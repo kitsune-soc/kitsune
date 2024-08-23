@@ -995,9 +995,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.13"
+version = "1.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72db2f7947ecee9b03b510377e8bb9077afa27176fdbff55c51027e976fdcc48"
+checksum = "50d2eb3cd3d1bf4529e31c215ee6f93ec5a3d536d9f578f93d9d33ee19562932"
 dependencies = [
  "shlex",
 ]
@@ -1695,9 +1695,9 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "2.2.2"
+version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf97ee7261bb708fa3402fa9c17a54b70e90e3cb98afb3dc8999d5512cb03f94"
+checksum = "65e13bab2796f412722112327f3e575601a3e9cdcbe426f0d30dbf43f3f5dc71"
 dependencies = [
  "bitflags 2.6.0",
  "byteorder",
@@ -1724,9 +1724,9 @@ dependencies = [
 
 [[package]]
 name = "diesel_derives"
-version = "2.2.2"
+version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6ff2be1e7312c858b2ef974f5c7089833ae57b5311b334b30923af58e5718d8"
+checksum = "e7f2c3de51e2ba6bf2a648285696137aaf0f5f487bcbea93972fe8a364e131a4"
 dependencies = [
  "diesel_table_macro_syntax",
  "dsl_auto_type",
@@ -2425,8 +2425,8 @@ dependencies = [
  "rand 0.8.5",
  "rand_xorshift",
  "serde",
- "serde_json",
  "simdutf8",
+ "sonic-rs",
  "thiserror",
  "tokio",
  "tracing",
@@ -4569,7 +4569,7 @@ dependencies = [
  "color-eyre",
  "colored_json",
  "mrf-manifest",
- "serde_json",
+ "sonic-rs",
  "wasmparser 0.216.0",
  "wat",
 ]
@@ -5597,9 +5597,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.36"
+version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
+checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
 dependencies = [
  "proc-macro2",
 ]
@@ -6377,9 +6377,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.125"
+version = "1.0.127"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83c8e735a073ccf5be70aa8066aa984eaf2fa000db6c8d0100ae605b366d31ed"
+checksum = "8043c06d9f82bd7271361ed64f415fe5e12a77fdb52e573e7f06a516dea329ad"
 dependencies = [
  "itoa 1.0.11",
  "memchr",
@@ -7403,7 +7403,7 @@ name = "tower-stop-using-brave"
 version = "0.0.1-pre.6"
 dependencies = [
  "either",
- "futures",
+ "futures-test",
  "http",
  "regex",
  "tower 0.5.0",
