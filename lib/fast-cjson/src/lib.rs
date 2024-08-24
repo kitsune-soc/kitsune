@@ -15,12 +15,6 @@ use std::{
 
 mod util;
 
-#[derive(Debug, Default)]
-struct Object {
-    obj: BTreeMap<Vec<u8>, Vec<u8>>,
-    state: Collecting,
-}
-
 #[derive(Debug)]
 enum Collecting {
     Key(Vec<u8>),
@@ -31,6 +25,12 @@ impl Default for Collecting {
     fn default() -> Self {
         Self::Key(Vec::new())
     }
+}
+
+#[derive(Debug, Default)]
+struct Object {
+    obj: BTreeMap<Vec<u8>, Vec<u8>>,
+    state: Collecting,
 }
 
 /// A [`Formatter`](sonic_rs::format::Formatter) that produces canonical JSON.

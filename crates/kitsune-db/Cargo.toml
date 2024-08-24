@@ -29,7 +29,7 @@ rustls = { version = "0.23.12", default-features = false, features = [
     "tls12",
 ] }
 rustls-native-certs = "0.7.2"
-serde = { version = "1.0.208", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { version = "1.39.3", features = ["rt"] }

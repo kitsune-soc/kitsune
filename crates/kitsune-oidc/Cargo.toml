@@ -21,7 +21,7 @@ openidconnect = { version = "4.0.0-alpha.2", default-features = false, features 
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
 ] }
-serde = { version = "1.0.208", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 url = "2.5.2"
