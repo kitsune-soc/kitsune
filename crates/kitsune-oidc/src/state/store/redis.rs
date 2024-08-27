@@ -29,7 +29,8 @@ impl Store for Redis {
 
     async fn set(&self, key: &str, value: LoginState) -> Result<()> {
         let raw_value = sonic_rs::to_string(&value)?;
-        self.pool
+        let () = self
+            .pool
             .set(Self::format_key(key), raw_value, None, None, false)
             .await?;
 
