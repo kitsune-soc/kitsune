@@ -45,7 +45,7 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.208"
+serde = "1.0.209"
 smol_str = "0.2.2"
 speedy-uuid = { workspace = true }
 tokio = { version = "1.39.3", features = ["macros", "sync"] }

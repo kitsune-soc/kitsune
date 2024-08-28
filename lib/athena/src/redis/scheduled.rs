@@ -22,7 +22,7 @@ pub struct ScheduledJobActor {
 impl ScheduledJobActor {
     async fn run(&mut self) -> Result<()> {
         let client = self.redis_pool.next();
-        SCHEDULE_SCRIPT
+        let () = SCHEDULE_SCRIPT
             .evalsha_with_reload(
                 client,
                 (self.queue_name.as_str(), self.scheduled_queue_name.as_str()),

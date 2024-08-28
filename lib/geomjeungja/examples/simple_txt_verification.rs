@@ -11,13 +11,12 @@ async fn main() {
         .build();
 
     // Now we store that somewhere for later verification
-    let serialised_strategy = serde_json::to_string(verifier.strategy()).unwrap();
+    let serialised_strategy = sonic_rs::to_string(verifier.strategy()).unwrap();
 
     // --- SOME TIME LATER ---
 
     // Now we can deserialise it because the user told us "yeah I set that"
-    let deserialised_strategy: KeyValueStrategy =
-        serde_json::from_str(&serialised_strategy).unwrap();
+    let deserialised_strategy: KeyValueStrategy = sonic_rs::from_str(&serialised_strategy).unwrap();
 
     // Let's check if they didn't lie
     let verifier = Verifier::builder()

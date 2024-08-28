@@ -105,7 +105,7 @@ where
                 .duration_since(Timestamp::UNIX_EPOCH)
                 .as_seconds_f64();
 
-            client
+            let () = client
                 .zadd(
                     self.scheduled_queue_name.as_str(),
                     None,
@@ -116,7 +116,7 @@ where
                 )
                 .await?;
         } else {
-            client
+            let () = client
                 .xadd(
                     self.queue_name.as_str(),
                     false,
@@ -241,14 +241,14 @@ where
         let client = self.redis_pool.next();
         let pipeline = client.pipeline();
 
-        pipeline
+        let () = pipeline
             .xack(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
                 stream_id.as_str(),
             )
             .await?;
-        pipeline
+        let () = pipeline
             .xdel(self.queue_name.as_str(), &[stream_id])
             .await?;
 
@@ -279,7 +279,7 @@ where
             Outcome::Success => true, // Execution succeeded, we don't need the context anymore
         };
 
-        pipeline.last().await?;
+        let () = pipeline.last().await?;
 
         if remove_context {
             self.context_repository
@@ -297,7 +297,8 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        self.redis_pool
+        let () = self
+            .redis_pool
             .xclaim(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),

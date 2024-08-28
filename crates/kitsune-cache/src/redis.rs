@@ -54,7 +54,7 @@ where
         let key = self.compute_key(key);
 
         debug!(%key, "Deleting cache entry");
-        self.redis_conn.del(key).await?;
+        let () = self.redis_conn.del(key).await?;
 
         Ok(())
     }
@@ -78,7 +78,8 @@ where
         let serialised = sonic_rs::to_string(value)?;
 
         debug!(%key, ttl = ?self.ttl, "Setting cache entry");
-        self.redis_conn
+        let () = self
+            .redis_conn
             .set(
                 key,
                 serialised,

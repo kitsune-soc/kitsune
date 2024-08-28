@@ -78,7 +78,6 @@ impl<S> Layer<S> for StopUsingBraveLayer {
 #[cfg(test)]
 mod test {
     use crate::{StopUsingBraveLayer, REDIRECT_URL};
-    use futures::executor;
     use http::{
         header::{LOCATION, USER_AGENT},
         Request, Response, StatusCode,
@@ -108,8 +107,8 @@ mod test {
         "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/121.0",
     ];
 
-    #[test]
-    fn matches_brave_agents() {
+    #[futures_test::test]
+    async fn matches_brave_agents() {
         for user_agent in BRAVE_USER_AGENTS {
             let service = StopUsingBraveLayer::default().layer(service_fn(|_req: Request<()>| {
                 // The "unreachable" expression provides type annotations for the compiler to figure out the response and error types
@@ -120,14 +119,14 @@ mod test {
                 }
             }));
 
-            let response = executor::block_on(async move {
+            let response = {
                 let request = Request::builder()
                     .header(USER_AGENT, *user_agent)
                     .body(())
                     .unwrap();
 
                 service.oneshot(request).await.unwrap()
-            });
+            };
 
             assert_eq!(response.status(), StatusCode::FOUND);
             assert_eq!(
@@ -137,8 +136,8 @@ mod test {
         }
     }
 
-    #[test]
-    fn doesnt_match_other_agents() {
+    #[futures_test::test]
+    async fn doesnt_match_other_agents() {
         for user_agent in OTHER_USER_AGENTS {
             let service =
                 StopUsingBraveLayer::default().layer(service_fn(|_req: Request<()>| async move {
@@ -147,14 +146,14 @@ mod test {
                     )
                 }));
 
-            let response = executor::block_on(async move {
+            let response = {
                 let request = Request::builder()
                     .header(USER_AGENT, *user_agent)
                     .body(())
                     .unwrap();
 
                 service.oneshot(request).await.unwrap()
-            });
+            };
 
             assert_eq!(response.status(), StatusCode::OK);
         }

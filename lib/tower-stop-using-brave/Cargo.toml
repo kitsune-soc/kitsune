@@ -13,9 +13,7 @@ tower-layer = "0.3.3"
 tower-service = "0.3.3"
 
 [dev-dependencies]
-futures = { version = "0.3.30", default-features = false, features = [
-    "executor",
-] }
+futures-test = "0.3.30"
 tower = { version = "0.5.0", default-features = false, features = ["util"] }
 
 [lints]
