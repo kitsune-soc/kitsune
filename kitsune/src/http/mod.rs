@@ -120,23 +120,19 @@ pub fn create_router(
     #[cfg(feature = "mastodon-api")]
     let router = router.merge(handler::mastodon::routes());
 
-    let router = router.fallback_service(serve_frontend(server_config));
+    let mut router = router.fallback_service(serve_frontend(server_config));
 
-    let router = if !server_config.clacks_overhead.is_empty() {
+    if !server_config.clacks_overhead.is_empty() {
         let clacks_overhead_layer =
             XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
                 .wrap_err("Invalid clacks overhead values")?;
 
-        router.layer(clacks_overhead_layer)
-    } else {
-        router
-    };
+        router = router.layer(clacks_overhead_layer);
+    }
 
-    let router = if server_config.deny_brave_browsers {
-        router.layer(StopUsingBraveLayer::default())
-    } else {
-        router
-    };
+    if server_config.deny_brave_browsers {
+        router = router.layer(StopUsingBraveLayer::default());
+    }
 
     Ok(router
         .layer(CatchPanicLayer::new())
