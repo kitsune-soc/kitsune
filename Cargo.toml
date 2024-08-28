@@ -215,6 +215,7 @@ install-updater = true
 install-path = "CARGO_HOME"
 
 [patch.crates-io]
+# Use RustCrypto "x509-cert" crate for certificate parsing
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
 # Patch potential unsoundness. Scary...
