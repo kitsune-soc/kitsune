@@ -18,7 +18,7 @@ atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
 blowocking = { workspace = true, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
-derive_builder = "0.20.0"
+derive_builder = "0.20.1"
 http = "1.1.0"
 httpdate = "1.0.3"
 itertools = { workspace = true }
@@ -33,7 +33,7 @@ tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
 divan = "0.1.14"
-tokio = { version = "1.39.3", features = ["macros", "rt"] }
+tokio = { version = "1.40.0", features = ["macros", "rt"] }
 
 [features]
 default = ["easy"]

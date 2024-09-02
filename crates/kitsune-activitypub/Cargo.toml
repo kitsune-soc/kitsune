@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.81"
+async-trait = "0.1.82"
 base64-simd = "0.8.0"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
@@ -50,7 +50,7 @@ kitsune-config = { workspace = true }
 kitsune-test = { workspace = true }
 kitsune-webfinger = { workspace = true }
 pretty_assertions = "1.4.0"
-tokio = { version = "1.39.3", features = ["macros"] }
+tokio = { version = "1.40.0", features = ["macros"] }
 tower = { version = "0.5.0", default-features = false, features = ["util"] }
 
 [lints]

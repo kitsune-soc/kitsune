@@ -48,7 +48,7 @@ tower-http = { version = "0.5.2", features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.39.3", features = ["macros", "rt"] }
+tokio = { version = "1.40.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

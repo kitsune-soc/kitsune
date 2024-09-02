@@ -19,7 +19,7 @@ athena = { workspace = true }
 argon2 = { version = "0.5.3", features = ["std"] }
 askama = { workspace = true }
 askama_axum = "0.4.0"
-async-trait = "0.1.81"
+async-trait = "0.1.82"
 axum = { version = "0.7.5", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.3", features = [
     "cookie",
@@ -83,7 +83,7 @@ speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive", "phf"] }
 tempfile = "3.12.0"
 time = "0.3.36"
-tokio = { version = "1.39.3", features = ["full"] }
+tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io"] }
 tower = { version = "0.5.0", features = ["util"] }
 tower-stop-using-brave = { workspace = true }
@@ -106,14 +106,14 @@ url = "2.5.2"
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "7.0.7", default-features = false, features = [
+async-graphql = { version = "7.0.9", default-features = false, features = [
     "graphiql",
     "tempfile",
     "time",
     "tracing",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "7.0.7", optional = true }
+async-graphql-axum = { version = "7.0.9", optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { workspace = true, optional = true }

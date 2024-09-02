@@ -110,7 +110,7 @@ garde = { version = "0.20.0", features = [
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.11"
+sonic-rs = "0.3.12"
 triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
@@ -222,8 +222,11 @@ tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.gi
 async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40a8deb7d41d3ac0e563f9a0fd7f600c23189987" }
 
 # SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "aa96b57ffc86b8aa81d1783d785c308e472378be" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6e17d8f1dfff5d325e90200806c9abae6eeaadfd" }
 
 # TCP nodelay for `axum::serve` and cloning improvements
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
 axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
+
+[patch.'https://github.com/Lantern-chat/client-sdk-rs.git']
+client-sdk-common = { git = "https://github.com/Lantern-chat/client-sdk-rs.git?owo=uwu", rev = "62ee04d705d5d9642e7e0dacc463e0ebb657c0c9" }

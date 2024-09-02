@@ -28,11 +28,11 @@ rustls = { version = "0.23.12", default-features = false, features = [
     "std",
     "tls12",
 ] }
-rustls-native-certs = "0.7.3"
+rustls-native-certs = "0.8.0"
 serde = { version = "1.0.209", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
-tokio = { version = "1.39.3", features = ["rt"] }
+tokio = { version = "1.40.0", features = ["rt"] }
 tokio-postgres = "0.7.11"
 tokio-postgres-rustls = "0.12.0"
 tracing = "0.1.40"
@@ -42,7 +42,7 @@ typed-builder = "0.20.0"
 
 [dev-dependencies]
 kitsune-test = { workspace = true }
-tokio = { version = "1.39.3", features = ["macros"] }
+tokio = { version = "1.40.0", features = ["macros"] }
 
 [lints]
 workspace = true
