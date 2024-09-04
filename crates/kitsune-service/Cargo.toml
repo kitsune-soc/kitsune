@@ -12,7 +12,7 @@ async-stream = "0.3.5"
 athena = { workspace = true }
 blowocking = { workspace = true }
 bytes = "1.7.1"
-derive_builder = "0.20.0"
+derive_builder = "0.20.1"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 eyre = "0.6.12"
@@ -48,7 +48,7 @@ rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.209"
 smol_str = "0.2.2"
 speedy-uuid = { workspace = true }
-tokio = { version = "1.39.3", features = ["macros", "sync"] }
+tokio = { version = "1.40.0", features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
