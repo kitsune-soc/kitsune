@@ -4,7 +4,7 @@ import { houdiniPlugin as authPlugin } from '$lib/oauth/auth.svelte';
 export default new HoudiniClient({
 	url: `${import.meta.env.VITE_BACKEND_URL ?? ''}/graphql`,
 	plugins: [authPlugin],
-	fetchParams(wha) {
+	fetchParams() {
 		const session = getClientSession();
 		return {
 			headers: {

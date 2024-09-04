@@ -1,6 +1,5 @@
 import { RegisterOAuthAppStore } from '$houdini';
 
-import { readable, type Readable } from 'svelte/store';
 import { z } from 'zod';
 
 const OAUTH_STORAGE_KEY = 'oauth_app';
