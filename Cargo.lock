@@ -4796,8 +4796,7 @@ dependencies = [
 [[package]]
 name = "olpc-cjson"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d637c9c15b639ccff597da8f4fa968300651ad2f1e968aefc3b4927a6fb2027a"
+source = "git+https://github.com/aumetra/aws-tough.git?rev=3b46feaeaf8048d46f85d023295e65563b84d7d6#3b46feaeaf8048d46f85d023295e65563b84d7d6"
 dependencies = [
  "serde",
  "serde_json",
