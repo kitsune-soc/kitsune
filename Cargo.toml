@@ -81,8 +81,9 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-clap = { version = "4.5.16", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.3", default-features = false, features = [
+async-fn-stream = "0.2.2"
+clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
+diesel = { version = "2.2.4", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
@@ -93,7 +94,7 @@ diesel-async = { version = "0.5.0", features = [
     "tokio",
 ] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
-fred = { version = "9.1.2", features = [
+fred = { version = "9.2.1", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
@@ -107,6 +108,7 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
+iso8601-timestamp = "0.3.0-beta.1"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
@@ -218,15 +220,9 @@ install-path = "CARGO_HOME"
 # Use RustCrypto "x509-cert" crate for certificate parsing
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
 
-# Patch potential unsoundness. Scary...
-async-stream = { git = "https://github.com/tokio-rs/async-stream.git", rev = "40a8deb7d41d3ac0e563f9a0fd7f600c23189987" }
-
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6e17d8f1dfff5d325e90200806c9abae6eeaadfd" }
 
 # TCP nodelay for `axum::serve` and cloning improvements
 axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
 axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
-
-[patch.'https://github.com/Lantern-chat/client-sdk-rs.git']
-client-sdk-common = { git = "https://github.com/Lantern-chat/client-sdk-rs.git?owo=uwu", rev = "62ee04d705d5d9642e7e0dacc463e0ebb657c0c9" }

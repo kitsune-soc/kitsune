@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 kitsune-derive = { workspace = true }
-smol_str = "0.2.2"
+smol_str = "0.3.1"
 speedy-uuid = { workspace = true }
 
 [lints]

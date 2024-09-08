@@ -9,7 +9,7 @@ license.workspace = true
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 futures-util = "0.3.30"
-iso8601-timestamp = "0.2.17"
+iso8601-timestamp = { workspace = true }
 kitsune-cache = { workspace = true }
 kitsune-db = { workspace = true }
 kitsune-embed = { workspace = true }
@@ -19,8 +19,8 @@ kitsune-type = { workspace = true }
 kitsune-url = { workspace = true }
 kitsune-util = { workspace = true }
 mime = "0.3.17"
-serde = "1.0.209"
-smol_str = "0.2.2"
+serde = "1.0.210"
+smol_str = "0.3.1"
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 tracing = "0.1.40"

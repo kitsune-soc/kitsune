@@ -23,7 +23,7 @@ kitsune-http-client = { workspace = true }
 kitsune-language = { workspace = true }
 meilisearch-sdk = { version = "0.27.1", default-features = false }
 pin-project-lite = "0.2.14"
-serde = { version = "1.0.209", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive"] }
