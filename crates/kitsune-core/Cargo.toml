@@ -4,11 +4,11 @@ authors.workspace = true
 edition.workspace = true
 version.workspace = true
 license.workspace = true
-build = "build.rs"
 
 [dependencies]
 async-trait = "0.1.82"
 const_format = "0.2.33"
+git-version = "0.3.9"
 kitsune-db = { workspace = true }
 kitsune-error = { workspace = true }
 paste = "1.0.15"
@@ -16,9 +16,6 @@ serde = { version = "1.0.210", features = ["derive"] }
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 unsize = "1.1.0"
-
-[build-dependencies]
-vergen-gitcl = { version = "1.0.0", features = ["build"] }
 
 [lints]
 workspace = true
