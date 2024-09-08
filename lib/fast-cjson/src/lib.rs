@@ -121,14 +121,26 @@ impl Formatter for CanonicalFormatter {
     wrapper! {
         write_null;
         write_bool, bool;
+    }
+
+    wrapper! {
         write_i8, i8;
         write_i16, i16;
         write_i32, i32;
         write_i64, i64;
+        write_i128, i128;
+    }
+
+    wrapper! {
         write_u8, u8;
         write_u16, u16;
         write_u32, u32;
         write_u64, u64;
+        write_u128, u128;
+    }
+
+    wrapper! {
+        write_byte_array, &[u8];
     }
 
     wrapper! {
@@ -153,9 +165,8 @@ impl Formatter for CanonicalFormatter {
         float_err!()
     }
 
-    // By default this is only used for u128/i128. If sonic_rs's `arbitrary_precision` feature is
-    // enabled, all numbers are internally stored as strings, and this method is always used (even
-    // for floating point values).
+    // If sonic_rs's `arbitrary_precision` feature is enabled, all numbers are internally stored as strings,
+    // and this method is always used (even for floating point values).
     #[inline]
     fn write_number_str<W: io::Write + ?Sized>(
         &mut self,

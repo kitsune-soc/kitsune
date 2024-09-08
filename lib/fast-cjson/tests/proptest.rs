@@ -22,6 +22,9 @@ proptest! {
         let mut our_cjson_ser = sonic_rs::Serializer::with_formatter(&mut our_cjson, fast_cjson::CanonicalFormatter::new());
         data.serialize(&mut our_cjson_ser).unwrap();
 
+        let olpc_cjson = String::from_utf8(olpc_cjson).unwrap();
+        let our_cjson = String::from_utf8(our_cjson).unwrap();
+
         prop_assert_eq!(olpc_cjson, our_cjson);
     }
 }

@@ -217,12 +217,15 @@ install-updater = true
 install-path = "CARGO_HOME"
 
 [patch.crates-io]
-# Use RustCrypto "x509-cert" crate for certificate parsing
-tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
+# TCP nodelay for `axum::serve` and cloning improvements
+axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
+axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
+
+# Fix proptests by fixing a olpc-cjson bug
+olpc-cjson = { git = "https://github.com/aumetra/aws-tough.git", rev = "3b46feaeaf8048d46f85d023295e65563b84d7d6" }
 
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6e17d8f1dfff5d325e90200806c9abae6eeaadfd" }
 
-# TCP nodelay for `axum::serve` and cloning improvements
-axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
-axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
+# Use RustCrypto "x509-cert" crate for certificate parsing
+tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }

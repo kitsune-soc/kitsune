@@ -1,17 +1,21 @@
 use fast_cjson::CanonicalFormatter;
-use serde::Serialize;
-use sonic_rs::Serializer;
+use serde::{Deserialize, Serialize};
+use sonic_rs::{LazyValue, Serializer};
 use std::io;
 
 /// Small wrapper around the `sonic_rs` json! macro to encode the value as canonical JSON.
 macro_rules! encode {
-    ($($tt:tt)+) => {
+    (@raw $($tt:tt)+) => {
         (|v: sonic_rs::Value| -> io::Result<Vec<u8>> {
             let mut buf = Vec::new();
             let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
             v.serialize(&mut ser)?;
             Ok(buf)
-        })(sonic_rs::json!($($tt)+))
+        })($($tt)+)
+    };
+
+    ($($tt:tt)+) => {
+        encode!(@raw sonic_rs::json!($($tt)+))
     };
 }
 
@@ -171,4 +175,70 @@ fn actual_tuf_signed() {
         114, 115, 105, 111, 110, 34, 58, 49, 54, 48, 52, 54, 48, 53, 53, 49, 50, 125, 125,
     ];
     assert_eq!(expected, encoded);
+}
+
+#[test]
+fn raw_value() {
+    #[derive(Deserialize, Serialize)]
+    struct TestValue<'a> {
+        #[serde(borrow)]
+        a: LazyValue<'a>,
+
+        #[serde(borrow)]
+        b: LazyValue<'a>,
+
+        #[serde(borrow)]
+        c: LazyValue<'a>,
+
+        #[serde(borrow)]
+        nested: LazyValue<'a>,
+    }
+
+    let encoded = encode!({
+        "nested": {
+            "bad": true,
+            "good": false
+        },
+        "b": 2,
+        "a": 1,
+        "c": {
+            "h": {
+                "h": -5,
+                "i": 3
+            },
+            "a": null,
+            "x": {}
+        }
+    })
+    .unwrap();
+
+    let parsed: TestValue<'_> = sonic_rs::from_slice(&encoded).unwrap();
+    let encoded = encode!(parsed).unwrap();
+
+    assert_eq!(
+        br#"{"a":{"$sonic_rs::LazyValue":"1"},"b":{"$sonic_rs::LazyValue":"2"},"c":{"$sonic_rs::LazyValue":"{\"a\":null,\"h\":{\"h\":-5,\"i\":3},\"x\":{}}"},"nested":{"$sonic_rs::LazyValue":"{\"bad\":true,\"good\":false}"}}"#,
+        encoded.as_slice(),
+    );
+}
+
+#[test]
+fn accept_raw_integer() {
+    let raw_number: sonic_rs::RawNumber = sonic_rs::from_str("8").unwrap();
+
+    let mut buf = Vec::new();
+    let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
+    assert!(raw_number.serialize(&mut ser).is_ok());
+}
+
+#[test]
+fn reject_raw_float() {
+    let raw_number: sonic_rs::RawNumber = sonic_rs::from_str("8.0").unwrap();
+    let raw_number_small: sonic_rs::RawNumber = sonic_rs::from_str("12.3e+11").unwrap();
+    let raw_number_large: sonic_rs::RawNumber = sonic_rs::from_str("13.12E+161").unwrap();
+
+    for number in &[raw_number, raw_number_small, raw_number_large] {
+        let mut buf = Vec::new();
+        let mut ser = Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
+        assert!(number.serialize(&mut ser).is_err());
+    }
 }
