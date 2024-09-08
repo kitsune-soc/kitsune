@@ -2,9 +2,9 @@
 #![deny(missing_docs)]
 
 use self::util::BoxCloneService;
-use async_stream::try_stream;
+use async_fn_stream::try_fn_stream;
 use bytes::Buf;
-use futures_util::Stream;
+use futures_util::{Stream, StreamExt};
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
@@ -407,19 +407,21 @@ impl Response {
 
     /// Stream the body
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
-        let body_stream = BodyStream::new(self.inner.into_body());
+        let mut body_stream = BodyStream::new(self.inner.into_body());
 
-        try_stream! {
-            for await frame in body_stream {
+        try_fn_stream(|emitter| async move {
+            while let Some(frame) = body_stream.next().await {
                 match frame.map_err(Error::new)?.into_data() {
-                    Ok(val) if val.has_remaining() => yield val,
+                    Ok(val) if val.has_remaining() => emitter.emit(val).await,
                     Ok(..) | Err(..) => {
                         // There was either no remaining data or the frame was no data frame.
                         // Therefore we just discard it.
                     }
                 }
             }
-        }
+
+            Ok(())
+        })
     }
 
     /// Get the HTTP version the client used

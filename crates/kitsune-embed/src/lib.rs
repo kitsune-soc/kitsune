@@ -1,6 +1,5 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -12,12 +11,12 @@ use kitsune_db::{
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
+use lantern_client_sdk::models::EmbedWithExpire;
 use scraper::{Html, Selector};
 use smol_str::SmolStr;
 use std::sync::LazyLock;
 
-pub use embed_sdk;
-pub use embed_sdk::Embed;
+pub use lantern_client_sdk::models::{Embed, EmbedType};
 
 static LINK_SELECTOR: LazyLock<Selector> = LazyLock::new(|| {
     Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")

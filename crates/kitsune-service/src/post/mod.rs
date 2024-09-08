@@ -4,7 +4,7 @@ use super::{
     notification::NotificationService,
     LimitContext,
 };
-use async_stream::try_stream;
+use async_fn_stream::try_fn_stream;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
     QueryDsl, SelectableHelper,
@@ -1050,7 +1050,7 @@ impl PostService {
             Ok::<_, Error>(post)
         };
 
-        try_stream! {
+        try_fn_stream(|emitter| async move {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
@@ -1058,12 +1058,13 @@ impl PostService {
 
             while let Some(in_reply_to_id) = last_post.in_reply_to_id {
                 let post = load_post(in_reply_to_id, permission_check).await?;
-
-                yield post.clone();
+                emitter.emit(post.clone()).await;
 
                 last_post = post;
             }
-        }
+
+            Ok(())
+        })
     }
 
     /// Get the descendants of the post
@@ -1090,24 +1091,24 @@ impl PostService {
             Ok::<_, Error>(post)
         };
 
-        try_stream! {
+        try_fn_stream(|emitter| async move {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build();
 
-            let descendant_stream = load_post(id, permission_check).await?;
-            for await descendant in descendant_stream {
-                let descendant = descendant?;
+            let mut descendant_stream = load_post(id, permission_check).await?;
+            while let Some(descendant) = descendant_stream.try_next().await? {
                 let descendant_id = descendant.id;
+                emitter.emit(descendant).await;
 
-                yield descendant;
-
-                let sub_descendants = self.get_descendants(descendant_id, fetching_account_id);
-                for await sub_descendant in sub_descendants {
-                    yield sub_descendant?;
+                let mut sub_descendants = self.get_descendants(descendant_id, fetching_account_id);
+                while let Some(sub_descendant) = sub_descendants.try_next().await? {
+                    emitter.emit(sub_descendant).await;
                 }
             }
-        }
+
+            Ok(())
+        })
         .boxed()
     }
 

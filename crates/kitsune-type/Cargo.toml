@@ -6,13 +6,13 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-iso8601-timestamp = "0.2.17"
-serde = { version = "1.0.209", features = ["derive"] }
+iso8601-timestamp = { workspace = true }
+serde = { version = "1.0.210", features = ["derive"] }
 serde_with = { version = "3.9.0", default-features = false, features = [
     "alloc",
     "macros",
 ] }
-smol_str = { version = "0.2.2", features = ["serde"] }
+smol_str = { version = "0.3.1", features = ["serde"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
 strum = { version = "0.26.3", features = ["derive"] }

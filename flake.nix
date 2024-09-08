@@ -13,10 +13,7 @@
       url = "github:oxalica/rust-overlay";
     };
 
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "github:ipetkov/crane";
 
     # The premise is this is the "default" and if you want to do a debug build,
     # pass it in as an arg.
@@ -142,7 +139,7 @@
                 inherit version;
 
                 src = "${src}/kitsune-fe";
-                npmDepsHash = "sha256-jC9zB68BKGEEJhPCprvmQDl5WV0bzm9ZaIfO+K9O+wc=";
+                npmDepsHash = "sha256-zF36ES28Ok6hDYw59ZfvoO2hyeQhEnfNqzYMo8X9iGw=";
 
                 npmFlags = [ "--legacy-peer-deps" ];
 

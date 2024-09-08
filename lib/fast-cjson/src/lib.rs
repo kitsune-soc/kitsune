@@ -179,7 +179,7 @@ impl Formatter for CanonicalFormatter {
         W: WriteExt + ?Sized,
     {
         if need_quote {
-            self.writer(writer).write_all(&[b'"'])?;
+            self.writer(writer).write_all(b"\"")?;
         }
 
         let normalizer = const { ComposingNormalizer::new_nfc() };
@@ -187,7 +187,7 @@ impl Formatter for CanonicalFormatter {
             // CJSON wants us to escape backslashes and double quotes.
             // And only backslashes and double quotes.
             if matches!(ch, '\\' | '"') {
-                self.writer(writer).write_all(&[b'\\'])?;
+                self.writer(writer).write_all(b"\\")?;
             }
 
             self.writer(writer)
@@ -195,7 +195,7 @@ impl Formatter for CanonicalFormatter {
         }
 
         if need_quote {
-            self.writer(writer).write_all(&[b'"'])?;
+            self.writer(writer).write_all(b"\"")?;
         }
 
         Ok(())

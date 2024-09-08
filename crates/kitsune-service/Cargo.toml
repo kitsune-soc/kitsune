@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 ahash = "0.8.11"
 argon2 = "0.5.3"
-async-stream = "0.3.5"
+async-fn-stream = { workspace = true }
 athena = { workspace = true }
 blowocking = { workspace = true }
 bytes = "1.7.1"
@@ -21,7 +21,7 @@ futures-util = "0.3.30"
 garde = { workspace = true }
 http = "1.1.0"
 img-parts = "0.3.0"
-iso8601-timestamp = "0.2.17"
+iso8601-timestamp = { workspace = true }
 kitsune-cache = { workspace = true }
 kitsune-captcha = { workspace = true }
 kitsune-config = { workspace = true }
@@ -45,8 +45,8 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.209"
-smol_str = "0.2.2"
+serde = "1.0.210"
+smol_str = "0.3.1"
 speedy-uuid = { workspace = true }
 tokio = { version = "1.40.0", features = ["macros", "sync"] }
 tracing = "0.1.40"
