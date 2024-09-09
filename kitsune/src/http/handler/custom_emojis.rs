@@ -1,5 +1,5 @@
 use crate::{http::responder::ActivityPubJson, state::Zustand};
-use axum::{debug_handler, extract::Path, extract::State, routing, Router};
+use axum::{debug_handler, extract::Path, extract::State};
 use kitsune_activitypub::mapping::IntoObject;
 use kitsune_error::Result;
 use kitsune_service::custom_emoji::CustomEmojiService;
@@ -7,7 +7,7 @@ use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 
 #[debug_handler(state = Zustand)]
-async fn get(
+pub async fn get(
     State(state): State<Zustand>,
     State(emoji_service): State<CustomEmojiService>,
     Path(id): Path<Uuid>,
@@ -17,8 +17,4 @@ async fn get(
     Ok(ActivityPubJson(
         custom_emoji.into_object(state.ap_state()).await?,
     ))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/:id", routing::get(get))
 }

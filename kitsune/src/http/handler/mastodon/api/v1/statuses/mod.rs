@@ -5,7 +5,7 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Path, State},
-    routing, Json, Router,
+    Json,
 };
 use http::StatusCode;
 use kitsune_error::Result;
@@ -50,7 +50,7 @@ pub struct UpdateForm {
 }
 
 #[debug_handler(state = Zustand)]
-async fn delete(
+pub async fn delete(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
     Path(id): Path<Uuid>,
@@ -67,7 +67,7 @@ async fn delete(
 }
 
 #[debug_handler(state = Zustand)]
-async fn get(
+pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
     user_data: Option<MastodonAuthExtractor>,
@@ -86,7 +86,7 @@ async fn get(
 }
 
 #[debug_handler(state = Zustand)]
-async fn post(
+pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post_service): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -108,7 +108,7 @@ async fn post(
 }
 
 #[debug_handler(state = Zustand)]
-async fn put(
+pub async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -127,18 +127,4 @@ async fn put(
     let status = mastodon_mapper.map(post.update(update_post).await?).await?;
 
     Ok(Json(status))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::post(post))
-        .route("/:id", routing::get(get).delete(delete).put(put))
-        .route("/:id/context", routing::get(context::get))
-        .route("/:id/favourite", routing::post(favourite::post))
-        .route("/:id/favourited_by", routing::get(favourited_by::get))
-        .route("/:id/reblog", routing::post(reblog::post))
-        .route("/:id/reblogged_by", routing::get(reblogged_by::get))
-        .route("/:id/source", routing::get(source::get))
-        .route("/:id/unfavourite", routing::post(unfavourite::post))
-        .route("/:id/unreblog", routing::post(unreblog::post))
 }

@@ -23,7 +23,7 @@ tracing = { version = "0.1.40", default-features = false }
 bytes = "1.7.1"
 futures-test = "0.3.30"
 http-body-util = "0.1.2"
-tower = { version = "0.5.0", default-features = false, features = ["util"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

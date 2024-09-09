@@ -1,5 +1,5 @@
-use crate::{http::extractor::MastodonAuthExtractor, state::Zustand};
-use axum::{debug_handler, extract::State, routing, Json, Router};
+use crate::http::extractor::MastodonAuthExtractor;
+use axum::{debug_handler, extract::State, Json};
 use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_error::{Error, Result};
 use kitsune_mastodon::MastodonMapper;
@@ -25,8 +25,4 @@ pub async fn get(
         .await?;
 
     Ok(Json(custom_emojis))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
 }

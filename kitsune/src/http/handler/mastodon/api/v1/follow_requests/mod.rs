@@ -4,12 +4,11 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::Zustand,
 };
 use axum::{
     debug_handler,
     extract::{OriginalUri, State},
-    routing, Json, Router,
+    Json,
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
@@ -65,11 +64,4 @@ pub async fn get(
     );
 
     Ok((link_header, Json(accounts)))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::get(get))
-        .route("/:id/authorize", routing::post(accept::post))
-        .route("/:id/reject", routing::post(reject::post))
 }

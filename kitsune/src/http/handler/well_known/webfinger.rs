@@ -1,7 +1,6 @@
-use crate::state::Zustand;
 use axum::{
     extract::{Query, State},
-    routing, Json, Router,
+    Json,
 };
 use axum_extra::either::Either;
 use http::StatusCode;
@@ -12,11 +11,11 @@ use kitsune_url::UrlService;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct WebfingerQuery {
+pub struct WebfingerQuery {
     resource: String,
 }
 
-async fn get(
+pub async fn get(
     State(account_service): State<AccountService>,
     State(url_service): State<UrlService>,
     Query(query): Query<WebfingerQuery>,
@@ -48,10 +47,6 @@ async fn get(
             href: Some(account_url),
         }],
     })))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
 }
 
 #[cfg(test)]

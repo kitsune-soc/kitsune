@@ -9,7 +9,7 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{OriginalUri, Path, State},
-    routing, Json, Router,
+    Json,
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
@@ -101,12 +101,4 @@ pub async fn get_by_id(
         .ok_or_else(|| kitsune_error!(type = ErrorType::NotFound, "notification not found"))?;
 
     Ok(Json(mastodon_mapper.map(notification).await?))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::get(get))
-        .route("/:id", routing::get(get_by_id))
-        .route("/:id/dismiss", routing::post(dismiss::post))
-        .route("/clear", routing::post(clear::post))
 }
