@@ -67,7 +67,7 @@ kitsune-test = { workspace = true }
 kitsune-webfinger = { workspace = true }
 pretty_assertions = "1.4.0"
 tempfile = "3.12.0"
-tower = { version = "0.5.0", default-features = false, features = ["util"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

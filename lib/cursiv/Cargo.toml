@@ -13,7 +13,7 @@ hex-simd = "0.8.0"
 http = "1.1.0"
 pin-project-lite = "0.2.14"
 rand = "0.8.5"
-tower = { version = "0.5.0", default-features = false }
+tower = { version = "0.5.1", default-features = false }
 triomphe = { workspace = true }
 zeroize = { version = "1.8.1", features = ["derive"] }
 
@@ -23,7 +23,7 @@ axum-core = { version = "0.4.3", optional = true }
 
 [dev-dependencies]
 futures-test = "0.3.30"
-tower = { version = "0.5.0", default-features = false, features = ["util"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [features]
 axum = ["dep:async-trait", "dep:axum-core"]

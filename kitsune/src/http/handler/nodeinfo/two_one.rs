@@ -1,5 +1,4 @@
-use crate::state::Zustand;
-use axum::{debug_handler, extract::State, routing, Json, Router};
+use axum::{debug_handler, extract::State, Json};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::consts::VERSION;
@@ -16,7 +15,7 @@ use kitsune_util::try_join;
 use sonic_rs::Value;
 
 #[debug_handler(state = crate::state::Zustand)]
-async fn get(
+pub async fn get(
     State(db_pool): State<PgPool>,
     State(user_service): State<UserService>,
 ) -> Result<Json<TwoOne>> {
@@ -55,8 +54,4 @@ async fn get(
         },
         metadata: Value::new(),
     }))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
 }

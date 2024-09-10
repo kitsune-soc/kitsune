@@ -1,9 +1,8 @@
-use crate::state::Zustand;
 use crate::{
     http::extractor::AgnosticForm,
     oauth2::{CreateApp, OAuth2Service},
 };
-use axum::{extract::State, routing, Json, Router};
+use axum::{extract::State, Json};
 use kitsune_error::Result;
 use kitsune_type::mastodon::App;
 use serde::Deserialize;
@@ -14,7 +13,7 @@ pub struct AppForm {
     redirect_uris: String,
 }
 
-async fn post(
+pub async fn post(
     State(oauth2): State<OAuth2Service>,
     AgnosticForm(form): AgnosticForm<AppForm>,
 ) -> Result<Json<App>> {
@@ -31,8 +30,4 @@ async fn post(
         client_id: application.id,
         client_secret: application.secret,
     }))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::post(post))
 }

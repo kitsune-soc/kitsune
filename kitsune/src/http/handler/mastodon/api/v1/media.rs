@@ -8,7 +8,7 @@ use crate::{
 use axum::{
     debug_handler,
     extract::{Multipart, Path, State},
-    routing, Json, Router,
+    Json,
 };
 use futures_util::TryFutureExt;
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
@@ -90,10 +90,4 @@ pub async fn put(
         .and_then(|model| mastodon_mapper.map(model).map_err(Error::from))
         .map_ok(Json)
         .await
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::post(post))
-        .route("/:id", routing::get(get).put(put))
 }

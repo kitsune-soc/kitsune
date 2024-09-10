@@ -15,7 +15,7 @@ triomphe = { workspace = true }
 
 [dev-dependencies]
 futures-test = "0.3.30"
-tower = { version = "0.5.0", default-features = false, features = ["util"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

@@ -51,7 +51,7 @@ kitsune-test = { workspace = true }
 kitsune-webfinger = { workspace = true }
 pretty_assertions = "1.4.0"
 tokio = { version = "1.40.0", features = ["macros"] }
-tower = { version = "0.5.0", default-features = false, features = ["util"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true
