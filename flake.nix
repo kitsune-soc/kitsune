@@ -139,7 +139,7 @@
                 inherit version;
 
                 src = "${src}/kitsune-fe";
-                npmDepsHash = "sha256-Nr7jpoYmYh0UgB3KoLepWEIrx6UAJFTOfvKL+12eHjk=";
+                npmDepsHash = "sha256-qctSnlEycd4Krhps+5GoLl+EwdY4XgNh8p8jAybFg3U=";
 
                 npmFlags = [ "--legacy-peer-deps" ];
 

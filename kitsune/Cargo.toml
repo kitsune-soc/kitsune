@@ -83,7 +83,7 @@ speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive", "phf"] }
 tempfile = "3.12.0"
 time = "0.3.36"
-tokio = { version = "1.40.0", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 tokio-util = { version = "0.7.12", features = ["io"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-stop-using-brave = { workspace = true }
@@ -129,7 +129,7 @@ kitsune-scss-compiler = { workspace = true }
 [dev-dependencies]
 kitsune-http-client = { workspace = true }
 kitsune-test = { workspace = true }
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4.1"
 fred = { workspace = true }
 
 [features]

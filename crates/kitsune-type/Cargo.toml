@@ -18,7 +18,7 @@ speedy-uuid = { workspace = true, features = ["diesel"] }
 strum = { version = "0.26.3", features = ["derive"] }
 
 [dev-dependencies]
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4.1"
 rstest = { version = "0.22.0", default-features = false }
 serde_test = "1"
 

@@ -16,7 +16,7 @@ logos = "0.14.1"
 divan = "0.1.14"
 futures-executor = "0.3.30"
 insta = { version = "1.40.0", features = ["glob"] }
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4.1"
 
 [lints]
 workspace = true

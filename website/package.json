@@ -11,16 +11,16 @@
     "format": "prettier -w . --cache"
   },
   "dependencies": {
-    "@astrojs/check": "^0.8.3",
-    "@astrojs/starlight": "^0.25.3",
-    "astro": "^4.10.2",
-    "sharp": "^0.32.5",
-    "starlight-links-validator": "^0.10.0",
-    "typescript": "^5.5.4"
+    "@astrojs/check": "^0.9.3",
+    "@astrojs/starlight": "^0.27.1",
+    "astro": "^4.15.5",
+    "sharp": "^0.33.5",
+    "starlight-links-validator": "^0.12.0",
+    "typescript": "^5.6.2"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
     "prettier-plugin-astro": "^0.14.1",
-    "sass": "^1.77.8"
+    "sass": "^1.78.0"
   }
 }

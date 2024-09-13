@@ -108,11 +108,12 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
-iso8601-timestamp = "0.3.0-beta.1"
+iso8601-timestamp = "0.3.0-rc.1"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
-sonic-rs = "0.3.12"
+sonic-rs = "0.3.13"
+tokio = "=1.38.1"
 triomphe = { version = "0.1.13", default-features = false, features = [
     "unsize",
 ] }
@@ -225,7 +226,7 @@ axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc
 olpc-cjson = { git = "https://github.com/aumetra/aws-tough.git", rev = "3b46feaeaf8048d46f85d023295e65563b84d7d6" }
 
 # SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "6e17d8f1dfff5d325e90200806c9abae6eeaadfd" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "add820f8837c974fcee4110e678bb9e79b3f6ecb" }
 
 # Use RustCrypto "x509-cert" crate for certificate parsing
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
