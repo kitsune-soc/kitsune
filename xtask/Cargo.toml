@@ -6,7 +6,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-anyhow = "1.0.87"
+anyhow = "1.0.88"
 argh = "0.1.12"
 sonic-rs = { workspace = true }
 tracing = { version = "0.1.40", default-features = false }
