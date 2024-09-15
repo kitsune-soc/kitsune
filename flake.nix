@@ -139,7 +139,7 @@
                 inherit version;
 
                 src = "${src}/kitsune-fe";
-                npmDepsHash = "sha256-qctSnlEycd4Krhps+5GoLl+EwdY4XgNh8p8jAybFg3U=";
+                npmDepsHash = "sha256-H1xGeiDPUtXirWvmEuOhdYdZey/nm9O96A1ihnkhmt8=";
 
                 npmFlags = [ "--legacy-peer-deps" ];
 
@@ -194,7 +194,6 @@
               frontend = pkgs.mkShell {
                 buildInputs = with pkgs; [
                   nodejs
-                  yarn
                   nodePackages.svelte-language-server
                   nodePackages.typescript-language-server
                 ];
