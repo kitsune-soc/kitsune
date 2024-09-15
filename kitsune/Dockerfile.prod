@@ -14,10 +14,9 @@ COPY . .
 RUN cargo build --release --bin kitsune
 
 FROM base AS frontend
-RUN apk add --no-cache yarn
 COPY kitsune-fe .
 WORKDIR kitsune-fe
-RUN yarn install && yarn build
+RUN npm i && npm run build
 
 FROM alpine:latest
 WORKDIR app

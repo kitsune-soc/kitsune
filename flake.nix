@@ -194,7 +194,6 @@
               frontend = pkgs.mkShell {
                 buildInputs = with pkgs; [
                   nodejs
-                  yarn
                   nodePackages.svelte-language-server
                   nodePackages.typescript-language-server
                 ];
