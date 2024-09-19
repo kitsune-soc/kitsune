@@ -20,8 +20,8 @@ argon2 = { version = "0.5.3", features = ["std"] }
 askama = { workspace = true }
 askama_axum = "0.4.0"
 async-trait = "0.1.82"
-axum = { version = "0.7.5", features = ["macros", "multipart"] }
-axum-extra = { version = "0.9.3", features = [
+axum = { version = "0.7.6", features = ["macros", "multipart"] }
+axum-extra = { version = "0.9.4", features = [
     "cookie",
     "cookie-signed",
     "query",
@@ -29,7 +29,7 @@ axum-extra = { version = "0.9.3", features = [
 ] }
 axum-flash = "0.8.0"
 blowocking = { workspace = true }
-bytes = "1.7.1"
+bytes = "1.7.2"
 chrono = { version = "0.4.38", default-features = false }
 clap = { workspace = true }
 color-eyre = "0.6.3"
@@ -88,7 +88,7 @@ tokio-util = { version = "0.7.12", features = ["io"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-stop-using-brave = { workspace = true }
 tower-x-clacks-overhead = { workspace = true }
-tower-http = { version = "0.5.2", features = [
+tower-http = { version = "0.6.0", features = [
     "catch-panic",
     "cors",
     "fs",

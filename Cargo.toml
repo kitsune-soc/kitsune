@@ -82,7 +82,7 @@ askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
 async-fn-stream = "0.2.2"
-clap = { version = "4.5.17", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.18", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.4", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -111,7 +111,7 @@ garde = { version = "0.20.0", features = [
 iso8601-timestamp = "0.3.0-rc.1"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
-simdutf8 = { version = "0.1.4", features = ["aarch64_neon"] }
+simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 sonic-rs = "0.3.13"
 tokio = "=1.38.1"
 triomphe = { version = "0.1.13", default-features = false, features = [
@@ -218,10 +218,6 @@ install-updater = true
 install-path = "CARGO_HOME"
 
 [patch.crates-io]
-# TCP nodelay for `axum::serve` and cloning improvements
-axum = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
-axum-core = { git = "https://github.com/tokio-rs/axum.git", rev = "918170a12bfcc488000998f33684c29f5599d0d6" }
-
 # Fix proptests by fixing a olpc-cjson bug
 olpc-cjson = { git = "https://github.com/aumetra/aws-tough.git", rev = "3b46feaeaf8048d46f85d023295e65563b84d7d6" }
 

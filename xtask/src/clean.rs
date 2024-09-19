@@ -1,6 +1,6 @@
 use crate::util::cargo;
 
-pub fn clean() -> anyhow::Result<()> {
+pub fn clean() -> eyre::Result<()> {
     cargo(["clean"])?;
     cargo(["clean", "--target-dir", "target-analyzer"])?;
 

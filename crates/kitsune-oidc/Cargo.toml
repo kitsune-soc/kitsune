@@ -15,8 +15,8 @@ kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
 moka = { workspace = true }
-oauth2 = { version = "5.0.0-alpha.4", default-features = false }
-openidconnect = { version = "4.0.0-alpha.2", default-features = false, features = [
+oauth2 = { version = "5.0.0-rc.1", default-features = false }
+openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     # Accept these two, per specification invalid, cases to increase compatibility
     "accept-rfc3339-timestamps",
     "accept-string-booleans",

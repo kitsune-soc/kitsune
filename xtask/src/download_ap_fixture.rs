@@ -7,7 +7,7 @@ fn compute_filename(url: &str) -> String {
     filename
 }
 
-pub fn download(url: &str) -> anyhow::Result<()> {
+pub fn download(url: &str) -> eyre::Result<()> {
     let response = ureq::get(url)
         .set("Accept", "application/activity+json")
         .call()?;
