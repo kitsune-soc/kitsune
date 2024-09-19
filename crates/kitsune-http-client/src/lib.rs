@@ -25,6 +25,7 @@ use tower_http::{
     map_response_body::MapResponseBodyLayer,
     timeout::TimeoutLayer,
 };
+use triomphe::Arc;
 
 mod body;
 mod util;
@@ -32,8 +33,8 @@ mod util;
 type BoxBody<E = BoxError> = http_body_util::combinators::BoxBody<Bytes, E>;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-/// Default body limit of 1MB
-const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
+/// Default body limit of 2MiB
+const DEFAULT_BODY_LIMIT: usize = 2 * 1024 * 1024;
 
 /// Alias for our internal HTTP body type
 pub use self::body::Body;
@@ -82,7 +83,7 @@ impl ClientBuilder {
     ///
     /// This is enforced at the body level, regardless of whether the `Content-Type` header is set or not.
     ///
-    /// Defaults to 1MB
+    /// Defaults to 2MiB
     #[must_use]
     pub fn content_length_limit(self, content_length_limit: Option<usize>) -> Self {
         Self {
@@ -189,16 +190,18 @@ impl ClientBuilder {
         );
 
         Client {
-            default_headers: self.default_headers,
-            inner: BoxCloneService::new(
-                ServiceBuilder::new()
-                    .layer(content_length_limit)
-                    .layer(FollowRedirectLayer::new())
-                    .layer(DecompressionLayer::default())
-                    .layer(timeout)
-                    .service(client)
-                    .map_err(BoxError::from),
-            ),
+            inner: Arc::new(ClientInner {
+                client: BoxCloneService::new(
+                    ServiceBuilder::new()
+                        .layer(content_length_limit)
+                        .layer(FollowRedirectLayer::new())
+                        .layer(DecompressionLayer::default())
+                        .layer(timeout)
+                        .service(client)
+                        .map_err(BoxError::from),
+                ),
+                default_headers: self.default_headers,
+            }),
         }
     }
 }
@@ -215,11 +218,15 @@ impl Default for ClientBuilder {
     }
 }
 
+struct ClientInner {
+    client: BoxCloneService<Request<Body>, HyperResponse<BoxBody>, BoxError>,
+    default_headers: HeaderMap,
+}
+
 #[derive(Clone)]
 /// An opinionated HTTP client
 pub struct Client {
-    default_headers: HeaderMap,
-    inner: BoxCloneService<Request<Body>, HyperResponse<BoxBody>, BoxError>,
+    inner: Arc<ClientInner>,
 }
 
 impl Client {
@@ -230,7 +237,7 @@ impl Client {
     }
 
     fn prepare_request(&self, mut req: Request<Body>) -> Request<Body> {
-        req.headers_mut().extend(self.default_headers.clone());
+        req.headers_mut().extend(self.inner.default_headers.clone());
         req
     }
 
@@ -243,7 +250,7 @@ impl Client {
     pub async fn execute(&self, req: Request<Body>) -> Result<Response> {
         let req = self.prepare_request(req);
 
-        let ready_svc = self.inner.clone();
+        let ready_svc = self.inner.client.clone();
         let response = ready_svc.oneshot(req).await.map_err(Error::new)?;
 
         Ok(Response { inner: response })
@@ -309,6 +316,7 @@ pub struct Response {
 
 impl Response {
     /// Convert the response into its inner `hyper` representation
+    #[inline]
     #[must_use]
     pub fn into_inner(self) -> HyperResponse<BoxBody> {
         self.inner
@@ -319,11 +327,13 @@ impl Response {
     /// # Errors
     ///
     /// Reading the body from the remote failed
+    #[inline]
     pub async fn bytes(self) -> Result<Bytes> {
         Ok(self.inner.collect().await.map_err(Error::new)?.to_bytes())
     }
 
     /// Get a reference to the headers
+    #[inline]
     #[must_use]
     pub fn headers(&self) -> &HeaderMap {
         self.inner.headers()
@@ -335,6 +345,7 @@ impl Response {
     ///
     /// - Reading the body from the remote failed
     /// - The body isn't a UTF-8 encoded string
+    #[inline]
     pub async fn text(self) -> Result<String> {
         let body = self.bytes().await?;
         // `.to_owned()` as the same performance overhead as calling `.to_vec()` on the `Bytes` body.
@@ -350,6 +361,7 @@ impl Response {
     ///
     /// - Reading the body from the remote failed
     /// - Deserialising the body into the structure failed
+    #[inline]
     pub async fn json<T>(self) -> Result<T>
     where
         T: DeserializeOwned,
@@ -365,6 +377,7 @@ impl Response {
     /// - Reading the body from the remote failed
     /// - Deserialising the body into the structure failed
     /// - The authority part of the returned JSON-LD node's `@id` doesn't belong to the originating server
+    #[inline]
     pub async fn jsonld<T>(mut self) -> Result<T>
     where
         T: DeserializeOwned + RdfNode,
@@ -400,12 +413,14 @@ impl Response {
     }
 
     /// Get the status of the request
+    #[inline]
     #[must_use]
     pub fn status(&self) -> StatusCode {
         self.inner.status()
     }
 
     /// Stream the body
+    #[inline]
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
         let mut body_stream = BodyStream::new(self.inner.into_body());
 
@@ -425,6 +440,7 @@ impl Response {
     }
 
     /// Get the HTTP version the client used
+    #[inline]
     #[must_use]
     pub fn version(&self) -> Version {
         self.inner.version()

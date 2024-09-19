@@ -10,6 +10,7 @@ pub mod messaging;
 pub mod mrf;
 pub mod oidc;
 pub mod open_telemetry;
+pub mod proxy;
 pub mod search;
 pub mod server;
 pub mod storage;
@@ -34,6 +35,7 @@ pub struct Configuration {
     pub messaging: messaging::Configuration,
     pub mrf: mrf::Configuration,
     pub opentelemetry: Option<open_telemetry::Configuration>,
+    pub proxy: Option<proxy::Configuration>,
     pub server: server::Configuration,
     pub search: search::Configuration,
     pub storage: storage::Configuration,

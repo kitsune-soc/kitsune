@@ -34,6 +34,7 @@ pin-project = "1.1.5"
 serde = "1.0.210"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
+tokio-socks = { version = "0.5.2", features = ["tor"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-http = { version = "0.5.2", features = [
     # Explicitly exclude `zstd`
@@ -46,6 +47,7 @@ tower-http = { version = "0.5.2", features = [
     "map-response-body",
     "timeout",
 ] }
+triomphe = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt"] }

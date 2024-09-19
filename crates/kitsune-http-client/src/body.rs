@@ -111,4 +111,18 @@ impl http_body::Body for Body {
             BodyProj::Stream(stream) => stream.poll_frame(cx),
         }
     }
+
+    #[inline]
+    fn is_end_stream(&self) -> bool {
+        matches!(self, Self::Empty | Self::Full(None))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> http_body::SizeHint {
+        match self {
+            Self::Empty => http_body::SizeHint::with_exact(0),
+            Self::Full(Some(body)) => http_body::SizeHint::with_exact(body.len() as u64),
+            _ => http_body::SizeHint::new(),
+        }
+    }
 }
