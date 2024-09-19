@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-fn-stream = { workspace = true }
-bytes = "1.7.1"
+bytes = "1.7.2"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }

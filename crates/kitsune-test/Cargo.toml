@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-bytes = "1.7.1"
+bytes = "1.7.2"
 diesel-async = { workspace = true }
 fred = { workspace = true }
 futures-util = "0.3.30"

@@ -29,7 +29,7 @@ axum-extra = { version = "0.9.3", features = [
 ] }
 axum-flash = "0.8.0"
 blowocking = { workspace = true }
-bytes = "1.7.1"
+bytes = "1.7.2"
 chrono = { version = "0.4.38", default-features = false }
 clap = { workspace = true }
 color-eyre = "0.6.3"

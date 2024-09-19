@@ -11,7 +11,7 @@ argon2 = "0.5.3"
 async-fn-stream = { workspace = true }
 athena = { workspace = true }
 blowocking = { workspace = true }
-bytes = "1.7.1"
+bytes = "1.7.2"
 derive_builder = "0.20.1"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
