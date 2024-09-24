@@ -52,14 +52,8 @@ impl MockHandle {
     /// Reset the offset to 0
     #[inline]
     pub fn reset(&self) {
-        self.set_delta(0);
-    }
-
-    /// Set the delta to the absolute value
-    #[inline]
-    pub fn set_delta(&self, delta: i64) {
         if let Some(delta_handle) = self.delta.upgrade() {
-            delta_handle.store(delta, Ordering::Release);
+            delta_handle.store(0, Ordering::Release);
         }
     }
 }
