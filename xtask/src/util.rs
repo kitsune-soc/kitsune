@@ -1,7 +1,7 @@
-use anyhow::ensure;
+use eyre::ensure;
 use std::{env, ffi::OsStr, io, process::Command};
 
-pub fn cargo<I>(params: I) -> anyhow::Result<()>
+pub fn cargo<I>(params: I) -> eyre::Result<()>
 where
     I: IntoIterator,
     I::Item: AsRef<OsStr>,

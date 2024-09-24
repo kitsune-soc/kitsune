@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-fn-stream = { workspace = true }
-bytes = "1.7.1"
+bytes = "1.7.2"
 futures-util = { version = "0.3.30", default-features = false, features = [
     "alloc",
 ] }
@@ -35,7 +35,7 @@ serde = "1.0.210"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
 tower = { version = "0.5.1", features = ["util"] }
-tower-http = { version = "0.5.2", features = [
+tower-http = { version = "0.6.0", features = [
     # Explicitly exclude `zstd`
     # It's not widely adopted and takes a long time to build
     "decompression-br",

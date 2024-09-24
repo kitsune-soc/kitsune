@@ -49,7 +49,7 @@ struct Command {
     subcommand: Subcommand,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> eyre::Result<()> {
     tracing_subscriber::fmt::init();
 
     let command: Command = argh::from_env();

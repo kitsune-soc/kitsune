@@ -10,7 +10,7 @@ name = "simple"
 harness = false
 
 [dependencies]
-logos = "0.14.1"
+logos = "0.14.2"
 
 [dev-dependencies]
 divan = "0.1.14"

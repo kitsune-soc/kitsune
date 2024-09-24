@@ -11,7 +11,7 @@ hickory-resolver = "0.24.1"
 rand = "0.8.5"
 serde = { version = "1.0.210", features = ["derive"] }
 simdutf8 = { workspace = true }
-thiserror = "1.0.63"
+thiserror = "1.0.64"
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"

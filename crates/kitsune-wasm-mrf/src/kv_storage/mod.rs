@@ -137,7 +137,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
         }
     }
 
-    fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
+    async fn drop(&mut self, rep: Resource<keyvalue::Bucket>) -> wasmtime::Result<()> {
         self.kv_ctx.buckets.remove(rep.rep() as usize);
         Ok(())
     }
@@ -145,7 +145,7 @@ impl keyvalue::HostBucket for crate::ctx::Context {
 
 #[async_trait]
 impl keyvalue::HostError for crate::ctx::Context {
-    fn drop(&mut self, _rep: Resource<keyvalue::Error>) -> wasmtime::Result<()> {
+    async fn drop(&mut self, _rep: Resource<keyvalue::Error>) -> wasmtime::Result<()> {
         Ok(())
     }
 }
