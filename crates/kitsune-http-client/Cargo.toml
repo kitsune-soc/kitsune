@@ -15,7 +15,7 @@ http-body = "1.0.1"
 http-body-util = "0.1.2"
 http-signatures = { workspace = true }
 hyper = "1.4.1"
-hyper-util = { version = "0.1.8", features = [
+hyper-util = { version = "0.1.9", features = [
     "client-legacy",
     "http1",
     "http2",
@@ -35,7 +35,7 @@ serde = "1.0.210"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
 tower = { version = "0.5.1", features = ["util"] }
-tower-http = { version = "0.6.0", features = [
+tower-http = { version = "0.6.1", features = [
     # Explicitly exclude `zstd`
     # It's not widely adopted and takes a long time to build
     "decompression-br",

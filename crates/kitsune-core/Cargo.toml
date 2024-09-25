@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 const_format = "0.2.33"
 git-version = "0.3.9"
 kitsune-db = { workspace = true }

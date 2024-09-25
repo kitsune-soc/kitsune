@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 eyre = "0.6.12"
 http-body-util = "0.1.2"
 hyper = { version = "1.4.1", default-features = false }

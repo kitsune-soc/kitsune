@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 fred = { workspace = true }
 futures-util = "0.3.30"
 http = "1.1.0"
