@@ -35,6 +35,7 @@ pub struct MockHandle {
 
 impl MockHandle {
     /// Adjust the delta by the duration in the direction specified
+    #[inline]
     pub fn adjust(&self, direction: DeltaDirection, delta: Duration) {
         let Some(delta_handle) = self.delta.upgrade() else {
             return;
@@ -48,10 +49,11 @@ impl MockHandle {
         delta_handle.fetch_add(delta, Ordering::AcqRel);
     }
 
-    /// Set the delta to the absolute value
-    pub fn set_delta(&self, delta: i64) {
+    /// Reset the offset to 0
+    #[inline]
+    pub fn reset(&self) {
         if let Some(delta_handle) = self.delta.upgrade() {
-            delta_handle.store(delta, Ordering::Release);
+            delta_handle.store(0, Ordering::Release);
         }
     }
 }
@@ -75,6 +77,7 @@ pub struct Clock {
 
 impl Clock {
     /// Construct a new clock without an internal delta
+    #[inline]
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -83,6 +86,7 @@ impl Clock {
     /// Construct a mockable clock
     ///
     /// This clock returns a handle which you can use to adjust the delta
+    #[inline]
     #[must_use]
     pub fn mockable() -> (Self, MockHandle) {
         let delta = Arc::new(AtomicI64::default());
@@ -98,6 +102,7 @@ impl Clock {
     /// Enter a context where this clock is installed into the thread-local context
     ///
     /// As long as the guard is kept live, the [`now`] function will read the time of this clock
+    #[inline]
     #[must_use]
     pub fn enter(&self) -> ClockGuard {
         let old_clock = THREAD_CLOCK.with(|clock| clock.replace(self.clone()));
@@ -108,6 +113,7 @@ impl Clock {
     }
 
     /// Read the current time from the system clock and apply the delta
+    #[inline]
     #[must_use]
     pub fn now(&self) -> SystemTime {
         let mut now = SystemTime::now();
@@ -126,6 +132,7 @@ impl Clock {
 }
 
 /// Read the current time from the thread-local clock
+#[inline]
 #[must_use]
 pub fn now() -> SystemTime {
     THREAD_CLOCK.with(|clock| clock.borrow().now())
@@ -160,5 +167,26 @@ mod test {
 
         let delta = now.duration_since(after).unwrap();
         assert_eq!(delta.as_secs_f32().round() as u8, 1);
+    }
+
+    #[test]
+    fn can_reset() {
+        let (clock, mock) = Clock::mockable();
+        let _clock_guard = clock.enter();
+
+        let now = crate::now();
+        mock.adjust(DeltaDirection::Add, Duration::from_secs(10));
+        let adjusted = crate::now();
+        mock.reset();
+        let reset = crate::now();
+
+        // "adjusted" should be ahead of "now" and "reset"
+        assert!(now < adjusted && reset < adjusted);
+
+        // "now" and "reset" should be pretty much equal
+        //
+        // Technically this very much depends on the system clock and execution speed,
+        // but it should pretty much always hold true
+        assert_eq!(reset.duration_since(now).unwrap().as_secs(), 0);
     }
 }
