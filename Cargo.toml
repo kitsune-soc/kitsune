@@ -66,6 +66,7 @@ members = [
     "lib/mrf-manifest",
     "lib/mrf-tool",
     "lib/post-process",
+    "lib/schaber",
     "lib/speedy-uuid",
     "lib/tick-tock-mock",
     "lib/tower-http-digest",
@@ -162,6 +163,7 @@ just-retry = { path = "lib/just-retry" }
 masto-id-convert = { path = "lib/masto-id-convert" }
 mrf-manifest = { path = "lib/mrf-manifest" }
 post-process = { path = "lib/post-process" }
+schaber = { path = "lib/schaber" }
 speedy-uuid = { path = "lib/speedy-uuid", features = ["serde"] }
 tick-tock-mock = { path = "lib/tick-tock-mock" }
 tower-http-digest = { path = "lib/tower-http-digest" }
