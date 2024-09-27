@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-bubble-bath = "0.1.3"
+bubble-bath = "0.2.0"
 iso8601-timestamp = { workspace = true }
 kitsune-type = { workspace = true }
 pulldown-cmark = { version = "0.12.1", default-features = false, features = [

@@ -106,14 +106,14 @@ url = "2.5.2"
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "7.0.10", default-features = false, features = [
+async-graphql = { version = "7.0.11", default-features = false, features = [
     "graphiql",
     "tempfile",
     "time",
     "tracing",
     "uuid",
 ], optional = true }
-async-graphql-axum = { version = "7.0.10", optional = true }
+async-graphql-axum = { version = "7.0.11", optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { workspace = true, optional = true }
