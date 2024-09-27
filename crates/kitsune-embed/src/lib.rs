@@ -12,24 +12,26 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
 use lantern_client_sdk::models::EmbedWithExpire;
-use scraper::{Html, Selector};
+use schaber::Scraper;
 use smol_str::SmolStr;
-use std::sync::LazyLock;
+use std::{ops::ControlFlow, sync::LazyLock};
 
 pub use lantern_client_sdk::models::{Embed, EmbedType};
 
-static LINK_SELECTOR: LazyLock<Selector> = LazyLock::new(|| {
-    Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
+static LINK_SCRAPER: LazyLock<Scraper> = LazyLock::new(|| {
+    Scraper::new("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
 });
 
 fn first_link_from_fragment(fragment: &str) -> Option<String> {
-    let parsed_fragment = Html::parse_fragment(fragment);
+    let mut link = None;
+    LINK_SCRAPER
+        .process(fragment, |element| {
+            link = element.get_attribute("href");
+            ControlFlow::Break(())
+        })
+        .unwrap();
 
-    parsed_fragment
-        .select(&LINK_SELECTOR)
-        .next()
-        .and_then(|element| element.value().attr("href"))
-        .map(ToString::to_string)
+    link
 }
 
 #[kitsune_service]
