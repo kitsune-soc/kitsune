@@ -48,7 +48,7 @@ impl Scraper {
         I: AsRef<[u8]>,
         H: FnMut(&Element<'_, '_>) -> ControlFlow<()>,
     {
-        #[inline(always)]
+        #[inline]
         fn handler_assert<F>(uwu: F) -> F
         where
             F: FnMut(&mut Element<'_, '_>) -> HandlerResult,
@@ -56,7 +56,7 @@ impl Scraper {
             uwu
         }
 
-        #[inline(always)]
+        #[inline]
         fn sink_assert<F>(uwu: F) -> F
         where
             F: FnMut(&[u8]),
