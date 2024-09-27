@@ -1,4 +1,5 @@
 use schaber::Scraper;
+use std::ops::ControlFlow;
 
 #[test]
 fn select_link() {
@@ -16,6 +17,7 @@ fn select_link() {
     scraper
         .process(html, |element| {
             link_url = element.get_attribute("href");
+            ControlFlow::Break(())
         })
         .unwrap();
 

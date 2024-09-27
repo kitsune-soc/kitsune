@@ -3,10 +3,25 @@ use lol_html::{
     html_content::Element,
     ElementContentHandlers, HandlerResult, HtmlRewriter, Selector, Settings,
 };
-use std::{borrow::Cow, str::FromStr};
+use std::{borrow::Cow, ops::ControlFlow, str::FromStr};
 use thiserror::Error;
 
 type Result<T, E = Error> = std::result::Result<T, E>;
+
+/// Ignore any content handler "errors", since we use these errors
+/// as our means of communicating control flow
+macro_rules! handle_error {
+    ($error_expr:expr) => {{
+        match { $error_expr } {
+            Err(::lol_html::errors::RewritingError::ContentHandlerError(..)) => return Ok(()),
+            other => other,
+        }
+    }};
+}
+
+#[derive(Debug, Error)]
+#[error("small sacrifice for the lol_html gods")]
+struct Sacrifice;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -31,7 +46,7 @@ impl Scraper {
     pub fn process<I, H>(&self, input: I, mut handler: H) -> Result<()>
     where
         I: AsRef<[u8]>,
-        H: FnMut(&Element<'_, '_>),
+        H: FnMut(&Element<'_, '_>) -> ControlFlow<()>,
     {
         #[inline(always)]
         fn handler_assert<F>(uwu: F) -> F
@@ -54,8 +69,11 @@ impl Scraper {
                 element_content_handlers: vec![(
                     Cow::Borrowed(&self.element_selector),
                     ElementContentHandlers::default().element(handler_assert(|el| {
-                        handler(el);
-                        Ok(())
+                        if handler(el).is_continue() {
+                            Ok(())
+                        } else {
+                            Err(Box::new(Sacrifice))
+                        }
                     })),
                 )],
                 ..Settings::new()
@@ -63,8 +81,8 @@ impl Scraper {
             sink_assert(|_| {}),
         );
 
-        rewriter.write(input.as_ref())?;
-        rewriter.end()?;
+        handle_error!(rewriter.write(input.as_ref()))?;
+        handle_error!(rewriter.end())?;
 
         Ok(())
     }

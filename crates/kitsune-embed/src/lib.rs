@@ -14,7 +14,7 @@ use kitsune_http_client::Client as HttpClient;
 use lantern_client_sdk::models::EmbedWithExpire;
 use schaber::Scraper;
 use smol_str::SmolStr;
-use std::sync::LazyLock;
+use std::{ops::ControlFlow, sync::LazyLock};
 
 pub use lantern_client_sdk::models::{Embed, EmbedType};
 
@@ -26,11 +26,8 @@ fn first_link_from_fragment(fragment: &str) -> Option<String> {
     let mut link = None;
     LINK_SCRAPER
         .process(fragment, |element| {
-            if link.is_some() {
-                return;
-            }
-
             link = element.get_attribute("href");
+            ControlFlow::Break(())
         })
         .unwrap();
 
