@@ -10,7 +10,7 @@ athena = { workspace = true }
 derive_more = { version = "1.0.0", features = ["from"] }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 kitsune-core = { workspace = true }
 kitsune-db = { workspace = true }
 kitsune-email = { workspace = true }

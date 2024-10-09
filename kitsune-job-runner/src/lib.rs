@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use athena::{Coerce, JobQueue, RedisJobQueue, TaskTracker};
+use athena::{Coerce, JobContextRepository, JobQueue, RedisJobQueue, TaskTracker};
 use fred::{
     clients::RedisPool,
     interfaces::{ClientLike, RedisResult},
@@ -60,7 +60,7 @@ pub async fn prepare_job_queue(
 
 #[instrument(skip(job_queue, state))]
 pub async fn run_dispatcher(
-    job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>,
+    job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo> + '_>,
     state: JobDispatcherState,
     num_job_workers: usize,
 ) {
@@ -92,21 +92,36 @@ pub async fn run_dispatcher(
     let job_tracker = TaskTracker::new();
     job_tracker.close();
 
+    // dunno why the compiler needs this? this is legit a regression.
+    //
+    // stable -> nightly. but i really cant be bothered anymore to report stuff.
+    // i dont like reporting stuff to the rust issue tracker. interactions are always annoying.
+    // if i need to write this, then i will. as long as i dont have to deal with the rust teams.
+    //
+    // because i know, i JUST KNOW, that there will be some response like "oh this is part of a fix. write around it. we dont care."
+    // and then i have to write this anyway and wasted my time attempting to report something.
+    //
+    // happened before. will happen again.
+    // i dont have the time nor energy to deal with it. so instead i rant in my source code and then go watch a movie.
+    #[allow(clippy::items_after_statements)]
+    #[inline]
+    fn assert_trait_bounds<CR>(
+        item: &(impl JobQueue<ContextRepository = CR> + Clone),
+    ) -> &(impl JobQueue<ContextRepository = CR> + Clone)
+    where
+        CR: JobContextRepository,
+    {
+        item
+    }
+
     loop {
         let _ = (|| {
-            let job_queue = Arc::clone(&job_queue);
-            let ctx = Arc::clone(&ctx);
-            let job_tracker = job_tracker.clone();
-
-            async move {
-                athena::spawn_jobs(
-                    &job_queue,
-                    num_job_workers - job_tracker.len(),
-                    Arc::clone(&ctx),
-                    &job_tracker,
-                )
-                .await
-            }
+            athena::spawn_jobs(
+                assert_trait_bounds(&job_queue),
+                num_job_workers - job_tracker.len(),
+                Arc::clone(&ctx),
+                &job_tracker,
+            )
         })
         .retry(just_retry::backoff_policy())
         .await;

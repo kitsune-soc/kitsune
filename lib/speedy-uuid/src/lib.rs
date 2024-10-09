@@ -298,7 +298,7 @@ mod serde_impl {
             } else {
                 struct UuidBytesVisitor;
 
-                impl<'vi> de::Visitor<'vi> for UuidBytesVisitor {
+                impl de::Visitor<'_> for UuidBytesVisitor {
                     type Value = Uuid;
 
                     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

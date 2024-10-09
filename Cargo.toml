@@ -82,8 +82,8 @@ resolver = "2"
 askama = { version = "0.12.1", default-features = false, features = [
     "with-axum",
 ] }
-async-fn-stream = "0.2.2"
-clap = { version = "4.5.18", features = ["derive", "wrap_help"] }
+asynk-strim = "0.1.2"
+clap = { version = "4.5.20", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.4", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
@@ -114,8 +114,8 @@ itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 sonic-rs = "0.3.13"
-tokio = "=1.38.1"
-triomphe = { version = "0.1.13", default-features = false, features = [
+tokio = "1.40.0"
+triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
 ] }
 
@@ -182,6 +182,7 @@ cast_sign_loss = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
+needless_return = "allow"
 no_effect_underscore_binding = "allow"
 
 [workspace.lints.rust]

@@ -47,7 +47,7 @@ impl<'a, T> CowBox<'a, T> {
     }
 }
 
-impl<'a, T> Deref for CowBox<'a, T> {
+impl<T> Deref for CowBox<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {

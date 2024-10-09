@@ -19,10 +19,10 @@ zeroize = { version = "1.8.1", features = ["derive"] }
 
 # `axum` feature
 async-trait = { version = "0.1.83", optional = true }
-axum-core = { version = "0.4.4", optional = true }
+axum-core = { version = "0.4.5", optional = true }
 
 [dev-dependencies]
-futures-test = "0.3.30"
+futures-test = "0.3.31"
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [features]

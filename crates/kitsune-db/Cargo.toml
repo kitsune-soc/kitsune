@@ -12,7 +12,7 @@ diesel = { workspace = true }
 diesel-async = { workspace = true }
 diesel_full_text_search = { workspace = true }
 diesel_migrations = "2.2.0"
-futures-util = { version = "0.3.30", default-features = false, features = [
+futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
 iso8601-timestamp = { workspace = true, features = ["diesel-pg"] }
@@ -22,7 +22,7 @@ kitsune-language = { workspace = true }
 kitsune-type = { workspace = true }
 num-derive = "0.4.2"
 num-traits = "0.2.19"
-rustls = { version = "0.23.13", default-features = false, features = [
+rustls = { version = "0.23.14", default-features = false, features = [
     "logging",
     "ring",
     "std",

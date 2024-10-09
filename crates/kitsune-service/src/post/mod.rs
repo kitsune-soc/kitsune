@@ -4,7 +4,6 @@ use super::{
     notification::NotificationService,
     LimitContext,
 };
-use async_fn_stream::try_fn_stream;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
     QueryDsl, SelectableHelper,
@@ -1050,7 +1049,7 @@ impl PostService {
             Ok::<_, Error>(post)
         };
 
-        try_fn_stream(|emitter| async move {
+        asynk_strim::try_stream_fn(move |mut yielder| async move {
             let mut last_post = self.get_by_id(id, fetching_account_id).await?;
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
@@ -1058,7 +1057,7 @@ impl PostService {
 
             while let Some(in_reply_to_id) = last_post.in_reply_to_id {
                 let post = load_post(in_reply_to_id, permission_check).await?;
-                emitter.emit(post.clone()).await;
+                yielder.yield_ok(post.clone()).await;
 
                 last_post = post;
             }
@@ -1091,7 +1090,7 @@ impl PostService {
             Ok::<_, Error>(post)
         };
 
-        try_fn_stream(|emitter| async move {
+        asynk_strim::try_stream_fn(move |mut yielder| async move {
             let permission_check = PermissionCheck::builder()
                 .fetching_account_id(fetching_account_id)
                 .build();
@@ -1099,11 +1098,11 @@ impl PostService {
             let mut descendant_stream = load_post(id, permission_check).await?;
             while let Some(descendant) = descendant_stream.try_next().await? {
                 let descendant_id = descendant.id;
-                emitter.emit(descendant).await;
+                yielder.yield_ok(descendant).await;
 
                 let mut sub_descendants = self.get_descendants(descendant_id, fetching_account_id);
                 while let Some(sub_descendant) = sub_descendants.try_next().await? {
-                    emitter.emit(sub_descendant).await;
+                    yielder.yield_ok(sub_descendant).await;
                 }
             }
 
