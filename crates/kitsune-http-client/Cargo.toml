@@ -6,9 +6,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-async-fn-stream = { workspace = true }
+asynk-strim = { workspace = true }
 bytes = "1.7.2"
-futures-util = { version = "0.3.30", default-features = false, features = [
+futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
 http-body = "1.0.1"
@@ -30,7 +30,7 @@ hyper-rustls = { version = "0.27.3", default-features = false, features = [
     "tls12",
 ] }
 kitsune-type = { workspace = true }
-pin-project = "1.1.5"
+pin-project = "1.1.6"
 serde = "1.0.210"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }

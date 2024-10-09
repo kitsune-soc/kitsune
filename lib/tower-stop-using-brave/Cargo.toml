@@ -8,12 +8,12 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 either = "1.13.0"
 http = "1.1.0"
-regex = "1.10.6"
+regex = "1.11.0"
 tower-layer = "0.3.3"
 tower-service = "0.3.3"
 
 [dev-dependencies]
-futures-test = "0.3.30"
+futures-test = "0.3.31"
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]

@@ -18,7 +18,7 @@ atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
 blowocking = { workspace = true, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
-derive_builder = "0.20.1"
+derive_builder = "0.20.2"
 http = "1.1.0"
 httpdate = "1.0.3"
 itertools = { workspace = true }

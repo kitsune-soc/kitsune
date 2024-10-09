@@ -16,11 +16,11 @@ mrf-manifest = { workspace = true, features = [
     "serialise",
 ] }
 sonic-rs = { workspace = true }
-wasmparser = "0.217.0"
+wasmparser = "0.219.0"
 
 [lints]
 workspace = true
 
 [dev-dependencies]
 sonic-rs = { workspace = true }
-wat = "1.217.0"
+wat = "1.219.0"

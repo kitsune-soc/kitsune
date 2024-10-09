@@ -41,6 +41,7 @@ fn conditional_ascii_check(value: &str, ctx: &RegisterContext) -> garde::Result 
     garde::rules::ascii::apply(&value, ())
 }
 
+#[allow(clippy::ref_option)] // garde requirement
 fn is_strong_password<T>(value: &Option<String>, _context: &T) -> garde::Result {
     let Some(ref value) = value else {
         return Ok(());

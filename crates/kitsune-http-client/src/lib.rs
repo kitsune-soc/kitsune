@@ -2,7 +2,6 @@
 #![deny(missing_docs)]
 
 use self::util::BoxCloneService;
-use async_fn_stream::try_fn_stream;
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
 use http_body::Body as HttpBody;
@@ -409,10 +408,10 @@ impl Response {
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
         let mut body_stream = BodyStream::new(self.inner.into_body());
 
-        try_fn_stream(|emitter| async move {
+        asynk_strim::try_stream_fn(|mut yielder| async move {
             while let Some(frame) = body_stream.next().await {
                 match frame.map_err(Error::new)?.into_data() {
-                    Ok(val) if val.has_remaining() => emitter.emit(val).await,
+                    Ok(val) if val.has_remaining() => yielder.yield_ok(val).await,
                     Ok(..) | Err(..) => {
                         // There was either no remaining data or the frame was no data frame.
                         // Therefore we just discard it.

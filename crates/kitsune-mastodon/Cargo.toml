@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 diesel = { workspace = true }
 diesel-async = { workspace = true }
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 iso8601-timestamp = { workspace = true }
 kitsune-cache = { workspace = true }
 kitsune-db = { workspace = true }

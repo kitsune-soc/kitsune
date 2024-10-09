@@ -9,7 +9,7 @@ license.workspace = true
 bytes = "1.7.2"
 diesel-async = { workspace = true }
 fred = { workspace = true }
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 http = "1.1.0"
 http-body-util = "0.1.2"
 isolang = "2.4.0"

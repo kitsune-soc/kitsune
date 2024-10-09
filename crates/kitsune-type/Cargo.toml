@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 iso8601-timestamp = { workspace = true }
 serde = { version = "1.0.210", features = ["derive"] }
-serde_with = { version = "3.9.0", default-features = false, features = [
+serde_with = { version = "3.11.0", default-features = false, features = [
     "alloc",
     "macros",
 ] }
@@ -19,7 +19,7 @@ strum = { version = "0.26.3", features = ["derive"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
-rstest = { version = "0.22.0", default-features = false }
+rstest = { version = "0.23.0", default-features = false }
 serde_test = "1"
 
 [lints]

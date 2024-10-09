@@ -10,7 +10,7 @@ async-trait = "0.1.83"
 base64-simd = "0.8.0"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 headers = "0.4.0"
 http = "1.1.0"
 iso8601-timestamp = { workspace = true }

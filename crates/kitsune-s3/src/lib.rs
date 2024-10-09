@@ -8,7 +8,7 @@ use kitsune_error::{bail, Error, Result};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
 use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
 use serde::Serialize;
-use std::{ops::Deref, time::Duration};
+use std::{ops::Deref, pin::pin, time::Duration};
 use typed_builder::TypedBuilder;
 
 const TWO_MINUTES: Duration = Duration::from_secs(2 * 60);
@@ -144,11 +144,11 @@ impl Client {
             .await?;
         let create_response = CreateMultipartUpload::parse_response(&response)?;
 
-        let stream = futures_util::stream::iter(1..) // Chunk IDs for the S3 API are 1-based
-            .zip(stream)
-            .map(|(id, result)| result.map(|chunk| (id, chunk)));
-
-        futures_util::pin_mut!(stream);
+        let mut stream = pin!(
+            futures_util::stream::iter(1..) // Chunk IDs for the S3 API are 1-based
+                .zip(stream)
+                .map(|(id, result)| result.map(|chunk| (id, chunk)))
+        );
 
         let upload_chunks_fut = async {
             let mut etags = Vec::new();

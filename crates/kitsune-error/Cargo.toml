@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-axum-core = "0.4.4"
+axum-core = "0.4.5"
 eyre = "0.6.12"
 garde = { workspace = true }
 http = "1.1.0"
