@@ -221,9 +221,6 @@ install-updater = true
 install-path = "CARGO_HOME"
 
 [patch.crates-io]
-# Fix proptests by fixing a olpc-cjson bug
-olpc-cjson = { git = "https://github.com/aumetra/aws-tough.git", rev = "3b46feaeaf8048d46f85d023295e65563b84d7d6" }
-
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "add820f8837c974fcee4110e678bb9e79b3f6ecb" }
 
