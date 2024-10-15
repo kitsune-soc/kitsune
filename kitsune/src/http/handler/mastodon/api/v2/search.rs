@@ -1,7 +1,6 @@
 use crate::{
     consts::default_limit,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    state::Zustand,
 };
 use axum::{debug_handler, extract::State, Json};
 use axum_extra::{either::Either, extract::Query};
@@ -39,7 +38,7 @@ pub struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     State(search_service): State<SearchService>,
     State(mastodon_mapper): State<MastodonMapper>,

@@ -1,4 +1,3 @@
-use crate::state::Zustand;
 use axum::{
     debug_handler,
     extract::{Path, State},
@@ -12,7 +11,7 @@ pub struct GetPath {
     confirmation_token: String,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     State(mailing_service): State<MailingService>,
     Path(path): Path<GetPath>,
