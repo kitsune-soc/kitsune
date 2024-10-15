@@ -1,9 +1,6 @@
-use crate::{
-    http::{
-        extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-        util::buffer_multipart_to_tempfile,
-    },
-    state::Zustand,
+use crate::http::{
+    extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
+    util::buffer_multipart_to_tempfile,
 };
 use axum::{
     debug_handler,
@@ -70,7 +67,7 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn put(
     State(attachment_service): State<AttachmentService>,
     State(mastodon_mapper): State<MastodonMapper>,

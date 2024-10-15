@@ -1,7 +1,4 @@
-use crate::{
-    http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-    state::Zustand,
-};
+use crate::http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor};
 use axum::{
     debug_handler,
     extract::{Path, State},
@@ -49,7 +46,7 @@ pub struct UpdateForm {
     spoiler_text: Option<String>,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn delete(
     State(post): State<PostService>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -66,7 +63,7 @@ pub async fn delete(
     Ok(StatusCode::OK)
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
@@ -85,7 +82,7 @@ pub async fn get(
     Ok(Json(status))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post_service): State<PostService>,
@@ -107,7 +104,7 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(post).await?))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn put(
     State(mastodon_mapper): State<MastodonMapper>,
     State(post): State<PostService>,
