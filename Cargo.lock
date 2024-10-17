@@ -3856,12 +3856,13 @@ dependencies = [
  "kitsune-derive",
  "kitsune-error",
  "kitsune-http-client",
- "moka",
  "oauth2",
  "openidconnect",
+ "scc",
  "serde",
  "sonic-rs",
  "speedy-uuid",
+ "triomphe",
  "url",
 ]
 
@@ -5997,6 +5998,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "scc"
+version = "2.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2c1f7fc6deb21665a9060dfc7d271be784669295a31babdcd4dd2c79ae8cbfb"
+dependencies = [
+ "sdd",
+]
+
+[[package]]
 name = "schaber"
 version = "0.0.1-pre.6"
 dependencies = [
@@ -6053,6 +6063,12 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "sdd"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49c1eeaf4b6a87c7479688c6d52b9f1153cedd3c489300564f932b065c6eab95"
 
 [[package]]
 name = "sec1"
