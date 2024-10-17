@@ -6,14 +6,14 @@ pub use self::store::{AnyStore, Store};
 
 pub mod store;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct OAuth2LoginState {
     pub application_id: Uuid,
     pub scope: String,
     pub state: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct LoginState {
     pub nonce: Nonce,
     pub pkce_verifier: PkceCodeVerifier,

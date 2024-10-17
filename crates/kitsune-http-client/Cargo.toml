@@ -14,7 +14,7 @@ futures-util = { version = "0.3.31", default-features = false, features = [
 http-body = "1.0.1"
 http-body-util = "0.1.2"
 http-signatures = { workspace = true }
-hyper = "1.4.1"
+hyper = "1.5.0"
 hyper-util = { version = "0.1.9", features = [
     "client-legacy",
     "http1",

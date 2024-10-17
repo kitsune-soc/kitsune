@@ -9,7 +9,7 @@ license.workspace = true
 bubble-bath = "0.2.0"
 iso8601-timestamp = { workspace = true }
 kitsune-type = { workspace = true }
-pulldown-cmark = { version = "0.12.1", default-features = false, features = [
+pulldown-cmark = { version = "0.12.2", default-features = false, features = [
     "html",
     "simd",
 ] }

@@ -28,3 +28,52 @@ impl Store for InMemory {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::InMemory;
+    use crate::state::{LoginState, OAuth2LoginState, Store};
+    use oauth2::PkceCodeVerifier;
+    use openidconnect::Nonce;
+    use speedy_uuid::Uuid;
+
+    #[tokio::test]
+    async fn basic_ops() {
+        let val = LoginState {
+            nonce: Nonce::new_random(),
+            pkce_verifier: PkceCodeVerifier::new("test".into()),
+            oauth2: OAuth2LoginState {
+                application_id: Uuid::now_v7(),
+                scope: "owo".into(),
+                state: None,
+            },
+        };
+
+        let in_memory = InMemory::new(10);
+        in_memory.set("uwu", val.clone()).await.unwrap();
+        let got_val = in_memory.get_and_remove("uwu").await.unwrap();
+        assert_eq!(got_val, val);
+    }
+
+    #[tokio::test]
+    async fn limits_size() {
+        let val = LoginState {
+            nonce: Nonce::new_random(),
+            pkce_verifier: PkceCodeVerifier::new("test".into()),
+            oauth2: OAuth2LoginState {
+                application_id: Uuid::now_v7(),
+                scope: "owo".into(),
+                state: None,
+            },
+        };
+
+        let in_memory = InMemory::new(2);
+        in_memory.set("owo", val.clone()).await.unwrap();
+        in_memory.set("uwu", val.clone()).await.unwrap();
+        in_memory.set("ùwú", val.clone()).await.unwrap();
+
+        in_memory.inner.run_pending_tasks();
+
+        assert_eq!(in_memory.inner.entry_count(), 2);
+    }
+}
