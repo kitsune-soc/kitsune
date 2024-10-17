@@ -50,7 +50,7 @@ mod state;
 
 pub mod http;
 
-const LOGIN_STATE_STORE_SIZE: usize = 100;
+const LOGIN_STATE_STORE_SIZE: u64 = 100;
 
 #[derive(Debug)]
 pub struct OAuth2Info {
