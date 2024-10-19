@@ -23,7 +23,7 @@ kitsune-type = { workspace = true }
 mrf-manifest = { workspace = true, features = ["decode"] }
 redb = { version = "2.1.4", features = ["logging"] }
 slab = "0.4.9"
-smol_str = "0.3.1"
+smol_str = "0.3.2"
 sonic-rs = { workspace = true }
 tokio = { workspace = true, features = ["fs"] }
 tracing = "0.1.40"

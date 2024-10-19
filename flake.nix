@@ -196,6 +196,7 @@
                   nodejs
                   nodePackages.svelte-language-server
                   nodePackages.typescript-language-server
+                  pnpm
                 ];
               };
             };

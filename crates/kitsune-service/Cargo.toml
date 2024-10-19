@@ -46,7 +46,7 @@ rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.213"
-smol_str = "0.3.1"
+smol_str = "0.3.2"
 speedy-uuid = { workspace = true }
 tokio = { workspace = true, features = ["macros", "sync"] }
 tracing = "0.1.40"
