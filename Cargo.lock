@@ -177,9 +177,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.89"
+version = "1.0.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
+checksum = "37bf3594c4c988a53154954629820791dde498571819ae4ca50ca811e060cc95"
 
 [[package]]
 name = "arbitrary"
@@ -989,9 +989,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.30"
+version = "1.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b16803a61b81d9eabb7eae2588776c4c1e584b738ede45fdbb4c972cec1e9945"
+checksum = "c2e7962b54006dcfcc61cb72735f4d89bb97061dd6a7ed882ec6b8ee53714c6f"
 dependencies = [
  "shlex",
 ]
@@ -3278,9 +3278,9 @@ dependencies = [
 
 [[package]]
 name = "iso8601-timestamp"
-version = "0.3.0-rc.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b6b1a5f1da281972783c7637dbea5b63ebec6d0e147ade6e6b406a761ef3e22"
+checksum = "024c61ea290f1299b796ffb5dead4207276af8de93b8e875d7433f66bd7bfbdc"
 dependencies = [
  "diesel",
  "generic-array 1.1.0",
@@ -4182,9 +4182,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.160"
+version = "0.2.161"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0b21006cd1874ae9e650973c565615676dc4a274c965bb0a73796dac838ce4f"
+checksum = "8e9489c2807c139ffd9c1794f4af0ebe86a828db53ecdc7fea2111d0fed085d1"
 
 [[package]]
 name = "libm"
@@ -6177,9 +6177,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.129"
+version = "1.0.131"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dbcf9b78a125ee667ae19388837dd12294b858d101fdd393cb9d5501ef09eb2"
+checksum = "67d42a0bd4ac281beff598909bb56a86acaf979b84483e1c79c10dcaf98f8cf3"
 dependencies = [
  "itoa 1.0.11",
  "memchr",
@@ -6425,7 +6425,7 @@ dependencies = [
 [[package]]
 name = "snowflake"
 version = "0.1.0"
-source = "git+https://github.com/Lantern-chat/snowflake#035b779d39405240dc3ea43aa42bd494ddb37f20"
+source = "git+https://github.com/Lantern-chat/snowflake#87ed4fbb193570e163af9e53db384490595edc9f"
 dependencies = [
  "crossbeam-utils",
  "iso8601-timestamp",
@@ -6445,8 +6445,8 @@ dependencies = [
 
 [[package]]
 name = "sonic-rs"
-version = "0.3.13"
-source = "git+https://github.com/aumetra/sonic-rs.git?rev=add820f8837c974fcee4110e678bb9e79b3f6ecb#add820f8837c974fcee4110e678bb9e79b3f6ecb"
+version = "0.3.14"
+source = "git+https://github.com/aumetra/sonic-rs.git?rev=12df930a57ff9f07eb16111a3da1feff3dc8e5ad#12df930a57ff9f07eb16111a3da1feff3dc8e5ad"
 dependencies = [
  "bumpalo",
  "bytes",
@@ -7420,12 +7420,9 @@ checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
 
 [[package]]
 name = "unicase"
-version = "2.7.0"
+version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
-dependencies = [
- "version_check",
-]
+checksum = "7e51b68083f157f853b6379db119d1c1be0e6e4dec98101079dec41f6f5cf6df"
 
 [[package]]
 name = "unicode-bidi"

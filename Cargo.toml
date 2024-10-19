@@ -109,11 +109,11 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
-iso8601-timestamp = "0.3.0-rc.1"
+iso8601-timestamp = "0.3.0"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
-sonic-rs = "0.3.13"
+sonic-rs = "0.3.14"
 tokio = "1.40.0"
 triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
@@ -196,33 +196,9 @@ edition = "2021"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
 
-# Config for 'cargo dist'
-[workspace.metadata.dist]
-# Whether to pass --all-features to cargo build
-all-features = true
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.19.1"
-# CI backends to support
-ci = "github"
-# The installers to generate for each app
-installers = ["powershell", "shell"]
-# Target platforms to build apps for (Rust target-triple syntax)
-targets = [
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "x86_64-pc-windows-msvc",
-    "x86_64-unknown-linux-musl",
-]
-# Publish jobs to run in CI
-pr-run-mode = "plan"
-# Whether to install an updater program
-install-updater = true
-# Path that installers should place binaries in
-install-path = "CARGO_HOME"
-
 [patch.crates-io]
 # SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "add820f8837c974fcee4110e678bb9e79b3f6ecb" }
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "12df930a57ff9f07eb16111a3da1feff3dc8e5ad" }
 
 # Use RustCrypto "x509-cert" crate for certificate parsing
 tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
