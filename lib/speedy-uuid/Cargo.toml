@@ -11,7 +11,7 @@ diesel = { version = "2.2.4", default-features = false, features = [
     "postgres_backend",
     "uuid",
 ], optional = true }
-fred = { version = "9.2.1", default-features = false, optional = true }
+fred = { version = "9.3.0", default-features = false, optional = true }
 serde = { version = "1.0.210", optional = true }
 thiserror = "1.0.64"
 uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }

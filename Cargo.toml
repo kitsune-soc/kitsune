@@ -95,7 +95,7 @@ diesel-async = { version = "0.5.0", features = [
     "tokio",
 ] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
-fred = { version = "9.2.1", features = [
+fred = { version = "9.3.0", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
@@ -200,5 +200,3 @@ license = "AGPL-3.0-or-later"
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "12df930a57ff9f07eb16111a3da1feff3dc8e5ad" }
 
-# Use RustCrypto "x509-cert" crate for certificate parsing
-tokio-postgres-rustls = { git = "https://github.com/jbg/tokio-postgres-rustls.git", rev = "b16c1bc0f5d4f91324174fd1bd839d743a70f86a" }
