@@ -21,13 +21,13 @@ openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     "accept-string-booleans",
     "timing-resistant-secret-traits",
 ] }
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.213", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 url = "2.5.2"
 
 [dev-dependencies]
-tokio = { version = "1.40.0", features = ["macros", "rt"] }
+tokio = { version = "1.41.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true
