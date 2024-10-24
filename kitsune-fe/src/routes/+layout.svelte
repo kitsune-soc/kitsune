@@ -19,7 +19,7 @@
 {@render children()}
 
 <footer>
-	<p class="version">
+	<p>
 		Backend version: {backendVersion}
 		<br />Frontend version: {frontendVersion}
 	</p>

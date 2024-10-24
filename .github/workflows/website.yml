@@ -24,8 +24,8 @@ jobs:
         uses: withastro/action@v2
         with:
           path: ./website
+          package-manager: pnpm@latest
         # node-version: 20 # The specific version of Node that should be used to build your site. Defaults to 20. (optional)
-        # package-manager: pnpm@latest # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
 
   deploy:
     needs: build

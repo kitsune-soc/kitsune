@@ -17,7 +17,7 @@ kitsune-db = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-url = { workspace = true }
-lettre = { version = "0.11.9", default-features = false, features = [
+lettre = { version = "0.11.10", default-features = false, features = [
     "builder",
     "hostname",
     "pool",

@@ -29,12 +29,12 @@ rustls = { version = "0.23.15", default-features = false, features = [
     "tls12",
 ] }
 rustls-native-certs = "0.8.0"
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.213", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { workspace = true, features = ["rt"] }
 tokio-postgres = "0.7.12"
-tokio-postgres-rustls = "0.12.0"
+tokio-postgres-rustls = "0.13.0"
 tracing = "0.1.40"
 tracing-log = "0.2.0"
 trials = { workspace = true }

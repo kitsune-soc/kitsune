@@ -11,7 +11,7 @@ argon2 = "0.5.3"
 asynk-strim = { workspace = true }
 athena = { workspace = true }
 blowocking = { workspace = true }
-bytes = "1.7.2"
+bytes = "1.8.0"
 derive_builder = "0.20.2"
 diesel = { workspace = true }
 diesel-async = { workspace = true }
@@ -45,8 +45,8 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.210"
-smol_str = "0.3.1"
+serde = "1.0.213"
+smol_str = "0.3.2"
 speedy-uuid = { workspace = true }
 tokio = { workspace = true, features = ["macros", "sync"] }
 tracing = "0.1.40"
