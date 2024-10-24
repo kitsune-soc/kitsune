@@ -11,7 +11,7 @@ blake3 = "1.5.4"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 hex-simd = "0.8.0"
 http = "1.1.0"
-pin-project-lite = "0.2.14"
+pin-project-lite = "0.2.15"
 rand = "0.8.5"
 tower = { version = "0.5.1", default-features = false }
 triomphe = { workspace = true }

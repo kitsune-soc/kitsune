@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 http = "1.1.0"
 itertools = { workspace = true }
-pin-project-lite = "0.2.14"
+pin-project-lite = "0.2.15"
 tower-layer = "0.3.3"
 tower-service = "0.3.3"
 triomphe = { workspace = true }

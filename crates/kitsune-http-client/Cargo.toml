@@ -30,7 +30,7 @@ hyper-rustls = { version = "0.27.3", default-features = false, features = [
     "tls12",
 ] }
 kitsune-type = { workspace = true }
-pin-project = "1.1.6"
+pin-project = "1.1.7"
 serde = "1.0.213"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
