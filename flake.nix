@@ -14,6 +14,13 @@
     };
 
     crane.url = "github:ipetkov/crane";
+    pnpm2nix = {
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs";
+      };
+      url = "github:nzbr/pnpm2nix-nzbr";
+    };
 
     # The premise is this is the "default" and if you want to do a debug build,
     # pass it in as an arg.
@@ -27,6 +34,7 @@
     , nixpkgs
     , rust-overlay
     , crane
+    , pnpm2nix
     , ...
     }@inputs:
     (
@@ -134,19 +142,15 @@
                 }
               );
 
-              frontend = pkgs.buildNpmPackage {
-                pname = "kitsune-fe";
-                inherit version;
-
+              frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
                 src = "${src}/kitsune-fe";
-                npmDepsHash = "sha256-t2YeggB1spIlOs0dH4tV+X2P+2pc4FMMqYtB7gLn47k=";
+                distDir = "build";
+                installInPlace = true;
+              };
 
-                npmFlags = [ "--legacy-peer-deps" ];
-
-                installPhase = ''
-                  mkdir -p $out
-                  cp -R build/* $out
-                '';
+              website = pnpm2nix.packages.${system}.mkPnpmPackage {
+                src = "${src}/website";
+                installInPlace = true;
               };
             };
 
