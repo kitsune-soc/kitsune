@@ -1,5 +1,6 @@
 {
 	"name": "kitsune-fe",
+	"type": "module",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
@@ -9,7 +10,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest && npm run test:e2e && npm run test:unit -- --run",
+		"test": "pnpm run test:e2e && pnpm run test:unit -- --run",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:e2e": "playwright test",
@@ -23,8 +24,6 @@
 		"@sveltejs/vite-plugin-svelte": "4.0.0",
 		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
 		"@types/eslint": "^9.6.0",
-		"@typescript-eslint/eslint-plugin": "^8.11.0",
-		"@typescript-eslint/parser": "^8.11.0",
 		"eslint": "^9.7.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0",
@@ -37,13 +36,11 @@
 		"sass": "^1.80.3",
 		"svelte": "^5.0.5",
 		"svelte-check": "^4.0.5",
-		"tslib": "^2.8.0",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.0.0",
 		"unplugin-icons": "^0.19.3",
 		"vite": "^5.4.9",
 		"vitest": "^2.0.4",
 		"zod": "^3.23.8"
-	},
-	"type": "module"
+	}
 }
