@@ -62,6 +62,7 @@ members = [
     "lib/http-signatures",
     "lib/http-signatures-cli",
     "lib/just-retry",
+    "lib/komainu",
     "lib/masto-id-convert",
     "lib/mrf-manifest",
     "lib/mrf-tool",
