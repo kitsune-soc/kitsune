@@ -3993,6 +3993,12 @@ dependencies = [
 [[package]]
 name = "komainu"
 version = "0.0.1-pre.6"
+dependencies = [
+ "http",
+ "serde",
+ "serde_test",
+ "thiserror 1.0.69",
+]
 
 [[package]]
 name = "kqueue"
