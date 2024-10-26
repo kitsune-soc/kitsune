@@ -3994,10 +3994,14 @@ dependencies = [
 name = "komainu"
 version = "0.0.1-pre.6"
 dependencies = [
+ "bytes",
+ "headers",
  "http",
  "serde",
  "serde_test",
- "thiserror 1.0.69",
+ "serde_urlencoded",
+ "sonic-rs",
+ "thiserror 2.0.3",
 ]
 
 [[package]]

@@ -22,7 +22,7 @@ impl<K, V> ParamStorage<K, V>
 where
     K: Eq + Hash,
 {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             inner: HashMap::new(),
         }
