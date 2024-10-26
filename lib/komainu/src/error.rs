@@ -1,6 +1,24 @@
 use thiserror::Error;
 
+type BoxError = Box<dyn std::error::Error + Send + Sync>;
+
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, Error)]
-pub enum Error {}
+pub enum Error {
+    #[error("Malformed body")]
+    Body(#[source] BoxError),
+
+    #[error("Malformed query")]
+    Query(#[source] BoxError),
+}
+
+impl Error {
+    pub(crate) fn body(err: impl Into<BoxError>) -> Self {
+        Self::Body(err.into())
+    }
+
+    pub(crate) fn query(err: impl Into<BoxError>) -> Self {
+        Self::Query(err.into())
+    }
+}

@@ -6,9 +6,13 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+bytes = "1.8.0"
+headers = "0.4.0"
 http = "1.1.0"
-serde = "1.0.213"
-thiserror = "1.0.65"
+serde = "1.0.215"
+serde_urlencoded = "0.7.1"
+sonic-rs.workspace = true
+thiserror = "2.0.3"
 
 [dev-dependencies]
 serde_test = "1.0.177"
