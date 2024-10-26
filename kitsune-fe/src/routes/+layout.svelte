@@ -1,4 +1,5 @@
 <script lang="ts">
+	//import '../app.css';
 	import type { Snippet } from 'svelte';
 	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
