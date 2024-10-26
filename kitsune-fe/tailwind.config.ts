@@ -7,7 +7,13 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 
 	theme: {
-		extend: {}
+		extend: {
+			colors: {
+				dark: {
+					'1': '#2b233a'
+				}
+			}
+		}
 	},
 
 	plugins: [typography, forms]

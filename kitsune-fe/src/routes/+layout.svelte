@@ -1,5 +1,5 @@
 <script lang="ts">
-	//import '../app.css';
+	import '../app.css';
 	import type { Snippet } from 'svelte';
 	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
@@ -19,7 +19,7 @@
 
 {@render children()}
 
-<footer>
+<footer class="absolute bottom-3 left-3 text-sm">
 	<p>
 		Backend version: {backendVersion}
 		<br />Frontend version: {frontendVersion}
@@ -33,25 +33,4 @@
 
 <style lang="scss">
 	@use '../styles/mixins' as *;
-
-	footer {
-		font-size: small;
-		line-height: normal;
-	}
-
-	@include only-on-mobile {
-		footer {
-			margin: 3em 0;
-			text-align: center;
-		}
-	}
-
-	@include not-on-mobile {
-		footer {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			padding: 1em;
-		}
-	}
 </style>

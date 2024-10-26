@@ -1,3 +1,17 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+@layer base {
+    :root {
+        @apply text-white;
+    }
+
+    body {
+        @apply bg-no-repeat bg-gradient-to-bl from-dark-1 to-slate-950 min-h-screen;
+    }
+
+    a {
+        @apply text-pink-400;
+    }
+}
