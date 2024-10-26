@@ -134,6 +134,8 @@ mod test {
         map2.insert("hello", "world");
         map2.insert("hello", "owo");
 
+        assert!(map2.get("hello").is_none());
+
         serde_test::assert_de_tokens(
             &map2,
             &[
