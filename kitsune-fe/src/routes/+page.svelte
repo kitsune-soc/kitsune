@@ -80,8 +80,8 @@
 	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
 </Dialog>
 
-<div class="flex h-screen w-screen flex-col place-content-evenly items-center md:flex-row">
-	<div>
+<div class="flex h-screen w-screen flex-col lg:flex-row lg:place-content-evenly lg:items-center">
+	<div class="place-item-center flex flex-col max-lg:text-center">
 		<img class="w-3/5" src="/kitsune_full.svg" alt="Kitsune logo" />
 
 		<h1>Federated microblogging</h1>
@@ -100,8 +100,8 @@
 
 	<div class="basis-1/4">
 		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
-			<label class="block">
-				<span>Username</span>
+			<label class="block" for="username">
+				Username
 
 				<input
 					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
