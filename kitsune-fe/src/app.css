@@ -3,15 +3,12 @@
 @import 'tailwindcss/utilities';
 
 @layer base {
-    :root {
-        @apply text-white;
-    }
+	body {
+		@apply min-h-screen w-screen bg-gradient-to-bl from-dark-2 via-dark-1 to-slate-950 bg-no-repeat;
+		@apply prose prose-slate prose-invert;
+	}
 
-    body {
-        @apply bg-no-repeat bg-gradient-to-bl from-dark-1 to-slate-950 min-h-screen;
-    }
-
-    a {
-        @apply text-pink-400;
-    }
+	a {
+		/*@apply text-pink-400;*/
+	}
 }

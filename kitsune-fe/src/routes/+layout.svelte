@@ -1,9 +1,10 @@
 <script lang="ts">
-	import '../app.css';
 	import type { Snippet } from 'svelte';
 	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
 	import { version as frontendVersion } from '$app/environment';
+
+	import '../app.css';
 
 	const { children, data }: { children: Snippet; data: PageData } = $props();
 

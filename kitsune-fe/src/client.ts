@@ -8,7 +8,7 @@ export default new HoudiniClient({
 		const session = getClientSession();
 		return {
 			headers: {
-				...session.headers
+				//...session.headers
 			}
 		};
 	}
