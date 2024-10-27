@@ -20,7 +20,7 @@
 
 {@render children()}
 
-<footer class="absolute bottom-3 left-3 text-sm">
+<footer class="text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3">
 	<p>
 		Backend version: {backendVersion}
 		<br />Frontend version: {frontendVersion}
@@ -31,7 +31,3 @@
 		<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
 	</span>
 </footer>
-
-<style lang="scss">
-	@use '../styles/mixins' as *;
-</style>

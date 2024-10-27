@@ -80,8 +80,10 @@
 	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
 </Dialog>
 
-<div class="flex h-screen w-screen flex-col lg:flex-row lg:place-content-evenly lg:items-center">
-	<div class="place-item-center flex flex-col max-lg:text-center">
+<div
+	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
+>
+	<div class="flex flex-col max-lg:place-items-center max-lg:text-center">
 		<img class="w-3/5" src="/kitsune_full.svg" alt="Kitsune logo" />
 
 		<h1>Federated microblogging</h1>
@@ -98,7 +100,7 @@
 		</ul>
 	</div>
 
-	<div class="basis-1/4">
+	<div class="basis-1/4 max-lg:m-5">
 		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
 			<label class="block" for="username">
 				Username
@@ -118,7 +120,7 @@
 					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
 					type="email"
 					name="email"
-					placeholder="hangaku@joinkitsune.org"
+					placeholder="hangaku@kabuki.dd"
 				/>
 			</label>
 
