@@ -16,7 +16,7 @@ RUN cargo build --bin kitsune
 FROM base AS frontend
 COPY kitsune-fe .
 WORKDIR kitsune-fe
-RUN npm i && npm run build
+RUN pnpm i && pnpm run build
 
 FROM alpine:latest
 WORKDIR app
