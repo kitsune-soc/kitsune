@@ -21,7 +21,7 @@ openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     "accept-string-booleans",
     "timing-resistant-secret-traits",
 ] }
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 url = "2.5.2"
