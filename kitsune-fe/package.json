@@ -10,15 +10,13 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "pnpm run test:e2e && pnpm run test:unit -- --run",
+		"test": "pnpm run test:unit -- --run",
 		"lint": "prettier --check . && eslint .",
 		"fmt": "prettier --write .",
-		"test:e2e": "playwright test",
 		"test:unit": "vitest"
 	},
 	"devDependencies": {
 		"@iconify-json/eos-icons": "^1.2.1",
-		"@playwright/test": "^1.48.1",
 		"@sveltejs/adapter-static": "^3.0.5",
 		"@sveltejs/kit": "^2.7.2",
 		"@sveltejs/vite-plugin-svelte": "4.0.0",
