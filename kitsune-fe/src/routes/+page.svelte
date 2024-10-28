@@ -77,7 +77,12 @@
 		{/each}
 	</ol>
 
-	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
+	<button
+		class="border-grey rounded border-2 px-2 py-1"
+		onclick={() => (registerErrorDialogOpen = false)}
+	>
+		Close
+	</button>
 </Dialog>
 
 <div
