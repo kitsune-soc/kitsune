@@ -20,7 +20,7 @@ fred = { workspace = true }
 futures-util = "0.3.31"
 garde = { workspace = true }
 http = "1.1.0"
-img-parts = "0.3.0"
+img-parts = "0.3.1"
 iso8601-timestamp = { workspace = true }
 kitsune-cache = { workspace = true }
 kitsune-captcha = { workspace = true }

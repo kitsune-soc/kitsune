@@ -15,7 +15,7 @@ logos = "0.14.2"
 [dev-dependencies]
 divan = "0.1.14"
 futures-executor = "0.3.31"
-insta = { version = "1.40.0", features = ["glob"] }
+insta = { version = "1.41.0", features = ["glob"] }
 pretty_assertions = "1.4.1"
 
 [lints]
