@@ -14,46 +14,36 @@
 		 *
 		 * @default 'primary'
 		 */
-		buttonType?: string;
+		buttonType?: 'primary' | 'secondary';
 		children: Snippet;
 	} & HTMLButtonAttributes = $props();
 
-	classNames += ` ${buttonType}`;
+	if (buttonType === 'primary') {
+		classNames += ` primary`; // ToDo: Port styles to tailwind
+	} else if (buttonType === 'secondary') {
+		classNames += ` border-solid border-2 bg-transparent`;
+	}
 </script>
 
-<button class={classNames} {...rest}>
+<button
+	class={classNames + ` min-h-1 cursor-pointer rounded p-2 transition duration-500`}
+	{...rest}
+>
 	{@render children()}
 </button>
 
 <style lang="scss">
 	@use '../../styles/colours' as *;
 
-	button {
-		transition: 0.5s;
-		cursor: pointer;
+	button:global(.primary) {
+		background-color: $shade1dark;
 
-		border: 0;
-		border-radius: 10px;
-
-		padding: 10px;
-		min-height: 50px;
-		font-size: 16px;
-
-		&:global(.primary) {
-			background-color: $shade1dark;
-
-			&:not(:hover) {
-				color: $dark1;
-			}
-
-			&:hover:not([disabled]) {
-				background-color: $shade2dark;
-			}
+		&:not(:hover) {
+			color: $dark1;
 		}
 
-		&:global(.secondary) {
-			border: 1px solid;
-			background-color: transparent;
+		&:hover:not([disabled]) {
+			background-color: $shade2dark;
 		}
 	}
 </style>
