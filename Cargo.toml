@@ -88,7 +88,7 @@ diesel = { version = "2.2.4", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
-diesel-async = { version = "0.5.0", features = [
+diesel-async = { version = "0.5.1", features = [
     "async-connection-wrapper",
     "bb8",
     "postgres",

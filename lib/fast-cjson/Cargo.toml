@@ -16,7 +16,7 @@ serde = "1.0.214"
 sonic-rs = { workspace = true }
 
 [dev-dependencies]
-divan = "0.1.14"
+divan = "0.1.15"
 mimalloc = "0.1.43"
 olpc-cjson = "0.1.4"
 proptest = { version = "1.5.0", default-features = false, features = ["std"] }

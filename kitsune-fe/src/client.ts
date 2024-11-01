@@ -5,7 +5,7 @@ export default new HoudiniClient({
 	url: `/graphql`,
 	plugins: [authPlugin],
 	fetchParams() {
-		const session = getClientSession();
+		//const session = getClientSession();
 		return {
 			headers: {
 				//...session.headers

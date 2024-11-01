@@ -14,6 +14,7 @@ export default {
 					'2': '#2b233a',
 					'3': '#042f40'
 				}
+				// ToDo: Port rest of colour palette over
 			}
 		}
 	},
