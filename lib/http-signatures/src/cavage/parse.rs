@@ -1,4 +1,5 @@
 use super::{SignatureHeader, SignatureHeaderBuilder, SignatureHeaderBuilderError};
+use lexical_parse_integer::FromLexical;
 use logos::{Lexer, Logos, Span};
 use miette::{Diagnostic, SourceSpan};
 use thiserror::Error;
@@ -161,12 +162,12 @@ pub fn parse(
             }
             "created" => {
                 builder.created(
-                    atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
+                    u64::from_lexical(value.as_bytes()).map_err(|_| ParseError::Radix10Parse)?,
                 );
             }
             "expires" => {
                 builder.expires(
-                    atoi_radix10::parse_from_str(value).map_err(|_| ParseError::Radix10Parse)?,
+                    u64::from_lexical(value.as_bytes()).map_err(|_| ParseError::Radix10Parse)?,
                 );
             }
             _ => {

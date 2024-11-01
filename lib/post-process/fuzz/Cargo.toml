@@ -8,7 +8,7 @@ publish = false
 cargo-fuzz = true
 
 [dependencies]
-futures-executor = "0.3.30"
+futures-executor = "0.3.31"
 libfuzzer-sys = "0.4"
 
 [dependencies.post-process]

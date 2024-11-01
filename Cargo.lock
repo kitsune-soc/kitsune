@@ -500,12 +500,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atoi_radix10"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6970a22a33d6a8f862aac371bac48505a1bfaa230ecb268c7b86fa4ac6e7121"
-
-[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2811,7 +2805,6 @@ checksum = "08a397c49fec283e3d6211adbe480be95aae5f304cfb923e9970e08956d5168a"
 name = "http-signatures"
 version = "0.0.1-pre.6"
 dependencies = [
- "atoi_radix10",
  "base64-simd",
  "blowocking",
  "const-oid",
@@ -2820,6 +2813,7 @@ dependencies = [
  "http",
  "httpdate",
  "itertools 0.13.0",
+ "lexical-parse-integer",
  "logos",
  "miette",
  "pkcs8",
@@ -4159,6 +4153,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "lexical-parse-integer"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5df98f4a4ab53bf8b175b363a34c7af608fe31f93cc1fb1bf07130622ca4ef61"
+dependencies = [
+ "lexical-util",
+ "static_assertions",
+]
+
+[[package]]
+name = "lexical-util"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85314db53332e5c192b6bca611fb10c114a80d1b831ddac0af1e9be1b9232ca0"
+dependencies = [
+ "static_assertions",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.161"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4288,8 +4301,8 @@ dependencies = [
 name = "masto-id-convert"
 version = "0.0.1-pre.6"
 dependencies = [
- "atoi_radix10",
  "divan",
+ "lexical-parse-integer",
  "nanorand",
  "time",
  "uuid",
