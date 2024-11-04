@@ -4054,6 +4054,7 @@ dependencies = [
  "kitsune-config",
  "kitsune-derive",
  "kitsune-error",
+ "kitsune-http-client",
  "kitsune-type",
  "mrf-manifest",
  "redb",
