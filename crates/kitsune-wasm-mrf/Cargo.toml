@@ -14,6 +14,7 @@ derive_more = { version = "1.0.0", features = ["from"] }
 enum_dispatch = "0.3.13"
 fred = { workspace = true }
 futures-util = { version = "0.3.31", default-features = false, features = ["alloc"] }
+http-body-util = "0.1.2"
 kitsune-config = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }

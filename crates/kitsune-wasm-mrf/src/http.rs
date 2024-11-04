@@ -4,7 +4,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
-use kitsune_http_client::http_body_util::{BodyDataStream, BodyExt};
+use http_body_util::{BodyDataStream, BodyExt};
 use wasmtime::component::Resource;
 
 pub type Body = BodyDataStream<kitsune_http_client::ResponseBody>;

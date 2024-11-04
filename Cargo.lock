@@ -4052,6 +4052,7 @@ dependencies = [
  "enum_dispatch",
  "fred",
  "futures-util",
+ "http-body-util",
  "kitsune-config",
  "kitsune-derive",
  "kitsune-error",
