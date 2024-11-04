@@ -3701,6 +3701,7 @@ dependencies = [
  "asynk-strim",
  "bytes",
  "futures-util",
+ "http",
  "http-body",
  "http-body-util",
  "http-signatures",

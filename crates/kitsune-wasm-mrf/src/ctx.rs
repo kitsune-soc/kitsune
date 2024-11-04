@@ -10,8 +10,6 @@ use wasmtime::{
 };
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 
-const TABLE_ELEMENT_SIZE: usize = std::mem::size_of::<usize>();
-
 pub struct KvContext {
     pub module_name: Option<String>,
     pub storage: Arc<kv_storage::BackendDispatch>,
@@ -30,13 +28,13 @@ impl KvContext {
 
 pub struct HttpContext {
     pub client: kitsune_http_client::Client,
-    pub bodies: Slab<todo!()>,
+    pub bodies: Slab<crate::http::Body>,
 }
 
 impl HttpContext {
     #[inline]
-    pub fn get_body(&self, rep: &Resource<http::ResponseBody>) -> &todo!() {
-        &self.bodies[rep.rep() as usize]
+    pub fn get_body(&mut self, rep: &Resource<http::ResponseBody>) -> &mut crate::http::Body {
+        &mut self.bodies[rep.rep() as usize]
     }
 }
 

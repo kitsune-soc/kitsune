@@ -4,12 +4,12 @@
 use self::util::BoxCloneService;
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
+use http::HeaderValue;
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
     body::Bytes,
     header::{HeaderName, USER_AGENT},
-    http::{self, HeaderValue},
     HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
 };
 use hyper_rustls::HttpsConnectorBuilder;
@@ -36,6 +36,12 @@ const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
 
 /// Alias for our internal HTTP body type
 pub use self::body::Body;
+
+/// Response body type
+pub type ResponseBody = BoxBody;
+
+pub use ::http;
+pub use ::http_body_util;
 
 /// Client error type
 pub struct Error {

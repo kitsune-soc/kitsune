@@ -13,9 +13,7 @@ color-eyre = "0.6.3"
 derive_more = { version = "1.0.0", features = ["from"] }
 enum_dispatch = "0.3.13"
 fred = { workspace = true }
-futures-util = { version = "0.3.31", default-features = false, features = [
-    "alloc",
-] }
+futures-util = { version = "0.3.31", default-features = false, features = ["alloc"] }
 kitsune-config = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
