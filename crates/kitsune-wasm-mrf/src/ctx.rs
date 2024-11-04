@@ -1,11 +1,16 @@
-use crate::{kv_storage, mrf_wit::v1::fep::mrf::keyvalue};
+use crate::{
+    kv_storage,
+    mrf_wit::v1::fep::mrf::{http, keyvalue},
+};
 use slab::Slab;
 use triomphe::Arc;
 use wasmtime::{
     component::{Resource, ResourceTable},
-    Engine, Store,
+    Engine, Store, StoreLimits, StoreLimitsBuilder,
 };
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
+
+const TABLE_ELEMENT_SIZE: usize = std::mem::size_of::<usize>();
 
 pub struct KvContext {
     pub module_name: Option<String>,
@@ -23,8 +28,22 @@ impl KvContext {
     }
 }
 
+pub struct HttpContext {
+    pub client: kitsune_http_client::Client,
+    pub bodies: Slab<todo!()>,
+}
+
+impl HttpContext {
+    #[inline]
+    pub fn get_body(&self, rep: &Resource<http::ResponseBody>) -> &todo!() {
+        &self.bodies[rep.rep() as usize]
+    }
+}
+
 pub struct Context {
+    pub http_ctx: HttpContext,
     pub kv_ctx: KvContext,
+    pub resource_limiter: StoreLimits,
     pub resource_table: ResourceTable,
     pub wasi_ctx: WasiCtx,
 }
@@ -50,16 +69,26 @@ pub fn construct_store(
         .allow_udp(false)
         .build();
 
-    Store::new(
-        engine,
-        Context {
-            kv_ctx: KvContext {
-                module_name: None,
-                storage,
-                buckets: Slab::new(),
-            },
-            resource_table: ResourceTable::new(),
-            wasi_ctx,
+    let data = Context {
+        http_ctx: HttpContext {
+            client: kitsune_http_client::Client::builder()
+                .content_length_limit(None)
+                .build(),
+            bodies: Slab::new(),
         },
-    )
+        kv_ctx: KvContext {
+            module_name: None,
+            storage,
+            buckets: Slab::new(),
+        },
+        resource_limiter: StoreLimitsBuilder::new()
+            .memory_size(100 * 1024 * 1024)
+            .build(),
+        resource_table: ResourceTable::new(),
+        wasi_ctx,
+    };
+
+    let mut store = Store::new(engine, data);
+    store.limiter(|store| &mut store.resource_limiter);
+    store
 }
