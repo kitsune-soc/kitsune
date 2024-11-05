@@ -1,7 +1,8 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-#[derive(Clone, Copy, PartialEq, ValueEnum)]
+#[derive(Clone, Copy, Default, PartialEq, ValueEnum)]
 pub enum SignatureScheme {
+    #[default]
     Cavage,
 }
 
@@ -11,12 +12,7 @@ pub struct ParseHeaderArgs {
     pub header: String,
 
     /// The scheme this header uses
-    #[arg(
-        default_value_t = SignatureScheme::Cavage,
-        long,
-        short,
-        value_enum,
-    )]
+    #[arg(default_value_t, long, short, value_enum)]
     pub scheme: SignatureScheme,
 }
 

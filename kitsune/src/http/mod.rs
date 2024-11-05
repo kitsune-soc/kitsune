@@ -1,32 +1,20 @@
-use self::handler::{
-    confirm_account, custom_emojis, media, nodeinfo, oauth, posts, public, users, well_known,
-};
 use crate::state::Zustand;
 use axum::{
     body::HttpBody,
-    extract::DefaultBodyLimit,
     response::{Html, IntoResponse},
-    Router,
 };
 use bytes::Bytes;
-use color_eyre::eyre::{self, Context};
-use cursiv::CsrfLayer;
+use color_eyre::eyre;
 use http::{HeaderName, StatusCode};
 use http_body_util::Either;
 use kitsune_config::server;
-use std::{convert::Infallible, time::Duration};
+use std::convert::Infallible;
 use tokio::net::TcpListener;
 use tower::{BoxError, Service, ServiceExt};
 use tower_http::{
-    catch_panic::CatchPanicLayer,
-    cors::CorsLayer,
-    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
     services::{ServeDir, ServeFile},
-    timeout::TimeoutLayer,
     trace::{HttpMakeClassifier, MakeSpan, TraceLayer},
 };
-use tower_stop_using_brave::StopUsingBraveLayer;
-use tower_x_clacks_overhead::XClacksOverheadLayer;
 
 const FALLBACK_FALLBACK_INDEX: &str = include_str!("../../templates/fallback-fallback.html");
 
@@ -42,6 +30,7 @@ mod responder;
 mod util;
 
 pub mod extractor;
+pub mod router;
 
 #[inline]
 fn serve_frontend<B>(
@@ -83,7 +72,7 @@ where
 #[inline]
 fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> {
     TraceLayer::new_for_http().make_span_with(|request: &http::Request<B>| {
-        debug_span!(
+        info_span!(
             "request",
             method = %request.method(),
             uri = %request.uri(),
@@ -93,81 +82,13 @@ fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> 
     })
 }
 
-pub fn create_router(
-    state: Zustand,
-    server_config: &server::Configuration,
-) -> eyre::Result<Router> {
-    // This warning will come up if the server is compiled without the Mastodon API compatibility
-    #[allow(unused_mut)]
-    let mut router = Router::new()
-        .nest("/confirm-account", confirm_account::routes())
-        .nest("/emojis", custom_emojis::routes())
-        .nest("/media", media::routes())
-        .nest("/nodeinfo", nodeinfo::routes())
-        .nest(
-            "/oauth",
-            oauth::routes().layer(axum::middleware::from_fn(middleware::json_to_urlencoded)),
-        )
-        .nest("/posts", posts::routes())
-        .nest("/users", users::routes())
-        .nest("/.well-known", well_known::routes())
-        .nest("/public", public::routes());
-
-    #[cfg(feature = "oidc")]
-    {
-        router = router.nest("/oidc", handler::oidc::routes());
-    }
-
-    #[cfg(feature = "graphql-api")]
-    {
-        router = router.merge(graphql::routes(state.clone()));
-    }
-
-    #[cfg(feature = "mastodon-api")]
-    {
-        router = router.merge(handler::mastodon::routes());
-    }
-
-    router = router.fallback_service(serve_frontend(server_config));
-
-    if !server_config.clacks_overhead.is_empty() {
-        let clacks_overhead_layer =
-            XClacksOverheadLayer::new(server_config.clacks_overhead.iter().map(AsRef::as_ref))
-                .wrap_err("Invalid clacks overhead values")?;
-
-        router = router.layer(clacks_overhead_layer);
-    }
-
-    if server_config.deny_brave_browsers {
-        router = router.layer(StopUsingBraveLayer::default());
-    }
-
-    Ok(router
-        .layer(CatchPanicLayer::new())
-        .layer(CorsLayer::permissive())
-        .layer(CsrfLayer::generate()) // TODO: Make this configurable instead of random
-        .layer(DefaultBodyLimit::max(
-            server_config.max_upload_size.to_bytes() as usize,
-        ))
-        .layer(TimeoutLayer::new(Duration::from_secs(
-            server_config.request_timeout_secs,
-        )))
-        .layer(trace_layer())
-        .layer(PropagateRequestIdLayer::new(X_REQUEST_ID.clone()))
-        .layer(SetRequestIdLayer::new(
-            X_REQUEST_ID.clone(),
-            MakeRequestUuid,
-        ))
-        .with_state(state))
-}
-
 #[instrument(skip_all, fields(port = %server_config.port))]
 pub async fn run(
     state: Zustand,
     server_config: server::Configuration,
     shutdown_signal: crate::signal::Receiver,
 ) -> eyre::Result<()> {
-    let router = create_router(state, &server_config)?;
+    let router = router::create(state, &server_config)?;
     let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
 
     axum::serve(listener, router)

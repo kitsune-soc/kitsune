@@ -4,9 +4,10 @@
 
 use crate::StorageBackend;
 use bytes::Bytes;
-use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt};
 use kitsune_error::Result;
 use std::path::PathBuf;
+use std::pin::pin;
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
@@ -44,8 +45,8 @@ impl StorageBackend for Storage {
     where
         T: Stream<Item = Result<Bytes>> + Send + Sync + 'static,
     {
+        let mut input_stream = pin!(input_stream);
         let mut file = File::create(self.storage_dir.join(path)).await?;
-        pin_mut!(input_stream);
         while let Some(chunk) = input_stream.next().await.transpose()? {
             file.write_all(&chunk).await?;
         }

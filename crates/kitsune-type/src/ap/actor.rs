@@ -2,6 +2,7 @@ use super::object::MediaAttachment;
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, skip_serializing_none};
 use sonic_rs::Value;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -23,58 +24,59 @@ impl ActorType {
     }
 }
 
+#[serde_as]
+#[skip_serializing_none]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
     #[serde(default, rename = "@context")]
     pub context: Value,
+
     pub id: String,
-    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::FirstOk")]
     pub r#type: ActorType,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub name: Option<String>,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::First")]
     pub preferred_username: String,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub subject: Option<String>,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub icon: Option<MediaAttachment>,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub image: Option<MediaAttachment>,
+
     #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+    #[serde_as(as = "jsonld::serde::First")]
     pub manually_approves_followers: bool,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::First")]
     pub public_key: PublicKey,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub endpoints: Option<Endpoints>,
-    #[serde(default)]
-    #[serde(
-        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
-    )]
+
+    #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub featured: Option<String>,
-    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::First")]
     pub inbox: String,
-    #[serde(default)]
-    #[serde(
-        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
-    )]
+
+    #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub outbox: Option<String>,
-    #[serde(default)]
-    #[serde(
-        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
-    )]
+
+    #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub followers: Option<String>,
-    #[serde(default)]
-    #[serde(
-        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
-    )]
+
+    #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub following: Option<String>,
+
     #[serde(default = "Timestamp::now_utc")]
     pub published: Timestamp,
 }
@@ -85,22 +87,25 @@ impl RdfNode for Actor {
     }
 }
 
+#[serde_as]
+#[skip_serializing_none]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Endpoints {
-    #[serde(default)]
-    #[serde(
-        deserialize_with = "jsonld::serde::Optional::<jsonld::serde::FirstId<_>>::deserialize"
-    )]
+    #[serde_as(as = "Option<jsonld::serde::First<jsonld::serde::Id>>")]
     pub shared_inbox: Option<String>,
 }
 
+#[serde_as]
+#[skip_serializing_none]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKey {
     pub id: String,
-    #[serde(deserialize_with = "jsonld::serde::FirstId::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::First<jsonld::serde::Id>")]
     pub owner: String,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+
+    #[serde_as(as = "jsonld::serde::First")]
     pub public_key_pem: String,
 }

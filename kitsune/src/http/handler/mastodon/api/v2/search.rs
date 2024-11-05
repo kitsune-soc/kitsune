@@ -1,9 +1,8 @@
 use crate::{
     consts::default_limit,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
-    state::Zustand,
 };
-use axum::{debug_handler, extract::State, routing, Json, Router};
+use axum::{debug_handler, extract::State, Json};
 use axum_extra::{either::Either, extract::Query};
 use http::StatusCode;
 use kitsune_core::consts::API_MAX_LIMIT;
@@ -25,7 +24,7 @@ pub enum SearchType {
 }
 
 #[derive(Deserialize)]
-struct SearchQuery {
+pub struct SearchQuery {
     #[serde(rename = "q")]
     query: String,
     r#type: Option<SearchType>,
@@ -39,8 +38,8 @@ struct SearchQuery {
     offset: u64,
 }
 
-#[debug_handler(state = Zustand)]
-async fn get(
+#[debug_handler(state = crate::state::Zustand)]
+pub async fn get(
     State(search_service): State<SearchService>,
     State(mastodon_mapper): State<MastodonMapper>,
     AuthExtractor(user_data): MastodonAuthExtractor,
@@ -81,8 +80,4 @@ async fn get(
     }
 
     Ok(Either::E1(Json(search_result)))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
 }

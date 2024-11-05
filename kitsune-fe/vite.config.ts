@@ -1,32 +1,19 @@
-import vue from '@vitejs/plugin-vue';
+import { sveltekit } from '@sveltejs/kit/vite';
 
-import path from 'node:path';
-import { ExternalFluentPlugin } from 'unplugin-fluent-vue/vite';
-import { defineConfig } from 'vite';
+import houdini from 'houdini/vite';
+import Icons from 'unplugin-icons/vite';
+import { defineConfig } from 'vitest/config';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          zxcvbnCommon: ['@zxcvbn-ts/language-common'],
-        },
-      },
-    },
-  },
-  plugins: [
-    vue(),
-    ExternalFluentPlugin({
-      locales: ['en', 'en-cyberpunk'],
-      checkSyntax: true,
-
-      baseDir: path.resolve('src'),
-      ftlDir: path.resolve('src/locales'),
-
-      getFtlPath(locale) {
-        return path.join('src/locales', `${locale}.ftl`);
-      },
-    }),
-  ],
+	plugins: [
+		houdini(),
+		sveltekit(),
+		Icons({
+			autoInstall: true,
+			compiler: 'svelte'
+		})
+	],
+	test: {
+		include: ['src/**/*.{test,spec}.{js,ts}']
+	}
 });

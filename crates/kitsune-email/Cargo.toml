@@ -17,7 +17,7 @@ kitsune-db = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-url = { workspace = true }
-lettre = { version = "0.11.7", default-features = false, features = [
+lettre = { version = "0.11.10", default-features = false, features = [
     "builder",
     "hostname",
     "pool",
@@ -32,7 +32,7 @@ mrml = { version = "4.0.1", default-features = false, features = [
 ] }
 speedy-uuid = { workspace = true }
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
+typed-builder = "0.20.0"
 
 [lints]
 workspace = true

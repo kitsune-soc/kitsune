@@ -2,7 +2,13 @@
 @use 'sass:map';
 
 @mixin only-on-mobile {
-  @media only screen and (max-width: map.get($breakpoints, md)) {
-    @content;
-  }
+	@media only screen and (max-width: map.get($breakpoints, md)) {
+		@content;
+	}
+}
+
+@mixin not-on-mobile {
+	@media not screen and (max-width: map.get($breakpoints, md)) {
+		@content;
+	}
 }

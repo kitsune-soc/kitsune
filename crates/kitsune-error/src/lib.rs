@@ -30,7 +30,7 @@ macro_rules! kitsune_error {
     };
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum ErrorType {
     BadRequest,
     Forbidden,
@@ -41,6 +41,7 @@ pub enum ErrorType {
 }
 
 impl ErrorType {
+    #[inline]
     #[must_use]
     pub fn with_body<B>(self, body: B) -> ErrorContext
     where
@@ -54,6 +55,7 @@ impl ErrorType {
 }
 
 impl From<ErrorType> for ErrorContext {
+    #[inline]
     fn from(value: ErrorType) -> Self {
         Self {
             ty: value,
@@ -76,6 +78,7 @@ pub struct Error {
 
 impl Error {
     #[inline]
+    #[track_caller]
     pub fn new<E>(ctx: ErrorContext, err: E) -> Self
     where
         E: Into<eyre::Report>,
@@ -121,15 +124,15 @@ impl<T> From<T> for Error
 where
     T: Into<eyre::Report>,
 {
+    #[inline]
+    #[track_caller]
     fn from(value: T) -> Self {
-        Self {
-            ctx: ErrorType::Other.into(),
-            inner: value.into(),
-        }
+        Self::new(ErrorType::Other.into(), value)
     }
 }
 
 impl From<Error> for BoxError {
+    #[inline]
     fn from(value: Error) -> Self {
         BoxError::from(value.inner)
     }

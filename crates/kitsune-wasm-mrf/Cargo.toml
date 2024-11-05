@@ -7,13 +7,13 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.81"
-blake3 = "1.5.1"
+async-trait = "0.1.83"
+blake3 = "1.5.4"
 color-eyre = "0.6.3"
-derive_more = { version = "1.0.0-beta.6", features = ["from"] }
+derive_more = { version = "1.0.0", features = ["from"] }
 enum_dispatch = "0.3.13"
 fred = { workspace = true }
-futures-util = { version = "0.3.30", default-features = false, features = [
+futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
 kitsune-config = { workspace = true }
@@ -21,15 +21,15 @@ kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-type = { workspace = true }
 mrf-manifest = { workspace = true, features = ["decode"] }
-redb = { version = "2.1.1", features = ["logging"] }
+redb = { version = "2.2.0", features = ["logging"] }
 slab = "0.4.9"
-smol_str = "0.2.2"
+smol_str = "0.3.2"
 sonic-rs = { workspace = true }
-tokio = { version = "1.38.0", features = ["fs"] }
+tokio = { workspace = true, features = ["fs"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 walkdir = "2.5.0"
-wasmtime = { version = "22.0.0", default-features = false, features = [
+wasmtime = { version = "26.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -38,13 +38,13 @@ wasmtime = { version = "22.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "22.0.0", default-features = false }
+wasmtime-wasi = { version = "26.0.0", default-features = false }
 
 [dev-dependencies]
-tempfile = "3.10.1"
-tokio = { version = "1.38.0", features = ["macros", "rt"] }
+tempfile = "3.13.0"
+tokio = { workspace = true, features = ["macros", "rt"] }
 tracing-subscriber = "0.3.18"
-wat = "1.213.0"
+wat = "1.219.1"
 
 [lints]
 workspace = true

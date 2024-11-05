@@ -1,0 +1,20 @@
+{
+  "@context": [
+    "https://join-lemmy.org/context.json",
+    "https://www.w3.org/ns/activitystreams"
+  ],
+  "type": "Person",
+  "id": "https://lemmy.world/u/erlend_sh",
+  "preferredUsername": "erlend_sh",
+  "inbox": "https://lemmy.world/u/erlend_sh/inbox",
+  "outbox": "https://lemmy.world/u/erlend_sh/outbox",
+  "publicKey": {
+    "id": "https://lemmy.world/u/erlend_sh#main-key",
+    "owner": "https://lemmy.world/u/erlend_sh",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvWz3qnXIYKOUY8shR5yQ\npSfJ+/KHwsEs7XAXo/noAihKe4wSlQG0Gj3FatIkG4aT85WyoRo5E1Od0gUsLNjV\ndAtwRG3jRja+5DixKjzBNz7hKyqSI6rNXIRPNErbVf9uiMbxfWM7ZGYNvn94v/SV\nQdJ6XN7enTeEaHm/RpTTMPZeLvC2jl9QiPkeTzHf2LLlaDto8qV2IS4hIfNPC+L4\n6rg5FPU3dMNKru7WhGelycmaikyzsX63WkOEg1OeAzfsJuhRM+6Hn56SD9Ob2zNm\nOXlMpbRcQHnj/ZM6nv9d7uLFydm67ZphA4UtkzaZgdSiRQgvZOcxQTgHqfJVSbUq\n5QIDAQAB\n-----END PUBLIC KEY-----\n"
+  },
+  "endpoints": {
+    "sharedInbox": "https://lemmy.world/inbox"
+  },
+  "published": "2023-06-21T07:18:17.237245Z"
+}

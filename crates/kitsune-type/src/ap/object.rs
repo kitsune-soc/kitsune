@@ -1,26 +1,36 @@
 use crate::jsonld;
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, skip_serializing_none};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MediaAttachmentType {
     Audio,
     Document,
     Image,
+    Link,
     Video,
+
+    #[serde(other)]
+    Other,
 }
 
+#[serde_as]
+#[skip_serializing_none]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaAttachment {
-    #[serde(deserialize_with = "jsonld::serde::FirstOk::deserialize")]
+    #[serde_as(as = "jsonld::serde::FirstOk")]
     pub r#type: MediaAttachmentType,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub name: Option<String>,
+
     pub media_type: Option<String>,
-    #[serde(default)]
-    #[serde(deserialize_with = "jsonld::serde::Optional::<jsonld::serde::First<_>>::deserialize")]
+
+    #[serde_as(as = "Option<jsonld::serde::First>")]
     pub blurhash: Option<String>,
-    #[serde(deserialize_with = "jsonld::serde::First::deserialize")]
+
+    #[serde(alias = "href")]
+    #[serde_as(as = "jsonld::serde::First")]
     pub url: String,
 }

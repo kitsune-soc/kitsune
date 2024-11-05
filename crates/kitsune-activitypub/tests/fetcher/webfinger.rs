@@ -19,7 +19,7 @@ use triomphe::Arc;
 #[tokio::test]
 async fn fetch_actor_with_custom_acct() {
     database_test(|db_pool| async move {
-        let jrd_base = include_bytes!("../../../../test-fixtures/0x0_jrd.json");
+        let jrd_base = include_bytes!("../../../../test-fixtures/activitypub/0x0_jrd.json");
         let jrd_body = sonic_rs::to_string(&Resource {
             subject: "acct:0x0@joinkitsune.org".into(),
             ..sonic_rs::from_slice(jrd_base).unwrap()

@@ -2,7 +2,7 @@ use color_eyre::eyre::{self, Result};
 use std::path::Path;
 use wasmtime::component::Component;
 
-const CACHE_TABLE: redb::TableDefinition<'static, [u8; blake3::OUT_LEN], &'static [u8]> =
+const CACHE_TABLE: redb::TableDefinition<'_, [u8; blake3::OUT_LEN], &[u8]> =
     redb::TableDefinition::new("wasm_cache");
 
 pub struct Cache {

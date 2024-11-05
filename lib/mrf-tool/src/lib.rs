@@ -43,7 +43,7 @@ where
     F: Filesystem,
 {
     // Parse the manifest and re-encode it in canonical JSON
-    let parsed_manifest = serde_json::from_slice(manifest)?;
+    let parsed_manifest = sonic_rs::from_slice(manifest)?;
     let custom_section = mrf_manifest::encode(&parsed_manifest)?;
 
     let mut file = fs.open_append(module_path)?;

@@ -3,6 +3,11 @@ extend-ignore-words-re = ["guid"]
 
 [files]
 extend-exclude = [
+    # Exclude all test fixtures
+    "crates/kitsune-type/tests/actors/*",
+    "crates/kitsune-type/tests/objects/*",
+    "test-fixtures/*",
+
     "crates/kitsune-language/examples/basic.rs",
     "crates/kitsune-language/src/map.rs",
 
@@ -11,6 +16,7 @@ extend-exclude = [
     "crates/kitsune-wasm-mrf/wit/wasi-keyvalue",
     "crates/kitsune-wasm-mrf/wit/wasi-logging",
 
+    "lib/fast-cjson/benches/*.json",
     "lib/http-signatures/tests/data.rs",
     "lib/post-process/tests/input/*",
 

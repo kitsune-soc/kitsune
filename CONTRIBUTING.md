@@ -9,7 +9,7 @@ Our tech stack mainly consists of the following:
 
 - Rust
 - PostgreSQL
-- Vue
+- SvelteKit
 - TypeScript
 - SCSS
 

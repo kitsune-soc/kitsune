@@ -15,12 +15,12 @@ mrf-manifest = { workspace = true, features = [
     "encode",
     "serialise",
 ] }
-serde_json = "1.0.120"
-wasmparser = "0.213.0"
+sonic-rs = { workspace = true }
+wasmparser = "0.219.1"
 
 [lints]
 workspace = true
 
 [dev-dependencies]
-serde_json = "1.0.120"
-wat = "1.213.0"
+sonic-rs = { workspace = true }
+wat = "1.219.1"

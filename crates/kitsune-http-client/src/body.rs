@@ -28,12 +28,14 @@ pub enum Body {
 
 impl Body {
     /// Empty body
+    #[inline]
     #[must_use]
     pub fn empty() -> Self {
         Self::Empty
     }
 
     /// Single byte chunk body
+    #[inline]
     pub fn data<D>(data: D) -> Self
     where
         D: Into<Bytes>,
@@ -42,6 +44,7 @@ impl Body {
     }
 
     /// Stream body
+    #[inline]
     pub fn stream<S>(stream: S) -> Self
     where
         S: TryStream + Send + 'static,
@@ -58,6 +61,7 @@ impl Body {
 }
 
 impl Debug for Body {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(std::any::type_name::<Self>())
             .finish_non_exhaustive()
@@ -65,24 +69,28 @@ impl Debug for Body {
 }
 
 impl From<Bytes> for Body {
+    #[inline]
     fn from(value: Bytes) -> Self {
         Self::data(value)
     }
 }
 
 impl From<Cow<'_, str>> for Body {
+    #[inline]
     fn from(value: Cow<'_, str>) -> Self {
         Self::data(value.into_owned())
     }
 }
 
 impl From<String> for Body {
+    #[inline]
     fn from(value: String) -> Self {
         Self::data(value)
     }
 }
 
 impl From<Vec<u8>> for Body {
+    #[inline]
     fn from(value: Vec<u8>) -> Self {
         Self::data(value)
     }
@@ -92,6 +100,7 @@ impl http_body::Body for Body {
     type Data = Bytes;
     type Error = BoxError;
 
+    #[inline]
     fn poll_frame(
         self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,

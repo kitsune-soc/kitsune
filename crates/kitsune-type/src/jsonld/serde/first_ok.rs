@@ -3,12 +3,15 @@ use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{
-    self,
-    value::{EnumAccessDeserializer, MapAccessDeserializer},
-    Deserialize, DeserializeSeed, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer,
-    MapAccess, SeqAccess,
+use serde::{
+    de::{
+        self,
+        value::{EnumAccessDeserializer, MapAccessDeserializer},
+        Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
+    },
+    Serialize,
 };
+use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
 
 // XXX: Conceptually, we could decompose it into `First` and a helper type that filters successfully
 // deserialised elements in a JSON-LD set. In practice, however, the latter type cannot be
@@ -23,57 +26,32 @@ use serde::de::{
 ///
 /// The detection of recoverable errors is a "best effort" check and won't work for maps for
 /// example, although it works for strings. It's suitable for tag-like fields like `"type"`.
-pub struct FirstOk<T> {
-    seed: T,
-}
+pub struct FirstOk<U = serde_with::Same>(PhantomData<U>);
 
-struct Visitor<T>(T);
+struct Visitor<T, U>(PhantomData<T>, PhantomData<U>);
 
-impl<'de, T> FirstOk<PhantomData<T>>
+impl<'de, T, U> DeserializeAs<'de, T> for FirstOk<U>
 where
     T: Deserialize<'de>,
+    U: DeserializeAs<'de, T>,
 {
-    pub fn new() -> Self {
-        Self::with_seed(PhantomData)
-    }
-
-    pub fn deserialize<D>(deserializer: D) -> Result<T, D::Error>
+    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Self::new().deserialize(deserializer)
+        deserializer.deserialize_any(Visitor(PhantomData::<T>, PhantomData::<U>))
     }
 }
 
-impl<'de, T> FirstOk<T>
+impl<T, U> SerializeAs<T> for FirstOk<U>
 where
-    T: DeserializeSeed<'de> + Clone,
+    T: Serialize,
 {
-    pub fn with_seed(seed: T) -> Self {
-        Self { seed }
-    }
-}
-
-impl<'de, T> Default for FirstOk<PhantomData<T>>
-where
-    T: Deserialize<'de>,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for FirstOk<T>
-where
-    T: DeserializeSeed<'de> + Clone,
-{
-    type Value = T::Value;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    fn serialize_as<S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
     where
-        D: Deserializer<'de>,
+        S: serde::Serializer,
     {
-        deserializer.deserialize_any(Visitor(self.seed))
+        value.serialize(serializer)
     }
 }
 
@@ -83,21 +61,20 @@ macro_rules! forward_to_into_deserializer {
         where
             E: de::Error,
         {
-            self.0
-                .clone()
-                .deserialize(serde::de::IntoDeserializer::into_deserializer(v))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(v))
                 // No (deserialisable) element in the (single-value) set.
                 // Interpret it as equivalent to `null` according to the JSON-LD data model.
-                .or_else(|_: E| self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(())))
+                .or_else(|_: E| T::deserialize(serde::de::IntoDeserializer::into_deserializer(())))
         }
     )*};
 }
 
-impl<'de, T> de::Visitor<'de> for Visitor<T>
+impl<'de, T, U> de::Visitor<'de> for Visitor<T, U>
 where
-    T: DeserializeSeed<'de> + Clone,
+    T: Deserialize<'de>,
+    U: DeserializeAs<'de, T>,
 {
-    type Value = T::Value;
+    type Value = T;
 
     fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(super::EXPECTING_SET)
@@ -108,13 +85,16 @@ where
         A: SeqAccess<'de>,
     {
         loop {
-            match seq.next_element_seed(CatchError::<_, A::Error>::new(self.0.clone()))? {
+            match seq
+                .next_element::<DeserializeAsWrap<_, CatchError<_, A::Error>>>()?
+                .map(DeserializeAsWrap::into_inner)
+            {
                 Some(Ok(value)) => {
                     while let Some(IgnoredAny) = seq.next_element()? {}
                     return Ok(value);
                 }
                 Some(Err(_)) => {}
-                None => return self.0.deserialize(().into_deserializer()),
+                None => return T::deserialize(().into_deserializer()),
             }
         }
     }
@@ -123,62 +103,58 @@ where
     where
         E: de::Error,
     {
-        self.0
-            .clone()
-            .deserialize(de::value::BorrowedStrDeserializer::new(v))
-            .or_else(|_: E| self.0.deserialize(().into_deserializer()))
+        T::deserialize(de::value::BorrowedStrDeserializer::new(v))
+            .or_else(|_: E| T::deserialize(().into_deserializer()))
     }
 
     fn visit_borrowed_bytes<E>(self, v: &'de [u8]) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        self.0
-            .clone()
-            .deserialize(de::value::BorrowedBytesDeserializer::new(v))
-            .or_else(|_: E| self.0.deserialize(().into_deserializer()))
+        T::deserialize(de::value::BorrowedBytesDeserializer::new(v))
+            .or_else(|_: E| T::deserialize(().into_deserializer()))
     }
 
     fn visit_none<E>(self) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        self.0.deserialize(().into_deserializer())
+        T::deserialize(().into_deserializer())
     }
 
     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        FirstOk::with_seed(self.0).deserialize(deserializer)
+        FirstOk::<U>::deserialize_as(deserializer)
     }
 
     fn visit_unit<E>(self) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        self.0.deserialize(().into_deserializer())
+        T::deserialize(().into_deserializer())
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        FirstOk::with_seed(self.0).deserialize(deserializer)
+        FirstOk::<U>::deserialize_as(deserializer)
     }
 
     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
-        self.0.deserialize(MapAccessDeserializer::new(map))
+        T::deserialize(MapAccessDeserializer::new(map))
     }
 
     fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
     where
         A: EnumAccess<'de>,
     {
-        self.0.deserialize(EnumAccessDeserializer::new(data))
+        T::deserialize(EnumAccessDeserializer::new(data))
     }
 
     forward_to_into_deserializer! {
@@ -206,6 +182,7 @@ where
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
+    use serde_with::{DeserializeAs, Same};
 
     use super::super::into_deserializer;
     use super::FirstOk;
@@ -217,7 +194,10 @@ mod tests {
             A,
         }
         let data = "A";
-        assert_eq!(FirstOk::deserialize(into_deserializer(data)), Ok(Test::A));
+        assert_eq!(
+            FirstOk::<Same>::deserialize_as(into_deserializer(data)),
+            Ok(Test::A)
+        );
     }
 
     #[test]
@@ -229,7 +209,7 @@ mod tests {
 
         let data = "B";
         assert_eq!(
-            FirstOk::deserialize(into_deserializer(data)),
+            FirstOk::<Same>::deserialize_as(into_deserializer(data)),
             Ok(None::<Test>)
         );
     }
@@ -243,7 +223,10 @@ mod tests {
         }
 
         let data = vec!["C", "B", "A"];
-        assert_eq!(FirstOk::deserialize(into_deserializer(data)), Ok(Test::B));
+        assert_eq!(
+            FirstOk::<Same>::deserialize_as(into_deserializer(data)),
+            Ok(Test::B)
+        );
     }
 
     #[test]
@@ -256,7 +239,7 @@ mod tests {
 
         let data = vec!["C", "D"];
         assert_eq!(
-            FirstOk::deserialize(into_deserializer(data)),
+            FirstOk::<Same>::deserialize_as(into_deserializer(data)),
             Ok(None::<Test>)
         );
     }

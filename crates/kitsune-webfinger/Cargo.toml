@@ -6,9 +6,9 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.81"
+async-trait = "0.1.83"
 fred = { workspace = true }
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 http = "1.1.0"
 kitsune-cache = { workspace = true }
 kitsune-core = { workspace = true }
@@ -22,11 +22,11 @@ urlencoding = "2.1.3"
 
 [dev-dependencies]
 http-body-util = "0.1.2"
-hyper = "1.4.1"
-pretty_assertions = "1.4.0"
+hyper = "1.5.0"
+pretty_assertions = "1.4.1"
 sonic-rs = { workspace = true }
-tokio = { version = "1.38.0", features = ["macros"] }
-tower = { version = "0.4.13", default-features = false, features = ["util"] }
+tokio = { workspace = true, features = ["macros"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]
 workspace = true

@@ -23,6 +23,7 @@ use std::{
     io,
     ops::ControlFlow,
     path::{Path, PathBuf},
+    pin::pin,
 };
 use tokio::fs;
 use triomphe::Arc;
@@ -184,7 +185,7 @@ impl MrfService {
             .wasm_component_model(true);
 
         let engine = Engine::new(&engine_config).map_err(eyre::Report::msg)?;
-        let wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
+        let mut wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
             .map_err(eyre::Report::from)
             .and_then(|(module_path, wasm_data)| {
                 let cache = cache.as_ref();
@@ -192,8 +193,7 @@ impl MrfService {
 
                 async move { load_mrf_module(cache, engine, &module_path, &wasm_data) }
             });
-
-        tokio::pin!(wasm_data_stream);
+        let mut wasm_data_stream = pin!(wasm_data_stream);
 
         let mut modules = Vec::new();
         while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
@@ -245,10 +245,9 @@ impl MrfService {
         direction: Direction,
         activity: Cow<'a, str>,
     ) -> Result<ControlFlow<(), Cow<'a, str>>, Error> {
-        let (mrf, _) =
-            mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
-                .await
-                .map_err(Error::msg)?;
+        let mrf = mrf_wit::v1::Mrf::instantiate_async(&mut store, &module.component, &self.linker)
+            .await
+            .map_err(Error::msg)?;
 
         store.data_mut().kv_ctx.module_name = Some(module.manifest.name.to_string());
 

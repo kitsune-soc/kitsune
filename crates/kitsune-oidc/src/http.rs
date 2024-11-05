@@ -1,9 +1,9 @@
 use http_body_util::BodyExt;
 use kitsune_http_client::Client as HttpClient;
-use once_cell::sync::Lazy;
 use openidconnect::{HttpRequest, HttpResponse};
+use std::sync::LazyLock;
 
-static HTTP_CLIENT: Lazy<HttpClient> = Lazy::new(HttpClient::default);
+static HTTP_CLIENT: LazyLock<HttpClient> = LazyLock::new(HttpClient::default);
 
 #[inline]
 pub async fn async_client(req: HttpRequest) -> Result<HttpResponse, kitsune_http_client::Error> {

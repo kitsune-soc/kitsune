@@ -2,12 +2,8 @@
 extern crate tracing;
 
 use retry_policies::{policies::ExponentialBackoff, Jitter, RetryDecision};
-use std::{
-    fmt::Debug,
-    future::Future,
-    ops::ControlFlow,
-    time::{Duration, SystemTime},
-};
+use std::{fmt::Debug, future::Future, ops::ControlFlow, time::SystemTime};
+use tokio::time::Duration;
 
 pub use retry_policies;
 

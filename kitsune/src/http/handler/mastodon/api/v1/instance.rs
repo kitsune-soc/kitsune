@@ -1,5 +1,4 @@
-use crate::state::Zustand;
-use axum::{extract::State, routing, Json, Router};
+use axum::{extract::State, Json};
 use kitsune_core::consts::VERSION;
 use kitsune_error::Result;
 use kitsune_service::instance::InstanceService;
@@ -9,7 +8,7 @@ use kitsune_type::mastodon::{
 };
 use kitsune_url::UrlService;
 
-async fn get(
+pub async fn get(
     State(instance_service): State<InstanceService>,
     State(url_service): State<UrlService>,
 ) -> Result<Json<Instance>> {
@@ -34,8 +33,4 @@ async fn get(
             domain_count,
         },
     }))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new().route("/", routing::get(get))
 }

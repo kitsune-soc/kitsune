@@ -52,7 +52,7 @@ fn chrono_to_timestamp(ts: chrono::DateTime<Utc>) -> iso8601_timestamp::Timestam
 }
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
-#[strum(serialize_all = "lowercase", use_phf)]
+#[strum(serialize_all = "lowercase")]
 pub enum OAuthScope {
     #[strum(message = "Read admin-related data", serialize = "admin:read")]
     AdminRead,

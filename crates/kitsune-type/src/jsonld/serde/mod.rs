@@ -8,15 +8,10 @@
 //! - A non-array value (`"value"`) and a single-value array of the same value (`["value"]`)
 //! - An empty array (`[]`), `null` and an absent entry
 //!
-//! The following helpers in the module deserialise a set as a sequence:
-//!
-//! - [`Set`]
-//! - [`IdSet`]
 //!
 //! The following helpers deserialise a single value or `null` from a set:
 //!
 //! - [`First`]
-//! - [`FirstId`]
 //! - [`FirstOk`]
 //!
 //! ## JSON-LD `@id`
@@ -28,8 +23,6 @@
 //! The following helpers deserialise the node identifier string(s):
 //!
 //! - [`Id`]
-//! - [`FirstId`]
-//! - [`IdSet`]
 
 macro_rules! forward_to_into_deserializer {
     (
@@ -40,7 +33,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::value::BorrowedStrDeserializer::new(v))
+            T::deserialize(serde::de::value::BorrowedStrDeserializer::new(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -52,7 +45,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::value::BorrowedBytesDeserializer::new(v))
+            T::deserialize(serde::de::value::BorrowedBytesDeserializer::new(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -64,7 +57,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(()))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(()))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -76,7 +69,7 @@ macro_rules! forward_to_into_deserializer {
         where
             D: serde::Deserializer<'de>,
         {
-            self.0.deserialize(deserializer)
+            T::deserialize(deserializer)
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -88,7 +81,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(()))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(()))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -100,7 +93,7 @@ macro_rules! forward_to_into_deserializer {
         where
             D: serde::Deserializer<'de>,
         {
-            self.0.deserialize(deserializer)
+            T::deserialize(deserializer)
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -112,7 +105,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::SeqAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::SeqAccessDeserializer::new(seq))
+            T::deserialize(serde::de::value::SeqAccessDeserializer::new(seq))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -124,7 +117,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::MapAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::MapAccessDeserializer::new(map))
+            T::deserialize(serde::de::value::MapAccessDeserializer::new(map))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -136,7 +129,7 @@ macro_rules! forward_to_into_deserializer {
         where
             A: serde::de::EnumAccess<'de>,
         {
-            self.0.deserialize(serde::de::value::EnumAccessDeserializer::new(data))
+            T::deserialize(serde::de::value::EnumAccessDeserializer::new(data))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -148,7 +141,7 @@ macro_rules! forward_to_into_deserializer {
         where
             E: serde::de::Error,
         {
-            self.0.deserialize(serde::de::IntoDeserializer::into_deserializer(v))
+            T::deserialize(serde::de::IntoDeserializer::into_deserializer(v))
         }
         forward_to_into_deserializer! { $($rest)* }
     };
@@ -156,99 +149,46 @@ macro_rules! forward_to_into_deserializer {
 }
 
 mod first;
-mod first_id;
 mod first_ok;
 mod id;
-mod id_set;
-mod optional;
-mod set;
 
-pub use self::first::First;
-pub use self::first_id::FirstId;
-pub use self::first_ok::FirstOk;
-pub use self::id::Id;
-pub use self::id_set::IdSet;
-pub use self::optional::Optional;
-pub use self::set::Set;
+pub use self::{first::First, first_ok::FirstOk, id::Id};
 
 use core::{
     fmt::{self, Formatter},
     marker::PhantomData,
 };
-use serde::de::{
-    self,
-    value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
-    DeserializeSeed, Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+use serde::{
+    de::{
+        self,
+        value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+        Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+    },
+    Deserialize,
 };
+use serde_with::DeserializeAs;
 
 const EXPECTING_SET: &str = "a JSON-LD set";
 
-/// A wrapper to implement `IntoDeserializer` for an `impl Deserializer`, because Serde somehow
-/// doesn't provide a blanket impl.
-struct DeserializerIntoDeserializer<D>(D);
-
 /// A `DeserializeSeed` that catches a recoverable error and returns it as a successful value.
 struct CatchError<T, E> {
-    seed: T,
+    target: PhantomData<T>,
     marker: PhantomData<fn() -> E>,
 }
 
-struct OptionSeed<T>(Option<T>);
-
-impl<'de, D> IntoDeserializer<'de, D::Error> for DeserializerIntoDeserializer<D>
+impl<'de, T, E> DeserializeAs<'de, Result<T, E>> for CatchError<T, E>
 where
-    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+    E: de::Error,
 {
-    type Deserializer = D;
-
-    fn into_deserializer(self) -> Self::Deserializer {
-        self.0
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for &mut OptionSeed<T>
-where
-    T: DeserializeSeed<'de>,
-{
-    type Value = Option<T::Value>;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    fn deserialize_as<D>(deserializer: D) -> Result<Result<T, E>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        if let Some(seed) = self.0.take() {
-            seed.deserialize(deserializer).map(Some)
-        } else {
-            Ok(None)
-        }
-    }
-}
-
-impl<'de, T, E> CatchError<T, E>
-where
-    T: DeserializeSeed<'de>,
-    E: de::Error,
-{
-    pub fn new(seed: T) -> Self {
-        Self {
-            seed,
+        deserializer.deserialize_any(CatchError {
+            target: PhantomData,
             marker: PhantomData,
-        }
-    }
-}
-
-impl<'de, T, E> DeserializeSeed<'de> for CatchError<T, E>
-where
-    T: DeserializeSeed<'de>,
-    E: de::Error,
-{
-    type Value = Result<T::Value, E>;
-
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_any(self)
+        })
     }
 }
 
@@ -257,17 +197,17 @@ macro_rules! catch_error_forward_to_into_deserializer {
         fn $name<E2>(self, v: $T) -> Result<Self::Value, E2> {
             // We can tell that the error isn't fatal to the deserialiser because it's originated
             // from the already deserialised value `$t` rather than the deserialiser.
-            Ok(self.seed.deserialize(serde::de::IntoDeserializer::into_deserializer(v)))
+            Ok(T::deserialize(serde::de::IntoDeserializer::into_deserializer(v)))
         }
     )*};
 }
 
 impl<'de, T, E> Visitor<'de> for CatchError<T, E>
 where
-    T: DeserializeSeed<'de>,
+    T: Deserialize<'de>,
     E: de::Error,
 {
-    type Value = Result<T::Value, E>;
+    type Value = Result<T, E>;
 
     fn expecting(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str("a value")
@@ -277,40 +217,36 @@ where
     where
         E: de::Error,
     {
-        Ok(self
-            .seed
-            .deserialize(de::value::BorrowedStrDeserializer::new(v)))
+        Ok(T::deserialize(de::value::BorrowedStrDeserializer::new(v)))
     }
 
     fn visit_borrowed_bytes<E2>(self, v: &'de [u8]) -> Result<Self::Value, E2>
     where
         E: de::Error,
     {
-        Ok(self
-            .seed
-            .deserialize(de::value::BorrowedBytesDeserializer::new(v)))
+        Ok(T::deserialize(de::value::BorrowedBytesDeserializer::new(v)))
     }
 
     fn visit_none<E2>(self) -> Result<Self::Value, E2> {
-        Ok(self.seed.deserialize(().into_deserializer()))
+        Ok(T::deserialize(().into_deserializer()))
     }
 
     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.deserialize(deserializer)
+        Self::deserialize_as(deserializer)
     }
 
     fn visit_unit<E2>(self) -> Result<Self::Value, E2> {
-        Ok(self.seed.deserialize(().into_deserializer()))
+        Ok(T::deserialize(().into_deserializer()))
     }
 
     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.deserialize(deserializer)
+        Self::deserialize_as(deserializer)
     }
 
     // XXX: The following methods cannot determine whether an error is recoverable. While we might
@@ -322,27 +258,21 @@ where
     where
         A: SeqAccess<'de>,
     {
-        self.seed
-            .deserialize(SeqAccessDeserializer::new(seq))
-            .map(Ok)
+        Self::deserialize_as(SeqAccessDeserializer::new(seq))
     }
 
     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
-        self.seed
-            .deserialize(MapAccessDeserializer::new(map))
-            .map(Ok)
+        Self::deserialize_as(MapAccessDeserializer::new(map))
     }
 
     fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
     where
         A: EnumAccess<'de>,
     {
-        self.seed
-            .deserialize(EnumAccessDeserializer::new(data))
-            .map(Ok)
+        Self::deserialize_as(EnumAccessDeserializer::new(data))
     }
 
     catch_error_forward_to_into_deserializer! {
@@ -377,8 +307,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{First, FirstId, FirstOk, IdSet, Optional};
+    use super::{First, FirstOk, Id};
     use serde::Deserialize;
+    use serde_with::{serde_as, OneOrMany};
 
     /// Checks that the types work for some random real-world-ish use cases.
     #[test]
@@ -388,25 +319,26 @@ mod tests {
             Note,
         }
 
+        #[serde_as]
         #[derive(Debug, Deserialize, PartialEq)]
         #[serde(rename_all = "camelCase")]
         struct Object {
             id: String,
-            #[serde(deserialize_with = "FirstOk::deserialize")]
+            #[serde_as(as = "FirstOk")]
             r#type: Type,
-            #[serde(deserialize_with = "FirstId::deserialize")]
+            #[serde_as(as = "First<Id>")]
             attributed_to: String,
             #[serde(default)]
-            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
+            #[serde_as(as = "Option<First>")]
             summary: Option<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "Optional::<First<_>>::deserialize")]
+            #[serde_as(as = "Option<First>")]
             content: Option<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "IdSet::deserialize")]
+            #[serde_as(as = "OneOrMany<Id>")]
             to: Vec<String>,
             #[serde(default)]
-            #[serde(deserialize_with = "IdSet::deserialize")]
+            #[serde_as(as = "OneOrMany<Id>")]
             cc: Vec<String>,
         }
 

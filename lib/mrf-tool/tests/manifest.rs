@@ -17,9 +17,9 @@ fn module_with_manifest() -> Vec<u8> {
 }
 
 fn manifest_to_escaped_string() -> String {
-    let manifest: Manifest<'_> = serde_json::from_str(MANIFEST).unwrap();
+    let manifest: Manifest<'_> = sonic_rs::from_str(MANIFEST).unwrap();
     let encoded_manifest = mrf_manifest::serialise(&manifest).unwrap();
-    serde_json::to_string(str::from_utf8(&encoded_manifest).unwrap()).unwrap()
+    sonic_rs::to_string(str::from_utf8(&encoded_manifest).unwrap()).unwrap()
 }
 
 #[test]
@@ -62,7 +62,7 @@ fn add() {
 
 #[test]
 fn read() {
-    let manifest: Manifest<'_> = serde_json::from_str(MANIFEST).unwrap();
+    let manifest: Manifest<'_> = sonic_rs::from_str(MANIFEST).unwrap();
     let module_with_manifest = module_with_manifest();
 
     let pretty_manifest = colored_json::to_colored_json_auto(&manifest)

@@ -7,7 +7,7 @@ use ahash::HashMap;
 use futures_util::TryStreamExt;
 use just_retry::RetryExt;
 use speedy_uuid::Uuid;
-use std::time::Duration;
+use std::{pin::pin, time::Duration};
 use tokio::time::Instant;
 use tokio_util::task::TaskTracker;
 use triomphe::Arc;
@@ -32,8 +32,7 @@ where
         .fetch_context(job_ids.into_iter())
         .await
         .map_err(|err| Error::ContextRepository(err.into()))?;
-
-    tokio::pin!(context_stream);
+    let mut context_stream = pin!(context_stream);
 
     // Collect all the job data into a hashmap indexed by the job ID
     // This is because we don't enforce an ordering with the batch fetching
@@ -54,8 +53,7 @@ where
 
         task_tracker.spawn(async move {
             let job_data = &job_data[&job_id];
-            let run_fut = job_ctx.run(&run_ctx);
-            tokio::pin!(run_fut);
+            let mut run_fut = pin!(job_ctx.run(&run_ctx));
 
             let tick_period = MIN_IDLE_TIME - Duration::from_secs(2 * 60);
             let mut tick_interval =

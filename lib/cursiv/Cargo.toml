@@ -7,23 +7,23 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 aliri_braid = "0.4.0"
-blake3 = "1.5.1"
+blake3 = "1.5.4"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 hex-simd = "0.8.0"
 http = "1.1.0"
-pin-project-lite = "0.2.14"
+pin-project-lite = "0.2.15"
 rand = "0.8.5"
-tower = { version = "0.4.13", default-features = false }
+tower = { version = "0.5.1", default-features = false }
 triomphe = { workspace = true }
 zeroize = { version = "1.8.1", features = ["derive"] }
 
 # `axum` feature
-async-trait = { version = "0.1.81", optional = true }
-axum-core = { version = "0.4.3", optional = true }
+async-trait = { version = "0.1.83", optional = true }
+axum-core = { version = "0.4.5", optional = true }
 
 [dev-dependencies]
-futures-test = "0.3.30"
-tower = { version = "0.4.13", default-features = false, features = ["util"] }
+futures-test = "0.3.31"
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [features]
 axum = ["dep:async-trait", "dep:axum-core"]

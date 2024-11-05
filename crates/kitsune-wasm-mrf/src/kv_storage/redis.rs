@@ -26,18 +26,22 @@ pub struct RedisBucketBackend {
 }
 
 impl super::BucketBackend for RedisBucketBackend {
+    #[inline]
     async fn exists(&self, key: &str) -> eyre::Result<bool> {
         self.pool.hexists(&self.name, key).await.map_err(Into::into)
     }
 
+    #[inline]
     async fn delete(&self, key: &str) -> eyre::Result<()> {
         self.pool.hdel(&self.name, key).await.map_err(Into::into)
     }
 
+    #[inline]
     async fn get(&self, key: &str) -> eyre::Result<Option<Vec<u8>>> {
         self.pool.hget(&self.name, key).await.map_err(Into::into)
     }
 
+    #[inline]
     async fn set(&self, key: &str, value: &[u8]) -> eyre::Result<()> {
         self.pool
             .hset(&self.name, (key, value))

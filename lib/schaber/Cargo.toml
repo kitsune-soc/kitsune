@@ -1,0 +1,13 @@
+[package]
+name = "schaber"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+lol_html = "2.0.0"
+thiserror = "1.0.68"
+
+[lints]
+workspace = true

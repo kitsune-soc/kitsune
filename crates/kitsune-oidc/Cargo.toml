@@ -8,24 +8,26 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 fred = { workspace = true }
-http = "1.1.0"
 http-body-util = "0.1.2"
 kitsune-config = { workspace = true }
 kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
-moka = { workspace = true }
-oauth2 = { version = "5.0.0-alpha.4", default-features = false }
-once_cell = "1.19.0"
-openidconnect = { version = "4.0.0-alpha.2", default-features = false, features = [
+moka = { workspace = true, features = ["sync"] }
+oauth2 = { version = "5.0.0-rc.1", default-features = false }
+openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     # Accept these two, per specification invalid, cases to increase compatibility
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
+    "timing-resistant-secret-traits",
 ] }
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
-url = "2.5.2"
+url = "2.5.3"
+
+[dev-dependencies]
+tokio = { version = "1.41.0", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

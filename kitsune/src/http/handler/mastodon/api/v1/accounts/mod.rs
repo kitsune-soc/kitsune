@@ -1,7 +1,6 @@
-use crate::state::Zustand;
 use axum::{
     extract::{Path, State},
-    routing, Json, Router,
+    Json,
 };
 use kitsune_error::{kitsune_error, ErrorType, Result};
 use kitsune_mastodon::MastodonMapper;
@@ -17,7 +16,7 @@ pub mod unfollow;
 pub mod update_credentials;
 pub mod verify_credentials;
 
-async fn get(
+pub async fn get(
     State(account_service): State<AccountService>,
     State(mastodon_mapper): State<MastodonMapper>,
     Path(id): Path<Uuid>,
@@ -28,19 +27,4 @@ async fn get(
         .ok_or_else(|| kitsune_error!(type = ErrorType::NotFound, "account not found"))?;
 
     Ok(Json(mastodon_mapper.map(account).await?))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/:id", routing::get(get))
-        .route("/:id/follow", routing::post(follow::post))
-        .route("/:id/statuses", routing::get(statuses::get))
-        .route("/:id/unfollow", routing::post(unfollow::post))
-        .route("/lookup", routing::get(lookup::get))
-        .route("/relationships", routing::get(relationships::get))
-        .route(
-            "/update_credentials",
-            routing::patch(update_credentials::patch),
-        )
-        .route("/verify_credentials", routing::get(verify_credentials::get))
 }

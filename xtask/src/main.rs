@@ -4,7 +4,7 @@ extern crate tracing;
 use argh::FromArgs;
 
 mod clean;
-mod fmt_toml;
+mod download_ap_fixture;
 mod util;
 mod watch;
 
@@ -14,9 +14,12 @@ mod watch;
 struct Clean {}
 
 #[derive(FromArgs)]
-#[argh(subcommand, name = "fmt-toml")]
-/// Format TOML across the workspace
-struct FmtToml {}
+#[argh(subcommand, name = "download-ap-fixture")]
+/// Download ActivityPub fixtures
+struct DownloadApFixture {
+    #[argh(positional)]
+    url: String,
+}
 
 #[derive(FromArgs)]
 #[argh(subcommand, name = "watch")]
@@ -35,7 +38,7 @@ struct Watch {
 #[argh(subcommand)]
 enum Subcommand {
     Clean(Clean),
-    FmtToml(FmtToml),
+    DownloadApFixture(DownloadApFixture),
     Watch(Watch),
 }
 
@@ -46,13 +49,15 @@ struct Command {
     subcommand: Subcommand,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> eyre::Result<()> {
     tracing_subscriber::fmt::init();
 
     let command: Command = argh::from_env();
     match command.subcommand {
         Subcommand::Clean(..) => clean::clean()?,
-        Subcommand::FmtToml(..) => fmt_toml::fmt()?,
+        Subcommand::DownloadApFixture(DownloadApFixture { url }) => {
+            download_ap_fixture::download(&url)?;
+        }
         Subcommand::Watch(Watch { config, bin }) => watch::watch(&config, &bin)?,
     }
 

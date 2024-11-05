@@ -16,7 +16,7 @@ async fn basic() {
             req.uri().path_and_query().unwrap(),
             "/.well-known/webfinger?resource=acct:0x0@corteximplant.com"
         );
-        let body = include_str!("../../../test-fixtures/0x0_jrd.json");
+        let body = include_str!("../../../test-fixtures/activitypub/0x0_jrd.json");
         Ok::<Response<Full<Bytes>>, Infallible>(Response::new(Full::from(Bytes::from(body))))
     });
     let client = Client::builder().service(client);

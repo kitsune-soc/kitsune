@@ -5,12 +5,7 @@ use async_graphql::{
     extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
-use axum::{
-    debug_handler,
-    response::Html,
-    routing::{any, get},
-    Extension, Router,
-};
+use axum::{debug_handler, response::Html, Extension};
 
 type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 
@@ -35,7 +30,7 @@ impl ContextExt for &Context<'_> {
 }
 
 #[debug_handler(state = Zustand)]
-async fn graphql_route(
+pub async fn graphql(
     Extension(schema): Extension<GraphQLSchema>,
     user_data: Option<AuthExtractor<true>>,
     req: GraphQLBatchRequest,
@@ -49,7 +44,7 @@ async fn graphql_route(
 }
 
 #[allow(clippy::unused_async)]
-async fn graphiql_route() -> Html<String> {
+pub async fn graphiql() -> Html<String> {
     let source = GraphiQLSource::build()
         .endpoint("/graphql")
         .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"))
@@ -58,18 +53,13 @@ async fn graphiql_route() -> Html<String> {
     Html(source)
 }
 
-pub fn routes(state: Zustand) -> Router<Zustand> {
-    let schema: GraphQLSchema = Schema::build(
+pub fn schema(state: Zustand) -> GraphQLSchema {
+    Schema::build(
         RootQuery::default(),
         RootMutation::default(),
         EmptySubscription,
     )
     .data(state)
     .extension(Tracing)
-    .finish();
-
-    Router::new()
-        .route("/graphql", any(graphql_route))
-        .route("/graphiql", get(graphiql_route))
-        .layer(Extension(schema))
+    .finish()
 }

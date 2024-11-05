@@ -4,12 +4,11 @@ use crate::{
         extractor::{AuthExtractor, MastodonAuthExtractor},
         pagination::{LinkHeader, PaginatedJsonResponse},
     },
-    state::Zustand,
 };
 use axum::{
     debug_handler,
     extract::{OriginalUri, Path, State},
-    routing, Json, Router,
+    Json,
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
@@ -42,7 +41,7 @@ pub struct GetQuery {
     limit: usize,
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     State(notification_service): State<NotificationService>,
     State(mastodon_mapper): State<MastodonMapper>,
@@ -88,7 +87,7 @@ pub async fn get(
     Ok((link_header, Json(notifications)))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get_by_id(
     State(notification_service): State<NotificationService>,
     State(mastodon_mapper): State<MastodonMapper>,
@@ -101,12 +100,4 @@ pub async fn get_by_id(
         .ok_or_else(|| kitsune_error!(type = ErrorType::NotFound, "notification not found"))?;
 
     Ok(Json(mastodon_mapper.map(notification).await?))
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::get(get))
-        .route("/:id", routing::get(get_by_id))
-        .route("/:id/dismiss", routing::post(dismiss::post))
-        .route("/clear", routing::post(clear::post))
 }

@@ -15,8 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install taplo
+        run: |
+          curl -fsSL https://github.com/tamasfe/taplo/releases/latest/download/taplo-full-linux-x86_64.gz \
+            | gzip -d - | install -m 755 /dev/stdin /usr/local/bin/taplo
       - run: |
-          cargo xtask fmt-toml
+          taplo fmt
           CHANGES_IN_REPO=$(git status --porcelain)
           if [[ -n "$CHANGES_IN_REPO" ]]; then
               exit 1

@@ -2,7 +2,7 @@ use bytes::{Bytes, BytesMut};
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use futures_util::{pin_mut, stream, Stream, StreamExt, TryStreamExt};
+use futures_util::{stream, Stream, StreamExt, TryStreamExt};
 use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
@@ -17,6 +17,7 @@ use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
 use speedy_uuid::Uuid;
+use std::pin::pin;
 use typed_builder::TypedBuilder;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
@@ -175,8 +176,7 @@ impl AttachmentService {
 
         // remove exif info from image uploads
         if is_image_type_with_supported_metadata(&upload.content_type) {
-            let stream = upload.stream;
-            pin_mut!(stream);
+            let mut stream = pin!(upload.stream);
 
             let mut img_bytes = BytesMut::new();
             while let Some(chunk) = stream.next().await.transpose()? {
@@ -224,7 +224,7 @@ mod test {
     use crate::attachment::{AttachmentService, Upload};
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncPgConnection, RunQueryDsl};
-    use futures_util::{future, pin_mut, stream, StreamExt};
+    use futures_util::{future, stream, StreamExt};
     use http::{Request, Response};
     use http_body_util::Empty;
     use img_parts::{
@@ -245,7 +245,7 @@ mod test {
     use kitsune_test::database_test;
     use kitsune_url::UrlService;
     use speedy_uuid::Uuid;
-    use std::convert::Infallible;
+    use std::{convert::Infallible, pin::pin};
     use tempfile::TempDir;
     use tower::service_fn;
 
@@ -302,10 +302,9 @@ mod test {
                 created_at: Timestamp::now_utc(),
                 updated_at: Timestamp::now_utc()
             };
-            let download = attachment_service.stream_file(&attachment).await.unwrap();
+            let mut download = pin!(attachment_service.stream_file(&attachment).await.unwrap());
 
             let mut img_bytes = BytesMut::new();
-            pin_mut!(download);
             while let Some(chunk) = download.next().await.transpose().unwrap() {
                 img_bytes.extend_from_slice(&chunk);
             }

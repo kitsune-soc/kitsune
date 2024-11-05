@@ -1,6 +1,5 @@
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
-use embed_sdk::EmbedWithExpire;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -12,24 +11,27 @@ use kitsune_db::{
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
-use once_cell::sync::Lazy;
-use scraper::{Html, Selector};
+use lantern_client_sdk::models::EmbedWithExpire;
+use schaber::Scraper;
 use smol_str::SmolStr;
+use std::{ops::ControlFlow, sync::LazyLock};
 
-pub use embed_sdk;
-pub use embed_sdk::Embed;
+pub use lantern_client_sdk::models::{Embed, EmbedType};
 
-static LINK_SELECTOR: Lazy<Selector> = Lazy::new(|| {
-    Selector::parse("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
+static LINK_SCRAPER: LazyLock<Scraper> = LazyLock::new(|| {
+    Scraper::new("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
 });
 
 fn first_link_from_fragment(fragment: &str) -> Option<String> {
-    let parsed_fragment = Html::parse_fragment(fragment);
+    let mut link = None;
+    LINK_SCRAPER
+        .process(fragment, |element| {
+            link = element.get_attribute("href");
+            ControlFlow::Break(())
+        })
+        .unwrap();
 
-    parsed_fragment
-        .select(&LINK_SELECTOR)
-        .next()
-        .and_then(|element| element.value().attr("href").map(ToString::to_string))
+    link
 }
 
 #[kitsune_service]

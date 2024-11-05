@@ -6,17 +6,18 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.81"
+async-trait = "0.1.83"
 eyre = "0.6.12"
 http-body-util = "0.1.2"
-hyper = { version = "1.4.1", default-features = false }
+hyper = { version = "1.5.0", default-features = false }
 kitsune-config = { workspace = true }
+kitsune-core = { workspace = true }
 kitsune-http-client = { workspace = true }
-opentelemetry = { version = "0.23.0", default-features = false, features = [
+opentelemetry = { version = "0.26.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry-http = "0.12.0"
-opentelemetry-otlp = { version = "0.16.0", default-features = false, features = [
+opentelemetry-http = "0.26.0"
+opentelemetry-otlp = { version = "0.26.0", default-features = false, features = [
     "grpc-tonic",
     "http-json",
     "http-proto",
@@ -24,12 +25,12 @@ opentelemetry-otlp = { version = "0.16.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.23.0", default-features = false, features = [
+opentelemetry_sdk = { version = "0.26.0", default-features = false, features = [
     "rt-tokio",
 ] }
 tracing = "0.1.40"
 tracing-error = "0.2.0"
-tracing-opentelemetry = { version = "0.24.0", default-features = false }
+tracing-opentelemetry = { version = "0.27.0", default-features = false }
 tracing-subscriber = "0.3.18"
 
 [lints]

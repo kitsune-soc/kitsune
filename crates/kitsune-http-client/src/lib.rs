@@ -2,8 +2,10 @@
 #![deny(missing_docs)]
 
 use self::util::BoxCloneService;
-use futures_util::Stream;
-use http_body_util::{BodyStream, Limited};
+use bytes::Buf;
+use futures_util::{Stream, StreamExt};
+use http_body::Body as HttpBody;
+use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
     body::Bytes,
     header::{HeaderName, USER_AGENT},
@@ -173,16 +175,16 @@ impl ClientBuilder {
         B::Error: StdError + Send + Sync + 'static,
     {
         let content_length_limit = self.content_length_limit.map_or_else(
-            || Either::B(MapResponseBodyLayer::new(BoxBody::new)),
+            || Either::Left(MapResponseBodyLayer::new(BoxBody::new)),
             |limit| {
-                Either::A(MapResponseBodyLayer::new(move |body| {
+                Either::Right(MapResponseBodyLayer::new(move |body| {
                     BoxBody::new(Limited::new(body, limit))
                 }))
             },
         );
         let timeout = self.timeout.map_or_else(
-            || Either::B(Identity::new()),
-            |duration| Either::A(TimeoutLayer::new(duration)),
+            || Either::Left(Identity::new()),
+            |duration| Either::Right(TimeoutLayer::new(duration)),
         );
 
         Client {
@@ -193,7 +195,8 @@ impl ClientBuilder {
                     .layer(FollowRedirectLayer::new())
                     .layer(DecompressionLayer::default())
                     .layer(timeout)
-                    .service(client),
+                    .service(client)
+                    .map_err(BoxError::from),
             ),
         }
     }
@@ -405,18 +408,21 @@ impl Response {
 
     /// Stream the body
     pub fn stream(self) -> impl Stream<Item = Result<Bytes>> {
-        use futures_util::TryStreamExt;
+        let mut body_stream = BodyStream::new(self.inner.into_body());
 
-        BodyStream::new(self.inner.into_body())
-            .map_err(Error::new)
-            .map_ok(|value| match value.into_data() {
-                Ok(val) => val,
-                Err(..) => {
-                    // There was either no remaining data or the frame was no data frame.
-                    // Therefore we just discard it.
-                    Bytes::new()
+        asynk_strim::try_stream_fn(|mut yielder| async move {
+            while let Some(frame) = body_stream.next().await {
+                match frame.map_err(Error::new)?.into_data() {
+                    Ok(val) if val.has_remaining() => yielder.yield_ok(val).await,
+                    Ok(..) | Err(..) => {
+                        // There was either no remaining data or the frame was no data frame.
+                        // Therefore we just discard it.
+                    }
                 }
-            })
+            }
+
+            Ok(())
+        })
     }
 
     /// Get the HTTP version the client used

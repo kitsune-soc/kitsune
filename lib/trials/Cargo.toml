@@ -6,13 +6,9 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-trials-macros = { path = "macros", optional = true }
-
-[features]
-proc-macro = ["dep:trials-macros"]
 
 [dev-dependencies]
-futures-test = "0.3.30"
+futures-test = "0.3.31"
 
 [lints]
 workspace = true

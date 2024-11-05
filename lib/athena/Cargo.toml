@@ -11,33 +11,34 @@ required-features = ["redis"]
 
 [dependencies]
 ahash = "0.8.11"
-async-trait = "0.1.81"
+async-trait = "0.1.83"
 either = { version = "1.13.0", default-features = false, optional = true }
-futures-util = { version = "0.3.30", default-features = false }
-iso8601-timestamp = "0.2.17"
+futures-util = { version = "0.3.31", default-features = false }
+iso8601-timestamp = { workspace = true }
 fred = { workspace = true, optional = true }
 just-retry = { workspace = true }
-once_cell = { version = "1.19.0", optional = true }
 rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0.204", features = ["derive"] }
-smol_str = "0.2.2"
+serde = { version = "1.0.214", features = ["derive"] }
+smol_str = "0.3.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
-thiserror = "1.0.62"
-tokio = { version = "1.38.0", features = ["macros", "rt", "sync"] }
-tokio-util = { version = "0.7.11", features = ["rt"] }
+thiserror = "1.0.68"
+tokio = { workspace = true, features = ["macros", "rt", "sync"] }
+tokio-util = { version = "0.7.12", features = ["rt"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
-typed-builder = "0.18.2"
-typetag = "0.2.16"
+typed-builder = "0.20.0"
+typetag = "0.2.18"
 unsize = "1.1.0"
 
 [features]
-redis = ["dep:either", "dep:fred", "dep:once_cell", "dep:rand", "dep:sonic-rs"]
+redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
 kitsune-test = { workspace = true }
-postcard = { version = "1.0.8", default-features = false, features = ["alloc"] }
+postcard = { version = "1.0.10", default-features = false, features = [
+    "alloc",
+] }
 tracing-subscriber = "0.3.18"
 
 [lints]

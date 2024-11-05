@@ -34,12 +34,12 @@ where
         .collect();
 
     let mut function = format!(
-        r#"
-        CREATE OR REPLACE FUNCTION {DB_FUNCTION_NAME} ({DB_ENUM_NAME})
+        r"
+        CREATE OR REPLACE FUNCTION {function_name} ({enum_name})
             RETURNS regconfig
             AS $$
                 SELECT CASE $1
-        "#
+        "
     );
 
     for lang in supported_languages() {
@@ -58,11 +58,11 @@ where
 
     writeln!(
         function,
-        r#"
+        r"
                 ELSE 'english'::regconfig
                 END
             $$ LANGUAGE SQL IMMUTABLE;
-        "#
+        "
     )
     .unwrap();
 

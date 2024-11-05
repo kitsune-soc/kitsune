@@ -1,14 +1,11 @@
-use crate::{
-    http::{
-        extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
-        util::buffer_multipart_to_tempfile,
-    },
-    state::Zustand,
+use crate::http::{
+    extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor},
+    util::buffer_multipart_to_tempfile,
 };
 use axum::{
     debug_handler,
     extract::{Multipart, Path, State},
-    routing, Json, Router,
+    Json,
 };
 use futures_util::TryFutureExt;
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
@@ -70,7 +67,7 @@ pub async fn post(
     Ok(Json(mastodon_mapper.map(media_attachment).await?))
 }
 
-#[debug_handler(state = Zustand)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn put(
     State(attachment_service): State<AttachmentService>,
     State(mastodon_mapper): State<MastodonMapper>,
@@ -90,10 +87,4 @@ pub async fn put(
         .and_then(|model| mastodon_mapper.map(model).map_err(Error::from))
         .map_ok(Json)
         .await
-}
-
-pub fn routes() -> Router<Zustand> {
-    Router::new()
-        .route("/", routing::post(post))
-        .route("/:id", routing::get(get).put(put))
 }

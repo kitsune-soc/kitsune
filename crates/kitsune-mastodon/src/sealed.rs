@@ -26,7 +26,7 @@ use kitsune_db::{
     with_connection, PgPool,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_embed::{embed_sdk::EmbedType, Embed};
+use kitsune_embed::{Embed, EmbedType};
 use kitsune_error::{Error, Result};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_type::mastodon::{
@@ -459,16 +459,17 @@ impl IntoMastodon for LinkPreview<Embed> {
             panic!("Incompatible embed data found in database than known to our SDK. Please update Kitsune");
         };
 
-        let title = embed_data.title.unwrap_or_default();
-        let description = embed_data.description.unwrap_or_default();
+        let title = embed_data.title.unwrap_or_default().as_str().into();
+        let description = embed_data.description.unwrap_or_default().as_str().into();
         let (author_name, author_url) = embed_data
             .author
             .map(|author| (author.name, author.url.unwrap_or_default()))
+            .map(|(name, url)| (name.as_str().into(), url.as_str().into()))
             .unwrap_or_default();
 
         let (provider_name, provider_url) = (
-            embed_data.provider.name.unwrap_or_default(),
-            embed_data.provider.url.unwrap_or_default(),
+            embed_data.provider.name.unwrap_or_default().as_str().into(),
+            embed_data.provider.url.unwrap_or_default().as_str().into(),
         );
 
         let r#type = match embed_data.ty {
@@ -477,7 +478,7 @@ impl IntoMastodon for LinkPreview<Embed> {
             _ => PreviewType::Link,
         };
 
-        let image = embed_data.thumb.map(|thumb| thumb.url.clone());
+        let image = embed_data.thumb.map(|thumb| thumb.url.as_str().into());
         let (html, width, height, embed_url) = match (embed_data.img, embed_data.video) {
             (.., Some(vid)) => {
                 let width = vid.width.unwrap_or_default();
@@ -502,7 +503,7 @@ impl IntoMastodon for LinkPreview<Embed> {
                 String::default(),
                 img.width.unwrap_or_default(),
                 img.height.unwrap_or_default(),
-                img.url.clone(),
+                img.url.as_str().into(),
             ),
             _ => (String::default(), 0, 0, SmolStr::default()),
         };

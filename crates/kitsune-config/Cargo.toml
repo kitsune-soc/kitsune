@@ -9,10 +9,10 @@ license.workspace = true
 eyre = "0.6.12"
 human-size = { version = "0.4.3", features = ["serde"] }
 isolang = { version = "2.4.0", features = ["serde"] }
-serde = { version = "1.0.204", features = ["derive"] }
-smol_str = { version = "0.2.2", features = ["serde"] }
-tokio = { version = "1.38.0", features = ["fs"] }
-toml = { version = "0.8.14", default-features = false, features = ["parse"] }
+serde = { version = "1.0.214", features = ["derive"] }
+smol_str = { version = "0.3.2", features = ["serde"] }
+tokio = { workspace = true, features = ["fs"] }
+toml = { version = "0.8.19", default-features = false, features = ["parse"] }
 
 [lints]
 workspace = true

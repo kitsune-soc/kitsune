@@ -1,0 +1,26 @@
+{
+  "name": "kitsune-website",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "format": "prettier -w . --cache"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/starlight": "^0.28.3",
+    "astro": "^4.16.6",
+    "sharp": "^0.33.5",
+    "starlight-links-validator": "^0.12.3",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "sass": "^1.80.3"
+  }
+}
