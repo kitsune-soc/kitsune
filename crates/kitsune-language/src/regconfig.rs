@@ -35,7 +35,7 @@ where
 
     let mut function = format!(
         r"
-        CREATE OR REPLACE FUNCTION {function_name} ({enum_name})
+        CREATE OR REPLACE FUNCTION {DB_FUNCTION_NAME} ({DB_ENUM_NAME})
             RETURNS regconfig
             AS $$
                 SELECT CASE $1

@@ -4,8 +4,7 @@
 use self::util::BoxCloneService;
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
-use http_body::Body as HttpBody;
-use http_body_util::{BodyExt, BodyStream, Limited};
+use http_body_util::{BodyStream, Limited};
 use hyper::{
     body::Bytes,
     header::{HeaderName, USER_AGENT},
