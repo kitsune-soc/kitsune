@@ -331,7 +331,6 @@ CREATE TABLE posts
     in_reply_to_id   UUID,
     reposted_post_id UUID,
 
-    is_sensitive     BOOLEAN                                                                                                NOT NULL,
     subject          TEXT,
 
     content          TEXT                                                                                                   NOT NULL,
@@ -399,6 +398,7 @@ CREATE TABLE media_attachments
     content_type TEXT        NOT NULL,
     description  TEXT,
     file_path    TEXT,
+    is_sensitive BOOLEAN     NOT NULL,
     remote_url   TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
