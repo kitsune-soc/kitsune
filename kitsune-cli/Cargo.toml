@@ -22,7 +22,7 @@ kitsune-config = { workspace = true }
 kitsune-core = { workspace = true }
 kitsune-db = { workspace = true }
 kitsune-error = { workspace = true }
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 speedy-uuid = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tracing-subscriber = "0.3.18"

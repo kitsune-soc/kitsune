@@ -21,7 +21,7 @@ kitsune-derive = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-type = { workspace = true }
 mrf-manifest = { workspace = true, features = ["decode"] }
-redb = { version = "2.1.4", features = ["logging"] }
+redb = { version = "2.2.0", features = ["logging"] }
 slab = "0.4.9"
 smol_str = "0.3.2"
 sonic-rs = { workspace = true }

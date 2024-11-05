@@ -169,6 +169,8 @@
                         [
                           cargo-insta
                           diesel-cli
+                          diesel-cli-ext
+                          pgformatter
                           rust-bin.nightly.latest.default
                         ]
                         ++ buildInputs

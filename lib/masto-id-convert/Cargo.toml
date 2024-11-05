@@ -21,7 +21,7 @@ default = ["std"]
 std = []
 
 [dev-dependencies]
-divan = "0.1.14"
+divan = "0.1.15"
 time = "0.3.36"
 uuid = { version = "1.11.0", features = ["v7"] }
 
