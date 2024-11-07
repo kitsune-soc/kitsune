@@ -162,7 +162,7 @@
 			</p>
 		</form>
 
-		<Button class="w-full" buttonType="danger" onclick={initiateLogin}>
+		<Button class="w-full" buttonType="secondary" onclick={initiateLogin}>
 			Already have an account? Sign in
 		</Button>
 	</div>

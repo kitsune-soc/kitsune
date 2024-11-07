@@ -19,7 +19,7 @@
 	} & HTMLButtonAttributes = $props();
 
 	if (buttonType === 'primary') {
-		classNames += ` text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark`; // ToDo: Port styles to tailwind
+		classNames += ` [&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark`;
 	} else if (buttonType === 'secondary') {
 		classNames += ` border-solid border-2 bg-transparent`;
 	} else if (buttonType === 'danger') {
