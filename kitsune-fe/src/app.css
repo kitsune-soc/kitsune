@@ -13,12 +13,11 @@
 	}
 
 	::-webkit-scrollbar {
-		width: 0.666em;
-		height: 0.666em;
+		@apply h-2.5 w-2.5;
 	}
 
 	::-webkit-scrollbar-track {
-		box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+		@apply shadow-lg;
 	}
 
 	::-webkit-scrollbar-thumb {
