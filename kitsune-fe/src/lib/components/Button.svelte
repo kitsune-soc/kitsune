@@ -14,14 +14,16 @@
 		 *
 		 * @default 'primary'
 		 */
-		buttonType?: 'primary' | 'secondary';
+		buttonType?: 'primary' | 'secondary' | 'danger';
 		children: Snippet;
 	} & HTMLButtonAttributes = $props();
 
 	if (buttonType === 'primary') {
-		classNames += ` primary`; // ToDo: Port styles to tailwind
+		classNames += ` text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark`; // ToDo: Port styles to tailwind
 	} else if (buttonType === 'secondary') {
 		classNames += ` border-solid border-2 bg-transparent`;
+	} else if (buttonType === 'danger') {
+		classNames += ` bg-red-700 text-white`;
 	}
 </script>
 
@@ -31,19 +33,3 @@
 >
 	{@render children()}
 </button>
-
-<style lang="scss">
-	@use '../../styles/colours' as *;
-
-	button:global(.primary) {
-		background-color: $shade1dark;
-
-		&:not(:hover) {
-			color: $dark1;
-		}
-
-		&:hover:not([disabled]) {
-			background-color: $shade2dark;
-		}
-	}
-</style>
