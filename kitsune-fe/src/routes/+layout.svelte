@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
 	import { version as frontendVersion } from '$app/environment';
 
