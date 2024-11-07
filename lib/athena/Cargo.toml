@@ -22,7 +22,7 @@ serde = { version = "1.0.214", features = ["derive"] }
 smol_str = "0.3.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
-thiserror = "1.0.66"
+thiserror = "2.0.0"
 tokio = { workspace = true, features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.12", features = ["rt"] }
 tracing = "0.1.40"

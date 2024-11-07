@@ -95,7 +95,7 @@ diesel-async = { version = "0.5.1", features = [
     "tokio",
 ] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
-fred = { version = "9.3.0", features = [
+fred = { version = "9.4.0", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
