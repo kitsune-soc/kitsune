@@ -20,7 +20,7 @@ fred = { workspace = true }
 futures-util = "0.3.31"
 garde = { workspace = true }
 http = "1.1.0"
-img-parts = "0.3.0"
+img-parts = "0.3.1"
 iso8601-timestamp = { workspace = true }
 kitsune-cache = { workspace = true }
 kitsune-captcha = { workspace = true }
@@ -45,14 +45,14 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.213"
+serde = "1.0.214"
 smol_str = "0.3.2"
 speedy-uuid = { workspace = true }
 tokio = { workspace = true, features = ["macros", "sync"] }
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
-url = "2.5.2"
+url = "2.5.3"
 zxcvbn = { version = "3.1.0", default-features = false }
 
 [dev-dependencies]

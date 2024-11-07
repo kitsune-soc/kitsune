@@ -11,9 +11,9 @@ futures-util = { version = "0.3.31", default-features = false }
 http = "1.1.0"
 kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
-quick-xml = { version = "0.36.2", features = ["serialize"] }
+quick-xml = { version = "0.37.0", features = ["serialize"] }
 rusty-s3 = "0.5.0"
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 typed-builder = "0.20.0"
 
 [dev-dependencies]
