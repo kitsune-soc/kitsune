@@ -9,16 +9,16 @@ license = "MIT OR Apache-2.0"
 async-trait = "0.1.83"
 hickory-resolver = "0.25.0-alpha.2"
 rand = "0.8.5"
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 simdutf8 = { workspace = true }
-thiserror = "1.0.65"
+thiserror = "2.0.0"
 tracing = "0.1.40"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 unsize = "1.1.0"
 
 [dev-dependencies]
-insta = { version = "1.40.0", features = ["json"] }
+insta = { version = "1.41.1", features = ["json"] }
 rand_xorshift = "0.3.0"
 sonic-rs = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt"] }
