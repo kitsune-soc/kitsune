@@ -8,7 +8,7 @@ use crate::util::OpaqueDebug;
 use async_trait::async_trait;
 use hickory_resolver::{
     config::{ResolverConfig, ResolverOpts},
-    TokioAsyncResolver,
+    TokioResolver,
 };
 use rand::{
     distributions::{Alphanumeric, DistString},
@@ -71,7 +71,7 @@ pub trait DnsResolver: Send + Sync {
 }
 
 #[async_trait]
-impl DnsResolver for TokioAsyncResolver {
+impl DnsResolver for TokioResolver {
     async fn lookup_txt(&self, fqdn: &str) -> Result<Vec<String>, BoxError> {
         let records =
             self.txt_lookup(fqdn)
@@ -160,8 +160,10 @@ impl VerificationStrategy for KeyValueStrategy {
 /// Construct the default resolver used by this library
 #[must_use]
 pub fn default_resolver() -> Arc<dyn DnsResolver> {
-    Arc::new(TokioAsyncResolver::tokio(
-        ResolverConfig::default(),
+    Arc::new(TokioResolver::tokio(
+        // Per-default hickory-resolver would use Google's DNS servers.
+        // Since Google is kinda disgusting, we use Quad9 instead.
+        ResolverConfig::quad9_tls(),
         ResolverOpts::default(),
     ))
     .unsize(Coercion!(to dyn DnsResolver))
