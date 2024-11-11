@@ -129,7 +129,7 @@
                 config.Cmd = [ "${cli}/bin/kitsune-cli" ];
               };
 
-              job-runner = craneLib.buildPage (
+              job-runner = craneLib.buildPackage (
                 commonArgs
                 // {
                   pname = "kitsune-job-runner";
