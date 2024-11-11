@@ -85,8 +85,8 @@
                   homepage = "https://joinkitsune.org";
                 };
 
-                OPENSSL_NO_VENDOR = 1;
                 NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+                CARGO_PROFILE = "dist";
                 cargoExtraArgs = "--locked ${features}";
               }
               // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
