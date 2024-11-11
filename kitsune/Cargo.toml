@@ -81,7 +81,7 @@ sonic-rs = { workspace = true }
 simdutf8 = { workspace = true }
 speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive"] }
-tempfile = "3.13.0"
+tempfile = "3.14.0"
 time = "0.3.36"
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { version = "0.7.12", features = ["io"] }
