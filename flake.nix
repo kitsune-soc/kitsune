@@ -156,6 +156,13 @@
                 }
               );
 
+              mrf-tool-docker = pkgs.dockerTools.buildImage {
+                name = "mrf-tool";
+                tag = "latest";
+                copyToRoot = [ mrf-tool ];
+                config.Cmd = [ "${mrf-tool}/bin/mrf-tool" ];
+              };
+
               main = craneLib.buildPackage (
                 commonArgs
                 // {
