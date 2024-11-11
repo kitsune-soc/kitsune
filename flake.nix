@@ -122,6 +122,30 @@
                 }
               );
 
+              cli-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-cli";
+                tag = "latest";
+                copyToRoot = [ cli ];
+                config.Cmd = [ "${cli}/bin/kitsune-cli" ];
+              };
+
+              job-runner = craneLib.buildPage (
+                commonArgs
+                // {
+                  pname = "kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-job-runner";
+                  inherit cargoArtifacts;
+                  doCheck = false;
+                }
+              );
+
+              job-runner-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-job-runner";
+                tag = "latest";
+                copyToRoot = [ job-runner ];
+                config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
+              };
+
               mrf-tool = craneLib.buildPackage (
                 commonArgs
                 // {
@@ -136,11 +160,18 @@
                 commonArgs
                 // {
                   pname = "kitsune";
-                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune --bin kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune";
                   inherit cargoArtifacts;
                   doCheck = false;
                 }
               );
+
+              main-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune";
+                tag = "latest";
+                copyToRoot = [ main ];
+                config.Cmd = [ "${main}/bin/kitsune" ];
+              };
 
               frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
                 src = "${src}/kitsune-fe";
