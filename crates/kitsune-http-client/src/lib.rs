@@ -49,8 +49,7 @@ pub struct Error {
 
 impl Error {
     #[inline]
-    #[doc(hidden)]
-    pub fn new<E>(inner: E) -> Self
+    fn new<E>(inner: E) -> Self
     where
         E: Into<BoxError>,
     {

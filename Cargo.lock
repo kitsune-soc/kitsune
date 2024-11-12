@@ -3828,6 +3828,7 @@ dependencies = [
  "serde",
  "sonic-rs",
  "speedy-uuid",
+ "thiserror 2.0.3",
  "tokio",
  "url",
 ]
