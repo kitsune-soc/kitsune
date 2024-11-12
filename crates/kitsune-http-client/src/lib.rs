@@ -1,9 +1,10 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-use self::util::BoxCloneService;
+use self::{resolver::Resolver, util::BoxCloneService};
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
+use hickory_resolver::config::{ResolverConfig, ResolverOpts};
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
@@ -13,7 +14,10 @@ use hyper::{
     HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
 };
 use hyper_rustls::HttpsConnectorBuilder;
-use hyper_util::{client::legacy::Client as HyperClient, rt::TokioExecutor};
+use hyper_util::{
+    client::legacy::{connect::HttpConnector, Client as HyperClient},
+    rt::TokioExecutor,
+};
 use kitsune_type::jsonld::RdfNode;
 use serde::de::DeserializeOwned;
 use std::{error::Error as StdError, fmt, time::Duration};
@@ -26,6 +30,7 @@ use tower_http::{
 };
 
 mod body;
+mod resolver;
 mod util;
 
 type BoxBody<E = BoxError> = http_body_util::combinators::BoxBody<Bytes, E>;
@@ -73,6 +78,7 @@ impl StdError for Error {}
 pub struct ClientBuilder {
     content_length_limit: Option<usize>,
     default_headers: HeaderMap,
+    dns_resolver: Option<Resolver>,
     timeout: Option<Duration>,
 }
 
@@ -113,6 +119,15 @@ impl ClientBuilder {
         Ok(self)
     }
 
+    /// Set a hickory DNS resolver you want this client to use
+    ///
+    /// Otherwise it creates a new one which connects to Quad9 via DNS-over-TLS
+    #[must_use]
+    pub fn dns_resolver(mut self, resolver: impl Into<Resolver>) -> Self {
+        self.dns_resolver = Some(resolver.into());
+        self
+    }
+
     /// Set the User-Agent header
     ///
     /// Defaults to `kitsune-http-client`
@@ -143,14 +158,22 @@ impl ClientBuilder {
     ///
     /// Yes, this operation is infallible
     #[must_use]
-    pub fn build(self) -> Client {
+    pub fn build(mut self) -> Client {
+        let resolver = self.dns_resolver.take().unwrap_or_else(|| {
+            let resolver = hickory_resolver::TokioResolver::tokio(
+                ResolverConfig::quad9_tls(),
+                ResolverOpts::default(),
+            );
+            resolver.into()
+        });
+
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()
             .expect("Failed to fetch native certificates")
             .https_or_http()
             .enable_http1()
             .enable_http2()
-            .build();
+            .wrap_connector(HttpConnector::new_with_resolver(resolver));
 
         let client = HyperClient::builder(TokioExecutor::new())
             .build(connector)
@@ -207,6 +230,7 @@ impl Default for ClientBuilder {
         let builder = ClientBuilder {
             content_length_limit: Some(DEFAULT_BODY_LIMIT),
             default_headers: HeaderMap::default(),
+            dns_resolver: None,
             timeout: Option::default(),
         };
 

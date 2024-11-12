@@ -109,6 +109,10 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
+hickory-resolver = { version = "0.25.0-alpha.3", default-features = false, features = [
+    "dns-over-rustls",
+    "tokio-runtime",
+] }
 iso8601-timestamp = "0.3.0"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }

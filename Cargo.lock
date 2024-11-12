@@ -3688,6 +3688,7 @@ dependencies = [
  "asynk-strim",
  "bytes",
  "futures-util",
+ "hickory-resolver",
  "http-body",
  "http-body-util",
  "http-signatures",

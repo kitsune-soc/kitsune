@@ -11,6 +11,7 @@ bytes = "1.8.0"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
+hickory-resolver = { workspace = true }
 http-body = "1.0.1"
 http-body-util = "0.1.2"
 http-signatures = { workspace = true }
