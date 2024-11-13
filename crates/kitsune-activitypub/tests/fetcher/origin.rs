@@ -37,9 +37,9 @@ async fn check_ap_id_authority() {
         let client = Client::builder().service(client);
         let fetcher = builder
             .clone()
-            .client(client.clone())
+            .http_client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         // The mock HTTP client ensures that the fetcher doesn't access the correct server
@@ -60,9 +60,9 @@ async fn check_ap_id_authority() {
         let client = Client::builder().service(client);
         let fetcher = builder
             .clone()
-            .client(client.clone())
+            .http_client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         let _ = fetcher
@@ -84,7 +84,7 @@ async fn check_ap_content_type() {
         let client = Client::builder().service(client);
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -95,7 +95,7 @@ async fn check_ap_content_type() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

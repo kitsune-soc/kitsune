@@ -55,6 +55,7 @@ kitsune-embed = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-federation = { workspace = true }
 kitsune-federation-filter = { workspace = true }
+kitsune-http-client = { workspace = true }
 kitsune-job-runner = { workspace = true }
 kitsune-jobs = { workspace = true }
 kitsune-language = { workspace = true }

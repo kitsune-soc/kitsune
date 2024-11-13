@@ -4,12 +4,9 @@ extern crate tracing;
 use async_trait::async_trait;
 use fred::clients::RedisPool;
 use futures_util::future::{FutureExt, OptionFuture};
-use http::{HeaderValue, StatusCode};
+use http::{header::ACCEPT, HeaderValue, Request, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
-use kitsune_core::{
-    consts::USER_AGENT,
-    traits::{resolver::AccountResource, Resolver},
-};
+use kitsune_core::traits::{resolver::AccountResource, Resolver};
 use kitsune_error::Result;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
@@ -18,6 +15,7 @@ use std::{ptr, time::Duration};
 use triomphe::Arc;
 
 const CACHE_DURATION: Duration = Duration::from_secs(10 * 60); // 10 minutes
+static ACCEPT_VALUE: HeaderValue = HeaderValue::from_static("application/jrd+json");
 
 /// Intended to allow up to one canonicalisation on the originating server, one cross-origin
 /// canonicalisation and one more canonicalisation on the destination server,
@@ -28,35 +26,26 @@ pub const MAX_JRD_REDIRECTS: u32 = 3;
 #[derive(Clone)]
 pub struct Webfinger {
     cache: ArcCache<str, AccountResource>,
-    client: Client,
+    http_client: Client,
 }
 
 impl Webfinger {
     #[must_use]
-    pub fn with_defaults(redis_pool: RedisPool) -> Self {
-        Self::new(Arc::new(
-            RedisCache::new(redis_pool, "webfinger", CACHE_DURATION).into(),
-        ))
+    pub fn with_defaults(client: Client, redis_pool: RedisPool) -> Self {
+        Self::new(
+            client,
+            Arc::new(RedisCache::new(redis_pool, "webfinger", CACHE_DURATION).into()),
+        )
     }
 }
 
 impl Webfinger {
-    #[allow(clippy::missing_panics_doc)] // The invariants are covered. It won't panic.
     #[must_use]
-    pub fn new(cache: ArcCache<str, AccountResource>) -> Self {
-        let client = Client::builder()
-            .default_header("Accept", HeaderValue::from_static("application/jrd+json"))
-            .unwrap()
-            .user_agent(USER_AGENT)
-            .unwrap()
-            .build();
-
-        Self::with_client(client, cache)
-    }
-
-    #[must_use]
-    pub fn with_client(client: Client, cache: ArcCache<str, AccountResource>) -> Self {
-        Self { cache, client }
+    pub fn new(client: Client, cache: ArcCache<str, AccountResource>) -> Self {
+        Self {
+            cache,
+            http_client: client,
+        }
     }
 }
 
@@ -95,8 +84,13 @@ impl Resolver for Webfinger {
             }
 
             let webfinger_url = format!("https://{domain}/.well-known/webfinger?resource={acct}");
-            let response = self.client.get(webfinger_url).await?;
+            let request = Request::builder()
+                .header(ACCEPT, &ACCEPT_VALUE)
+                .uri(webfinger_url)
+                .body(kitsune_http_client::Body::empty())
+                .unwrap();
 
+            let response = self.http_client.execute(request).await?;
             if matches!(response.status(), StatusCode::NOT_FOUND | StatusCode::GONE) {
                 // Either the actor couldn't be found or the server doesn't support WebFinger
                 return Ok(None);

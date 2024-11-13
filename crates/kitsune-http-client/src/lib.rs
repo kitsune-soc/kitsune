@@ -233,7 +233,9 @@ impl Default for ClientBuilder {
             timeout: Option::default(),
         };
 
-        builder.user_agent("kitsune-http-client").unwrap()
+        builder
+            .user_agent(kitsune_core::consts::USER_AGENT)
+            .unwrap()
     }
 }
 

@@ -55,12 +55,13 @@ where
 }
 
 #[must_use]
-pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
+pub fn captcha(client: kitsune_http_client::Client, config: &captcha::Configuration) -> AnyCaptcha {
     match config {
         captcha::Configuration::HCaptcha(config) => HCaptcha::builder()
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
             .secret_key(config.secret_key.to_string())
+            .http_client(client)
             .build()
             .into(),
         captcha::Configuration::MCaptcha(config) => MCaptcha::builder()
@@ -68,6 +69,7 @@ pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
             .secret_key(config.secret_key.to_string())
+            .http_client(client)
             .build()
             .into(),
     }

@@ -91,7 +91,7 @@ async fn fetch_infinitely_long_reply_chain() {
             let client = Client::builder().service(client);
 
             let fetcher = Fetcher::builder()
-                .client(client.clone())
+                .http_client(client.clone())
                 .db_pool(db_pool)
                 .embed_client(None)
                 .federation_filter(
@@ -102,7 +102,7 @@ async fn fetch_infinitely_long_reply_chain() {
                 )
                 .language_detection_config(language_detection_config())
                 .search_backend(NoopSearchService)
-                .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+                .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
                 .account_cache(Arc::new(NoopCache.into()))
                 .post_cache(Arc::new(NoopCache.into()))
                 .build();
