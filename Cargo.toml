@@ -204,3 +204,6 @@ license = "AGPL-3.0-or-later"
 [patch.crates-io]
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "12df930a57ff9f07eb16111a3da1feff3dc8e5ad" }
+
+# Compatibility with latest opentelemetry crates
+tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "d18214596c97b1243ee955a63bed3875a4f8f5f9" }
