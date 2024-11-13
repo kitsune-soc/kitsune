@@ -25,7 +25,7 @@ async fn fetch_actor() {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -36,7 +36,7 @@ async fn fetch_actor() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -64,7 +64,7 @@ async fn fetch_emoji() {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
@@ -75,7 +75,7 @@ async fn fetch_emoji() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -115,7 +115,7 @@ async fn fetch_note() {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
@@ -126,7 +126,7 @@ async fn fetch_note() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

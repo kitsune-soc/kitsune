@@ -10,16 +10,16 @@ fast-cjson = { workspace = true, optional = true }
 leb128 = { version = "0.2.5", optional = true }
 schemars = { version = "0.8.21", features = ["impl_json_schema", "semver"] }
 semver = { version = "1.0.23", features = ["serde"] }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 sonic-rs = { workspace = true, optional = true }
 thiserror = { version = "2.0.3", optional = true }
-wasm-encoder = { version = "0.219.1", optional = true }
-wasmparser = { version = "0.219.1", optional = true }
+wasm-encoder = { version = "0.220.0", optional = true }
+wasmparser = { version = "0.220.0", optional = true }
 
 [dev-dependencies]
 insta = { version = "1.41.1", default-features = false, features = ["json"] }
 sonic-rs = { workspace = true }
-wat = "1.219.1"
+wat = "1.220.0"
 
 [features]
 decode = ["dep:leb128", "dep:sonic-rs", "dep:thiserror", "dep:wasmparser"]

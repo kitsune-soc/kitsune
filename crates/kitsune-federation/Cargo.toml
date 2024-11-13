@@ -13,6 +13,7 @@ kitsune-core = { workspace = true }
 kitsune-db = { workspace = true }
 kitsune-embed = { workspace = true }
 kitsune-federation-filter = { workspace = true }
+kitsune-http-client.workspace = true
 kitsune-search = { workspace = true }
 kitsune-service = { workspace = true }
 kitsune-url = { workspace = true }

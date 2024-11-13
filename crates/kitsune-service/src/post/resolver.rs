@@ -165,10 +165,10 @@ mod test {
                 });
                 let client = Client::builder().service(client);
 
-                let webfinger = Arc::new(Webfinger::with_client(client.clone(), Arc::new(NoopCache.into()))).coerce();
+                let webfinger = Arc::new(Webfinger::new(client.clone(), Arc::new(NoopCache.into()))).coerce();
 
                 let fetcher = Fetcher::builder()
-                    .client(client)
+                    .http_client(client)
                     .db_pool(db_pool.clone())
                     .embed_client(None)
                     .federation_filter(

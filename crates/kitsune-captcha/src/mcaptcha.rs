@@ -11,8 +11,7 @@ pub struct Captcha {
     pub secret_key: String,
     pub site_key: String,
 
-    #[builder(default)]
-    client: Client,
+    http_client: Client,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -41,7 +40,7 @@ impl CaptchaBackend for Captcha {
             .header("Accept", "application/json")
             .body(body.into())?;
 
-        let response = self.client.execute(request).await?;
+        let response = self.http_client.execute(request).await?;
 
         let verification_result = response.json::<MCaptchaResponse>().await?;
         if !verification_result.valid {

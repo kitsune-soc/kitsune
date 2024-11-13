@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 iso8601-timestamp = { workspace = true }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 serde_with = { version = "3.11.0", default-features = false, features = [
     "alloc",
     "macros",

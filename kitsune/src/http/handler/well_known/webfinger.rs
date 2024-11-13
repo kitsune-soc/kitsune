@@ -108,17 +108,21 @@ mod tests {
         let client = Client::builder().service(service_fn(handle));
 
         let attachment_service = AttachmentService::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .url_service(url_service.clone())
             .storage_backend(storage)
             .media_proxy_enabled(false)
             .build();
 
-        let resolver = Arc::new(Webfinger::new(Arc::new(NoopCache.into()))).coerce();
+        let resolver = Arc::new(Webfinger::new(
+            Client::default(),
+            Arc::new(NoopCache.into()),
+        ))
+        .coerce();
 
         let fetcher = Fetcher::builder()
-            .client(client)
+            .http_client(client)
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
