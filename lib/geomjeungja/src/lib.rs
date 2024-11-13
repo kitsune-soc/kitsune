@@ -268,7 +268,7 @@ mod test {
             .strategy(dummy)
             .build();
 
-        assert!(verifier.verify().await.is_ok());
+        verifier.verify().await.unwrap();
     }
 
     #[tokio::test]

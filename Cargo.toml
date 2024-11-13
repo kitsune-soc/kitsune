@@ -111,6 +111,7 @@ garde = { version = "0.20.0", features = [
 ] }
 hickory-resolver = { version = "0.25.0-alpha.3", default-features = false, features = [
     "dns-over-rustls",
+    "native-certs",
     "tokio-runtime",
 ] }
 iso8601-timestamp = "0.3.0"
