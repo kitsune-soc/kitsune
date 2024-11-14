@@ -3,9 +3,9 @@
 #![no_std]
 
 use core::fmt;
+use lexical_parse_integer::FromLexical;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
-use lexical_parse_integer::FromLexical;
 
 /// Combined error type
 #[derive(Debug)]
