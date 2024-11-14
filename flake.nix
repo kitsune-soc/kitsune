@@ -226,7 +226,10 @@
                           enable = true;
                           listen_addresses = "127.0.0.1";
                         };
-                        redis.enable = true;
+                        redis = {
+                          package = pkgs.valkey;
+                          enable = true;
+                        };
                       };
                     }
                   )

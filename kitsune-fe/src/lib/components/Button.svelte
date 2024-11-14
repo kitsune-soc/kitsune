@@ -8,53 +8,28 @@
 		buttonType = 'primary',
 		...rest
 	}: {
-		class: string;
+		class?: string;
 		/**
 		 * The type of button to render.
 		 *
 		 * @default 'primary'
 		 */
-		buttonType?: string;
+		buttonType?: 'primary' | 'secondary' | 'danger';
 		children: Snippet;
 	} & HTMLButtonAttributes = $props();
 
-	classNames += ` ${buttonType}`;
+	if (buttonType === 'primary') {
+		classNames += ` [&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark`;
+	} else if (buttonType === 'secondary') {
+		classNames += ` border-solid border-2 bg-transparent`;
+	} else if (buttonType === 'danger') {
+		classNames += ` bg-red-700 text-white`;
+	}
 </script>
 
-<button class={classNames} {...rest}>
+<button
+	class={classNames + ` min-h-1 cursor-pointer rounded p-2 transition duration-500`}
+	{...rest}
+>
 	{@render children()}
 </button>
-
-<style lang="scss">
-	@use '../../styles/colours' as *;
-
-	button {
-		transition: 0.5s;
-		cursor: pointer;
-
-		border: 0;
-		border-radius: 10px;
-
-		padding: 10px;
-		width: 100px;
-		min-height: 50px;
-		font-size: 16px;
-
-		&:global(.primary) {
-			background-color: $shade1dark;
-
-			&:not(:hover) {
-				color: $dark1;
-			}
-
-			&:hover:not([disabled]) {
-				background-color: $shade2dark;
-			}
-		}
-
-		&:global(.secondary) {
-			border: 1px solid;
-			background-color: transparent;
-		}
-	}
-</style>

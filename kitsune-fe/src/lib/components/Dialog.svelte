@@ -19,21 +19,10 @@
 	});
 </script>
 
-<dialog bind:this={dialog} {...rest}>
+<dialog
+	class="prose prose-slate prose-invert rounded bg-dark-1 p-5 backdrop:bg-black/50"
+	bind:this={dialog}
+	{...rest}
+>
 	{@render children()}
 </dialog>
-
-<style lang="scss">
-	@use '../../styles/colours' as *;
-
-	dialog {
-		border-width: 0px;
-		border-radius: 5px;
-		background-color: $dark1;
-	}
-
-	::backdrop {
-		opacity: 50%;
-		background-color: black;
-	}
-</style>
