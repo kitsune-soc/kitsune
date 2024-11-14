@@ -1,4 +1,4 @@
-import { HoudiniClient, getClientSession } from '$houdini';
+import { HoudiniClient } from '$houdini';
 import { houdiniPlugin as authPlugin } from '$lib/oauth/auth.svelte';
 
 export default new HoudiniClient({
