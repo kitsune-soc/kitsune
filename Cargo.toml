@@ -109,12 +109,17 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
+hickory-resolver = { version = "0.25.0-alpha.3", default-features = false, features = [
+    "dns-over-rustls",
+    "native-certs",
+    "tokio-runtime",
+] }
 iso8601-timestamp = "0.3.0"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
-sonic-rs = "0.3.14"
-tokio = "1.41.0"
+sonic-rs = "=0.3.14"
+tokio = "1.41.1"
 triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
 ] }
@@ -199,3 +204,6 @@ license = "AGPL-3.0-or-later"
 [patch.crates-io]
 # SIMD runtime detection and generic I/O wrapper
 sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "12df930a57ff9f07eb16111a3da1feff3dc8e5ad" }
+
+# Compatibility with latest opentelemetry crates
+tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "d18214596c97b1243ee955a63bed3875a4f8f5f9" }

@@ -22,6 +22,7 @@ async fn boot() -> eyre::Result<()> {
     let config = Configuration::load(args.config).await?;
     kitsune_observability::initialise(&config)?;
 
+    let http_client = kitsune_http_client::Client::default();
     let conn = kitsune_db::connect(&config.database)
         .await
         .map_err(kitsune_error::Error::into_error)
@@ -31,7 +32,9 @@ async fn boot() -> eyre::Result<()> {
         .await
         .wrap_err("Failed to connect to the Redis instance for the job scheduler")?;
 
-    let state = kitsune::initialise_state(&config, conn, job_queue.clone()).await?;
+    let state =
+        kitsune::initialise_state(&config, conn, http_client.clone(), job_queue.clone()).await?;
+
     let dispatcher_state = JobDispatcherState::builder()
         .attachment_service(state.service.attachment.clone())
         .db_pool(state.db_pool.clone())
@@ -49,6 +52,7 @@ async fn boot() -> eyre::Result<()> {
         shutdown_signal.clone(),
     ));
     let job_runner_fut = tokio::spawn(kitsune_job_runner::run_dispatcher(
+        http_client,
         job_queue,
         dispatcher_state,
         config.job_queue.num_workers.get(),

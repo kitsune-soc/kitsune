@@ -84,7 +84,7 @@ pub struct AttachmentService {
             .unwrap()
             .build()
     )]
-    client: Client,
+    http_client: Client,
     db_pool: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
@@ -132,7 +132,7 @@ impl AttachmentService {
             Ok(stream.map_err(Error::from).boxed())
         } else if self.media_proxy_enabled {
             Ok(self
-                .client
+                .http_client
                 .get(media_attachment.remote_url.as_ref().unwrap())
                 .await?
                 .stream()
@@ -267,7 +267,7 @@ mod test {
                 .build();
 
             let attachment_service = AttachmentService::builder()
-                .client(client)
+                .http_client(client)
                 .db_pool(db_pool)
                 .url_service(url_service)
                 .storage_backend(storage)

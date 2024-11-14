@@ -45,9 +45,9 @@ async fn federation_allow() {
         let client = Client::builder().service(client);
         let fetcher = builder
             .clone()
-            .client(client.clone())
+            .http_client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         assert_blocked!(fetcher
@@ -63,9 +63,9 @@ async fn federation_allow() {
         let client = Client::builder().service(service_fn(handle));
         let fetcher = builder
             .clone()
-            .client(client.clone())
+            .http_client(client.clone())
             .language_detection_config(language_detection_config())
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
         assert!(matches!(
@@ -90,7 +90,7 @@ async fn federation_deny() {
         let client = Client::builder().service(client);
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -101,7 +101,7 @@ async fn federation_deny() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

@@ -46,6 +46,7 @@ type OidcClient = openidconnect::Client<
     openidconnect::EndpointMaybeSet,
 >;
 
+mod error;
 mod state;
 
 pub mod http;

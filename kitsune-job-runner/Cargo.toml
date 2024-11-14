@@ -24,6 +24,7 @@ kitsune-email = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-federation = { workspace = true }
 kitsune-federation-filter = { workspace = true }
+kitsune-http-client.workspace = true
 kitsune-jobs = { workspace = true }
 kitsune-observability = { workspace = true }
 kitsune-service = { workspace = true }

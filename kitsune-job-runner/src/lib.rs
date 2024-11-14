@@ -58,8 +58,9 @@ pub async fn prepare_job_queue(
     Ok(Arc::new(queue).coerce())
 }
 
-#[instrument(skip(job_queue, state))]
+#[instrument(skip(http_client, job_queue, state))]
 pub async fn run_dispatcher(
+    http_client: kitsune_http_client::Client,
     job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo> + '_>,
     state: JobDispatcherState,
     num_job_workers: usize,
@@ -68,6 +69,7 @@ pub async fn run_dispatcher(
         .attachment_service(state.attachment_service)
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter)
+        .http_client(http_client)
         .mrf_service(state.mrf_service)
         .url_service(state.url_service.clone())
         .build();

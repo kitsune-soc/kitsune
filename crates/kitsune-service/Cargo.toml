@@ -45,7 +45,7 @@ post-process = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.214"
+serde = "1.0.215"
 smol_str = "0.3.2"
 speedy-uuid = { workspace = true }
 tokio = { workspace = true, features = ["macros", "sync"] }
@@ -66,7 +66,7 @@ kitsune-jobs = { workspace = true }
 kitsune-test = { workspace = true }
 kitsune-webfinger = { workspace = true }
 pretty_assertions = "1.4.1"
-tempfile = "3.13.0"
+tempfile = "3.14.0"
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]

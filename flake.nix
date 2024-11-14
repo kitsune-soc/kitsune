@@ -85,8 +85,8 @@
                   homepage = "https://joinkitsune.org";
                 };
 
-                OPENSSL_NO_VENDOR = 1;
                 NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+                CARGO_PROFILE = "dist";
                 cargoExtraArgs = "--locked ${features}";
               }
               // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
@@ -122,6 +122,30 @@
                 }
               );
 
+              cli-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-cli";
+                tag = "latest";
+                copyToRoot = [ cli ];
+                config.Cmd = [ "${cli}/bin/kitsune-cli" ];
+              };
+
+              job-runner = craneLib.buildPackage (
+                commonArgs
+                // {
+                  pname = "kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-job-runner";
+                  inherit cargoArtifacts;
+                  doCheck = false;
+                }
+              );
+
+              job-runner-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-job-runner";
+                tag = "latest";
+                copyToRoot = [ job-runner ];
+                config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
+              };
+
               mrf-tool = craneLib.buildPackage (
                 commonArgs
                 // {
@@ -132,15 +156,29 @@
                 }
               );
 
+              mrf-tool-docker = pkgs.dockerTools.buildImage {
+                name = "mrf-tool";
+                tag = "latest";
+                copyToRoot = [ mrf-tool ];
+                config.Cmd = [ "${mrf-tool}/bin/mrf-tool" ];
+              };
+
               main = craneLib.buildPackage (
                 commonArgs
                 // {
                   pname = "kitsune";
-                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune --bin kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune";
                   inherit cargoArtifacts;
                   doCheck = false;
                 }
               );
+
+              main-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune";
+                tag = "latest";
+                copyToRoot = [ main ];
+                config.Cmd = [ "${main}/bin/kitsune" ];
+              };
 
               frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
                 src = "${src}/kitsune-fe";

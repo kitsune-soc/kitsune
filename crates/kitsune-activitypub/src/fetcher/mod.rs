@@ -1,15 +1,12 @@
 use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
-use http::HeaderValue;
+use http::{header::ACCEPT, HeaderValue, Request};
 use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
-use kitsune_core::{
-    consts::USER_AGENT,
-    traits::{
-        coerce::CoerceResolver,
-        fetcher::{AccountFetchOptions, PostFetchOptions},
-        Fetcher as FetcherTrait, Resolver,
-    },
+use kitsune_core::traits::{
+    coerce::CoerceResolver,
+    fetcher::{AccountFetchOptions, PostFetchOptions},
+    Fetcher as FetcherTrait, Resolver,
 };
 use kitsune_db::{
     model::{account::Account, custom_emoji::CustomEmoji, post::Post},
@@ -32,23 +29,14 @@ mod actor;
 mod emoji;
 mod object;
 
+static ACCEPT_VALUE: HeaderValue = HeaderValue::from_static(
+    "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\", application/activity+json",
+);
+
 #[derive(TypedBuilder)]
 #[builder(build_method(into = Arc<Fetcher>))]
 pub struct Fetcher {
-    #[builder(default =
-        Client::builder()
-            .default_header(
-                "accept",
-                HeaderValue::from_static(
-                    "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\", application/activity+json",
-                ),
-            )
-            .unwrap()
-            .user_agent(USER_AGENT)
-            .unwrap()
-            .build()
-    )]
-    client: Client,
+    http_client: Client,
     db_pool: PgPool,
     embed_client: Option<EmbedClient>,
     federation_filter: FederationFilter,
@@ -74,8 +62,13 @@ impl Fetcher {
             bail!("instance is blocked");
         }
 
-        let response = self.client.get(url.as_str()).await?;
+        let request = Request::builder()
+            .method(http::Method::GET)
+            .uri(url.as_str())
+            .header(ACCEPT, &ACCEPT_VALUE)
+            .body(kitsune_http_client::Body::empty())?;
 
+        let response = self.http_client.execute(request).await?;
         if !response.status().is_success() {
             return Ok(None);
         }

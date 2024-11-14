@@ -30,6 +30,7 @@ async fn main() -> eyre::Result<()> {
 
     kitsune_observability::initialise(&config)?;
 
+    let http_client = kitsune_http_client::Client::default();
     let db_pool = kitsune_db::connect(&config.database)
         .await
         .map_err(kitsune_error::Error::into_error)?;
@@ -67,7 +68,13 @@ async fn main() -> eyre::Result<()> {
         .url_service(url_service)
         .build();
 
-    kitsune_job_runner::run_dispatcher(job_queue, state, config.job_queue.num_workers.into()).await;
+    kitsune_job_runner::run_dispatcher(
+        http_client,
+        job_queue,
+        state,
+        config.job_queue.num_workers.into(),
+    )
+    .await;
 
     Ok(())
 }

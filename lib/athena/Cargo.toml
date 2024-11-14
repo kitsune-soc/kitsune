@@ -18,11 +18,11 @@ iso8601-timestamp = { workspace = true }
 fred = { workspace = true, optional = true }
 just-retry = { workspace = true }
 rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 smol_str = "0.3.2"
 sonic-rs = { workspace = true, optional = true }
 speedy-uuid = { workspace = true, features = ["redis"] }
-thiserror = "2.0.0"
+thiserror = "2.0.3"
 tokio = { workspace = true, features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.12", features = ["rt"] }
 tracing = "0.1.40"
