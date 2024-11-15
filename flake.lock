@@ -296,15 +296,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1706694632,
-        "narHash": "sha256-ytyTwNPiUR8aq74QlxFI+Wv3MyvXz5POO1xZxQIoi0c=",
-        "owner": "nzbr",
+        "lastModified": 1731701186,
+        "narHash": "sha256-0XbT9mJFgTer3rJ7VH1t+Gan6iHuTwe/s0mODdVdtP0=",
+        "owner": "aumetra",
         "repo": "pnpm2nix-nzbr",
-        "rev": "0366b7344171accc2522525710e52a8abbf03579",
+        "rev": "4ed8937ba4f2fe43c3a935a2f54a4d1468b5bdf4",
         "type": "github"
       },
       "original": {
-        "owner": "nzbr",
+        "owner": "aumetra",
         "repo": "pnpm2nix-nzbr",
         "type": "github"
       }

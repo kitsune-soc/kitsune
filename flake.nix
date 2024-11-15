@@ -19,7 +19,7 @@
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
       };
-      url = "github:nzbr/pnpm2nix-nzbr";
+      url = "github:aumetra/pnpm2nix-nzbr";
     };
 
     # The premise is this is the "default" and if you want to do a debug build,
