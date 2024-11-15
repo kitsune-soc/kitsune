@@ -12,15 +12,15 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.28.6",
-    "astro": "^4.16.10",
+    "@astrojs/starlight": "^0.29.0",
+    "astro": "^4.16.13",
     "sharp": "^0.33.5",
-    "starlight-links-validator": "^0.13.0",
+    "starlight-links-validator": "^0.13.2",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
     "prettier-plugin-astro": "^0.14.1",
-    "sass": "^1.80.6"
+    "sass": "^1.81.0"
   }
 }
