@@ -15,6 +15,9 @@
 		"fmt": "prettier --write .",
 		"test:unit": "vitest"
 	},
+	"devDependenciesComment": {
+		"eslint": "upgrade once <https://github.com/eslint/eslint/issues/19134> is resolved"
+	},
 	"devDependencies": {
 		"@iconify-json/eos-icons": "^1.2.1",
 		"@sveltejs/adapter-static": "^3.0.6",
@@ -25,7 +28,7 @@
 		"@trivago/prettier-plugin-sort-imports": "^4.3.0",
 		"@types/eslint": "^9.6.1",
 		"autoprefixer": "^10.4.20",
-		"eslint": "^9.15.0",
+		"eslint": "<=9.14.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.46.0",
 		"globals": "^15.12.0",
