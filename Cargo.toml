@@ -84,7 +84,7 @@ askama = { version = "0.12.1", default-features = false, features = [
 ] }
 asynk-strim = "0.1.2"
 clap = { version = "4.5.21", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.4", default-features = false, features = [
+diesel = { version = "2.2.5", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
@@ -114,7 +114,7 @@ hickory-resolver = { version = "0.25.0-alpha.3", default-features = false, featu
     "native-certs",
     "tokio-runtime",
 ] }
-iso8601-timestamp = "0.3.0"
+iso8601-timestamp = "0.3.1"
 itertools = { version = "0.13.0", default-features = false }
 moka = { version = "=0.12.7", features = ["sync"] }
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }

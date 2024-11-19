@@ -11,7 +11,7 @@ eyre = "0.6.12"
 garde = { workspace = true }
 http = "1.1.0"
 sonic-rs = { workspace = true }
-sync_wrapper = "1.0.1"
+sync_wrapper = "1.0.2"
 tracing = "0.1.40"
 
 [lints]

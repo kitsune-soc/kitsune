@@ -9,7 +9,7 @@ license.workspace = true
 async-trait = "0.1.83"
 eyre = "0.6.12"
 http-body-util = "0.1.2"
-hyper = { version = "1.5.0", default-features = false }
+hyper = { version = "1.5.1", default-features = false }
 kitsune-config = { workspace = true }
 kitsune-core = { workspace = true }
 kitsune-http-client = { workspace = true }
