@@ -27,7 +27,7 @@ where
     B: AsyncTransport + Sync,
     Error: From<<B as AsyncTransport>::Error>,
 {
-    pub async fn send<'a, I, M>(&self, mailboxes: I, email: &M) -> Result<()>
+    pub async fn send<I, M>(&self, mailboxes: I, email: &M) -> Result<()>
     where
         I: Iterator<Item = Mailbox> + Send,
         M: RenderableEmail,

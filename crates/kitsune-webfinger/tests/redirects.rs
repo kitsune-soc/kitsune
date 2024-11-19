@@ -40,7 +40,7 @@ async fn follow_jrd_redirect() {
 
     let client = Client::builder().service(client);
 
-    let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
+    let webfinger = Webfinger::new(client, Arc::new(NoopCache.into()));
     let resource = webfinger
         .resolve_account("0x0", "corteximplant.com")
         .await
@@ -79,7 +79,7 @@ async fn reject_fake_jrd_redirect() {
     });
     let client = Client::builder().service(client);
 
-    let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
+    let webfinger = Webfinger::new(client, Arc::new(NoopCache.into()));
     let resource = webfinger
         .resolve_account("0x0", "corteximplant.com")
         .await
@@ -116,7 +116,7 @@ async fn reject_unbounded_number_of_jrd_redirects() {
     });
     let client = Client::builder().service(client);
 
-    let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
+    let webfinger = Webfinger::new(client, Arc::new(NoopCache.into()));
     let resource = webfinger
         .resolve_account("0x0", "corteximplant.com")
         .await

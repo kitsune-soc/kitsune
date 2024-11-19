@@ -10,18 +10,14 @@ name = "process"
 harness = false
 
 [dependencies]
-atoi_radix10 = "0.0.1"
+lexical-parse-integer = { version = "1.0.2", default-features = false }
 nanorand = { version = "0.7.0", default-features = false, features = [
     "wyrand",
 ] }
 uuid = { version = "1.11.0", default-features = false }
 
-[features]
-default = ["std"]
-std = []
-
 [dev-dependencies]
-divan = "0.1.14"
+divan = "0.1.15"
 time = "0.3.36"
 uuid = { version = "1.11.0", features = ["v7"] }
 

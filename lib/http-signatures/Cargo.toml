@@ -14,7 +14,6 @@ name = "parse_cavage_header"
 harness = false
 
 [dependencies]
-atoi_radix10 = "0.0.1"
 base64-simd = "0.8.0"
 blowocking = { workspace = true, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
@@ -22,17 +21,18 @@ derive_builder = "0.20.2"
 http = "1.1.0"
 httpdate = "1.0.3"
 itertools = { workspace = true }
+lexical-parse-integer = "1.0.2"
 logos = "0.14.2"
 miette = "7.2.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.4", default-features = false }
-thiserror = "1.0.65"
+thiserror = "2.0.3"
 tick-tock-mock = { workspace = true }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
-divan = "0.1.14"
+divan = "0.1.15"
 tokio = { workspace = true, features = ["macros", "rt"] }
 
 [features]

@@ -20,8 +20,8 @@ argon2 = { version = "0.5.3", features = ["std"] }
 askama = { workspace = true }
 askama_axum = "0.4.0"
 async-trait = "0.1.83"
-axum = { version = "0.7.7", features = ["macros", "multipart"] }
-axum-extra = { version = "0.9.4", features = [
+axum = { version = "0.7.8", features = ["macros", "multipart"] }
+axum-extra = { version = "0.9.5", features = [
     "cookie",
     "cookie-signed",
     "query",
@@ -55,6 +55,7 @@ kitsune-embed = { workspace = true }
 kitsune-error = { workspace = true }
 kitsune-federation = { workspace = true }
 kitsune-federation-filter = { workspace = true }
+kitsune-http-client = { workspace = true }
 kitsune-job-runner = { workspace = true }
 kitsune-jobs = { workspace = true }
 kitsune-language = { workspace = true }
@@ -75,13 +76,13 @@ oxide-auth-async = "0.2.1"
 oxide-auth-axum = "0.5.0"
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 scoped-futures = "0.1.4"
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 serde_urlencoded = "0.7.1"
 sonic-rs = { workspace = true }
 simdutf8 = { workspace = true }
 speedy-uuid = { workspace = true }
 strum = { version = "0.26.3", features = ["derive"] }
-tempfile = "3.13.0"
+tempfile = "3.14.0"
 time = "0.3.36"
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { version = "0.7.12", features = ["io"] }
@@ -101,7 +102,7 @@ tracing = "0.1.40"
 trials = { workspace = true }
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
-url = "2.5.2"
+url = "2.5.3"
 
 # --- Optional dependencies ---
 

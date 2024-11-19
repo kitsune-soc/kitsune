@@ -11,12 +11,13 @@ bytes = "1.8.0"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
+hickory-resolver = { workspace = true }
 http = "1.1.0"
 http-body = "1.0.1"
 http-body-util = "0.1.2"
 http-signatures = { workspace = true }
 hyper = "1.5.0"
-hyper-util = { version = "0.1.9", features = [
+hyper-util = { version = "0.1.10", features = [
     "client-legacy",
     "http1",
     "http2",
@@ -30,9 +31,10 @@ hyper-rustls = { version = "0.27.3", default-features = false, features = [
     "ring",
     "tls12",
 ] }
+kitsune-core = { workspace = true }
 kitsune-type = { workspace = true }
 pin-project = "1.1.7"
-serde = "1.0.213"
+serde = "1.0.215"
 simdutf8 = { workspace = true }
 sonic-rs = { workspace = true }
 tower = { version = "0.5.1", features = ["util"] }

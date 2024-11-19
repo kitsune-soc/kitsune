@@ -1,8 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 
 use core::fmt;
+use lexical_parse_integer::FromLexical;
 use nanorand::{Rng, WyRand};
 use uuid::Uuid;
 
@@ -10,7 +11,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub enum Error {
     /// Number parsing error
-    NumberParse(atoi_radix10::ParseIntErrorPublic),
+    NumberParse(lexical_parse_integer::Error),
 }
 
 impl fmt::Display for Error {
@@ -19,14 +20,13 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<atoi_radix10::ParseIntErrorPublic> for Error {
-    fn from(value: atoi_radix10::ParseIntErrorPublic) -> Self {
+impl From<lexical_parse_integer::Error> for Error {
+    fn from(value: lexical_parse_integer::Error) -> Self {
         Self::NumberParse(value)
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}
 
 /// Process a Mastodon snowflake in its u64 representation into a UUID v7 identifier
 #[inline]
@@ -52,7 +52,7 @@ pub fn process<T>(masto_id: T) -> Result<Uuid, Error>
 where
     T: AsRef<[u8]>,
 {
-    let result = atoi_radix10::parse(masto_id.as_ref())?;
+    let result = u64::from_lexical(masto_id.as_ref())?;
     Ok(process_u64(result))
 }
 

@@ -77,157 +77,93 @@
 		{/each}
 	</ol>
 
-	<button onclick={() => (registerErrorDialogOpen = false)}>Close</button>
+	<button
+		class="border-grey rounded border-2 px-2 py-1"
+		onclick={() => (registerErrorDialogOpen = false)}
+	>
+		Close
+	</button>
 </Dialog>
 
-<div class="landing-page">
-	<div class="section-left">
-		<div class="section-left-content">
-			<img class="logo" src="/kitsune_full.svg" alt="Kitsune logo" />
+<div
+	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
+>
+	<div class="flex flex-col max-lg:place-items-center max-lg:text-center">
+		<img class="w-3/5" src="/kitsune_full.svg" alt="Kitsune logo" />
 
-			<h1>Federated microblogging</h1>
+		<h1>Federated microblogging</h1>
 
-			Statistics:
+		Statistics:
 
-			<ul>
-				<li>
-					<strong>{stats.registeredUsers}</strong> registered users
-				</li>
-				<li>
-					<strong>{stats.postCount}</strong> posts
-				</li>
-			</ul>
-		</div>
+		<ul class="list-none p-0">
+			<li>
+				<strong>{stats.registeredUsers}</strong> registered users
+			</li>
+			<li>
+				<strong>{stats.postCount}</strong> posts
+			</li>
+		</ul>
 	</div>
 
-	<div class="section-right">
-		<div class="section-right-content">
-			<form class="register-form" onsubmit={doRegister}>
-				<label for="username">Username</label>
-				<input type="text" name="username" placeholder="hangaku" />
+	<div class="basis-1/4 max-lg:m-5">
+		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
+			<label class="block" for="username">
+				Username
 
-				<label for="email">Email address</label>
-				<input type="email" name="email" placeholder="hangaku@joinkitsune.org" />
+				<input
+					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+					type="text"
+					name="username"
+					placeholder="hangaku"
+				/>
+			</label>
 
-				<label for="password">Password</label>
-				<input type="password" name="password" />
+			<label for="email">
+				Email address
 
-				<label for="confirm-password">Confirm Password</label>
-				<input type="password" name="confirm-password" />
+				<input
+					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+					type="email"
+					name="email"
+					placeholder="hangaku@kabuki.dd"
+				/>
+			</label>
 
-				<p>
-					<Button class="register-button" disabled={registerButtonDisabled}>
-						{#if registerButtonDisabled}
-							<!-- Work around unplugin-icons bug: <https://github.com/unplugin/unplugin-icons/issues/242> -->
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html IconThreeDotsLoading}
-						{:else}
-							Register
-						{/if}
-					</Button>
-				</p>
-			</form>
+			<label for="password">
+				Password
 
-			<Button buttonType="secondary" class="sign-in-button" onclick={initiateLogin}>
-				Already have an account? Sign in
-			</Button>
-		</div>
+				<input
+					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+					type="password"
+					name="password"
+				/>
+			</label>
+
+			<label for="confirm-password">
+				Confirm Password
+
+				<input
+					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+					type="password"
+					name="confirm-password"
+				/>
+			</label>
+
+			<p>
+				<Button class="w-full" disabled={registerButtonDisabled}>
+					{#if registerButtonDisabled}
+						<!-- Work around unplugin-icons bug: <https://github.com/unplugin/unplugin-icons/issues/242> -->
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						{@html IconThreeDotsLoading}
+					{:else}
+						Register
+					{/if}
+				</Button>
+			</p>
+		</form>
+
+		<Button class="w-full" buttonType="secondary" onclick={initiateLogin}>
+			Already have an account? Sign in
+		</Button>
 	</div>
 </div>
-
-<style lang="scss">
-	@use '../styles/breakpoints' as *;
-	@use '../styles/colours' as *;
-	@use '../styles/mixins' as *;
-	@use 'sass:map';
-
-	ul {
-		padding: 0;
-		list-style-type: none;
-	}
-
-	.landing-page {
-		display: flex;
-		flex-direction: row;
-
-		@include not-on-mobile {
-			height: 100%;
-		}
-
-		.section-left {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			width: 100%;
-		}
-
-		.section-right {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			background-color: $dark2;
-			width: 100%;
-
-			&-content {
-				border-radius: 0px 30px 30px 0px;
-				background-color: $dark1;
-				padding: 2em;
-				max-width: 40ch;
-
-				& :global(.sign-in-button) {
-					width: 100%;
-				}
-			}
-		}
-	}
-
-	.logo {
-		width: 65%;
-	}
-
-	.register-form {
-		display: flex;
-		flex-direction: column;
-
-		& label {
-			margin-top: 0.5em;
-		}
-
-		& input {
-			margin-bottom: 0.75em;
-			border: none;
-			border-radius: 10px;
-			background-color: $dark2;
-			padding-left: 1em;
-			height: 40px;
-		}
-
-		& :global(.register-button) {
-			margin-top: 1.5em;
-			width: 100%;
-		}
-	}
-
-	@include only-on-mobile {
-		.landing-page {
-			flex-direction: column;
-
-			margin: auto;
-			margin-top: 3em;
-			max-width: 80vw;
-
-			.section-left {
-				text-align: center;
-			}
-
-			.section-right-content {
-				background-color: $dark2;
-				max-width: 100%;
-			}
-		}
-
-		.register-form input {
-			background-color: $dark1;
-		}
-	}
-</style>

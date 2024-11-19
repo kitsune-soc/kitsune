@@ -13,6 +13,11 @@ export default defineConfig({
 			compiler: 'svelte'
 		})
 	],
+	server: {
+		proxy: {
+			'/graphql': 'http://localhost:5000'
+		}
+	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}

@@ -19,7 +19,7 @@
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
       };
-      url = "github:nzbr/pnpm2nix-nzbr";
+      url = "github:aumetra/pnpm2nix-nzbr";
     };
 
     # The premise is this is the "default" and if you want to do a debug build,
@@ -27,6 +27,12 @@
     # like so `nix build --override-input debugBuild github:boolean-option/true`
     debugBuild.url = "github:boolean-option/false/d06b4794a134686c70a1325df88a6e6768c6b212";
   };
+
+  nixConfig = {
+    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
+    extra-substituters = "https://devenv.cachix.org";
+  };
+
   outputs =
     { self
     , devenv
@@ -85,8 +91,8 @@
                   homepage = "https://joinkitsune.org";
                 };
 
-                OPENSSL_NO_VENDOR = 1;
                 NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+                CARGO_PROFILE = "dist";
                 cargoExtraArgs = "--locked ${features}";
               }
               // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
@@ -122,6 +128,30 @@
                 }
               );
 
+              cli-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-cli";
+                tag = "latest";
+                copyToRoot = [ cli ];
+                config.Cmd = [ "${cli}/bin/kitsune-cli" ];
+              };
+
+              job-runner = craneLib.buildPackage (
+                commonArgs
+                // {
+                  pname = "kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-job-runner";
+                  inherit cargoArtifacts;
+                  doCheck = false;
+                }
+              );
+
+              job-runner-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune-job-runner";
+                tag = "latest";
+                copyToRoot = [ job-runner ];
+                config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
+              };
+
               mrf-tool = craneLib.buildPackage (
                 commonArgs
                 // {
@@ -132,15 +162,29 @@
                 }
               );
 
+              mrf-tool-docker = pkgs.dockerTools.buildImage {
+                name = "mrf-tool";
+                tag = "latest";
+                copyToRoot = [ mrf-tool ];
+                config.Cmd = [ "${mrf-tool}/bin/mrf-tool" ];
+              };
+
               main = craneLib.buildPackage (
                 commonArgs
                 // {
                   pname = "kitsune";
-                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune --bin kitsune-job-runner";
+                  cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune";
                   inherit cargoArtifacts;
                   doCheck = false;
                 }
               );
+
+              main-docker = pkgs.dockerTools.buildImage {
+                name = "kitsune";
+                tag = "latest";
+                copyToRoot = [ main ];
+                config.Cmd = [ "${main}/bin/kitsune" ];
+              };
 
               frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
                 src = "${src}/kitsune-fe";
@@ -188,7 +232,10 @@
                           enable = true;
                           listen_addresses = "127.0.0.1";
                         };
-                        redis.enable = true;
+                        redis = {
+                          package = pkgs.valkey;
+                          enable = true;
+                        };
                       };
                     }
                   )

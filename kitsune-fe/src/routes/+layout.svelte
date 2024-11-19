@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import '../styles/root.scss';
 	import type { PageData } from './$houdini';
 	import { version as frontendVersion } from '$app/environment';
+
+	import '../app.css';
 
 	const { children, data }: { children: Snippet; data: PageData } = $props();
 
@@ -18,7 +19,7 @@
 
 {@render children()}
 
-<footer>
+<footer class="w-full text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3">
 	<p>
 		Backend version: {backendVersion}
 		<br />Frontend version: {frontendVersion}
@@ -29,28 +30,3 @@
 		<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
 	</span>
 </footer>
-
-<style lang="scss">
-	@use '../styles/mixins' as *;
-
-	footer {
-		font-size: small;
-		line-height: normal;
-	}
-
-	@include only-on-mobile {
-		footer {
-			margin: 3em 0;
-			text-align: center;
-		}
-	}
-
-	@include not-on-mobile {
-		footer {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			padding: 1em;
-		}
-	}
-</style>
