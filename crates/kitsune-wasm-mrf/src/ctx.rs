@@ -1,6 +1,6 @@
 use crate::{
     kv_storage,
-    mrf_wit::v1::fep::mrf::{http, keyvalue},
+    mrf_wit::v1::fep::mrf::{http_client, keyvalue},
 };
 use slab::Slab;
 use triomphe::Arc;
@@ -28,12 +28,15 @@ impl KvContext {
 
 pub struct HttpContext {
     pub client: kitsune_http_client::Client,
-    pub bodies: Slab<crate::http::Body>,
+    pub bodies: Slab<crate::http_client::Body>,
 }
 
 impl HttpContext {
     #[inline]
-    pub fn get_body(&mut self, rep: &Resource<http::ResponseBody>) -> &mut crate::http::Body {
+    pub fn get_body(
+        &mut self,
+        rep: &Resource<http_client::ResponseBody>,
+    ) -> &mut crate::http_client::Body {
         &mut self.bodies[rep.rep() as usize]
     }
 }
@@ -80,7 +83,7 @@ pub fn construct_store(
             buckets: Slab::new(),
         },
         resource_limiter: StoreLimitsBuilder::new()
-            .memory_size(100 * 1024 * 1024)
+            .memory_size(15 * 1024 * 1024)
             .build(),
         resource_table: ResourceTable::new(),
         wasi_ctx,

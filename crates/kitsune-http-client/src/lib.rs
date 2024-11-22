@@ -45,8 +45,6 @@ pub use self::body::Body;
 /// Response body type
 pub type ResponseBody = BoxBody;
 
-pub use ::http;
-
 /// Client error type
 pub struct Error {
     inner: BoxError,

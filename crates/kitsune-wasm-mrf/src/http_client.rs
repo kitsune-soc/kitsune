@@ -1,6 +1,6 @@
 use crate::{
     ctx::Context,
-    mrf_wit::v1::fep::mrf::http::{self, Error, Request, Response, ResponseBody},
+    mrf_wit::v1::fep::mrf::http_client::{self, Error, Request, Response, ResponseBody},
 };
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
@@ -10,12 +10,12 @@ use wasmtime::component::Resource;
 pub type Body = BodyDataStream<kitsune_http_client::ResponseBody>;
 
 #[async_trait]
-impl http::Host for Context {
+impl http_client::Host for Context {
     async fn do_request(&mut self, request: Request) -> Result<Response, Resource<Error>> {
-        let method = kitsune_http_client::http::Method::from_bytes(request.method.as_bytes())
+        let method = http::Method::from_bytes(request.method.as_bytes())
             .map_err(|_| Resource::new_own(0))?;
 
-        let request = kitsune_http_client::http::Request::builder()
+        let request = http::Request::builder()
             .uri(request.url)
             .method(method)
             .body(request.body.map_or_else(Default::default, Into::into))
@@ -51,7 +51,7 @@ impl http::Host for Context {
 }
 
 #[async_trait]
-impl http::HostResponseBody for Context {
+impl http_client::HostResponseBody for Context {
     async fn next(
         &mut self,
         rep: Resource<ResponseBody>,
@@ -72,7 +72,7 @@ impl http::HostResponseBody for Context {
 }
 
 #[async_trait]
-impl http::HostError for Context {
+impl http_client::HostError for Context {
     async fn drop(&mut self, _rep: Resource<Error>) -> wasmtime::Result<()> {
         Ok(())
     }

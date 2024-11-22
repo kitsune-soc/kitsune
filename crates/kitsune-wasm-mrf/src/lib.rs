@@ -35,7 +35,7 @@ use wasmtime::{
 
 mod cache;
 mod ctx;
-mod http;
+mod http_client;
 mod logging;
 mod mrf_wit;
 

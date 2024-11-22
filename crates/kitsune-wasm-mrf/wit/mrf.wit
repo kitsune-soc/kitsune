@@ -1,7 +1,7 @@
-package fep:mrf@1.0.0;
+package fep:mrf@0.1.0;
 
 /// Home-grown version of an interface for doing HTTP requests
-interface http {
+interface http-client {
     /// Opaque representation of some error
     resource error {}
 
@@ -101,7 +101,7 @@ interface types {
 world mrf {
     use types.{direction, error};
 
-    import http;
+    import http-client;
     import keyvalue;
     import wasi:logging/logging;
 
