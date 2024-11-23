@@ -1,5 +1,5 @@
 use eyre::ensure;
-use std::{env, ffi::OsStr, io, process::Command};
+use std::{env, ffi::OsStr, process::Command};
 
 pub fn cargo<I>(params: I) -> eyre::Result<()>
 where
@@ -7,13 +7,9 @@ where
     I::Item: AsRef<OsStr>,
 {
     let cargo = env::var("CARGO").unwrap();
-    let output = Command::new(cargo)
-        .args(params)
-        .stderr(io::stderr())
-        .stdout(io::stdout())
-        .output()?;
+    let status = Command::new(cargo).args(params).status()?;
 
-    ensure!(output.status.success(), "Failed to run cargo subcommand");
+    ensure!(status.success(), "Failed to run cargo subcommand");
 
     Ok(())
 }
