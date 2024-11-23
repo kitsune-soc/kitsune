@@ -18,9 +18,9 @@ mrf-manifest = { workspace = true, features = [
 sonic-rs = { workspace = true }
 wasmparser = "0.220.0"
 
-[lints]
-workspace = true
-
 [dev-dependencies]
 sonic-rs = { workspace = true }
 wat = "1.220.0"
+
+[lints]
+workspace = true

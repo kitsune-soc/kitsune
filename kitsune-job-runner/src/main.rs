@@ -38,7 +38,7 @@ async fn main() -> eyre::Result<()> {
     let job_queue =
         kitsune_job_runner::prepare_job_queue(db_pool.clone(), &config.job_queue).await?;
 
-    let mrf_service = MrfService::from_config(&config.mrf).await?;
+    let mrf_service = MrfService::from_config(&config.mrf, http_client.clone()).await?;
     let url_service = UrlService::builder()
         .domain(config.url.domain)
         .scheme(config.url.scheme)

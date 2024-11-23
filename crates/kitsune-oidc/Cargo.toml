@@ -25,7 +25,7 @@ serde = { version = "1.0.215", features = ["derive"] }
 sonic-rs = { workspace = true }
 speedy-uuid = { workspace = true }
 thiserror = "2.0.3"
-url = "2.5.3"
+url = "2.5.4"
 
 [dev-dependencies]
 tokio = { version = "1.41.1", features = ["macros", "rt"] }

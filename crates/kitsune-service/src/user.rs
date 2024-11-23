@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)] // garde expansion issue
+
 use super::{
     captcha::CaptchaService,
     job::{Enqueue, JobService},
