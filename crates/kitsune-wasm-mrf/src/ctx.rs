@@ -62,6 +62,7 @@ impl WasiView for Context {
 #[inline]
 pub fn construct_store(
     engine: &Engine,
+    http_client: kitsune_http_client::Client,
     storage: Arc<kv_storage::BackendDispatch>,
 ) -> Store<Context> {
     let wasi_ctx = WasiCtxBuilder::new()
@@ -72,9 +73,7 @@ pub fn construct_store(
 
     let data = Context {
         http_ctx: HttpContext {
-            client: kitsune_http_client::Client::builder()
-                .content_length_limit(None)
-                .build(),
+            client: http_client,
             bodies: Slab::new(),
         },
         kv_ctx: KvContext {

@@ -2800,6 +2800,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-client-test"
+version = "0.0.1-pre.6"
+dependencies = [
+ "wit-bindgen",
+]
+
+[[package]]
 name = "http-range-header"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4047,6 +4054,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "async-trait",
  "blake3",
+ "bytes",
  "color-eyre",
  "derive_more 1.0.0",
  "enum_dispatch",
@@ -4066,6 +4074,7 @@ dependencies = [
  "sonic-rs",
  "tempfile",
  "tokio",
+ "tower 0.5.1",
  "tracing",
  "tracing-subscriber",
  "triomphe",

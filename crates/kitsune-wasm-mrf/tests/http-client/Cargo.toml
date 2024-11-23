@@ -1,0 +1,16 @@
+[package]
+name = "http-client-test"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.35.0"
+
+[lints]
+workspace = true

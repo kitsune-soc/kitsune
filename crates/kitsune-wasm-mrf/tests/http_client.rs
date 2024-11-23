@@ -1,13 +1,30 @@
+use bytes::Bytes;
+use http_body_util::Full;
 use kitsune_wasm_mrf::{MrfModule, MrfService, Outcome};
 use smol_str::SmolStr;
-use std::borrow::Cow;
+use std::{borrow::Cow, convert::Infallible};
 use tempfile::NamedTempFile;
 use wasmtime::{component::Component, Config, Engine};
 
-const WASM_COMPONENT: &[u8] = include_bytes!("example_mrf.component.wasm");
+const WASM_COMPONENT: &[u8] = include_bytes!("http_client_test.component.wasm");
+
+async fn handle_request(
+    req: http::Request<kitsune_http_client::Body>,
+) -> Result<http::Response<Full<Bytes>>, Infallible> {
+    assert_eq!(req.uri().host(), Some("aumetra.xyz"));
+    assert_eq!(req.uri().path(), "/blog");
+    assert_eq!(req.uri().scheme_str(), Some("https"));
+
+    let response = http::Response::builder()
+        .status(200)
+        .body(Full::new(Bytes::from_static(b"[response here]")))
+        .unwrap();
+
+    Ok(response)
+}
 
 #[tokio::test]
-async fn basic() {
+async fn request() {
     tracing_subscriber::fmt::init();
 
     let db_file = NamedTempFile::new().unwrap();
@@ -23,6 +40,8 @@ async fn basic() {
         panic!();
     };
 
+    let mocked_client =
+        kitsune_http_client::Client::builder().service(tower::service_fn(handle_request));
     let service = MrfService::from_components(
         engine,
         vec![MrfModule {
@@ -30,7 +49,7 @@ async fn basic() {
             config: SmolStr::default(),
             manifest,
         }],
-        kitsune_http_client::Client::default(),
+        mocked_client,
         fs_backend.into(),
     )
     .unwrap();

@@ -118,6 +118,7 @@ pub struct MrfModule {
 #[kitsune_service]
 pub struct MrfService {
     engine: Engine,
+    http_client: kitsune_http_client::Client,
     linker: Arc<Linker<Context>>,
     modules: Arc<[MrfModule]>,
     storage: Arc<kv_storage::BackendDispatch>,
@@ -128,15 +129,17 @@ impl MrfService {
     pub fn from_components(
         engine: Engine,
         modules: Vec<MrfModule>,
+        http_client: kitsune_http_client::Client,
         storage: kv_storage::BackendDispatch,
     ) -> eyre::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
 
-        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
+        self::mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
         wasmtime_wasi::add_to_linker_async(&mut linker).map_err(eyre::Report::msg)?;
 
         Ok(__MrfService__Inner {
             engine,
+            http_client,
             linker: Arc::new(linker),
             modules: modules.into(),
             storage: Arc::new(storage),
@@ -145,7 +148,10 @@ impl MrfService {
     }
 
     #[instrument(skip_all, fields(module_dir = %config.module_dir))]
-    pub async fn from_config(config: &MrfConfiguration) -> eyre::Result<Self> {
+    pub async fn from_config(
+        config: &MrfConfiguration,
+        http_client: kitsune_http_client::Client,
+    ) -> eyre::Result<Self> {
         let cache = config
             .artifact_cache
             .as_ref()
@@ -227,7 +233,7 @@ impl MrfService {
             modules.push(module);
         }
 
-        Self::from_components(engine, modules, storage)
+        Self::from_components(engine, modules, http_client, storage)
     }
 
     #[must_use]
@@ -283,7 +289,8 @@ impl MrfService {
         activity_type: &str,
         activity: &'a str,
     ) -> Result<Outcome<'a>, Error> {
-        let mut store = construct_store(&self.engine, self.storage.clone());
+        let mut store =
+            construct_store(&self.engine, self.http_client.clone(), self.storage.clone());
         let mut activity = Cow::Borrowed(activity);
 
         for module in self.modules.iter() {
