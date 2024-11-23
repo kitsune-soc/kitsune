@@ -34,7 +34,7 @@ pub async fn post(
         .follower_id(user_data.account.id)
         .build();
     let follow_accounts = account_service
-        .follow(follow, follow_body.map_or(false, |body| body.0.notify))
+        .follow(follow, follow_body.is_some_and(|body| body.0.notify))
         .await?;
 
     Ok(Json(

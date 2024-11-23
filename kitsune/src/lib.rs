@@ -149,7 +149,7 @@ pub async fn initialise_state(
         .url_service(url_service.clone())
         .build();
 
-    let mrf_service = MrfService::from_config(&config.mrf).await?;
+    let mrf_service = MrfService::from_config(&config.mrf, http_client).await?;
 
     let notification_service = NotificationService::builder()
         .db_pool(db_pool.clone())

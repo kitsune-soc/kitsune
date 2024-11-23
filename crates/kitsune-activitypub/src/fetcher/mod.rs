@@ -87,7 +87,7 @@ impl Fetcher {
                 .eq_ignore_ascii_case("application/ld+json")
                 && content_type
                     .get_param("profile")
-                    .map_or(false, |profile_urls| {
+                    .is_some_and(|profile_urls| {
                         profile_urls
                             .as_str()
                             .split_whitespace()
