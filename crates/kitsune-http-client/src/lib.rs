@@ -39,6 +39,9 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
 
+/// Default request timeout of 30s (same as Firefox)
+const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// Alias for our internal HTTP body type
 pub use self::body::Body;
 
@@ -162,11 +165,11 @@ impl ClientBuilder {
     #[must_use]
     pub fn build(mut self) -> Client {
         let resolver = self.dns_resolver.take().unwrap_or_else(|| {
-            let resolver = hickory_resolver::TokioResolver::tokio(
+            hickory_resolver::TokioResolver::tokio(
                 ResolverConfig::quad9_tls(),
                 ResolverOpts::default(),
-            );
-            resolver.into()
+            )
+            .into()
         });
 
         let connector = HttpsConnectorBuilder::new()
@@ -233,7 +236,7 @@ impl Default for ClientBuilder {
             content_length_limit: Some(DEFAULT_BODY_LIMIT),
             default_headers: HeaderMap::default(),
             dns_resolver: None,
-            timeout: Option::default(),
+            timeout: Some(DEFAULT_REQUEST_TIMEOUT),
         };
 
         builder
