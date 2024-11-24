@@ -23,7 +23,6 @@ let
     };
   oneOfTagged = definitions:
     types.oneOf (lib.attrValues (lib.mapAttrs taggedSubmodule definitions));
-
 in
 {
   options = {
@@ -50,188 +49,18 @@ in
       };
 
       config = mkOption {
-        type = types.submodule {
-          freeformType = format.type;
-          options = {
-            cache = mkOption {
-              type = oneOfTagged {
-                in-memory = { };
-                redis = {
-                  url = mkOption {
-                    type = types.nonEmptyStr;
-                    default = "redis+unix:///run/redis-kitsune-cache/redis.sock";
-                  };
-                };
-              };
-              default = {
-                type = "redis";
-              };
-            };
-            database = mkOption {
-              type = types.submodule {
-                freeformType = format.type;
-                options = {
-                  url = mkOption {
-                    type = types.nonEmptyStr;
-                    default = "postgres://kitsune:kitsune@localhost/kitsune";
-                  };
-                  max-connections = mkOption {
-                    type = types.ints.positive;
-                    default = 20;
-                  };
-                };
-              };
-              default = { };
-            };
-            instance = mkOption {
-              type = types.submodule {
-                freeformType = format.type;
-                options = {
-                  name = mkOption {
-                    type = types.str;
-                  };
-                  description = mkOption {
-                    type = types.str;
-                  };
-                  character-limit = mkOption {
-                    type = types.ints.positive;
-                    default = 5000;
-                  };
-                  registrations-open = mkOption {
-                    type = types.bool;
-                  };
-                  federation-filter = mkOption {
-                    type = oneOfTagged {
-                      deny = {
-                        domains = mkOption {
-                          type = types.listOf types.str;
-                          default = [ ];
-                        };
-                      };
-                      allow = {
-                        domains = mkOption {
-                          type = types.listOf types.str;
-                          default = [ ];
-                        };
-                      };
-                    };
-                    default = {
-                      type = "deny";
-                    };
-                  };
-                };
-              };
-            };
-            job-queue = mkOption {
-              type = types.submodule {
-                freeformType = format.type;
-                options = {
-                  redis-url = mkOption {
-                    type = types.nonEmptyStr;
-                    default = "redis+unix:///run/redis-kitsune-jobqueue/redis.sock";
-                  };
-                  num-workers = mkOption {
-                    type = types.ints.positive;
-                    default = 20;
-                  };
-                };
-              };
-              default = { };
-            };
-            messaging = mkOption {
-              type = oneOfTagged {
-                in-process = { };
-                redis = {
-                  url = mkOption {
-                    type = types.nonEmptyStr;
-                    default = "redis+unix:///run/redis-kitsune-messaging/redis.sock";
-                  };
-                };
-              };
-              default = {
-                type = "redis";
-              };
-            };
-            server = mkOption {
-              type = types.submodule {
-                freeformType = format.type;
-                options = {
-                  frontend-dir = mkOption {
-                    type = types.path;
-                    default = "${cfg.packages.service}/kitsune-fe";
-                  };
-                  max-upload-size = mkOption {
-                    type = types.ints.positive;
-                    default = 5242880;
-                  };
-                  media-proxy-enabled = mkOption {
-                    type = types.bool;
-                    default = false;
-                  };
-                  port = mkOption {
-                    type = types.port;
-                    default = 5000;
-                  };
-                  request-timeout-secs = mkOption {
-                    type = types.ints.positive;
-                    default = 60;
-                  };
-                };
-              };
-              default = { };
-            };
-            search = mkOption {
-              type = oneOfTagged {
-                kitsune = {
-                  index-server = mkOption {
-                    type = types.nonEmptyStr;
-                  };
-                  search-servers = mkOption {
-                    type = types.listOf types.nonEmptyStr;
-                  };
-                };
-                meilisearch = {
-                  instance-url = mkOption {
-                    type = types.nonEmptyStr;
-                  };
-                };
-                sql = { };
-                none = { };
-              };
-              default = { type = "sql"; };
-            };
-            storage = mkOption {
-              type = oneOfTagged {
-                fs = {
-                  upload-dir = mkOption {
-                    type = types.path;
-                    default = "${cfg.dataDir}/uploads";
-                  };
-                };
-                s3 = {
-                  todo = mkOption {
-                    type = types.enum [ ];
-                  };
-                };
-              };
-              default = {
-                type = "fs";
-              };
-            };
-            url = mkOption {
-              type = types.submodule {
-                freeformType = format.type;
-                options = {
-                  scheme = mkOption {
-                    type = types.nonEmptyStr;
-                  };
-                  domain = mkOption {
-                    type = types.nonEmptyStr;
-                  };
-                };
-              };
-              default = { };
-            };
+        type = types.attrOf (types.nullOr [ types.bool types.int types.str ]);
+        default = {
+          database = {
+            url = "postgres://kitsune:kitsune@localhost/kitsune";
+            max-connections = 20;
+          };
+          job-queue = {
+            redis-url = "redis+unix:///run/redis-kitsune-jobqueue/redis.sock";
+            num-workers = 20;
+          };
+          messaging = {
+            type = "in-process";
           };
         };
       };
@@ -245,9 +74,7 @@ in
       isSystemUser = true;
       group = "kitsune";
       extraGroups = [
-        "redis-kitsune-cache"
         "redis-kitsune-jobqueue"
-        "redis-kitsune-messaging"
       ];
       home = cfg.dataDir;
     };
@@ -255,9 +82,8 @@ in
     users.groups.kitsune = { };
 
     services.redis = {
-      servers."kitsune-cache".enable = true;
+      package = pkgs.valkey;
       servers."kitsune-jobqueue".enable = true;
-      servers."kitsune-messaging".enable = true;
     };
 
     systemd.services.kitsune = {
@@ -265,9 +91,7 @@ in
       after = [
         "network.target"
         "postgresql.service"
-        "redis-kitsune-cache.service"
         "redis-kitsune-jobqueue.service"
-        "redis-kitsune-messaging.service"
       ];
 
       wants = [ "network-online.target" ];

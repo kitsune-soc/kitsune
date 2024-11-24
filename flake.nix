@@ -128,10 +128,10 @@
                 }
               );
 
-              cli-docker = pkgs.dockerTools.buildImage {
+              cli-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-cli";
                 tag = "latest";
-                copyToRoot = [ cli ];
+                contents = [ cli ];
                 config.Cmd = [ "${cli}/bin/kitsune-cli" ];
               };
 
@@ -145,10 +145,10 @@
                 }
               );
 
-              job-runner-docker = pkgs.dockerTools.buildImage {
+              job-runner-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-job-runner";
                 tag = "latest";
-                copyToRoot = [ job-runner ];
+                contents = [ job-runner ];
                 config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
               };
 
@@ -162,10 +162,10 @@
                 }
               );
 
-              mrf-tool-docker = pkgs.dockerTools.buildImage {
+              mrf-tool-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "mrf-tool";
                 tag = "latest";
-                copyToRoot = [ mrf-tool ];
+                contents = [ mrf-tool ];
                 config.Cmd = [ "${mrf-tool}/bin/mrf-tool" ];
               };
 
@@ -179,10 +179,10 @@
                 }
               );
 
-              main-docker = pkgs.dockerTools.buildImage {
+              main-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune";
                 tag = "latest";
-                copyToRoot = [ main ];
+                contents = [ main ];
                 config.Cmd = [ "${main}/bin/kitsune" ];
               };
 
