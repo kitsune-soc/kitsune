@@ -1002,7 +1002,7 @@ checksum = "afb84c814227b90d6895e01398aee0d8033c00e7466aca416fb6a8e0eb19d8a7"
 [[package]]
 name = "client-sdk"
 version = "0.1.0"
-source = "git+https://github.com/Lantern-chat/client-sdk-rs.git?rev=efb4288d9b107b48609802193d57b29f7ae395a1#efb4288d9b107b48609802193d57b29f7ae395a1"
+source = "git+https://github.com/Lantern-chat/client-sdk-rs.git?rev=8fdc7137af36b58eb2c2c38f718ddcb6f9f853ba#8fdc7137af36b58eb2c2c38f718ddcb6f9f853ba"
 dependencies = [
  "arrayvec",
  "bitflags 2.6.0",
@@ -1010,7 +1010,6 @@ dependencies = [
  "byteorder",
  "const-random",
  "enum-primitive-derive",
- "hashbrown 0.14.5",
  "iso8601-timestamp",
  "itoa 1.0.14",
  "num-traits",
