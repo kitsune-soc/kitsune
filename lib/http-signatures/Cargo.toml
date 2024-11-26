@@ -23,7 +23,7 @@ httpdate = "1.0.3"
 itertools = { workspace = true }
 lexical-parse-integer = "1.0.2"
 logos = "0.14.2"
-miette = "7.2.0"
+miette = "7.3.0"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.4", default-features = false }

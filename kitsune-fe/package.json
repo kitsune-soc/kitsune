@@ -15,9 +15,6 @@
 		"fmt": "prettier --write .",
 		"test:unit": "vitest"
 	},
-	"devDependenciesComment": {
-		"eslint": "upgrade once <https://github.com/eslint/eslint/issues/19134> is resolved"
-	},
 	"devDependencies": {
 		"@iconify-json/eos-icons": "^1.2.1",
 		"@sveltejs/adapter-static": "^3.0.6",
