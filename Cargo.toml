@@ -38,7 +38,6 @@ members = [
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-s3",
-    "crates/kitsune-scss-compiler",
     "crates/kitsune-search",
     "crates/kitsune-service",
     "crates/kitsune-storage",
@@ -89,7 +88,7 @@ diesel = { version = "2.2.5", default-features = false, features = [
     "32-column-tables",
     "with-deprecated",
 ] }
-diesel-async = { version = "0.5.1", features = [
+diesel-async = { version = "0.5.2", features = [
     "async-connection-wrapper",
     "bb8",
     "postgres",
