@@ -6,6 +6,9 @@
 target
 target-analyzer
 
+# Node dependencies
+node_modules
+
 # Build-time generated CSS artifacts
 /kitsune/assets-dist
 
