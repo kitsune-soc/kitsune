@@ -1,3 +1,4 @@
 packages:
+  - kitsune/
   - kitsune-fe/
   - website/

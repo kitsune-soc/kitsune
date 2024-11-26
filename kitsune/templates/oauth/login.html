@@ -1,25 +1,30 @@
-{% extends "../base.html" %}
+{% extends "../base.html" %} {% block title %}OAuth Login{% endblock %} {% block
+body %}
+<p class="header">Kitsune</p>
 
-{% block title %}
-  OAuth Login
-{% endblock %}
+{% for (_level, msg) in flash_messages %}
+<div class="message">{{ msg }}</div>
+{% endfor %}
 
-{% block body %}
-  <p class="header">Kitsune</p>
-
-  {% for (_level, msg) in flash_messages %}
-    <div class="message">
-      {{ msg }}
-    </div>
-  {% endfor %}
-
-  <form method="post">
-    <div>
-      <label class="label" for="username">Username</label><br />
-      <input class="field" type="text" id="username" name="username" value="" /><br />
-      <label class="label" for="password">Password</label><br />
-      <input class="field" type="password" id="password" name="password" value="" /><br /><br />
-    </div>
-    <input class="formButton" type="submit" value="Submit" />
-  </form>
+<form method="post">
+  <div>
+    <label class="label" for="username">Username</label><br />
+    <input
+      class="field"
+      type="text"
+      id="username"
+      name="username"
+      value=""
+    /><br />
+    <label class="label" for="password">Password</label><br />
+    <input
+      class="field"
+      type="password"
+      id="password"
+      name="password"
+      value=""
+    /><br /><br />
+  </div>
+  <input class="formButton" type="submit" value="Submit" />
+</form>
 {% endblock %}
