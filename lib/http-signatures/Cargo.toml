@@ -32,7 +32,7 @@ tick-tock-mock = { workspace = true }
 tracing = { version = "0.1.40", default-features = false, optional = true }
 
 [dev-dependencies]
-divan = "0.1.15"
+divan = "0.1.16"
 tokio = { workspace = true, features = ["macros", "rt"] }
 
 [features]
