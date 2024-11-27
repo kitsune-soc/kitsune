@@ -1,8 +1,9 @@
 import forms from '@tailwindcss/forms';
 import typography from '@tailwindcss/typography';
-import { extendTheme } from '../kitsune/theme';
 
 import type { Config } from 'tailwindcss';
+
+import { extendTheme } from '../kitsune/theme';
 
 export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
