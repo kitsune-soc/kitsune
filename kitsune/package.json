@@ -1,10 +1,9 @@
 {
   "name": "kitsune",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "tailwindcss -i styles/app.css -o assets/app.css --minify",
-    "dev": "tailwindcss -i styles/tailwind.css -o assets/app.css --watch",
+    "dev": "tailwindcss -i styles/app.css -o assets/app.css --watch",
     "fmt": "prettier --write --ignore-unknown --cache ."
   },
   "devDependencies": {
