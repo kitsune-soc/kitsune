@@ -32,7 +32,7 @@ kitsune-url = { workspace = true }
 kitsune-wasm-mrf = { workspace = true }
 mimalloc = "0.1.43"
 tokio = { workspace = true, features = ["full"] }
-tracing = "0.1.40"
+tracing = "0.1.41"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 

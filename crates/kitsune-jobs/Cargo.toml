@@ -17,7 +17,7 @@ kitsune-email = { workspace = true }
 kitsune-error = { workspace = true }
 serde = { version = "1.0.215", features = ["derive"] }
 speedy-uuid = { workspace = true }
-tracing = "0.1.40"
+tracing = "0.1.41"
 typed-builder = "0.20.0"
 
 [lints]

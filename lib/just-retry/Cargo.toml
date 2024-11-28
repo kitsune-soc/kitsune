@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 retry-policies = "0.4.0"
 tokio = { workspace = true, features = ["time"] }
-tracing = "0.1.40"
+tracing = "0.1.41"
 
 [lints]
 workspace = true

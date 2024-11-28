@@ -25,7 +25,7 @@ speedy-uuid = { workspace = true, features = ["redis"] }
 thiserror = "2.0.3"
 tokio = { workspace = true, features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.12", features = ["rt"] }
-tracing = "0.1.40"
+tracing = "0.1.41"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 typetag = "0.2.18"
@@ -36,7 +36,7 @@ redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
 kitsune-test = { workspace = true }
-postcard = { version = "1.0.10", default-features = false, features = [
+postcard = { version = "1.1.0", default-features = false, features = [
     "alloc",
 ] }
 tracing-subscriber = "0.3.18"

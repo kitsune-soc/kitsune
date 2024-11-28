@@ -12,7 +12,7 @@ kitsune-error = { workspace = true }
 moka = { workspace = true }
 serde = "1.0.215"
 sonic-rs = { workspace = true }
-tracing = "0.1.40"
+tracing = "0.1.41"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 

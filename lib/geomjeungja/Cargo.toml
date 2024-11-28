@@ -12,7 +12,7 @@ rand = "0.8.5"
 serde = { version = "1.0.215", features = ["derive"] }
 simdutf8 = { workspace = true }
 thiserror = "2.0.3"
-tracing = "0.1.40"
+tracing = "0.1.41"
 triomphe = { workspace = true }
 typed-builder = "0.20.0"
 unsize = "1.1.0"

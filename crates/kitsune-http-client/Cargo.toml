@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 asynk-strim = { workspace = true }
-bytes = "1.8.0"
+bytes = "1.9.0"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }

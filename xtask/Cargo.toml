@@ -9,12 +9,12 @@ publish = false
 argh = "0.1.12"
 eyre = "0.6.12"
 sonic-rs = { workspace = true }
-tracing = { version = "0.1.40", default-features = false }
+tracing = { version = "0.1.41", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "ansi",
     "fmt",
 ] }
-ureq = "2.10.1"
+ureq = "2.11.0"
 
 [lints]
 workspace = true

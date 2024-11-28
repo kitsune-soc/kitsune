@@ -22,7 +22,7 @@ kitsune-language = { workspace = true }
 kitsune-type = { workspace = true }
 num-derive = "0.4.2"
 num-traits = "0.2.19"
-rustls = { version = "0.23.18", default-features = false, features = [
+rustls = { version = "0.23.19", default-features = false, features = [
     "logging",
     "ring",
     "std",
@@ -35,7 +35,7 @@ speedy-uuid = { workspace = true, features = ["diesel"] }
 tokio = { workspace = true, features = ["rt"] }
 tokio-postgres = "0.7.12"
 tokio-postgres-rustls = "0.13.0"
-tracing = "0.1.40"
+tracing = "0.1.41"
 tracing-log = "0.2.0"
 trials = { workspace = true }
 typed-builder = "0.20.0"

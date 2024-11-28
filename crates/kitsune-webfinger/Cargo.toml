@@ -16,7 +16,7 @@ kitsune-error = { workspace = true }
 kitsune-http-client = { workspace = true }
 kitsune-type = { workspace = true }
 kitsune-util = { workspace = true }
-tracing = "0.1.40"
+tracing = "0.1.41"
 triomphe = { workspace = true }
 urlencoding = "2.1.3"
 

@@ -109,7 +109,7 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
-hickory-resolver = { version = "0.25.0-alpha.3", default-features = false, features = [
+hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, features = [
     "dns-over-rustls",
     "native-certs",
     "tokio-runtime",
