@@ -7,7 +7,7 @@ export default defineConfig({
   site: 'https://joinkitsune.org',
   integrations: [
     starlight({
-      customCss: ['./src/styles/global.scss'],
+      customCss: ['./src/styles/global.css'],
       plugins: [starlightLinksValidator()],
       sidebar: [
         {

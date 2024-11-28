@@ -144,9 +144,6 @@ importers:
       prettier-plugin-astro:
         specifier: ^0.14.1
         version: 0.14.1
-      sass:
-        specifier: ^1.81.0
-        version: 1.81.0
 
 packages:
 
