@@ -9,15 +9,15 @@ license.workspace = true
 bytes = "1.9.0"
 futures-util = { version = "0.3.31", default-features = false }
 http = "1.1.0"
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
 quick-xml = { version = "0.37.1", features = ["serialize"] }
 rusty-s3 = "0.5.0"
 serde = { version = "1.0.215", features = ["derive"] }
 typed-builder = "0.20.0"
 
 [dev-dependencies]
-kitsune-test = { workspace = true }
+kitsune-test.workspace = true
 tokio = { workspace = true, features = ["macros", "rt"] }
 
 [lints]

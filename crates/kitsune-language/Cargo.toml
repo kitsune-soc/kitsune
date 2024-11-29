@@ -6,9 +6,9 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-kitsune-config = { workspace = true }
+diesel.workspace = true
+diesel-async.workspace = true
+kitsune-config.workspace = true
 isolang = { version = "2.4.0", features = [
     "english_names",
     "list_languages",

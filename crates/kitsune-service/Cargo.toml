@@ -8,49 +8,49 @@ license.workspace = true
 [dependencies]
 ahash = "0.8.11"
 argon2 = "0.5.3"
-asynk-strim = { workspace = true }
-athena = { workspace = true }
-blowocking = { workspace = true }
+asynk-strim.workspace = true
+athena.workspace = true
+blowocking.workspace = true
 bytes = "1.9.0"
 derive_builder = "0.20.2"
-diesel = { workspace = true }
-diesel-async = { workspace = true }
+diesel.workspace = true
+diesel-async.workspace = true
 eyre = "0.6.12"
-fred = { workspace = true }
+fred.workspace = true
 futures-util = "0.3.31"
-garde = { workspace = true }
+garde.workspace = true
 http = "1.1.0"
 img-parts = "0.3.1"
-iso8601-timestamp = { workspace = true }
-kitsune-cache = { workspace = true }
-kitsune-captcha = { workspace = true }
-kitsune-config = { workspace = true }
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-email = { workspace = true }
-kitsune-embed = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
-kitsune-jobs = { workspace = true }
-kitsune-language = { workspace = true }
-kitsune-search = { workspace = true }
-kitsune-storage = { workspace = true }
-kitsune-url = { workspace = true }
-kitsune-util = { workspace = true }
+iso8601-timestamp.workspace = true
+kitsune-cache.workspace = true
+kitsune-captcha.workspace = true
+kitsune-config.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-derive.workspace = true
+kitsune-email.workspace = true
+kitsune-embed.workspace = true
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
+kitsune-jobs.workspace = true
+kitsune-language.workspace = true
+kitsune-search.workspace = true
+kitsune-storage.workspace = true
+kitsune-url.workspace = true
+kitsune-util.workspace = true
 mime = "0.3.17"
 password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"
-post-process = { workspace = true }
+post-process.workspace = true
 rand = "0.8.5"
 rsa = "0.9.7"
 rusty-s3 = { version = "0.5.0", default-features = false }
 serde = "1.0.215"
 smol_str = "0.3.2"
-speedy-uuid = { workspace = true }
+speedy-uuid.workspace = true
 tokio = { workspace = true, features = ["macros", "sync"] }
 tracing = "0.1.41"
-triomphe = { workspace = true }
+triomphe.workspace = true
 typed-builder = "0.20.0"
 url = "2.5.4"
 zxcvbn = { version = "3.1.0", default-features = false }
@@ -59,12 +59,12 @@ zxcvbn = { version = "3.1.0", default-features = false }
 hex-simd = "0.8.0"
 http-body-util = "0.1.2"
 hyper = "1.5.1"
-kitsune-activitypub = { workspace = true }
-kitsune-config = { workspace = true }
-kitsune-federation-filter = { workspace = true }
-kitsune-jobs = { workspace = true }
-kitsune-test = { workspace = true }
-kitsune-webfinger = { workspace = true }
+kitsune-activitypub.workspace = true
+kitsune-config.workspace = true
+kitsune-federation-filter.workspace = true
+kitsune-jobs.workspace = true
+kitsune-test.workspace = true
+kitsune-webfinger.workspace = true
 pretty_assertions = "1.4.1"
 tempfile = "3.14.0"
 tower = { version = "0.5.1", default-features = false, features = ["util"] }

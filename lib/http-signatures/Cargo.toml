@@ -20,7 +20,7 @@ const-oid = { version = "0.9.6", features = ["db"] }
 derive_builder = "0.20.2"
 http = "1.1.0"
 httpdate = "1.0.3"
-itertools = { workspace = true }
+itertools.workspace = true
 lexical-parse-integer = "1.0.2"
 logos = "0.14.2"
 miette = "7.4.0"
@@ -28,7 +28,7 @@ pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 ring = { version = "0.17.8", features = ["std"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 thiserror = "2.0.3"
-tick-tock-mock = { workspace = true }
+tick-tock-mock.workspace = true
 tracing = { version = "0.1.41", default-features = false, optional = true }
 
 [dev-dependencies]

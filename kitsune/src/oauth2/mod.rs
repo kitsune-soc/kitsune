@@ -1,6 +1,4 @@
-use askama::Template;
-use askama_axum::IntoResponse;
-use axum::response::{Redirect, Response};
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -14,6 +12,7 @@ use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
 use oxide_auth::endpoint::Scope;
+use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
@@ -78,8 +77,7 @@ pub struct CreateApp {
     redirect_uris: String,
 }
 
-#[derive(Template)]
-#[template(path = "oauth/token.html")]
+#[derive(Serialize)]
 struct ShowTokenPage {
     app_name: String,
     domain: String,
@@ -138,12 +136,18 @@ impl OAuth2Service {
             })?;
 
         if application.redirect_uri == SHOW_TOKEN_URI {
-            Ok(ShowTokenPage {
-                app_name: application.name,
-                domain: self.url_service.domain().into(),
-                token: authorization_code.code,
-            }
-            .into_response())
+            let page = crate::template::templates()
+                .render(
+                    "oauth/token.html",
+                    &ShowTokenPage {
+                        app_name: application.name,
+                        domain: self.url_service.domain().into(),
+                        token: authorization_code.code,
+                    },
+                )
+                .unwrap();
+
+            Ok(Html(page).into_response())
         } else {
             let mut url = Url::from_str(&application.redirect_uri)?;
             url.query_pairs_mut()

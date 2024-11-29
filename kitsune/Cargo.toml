@@ -15,10 +15,8 @@ license = false
 eula = false
 
 [dependencies]
-athena = { workspace = true }
+athena.workspace = true
 argon2 = { version = "0.5.3", features = ["std"] }
-askama = { workspace = true }
-askama_axum = "0.4.0"
 async-trait = "0.1.83"
 axum = { version = "0.7.9", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.6", features = [
@@ -28,49 +26,50 @@ axum-extra = { version = "0.9.6", features = [
     "typed-header",
 ] }
 axum-flash = "0.8.0"
-blowocking = { workspace = true }
+blowocking.workspace = true
 bytes = "1.9.0"
 chrono = { version = "0.4.38", default-features = false }
-clap = { workspace = true }
+clap.workspace = true
 color-eyre = "0.6.3"
 cursiv = { workspace = true, features = ["axum"] }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
+diesel.workspace = true
+diesel-async.workspace = true
 futures-util = "0.3.31"
 headers = "0.4.0"
 http = "1.1.0"
 http-body-util = "0.1.2"
-http-signatures = { workspace = true }
-iso8601-timestamp = { workspace = true }
-itertools = { workspace = true }
-kitsune-activitypub = { workspace = true }
-kitsune-cache = { workspace = true }
-kitsune-captcha = { workspace = true }
-kitsune-config = { workspace = true }
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-email = { workspace = true }
-kitsune-embed = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-federation = { workspace = true }
-kitsune-federation-filter = { workspace = true }
-kitsune-http-client = { workspace = true }
-kitsune-job-runner = { workspace = true }
-kitsune-jobs = { workspace = true }
-kitsune-language = { workspace = true }
-kitsune-observability = { workspace = true }
-kitsune-search = { workspace = true }
-kitsune-service = { workspace = true }
-kitsune-storage = { workspace = true }
-kitsune-type = { workspace = true }
-kitsune-url = { workspace = true }
-kitsune-util = { workspace = true }
-kitsune-wasm-mrf = { workspace = true }
-kitsune-webfinger = { workspace = true }
+http-signatures.workspace = true
+iso8601-timestamp.workspace = true
+itertools.workspace = true
+kitsune-activitypub.workspace = true
+kitsune-cache.workspace = true
+kitsune-captcha.workspace = true
+kitsune-config.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-derive.workspace = true
+kitsune-email.workspace = true
+kitsune-embed.workspace = true
+kitsune-error.workspace = true
+kitsune-federation.workspace = true
+kitsune-federation-filter.workspace = true
+kitsune-http-client.workspace = true
+kitsune-job-runner.workspace = true
+kitsune-jobs.workspace = true
+kitsune-language.workspace = true
+kitsune-observability.workspace = true
+kitsune-search.workspace = true
+kitsune-service.workspace = true
+kitsune-storage.workspace = true
+kitsune-type.workspace = true
+kitsune-url.workspace = true
+kitsune-util.workspace = true
+kitsune-wasm-mrf.workspace = true
+kitsune-webfinger.workspace = true
 mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
+minijinja.workspace = true
 oxide-auth = "0.6.1"
 oxide-auth-async = "0.2.1"
 oxide-auth-axum = "0.5.0"
@@ -78,17 +77,17 @@ rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 scoped-futures = "0.1.4"
 serde = { version = "1.0.215", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-sonic-rs = { workspace = true }
-simdutf8 = { workspace = true }
-speedy-uuid = { workspace = true }
+sonic-rs.workspace = true
+simdutf8.workspace = true
+speedy-uuid.workspace = true
 strum = { version = "0.26.3", features = ["derive"] }
 tempfile = "3.14.0"
 time = "0.3.36"
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { version = "0.7.12", features = ["io"] }
 tower = { version = "0.5.1", features = ["util"] }
-tower-stop-using-brave = { workspace = true }
-tower-x-clacks-overhead = { workspace = true }
+tower-stop-using-brave.workspace = true
+tower-x-clacks-overhead.workspace = true
 tower-http = { version = "0.6.2", features = [
     "catch-panic",
     "cors",
@@ -97,10 +96,10 @@ tower-http = { version = "0.6.2", features = [
     "timeout",
     "trace",
 ] }
-tower-http-digest = { workspace = true }
+tower-http-digest.workspace = true
 tracing = "0.1.41"
-trials = { workspace = true }
-triomphe = { workspace = true }
+trials.workspace = true
+triomphe.workspace = true
 typed-builder = "0.20.0"
 url = "2.5.4"
 
@@ -121,11 +120,12 @@ kitsune-mastodon = { workspace = true, optional = true }
 
 # "oidc" feature
 kitsune-oidc = { workspace = true, optional = true }
+arc-swap = "1.7.1"
 
 [dev-dependencies]
-kitsune-http-client = { workspace = true }
-kitsune-test = { workspace = true }
-fred = { workspace = true }
+kitsune-http-client.workspace = true
+kitsune-test.workspace = true
+fred.workspace = true
 
 [features]
 default = ["graphql-api", "mastodon-api", "oidc"]

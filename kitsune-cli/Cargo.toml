@@ -12,18 +12,18 @@ license = false
 eula = false
 
 [dependencies]
-clap = { workspace = true }
+clap.workspace = true
 color-eyre = "0.6.3"
-diesel = { workspace = true }
-diesel-async = { workspace = true }
+diesel.workspace = true
+diesel-async.workspace = true
 dotenvy = "0.15.7"
 envy = "0.4.2"
-kitsune-config = { workspace = true }
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-error = { workspace = true }
+kitsune-config.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-error.workspace = true
 serde = { version = "1.0.215", features = ["derive"] }
-speedy-uuid = { workspace = true }
+speedy-uuid.workspace = true
 tokio = { workspace = true, features = ["full"] }
 tracing-subscriber = "0.3.18"
 

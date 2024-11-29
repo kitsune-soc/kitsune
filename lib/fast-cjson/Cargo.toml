@@ -13,7 +13,7 @@ harness = false
 icu_normalizer = "1.5.0"
 memchr = "2.7.4"
 serde = "1.0.215"
-sonic-rs = { workspace = true }
+sonic-rs.workspace = true
 
 [dev-dependencies]
 divan = "0.1.16"

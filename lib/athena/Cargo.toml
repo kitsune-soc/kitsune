@@ -14,9 +14,9 @@ ahash = "0.8.11"
 async-trait = "0.1.83"
 either = { version = "1.13.0", default-features = false, optional = true }
 futures-util = { version = "0.3.31", default-features = false }
-iso8601-timestamp = { workspace = true }
+iso8601-timestamp.workspace = true
 fred = { workspace = true, optional = true }
-just-retry = { workspace = true }
+just-retry.workspace = true
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.215", features = ["derive"] }
 smol_str = "0.3.2"
@@ -26,7 +26,7 @@ thiserror = "2.0.3"
 tokio = { workspace = true, features = ["macros", "rt", "sync"] }
 tokio-util = { version = "0.7.12", features = ["rt"] }
 tracing = "0.1.41"
-triomphe = { workspace = true }
+triomphe.workspace = true
 typed-builder = "0.20.0"
 typetag = "0.2.18"
 unsize = "1.1.0"
@@ -35,7 +35,7 @@ unsize = "1.1.0"
 redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
-kitsune-test = { workspace = true }
+kitsune-test.workspace = true
 postcard = { version = "1.1.0", default-features = false, features = ["alloc"] }
 tracing-subscriber = "0.3.18"
 

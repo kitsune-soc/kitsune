@@ -8,11 +8,11 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 http = "1.1.0"
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
 serde = { version = "1.0.215", features = ["derive"] }
 serde_urlencoded = "0.7.1"
-sonic-rs = { workspace = true }
+sonic-rs.workspace = true
 strum = { version = "0.26.3", features = ["derive"] }
 typed-builder = "0.20.0"
 
