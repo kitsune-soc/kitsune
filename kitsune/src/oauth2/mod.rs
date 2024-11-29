@@ -77,13 +77,6 @@ pub struct CreateApp {
     redirect_uris: String,
 }
 
-#[derive(Serialize)]
-struct ShowTokenPage {
-    app_name: String,
-    domain: String,
-    token: String,
-}
-
 #[kitsune_service]
 pub struct OAuth2Service {
     db_pool: PgPool,
@@ -138,10 +131,10 @@ impl OAuth2Service {
         if application.redirect_uri == SHOW_TOKEN_URI {
             let page = crate::template::render(
                 "oauth/token.html",
-                &ShowTokenPage {
-                    app_name: application.name,
-                    domain: self.url_service.domain().into(),
-                    token: authorization_code.code,
+                minijinja::context! {
+                    app_name => application.name,
+                    domain => self.url_service.domain(),
+                    token => authorization_code.code,
                 },
             )
             .unwrap();

@@ -8,22 +8,11 @@ use kitsune_error::Result;
 use oxide_auth::endpoint::{OAuthError, OwnerConsent, QueryParameter, Solicitation, WebRequest};
 use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
-use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use trials::attempt;
 use typed_builder::TypedBuilder;
 
-#[derive(Serialize)]
-struct ConsentPage<'a> {
-    authenticated_username: &'a str,
-    app_name: &'a str,
-    csrf_token: &'a str,
-    query: PageQueryParams,
-    scopes: &'a [OAuthScope],
-}
-
-#[derive(Serialize)]
 struct PageQueryParams {
     client_id: String,
     csrf_token: Option<String>,
@@ -109,12 +98,18 @@ impl OAuthOwnerSolicitor {
 
                 let body = crate::template::render(
                     "oauth/consent.html",
-                    &ConsentPage {
-                        authenticated_username: &self.authenticated_user.username,
-                        app_name: &app_name,
-                        csrf_token: csrf_token.as_str(),
-                        query,
-                        scopes: &scopes,
+                    minijinja::context! {
+                        authenticated_username => &self.authenticated_user.username,
+                        app_name => &app_name,
+                        csrf_token => csrf_token.as_str(),
+                        query => minijinja::context! {
+                            client_id => query.client_id,
+                            redirect_uri => query.redirect_uri,
+                            response_type => query.response_type,
+                            scope => query.scope,
+                            state => query.state.as_deref().unwrap_or(""),
+                        },
+                        scopes => &scopes,
                     },
                 )
                 .unwrap();

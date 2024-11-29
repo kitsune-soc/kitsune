@@ -49,11 +49,6 @@ pub struct LoginForm {
     password: String,
 }
 
-#[derive(Serialize)]
-pub struct LoginPage {
-    flash_messages: IncomingFlashes,
-}
-
 #[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
@@ -91,7 +86,16 @@ pub async fn get(
             users::table.find(id).get_result(db_conn).await
         })?
     } else {
-        return Ok(Either3::E2(LoginPage { flash_messages }));
+        let messages: Vec<(axum_flash::Level, &str)> = flash_messages.into_iter().collect();
+        let page = crate::template::render(
+            "oauth/login.html",
+            minijinja::context! {
+                flash_messages => messages,
+            },
+        )
+        .unwrap();
+
+        return Ok(Either3::E2(Html(page)));
     };
 
     let solicitor = OAuthOwnerSolicitor::builder()

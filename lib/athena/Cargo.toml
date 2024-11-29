@@ -36,8 +36,8 @@ redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
 
 [dev-dependencies]
 kitsune-test.workspace = true
-postcard = { version = "1.1.0", default-features = false, features = ["alloc"] }
-tracing-subscriber = "0.3.18"
+postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
+tracing-subscriber = "0.3.19"
 
 [lints]
 workspace = true

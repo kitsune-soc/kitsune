@@ -5,12 +5,8 @@ edition.workspace = true
 version.workspace = true
 license.workspace = true
 
-[package.metadata.cargo-machete]
-ignored = ["askama_axum"] # See reason below.
-
 [dependencies]
 askama.workspace = true
-askama_axum = "0.4.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
 diesel.workspace = true
 diesel-async.workspace = true
 kitsune-db.workspace = true
