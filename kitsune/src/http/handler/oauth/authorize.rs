@@ -1,10 +1,9 @@
 use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use askama::Template;
 use axum::{
     debug_handler,
     extract::{OriginalUri, State},
-    response::Redirect,
+    response::{Html, Redirect},
     Form,
 };
 use axum_extra::{
@@ -50,12 +49,12 @@ pub struct LoginForm {
     password: String,
 }
 
-#[derive(Template)]
-#[template(path = "oauth/login.html")]
+#[derive(Serialize)]
 pub struct LoginPage {
     flash_messages: IncomingFlashes,
 }
 
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
         State<Option<OidcService>>,
@@ -68,7 +67,7 @@ pub async fn get(
     csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
-) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
+) -> Result<Either3<OAuthResponse, Html<String>, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = with_connection!(db_pool, |db_conn| {
