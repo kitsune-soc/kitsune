@@ -61,7 +61,7 @@ where
             spawn_watcher();
             ArcSwapAny::new(Arc::new(init_environment()))
         })
-        .load_full();
+        .load();
 
     let template = handle
         .get_template(name)
