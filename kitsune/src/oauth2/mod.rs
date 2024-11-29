@@ -136,16 +136,15 @@ impl OAuth2Service {
             })?;
 
         if application.redirect_uri == SHOW_TOKEN_URI {
-            let page = crate::template::templates()
-                .render(
-                    "oauth/token.html",
-                    &ShowTokenPage {
-                        app_name: application.name,
-                        domain: self.url_service.domain().into(),
-                        token: authorization_code.code,
-                    },
-                )
-                .unwrap();
+            let page = crate::template::render(
+                "oauth/token.html",
+                &ShowTokenPage {
+                    app_name: application.name,
+                    domain: self.url_service.domain().into(),
+                    token: authorization_code.code,
+                },
+            )
+            .unwrap();
 
             Ok(Html(page).into_response())
         } else {

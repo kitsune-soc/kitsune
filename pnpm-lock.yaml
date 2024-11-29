@@ -86,9 +86,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.9
         version: 0.6.9(@trivago/prettier-plugin-sort-imports@4.3.0(prettier@3.4.1))(prettier-plugin-astro@0.14.1)(prettier-plugin-css-order@2.1.2(postcss@8.4.49)(prettier@3.4.1))(prettier-plugin-svelte@3.3.2(prettier@3.4.1)(svelte@5.2.9))(prettier@3.4.1)
-      sass:
-        specifier: ^1.81.0
-        version: 1.81.0
       svelte:
         specifier: ^5.2.9
         version: 5.2.9
@@ -6500,7 +6497,8 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  immutable@5.0.3: {}
+  immutable@5.0.3:
+    optional: true
 
   import-fresh@3.3.0:
     dependencies:
@@ -7793,6 +7791,7 @@ snapshots:
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.0
+    optional: true
 
   sax@1.4.1: {}
 

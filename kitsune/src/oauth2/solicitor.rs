@@ -107,18 +107,17 @@ impl OAuthOwnerSolicitor {
                 let user_id = self.authenticated_user.id.to_string();
                 let csrf_token = self.csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
 
-                let body = crate::template::templates()
-                    .render(
-                        "oauth/consent.html",
-                        &ConsentPage {
-                            authenticated_username: &self.authenticated_user.username,
-                            app_name: &app_name,
-                            csrf_token: csrf_token.as_str(),
-                            query,
-                            scopes: &scopes,
-                        },
-                    )
-                    .map_err(|err| WebError::InternalError(Some(err.to_string())))?;
+                let body = crate::template::render(
+                    "oauth/consent.html",
+                    &ConsentPage {
+                        authenticated_username: &self.authenticated_user.username,
+                        app_name: &app_name,
+                        csrf_token: csrf_token.as_str(),
+                        query,
+                        scopes: &scopes,
+                    },
+                )
+                .unwrap();
 
                 OwnerConsent::InProgress(
                     OAuthResponse::default()
