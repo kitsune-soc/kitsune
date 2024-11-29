@@ -1,7 +1,8 @@
 use arc_swap::ArcSwapAny;
 use core::str;
+use notify::Watcher;
 use rust_embed::RustEmbed;
-use std::sync::OnceLock;
+use std::{mem::ManuallyDrop, path::Path, sync::OnceLock};
 use triomphe::Arc;
 
 static ENVIRONMENT: OnceLock<ArcSwapAny<Arc<minijinja::Environment<'static>>>> = OnceLock::new();
@@ -28,6 +29,27 @@ fn init_environment() -> minijinja::Environment<'static> {
     environment
 }
 
+fn spawn_watcher() {
+    let watcher = notify::recommended_watcher(|event: notify::Result<notify::Event>| {
+        if event.is_err() {
+            return;
+        }
+
+        ENVIRONMENT
+            .get()
+            .unwrap()
+            .store(Arc::new(init_environment()));
+    })
+    .unwrap();
+
+    let mut watcher = ManuallyDrop::new(watcher);
+    let template_dir = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/templates"));
+
+    watcher
+        .watch(template_dir, notify::RecursiveMode::Recursive)
+        .unwrap();
+}
+
 #[track_caller]
 pub fn render<S>(name: &str, ctx: S) -> Option<String>
 where
@@ -35,7 +57,8 @@ where
 {
     let handle = ENVIRONMENT
         .get_or_init(|| {
-            // ToDo: Spawn watcher on the path which replaces the environment through the arc-swap
+            #[cfg(debug_assertions)]
+            spawn_watcher();
             ArcSwapAny::new(Arc::new(init_environment()))
         })
         .load_full();
