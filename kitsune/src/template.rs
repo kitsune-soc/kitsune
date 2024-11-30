@@ -1,6 +1,6 @@
 use arc_swap::ArcSwapAny;
 use core::str;
-use notify_debouncer_full::notify;
+use notify_debouncer_full::{notify, DebounceEventResult};
 use rust_embed::RustEmbed;
 use std::{mem::ManuallyDrop, path::Path, sync::OnceLock, time::Duration};
 use triomphe::Arc;
@@ -33,7 +33,7 @@ fn spawn_watcher() {
     let watcher = notify_debouncer_full::new_debouncer(
         Duration::from_secs(1),
         None,
-        |events: notify_debouncer_full::DebounceEventResult| {
+        |events: DebounceEventResult| {
             let Ok(events) = events else {
                 return;
             };

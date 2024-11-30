@@ -1,11 +1,11 @@
 use crate::traits::{RenderableEmail, RenderedEmail};
-use askama::Template;
 use kitsune_error::Result;
 use mrml::{mjml::Mjml, prelude::render::RenderOptions};
+use sailfish::Template;
 use typed_builder::TypedBuilder;
 
 #[derive(Template, TypedBuilder)]
-#[template(escape = "html", path = "verify.mjml")]
+#[template(path = "verify.mjml")]
 pub struct ConfirmAccount<'a> {
     domain: &'a str,
     username: &'a str,

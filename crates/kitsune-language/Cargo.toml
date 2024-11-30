@@ -14,7 +14,7 @@ isolang = { version = "2.4.0", features = [
     "list_languages",
     "serde",
 ] }
-rustc-hash = "2.0.0"
+rustc-hash = "2.1.0"
 whatlang = "0.16.4"
 whichlang = "0.1.0"
 

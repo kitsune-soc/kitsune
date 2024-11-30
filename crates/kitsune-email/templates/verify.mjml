@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-title>Confirm your {{domain}} account</mj-title>
+    <mj-title>Confirm your <%= self.domain %> account</mj-title>
     <mj-attributes>
       <mj-all font-family="monospace" line-height="17px" />
     </mj-attributes>
@@ -8,32 +8,31 @@
   <mj-body>
     <mj-section>
       <mj-column>
-
-        <mj-text align="center" font-size="30px">
-          Kitsune
-        </mj-text>
+        <mj-text align="center" font-size="30px"> Kitsune </mj-text>
 
         <mj-divider></mj-divider>
 
-        <mj-text font-size="25px">
-          Confirm your account
-        </mj-text>
+        <mj-text font-size="25px"> Confirm your account </mj-text>
 
         <mj-text>
-          Congratulations to your new account on {{domain}}!
-          <p>Click the button below to unlock your account (@{{username}})!</p>
+          Congratulations to your new account on <%= self.domain %>!
+          <p>
+            Click the button below to unlock your account (@<%= self.username
+            %>)!
+          </p>
         </mj-text>
 
-        <mj-button href="{{verify_link}}">
-          Confirm my account!
-        </mj-button>
+        <mj-button href="{{verify_link}}"> Confirm my account! </mj-button>
 
         <mj-text>
           You didn't register an account? Feel free to just ignore this email!
         </mj-text>
 
         <mj-text align="center" font-size="10px">
-          {{domain}} powered by <a style="text-decoration:none;" href="https://joinkitsune.org">Kitsune</a>
+          <%= self.domain %> powered by
+          <a style="text-decoration: none" href="https://joinkitsune.org"
+            >Kitsune</a
+          >
         </mj-text>
       </mj-column>
     </mj-section>

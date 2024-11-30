@@ -6,7 +6,6 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-askama.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 kitsune-db.workspace = true
@@ -26,6 +25,7 @@ mrml = { version = "4.0.1", default-features = false, features = [
     "parse",
     "render",
 ] }
+sailfish.workspace = true
 speedy-uuid.workspace = true
 triomphe.workspace = true
 typed-builder = "0.20.0"
