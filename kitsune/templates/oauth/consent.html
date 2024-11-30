@@ -1,4 +1,4 @@
-{% extends "../base.html" %}
+{% extends "base.html" %}
 
 {% block title %}
   OAuth Login
@@ -9,45 +9,57 @@
   <input type="hidden" name="redirect_uri" value="{{ query.redirect_uri }}" />
   <input type="hidden" name="response_type" value="{{ query.response_type }}" />
   <input type="hidden" name="scope" value="{{ query.scope }}" />
-  <input type="hidden" name="state" value="{{ query.state.as_deref().unwrap_or("") }}" />
+  <input type="hidden" name="state" value="{{ query.state }}" />
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
 {% endmacro %}
 
 {% block body %}
-  <p class="header">
-    Kitsune
-  </p>
+  <main
+    class="flex flex-col place-content-center items-center w-screen min-h-screen"
+  >
+    <h1 class="italic text-shade1-dark">Kitsune</h1>
 
-  <div class="consent-text">
-    <span class="appName">{{app_name}}</span> wants the following access to your Kitsune account:
-    <p>
-      <ul>
-        {% for scope in scopes %}
-          <li>
-            {{ scope.get_message().unwrap() }}
-          </li>
-        {% endfor %}
-      </ul>
-    </p>
-  </div>
+    <div class="flex flex-col items-center">
+      <div>
+        <span class="font-bold text-shade1-dark">{{ app_name }}</span> wants the
+        following access to your Kitsune account:
+        <p></p>
+        <ul class="list-['>']">
+          {% for scope in scopes %}
+            <li>{{ scope }}</li>
+          {% endfor %}
+        </ul>
+      </div>
 
-  <div class="consent-forms">
-    <form method="get">
-      {% call add_query_params() %}
-      <input type="hidden" name="login_consent" value="accept" />
-      <input class="formButton" type="submit" value="Accept" />
-    </form>
+      <form class="w-full" method="get">
+        {{ add_query_params() }}
+        <input type="hidden" name="login_consent" value="accept" />
+        <input
+          class="w-full [&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark min-h-1 cursor-pointer rounded p-2 transition duration-500"
+          type="submit"
+          value="Accept"
+        />
+      </form>
 
-    <form method="get">
-      {% call add_query_params() %}
-      <input type="hidden" name="login_consent" value="deny" />
-      <input class="formButton" type="submit" value="Deny" />
-    </form>
-  </div>
+      <form class="w-full" method="get">
+        {{ add_query_params() }}
+        <input type="hidden" name="login_consent" value="deny" />
+        <input
+          class="w-full my-3 [&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark min-h-1 cursor-pointer rounded p-2 transition duration-500"
+          type="submit"
+          value="Deny"
+        />
+      </form>
 
-  <div class="disclaimer">
-    Authenticated as <span class="authUsername">{{ authenticated_username }}</span> ~
-    <a href="#"
-      onclick="document.cookie='user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';window.location.reload();">Logout</a>
-  </div>
+      <div>
+        Authenticated as
+        <span class="font-bold">{{ authenticated_username }}</span> ~
+        <a
+          href="#"
+          onclick="document.cookie='user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';window.location.reload();"
+          >Logout</a
+        >
+      </div>
+    </div>
+  </main>
 {% endblock %}

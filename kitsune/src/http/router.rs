@@ -90,7 +90,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
         router.merge(
             Router::new()
                 .route("/graphql", routing::any(graphql::graphql))
-                .route("/graphiql", routing::get(graphql::graphiql))
+                .route("/graphql-explorer", routing::get(graphql::explorer))
                 .layer(Extension(graphql::schema(state.clone()))),
         )
     };

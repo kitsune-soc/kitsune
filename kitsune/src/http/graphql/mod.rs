@@ -44,7 +44,7 @@ pub async fn graphql(
 }
 
 #[allow(clippy::unused_async)]
-pub async fn graphiql() -> Html<String> {
+pub async fn explorer() -> Html<String> {
     let source = GraphiQLSource::build()
         .endpoint("/graphql")
         .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"))

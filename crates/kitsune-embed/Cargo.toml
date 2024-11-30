@@ -6,16 +6,16 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = { workspace = true }
-diesel-async = { workspace = true }
+diesel.workspace = true
+diesel-async.workspace = true
 http = "1.1.0"
-iso8601-timestamp = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
+iso8601-timestamp.workspace = true
+kitsune-db.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
 lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "efb4288d9b107b48609802193d57b29f7ae395a1", default-features = false }
-schaber = { workspace = true }
+schaber.workspace = true
 smol_str = "0.3.2"
 
 [lints]

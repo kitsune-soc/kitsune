@@ -6,6 +6,7 @@ pub mod http;
 pub mod oauth2;
 pub mod signal;
 pub mod state;
+pub mod template;
 
 use self::{
     oauth2::{OAuth2Service, OAuthEndpoint},

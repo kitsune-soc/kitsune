@@ -187,14 +187,19 @@
               };
 
               frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
-                src = "${src}/kitsune-fe";
-                distDir = "build";
+                inherit src;
+                distDir = "kitsune-fe/build";
                 installInPlace = true;
+                packageJSON = "${src}/kitsune-fe/package.json";
+                script = "-C kitsune-fe build";
               };
 
               website = pnpm2nix.packages.${system}.mkPnpmPackage {
-                src = "${src}/website";
+                inherit src;
+                distDir = "website/dist";
                 installInPlace = true;
+                packageJSON = "${src}/website/package.json";
+                script = "-C website build";
               };
             };
 

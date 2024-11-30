@@ -7,20 +7,20 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 async-trait = "0.1.83"
-hickory-resolver = { workspace = true }
+hickory-resolver.workspace = true
 rand = "0.8.5"
 serde = { version = "1.0.215", features = ["derive"] }
-simdutf8 = { workspace = true }
+simdutf8.workspace = true
 thiserror = "2.0.3"
-tracing = "0.1.40"
-triomphe = { workspace = true }
+tracing = "0.1.41"
+triomphe.workspace = true
 typed-builder = "0.20.0"
 unsize = "1.1.0"
 
 [dev-dependencies]
 insta = { version = "1.41.1", features = ["json"] }
 rand_xorshift = "0.3.0"
-sonic-rs = { workspace = true }
+sonic-rs.workspace = true
 tokio = { workspace = true, features = ["macros", "rt"] }
 
 [lints]

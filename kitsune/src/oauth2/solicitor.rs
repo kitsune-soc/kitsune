@@ -1,5 +1,4 @@
 use super::OAuthScope;
-use askama::Template;
 use async_trait::async_trait;
 use cursiv::CsrfHandle;
 use diesel::{OptionalExtension, QueryDsl};
@@ -11,19 +10,8 @@ use oxide_auth_async::endpoint::OwnerSolicitor;
 use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
-use strum::EnumMessage;
 use trials::attempt;
 use typed_builder::TypedBuilder;
-
-#[derive(Template)]
-#[template(path = "oauth/consent.html")]
-struct ConsentPage<'a> {
-    authenticated_username: &'a str,
-    app_name: &'a str,
-    csrf_token: &'a str,
-    query: PageQueryParams,
-    scopes: &'a [OAuthScope],
-}
 
 struct PageQueryParams {
     client_id: String,
@@ -108,15 +96,23 @@ impl OAuthOwnerSolicitor {
                 let user_id = self.authenticated_user.id.to_string();
                 let csrf_token = self.csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
 
-                let body = ConsentPage {
-                    authenticated_username: &self.authenticated_user.username,
-                    app_name: &app_name,
-                    csrf_token: csrf_token.as_str(),
-                    query,
-                    scopes: &scopes,
-                }
-                .render()
-                .map_err(|err| WebError::InternalError(Some(err.to_string())))?;
+                let body = crate::template::render(
+                    "oauth/consent.html",
+                    minijinja::context! {
+                        authenticated_username => &self.authenticated_user.username,
+                        app_name => &app_name,
+                        csrf_token => csrf_token.as_str(),
+                        query => minijinja::context! {
+                            client_id => query.client_id,
+                            redirect_uri => query.redirect_uri,
+                            response_type => query.response_type,
+                            scope => query.scope,
+                            state => query.state.as_deref().unwrap_or(""),
+                        },
+                        scopes => &scopes,
+                    },
+                )
+                .unwrap();
 
                 OwnerConsent::InProgress(
                     OAuthResponse::default()

@@ -12,28 +12,28 @@ license = false
 eula = false
 
 [dependencies]
-athena = { workspace = true }
-clap = { workspace = true }
+athena.workspace = true
+clap.workspace = true
 color-eyre = "0.6.3"
-fred = { workspace = true }
-just-retry = { workspace = true }
-kitsune-config = { workspace = true }
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-email = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-federation = { workspace = true }
-kitsune-federation-filter = { workspace = true }
+fred.workspace = true
+just-retry.workspace = true
+kitsune-config.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-email.workspace = true
+kitsune-error.workspace = true
+kitsune-federation.workspace = true
+kitsune-federation-filter.workspace = true
 kitsune-http-client.workspace = true
-kitsune-jobs = { workspace = true }
-kitsune-observability = { workspace = true }
-kitsune-service = { workspace = true }
-kitsune-url = { workspace = true }
-kitsune-wasm-mrf = { workspace = true }
+kitsune-jobs.workspace = true
+kitsune-observability.workspace = true
+kitsune-service.workspace = true
+kitsune-url.workspace = true
+kitsune-wasm-mrf.workspace = true
 mimalloc = "0.1.43"
 tokio = { workspace = true, features = ["full"] }
-tracing = "0.1.40"
-triomphe = { workspace = true }
+tracing = "0.1.41"
+triomphe.workspace = true
 typed-builder = "0.20.0"
 
 [features]

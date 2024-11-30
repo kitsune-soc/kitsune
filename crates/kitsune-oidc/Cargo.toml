@@ -7,12 +7,12 @@ license.workspace = true
 
 [dependencies]
 enum_dispatch = "0.3.13"
-fred = { workspace = true }
+fred.workspace = true
 http-body-util = "0.1.2"
-kitsune-config = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
+kitsune-config.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
 moka = { workspace = true, features = ["sync"] }
 oauth2 = { version = "5.0.0-rc.1", default-features = false }
 openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
@@ -22,8 +22,8 @@ openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     "timing-resistant-secret-traits",
 ] }
 serde = { version = "1.0.215", features = ["derive"] }
-sonic-rs = { workspace = true }
-speedy-uuid = { workspace = true }
+sonic-rs.workspace = true
+speedy-uuid.workspace = true
 thiserror = "2.0.3"
 url = "2.5.4"
 

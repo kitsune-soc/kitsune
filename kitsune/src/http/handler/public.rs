@@ -6,8 +6,7 @@ use rust_embed::RustEmbed;
 use std::borrow::Cow;
 
 #[derive(RustEmbed)]
-#[folder = "assets-dist"]
-#[exclude = "*.scss"]
+#[folder = "assets"]
 struct AssetsDir;
 
 #[allow(clippy::unused_async)]

@@ -8,11 +8,11 @@ license.workspace = true
 [dependencies]
 axum-core = "0.4.5"
 eyre = "0.6.12"
-garde = { workspace = true }
+garde.workspace = true
 http = "1.1.0"
-sonic-rs = { workspace = true }
+sonic-rs.workspace = true
 sync_wrapper = "1.0.2"
-tracing = "0.1.40"
+tracing = "0.1.41"
 
 [lints]
 workspace = true

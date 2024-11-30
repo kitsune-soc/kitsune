@@ -1,10 +1,9 @@
 use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use askama::Template;
 use axum::{
     debug_handler,
     extract::{OriginalUri, State},
-    response::Redirect,
+    response::{Html, Redirect},
     Form,
 };
 use axum_extra::{
@@ -50,12 +49,6 @@ pub struct LoginForm {
     password: String,
 }
 
-#[derive(Template)]
-#[template(path = "oauth/login.html")]
-pub struct LoginPage {
-    flash_messages: IncomingFlashes,
-}
-
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
         State<Option<OidcService>>,
@@ -68,7 +61,7 @@ pub async fn get(
     csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
     oauth_req: OAuthRequest,
-) -> Result<Either3<OAuthResponse, LoginPage, Redirect>> {
+) -> Result<Either3<OAuthResponse, Html<String>, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = with_connection!(db_pool, |db_conn| {
@@ -92,7 +85,16 @@ pub async fn get(
             users::table.find(id).get_result(db_conn).await
         })?
     } else {
-        return Ok(Either3::E2(LoginPage { flash_messages }));
+        let messages: Vec<(axum_flash::Level, &str)> = flash_messages.into_iter().collect();
+        let page = crate::template::render(
+            "oauth/login.html",
+            minijinja::context! {
+                flash_messages => messages,
+            },
+        )
+        .unwrap();
+
+        return Ok(Either3::E2(Html(page)));
     };
 
     let solicitor = OAuthOwnerSolicitor::builder()

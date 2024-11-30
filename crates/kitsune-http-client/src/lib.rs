@@ -418,7 +418,7 @@ impl Response {
             if Uri::try_from(id)
                 .map_err(Error::new)?
                 .authority()
-                .map_or(true, |node_authority| *node_authority != server_authority)
+                .is_none_or(|node_authority| *node_authority != server_authority)
             {
                 return Err(Error::new(BoxError::from(
                     "Authority of `@id` doesn't belong to the originating server",

@@ -6,20 +6,20 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-kitsune-activitypub = { workspace = true }
-kitsune-cache = { workspace = true }
-kitsune-config = { workspace = true }
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-embed = { workspace = true }
-kitsune-federation-filter = { workspace = true }
+kitsune-activitypub.workspace = true
+kitsune-cache.workspace = true
+kitsune-config.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-embed.workspace = true
+kitsune-federation-filter.workspace = true
 kitsune-http-client.workspace = true
-kitsune-search = { workspace = true }
-kitsune-service = { workspace = true }
-kitsune-url = { workspace = true }
-kitsune-wasm-mrf = { workspace = true }
-kitsune-webfinger = { workspace = true }
-triomphe = { workspace = true }
+kitsune-search.workspace = true
+kitsune-service.workspace = true
+kitsune-url.workspace = true
+kitsune-wasm-mrf.workspace = true
+kitsune-webfinger.workspace = true
+triomphe.workspace = true
 typed-builder = "0.20.0"
 
 [lints]

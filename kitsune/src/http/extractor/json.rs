@@ -1,5 +1,5 @@
-use askama_axum::IntoResponse;
 use async_trait::async_trait;
+use axum::response::IntoResponse;
 use axum::{body::Body, extract::FromRequest, response::Response};
 use bytes::{BufMut, Bytes, BytesMut};
 use http::{header, HeaderMap, HeaderValue, Request, StatusCode};
