@@ -20,6 +20,9 @@ importers:
       prettier:
         specifier: ^3.4.1
         version: 3.4.1
+      prettier-plugin-jinja-template:
+        specifier: ^2.0.0
+        version: 2.0.0(prettier@3.4.1)
       prettier-plugin-tailwindcss:
         specifier: ^0.6.9
         version: 0.6.9(@trivago/prettier-plugin-sort-imports@4.3.0(prettier@3.4.1))(prettier-plugin-astro@0.14.1)(prettier-plugin-css-order@2.1.2(postcss@8.4.49)(prettier@3.4.1))(prettier-plugin-svelte@3.3.2(prettier@3.4.1)(svelte@5.2.9))(prettier@3.4.1)
@@ -3039,6 +3042,11 @@ packages:
     engines: {node: '>=16'}
     peerDependencies:
       prettier: 3.x
+
+  prettier-plugin-jinja-template@2.0.0:
+    resolution: {integrity: sha512-REZDAcZuOUvMDaPS47/GNRLKvbxh9DO9euXhWA7gJGqTLGzHPK2Z841F8I4bxsR7e2lqnHezkQ8GcWaKekKBVQ==, tarball: https://registry.npmjs.org/prettier-plugin-jinja-template/-/prettier-plugin-jinja-template-2.0.0.tgz}
+    peerDependencies:
+      prettier: ^3.0.0
 
   prettier-plugin-svelte@3.3.2:
     resolution: {integrity: sha512-kRPjH8wSj2iu+dO+XaUv4vD8qr5mdDmlak3IT/7AOgGIMRG86z/EHOLauFcClKEnOUf4A4nOA7sre5KrJD4Raw==, tarball: https://registry.npmjs.org/prettier-plugin-svelte/-/prettier-plugin-svelte-3.3.2.tgz}
@@ -7502,6 +7510,10 @@ snapshots:
       prettier: 3.4.1
     transitivePeerDependencies:
       - postcss
+
+  prettier-plugin-jinja-template@2.0.0(prettier@3.4.1):
+    dependencies:
+      prettier: 3.4.1
 
   prettier-plugin-svelte@3.3.2(prettier@3.4.1)(svelte@5.2.9):
     dependencies:

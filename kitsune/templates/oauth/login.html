@@ -1,49 +1,49 @@
 {% extends "base.html" %}
 
-<div></div>
-{% block title %}OAuth Login{% endblock %}
+{% block title %}
+  OAuth Login
+{% endblock %}
 
-<div></div>
 {% block body %}
-<main
-  class="flex flex-col place-content-center items-center w-screen min-h-screen"
->
-  <h1 class="italic text-shade1-dark">Kitsune</h1>
+  <main
+    class="flex flex-col place-content-center items-center w-screen min-h-screen"
+  >
+    <h1 class="italic text-shade1-dark">Kitsune</h1>
 
-  {% if flash_messages|length != 0 %}
-  <ul class="list-none border-4 border-solid border-red-500 px-4 py-2">
-    {% for (_level, msg) in flash_messages %}
-    <li>{{msg}}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+    {% if flash_messages|length != 0 %}
+      <ul class="list-none border-4 border-solid border-red-500 px-4 py-2">
+        {% for (_level, msg) in flash_messages %}
+          <li>{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
 
-  <form class="flex flex-col gap-6" method="post">
-    <label for="username"
-      >Username
+    <form class="flex flex-col gap-6" method="post">
+      <label for="username"
+        >Username
+        <input
+          class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+          type="text"
+          id="username"
+          name="username"
+          value=""
+        />
+      </label>
+      <label for="password"
+        >Password
+        <input
+          class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
+          type="password"
+          id="password"
+          name="password"
+          value=""
+        />
+      </label>
       <input
-        class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-        type="text"
-        id="username"
-        name="username"
-        value=""
+        class="[&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark min-h-1 cursor-pointer rounded p-2 transition duration-500"
+        type="submit"
+        value="Submit"
       />
-    </label>
-    <label for="password"
-      >Password
-      <input
-        class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-        type="password"
-        id="password"
-        name="password"
-        value=""
-      />
-    </label>
-    <input
-      class="[&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark min-h-1 cursor-pointer rounded p-2 transition duration-500"
-      type="submit"
-      value="Submit"
-    />
-  </form>
-</main>
+    </form>
+  </main>
 {% endblock %}

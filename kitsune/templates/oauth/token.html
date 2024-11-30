@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 
-<br />
-{% block title %} OAuth Token {% endblock %}
+{% block title %}
+  OAuth Token
+{% endblock %}
 
-<br />
 {% block body %}
-<p class="header">{{domain}}</p>
+  <p class="header">{{ domain }}</p>
 
-<div class="tokenContainer">
-  <p>Copy & Paste this token into <span class="appName">{{app_name}}</span></p>
-  <code class="token">{{token}}</code>
-</div>
+  <div class="tokenContainer">
+    <p>
+      Copy & Paste this token into <span class="appName">{{ app_name }}</span>
+    </p>
+    <code class="token">{{ token }}</code>
+  </div>
 {% endblock %}
