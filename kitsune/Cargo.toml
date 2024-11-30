@@ -71,7 +71,7 @@ mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja.workspace = true
-notify = "7.0.0"
+notify-debouncer-full = "0.4.0"
 oxide-auth = "0.6.1"
 oxide-auth-async = "0.2.1"
 oxide-auth-axum = "0.5.0"

@@ -1,8 +1,8 @@
 use arc_swap::ArcSwapAny;
 use core::str;
-use notify::Watcher;
+use notify_debouncer_full::notify;
 use rust_embed::RustEmbed;
-use std::{mem::ManuallyDrop, path::Path, sync::OnceLock};
+use std::{mem::ManuallyDrop, path::Path, sync::OnceLock, time::Duration};
 use triomphe::Arc;
 
 static ENVIRONMENT: OnceLock<ArcSwapAny<Arc<minijinja::Environment<'static>>>> = OnceLock::new();
@@ -30,28 +30,33 @@ fn init_environment() -> minijinja::Environment<'static> {
 }
 
 fn spawn_watcher() {
-    let watcher = notify::recommended_watcher(|event: notify::Result<notify::Event>| {
-        if event.is_err() {
-            return;
-        }
+    let watcher = notify_debouncer_full::new_debouncer(
+        Duration::from_secs(1),
+        None,
+        |events: notify_debouncer_full::DebounceEventResult| {
+            let Ok(events) = events else {
+                return;
+            };
 
-        match event {
-            Ok(notify::Event {
-                kind:
-                    notify::EventKind::Create(..)
-                    | notify::EventKind::Modify(..)
-                    | notify::EventKind::Remove(..),
-                ..
-            }) => {
-                debug!("reloading templates");
+            for event in events {
+                if matches!(
+                    event.event,
+                    notify::Event {
+                        kind: notify::EventKind::Create(..)
+                            | notify::EventKind::Modify(..)
+                            | notify::EventKind::Remove(..),
+                        ..
+                    }
+                ) {
+                    debug!("reloading templates");
 
-                if let Some(env) = ENVIRONMENT.get() {
-                    env.store(Arc::new(init_environment()));
+                    if let Some(env) = ENVIRONMENT.get() {
+                        env.store(Arc::new(init_environment()));
+                    }
                 }
             }
-            _ => return,
-        }
-    })
+        },
+    )
     .unwrap();
 
     let mut watcher = ManuallyDrop::new(watcher);
