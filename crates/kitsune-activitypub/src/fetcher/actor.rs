@@ -58,7 +58,7 @@ impl Fetcher {
         let domain_buf;
         let try_resolver = opts
             .acct
-            .map_or(true, |acct| acct != (&actor.preferred_username, domain));
+            .is_none_or(|acct| acct != (&actor.preferred_username, domain));
 
         let used_resolver = if try_resolver {
             match self
