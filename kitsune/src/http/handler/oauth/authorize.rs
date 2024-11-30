@@ -49,7 +49,6 @@ pub struct LoginForm {
     password: String,
 }
 
-#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
         State<Option<OidcService>>,
