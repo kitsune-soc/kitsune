@@ -4,14 +4,17 @@
 {% block title %} OAuth Login {% endblock %}
 
 <br />
-{% macro add_query_params() -%}
+{% block body %}
+
+{% macro add_query_params() %}
 <input type="hidden" name="client_id" value="{{ query.client_id }}" />
 <input type="hidden" name="redirect_uri" value="{{ query.redirect_uri }}" />
 <input type="hidden" name="response_type" value="{{ query.response_type }}" />
 <input type="hidden" name="scope" value="{{ query.scope }}" />
 <input type="hidden" name="state" value="{{ query.state }}" />
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-{%- endmacro %} {% block body %}
+{% endmacro %}
+
 <p class="header">Kitsune</p>
 
 <div class="consent-text">
@@ -20,20 +23,20 @@
   <p></p>
   <ul>
     {% for scope in scopes %}
-    <li>{{ scope.get_message().unwrap() }}</li>
+    <li>{{ scope }}</li>
     {% endfor %}
   </ul>
 </div>
 
 <div class="consent-forms">
   <form method="get">
-    {% add_query_params() %}
+    {{ add_query_params() }}
     <input type="hidden" name="login_consent" value="accept" />
     <input class="formButton" type="submit" value="Accept" />
   </form>
 
   <form method="get">
-    {% add_query_params() %}
+    {{ add_query_params() }}
     <input type="hidden" name="login_consent" value="deny" />
     <input class="formButton" type="submit" value="Deny" />
   </form>
@@ -42,10 +45,7 @@
 <div class="disclaimer">
   Authenticated as
   <span class="authUsername">{{ authenticated_username }}</span> ~
-  <a
-    href="#"
-    onclick="document.cookie='user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';window.location.reload();"
-    >Logout</a
-  >
+  <a href="#"
+    onclick="document.cookie='user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC;';window.location.reload();">Logout</a>
 </div>
 {% endblock %}

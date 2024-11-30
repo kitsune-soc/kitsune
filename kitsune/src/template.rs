@@ -35,10 +35,22 @@ fn spawn_watcher() {
             return;
         }
 
-        ENVIRONMENT
-            .get()
-            .unwrap()
-            .store(Arc::new(init_environment()));
+        match event {
+            Ok(notify::Event {
+                kind:
+                    notify::EventKind::Create(..)
+                    | notify::EventKind::Modify(..)
+                    | notify::EventKind::Remove(..),
+                ..
+            }) => {
+                debug!("reloading templates");
+
+                if let Some(env) = ENVIRONMENT.get() {
+                    env.store(Arc::new(init_environment()));
+                }
+            }
+            _ => return,
+        }
     })
     .unwrap();
 

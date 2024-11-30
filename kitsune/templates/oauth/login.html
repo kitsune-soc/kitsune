@@ -5,33 +5,29 @@
 
 <div></div>
 {% block body %}
-<p class="header">Kitsune</p>
+<main class="flex flex-col place-content-center items-center w-screen min-h-screen">
+  <h1 class="italic text-shade1-dark">Kitsune</h1>
 
-{% for (_level, msg) in flash_messages %}
-<div class="message">{{ msg }}</div>
-{% endfor %}
+  <ul class="list-none border-4 border-solid border-red-500 px-4 py-2">
+    {% for (_level, msg) in flash_messages %}
+    <li>
+      {{msg}}
+    </li>
+    {% endfor %}
+  </ul>
 
-<form method="post">
-  <div>
-    <label class="label" for="username">Username</label>
-    <br /><input
-      class="field"
-      type="text"
-      id="username"
-      name="username"
-      value=""
-    />
-    <br /><label class="label" for="password">Password</label><br />
+  <form class="flex flex-col gap-6" method="post">
+    <label for="username">Username
+      <input class="w-full border-0 border-b-2 border-gray-200 bg-transparent" type="text" id="username" name="username"
+        value="" />
+    </label>
+    <label for="password">Password
+      <input class="w-full border-0 border-b-2 border-gray-200 bg-transparent" type="password" id="password"
+        name="password" value="" />
+    </label>
     <input
-      class="field"
-      type="password"
-      id="password"
-      name="password"
-      value=""
-    />
-
-    <br /><br />
-  </div>
-  <input class="formButton" type="submit" value="Submit" />
-</form>
+      class="[&:not(:hover)]:text-dark-1 bg-shade1-dark hover:enabled:bg-shade2-dark min-h-1 cursor-pointer rounded p-2 transition duration-500"
+      type="submit" value="Submit" />
+  </form>
+</main>
 {% endblock %}

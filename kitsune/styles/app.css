@@ -1,3 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+	body {
+		@apply min-h-screen min-w-max bg-gradient-to-bl from-dark-2 via-dark-1 to-slate-950 bg-no-repeat;
+		@apply prose prose-slate prose-invert font-mono;
+	}
+
+	a {
+		/*@apply text-pink-400;*/
+	}
+
+	::-webkit-scrollbar {
+		@apply h-2.5 w-2.5;
+	}
+
+	::-webkit-scrollbar-track {
+		@apply shadow-lg;
+	}
+
+	::-webkit-scrollbar-thumb {
+		@apply bg-shade2-light;
+	}
+}
