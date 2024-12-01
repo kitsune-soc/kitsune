@@ -17,7 +17,7 @@ nanorand = { version = "0.7.0", default-features = false, features = [
 uuid.workspace = true
 
 [dev-dependencies]
-divan = "0.1.16"
+divan.workspace = true
 time.workspace = true
 uuid.workspace = true
 

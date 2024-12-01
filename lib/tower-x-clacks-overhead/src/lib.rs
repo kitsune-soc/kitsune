@@ -5,8 +5,7 @@ use std::{
     pin::Pin,
     task::{self, Poll},
 };
-use tower_layer::Layer;
-use tower_service::Service;
+use tower::{Layer, Service};
 use triomphe::Arc;
 
 static HEADER_NAME: HeaderName = HeaderName::from_static("x-clacks-overhead");
@@ -122,8 +121,7 @@ mod test {
     use crate::{XClacksOverheadLayer, HEADER_NAME};
     use http::{Request, Response};
     use std::convert::Infallible;
-    use tower::{service_fn, ServiceExt};
-    use tower_layer::Layer;
+    use tower::{service_fn, Layer, ServiceExt};
 
     #[futures_test::test]
     async fn add_header() {

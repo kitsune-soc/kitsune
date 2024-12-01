@@ -11,7 +11,7 @@ async-trait.workspace = true
 blake3 = "1.5.5"
 color-eyre.workspace = true
 derive_more = { version = "1.0.0", features = ["from"] }
-enum_dispatch = "0.3.13"
+enum_dispatch.workspace = true
 fred.workspace = true
 futures-util.workspace = true
 http.workspace = true

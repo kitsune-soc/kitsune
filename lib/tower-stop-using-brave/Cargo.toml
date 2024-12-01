@@ -6,14 +6,13 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-either = "1.13.0"
+either.workspace = true
 http.workspace = true
-regex = "1.11.1"
-tower-layer = "0.3.3"
-tower-service = "0.3.3"
+regex.workspace = true
+tower.workspace = true
 
 [dev-dependencies]
-futures-test = "0.3.31"
+futures-test.workspace = true
 tower.workspace = true
 
 [lints]

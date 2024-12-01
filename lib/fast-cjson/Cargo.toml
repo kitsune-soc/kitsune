@@ -11,12 +11,12 @@ harness = false
 
 [dependencies]
 icu_normalizer = "1.5.0"
-memchr = "2.7.4"
+memchr.workspace = true
 serde.workspace = true
 sonic-rs.workspace = true
 
 [dev-dependencies]
-divan = "0.1.16"
+divan.workspace = true
 mimalloc.workspace = true
 olpc-cjson = "0.1.4"
 proptest = { version = "1.5.0", default-features = false, features = ["std"] }

@@ -9,16 +9,12 @@ use memchr::memchr;
 use pin_project_lite::pin_project;
 use sha2::{digest::FixedOutput, Digest, Sha256, Sha512};
 use std::{
-    error::Error as StdError,
     future::{self, Ready},
     pin::Pin,
     task::{self, ready, Poll},
 };
 use subtle::ConstantTimeEq;
-use tower_layer::Layer;
-use tower_service::Service;
-
-type BoxError = Box<dyn StdError + Send + Sync>;
+use tower::{BoxError, Layer, Service};
 
 static DIGEST_HEADER_NAME: HeaderName = HeaderName::from_static("digest");
 

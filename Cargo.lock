@@ -7134,8 +7134,6 @@ dependencies = [
  "sha2",
  "subtle",
  "tower 0.5.1",
- "tower-layer",
- "tower-service",
  "tracing",
 ]
 
@@ -7160,8 +7158,6 @@ dependencies = [
  "http",
  "regex",
  "tower 0.5.1",
- "tower-layer",
- "tower-service",
 ]
 
 [[package]]
@@ -7173,8 +7169,6 @@ dependencies = [
  "itertools 0.13.0",
  "pin-project-lite",
  "tower 0.5.1",
- "tower-layer",
- "tower-service",
  "triomphe",
 ]
 

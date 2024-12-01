@@ -32,7 +32,7 @@ tick-tock-mock.workspace = true
 tracing = { workspace = true, optional = true }
 
 [dev-dependencies]
-divan = "0.1.16"
+divan.workspace = true
 tokio.workspace = true
 
 [features]

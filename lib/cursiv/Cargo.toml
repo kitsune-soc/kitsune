@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 aliri_braid = "0.4.0"
 blake3 = "1.5.5"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
-hex-simd = "0.8.0"
+hex-simd.workspace = true
 http.workspace = true
 pin-project-lite.workspace = true
 rand.workspace = true
@@ -19,10 +19,10 @@ zeroize = { version = "1.8.1", features = ["derive"] }
 
 # `axum` feature
 async-trait = { workspace = true, optional = true }
-axum-core = { version = "0.4.5", optional = true }
+axum-core = { workspace = true, optional = true }
 
 [dev-dependencies]
-futures-test = "0.3.31"
+futures-test.workspace = true
 tower.workspace = true
 
 [features]

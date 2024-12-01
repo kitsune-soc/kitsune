@@ -15,7 +15,7 @@ thiserror.workspace = true
 tracing.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
-unsize = "1.1.0"
+unsize.workspace = true
 
 [dev-dependencies]
 insta = { version = "1.41.1", features = ["json"] }

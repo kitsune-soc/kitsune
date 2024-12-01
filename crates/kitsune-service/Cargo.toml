@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = "0.8.11"
+ahash.workspace = true
 argon2.workspace = true
 asynk-strim.workspace = true
 athena.workspace = true
@@ -56,7 +56,7 @@ url.workspace = true
 zxcvbn = { version = "3.1.0", default-features = false }
 
 [dev-dependencies]
-hex-simd = "0.8.0"
+hex-simd.workspace = true
 http-body-util.workspace = true
 hyper = "1.5.1"
 kitsune-activitypub.workspace = true

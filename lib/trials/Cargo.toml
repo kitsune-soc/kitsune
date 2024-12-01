@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 
 [dev-dependencies]
-futures-test = "0.3.31"
+futures-test.workspace = true
 
 [lints]
 workspace = true

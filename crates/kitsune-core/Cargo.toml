@@ -15,7 +15,7 @@ paste = "1.0.15"
 serde.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
-unsize = "1.1.0"
+unsize.workspace = true
 
 [lints]
 workspace = true

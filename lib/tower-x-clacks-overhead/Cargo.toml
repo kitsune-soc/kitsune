@@ -9,12 +9,11 @@ license = "MIT OR Apache-2.0"
 http.workspace = true
 itertools.workspace = true
 pin-project-lite.workspace = true
-tower-layer = "0.3.3"
-tower-service = "0.3.3"
+tower.workspace = true
 triomphe.workspace = true
 
 [dev-dependencies]
-futures-test = "0.3.31"
+futures-test.workspace = true
 tower.workspace = true
 
 [lints]

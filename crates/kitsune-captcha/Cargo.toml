@@ -6,7 +6,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-enum_dispatch = "0.3.13"
+enum_dispatch.workspace = true
 http.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true

@@ -10,9 +10,9 @@ name = "basic_queue"
 required-features = ["redis"]
 
 [dependencies]
-ahash = "0.8.11"
+ahash.workspace = true
 async-trait.workspace = true
-either = { version = "1.13.0", default-features = false, optional = true }
+either = { workspace = true, optional = true }
 futures-util.workspace = true
 iso8601-timestamp.workspace = true
 fred = { workspace = true, optional = true }
@@ -29,7 +29,7 @@ tracing.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
 typetag = "0.2.18"
-unsize = "1.1.0"
+unsize.workspace = true
 
 [features]
 redis = ["dep:either", "dep:fred", "dep:rand", "dep:sonic-rs"]
