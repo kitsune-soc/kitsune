@@ -21,7 +21,7 @@ kitsune-derive.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
 kitsune-type.workspace = true
-mrf-manifest = { workspace = true, features = ["decode"] }
+mrf-manifest.workspace = true
 redb = { version = "2.2.0", features = ["logging"] }
 slab = "0.4.9"
 smol_str.workspace = true
@@ -45,7 +45,7 @@ wasmtime-wasi = { version = "27.0.0", default-features = false }
 bytes.workspace = true
 tempfile = "3.14.0"
 tokio.workspace = true
-tower = "0.5.1"
+tower.workspace = true
 tracing-subscriber = "0.3.19"
 wat = "1.221.0"
 

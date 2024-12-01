@@ -129,10 +129,11 @@ hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, featu
     "tokio-runtime",
 ] }
 http = "1.1.0"
-iso8601-timestamp = "0.3.1"
+iso8601-timestamp = { version = "0.3.1", features = ["diesel-pg"] }
 itertools = { version = "0.13.0", default-features = false }
 minijinja = { version = "2.5.0", features = ["loader"] }
 moka = { version = "=0.12.7", features = ["sync"] }
+pin-project-lite = "0.2.15"
 rand = "0.8.5"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
@@ -145,6 +146,7 @@ sonic-rs = "=0.3.14"
 strum = { version = "0.26.3", features = ["derive"] }
 thiserror = "2.0.3"
 tokio = { version = "1.41.1", features = ["full"] }
+tower = { version = "0.5.1", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.2", features = [
     "catch-panic",
     "cors",
@@ -159,7 +161,6 @@ tower-http = { version = "0.6.2", features = [
     "fs",
     "map-response-body",
     "request-id",
-    "timeout",
     "timeout",
     "trace",
 ] }
@@ -207,14 +208,18 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
-blowocking = { path = "lib/blowocking", default-features = false }
+blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
 geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
 masto-id-convert = { path = "lib/masto-id-convert" }
-mrf-manifest = { path = "lib/mrf-manifest" }
+mrf-manifest = { path = "lib/mrf-manifest", features = [
+    "decode",
+    "encode",
+    "serialise",
+] }
 post-process = { path = "lib/post-process" }
 schaber = { path = "lib/schaber" }
 speedy-uuid = { path = "lib/speedy-uuid", features = [

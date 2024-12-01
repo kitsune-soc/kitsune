@@ -14,7 +14,7 @@ tower-service = "0.3.3"
 
 [dev-dependencies]
 futures-test = "0.3.31"
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+tower.workspace = true
 
 [lints]
 workspace = true

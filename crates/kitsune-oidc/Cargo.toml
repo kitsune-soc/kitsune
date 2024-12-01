@@ -13,7 +13,7 @@ kitsune-config.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
-moka = { workspace = true, features = ["sync"] }
+moka.workspace = true
 oauth2 = { version = "5.0.0-rc.1", default-features = false }
 openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
     # Accept these two, per specification invalid, cases to increase compatibility

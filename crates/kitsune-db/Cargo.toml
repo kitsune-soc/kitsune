@@ -7,13 +7,13 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-blowocking = { workspace = true, features = ["io"] }
+blowocking.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
 diesel_migrations = "2.2.0"
 futures-util.workspace = true
-iso8601-timestamp = { workspace = true, features = ["diesel-pg"] }
+iso8601-timestamp.workspace = true
 kitsune-config.workspace = true
 kitsune-error.workspace = true
 kitsune-language.workspace = true

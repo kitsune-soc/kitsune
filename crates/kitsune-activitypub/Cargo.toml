@@ -48,7 +48,7 @@ kitsune-test.workspace = true
 kitsune-webfinger.workspace = true
 pretty_assertions = "1.4.1"
 tokio.workspace = true
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+tower.workspace = true
 
 [lints]
 workspace = true

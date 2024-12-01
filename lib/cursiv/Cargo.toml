@@ -11,9 +11,9 @@ blake3 = "1.5.5"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 hex-simd = "0.8.0"
 http.workspace = true
-pin-project-lite = "0.2.15"
+pin-project-lite.workspace = true
 rand.workspace = true
-tower = { version = "0.5.1", default-features = false }
+tower.workspace = true
 triomphe.workspace = true
 zeroize = { version = "1.8.1", features = ["derive"] }
 
@@ -23,7 +23,7 @@ axum-core = { version = "0.4.5", optional = true }
 
 [dev-dependencies]
 futures-test = "0.3.31"
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+tower.workspace = true
 
 [features]
 axum = ["dep:async-trait", "dep:axum-core"]

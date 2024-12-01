@@ -12,7 +12,7 @@ either = { version = "1.13.0", default-features = false }
 http.workspace = true
 http-body = "1.0.1"
 memchr = "2.7.4"
-pin-project-lite = "0.2.15"
+pin-project-lite.workspace = true
 sha2 = "0.10.8"
 subtle = "2.6.1"
 tower-layer = "0.3.3"
@@ -23,7 +23,7 @@ tracing.workspace = true
 bytes.workspace = true
 futures-test = "0.3.31"
 http-body-util = "0.1.2"
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+tower.workspace = true
 
 [lints]
 workspace = true

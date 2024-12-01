@@ -10,11 +10,7 @@ license = "MIT OR Apache-2.0"
 clap.workspace = true
 color-eyre.workspace = true
 colored_json = "5.0.0"
-mrf-manifest = { workspace = true, features = [
-    "decode",
-    "encode",
-    "serialise",
-] }
+mrf-manifest.workspace = true
 sonic-rs.workspace = true
 wasmparser = "0.221.0"
 
