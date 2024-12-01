@@ -10,11 +10,11 @@ enum_dispatch = "0.3.13"
 fred.workspace = true
 kitsune-error.workspace = true
 moka.workspace = true
-serde = "1.0.215"
+serde.workspace = true
 sonic-rs.workspace = true
-tracing = "0.1.41"
+tracing.workspace = true
 triomphe.workspace = true
-typed-builder = "0.20.0"
+typed-builder.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt"] }

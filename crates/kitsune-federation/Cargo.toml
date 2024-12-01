@@ -20,7 +20,7 @@ kitsune-url.workspace = true
 kitsune-wasm-mrf.workspace = true
 kitsune-webfinger.workspace = true
 triomphe.workspace = true
-typed-builder = "0.20.0"
+typed-builder.workspace = true
 
 [lints]
 workspace = true

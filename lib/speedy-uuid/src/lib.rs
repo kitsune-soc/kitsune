@@ -184,12 +184,12 @@ mod diesel_impl {
 mod redis_impl {
     use crate::Uuid;
     use fred::{
-        error::{RedisError, RedisErrorKind},
-        types::RedisValue,
+        error::{Error, ErrorKind},
+        types::Value,
     };
     use std::str::{self, FromStr};
 
-    impl From<Uuid> for RedisValue {
+    impl From<Uuid> for Value {
         fn from(value: Uuid) -> Self {
             let ascii_bytes = value.as_ascii_bytes();
             #[allow(unsafe_code)]
@@ -201,20 +201,14 @@ mod redis_impl {
         }
     }
 
-    impl fred::types::FromRedis for Uuid {
-        fn from_value(val: RedisValue) -> Result<Self, RedisError> {
-            let transform_error =
-                |err: crate::Error| RedisError::new(RedisErrorKind::Parse, err.to_string());
+    impl fred::types::FromValue for Uuid {
+        fn from_value(val: Value) -> Result<Self, Error> {
+            let transform_error = |err: crate::Error| Error::new(ErrorKind::Parse, err.to_string());
 
             let value = match val {
-                RedisValue::Bytes(bytes) => Uuid::from_slice(&bytes).map_err(transform_error)?,
-                RedisValue::String(string) => Uuid::from_str(&string).map_err(transform_error)?,
-                _ => {
-                    return Err(RedisError::new(
-                        RedisErrorKind::Parse,
-                        "invalid type for uuid",
-                    ))
-                }
+                Value::Bytes(bytes) => Uuid::from_slice(&bytes).map_err(transform_error)?,
+                Value::String(string) => Uuid::from_str(&string).map_err(transform_error)?,
+                _ => return Err(Error::new(ErrorKind::Parse, "invalid type for uuid")),
             };
 
             Ok(value)

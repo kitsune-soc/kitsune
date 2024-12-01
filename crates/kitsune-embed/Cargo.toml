@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 diesel.workspace = true
 diesel-async.workspace = true
-http = "1.1.0"
+http.workspace = true
 iso8601-timestamp.workspace = true
 kitsune-db.workspace = true
 kitsune-derive.workspace = true

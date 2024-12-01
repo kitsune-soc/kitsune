@@ -62,9 +62,9 @@ impl JobContextRepository for ContextRepo {
 async fn basic_schedule() {
     redis_test(|pool| async move {
         let queue = RedisJobQueue::builder()
+            .conn_pool(pool)
             .context_repository(ContextRepo)
             .queue_name("test_queue")
-            .redis_pool(pool)
             .build();
 
         queue

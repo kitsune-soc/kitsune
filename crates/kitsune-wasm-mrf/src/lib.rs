@@ -7,8 +7,10 @@ use self::{
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
 use color_eyre::{eyre, Section};
-use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
-use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
+use futures_util::{stream, StreamExt, TryStreamExt};
 use kitsune_config::mrf::{
     AllocationStrategy, Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
@@ -42,24 +44,36 @@ mod mrf_wit;
 pub mod kv_storage;
 
 #[inline]
-fn find_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
+async fn find_mrf_modules<P>(dir: P) -> Result<Vec<(PathBuf, Vec<u8>)>, io::Error>
 where
     P: AsRef<Path>,
 {
     // Read all the `.wasm` files from the disk
     // Recursively traverse the entire directory tree doing so and follow all symlinks
-    // Also run the I/O operations inside a `FuturesUnordered` to enable concurrent reading
-    WalkDir::new(dir)
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            (entry.path().is_file() && entry.path().extension() == Some("wasm".as_ref()))
-                .then(|| entry.into_path())
-        })
-        .inspect(|path| debug!(?path, "discovered WASM module"))
-        .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
-        .collect::<FuturesUnordered<_>>()
+    let entries = WalkDir::new(dir).follow_links(true);
+
+    let mut acc = Vec::new();
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(error) => {
+                debug!(?error, "failed to get file entry info");
+                continue;
+            }
+        };
+
+        if !entry.path().is_file() || entry.path().extension() != Some("wasm".as_ref()) {
+            continue;
+        }
+
+        let path = entry.into_path();
+        debug!(?path, "discovered WASM module");
+
+        let data = fs::read(path.clone()).await?;
+        acc.push((path, data));
+    }
+
+    Ok(acc)
 }
 
 #[inline]
@@ -192,18 +206,22 @@ impl MrfService {
             .wasm_component_model(true);
 
         let engine = Engine::new(&engine_config).map_err(eyre::Report::msg)?;
-        let mut wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
-            .map_err(eyre::Report::from)
-            .and_then(|(module_path, wasm_data)| {
-                let cache = cache.as_ref();
-                let engine = &engine;
 
-                async move { load_mrf_module(cache, engine, &module_path, &wasm_data) }
-            });
+        let wasm_modules = find_mrf_modules(config.module_dir.as_str()).await?;
+        let mut wasm_data_stream = stream::iter(wasm_modules).map(|(module_path, wasm_data)| {
+            let cache = cache.as_ref();
+            let engine = &engine;
+
+            load_mrf_module(cache, engine, &module_path, &wasm_data)
+        });
         let mut wasm_data_stream = pin!(wasm_data_stream);
 
         let mut modules = Vec::new();
-        while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
+        while let Some(maybe_module) = wasm_data_stream.try_next().await? {
+            let Some((manifest, component)) = maybe_module else {
+                continue;
+            };
+
             // TODO: permission grants, etc.
 
             let span = info_span!(

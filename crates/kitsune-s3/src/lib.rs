@@ -259,13 +259,11 @@ mod test {
                 .await
                 .unwrap();
 
-            let data = client
-                .get_object("good song")
-                .await
-                .unwrap()
-                .try_fold(Vec::new(), |mut acc, chunk| async move {
+            let data_stream = client.get_object("good song").await.unwrap();
+            let data = data_stream
+                .try_fold(Vec::new(), |mut acc, chunk| {
                     acc.extend_from_slice(&chunk);
-                    Ok(acc)
+                    future::ok(acc)
                 })
                 .await
                 .unwrap();

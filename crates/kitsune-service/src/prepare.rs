@@ -1,10 +1,9 @@
 use eyre::WrapErr;
-use fred::clients::RedisPool;
-use fred::interfaces::ClientLike;
-use fred::types::RedisConfig;
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::AnyCaptcha;
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
+use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, AnyCaptcha};
 use kitsune_config::{cache, captcha, email, language_detection, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
@@ -43,8 +42,8 @@ where
                 .await?;
 
             RedisCache::builder()
+                .conn_pool(pool.clone())
                 .prefix(cache_name)
-                .redis_conn(pool.clone())
                 .ttl(Duration::from_secs(60)) // TODO: Parameterise this
                 .build()
                 .into()

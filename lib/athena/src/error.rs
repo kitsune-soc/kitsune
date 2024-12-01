@@ -11,7 +11,7 @@ pub enum Error {
 
     #[cfg(feature = "redis")]
     #[error(transparent)]
-    Redis(#[from] fred::error::RedisError),
+    Redis(#[from] fred::error::Error),
 
     #[cfg(feature = "redis")]
     #[error(transparent)]

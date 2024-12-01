@@ -8,15 +8,14 @@ license.workspace = true
 [dependencies]
 async-trait = "0.1.83"
 fred.workspace = true
-futures-util = "0.3.31"
-http = "1.1.0"
+http.workspace = true
 kitsune-cache.workspace = true
 kitsune-core.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
 kitsune-type.workspace = true
 kitsune-util.workspace = true
-tracing = "0.1.41"
+tracing.workspace = true
 triomphe.workspace = true
 urlencoding = "2.1.3"
 

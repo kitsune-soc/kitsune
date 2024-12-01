@@ -28,7 +28,7 @@ opentelemetry-otlp = { version = "0.27.0", default-features = false, features = 
 opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
     "rt-tokio",
 ] }
-tracing = "0.1.41"
+tracing.workspace = true
 tracing-error = "0.2.1"
 tracing-opentelemetry = { version = "0.28.0", default-features = false }
 tracing-subscriber = "0.3.19"

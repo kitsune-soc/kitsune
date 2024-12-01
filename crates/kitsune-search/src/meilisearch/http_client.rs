@@ -33,7 +33,7 @@ impl<R> AsyncReadBridge<R> {
 
 impl<R> Stream for AsyncReadBridge<R>
 where
-    R: futures_io::AsyncRead,
+    R: futures_util::AsyncRead,
 {
     type Item = io::Result<Bytes>;
 
@@ -62,7 +62,7 @@ pub struct HttpClient {
 impl meilisearch_sdk::request::HttpClient for HttpClient {
     async fn stream_request<
         Query: Serialize + Send + Sync,
-        Body: futures_io::AsyncRead + Send + Sync + 'static,
+        Body: futures_util::AsyncRead + Send + Sync + 'static,
         Output: DeserializeOwned + 'static,
     >(
         &self,

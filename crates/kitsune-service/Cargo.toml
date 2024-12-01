@@ -17,9 +17,9 @@ diesel.workspace = true
 diesel-async.workspace = true
 eyre = "0.6.12"
 fred.workspace = true
-futures-util = "0.3.31"
+futures-util.workspace = true
 garde.workspace = true
-http = "1.1.0"
+http.workspace = true
 img-parts = "0.3.1"
 iso8601-timestamp.workspace = true
 kitsune-cache.workspace = true
@@ -45,14 +45,14 @@ post-process.workspace = true
 rand = "0.8.5"
 rsa = "0.9.7"
 rusty-s3 = { version = "0.5.0", default-features = false }
-serde = "1.0.215"
+serde.workspace = true
 smol_str = "0.3.2"
 speedy-uuid.workspace = true
 tokio = { workspace = true, features = ["macros", "sync"] }
-tracing = "0.1.41"
+tracing.workspace = true
 triomphe.workspace = true
-typed-builder = "0.20.0"
-url = "2.5.4"
+typed-builder.workspace = true
+url.workspace = true
 zxcvbn = { version = "3.1.0", default-features = false }
 
 [dev-dependencies]
