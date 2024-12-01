@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 eyre.workspace = true
-human-size = { version = "0.4.3", features = ["serde"] }
+human-size.workspace = true
 isolang.workspace = true
 serde.workspace = true
 smol_str.workspace = true

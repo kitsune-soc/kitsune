@@ -11,7 +11,7 @@ eyre.workspace = true
 garde.workspace = true
 http.workspace = true
 sonic-rs.workspace = true
-sync_wrapper = "1.0.2"
+sync_wrapper.workspace = true
 tracing.workspace = true
 
 [lints]
