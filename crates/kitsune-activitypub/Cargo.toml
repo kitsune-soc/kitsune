@@ -42,11 +42,11 @@ url.workspace = true
 
 [dev-dependencies]
 http-body-util.workspace = true
-hyper = "1.5.1"
+hyper.workspace = true
 kitsune-config.workspace = true
 kitsune-test.workspace = true
 kitsune-webfinger.workspace = true
-pretty_assertions = "1.4.1"
+pretty_assertions.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

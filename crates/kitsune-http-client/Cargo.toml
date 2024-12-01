@@ -14,7 +14,7 @@ http.workspace = true
 http-body.workspace = true
 http-body-util.workspace = true
 http-signatures.workspace = true
-hyper = "1.5.1"
+hyper.workspace = true
 hyper-util = { version = "0.1.10", features = [
     "client-legacy",
     "http1",

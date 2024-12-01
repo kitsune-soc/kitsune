@@ -9,14 +9,14 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 clap.workspace = true
 color-eyre.workspace = true
-colored_json = "5.0.0"
+colored_json.workspace = true
 mrf-manifest.workspace = true
 sonic-rs.workspace = true
-wasmparser = "0.221.0"
+wasmparser.workspace = true
 
 [dev-dependencies]
 sonic-rs.workspace = true
-wat = "1.221.0"
+wat.workspace = true
 
 [lints]
 workspace = true

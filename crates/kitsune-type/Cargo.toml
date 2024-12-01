@@ -18,9 +18,9 @@ speedy-uuid.workspace = true
 strum.workspace = true
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
+pretty_assertions.workspace = true
 rstest = { version = "0.23.0", default-features = false }
-serde_test = "1"
+serde_test.workspace = true
 
 [lints]
 workspace = true

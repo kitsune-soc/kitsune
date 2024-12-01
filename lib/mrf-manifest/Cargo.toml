@@ -7,19 +7,19 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 fast-cjson = { workspace = true, optional = true }
-leb128 = { version = "0.2.5", optional = true }
-schemars = { version = "0.8.21", features = ["impl_json_schema", "semver"] }
-semver = { version = "1.0.23", features = ["serde"] }
+leb128 = { workspace = true, optional = true }
+schemars.workspace = true
+semver.workspace = true
 serde.workspace = true
 sonic-rs = { workspace = true, optional = true }
 thiserror = { workspace = true, optional = true }
-wasm-encoder = { version = "0.221.0", optional = true }
-wasmparser = { version = "0.221.0", optional = true }
+wasm-encoder = { workspace = true, optional = true }
+wasmparser = { workspace = true, optional = true }
 
 [dev-dependencies]
-insta = { version = "1.41.1", default-features = false, features = ["json"] }
+insta.workspace = true
 sonic-rs.workspace = true
-wat = "1.221.0"
+wat.workspace = true
 
 [features]
 decode = ["dep:leb128", "dep:sonic-rs", "dep:thiserror", "dep:wasmparser"]

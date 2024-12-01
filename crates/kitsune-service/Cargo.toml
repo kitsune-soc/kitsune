@@ -12,7 +12,7 @@ asynk-strim.workspace = true
 athena.workspace = true
 blowocking.workspace = true
 bytes.workspace = true
-derive_builder = "0.20.2"
+derive_builder.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 eyre.workspace = true
@@ -40,7 +40,7 @@ kitsune-url.workspace = true
 kitsune-util.workspace = true
 mime.workspace = true
 password-hash = { version = "0.5.0", features = ["std"] }
-pkcs8 = "0.10.2"
+pkcs8.workspace = true
 post-process.workspace = true
 rand.workspace = true
 rsa = "0.9.7"
@@ -58,14 +58,14 @@ zxcvbn = { version = "3.1.0", default-features = false }
 [dev-dependencies]
 hex-simd.workspace = true
 http-body-util.workspace = true
-hyper = "1.5.1"
+hyper.workspace = true
 kitsune-activitypub.workspace = true
 kitsune-config.workspace = true
 kitsune-federation-filter.workspace = true
 kitsune-jobs.workspace = true
 kitsune-test.workspace = true
 kitsune-webfinger.workspace = true
-pretty_assertions = "1.4.1"
+pretty_assertions.workspace = true
 tempfile.workspace = true
 tower.workspace = true
 

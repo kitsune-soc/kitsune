@@ -18,8 +18,8 @@ typed-builder.workspace = true
 unsize.workspace = true
 
 [dev-dependencies]
-insta = { version = "1.41.1", features = ["json"] }
-rand_xorshift = "0.3.0"
+insta.workspace = true
+rand_xorshift.workspace = true
 sonic-rs.workspace = true
 tokio.workspace = true
 

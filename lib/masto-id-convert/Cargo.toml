@@ -10,10 +10,8 @@ name = "process"
 harness = false
 
 [dependencies]
-lexical-parse-integer = { version = "1.0.2", default-features = false }
-nanorand = { version = "0.7.0", default-features = false, features = [
-    "wyrand",
-] }
+lexical-parse-integer.workspace = true
+nanorand.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]

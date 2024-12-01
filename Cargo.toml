@@ -80,6 +80,7 @@ resolver = "2"
 
 [workspace.dependencies]
 ahash = "0.8.11"
+aliri_braid = "0.4.0"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.11", default-features = false, features = [
     "graphiql",
@@ -92,10 +93,15 @@ asynk-strim = "0.1.2"
 async-trait = "0.1.83"
 axum-core = "0.4.5"
 base64-simd = "0.8.0"
+blake3 = "1.5.5"
 bytes = "1.9.0"
 chrono = { version = "0.4.38", default-features = false }
 clap = { version = "4.5.21", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
+colored_json = "5.0.0"
+const-oid = { version = "0.9.6", features = ["db"] }
+cookie = { version = "0.18.1", features = ["percent-encode"] }
+derive_builder = "0.20.2"
 diesel = { version = "2.2.5", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
@@ -120,6 +126,7 @@ fred = { version = "10.0.0", features = [
     "sha-1",
     "unix-sockets",
 ] }
+futures-executor = "0.3.31"
 futures-test = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
@@ -141,23 +148,51 @@ hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, featu
 http = "1.1.0"
 http-body = "1.0.1"
 http-body-util = "0.1.2"
+httpdate = "1.0.3"
+hyper = "1.5.1"
+icu_normalizer = "1.5.0"
+insta = { version = "1.41.1", default-features = false, features = [
+    "glob",
+    "json",
+] }
 iso8601-timestamp = { version = "0.3.1", features = ["diesel-pg"] }
 itertools = { version = "0.13.0", default-features = false }
+leb128 = "0.2.5"
+lexical-parse-integer = { version = "1.0.2", default-features = false }
+logos = "0.14.2"
+lol_html = "2.0.0"
 memchr = "2.7.4"
+miette = { version = "7.4.0", features = ["fancy"] }
 mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.5.0", features = ["loader"] }
 moka = { version = "=0.12.7", features = ["sync"] }
+nanorand = { version = "0.7.0", default-features = false, features = [
+    "wyrand",
+] }
+olpc-cjson = "0.1.4"
+owo-colors = { version = "4.1.0", features = ["supports-colors"] }
 pin-project-lite = "0.2.15"
+pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
+postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
+pretty_assertions = "1.4.1"
 rand = "0.8.5"
+rand_xorshift = "0.3.0"
+rayon = "1.10.0"
 regex = "1.11.1"
+retry-policies = "0.4.0"
+ring = { version = "0.17.8", features = ["std"] }
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
     "perf-inline",
 ] }
+schemars = { version = "1.0.0-alpha.16", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
+semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.215", features = ["derive"] }
+serde_test = "1.0.177"
+serde_json = "1.0.133"
 sha2 = "0.10.8"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 smol_str = { version = "0.3.2", features = ["serde"] }
@@ -194,9 +229,15 @@ triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
 ] }
 typed-builder = "0.20.0"
+typetag = "0.2.18"
 unsize = "1.1.0"
 url = "2.5.4"
 uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }
+uuid-simd = { version = "0.8.0", features = ["uuid"] }
+wasm-encoder = "0.221.0"
+wasmparser = "0.221.0"
+wat = "1.221.0"
+zeroize = { version = "1.8.1", features = ["derive"] }
 
 # Local workspace dependencies (crate directory)
 kitsune-activitypub = { path = "crates/kitsune-activitypub" }

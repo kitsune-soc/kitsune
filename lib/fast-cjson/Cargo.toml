@@ -10,7 +10,7 @@ name = "bench"
 harness = false
 
 [dependencies]
-icu_normalizer = "1.5.0"
+icu_normalizer.workspace = true
 memchr.workspace = true
 serde.workspace = true
 sonic-rs.workspace = true
@@ -18,11 +18,9 @@ sonic-rs.workspace = true
 [dev-dependencies]
 divan.workspace = true
 mimalloc.workspace = true
-olpc-cjson = "0.1.4"
-proptest = { version = "1.5.0", default-features = false, features = ["std"] }
-proptest-derive = "0.5.0"
+olpc-cjson.workspace = true
 serde.workspace = true
-serde_json = "1.0.133"
+serde_json.workspace = true
 
 [lints]
 workspace = true

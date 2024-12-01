@@ -6,16 +6,16 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-aliri_braid = "0.4.0"
-blake3 = "1.5.5"
-cookie = { version = "0.18.1", features = ["percent-encode"] }
+aliri_braid.workspace = true
+blake3.workspace = true
+cookie.workspace = true
 hex-simd.workspace = true
 http.workspace = true
 pin-project-lite.workspace = true
 rand.workspace = true
 tower.workspace = true
 triomphe.workspace = true
-zeroize = { version = "1.8.1", features = ["derive"] }
+zeroize.workspace = true
 
 # `axum` feature
 async-trait = { workspace = true, optional = true }
