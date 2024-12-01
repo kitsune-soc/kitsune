@@ -31,7 +31,7 @@ hyper-rustls = { version = "0.27.3", default-features = false, features = [
 ] }
 kitsune-core.workspace = true
 kitsune-type.workspace = true
-pin-project = "1.1.7"
+pin-project-lite.workspace = true
 serde.workspace = true
 simdutf8.workspace = true
 sonic-rs.workspace = true

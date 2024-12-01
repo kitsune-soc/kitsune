@@ -3637,7 +3637,7 @@ dependencies = [
  "hyper-util",
  "kitsune-core",
  "kitsune-type",
- "pin-project",
+ "pin-project-lite",
  "serde",
  "simdutf8",
  "sonic-rs",
