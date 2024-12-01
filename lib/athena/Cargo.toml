@@ -17,11 +17,11 @@ futures-util.workspace = true
 iso8601-timestamp.workspace = true
 fred = { workspace = true, optional = true }
 just-retry.workspace = true
-rand = { version = "0.8.5", optional = true }
+rand = { workspace = true, optional = true }
 serde.workspace = true
-smol_str = "0.3.2"
+smol_str.workspace = true
 sonic-rs = { workspace = true, optional = true }
-speedy-uuid = { workspace = true, features = ["redis"] }
+speedy-uuid.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tokio-util = { version = "0.7.12", features = ["rt"] }

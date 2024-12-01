@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 argh = "0.1.12"
-eyre = "0.6.12"
+eyre.workspace = true
 sonic-rs.workspace = true
 tracing.workspace = true
 tracing-subscriber = { version = "0.3.19", default-features = false, features = [

@@ -11,7 +11,7 @@ diesel = { workspace = true, optional = true }
 fred = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 thiserror.workspace = true
-uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }
+uuid.workspace = true
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 
 [dev-dependencies]

@@ -9,7 +9,7 @@ build = "build.rs"
 [dependencies]
 async-trait.workspace = true
 blake3 = "1.5.5"
-color-eyre = "0.6.3"
+color-eyre.workspace = true
 derive_more = { version = "1.0.0", features = ["from"] }
 enum_dispatch = "0.3.13"
 fred.workspace = true
@@ -24,7 +24,7 @@ kitsune-type.workspace = true
 mrf-manifest = { workspace = true, features = ["decode"] }
 redb = { version = "2.2.0", features = ["logging"] }
 slab = "0.4.9"
-smol_str = "0.3.2"
+smol_str.workspace = true
 sonic-rs.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -42,7 +42,7 @@ wasmtime = { version = "27.0.0", default-features = false, features = [
 wasmtime-wasi = { version = "27.0.0", default-features = false }
 
 [dev-dependencies]
-bytes = "1.9.0"
+bytes.workspace = true
 tempfile = "3.14.0"
 tokio.workspace = true
 tower = "0.5.1"

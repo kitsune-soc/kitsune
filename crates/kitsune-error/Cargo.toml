@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 axum-core = "0.4.5"
-eyre = "0.6.12"
+eyre.workspace = true
 garde.workspace = true
 http.workspace = true
 sonic-rs.workspace = true

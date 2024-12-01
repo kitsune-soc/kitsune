@@ -14,7 +14,7 @@ eula = false
 [dependencies]
 athena.workspace = true
 clap.workspace = true
-color-eyre = "0.6.3"
+color-eyre.workspace = true
 fred.workspace = true
 just-retry.workspace = true
 kitsune-config.workspace = true

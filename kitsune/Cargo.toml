@@ -28,11 +28,11 @@ axum-extra = { version = "0.9.6", features = [
 ] }
 axum-flash = "0.8.0"
 blowocking.workspace = true
-bytes = "1.9.0"
+bytes.workspace = true
 chrono = { version = "0.4.38", default-features = false }
 clap.workspace = true
-color-eyre = "0.6.3"
-cursiv = { workspace = true, features = ["axum"] }
+color-eyre.workspace = true
+cursiv.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 futures-util.workspace = true
@@ -82,7 +82,7 @@ serde_urlencoded = "0.7.1"
 sonic-rs.workspace = true
 simdutf8.workspace = true
 speedy-uuid.workspace = true
-strum = { version = "0.26.3", features = ["derive"] }
+strum.workspace = true
 tempfile = "3.14.0"
 time = "0.3.36"
 tokio.workspace = true
@@ -90,14 +90,7 @@ tokio-util = { version = "0.7.12", features = ["io"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-stop-using-brave.workspace = true
 tower-x-clacks-overhead.workspace = true
-tower-http = { version = "0.6.2", features = [
-    "catch-panic",
-    "cors",
-    "fs",
-    "request-id",
-    "timeout",
-    "trace",
-] }
+tower-http.workspace = true
 tower-http-digest.workspace = true
 tracing.workspace = true
 trials.workspace = true

@@ -13,7 +13,7 @@ pulldown-cmark = { version = "0.12.2", default-features = false, features = [
     "html",
     "simd",
 ] }
-rand = "0.8.5"
+rand.workspace = true
 speedy-uuid.workspace = true
 tokio.workspace = true
 

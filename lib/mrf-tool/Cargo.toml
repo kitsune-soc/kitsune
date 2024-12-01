@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 clap.workspace = true
-color-eyre = "0.6.3"
+color-eyre.workspace = true
 colored_json = "5.0.0"
 mrf-manifest = { workspace = true, features = [
     "decode",

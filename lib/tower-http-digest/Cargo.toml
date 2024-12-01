@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 base64-simd.workspace = true
-bytes = "1.9.0"
+bytes.workspace = true
 either = { version = "1.13.0", default-features = false }
 http.workspace = true
 http-body = "1.0.1"
@@ -20,7 +20,7 @@ tower-service = "0.3.3"
 tracing.workspace = true
 
 [dev-dependencies]
-bytes = "1.9.0"
+bytes.workspace = true
 futures-test = "0.3.31"
 http-body-util = "0.1.2"
 tower = { version = "0.5.1", default-features = false, features = ["util"] }

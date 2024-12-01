@@ -13,7 +13,7 @@ kitsune-http-client.workspace = true
 serde.workspace = true
 serde_urlencoded = "0.7.1"
 sonic-rs.workspace = true
-strum = { version = "0.26.3", features = ["derive"] }
+strum.workspace = true
 typed-builder.workspace = true
 
 [lints]

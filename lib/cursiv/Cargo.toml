@@ -12,7 +12,7 @@ cookie = { version = "0.18.1", features = ["percent-encode"] }
 hex-simd = "0.8.0"
 http.workspace = true
 pin-project-lite = "0.2.15"
-rand = "0.8.5"
+rand.workspace = true
 tower = { version = "0.5.1", default-features = false }
 triomphe.workspace = true
 zeroize = { version = "1.8.1", features = ["derive"] }

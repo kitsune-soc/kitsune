@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 async-trait.workspace = true
-bytes = "1.9.0"
+bytes.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
@@ -25,7 +25,7 @@ pin-project-lite = "0.2.15"
 serde.workspace = true
 serde_urlencoded = "0.7.1"
 speedy-uuid.workspace = true
-strum = { version = "0.26.3", features = ["derive"] }
+strum.workspace = true
 tracing.workspace = true
 
 [lints]
