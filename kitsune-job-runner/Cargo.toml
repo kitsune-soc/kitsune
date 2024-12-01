@@ -31,7 +31,7 @@ kitsune-service.workspace = true
 kitsune-url.workspace = true
 kitsune-wasm-mrf.workspace = true
 mimalloc = "0.1.43"
-tokio = { workspace = true, features = ["full"] }
+tokio.workspace = true
 tracing.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true

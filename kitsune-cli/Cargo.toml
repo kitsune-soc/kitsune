@@ -24,7 +24,7 @@ kitsune-db.workspace = true
 kitsune-error.workspace = true
 serde.workspace = true
 speedy-uuid.workspace = true
-tokio = { workspace = true, features = ["full"] }
+tokio.workspace = true
 tracing-subscriber = "0.3.19"
 
 [lints]

@@ -33,7 +33,7 @@ tracing = { workspace = true, optional = true }
 
 [dev-dependencies]
 divan = "0.1.16"
-tokio = { workspace = true, features = ["macros", "rt"] }
+tokio.workspace = true
 
 [features]
 default = ["easy"]

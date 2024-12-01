@@ -17,7 +17,7 @@ triomphe.workspace = true
 typed-builder.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt"] }
+tokio.workspace = true
 
 [lints]
 workspace = true

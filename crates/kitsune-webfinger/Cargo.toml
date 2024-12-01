@@ -24,7 +24,7 @@ http-body-util = "0.1.2"
 hyper = "1.5.1"
 pretty_assertions = "1.4.1"
 sonic-rs.workspace = true
-tokio = { workspace = true, features = ["macros"] }
+tokio.workspace = true
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]

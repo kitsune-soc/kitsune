@@ -18,7 +18,7 @@ kitsune-s3.workspace = true
 pin-project-lite = "0.2.15"
 rand = "0.8.5"
 rusty-s3 = { version = "0.5.0", default-features = false }
-tokio = { workspace = true, features = ["time"] }
+tokio.workspace = true
 triomphe.workspace = true
 url.workspace = true
 uuid = { version = "1.11.0", features = ["fast-rng", "v4"] }

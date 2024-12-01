@@ -50,7 +50,7 @@ kitsune-config.workspace = true
 kitsune-test.workspace = true
 kitsune-webfinger.workspace = true
 pretty_assertions = "1.4.1"
-tokio = { workspace = true, features = ["macros"] }
+tokio.workspace = true
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 
 [lints]

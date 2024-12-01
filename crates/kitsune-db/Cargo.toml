@@ -30,7 +30,7 @@ rustls-native-certs = "0.8.1"
 serde.workspace = true
 sonic-rs.workspace = true
 speedy-uuid = { workspace = true, features = ["diesel"] }
-tokio = { workspace = true, features = ["rt"] }
+tokio.workspace = true
 tokio-postgres = "0.7.12"
 tokio-postgres-rustls = "0.13.0"
 tracing.workspace = true
@@ -40,7 +40,7 @@ typed-builder.workspace = true
 
 [dev-dependencies]
 kitsune-test.workspace = true
-tokio = { workspace = true, features = ["macros"] }
+tokio.workspace = true
 
 [lints]
 workspace = true

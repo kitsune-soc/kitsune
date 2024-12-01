@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 retry-policies = "0.4.0"
-tokio = { workspace = true, features = ["time"] }
+tokio.workspace = true
 tracing.workspace = true
 
 [lints]
