@@ -7,7 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait.workspace = true
 blake3 = "1.5.5"
 color-eyre = "0.6.3"
 derive_more = { version = "1.0.0", features = ["from"] }

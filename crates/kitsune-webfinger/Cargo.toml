@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait.workspace = true
 fred.workspace = true
 http.workspace = true
 kitsune-cache.workspace = true

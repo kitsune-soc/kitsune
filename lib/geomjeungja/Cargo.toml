@@ -6,7 +6,7 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait.workspace = true
 hickory-resolver.workspace = true
 rand = "0.8.5"
 serde.workspace = true

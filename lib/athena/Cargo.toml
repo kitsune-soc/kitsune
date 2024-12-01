@@ -11,7 +11,7 @@ required-features = ["redis"]
 
 [dependencies]
 ahash = "0.8.11"
-async-trait = "0.1.83"
+async-trait.workspace = true
 either = { version = "1.13.0", default-features = false, optional = true }
 futures-util.workspace = true
 iso8601-timestamp.workspace = true

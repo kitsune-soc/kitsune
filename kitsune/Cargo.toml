@@ -18,7 +18,7 @@ eula = false
 athena.workspace = true
 arc-swap = "1.7.1"
 argon2 = { version = "0.5.3", features = ["std"] }
-async-trait = "0.1.83"
+async-trait.workspace = true
 axum = { version = "0.7.9", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.6", features = [
     "cookie",

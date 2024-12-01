@@ -87,6 +87,8 @@ async-graphql = { version = "7.0.11", default-features = false, features = [
     "uuid",
 ] }
 asynk-strim = "0.1.2"
+async-trait = "0.1.83"
+base64-simd = "0.8.0"
 clap = { version = "4.5.21", features = ["derive", "wrap_help"] }
 diesel = { version = "2.2.5", default-features = false, features = [
     "32-column-tables",

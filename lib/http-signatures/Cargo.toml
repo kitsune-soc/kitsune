@@ -14,7 +14,7 @@ name = "parse_cavage_header"
 harness = false
 
 [dependencies]
-base64-simd = "0.8.0"
+base64-simd.workspace = true
 blowocking = { workspace = true, optional = true }
 const-oid = { version = "0.9.6", features = ["db"] }
 derive_builder = "0.20.2"

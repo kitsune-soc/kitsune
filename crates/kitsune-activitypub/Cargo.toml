@@ -6,8 +6,8 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
-base64-simd = "0.8.0"
+async-trait.workspace = true
+base64-simd.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 futures-util.workspace = true
@@ -39,9 +39,6 @@ tracing.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
 url.workspace = true
-
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
-sha2 = { version = "0.10.8", features = ["asm"] }
 
 [dev-dependencies]
 http-body-util = "0.1.2"
