@@ -10,10 +10,7 @@ argh = "0.1.12"
 eyre.workspace = true
 sonic-rs.workspace = true
 tracing.workspace = true
-tracing-subscriber = { version = "0.3.19", default-features = false, features = [
-    "ansi",
-    "fmt",
-] }
+tracing-subscriber.workspace = true
 ureq = "2.11.0"
 
 [lints]

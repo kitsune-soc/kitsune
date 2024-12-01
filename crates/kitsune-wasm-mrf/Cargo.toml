@@ -15,7 +15,7 @@ enum_dispatch = "0.3.13"
 fred.workspace = true
 futures-util.workspace = true
 http.workspace = true
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 kitsune-config.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true
@@ -43,10 +43,10 @@ wasmtime-wasi = { version = "27.0.0", default-features = false }
 
 [dev-dependencies]
 bytes.workspace = true
-tempfile = "3.14.0"
+tempfile.workspace = true
 tokio.workspace = true
 tower.workspace = true
-tracing-subscriber = "0.3.19"
+tracing-subscriber.workspace = true
 wat = "1.221.0"
 
 [lints]

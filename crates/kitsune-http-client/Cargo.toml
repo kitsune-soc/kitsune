@@ -11,8 +11,8 @@ bytes.workspace = true
 futures-util.workspace = true
 hickory-resolver.workspace = true
 http.workspace = true
-http-body = "1.0.1"
-http-body-util = "0.1.2"
+http-body.workspace = true
+http-body-util.workspace = true
 http-signatures.workspace = true
 hyper = "1.5.1"
 hyper-util = { version = "0.1.10", features = [

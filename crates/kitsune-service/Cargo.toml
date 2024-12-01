@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 ahash = "0.8.11"
-argon2 = "0.5.3"
+argon2.workspace = true
 asynk-strim.workspace = true
 athena.workspace = true
 blowocking.workspace = true
@@ -38,7 +38,7 @@ kitsune-search.workspace = true
 kitsune-storage.workspace = true
 kitsune-url.workspace = true
 kitsune-util.workspace = true
-mime = "0.3.17"
+mime.workspace = true
 password-hash = { version = "0.5.0", features = ["std"] }
 pkcs8 = "0.10.2"
 post-process.workspace = true
@@ -57,7 +57,7 @@ zxcvbn = { version = "3.1.0", default-features = false }
 
 [dev-dependencies]
 hex-simd = "0.8.0"
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 hyper = "1.5.1"
 kitsune-activitypub.workspace = true
 kitsune-config.workspace = true
@@ -66,7 +66,7 @@ kitsune-jobs.workspace = true
 kitsune-test.workspace = true
 kitsune-webfinger.workspace = true
 pretty_assertions = "1.4.1"
-tempfile = "3.14.0"
+tempfile.workspace = true
 tower.workspace = true
 
 [lints]

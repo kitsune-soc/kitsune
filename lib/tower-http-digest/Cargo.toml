@@ -10,7 +10,7 @@ base64-simd.workspace = true
 bytes.workspace = true
 either = { version = "1.13.0", default-features = false }
 http.workspace = true
-http-body = "1.0.1"
+http-body.workspace = true
 memchr = "2.7.4"
 pin-project-lite.workspace = true
 sha2 = "0.10.8"
@@ -22,7 +22,7 @@ tracing.workspace = true
 [dev-dependencies]
 bytes.workspace = true
 futures-test = "0.3.31"
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 tower.workspace = true
 
 [lints]

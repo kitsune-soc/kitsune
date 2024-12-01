@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 enum_dispatch = "0.3.13"
 fred.workspace = true
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 kitsune-config.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true

@@ -18,7 +18,7 @@ uuid.workspace = true
 
 [dev-dependencies]
 divan = "0.1.16"
-time = "0.3.36"
+time.workspace = true
 uuid.workspace = true
 
 [lints]

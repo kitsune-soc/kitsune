@@ -17,7 +17,7 @@ eula = false
 [dependencies]
 athena.workspace = true
 arc-swap = "1.7.1"
-argon2 = { version = "0.5.3", features = ["std"] }
+argon2.workspace = true
 async-trait.workspace = true
 axum = { version = "0.7.9", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9.6", features = [
@@ -29,16 +29,16 @@ axum-extra = { version = "0.9.6", features = [
 axum-flash = "0.8.0"
 blowocking.workspace = true
 bytes.workspace = true
-chrono = { version = "0.4.38", default-features = false }
+chrono.workspace = true
 clap.workspace = true
 color-eyre.workspace = true
 cursiv.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 futures-util.workspace = true
-headers = "0.4.0"
+headers.workspace = true
 http.workspace = true
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 http-signatures.workspace = true
 iso8601-timestamp.workspace = true
 itertools.workspace = true
@@ -67,26 +67,26 @@ kitsune-url.workspace = true
 kitsune-util.workspace = true
 kitsune-wasm-mrf.workspace = true
 kitsune-webfinger.workspace = true
-mimalloc = "0.1.43"
-mime = "0.3.17"
-mime_guess = { version = "2.0.5", default-features = false }
+mimalloc.workspace = true
+mime.workspace = true
+mime_guess.workspace = true
 minijinja.workspace = true
 notify-debouncer-full = "0.4.0"
 oxide-auth = "0.6.1"
 oxide-auth-async = "0.2.1"
 oxide-auth-axum = "0.5.0"
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
-scoped-futures = "0.1.4"
+scoped-futures.workspace = true
 serde.workspace = true
 serde_urlencoded = "0.7.1"
 sonic-rs.workspace = true
 simdutf8.workspace = true
 speedy-uuid.workspace = true
 strum.workspace = true
-tempfile = "3.14.0"
-time = "0.3.36"
+tempfile.workspace = true
+time.workspace = true
 tokio.workspace = true
-tokio-util = { version = "0.7.12", features = ["io"] }
+tokio-util.workspace = true
 tower.workspace = true
 tower-stop-using-brave.workspace = true
 tower-x-clacks-overhead.workspace = true

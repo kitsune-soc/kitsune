@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 async-trait.workspace = true
 eyre.workspace = true
-http-body-util = "0.1.2"
+http-body-util.workspace = true
 hyper = { version = "1.5.1", default-features = false }
 kitsune-config.workspace = true
 kitsune-core.workspace = true
@@ -31,7 +31,7 @@ opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
 tracing.workspace = true
 tracing-error = "0.2.1"
 tracing-opentelemetry = { version = "0.28.0", default-features = false }
-tracing-subscriber = "0.3.19"
+tracing-subscriber.workspace = true
 
 [lints]
 workspace = true

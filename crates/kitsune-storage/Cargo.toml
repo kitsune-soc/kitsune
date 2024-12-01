@@ -13,11 +13,11 @@ kitsune-error.workspace = true
 kitsune-s3.workspace = true
 rusty-s3 = { version = "0.5.0", default-features = false }
 tokio.workspace = true
-tokio-util = { version = "0.7.12", features = ["io"] }
+tokio-util.workspace = true
 triomphe.workspace = true
 
 [dev-dependencies]
-tempfile = "3.14.0"
+tempfile.workspace = true
 tokio.workspace = true
 
 [lints]
