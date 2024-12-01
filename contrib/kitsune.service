@@ -10,7 +10,7 @@ Type=simple
 User=kitsune
 Environment="RUST_LOG=debug"
 WorkingDirectory=/path-to-kitsune-root-folder
-ExecStart=/path-to-kitsune-executable /path-to-kitsune-config
+ExecStart=/path-to-kitsune-executable -c /path-to-kitsune-config
 Restart=on-failure
 
 [Install]

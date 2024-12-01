@@ -13,19 +13,19 @@ eula = false
 
 [dependencies]
 clap.workspace = true
-color-eyre = "0.6.3"
+color-eyre.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-dotenvy = "0.15.7"
-envy = "0.4.2"
+dotenvy.workspace = true
+envy.workspace = true
 kitsune-config.workspace = true
 kitsune-core.workspace = true
 kitsune-db.workspace = true
 kitsune-error.workspace = true
-serde = { version = "1.0.215", features = ["derive"] }
+serde.workspace = true
 speedy-uuid.workspace = true
-tokio = { workspace = true, features = ["full"] }
-tracing-subscriber = "0.3.19"
+tokio.workspace = true
+tracing-subscriber.workspace = true
 
 [lints]
 workspace = true

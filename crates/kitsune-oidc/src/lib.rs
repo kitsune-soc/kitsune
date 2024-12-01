@@ -2,7 +2,7 @@ use crate::state::{
     store::{InMemory as InMemoryStore, Redis as RedisStore},
     LoginState, OAuth2LoginState, Store,
 };
-use fred::{clients::RedisPool, types::RedisConfig};
+use fred::{clients::Pool as RedisPool, types::config::Config as RedisConfig};
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
 use kitsune_derive::kitsune_service;
 use kitsune_error::{bail, kitsune_error, Result};

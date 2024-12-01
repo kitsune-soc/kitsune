@@ -10,16 +10,14 @@ name = "process"
 harness = false
 
 [dependencies]
-lexical-parse-integer = { version = "1.0.2", default-features = false }
-nanorand = { version = "0.7.0", default-features = false, features = [
-    "wyrand",
-] }
-uuid = { version = "1.11.0", default-features = false }
+lexical-parse-integer.workspace = true
+nanorand.workspace = true
+uuid.workspace = true
 
 [dev-dependencies]
-divan = "0.1.16"
-time = "0.3.36"
-uuid = { version = "1.11.0", features = ["v7"] }
+divan.workspace = true
+time.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

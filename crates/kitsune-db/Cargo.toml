@@ -7,42 +7,34 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-blowocking = { workspace = true, features = ["io"] }
+blowocking.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
-diesel_migrations = "2.2.0"
-futures-util = { version = "0.3.31", default-features = false, features = [
-    "alloc",
-] }
-iso8601-timestamp = { workspace = true, features = ["diesel-pg"] }
+diesel_migrations.workspace = true
+futures-util.workspace = true
+iso8601-timestamp.workspace = true
 kitsune-config.workspace = true
 kitsune-error.workspace = true
 kitsune-language.workspace = true
 kitsune-type.workspace = true
-num-derive = "0.4.2"
-num-traits = "0.2.19"
-rustls = { version = "0.23.19", default-features = false, features = [
-    "logging",
-    "ring",
-    "std",
-    "tls12",
-] }
-rustls-native-certs = "0.8.1"
-serde = { version = "1.0.215", features = ["derive"] }
+num-derive.workspace = true
+num-traits.workspace = true
+rustls.workspace = true
+rustls-native-certs.workspace = true
+serde.workspace = true
 sonic-rs.workspace = true
-speedy-uuid = { workspace = true, features = ["diesel"] }
-tokio = { workspace = true, features = ["rt"] }
-tokio-postgres = "0.7.12"
-tokio-postgres-rustls = "0.13.0"
-tracing = "0.1.41"
-tracing-log = "0.2.0"
+speedy-uuid.workspace = true
+tokio.workspace = true
+tokio-postgres.workspace = true
+tokio-postgres-rustls.workspace = true
+tracing.workspace = true
 trials.workspace = true
-typed-builder = "0.20.0"
+typed-builder.workspace = true
 
 [dev-dependencies]
 kitsune-test.workspace = true
-tokio = { workspace = true, features = ["macros"] }
+tokio.workspace = true
 
 [lints]
 workspace = true

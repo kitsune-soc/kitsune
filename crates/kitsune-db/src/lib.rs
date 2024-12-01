@@ -10,7 +10,6 @@ use diesel_async::{
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use kitsune_config::database::Configuration as DatabaseConfig;
 use kitsune_error::{Error, Result};
-use tracing_log::LogTracer;
 
 pub type PgPool = Pool<AsyncPgConnection>;
 
@@ -34,8 +33,6 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 /// Connect to the database and run any pending migrations
 pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
-    LogTracer::init().ok();
-
     blowocking::io({
         let conn_str = config.url.clone();
 

@@ -6,16 +6,15 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-http = "1.1.0"
+http.workspace = true
 itertools.workspace = true
-pin-project-lite = "0.2.15"
-tower-layer = "0.3.3"
-tower-service = "0.3.3"
+pin-project-lite.workspace = true
+tower.workspace = true
 triomphe.workspace = true
 
 [dev-dependencies]
-futures-test = "0.3.31"
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+futures-test.workspace = true
+tower.workspace = true
 
 [lints]
 workspace = true

@@ -60,7 +60,7 @@ mod tests {
     use axum_extra::either::Either;
     use bytes::Bytes;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-    use fred::clients::RedisPool;
+    use fred::clients::Pool as RedisPool;
     use http::{Request, Response, StatusCode};
     use http_body_util::Empty;
     use kitsune_activitypub::Fetcher;
@@ -143,9 +143,9 @@ mod tests {
             .db_pool(db_pool.clone())
             .build();
         let job_queue = RedisJobQueue::builder()
+            .conn_pool(redis_pool)
             .context_repository(context_repo)
             .queue_name("webfinger_test")
-            .redis_pool(redis_pool)
             .build();
 
         let job_service = JobService::builder()

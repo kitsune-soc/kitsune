@@ -2,8 +2,7 @@
 extern crate tracing;
 
 use async_trait::async_trait;
-use fred::clients::RedisPool;
-use futures_util::future::{FutureExt, OptionFuture};
+use fred::clients::Pool as RedisPool;
 use http::{header::ACCEPT, HeaderValue, Request, StatusCode};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
 use kitsune_core::traits::{resolver::AccountResource, Resolver};
@@ -137,9 +136,14 @@ impl Resolver for Webfinger {
         };
 
         let cache_original_key_fut = self.cache.set(&original_acct, &ret);
-        let cache_resolved_key_fut =
-            OptionFuture::from((acct != original_acct).then(|| self.cache.set(acct, &ret)))
-                .map(Option::transpose);
+        let cache_resolved_key_fut = async {
+            if acct == original_acct {
+                None
+            } else {
+                Some(self.cache.set(acct, &ret).await)
+            }
+            .transpose()
+        };
 
         try_join!(cache_original_key_fut, cache_resolved_key_fut)?;
 

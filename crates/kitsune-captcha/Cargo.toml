@@ -6,15 +6,15 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-enum_dispatch = "0.3.13"
-http = "1.1.0"
+enum_dispatch.workspace = true
+http.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
-serde = { version = "1.0.215", features = ["derive"] }
-serde_urlencoded = "0.7.1"
+serde.workspace = true
+serde_urlencoded.workspace = true
 sonic-rs.workspace = true
-strum = { version = "0.26.3", features = ["derive"] }
-typed-builder = "0.20.0"
+strum.workspace = true
+typed-builder.workspace = true
 
 [lints]
 workspace = true

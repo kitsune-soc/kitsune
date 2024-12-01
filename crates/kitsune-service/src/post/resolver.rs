@@ -186,9 +186,9 @@ mod test {
 
                 let context_repo = KitsuneContextRepo::builder().db_pool(db_pool.clone()).build();
                 let job_queue = RedisJobQueue::builder()
+                    .conn_pool(redis_pool)
                     .context_repository(context_repo)
                     .queue_name("parse_mentions_test")
-                    .redis_pool(redis_pool)
                     .build();
 
                 let job_service = JobService::builder().job_queue(Arc::new(job_queue).coerce()).build();

@@ -6,24 +6,23 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-base64-simd = "0.8.0"
-bytes = "1.9.0"
-either = { version = "1.13.0", default-features = false }
-http = "1.1.0"
-http-body = "1.0.1"
-memchr = "2.7.4"
-pin-project-lite = "0.2.15"
-sha2 = "0.10.8"
-subtle = "2.6.1"
-tower-layer = "0.3.3"
-tower-service = "0.3.3"
-tracing = { version = "0.1.41", default-features = false }
+base64-simd.workspace = true
+bytes.workspace = true
+either.workspace = true
+http.workspace = true
+http-body.workspace = true
+memchr.workspace = true
+pin-project-lite.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+tower.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
-bytes = "1.9.0"
-futures-test = "0.3.31"
-http-body-util = "0.1.2"
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+bytes.workspace = true
+futures-test.workspace = true
+http-body-util.workspace = true
+tower.workspace = true
 
 [lints]
 workspace = true

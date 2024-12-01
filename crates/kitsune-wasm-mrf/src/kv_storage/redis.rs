@@ -1,12 +1,12 @@
 use color_eyre::eyre;
-use fred::{clients::RedisPool, interfaces::HashesInterface};
+use fred::{clients::Pool, interfaces::HashesInterface};
 use kitsune_derive::typed_builder::TypedBuilder;
 
 const REDIS_NAMESPACE: &str = "MRF-KV-STORE";
 
 #[derive(TypedBuilder)]
 pub struct RedisBackend {
-    pool: RedisPool,
+    pool: Pool,
 }
 
 impl super::Backend for RedisBackend {
@@ -22,7 +22,7 @@ impl super::Backend for RedisBackend {
 
 pub struct RedisBucketBackend {
     name: String,
-    pool: RedisPool,
+    pool: Pool,
 }
 
 impl super::BucketBackend for RedisBucketBackend {

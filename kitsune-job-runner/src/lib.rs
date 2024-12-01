@@ -2,10 +2,9 @@
 extern crate tracing;
 
 use athena::{Coerce, JobContextRepository, JobQueue, RedisJobQueue, TaskTracker};
+use color_eyre::eyre;
 use fred::{
-    clients::RedisPool,
-    interfaces::{ClientLike, RedisResult},
-    types::RedisConfig,
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
 use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
@@ -41,7 +40,7 @@ pub struct JobDispatcherState {
 pub async fn prepare_job_queue(
     db_pool: PgPool,
     config: &Configuration,
-) -> RedisResult<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
+) -> eyre::Result<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
     let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
 
     let config = RedisConfig::from_url(config.redis_url.as_str())?;
@@ -50,9 +49,9 @@ pub async fn prepare_job_queue(
     redis_pool.init().await?;
 
     let queue = RedisJobQueue::builder()
+        .conn_pool(redis_pool)
         .context_repository(context_repo)
         .queue_name("kitsune-jobs")
-        .redis_pool(redis_pool)
         .build();
 
     Ok(Arc::new(queue).coerce())

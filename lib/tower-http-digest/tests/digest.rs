@@ -2,9 +2,8 @@ use bytes::Bytes;
 use http::{Request, Response, StatusCode};
 use http_body_util::{BodyExt, Full};
 use std::convert::Infallible;
-use tower::{service_fn, ServiceExt};
+use tower::{service_fn, Layer, ServiceExt};
 use tower_http_digest::{VerifyDigestBody, VerifyDigestLayer};
-use tower_layer::Layer;
 
 const TEXT: &str = r"Una sombra abajo de mi cama
 Cómo se llama éste fantasma?

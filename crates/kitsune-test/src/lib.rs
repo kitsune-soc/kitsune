@@ -1,7 +1,8 @@
 use bytes::Bytes;
 use diesel_async::{AsyncConnection, AsyncPgConnection, SimpleAsyncConnection};
-use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
-use futures_util::Future;
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
 use isolang::Language;
@@ -11,7 +12,7 @@ use kitsune_config::{
 };
 use kitsune_db::PgPool;
 use resource::provide_resource;
-use std::env;
+use std::{env, future::Future};
 use triomphe::Arc;
 use url::Url;
 use uuid::Uuid;

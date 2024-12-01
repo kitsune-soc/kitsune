@@ -9,8 +9,7 @@ use std::{
     sync::LazyLock,
     task::{self, Poll},
 };
-use tower_layer::Layer;
-use tower_service::Service;
+use tower::{Layer, Service};
 
 static REDIRECT_URL: &str = "https://www.spacebar.news/stop-using-brave-browser/";
 static USER_AGENT_REGEX: LazyLock<Regex> = LazyLock::new(|| {

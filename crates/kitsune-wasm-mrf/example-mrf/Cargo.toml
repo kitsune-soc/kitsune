@@ -10,8 +10,8 @@ build = "build.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-rand = "0.8.5"
-wit-bindgen = "0.36.0"
+rand.workspace = true
+wit-bindgen.workspace = true
 
 [lints]
 workspace = true

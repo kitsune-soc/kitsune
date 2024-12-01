@@ -6,7 +6,7 @@
 
 #![deny(missing_docs)]
 
-use schemars::{schema::RootSchema, JsonSchema};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -143,7 +143,7 @@ pub struct ManifestV1<'a> {
     /// JSON schema of the configuration passed to the module
     ///
     /// This is optional but can be used for automatically generating a configuration UI
-    pub config_schema: Option<RootSchema>,
+    pub config_schema: Option<schemars::Schema>,
 }
 
 impl ManifestV1<'_> {

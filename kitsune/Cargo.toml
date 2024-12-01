@@ -16,29 +16,24 @@ eula = false
 
 [dependencies]
 athena.workspace = true
-arc-swap = "1.7.1"
-argon2 = { version = "0.5.3", features = ["std"] }
-async-trait = "0.1.83"
-axum = { version = "0.7.9", features = ["macros", "multipart"] }
-axum-extra = { version = "0.9.6", features = [
-    "cookie",
-    "cookie-signed",
-    "query",
-    "typed-header",
-] }
-axum-flash = "0.8.0"
+arc-swap.workspace = true
+argon2.workspace = true
+async-trait.workspace = true
+axum.workspace = true
+axum-extra.workspace = true
+axum-flash.workspace = true
 blowocking.workspace = true
-bytes = "1.9.0"
-chrono = { version = "0.4.38", default-features = false }
+bytes.workspace = true
+chrono.workspace = true
 clap.workspace = true
-color-eyre = "0.6.3"
-cursiv = { workspace = true, features = ["axum"] }
+color-eyre.workspace = true
+cursiv.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-futures-util = "0.3.31"
-headers = "0.4.0"
-http = "1.1.0"
-http-body-util = "0.1.2"
+futures-util.workspace = true
+headers.workspace = true
+http.workspace = true
+http-body-util.workspace = true
 http-signatures.workspace = true
 iso8601-timestamp.workspace = true
 itertools.workspace = true
@@ -67,55 +62,42 @@ kitsune-url.workspace = true
 kitsune-util.workspace = true
 kitsune-wasm-mrf.workspace = true
 kitsune-webfinger.workspace = true
-mimalloc = "0.1.43"
-mime = "0.3.17"
-mime_guess = { version = "2.0.5", default-features = false }
+mimalloc.workspace = true
+mime.workspace = true
+mime_guess.workspace = true
 minijinja.workspace = true
-notify-debouncer-full = "0.4.0"
-oxide-auth = "0.6.1"
-oxide-auth-async = "0.2.1"
-oxide-auth-axum = "0.5.0"
-rust-embed = { version = "8.5.0", features = ["include-exclude"] }
-scoped-futures = "0.1.4"
-serde = { version = "1.0.215", features = ["derive"] }
-serde_urlencoded = "0.7.1"
+notify-debouncer-full.workspace = true
+oxide-auth.workspace = true
+oxide-auth-async.workspace = true
+oxide-auth-axum.workspace = true
+rust-embed.workspace = true
+scoped-futures.workspace = true
+serde.workspace = true
+serde_urlencoded.workspace = true
 sonic-rs.workspace = true
 simdutf8.workspace = true
 speedy-uuid.workspace = true
-strum = { version = "0.26.3", features = ["derive"] }
-tempfile = "3.14.0"
-time = "0.3.36"
-tokio = { workspace = true, features = ["full"] }
-tokio-util = { version = "0.7.12", features = ["io"] }
-tower = { version = "0.5.1", features = ["util"] }
+strum.workspace = true
+tempfile.workspace = true
+time.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+tower.workspace = true
 tower-stop-using-brave.workspace = true
 tower-x-clacks-overhead.workspace = true
-tower-http = { version = "0.6.2", features = [
-    "catch-panic",
-    "cors",
-    "fs",
-    "request-id",
-    "timeout",
-    "trace",
-] }
+tower-http.workspace = true
 tower-http-digest.workspace = true
-tracing = "0.1.41"
+tracing.workspace = true
 trials.workspace = true
 triomphe.workspace = true
-typed-builder = "0.20.0"
-url = "2.5.4"
+typed-builder.workspace = true
+url.workspace = true
 
 # --- Optional dependencies ---
 
 # "graphql" feature
-async-graphql = { version = "7.0.11", default-features = false, features = [
-    "graphiql",
-    "tempfile",
-    "time",
-    "tracing",
-    "uuid",
-], optional = true }
-async-graphql-axum = { version = "7.0.11", optional = true }
+async-graphql = { workspace = true, optional = true }
+async-graphql-axum = { workspace = true, optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { workspace = true, optional = true }

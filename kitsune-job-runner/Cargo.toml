@@ -14,7 +14,7 @@ eula = false
 [dependencies]
 athena.workspace = true
 clap.workspace = true
-color-eyre = "0.6.3"
+color-eyre.workspace = true
 fred.workspace = true
 just-retry.workspace = true
 kitsune-config.workspace = true
@@ -30,11 +30,11 @@ kitsune-observability.workspace = true
 kitsune-service.workspace = true
 kitsune-url.workspace = true
 kitsune-wasm-mrf.workspace = true
-mimalloc = "0.1.43"
-tokio = { workspace = true, features = ["full"] }
-tracing = "0.1.41"
+mimalloc.workspace = true
+tokio.workspace = true
+tracing.workspace = true
 triomphe.workspace = true
-typed-builder = "0.20.0"
+typed-builder.workspace = true
 
 [features]
 

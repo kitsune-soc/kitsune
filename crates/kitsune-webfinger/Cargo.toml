@@ -6,27 +6,26 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait.workspace = true
 fred.workspace = true
-futures-util = "0.3.31"
-http = "1.1.0"
+http.workspace = true
 kitsune-cache.workspace = true
 kitsune-core.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
 kitsune-type.workspace = true
 kitsune-util.workspace = true
-tracing = "0.1.41"
+tracing.workspace = true
 triomphe.workspace = true
-urlencoding = "2.1.3"
+urlencoding.workspace = true
 
 [dev-dependencies]
-http-body-util = "0.1.2"
-hyper = "1.5.1"
-pretty_assertions = "1.4.1"
+http-body-util.workspace = true
+hyper.workspace = true
+pretty_assertions.workspace = true
 sonic-rs.workspace = true
-tokio = { workspace = true, features = ["macros"] }
-tower = { version = "0.5.1", default-features = false, features = ["util"] }
+tokio.workspace = true
+tower.workspace = true
 
 [lints]
 workspace = true
