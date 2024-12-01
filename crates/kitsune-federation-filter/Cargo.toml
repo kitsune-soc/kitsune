@@ -6,7 +6,7 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-globset = "0.4.15"
+globset.workspace = true
 kitsune-config.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true

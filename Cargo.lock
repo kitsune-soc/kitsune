@@ -3495,7 +3495,6 @@ dependencies = [
  "tokio-postgres",
  "tokio-postgres-rustls",
  "tracing",
- "tracing-log",
  "trials",
  "typed-builder",
 ]

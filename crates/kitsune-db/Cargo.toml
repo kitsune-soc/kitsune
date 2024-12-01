@@ -11,30 +11,24 @@ blowocking.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
-diesel_migrations = "2.2.0"
+diesel_migrations.workspace = true
 futures-util.workspace = true
 iso8601-timestamp.workspace = true
 kitsune-config.workspace = true
 kitsune-error.workspace = true
 kitsune-language.workspace = true
 kitsune-type.workspace = true
-num-derive = "0.4.2"
-num-traits = "0.2.19"
-rustls = { version = "0.23.19", default-features = false, features = [
-    "logging",
-    "ring",
-    "std",
-    "tls12",
-] }
-rustls-native-certs = "0.8.1"
+num-derive.workspace = true
+num-traits.workspace = true
+rustls.workspace = true
+rustls-native-certs.workspace = true
 serde.workspace = true
 sonic-rs.workspace = true
 speedy-uuid.workspace = true
 tokio.workspace = true
-tokio-postgres = "0.7.12"
-tokio-postgres-rustls = "0.13.0"
+tokio-postgres.workspace = true
+tokio-postgres-rustls.workspace = true
 tracing.workspace = true
-tracing-log = "0.2.0"
 trials.workspace = true
 typed-builder.workspace = true
 

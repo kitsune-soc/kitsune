@@ -16,17 +16,12 @@ eula = false
 
 [dependencies]
 athena.workspace = true
-arc-swap = "1.7.1"
+arc-swap.workspace = true
 argon2.workspace = true
 async-trait.workspace = true
-axum = { version = "0.7.9", features = ["macros", "multipart"] }
-axum-extra = { version = "0.9.6", features = [
-    "cookie",
-    "cookie-signed",
-    "query",
-    "typed-header",
-] }
-axum-flash = "0.8.0"
+axum.workspace = true
+axum-extra.workspace = true
+axum-flash.workspace = true
 blowocking.workspace = true
 bytes.workspace = true
 chrono.workspace = true
@@ -71,14 +66,14 @@ mimalloc.workspace = true
 mime.workspace = true
 mime_guess.workspace = true
 minijinja.workspace = true
-notify-debouncer-full = "0.4.0"
-oxide-auth = "0.6.1"
-oxide-auth-async = "0.2.1"
-oxide-auth-axum = "0.5.0"
-rust-embed = { version = "8.5.0", features = ["include-exclude"] }
+notify-debouncer-full.workspace = true
+oxide-auth.workspace = true
+oxide-auth-async.workspace = true
+oxide-auth-axum.workspace = true
+rust-embed.workspace = true
 scoped-futures.workspace = true
 serde.workspace = true
-serde_urlencoded = "0.7.1"
+serde_urlencoded.workspace = true
 sonic-rs.workspace = true
 simdutf8.workspace = true
 speedy-uuid.workspace = true
@@ -102,7 +97,7 @@ url.workspace = true
 
 # "graphql" feature
 async-graphql = { workspace = true, optional = true }
-async-graphql-axum = { version = "7.0.11", optional = true }
+async-graphql-axum = { workspace = true, optional = true }
 
 # "mastodon-api" feature
 kitsune-mastodon = { workspace = true, optional = true }

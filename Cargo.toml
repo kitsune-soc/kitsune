@@ -81,6 +81,8 @@ resolver = "2"
 [workspace.dependencies]
 ahash = "0.8.11"
 aliri_braid = "0.4.0"
+arc-swap = "1.7.1"
+argh = "0.1.12"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.11", default-features = false, features = [
     "graphiql",
@@ -89,19 +91,31 @@ async-graphql = { version = "7.0.11", default-features = false, features = [
     "tracing",
     "uuid",
 ] }
+async-graphql-axum = "7.0.11"
 asynk-strim = "0.1.2"
 async-trait = "0.1.83"
+axum = { version = "0.7.9", features = ["macros", "multipart"] }
 axum-core = "0.4.5"
+axum-extra = { version = "0.9.6", features = [
+    "cookie",
+    "cookie-signed",
+    "query",
+    "typed-header",
+] }
+axum-flash = "0.8.0"
 base64-simd = "0.8.0"
 blake3 = "1.5.5"
+bubble-bath = "0.2.1"
 bytes = "1.9.0"
 chrono = { version = "0.4.38", default-features = false }
 clap = { version = "4.5.21", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
+const_format = "0.2.33"
 const-oid = { version = "0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
+derive_more = { version = "1.0.0", features = ["from"] }
 diesel = { version = "2.2.5", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
@@ -115,6 +129,7 @@ diesel-async = { version = "0.5.2", features = [
     "tokio",
 ] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
+diesel_migrations = "2.2.0"
 divan = "0.1.16"
 either = { version = "1.13.0", default-features = false }
 enum_dispatch = "0.3.13"
@@ -138,6 +153,8 @@ garde = { version = "0.20.0", features = [
     "regex",
     "serde",
 ] }
+git-version = "0.3.9"
+globset = "0.4.15"
 headers = "0.4.0"
 hex-simd = "0.8.0"
 hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, features = [
@@ -149,15 +166,46 @@ http = "1.1.0"
 http-body = "1.0.1"
 http-body-util = "0.1.2"
 httpdate = "1.0.3"
+human-size = { version = "0.4.3", features = ["serde"] }
 hyper = "1.5.1"
+hyper-util = { version = "0.1.10", features = [
+    "client-legacy",
+    "http1",
+    "http2",
+    "tokio",
+] }
+hyper-rustls = { version = "0.27.3", default-features = false, features = [
+    "http1",
+    "http2",
+    "logging",
+    "native-tokio",
+    "ring",
+    "tls12",
+] }
 icu_normalizer = "1.5.0"
+img-parts = "0.3.1"
 insta = { version = "1.41.1", default-features = false, features = [
     "glob",
     "json",
 ] }
 iso8601-timestamp = { version = "0.3.1", features = ["diesel-pg"] }
+isolang = { version = "2.4.0", features = [
+    "english_names",
+    "list_languages",
+    "serde",
+] }
 itertools = { version = "0.13.0", default-features = false }
+lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "efb4288d9b107b48609802193d57b29f7ae395a1", default-features = false }
 leb128 = "0.2.5"
+lettre = { version = "0.11.10", default-features = false, features = [
+    "builder",
+    "hostname",
+    "pool",
+    "smtp-transport",
+    "tokio1",
+    "tokio1-rustls-tls",
+    "tracing",
+] }
 lexical-parse-integer = { version = "1.0.2", default-features = false }
 logos = "0.14.2"
 lol_html = "2.0.0"
@@ -168,21 +216,75 @@ mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.5.0", features = ["loader"] }
 moka = { version = "=0.12.7", features = ["sync"] }
+mrml = { version = "4.0.1", default-features = false, features = [
+    "parse",
+    "render",
+] }
 nanorand = { version = "0.7.0", default-features = false, features = [
     "wyrand",
 ] }
+notify-debouncer-full = "0.4.0"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+oauth2 = { version = "5.0.0-rc.1", default-features = false }
 olpc-cjson = "0.1.4"
+openidconnect = { version = "4.0.0-rc.1", default-features = false, features = [
+    # Accept these two, per specification invalid, cases to increase compatibility
+    "accept-rfc3339-timestamps",
+    "accept-string-booleans",
+    "timing-resistant-secret-traits",
+] }
+opentelemetry = { version = "0.27.1", default-features = false, features = [
+    "trace",
+] }
+opentelemetry-http = "0.27.0"
+opentelemetry-otlp = { version = "0.27.0", default-features = false, features = [
+    "grpc-tonic",
+    "http-json",
+    "http-proto",
+    "tls",
+    "tls-roots",
+    "trace",
+] }
+opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
+    "rt-tokio",
+] }
 owo-colors = { version = "4.1.0", features = ["supports-colors"] }
+oxide-auth = "0.6.1"
+oxide-auth-async = "0.2.1"
+oxide-auth-axum = "0.5.0"
+password-hash = { version = "0.5.0", features = ["std"] }
+paste = "1.0.15"
 pin-project-lite = "0.2.15"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
 pretty_assertions = "1.4.1"
+proc-macro2 = "1.0.92"
+pulldown-cmark = { version = "0.12.2", default-features = false, features = [
+    "html",
+    "simd",
+] }
+quick-xml = { version = "0.37.1", features = ["serialize"] }
+quote = "1.0.37"
 rand = "0.8.5"
 rand_xorshift = "0.3.0"
 rayon = "1.10.0"
+redb = { version = "2.2.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
 ring = { version = "0.17.8", features = ["std"] }
+rsa = "0.9.7"
+rstest = { version = "0.23.0", default-features = false }
+rust-embed = { version = "8.5.0", features = ["include-exclude"] }
+rustc-hash = "2.1.0"
+rustls = { version = "0.23.19", default-features = false, features = [
+    "logging",
+    "ring",
+    "std",
+    "tls12",
+] }
+rustls-native-certs = "0.8.1"
+rusty-s3 = "0.5.0"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
     "perf-inline",
@@ -191,19 +293,30 @@ schemars = { version = "1.0.0-alpha.16", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.215", features = ["derive"] }
-serde_test = "1.0.177"
 serde_json = "1.0.133"
+serde_test = "1.0.177"
+serde_urlencoded = "0.7.1"
+serde_with = { version = "3.11.0", default-features = false, features = [
+    "alloc",
+    "macros",
+] }
 sha2 = "0.10.8"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
+slab = "0.4.9"
 smol_str = { version = "0.3.2", features = ["serde"] }
 sonic-rs = "=0.3.14"
 strum = { version = "0.26.3", features = ["derive"] }
 subtle = "2.6.1"
+syn = { version = "2.0.90", features = ["full"] }
+sync_wrapper = "1.0.2"
 tempfile = "3.14.0"
 thiserror = "2.0.3"
 time = "0.3.36"
 tokio = { version = "1.41.1", features = ["full"] }
+tokio-postgres = "0.7.12"
+tokio-postgres-rustls = "0.13.0"
 tokio-util = { version = "0.7.12", features = ["io", "rt"] }
+toml = { version = "0.8.19", default-features = false, features = ["parse"] }
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.2", features = [
     "catch-panic",
@@ -223,6 +336,8 @@ tower-http = { version = "0.6.2", features = [
     "trace",
 ] }
 tracing = "0.1.41"
+tracing-error = "0.2.1"
+tracing-opentelemetry = { version = "0.28.0", default-features = false }
 tracing-subscriber = "0.3.19"
 triomphe = { version = "0.1.14", default-features = false, features = [
     "arc-swap",
@@ -231,13 +346,30 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.20.0"
 typetag = "0.2.18"
 unsize = "1.1.0"
+ureq = "2.11.0"
 url = "2.5.4"
+urlencoding = "2.1.3"
 uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
+walkdir = "2.5.0"
 wasm-encoder = "0.221.0"
 wasmparser = "0.221.0"
+wasmtime = { version = "27.0.0", default-features = false, features = [
+    "addr2line",
+    "async",
+    "component-model",
+    "cranelift",
+    "parallel-compilation",
+    "pooling-allocator",
+    "runtime",
+] }
+wasmtime-wasi = { version = "27.0.0", default-features = false }
 wat = "1.221.0"
+whatlang = "0.16.4"
+whichlang = "0.1.0"
+wit-bindgen = "0.36.0"
 zeroize = { version = "1.8.1", features = ["derive"] }
+zxcvbn = { version = "3.1.0", default-features = false }
 
 # Local workspace dependencies (crate directory)
 kitsune-activitypub = { path = "crates/kitsune-activitypub" }

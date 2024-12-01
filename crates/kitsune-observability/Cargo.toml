@@ -13,24 +13,13 @@ hyper.workspace = true
 kitsune-config.workspace = true
 kitsune-core.workspace = true
 kitsune-http-client.workspace = true
-opentelemetry = { version = "0.27.1", default-features = false, features = [
-    "trace",
-] }
-opentelemetry-http = "0.27.0"
-opentelemetry-otlp = { version = "0.27.0", default-features = false, features = [
-    "grpc-tonic",
-    "http-json",
-    "http-proto",
-    "tls",
-    "tls-roots",
-    "trace",
-] }
-opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
-    "rt-tokio",
-] }
+opentelemetry.workspace = true
+opentelemetry-http.workspace = true
+opentelemetry-otlp.workspace = true
+opentelemetry_sdk.workspace = true
 tracing.workspace = true
-tracing-error = "0.2.1"
-tracing-opentelemetry = { version = "0.28.0", default-features = false }
+tracing-error.workspace = true
+tracing-opentelemetry.workspace = true
 tracing-subscriber.workspace = true
 
 [lints]

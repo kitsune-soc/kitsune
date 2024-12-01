@@ -8,11 +8,11 @@ license.workspace = true
 [dependencies]
 eyre.workspace = true
 human-size = { version = "0.4.3", features = ["serde"] }
-isolang = { version = "2.4.0", features = ["serde"] }
+isolang.workspace = true
 serde.workspace = true
 smol_str.workspace = true
 tokio.workspace = true
-toml = { version = "0.8.19", default-features = false, features = ["parse"] }
+toml.workspace = true
 
 [lints]
 workspace = true

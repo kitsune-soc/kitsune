@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 athena.workspace = true
-derive_more = { version = "1.0.0", features = ["from"] }
+derive_more.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 futures-util.workspace = true

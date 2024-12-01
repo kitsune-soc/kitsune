@@ -8,10 +8,7 @@ license.workspace = true
 [dependencies]
 iso8601-timestamp.workspace = true
 serde.workspace = true
-serde_with = { version = "3.11.0", default-features = false, features = [
-    "alloc",
-    "macros",
-] }
+serde_with.workspace = true
 smol_str.workspace = true
 sonic-rs.workspace = true
 speedy-uuid.workspace = true
@@ -19,7 +16,7 @@ strum.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true
-rstest = { version = "0.23.0", default-features = false }
+rstest.workspace = true
 serde_test.workspace = true
 
 [lints]

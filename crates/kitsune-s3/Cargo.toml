@@ -11,8 +11,8 @@ futures-util.workspace = true
 http.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
-quick-xml = { version = "0.37.1", features = ["serialize"] }
-rusty-s3 = "0.5.0"
+quick-xml.workspace = true
+rusty-s3.workspace = true
 serde.workspace = true
 typed-builder.workspace = true
 

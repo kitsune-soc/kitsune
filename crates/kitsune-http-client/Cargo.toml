@@ -15,20 +15,8 @@ http-body.workspace = true
 http-body-util.workspace = true
 http-signatures.workspace = true
 hyper.workspace = true
-hyper-util = { version = "0.1.10", features = [
-    "client-legacy",
-    "http1",
-    "http2",
-    "tokio",
-] }
-hyper-rustls = { version = "0.27.3", default-features = false, features = [
-    "http1",
-    "http2",
-    "logging",
-    "native-tokio",
-    "ring",
-    "tls12",
-] }
+hyper-util.workspace = true
+hyper-rustls.workspace = true
 kitsune-core.workspace = true
 kitsune-type.workspace = true
 pin-project-lite.workspace = true

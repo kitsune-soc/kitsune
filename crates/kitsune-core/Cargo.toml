@@ -7,11 +7,11 @@ license.workspace = true
 
 [dependencies]
 async-trait.workspace = true
-const_format = "0.2.33"
-git-version = "0.3.9"
+const_format.workspace = true
+git-version.workspace = true
 kitsune-db.workspace = true
 kitsune-error.workspace = true
-paste = "1.0.15"
+paste.workspace = true
 serde.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
