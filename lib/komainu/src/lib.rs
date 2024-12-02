@@ -28,13 +28,11 @@ impl<'a> Authorizer<'a> {
             serde_urlencoded::from_bytes(body).map_err(Error::body)
         }?;
 
-        let query = req
-            .uri()
-            .query()
-            .map(serde_urlencoded::from_str)
-            .transpose()
-            .map_err(Error::query)?
-            .unwrap_or_else(ParamStorage::new);
+        let query = if let Some(raw_query) = req.uri().query() {
+            serde_urlencoded::from_str(raw_query).map_err(Error::query)?
+        } else {
+            ParamStorage::new()
+        };
 
         Ok(Self {
             body,
