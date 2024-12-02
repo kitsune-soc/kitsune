@@ -267,12 +267,12 @@
       // {
         overlays = rec {
           default = kitsune;
-          kitsune = (import ./overlay.nix self);
+          kitsune = (import ./nix/overlay.nix self);
         };
 
         nixosModules = rec {
           default = kitsune;
-          kitsune = (import ./module.nix);
+          kitsune = (import ./nix/module.nix);
         };
       }
     )
