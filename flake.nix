@@ -53,12 +53,12 @@
             pkgs = import nixpkgs { inherit overlays system; };
             stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
             rustPlatform = pkgs.makeRustPlatform {
-              cargo = pkgs.rust-bin.nightly.latest.minimal;
-              rustc = pkgs.rust-bin.nightly.latest.minimal;
+              cargo = pkgs.rust-bin.stable.latest.minimal;
+              rustc = pkgs.rust-bin.stable.latest.minimal;
               inherit stdenv;
             };
 
-            craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.nightly.latest.minimal;
+            craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.stable.latest.minimal;
             buildInputs = with pkgs; [
             ];
 
@@ -76,6 +76,11 @@
             };
 
             commonArgs =
+              let
+                excludedPkgs = [ "example-mrf" "http-client-test" ];
+                buildExcludeParam = pkgs.lib.strings.concatMapStringsSep " " (pkgName: "--exclude ${pkgName}");
+                excludeParam = buildExcludeParam excludedPkgs;
+              in
               {
                 inherit
                   src
@@ -93,7 +98,7 @@
 
                 NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
                 CARGO_PROFILE = "dist";
-                cargoExtraArgs = "--locked ${features}";
+                cargoExtraArgs = "--locked ${features} --workspace ${excludeParam}";
               }
               // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
                 # do a debug build, as `dev` is the default debug profile
@@ -108,6 +113,7 @@
               // {
                 pname = "kitsune-workspace";
                 src = craneLib.cleanCargoSource src;
+                doCheck = false;
               }
             );
           in
@@ -131,7 +137,7 @@
               cli-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-cli";
                 tag = "latest";
-                contents = [ cli ];
+                contents = [ pkgs.dockerTools.caCertificates cli ];
                 config.Cmd = [ "${cli}/bin/kitsune-cli" ];
               };
 
@@ -148,7 +154,7 @@
               job-runner-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-job-runner";
                 tag = "latest";
-                contents = [ job-runner ];
+                contents = [ pkgs.dockerTools.caCertificates job-runner ];
                 config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
               };
 
@@ -182,7 +188,7 @@
               main-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune";
                 tag = "latest";
-                contents = [ main ];
+                contents = [ pkgs.dockerTools.caCertificates main ];
                 config.Cmd = [ "${main}/bin/kitsune" ];
               };
 
@@ -218,7 +224,7 @@
                         [
                           cargo-insta
                           diesel-cli
-                          rust-bin.nightly.latest.default
+                          rust-bin.stable.latest.default
                         ]
                         ++ buildInputs
                         ++ nativeBuildInputs;
