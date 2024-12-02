@@ -6,16 +6,16 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bytes = "1.8.0"
-headers = "0.4.0"
-http = "1.1.0"
-serde = "1.0.215"
-serde_urlencoded = "0.7.1"
+bytes.workspace = true
+headers.workspace = true
+http.workspace = true
+serde.workspace = true
+serde_urlencoded.workspace = true
 sonic-rs.workspace = true
-thiserror = "2.0.3"
+thiserror.workspace = true
 
 [dev-dependencies]
-serde_test = "1.0.177"
+serde_test.workspace = true
 
 [lints]
 workspace = true
