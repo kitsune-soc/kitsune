@@ -131,7 +131,7 @@
               cli-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-cli";
                 tag = "latest";
-                contents = [ cli ];
+                contents = [ pkgs.dockerTools.caCertificates cli ];
                 config.Cmd = [ "${cli}/bin/kitsune-cli" ];
               };
 
@@ -148,7 +148,7 @@
               job-runner-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune-job-runner";
                 tag = "latest";
-                contents = [ job-runner ];
+                contents = [ pkgs.dockerTools.caCertificates job-runner ];
                 config.Cmd = [ "${job-runner}/bin/kitsune-job-runner" ];
               };
 
@@ -182,7 +182,7 @@
               main-docker = pkgs.dockerTools.buildLayeredImage {
                 name = "kitsune";
                 tag = "latest";
-                contents = [ main ];
+                contents = [ pkgs.dockerTools.caCertificates main ];
                 config.Cmd = [ "${main}/bin/kitsune" ];
               };
 
