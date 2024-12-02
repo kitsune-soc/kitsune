@@ -1,6 +1,68 @@
-{ commonArgs, craneLib, pkgs, pnpm2nix }:
-{
+{ crane, debugBuild, pkgs, mkPnpmPackage }:
+let
+  features = "--all-features";
+
+  stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
+  rustToolchain = pkgs.rust-bin.stable.latest.minimal;
+
+  rustPlatform = pkgs.makeRustPlatform {
+    cargo = rustToolchain;
+    rustc = rustToolchain;
+    inherit stdenv;
+  };
+
+  craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+
+  src = pkgs.lib.cleanSourceWith {
+    src = pkgs.lib.cleanSource ./..;
+    filter =
+      name: type:
+      let
+        baseName = baseNameOf (toString name);
+      in
+        !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
+  };
+
+  commonArgs =
+    let
+      excludedPkgs = [ "example-mrf" "http-client-test" ];
+      buildExcludeParam = pkgs.lib.strings.concatMapStringsSep " " (pkgName: "--exclude ${pkgName}");
+      excludeParam = buildExcludeParam excludedPkgs;
+    in
+    {
+      inherit src stdenv;
+
+      strictDeps = true;
+
+      meta = {
+        description = "ActivityPub-federated microblogging";
+        homepage = "https://joinkitsune.org";
+      };
+
+      NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+      CARGO_PROFILE = "dist";
+      cargoExtraArgs = "--locked ${features} --workspace ${excludeParam}";
+    }
+    // (pkgs.lib.optionalAttrs debugBuild.value {
+      # do a debug build, as `dev` is the default debug profile
+      CARGO_PROFILE = "dev";
+    });
+
+  cargoToml = builtins.fromTOML (builtins.readFile ./../Cargo.toml);
+  version = cargoToml.workspace.package.version;
+
+  cargoArtifacts = craneLib.buildDepsOnly (
+    commonArgs
+    // {
+      pname = "kitsune-workspace";
+      src = craneLib.cleanCargoSource src;
+      doCheck = false;
+    }
+  );
+in
+rec {
   default = main;
+
   cli = craneLib.buildPackage (
     commonArgs
     // {
@@ -69,7 +131,7 @@
     config.Cmd = [ "${main}/bin/kitsune" ];
   };
 
-  frontend = pnpm2nix.packages.${system}.mkPnpmPackage {
+  frontend = mkPnpmPackage {
     inherit src;
     distDir = "kitsune-fe/build";
     installInPlace = true;
@@ -77,7 +139,7 @@
     script = "-C kitsune-fe build";
   };
 
-  website = pnpm2nix.packages.${system}.mkPnpmPackage {
+  website = mkPnpmPackage {
     inherit src;
     distDir = "website/dist";
     installInPlace = true;
