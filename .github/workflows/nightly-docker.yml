@@ -1,0 +1,28 @@
+name: Nightly Docker Build
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  build-container:
+    name: Build nightly container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build image with Nix
+        run: "nix build .#main-docker"
+      - name: Load Docker image
+        run: "docker image load < result"
+      - name: Rename image to ghcr.io repo
+        run: "docker tag kitsune:latest ghcr.io/kitsune-soc/kitsune:nightly"
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Push to ghcr.io
+        run: "docker push ghcr.io/kitsune-soc/kitsune:nightly"
