@@ -52,18 +52,15 @@
             overlays = [ (import rust-overlay) ];
             pkgs = import nixpkgs { inherit overlays system; };
             stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
+            rustToolchain = pkgs.rust-bin.stable.latest.minimal;
+
             rustPlatform = pkgs.makeRustPlatform {
-              cargo = pkgs.rust-bin.stable.latest.minimal;
-              rustc = pkgs.rust-bin.stable.latest.minimal;
+              cargo = rustToolchain;
+              rustc = rustToolchain;
               inherit stdenv;
             };
 
-            craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.stable.latest.minimal;
-            buildInputs = with pkgs; [
-            ];
-
-            nativeBuildInputs = with pkgs; [
-            ];
+            craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
             src = pkgs.lib.cleanSourceWith {
               src = pkgs.lib.cleanSource ./.;
@@ -82,12 +79,7 @@
                 excludeParam = buildExcludeParam excludedPkgs;
               in
               {
-                inherit
-                  src
-                  stdenv
-                  buildInputs
-                  nativeBuildInputs
-                  ;
+                inherit src stdenv;
 
                 strictDeps = true;
 
@@ -209,59 +201,7 @@
               };
             };
 
-            devShells = rec {
-              default = backend;
-
-              backend = devenv.lib.mkShell {
-                inherit pkgs inputs;
-
-                modules = [
-                  (
-                    { pkgs, ... }:
-                    {
-                      packages =
-                        with pkgs;
-                        [
-                          cargo-insta
-                          diesel-cli
-                          rust-bin.stable.latest.default
-                        ]
-                        ++ buildInputs
-                        ++ nativeBuildInputs;
-
-                      enterShell = ''
-                        export PG_HOST=127.0.0.1
-                        export PG_PORT=5432
-                        [ -z "$DATABASE_URL" ] && export DATABASE_URL=postgres://$USER@$PG_HOST:$PG_PORT/$USER
-
-                        export REDIS_PORT=6379
-                        [ -z "$REDIS_URL" ] && export REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
-                      '';
-
-                      services = {
-                        postgres = {
-                          enable = true;
-                          listen_addresses = "127.0.0.1";
-                        };
-                        redis = {
-                          package = pkgs.valkey;
-                          enable = true;
-                        };
-                      };
-                    }
-                  )
-                ];
-              };
-
-              frontend = pkgs.mkShell {
-                buildInputs = with pkgs; [
-                  nodejs
-                  nodePackages.svelte-language-server
-                  nodePackages.typescript-language-server
-                  pnpm
-                ];
-              };
-            };
+            devShells = (import ./nix/devshells.nix) { inherit devenv pkgs inputs; };
           }
         )
       // {
