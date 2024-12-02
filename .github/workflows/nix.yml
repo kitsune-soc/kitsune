@@ -40,5 +40,4 @@ jobs:
         run: nix build --override-input debugBuild github:boolean-option/true/6ecb49143ca31b140a5273f1575746ba93c3f698 -L .#mrf-tool
 
       - name: nix check overlay
-        run: cd test-overlay && nix build --no-write-lock-file -L .#kitsune
-
+        run: cd nix/test-overlay && nix build --no-write-lock-file -L .#kitsune

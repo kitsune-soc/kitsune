@@ -1,6 +1,6 @@
 {
   inputs = {
-    kitsune-overlay.url = "./..";
+    kitsune-overlay.url = "./../..";
     kitsune-overlay.inputs.debugBuild.follows = "debugBuild";
     nixpkgs.follows = "kitsune-overlay/nixpkgs";
     flake-utils.follows = "kitsune-overlay/flake-utils";
