@@ -76,6 +76,11 @@
             };
 
             commonArgs =
+              let
+                excludedPkgs = [ "example-mrf" "http-client-test" ];
+                buildExcludeParam = pkgs.lib.strings.concatMapStringsSep " " (pkgName: "--exclude ${pkgName}");
+                excludeParam = buildExcludeParam excludedPkgs;
+              in
               {
                 inherit
                   src
@@ -93,7 +98,7 @@
 
                 NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
                 CARGO_PROFILE = "dist";
-                cargoExtraArgs = "--locked ${features}";
+                cargoExtraArgs = "--locked ${features} --workspace ${excludeParam}";
               }
               // (pkgs.lib.optionalAttrs inputs.debugBuild.value {
                 # do a debug build, as `dev` is the default debug profile
@@ -108,6 +113,7 @@
               // {
                 pname = "kitsune-workspace";
                 src = craneLib.cleanCargoSource src;
+                doCheck = false;
               }
             );
           in
