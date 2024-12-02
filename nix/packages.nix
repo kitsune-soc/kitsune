@@ -32,16 +32,11 @@ let
     {
       inherit src stdenv;
 
+      cargoExtraArgs = "--locked ${features} --workspace ${excludeParam}";
       strictDeps = true;
 
-      meta = {
-        description = "ActivityPub-federated microblogging";
-        homepage = "https://joinkitsune.org";
-      };
-
-      NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
       CARGO_PROFILE = "dist";
-      cargoExtraArgs = "--locked ${features} --workspace ${excludeParam}";
+      NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
     }
     // (pkgs.lib.optionalAttrs debugBuild.value {
       # do a debug build, as `dev` is the default debug profile
