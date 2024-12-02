@@ -53,12 +53,12 @@
             pkgs = import nixpkgs { inherit overlays system; };
             stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
             rustPlatform = pkgs.makeRustPlatform {
-              cargo = pkgs.rust-bin.nightly.latest.minimal;
-              rustc = pkgs.rust-bin.nightly.latest.minimal;
+              cargo = pkgs.rust-bin.stable.latest.minimal;
+              rustc = pkgs.rust-bin.stable.latest.minimal;
               inherit stdenv;
             };
 
-            craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.nightly.latest.minimal;
+            craneLib = (crane.mkLib pkgs).overrideToolchain pkgs.rust-bin.stable.latest.minimal;
             buildInputs = with pkgs; [
             ];
 
@@ -218,7 +218,7 @@
                         [
                           cargo-insta
                           diesel-cli
-                          rust-bin.nightly.latest.default
+                          rust-bin.stable.latest.default
                         ]
                         ++ buildInputs
                         ++ nativeBuildInputs;
