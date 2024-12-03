@@ -4000,7 +4000,7 @@ dependencies = [
  "serde_test",
  "serde_urlencoded",
  "sonic-rs",
- "thiserror 2.0.3",
+ "thiserror 2.0.6",
 ]
 
 [[package]]
