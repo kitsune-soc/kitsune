@@ -109,7 +109,7 @@ blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.9.0"
 chrono = { version = "0.4.38", default-features = false }
-clap = { version = "4.5.21", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.22", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 const_format = "0.2.33"
@@ -117,7 +117,7 @@ const-oid = { version = "0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "1.0.0", features = ["from"] }
-diesel = { version = "2.2.5", default-features = false, features = [
+diesel = { version = "2.2.6", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
     "uuid",
@@ -165,7 +165,7 @@ hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, featu
     "native-certs",
     "tokio-runtime",
 ] }
-http = "1.1.0"
+http = "1.2.0"
 http-body = "1.0.1"
 http-body-util = "0.1.2"
 httpdate = "1.0.3"
@@ -211,7 +211,7 @@ lettre = { version = "0.11.10", default-features = false, features = [
 ] }
 lexical-parse-integer = { version = "1.0.2", default-features = false }
 logos = "0.14.3"
-lol_html = "2.0.0"
+lol_html = "2.1.0"
 meilisearch-sdk = { version = "0.27.1", default-features = false }
 memchr = "2.7.4"
 miette = { version = "7.4.0", features = ["fancy"] }
@@ -293,7 +293,7 @@ sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
     "perf-inline",
 ] }
-schemars = { version = "1.0.0-alpha.16", features = ["semver1"] }
+schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.215", features = ["derive"] }
@@ -314,12 +314,12 @@ subtle = "2.6.1"
 syn = { version = "2.0.90", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.14.0"
-thiserror = "2.0.3"
-time = "0.3.36"
-tokio = { version = "1.41.1", features = ["full"] }
+thiserror = "2.0.4"
+time = "0.3.37"
+tokio = { version = "1.42.0", features = ["full"] }
 tokio-postgres = "0.7.12"
 tokio-postgres-rustls = "0.13.0"
-tokio-util = { version = "0.7.12", features = ["io", "rt"] }
+tokio-util = { version = "0.7.13", features = ["io", "rt"] }
 toml = { version = "0.8.19", default-features = false, features = ["parse"] }
 tower = { version = "0.5.1", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.2", features = [
@@ -350,14 +350,14 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.20.0"
 typetag = "0.2.18"
 unsize = "1.1.0"
-ureq = "2.11.0"
+ureq = "2.12.1"
 url = "2.5.4"
 urlencoding = "2.1.3"
 uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.221.0"
-wasmparser = "0.221.0"
+wasm-encoder = "0.221.2"
+wasmparser = "0.221.2"
 wasmtime = { version = "27.0.0", default-features = false, features = [
     "addr2line",
     "async",
@@ -368,7 +368,7 @@ wasmtime = { version = "27.0.0", default-features = false, features = [
     "runtime",
 ] }
 wasmtime-wasi = { version = "27.0.0", default-features = false }
-wat = "1.221.0"
+wat = "1.221.2"
 whatlang = "0.16.4"
 whichlang = "0.1.0"
 wit-bindgen = "0.36.0"
