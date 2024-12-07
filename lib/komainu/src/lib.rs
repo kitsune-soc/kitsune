@@ -82,7 +82,11 @@ where
         // consent answer.
 
         let client_id = query.get("client_id").or_missing_param()?;
-        let grant_type = query.get("grant_type").or_missing_param()?;
+        let response_type = query.get("response_type").or_missing_param()?;
+        if *response_type != "code" {
+            debug!(?client_id, "response_type not set to \"code\"");
+            return Err(Error::Unauthorized);
+        }
 
         let scope = query.get("scope").or_missing_param()?;
         let redirect_uri = query.get("redirect_uri").or_missing_param()?;
@@ -109,7 +113,6 @@ where
 
         Ok(Authorizer {
             client,
-            grant_type,
             query,
             state,
         })
@@ -118,7 +121,6 @@ where
 
 pub struct Authorizer<'a> {
     client: Client<'a>,
-    grant_type: &'a str,
     query: ParamStorage<&'a str, &'a str>,
     state: Option<&'a str>,
 }
