@@ -78,11 +78,9 @@ where
         //
         // Check the grant_type, let the client access it _somehow_
         //
-        // Give the user some kind of "state" parameter, preferrably typed, so they can store the authenticated user, and their
+        // Give the user some kind of "state" parameter, preferably typed, so they can store the authenticated user, and their
         // consent answer.
 
-        // attempt to extract client data from the HTTP basic authorization
-        // if it doesnt succeed, load the data from the query or body
         let client_id = query.get("client_id").or_missing_param()?;
         let grant_type = query.get("grant_type").or_missing_param()?;
 
