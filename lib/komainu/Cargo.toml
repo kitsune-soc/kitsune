@@ -1,0 +1,23 @@
+[package]
+name = "komainu"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+bytes.workspace = true
+headers.workspace = true
+http.workspace = true
+serde.workspace = true
+serde_urlencoded.workspace = true
+sonic-rs.workspace = true
+strum.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+serde_test.workspace = true
+
+[lints]
+workspace = true
