@@ -4000,6 +4000,7 @@ dependencies = [
  "serde_test",
  "serde_urlencoded",
  "sonic-rs",
+ "strum",
  "thiserror 2.0.6",
  "tracing",
 ]
