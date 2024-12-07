@@ -4,6 +4,7 @@ extern crate tracing;
 use bytes::Bytes;
 use std::collections::HashSet;
 use std::{borrow::Cow, future::Future};
+use strum::AsRefStr;
 
 pub use self::error::{Error, Result};
 pub use self::params::ParamStorage;
@@ -49,6 +50,18 @@ pub struct AuthorizerExtractor<CE> {
     client_extractor: CE,
 }
 
+#[derive(AsRefStr)]
+#[strum(serialize_all = "snake_case")]
+pub enum OAuthError {
+    InvalidRequest,
+    UnauthorizedClient,
+    AccessDenied,
+    UnsupportedResponseType,
+    InvalidScope,
+    ServerError,
+    TemporarilyUnavailable,
+}
+
 #[inline]
 fn get_from_either<'a>(
     key: &str,
@@ -67,11 +80,9 @@ where
     }
 
     pub async fn extract<'a>(&'a self, req: &'a http::Request<()>) -> Result<Authorizer<'a>> {
-        let query: ParamStorage<&str, &str> = if let Some(raw_query) = req.uri().query() {
-            serde_urlencoded::from_str(raw_query).map_err(Error::query)?
-        } else {
-            ParamStorage::new()
-        };
+        let query: ParamStorage<&str, &str> =
+            serde_urlencoded::from_str(req.uri().query().or_missing_param()?)
+                .map_err(Error::query)?;
 
         // TODO: Load client and verify the parameters (client ID, client secret, redirect URI, scopes, etc.) check out
         // Error out if that's not the case
