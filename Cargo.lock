@@ -4001,6 +4001,7 @@ dependencies = [
  "serde_urlencoded",
  "sonic-rs",
  "thiserror 2.0.6",
+ "tracing",
 ]
 
 [[package]]

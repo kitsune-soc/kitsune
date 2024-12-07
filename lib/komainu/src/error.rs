@@ -9,8 +9,14 @@ pub enum Error {
     #[error("Malformed body")]
     Body(#[source] BoxError),
 
+    #[error("Missing parameter")]
+    MissingParam,
+
     #[error("Malformed query")]
     Query(#[source] BoxError),
+
+    #[error("Request is unauthorized")]
+    Unauthorized,
 }
 
 impl Error {
