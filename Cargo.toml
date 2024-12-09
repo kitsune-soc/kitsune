@@ -85,14 +85,14 @@ aliri_braid = "0.4.0"
 arc-swap = "1.7.1"
 argh = "0.1.12"
 argon2 = { version = "0.5.3", features = ["std"] }
-async-graphql = { version = "7.0.11", default-features = false, features = [
+async-graphql = { version = "7.0.12", default-features = false, features = [
     "graphiql",
     "tempfile",
     "time",
     "tracing",
     "uuid",
 ] }
-async-graphql-axum = "7.0.11"
+async-graphql-axum = "7.0.12"
 async-trait = "0.1.83"
 asynk-strim = "0.1.2"
 axum = { version = "0.7.9", features = ["macros", "multipart"] }
@@ -108,7 +108,7 @@ base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.9.0"
-chrono = { version = "0.4.38", default-features = false }
+chrono = { version = "0.4.39", default-features = false }
 clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
@@ -191,7 +191,7 @@ insta = { version = "1.41.1", default-features = false, features = [
     "glob",
     "json",
 ] }
-iso8601-timestamp = { version = "0.3.1", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.3.2", features = ["diesel-pg"] }
 isolang = { version = "2.4.0", features = [
     "english_names",
     "list_languages",
@@ -209,7 +209,7 @@ lettre = { version = "0.11.11", default-features = false, features = [
     "tokio1-rustls-tls",
     "tracing",
 ] }
-lexical-parse-integer = { version = "1.0.3", default-features = false }
+lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
 lol_html = "2.1.0"
 meilisearch-sdk = { version = "0.27.1", default-features = false }
@@ -314,7 +314,7 @@ subtle = "2.6.1"
 syn = { version = "2.0.90", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.14.0"
-thiserror = "2.0.4"
+thiserror = "2.0.6"
 time = "0.3.37"
 tokio = { version = "1.42.0", features = ["full"] }
 tokio-postgres = "0.7.12"
