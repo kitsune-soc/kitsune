@@ -48,7 +48,7 @@ fn spawn_watcher() {
                         ..
                     }
                 ) {
-                    debug!("reloading templates");
+                    debug!(?event.paths, "reloading templates");
 
                     if let Some(env) = ENVIRONMENT.get() {
                         env.store(Arc::new(init_environment()));
