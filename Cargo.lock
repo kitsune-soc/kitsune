@@ -4003,6 +4003,7 @@ dependencies = [
  "strum",
  "thiserror 2.0.6",
  "tracing",
+ "url",
 ]
 
 [[package]]

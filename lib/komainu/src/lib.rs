@@ -9,6 +9,7 @@ use strum::AsRefStr;
 pub use self::error::{Error, Result};
 pub use self::params::ParamStorage;
 
+mod authorize;
 mod error;
 mod params;
 
@@ -121,7 +122,6 @@ where
         let state = query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;
-
         if client.redirect_uri != *redirect_uri {
             debug!(?client_id, "redirect uri doesn't match");
             return Err(Error::Unauthorized);
@@ -168,17 +168,24 @@ where
     }
 
     pub async fn accept(self, user_id: AI::UserId, scopes: &[&str]) -> http::Response<()> {
-        // TODO: Call an issuer to issue an access token for a particular user
-        // Construct the callback url
-        // Construct a redirect HTTP response UwU
-
         let code = self
             .auth_issuer
             .issue_code(user_id, self.client.client_id, scopes)
             .await
             .unwrap();
 
-        todo!();
+        let mut url = url::Url::parse(&self.client.redirect_uri).unwrap();
+        url.query_pairs_mut().append_pair("code", &code);
+
+        if let Some(state) = self.state {
+            url.query_pairs_mut().append_pair("state", state);
+        }
+
+        http::Response::builder()
+            .header(http::header::LOCATION, url.as_str())
+            .status(http::StatusCode::FOUND)
+            .body(())
+            .unwrap()
     }
 
     pub async fn deny(self) -> http::Response<()> {
