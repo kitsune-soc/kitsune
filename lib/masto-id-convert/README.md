@@ -4,7 +4,7 @@ Convert a Mastodon snowflake ID into a UUID v7 while preserving the timestamp co
 
 ## How?
 
-The unix timestamp is preserved as-is, the 2-bytes sequence is stretched out via the WyRand PRNG algorithm.
+The unix timestamp is preserved as-is, the 2-bytes sequence is kept as-is since we expect the sequence to be already unique.
 
 ## Performance
 
