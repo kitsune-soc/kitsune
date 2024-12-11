@@ -32,10 +32,10 @@ impl<T> OptionExt<T> for Option<T> {
 // Because we use native async traits where needed, we can't box the traits (not that we want to), so at least the compiler can inline stuff well
 
 pub struct Client<'a> {
-    client_id: &'a str,
-    client_secret: &'a str,
-    scopes: Cow<'a, [Cow<'a, str>]>,
-    redirect_uri: Cow<'a, str>,
+    pub client_id: &'a str,
+    pub client_secret: &'a str,
+    pub scopes: Cow<'a, [Cow<'a, str>]>,
+    pub redirect_uri: Cow<'a, str>,
 }
 
 pub trait ClientExtractor {
@@ -46,8 +46,15 @@ pub trait ClientExtractor {
     ) -> impl Future<Output = Result<Client<'_>>> + Send;
 }
 
-pub struct AuthorizerExtractor<CE> {
-    client_extractor: CE,
+pub trait AuthIssuer {
+    type UserId;
+
+    fn issue_code(
+        &self,
+        user_id: Self::UserId,
+        client_id: &str,
+        scopes: &[&str],
+    ) -> impl Future<Output = Result<String>> + Send;
 }
 
 #[derive(AsRefStr)]
@@ -71,15 +78,25 @@ fn get_from_either<'a>(
     left.get(key).or_else(|| right.get(key)).map(|item| &**item)
 }
 
-impl<CE> AuthorizerExtractor<CE>
+pub struct AuthorizerExtractor<AI, CE> {
+    // pls do not use ai for this, even if the type alias implies it.
+    // kthx bestie. bussi aufs bauchi.
+    auth_issuer: AI,
+    client_extractor: CE,
+}
+
+impl<AI, CE> AuthorizerExtractor<AI, CE>
 where
     CE: ClientExtractor,
 {
-    pub fn new(client_extractor: CE) -> Self {
-        Self { client_extractor }
+    pub fn new(auth_issuer: AI, client_extractor: CE) -> Self {
+        Self {
+            auth_issuer,
+            client_extractor,
+        }
     }
 
-    pub async fn extract<'a>(&'a self, req: &'a http::Request<()>) -> Result<Authorizer<'a>> {
+    pub async fn extract<'a>(&'a self, req: &'a http::Request<()>) -> Result<Authorizer<'a, AI>> {
         let query: ParamStorage<&str, &str> =
             serde_urlencoded::from_str(req.uri().query().or_missing_param()?)
                 .map_err(Error::query)?;
@@ -123,6 +140,7 @@ where
         }
 
         Ok(Authorizer {
+            auth_issuer: &self.auth_issuer,
             client,
             query,
             state,
@@ -130,13 +148,17 @@ where
     }
 }
 
-pub struct Authorizer<'a> {
+pub struct Authorizer<'a, AI> {
+    auth_issuer: &'a AI,
     client: Client<'a>,
     query: ParamStorage<&'a str, &'a str>,
     state: Option<&'a str>,
 }
 
-impl<'a> Authorizer<'a> {
+impl<'a, AI> Authorizer<'a, AI>
+where
+    AI: AuthIssuer,
+{
     pub fn client(&self) -> &Client<'a> {
         &self.client
     }
@@ -145,10 +167,16 @@ impl<'a> Authorizer<'a> {
         &self.query
     }
 
-    pub async fn accept<UID>(self, user_id: UID) -> http::Response<()> {
+    pub async fn accept(self, user_id: AI::UserId, scopes: &[&str]) -> http::Response<()> {
         // TODO: Call an issuer to issue an access token for a particular user
         // Construct the callback url
         // Construct a redirect HTTP response UwU
+
+        let code = self
+            .auth_issuer
+            .issue_code(user_id, self.client.client_id, scopes)
+            .await
+            .unwrap();
 
         todo!();
     }
