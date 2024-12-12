@@ -1,10 +1,10 @@
 doc-valid-idents = [
     "ActivityPub",
     "DoS",
+    "NixOS",
     "OAuth",
     "OAuth2",
     "PostgreSQL",
     "PubSub",
-    "WyRand",
     "gRPC",
 ]

@@ -11,6 +11,32 @@ expression: schema
       "description": "Manifest v1",
       "type": "object",
       "properties": {
+        "manifestVersion": {
+          "type": "string",
+          "const": "v1"
+        }
+      },
+      "$ref": "#/$defs/ManifestV1",
+      "required": [
+        "manifestVersion"
+      ]
+    }
+  ],
+  "$defs": {
+    "ApiVersion": {
+      "description": "Version of the API used",
+      "oneOf": [
+        {
+          "description": "Version 1",
+          "type": "string",
+          "const": "v1"
+        }
+      ]
+    },
+    "ManifestV1": {
+      "description": "Manifest v1",
+      "type": "object",
+      "properties": {
         "activityTypes": {
           "description": "Activity types passed to the MRF module\n\n `*` matching all types",
           "type": "array",
@@ -34,10 +60,6 @@ expression: schema
             }
           ]
         },
-        "manifestVersion": {
-          "type": "string",
-          "const": "v1"
-        },
         "name": {
           "description": "Name of the MRF module",
           "type": "string"
@@ -48,23 +70,10 @@ expression: schema
         }
       },
       "required": [
-        "manifestVersion",
         "apiVersion",
         "name",
         "version",
         "activityTypes"
-      ]
-    }
-  ],
-  "$defs": {
-    "ApiVersion": {
-      "description": "Version of the API used",
-      "oneOf": [
-        {
-          "description": "Version 1",
-          "type": "string",
-          "const": "v1"
-        }
       ]
     },
     "Schema": {

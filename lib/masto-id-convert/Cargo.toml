@@ -11,13 +11,11 @@ harness = false
 
 [dependencies]
 lexical-parse-integer.workspace = true
-nanorand.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
 divan.workspace = true
 time.workspace = true
-uuid.workspace = true
 
 [lints]
 workspace = true
