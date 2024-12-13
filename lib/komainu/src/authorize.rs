@@ -4,7 +4,7 @@ use crate::{
     params::ParamStorage,
     Authorization, Client, ClientExtractor, OAuthError, OptionExt, PreAuthorization,
 };
-use std::{borrow::Borrow, collections::HashSet, future::Future, str::FromStr};
+use std::{borrow::{Cow, Borrow}, collections::HashSet, future::Future, str::FromStr};
 
 pub trait Issuer {
     type UserId;
@@ -13,7 +13,7 @@ pub trait Issuer {
         &self,
         user_id: Self::UserId,
         pre_authorization: PreAuthorization<'_>,
-    ) -> impl Future<Output = Result<Authorization<'_>>> + Send;
+    ) -> impl Future<Output = Result<String>> + Send;
 }
 
 pub struct AuthorizerExtractor<I, CE> {
@@ -37,14 +37,6 @@ where
         let query: ParamStorage<&str, &str> =
             serde_urlencoded::from_str(req.uri().query().or_missing_param()?)
                 .map_err(Error::query)?;
-
-        // TODO: Load client and verify the parameters (client ID, client secret, redirect URI, scopes, etc.) check out
-        // Error out if that's not the case
-        //
-        // Check the grant_type, let the client access it _somehow_
-        //
-        // Give the user some kind of "state" parameter, preferably typed, so they can store the authenticated user, and their
-        // consent answer.
 
         let client_id = query.get("client_id").or_missing_param()?;
         let response_type = query.get("response_type").or_missing_param()?;
@@ -82,7 +74,7 @@ where
                 PkceMethod::default()
             };
 
-            Some(PkcePayload { method, challenge })
+            Some(PkcePayload { method, challenge: Cow::Borrowed(challenge) })
         } else {
             None
         };
@@ -133,11 +125,11 @@ where
 
     #[inline]
     #[instrument(skip_all)]
-    pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
+    pub async fn accept<'a>(self, user_id: I::UserId, scopes: &'a [&'a str]) -> http::Response<()> {
         let pre_authorization = PreAuthorization {
-            client: self.client,
+            client: &self.client,
             scopes,
-            pkce_payload: self.pkce_payload,
+            pkce_payload: self.pkce_payload.as_ref(),
         };
 
         let code = self

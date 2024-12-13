@@ -42,11 +42,12 @@ pub struct Authorization<'a> {
 }
 
 pub struct PreAuthorization<'a> {
-    pub client: Client<'a>,
-    pub pkce_payload: Option<PkcePayload<'a>>,
+    pub client: &'a Client<'a>,
+    pub pkce_payload: Option<&'a PkcePayload<'a>>,
     pub scopes: &'a [&'a str],
 }
 
+#[derive(Clone)]
 pub struct Client<'a> {
     pub client_id: &'a str,
     pub client_secret: &'a str,
