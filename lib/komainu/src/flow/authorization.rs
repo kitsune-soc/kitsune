@@ -75,7 +75,10 @@ where
         return Err(Error::Unauthorized);
     }
 
-    // TODO: Verify PKCE challenge
+    if let Some(ref pkce) = authorization.pkce_payload {
+        let code_verifier = body.get("code_verifier").or_unauthorized()?;
+        pkce.verify(code_verifier)?;
+    }
 
     let token = token_issuer.issue_token(&authorization).await?;
     let body = sonic_rs::to_vec(&token).unwrap();

@@ -1,9 +1,10 @@
 use crate::{
     error::{Error, Result},
+    flow::{PkceMethod, PkcePayload},
     params::ParamStorage,
-    Authorization, Client, ClientExtractor, OAuthError, OptionExt,
+    Authorization, Client, ClientExtractor, OAuthError, OptionExt, PreAuthorization,
 };
-use std::{borrow::Borrow, collections::HashSet, future::Future};
+use std::{borrow::Borrow, collections::HashSet, future::Future, str::FromStr};
 
 pub trait Issuer {
     type UserId;
@@ -11,8 +12,7 @@ pub trait Issuer {
     fn issue_code(
         &self,
         user_id: Self::UserId,
-        client_id: &str,
-        scopes: &[&str],
+        pre_authorization: PreAuthorization<'_>,
     ) -> impl Future<Output = Result<Authorization<'_>>> + Send;
 }
 
@@ -75,9 +75,22 @@ where
             return Err(Error::Unauthorized);
         }
 
+        let pkce_payload = if let Some(challenge) = query.get("code_challenge") {
+            let method = if let Some(method) = query.get("challenge_code_method") {
+                PkceMethod::from_str(*method).map_err(Error::query)?
+            } else {
+                PkceMethod::default()
+            };
+
+            Some(PkcePayload { method, challenge })
+        } else {
+            None
+        };
+
         Ok(Authorizer {
             issuer: &self.issuer,
             client,
+            pkce_payload,
             query,
             state,
         })
@@ -87,6 +100,7 @@ where
 pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
+    pkce_payload: Option<PkcePayload<'a>>,
     query: ParamStorage<&'a str, &'a str>,
     state: Option<&'a str>,
 }
@@ -120,9 +134,15 @@ where
     #[inline]
     #[instrument(skip_all)]
     pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
+        let pre_authorization = PreAuthorization {
+            client: self.client,
+            scopes,
+            pkce_payload: self.pkce_payload,
+        };
+
         let code = self
             .issuer
-            .issue_code(user_id, self.client.client_id, scopes)
+            .issue_code(user_id, pre_authorization)
             .await
             .unwrap();
 

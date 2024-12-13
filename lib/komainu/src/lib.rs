@@ -37,7 +37,14 @@ impl<T> OptionExt<T> for Option<T> {
 pub struct Authorization<'a> {
     pub code: Cow<'a, str>,
     pub client: Client<'a>,
-    pub pkce_payload: PkcePayload<'a>,
+    pub pkce_payload: Option<PkcePayload<'a>>,
+    pub scopes: Cow<'a, [Cow<'a, str>]>,
+}
+
+pub struct PreAuthorization<'a> {
+    pub client: Client<'a>,
+    pub pkce_payload: Option<PkcePayload<'a>>,
+    pub scopes: &'a [&'a str],
 }
 
 pub struct Client<'a> {

@@ -23,9 +23,10 @@ pub struct TokenResponse<'a> {
     pub expires_in: u64,
 }
 
-#[derive(AsRefStr, Deserialize, EnumString, Serialize)]
+#[derive(AsRefStr, Default, Deserialize, EnumString, Serialize)]
 #[strum(serialize_all = "snake_case")]
 pub enum PkceMethod {
+    #[default]
     None,
     #[strum(serialize = "S256")]
     S256,
