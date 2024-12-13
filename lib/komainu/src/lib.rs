@@ -41,10 +41,10 @@ pub struct Authorization<'a> {
     pub scopes: Cow<'a, [Cow<'a, str>]>,
 }
 
-pub struct PreAuthorization<'a> {
-    pub client: &'a Client<'a>,
-    pub pkce_payload: Option<&'a PkcePayload<'a>>,
-    pub scopes: &'a [&'a str],
+pub struct PreAuthorization<'a, 'b> {
+    pub client: &'b Client<'a>,
+    pub pkce_payload: Option<&'b PkcePayload<'a>>,
+    pub scopes: &'b [&'b str],
 }
 
 #[derive(Clone)]

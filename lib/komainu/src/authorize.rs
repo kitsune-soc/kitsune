@@ -2,9 +2,14 @@ use crate::{
     error::{Error, Result},
     flow::{PkceMethod, PkcePayload},
     params::ParamStorage,
-    Authorization, Client, ClientExtractor, OAuthError, OptionExt, PreAuthorization,
+    Client, ClientExtractor, OAuthError, OptionExt, PreAuthorization,
 };
-use std::{borrow::{Cow, Borrow}, collections::HashSet, future::Future, str::FromStr};
+use std::{
+    borrow::{Borrow, Cow},
+    collections::HashSet,
+    future::Future,
+    str::FromStr,
+};
 
 pub trait Issuer {
     type UserId;
@@ -12,7 +17,7 @@ pub trait Issuer {
     fn issue_code(
         &self,
         user_id: Self::UserId,
-        pre_authorization: PreAuthorization<'_>,
+        pre_authorization: PreAuthorization<'_, '_>,
     ) -> impl Future<Output = Result<String>> + Send;
 }
 
@@ -74,7 +79,10 @@ where
                 PkceMethod::default()
             };
 
-            Some(PkcePayload { method, challenge: Cow::Borrowed(challenge) })
+            Some(PkcePayload {
+                method,
+                challenge: Cow::Borrowed(challenge),
+            })
         } else {
             None
         };
@@ -125,7 +133,7 @@ where
 
     #[inline]
     #[instrument(skip_all)]
-    pub async fn accept<'a>(self, user_id: I::UserId, scopes: &'a [&'a str]) -> http::Response<()> {
+    pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
         let pre_authorization = PreAuthorization {
             client: &self.client,
             scopes,

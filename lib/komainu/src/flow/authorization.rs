@@ -1,6 +1,6 @@
-use super::{PkcePayload, TokenResponse};
+use super::TokenResponse;
 use crate::{
-    error::Result, params::ParamStorage, Authorization, Client, ClientExtractor, Error, OptionExt,
+    error::Result, params::ParamStorage, Authorization, ClientExtractor, Error, OptionExt,
 };
 use bytes::Bytes;
 use headers::HeaderMapExt;
