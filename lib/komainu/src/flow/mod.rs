@@ -1,7 +1,8 @@
 use serde::Serialize;
 use std::borrow::Cow;
 
-pub mod authorization_code;
+pub mod authorization;
+pub mod refresh;
 
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]
