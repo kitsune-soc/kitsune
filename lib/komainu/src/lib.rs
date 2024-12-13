@@ -66,12 +66,3 @@ fn deserialize_body<'a, T: serde::Deserialize<'a>>(req: &'a http::Request<Bytes>
         serde_urlencoded::from_bytes(req.body()).map_err(Error::body)
     }
 }
-
-#[inline]
-fn get_from_either<'a>(
-    key: &str,
-    left: &'a ParamStorage<&str, &str>,
-    right: &'a ParamStorage<&str, &str>,
-) -> Option<&'a str> {
-    left.get(key).or_else(|| right.get(key)).map(|item| &**item)
-}
