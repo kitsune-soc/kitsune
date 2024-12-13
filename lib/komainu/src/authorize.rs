@@ -1,9 +1,9 @@
 use crate::{
     error::{Error, Result},
     params::ParamStorage,
-    Client, ClientExtractor, OptionExt,
+    Client, ClientExtractor, OAuthError, OptionExt,
 };
-use std::{collections::HashSet, future::Future};
+use std::{borrow::Borrow, collections::HashSet, future::Future};
 
 pub trait Issuer {
     type UserId;
@@ -32,6 +32,7 @@ where
         }
     }
 
+    #[instrument(skip_all)]
     pub async fn extract<'a>(&'a self, req: &'a http::Request<()>) -> Result<Authorizer<'a, I>> {
         let query: ParamStorage<&str, &str> =
             serde_urlencoded::from_str(req.uri().query().or_missing_param()?)
@@ -66,7 +67,7 @@ where
         let client_scopes = client
             .scopes
             .iter()
-            .map(|scope| &**scope)
+            .map(|scope| scope.borrow())
             .collect::<HashSet<_>>();
 
         if !request_scopes.is_subset(&client_scopes) {
@@ -94,14 +95,30 @@ impl<'a, I> Authorizer<'a, I>
 where
     I: Issuer,
 {
+    #[must_use]
     pub fn client(&self) -> &Client<'a> {
         &self.client
     }
 
+    #[must_use]
     pub fn query(&self) -> &ParamStorage<&'a str, &'a str> {
         &self.query
     }
 
+    #[inline]
+    fn build_response<U>(url: U) -> http::Response<()>
+    where
+        U: AsRef<str>,
+    {
+        http::Response::builder()
+            .header(http::header::LOCATION, url.as_ref())
+            .status(http::StatusCode::FOUND)
+            .body(())
+            .unwrap()
+    }
+
+    #[inline]
+    #[instrument(skip_all)]
     pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
         let code = self
             .issuer
@@ -116,14 +133,17 @@ where
             url.query_pairs_mut().append_pair("state", state);
         }
 
-        http::Response::builder()
-            .header(http::header::LOCATION, url.as_str())
-            .status(http::StatusCode::FOUND)
-            .body(())
-            .unwrap()
+        Self::build_response(url)
     }
 
-    pub async fn deny(self) -> http::Response<()> {
-        todo!();
+    #[inline]
+    #[must_use]
+    #[instrument(skip_all)]
+    pub fn deny(self) -> http::Response<()> {
+        let mut url = url::Url::parse(&self.client.redirect_uri).unwrap();
+        url.query_pairs_mut()
+            .append_pair("error", OAuthError::AccessDenied.as_ref());
+
+        Self::build_response(url)
     }
 }

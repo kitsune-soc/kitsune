@@ -2,7 +2,7 @@
 extern crate tracing;
 
 use bytes::Bytes;
-use std::collections::HashSet;
+use headers::HeaderMapExt;
 use std::{borrow::Cow, future::Future};
 use strum::AsRefStr;
 
@@ -13,6 +13,7 @@ mod error;
 mod params;
 
 pub mod authorize;
+pub mod flow;
 
 trait OptionExt<T> {
     fn or_missing_param(self) -> Result<T>;
@@ -24,14 +25,6 @@ impl<T> OptionExt<T> for Option<T> {
         self.ok_or(Error::MissingParam)
     }
 }
-
-// TODO: Refactor into `AuthorizerExtractor` and `Authorizer`
-//
-// `AuthorizerExtractor` contains the `ClientExtractor`, so we can load client info.
-// `Authorizer` is the handle passed to the consumer to accept or deny the request.
-// Unlike `oxide-auth`, we won't force the user to implement a trait here, the flow better integrates with a simple function.
-//
-// Because we use native async traits where needed, we can't box the traits (not that we want to), so at least the compiler can inline stuff well
 
 pub struct Client<'a> {
     pub client_id: &'a str,
@@ -58,6 +51,20 @@ pub enum OAuthError {
     InvalidScope,
     ServerError,
     TemporarilyUnavailable,
+}
+
+#[inline]
+fn deserialize_body<'a, T: serde::Deserialize<'a>>(req: &'a http::Request<Bytes>) -> Result<T> {
+    // Not part of the RFC, but a bunch of implementations allow this.
+    // And because they allow this, clients make use of this.
+    //
+    // Done to increase compatibility.
+    let content_type = req.headers().typed_get::<headers::ContentType>();
+    if content_type == Some(headers::ContentType::json()) {
+        sonic_rs::from_slice(req.body()).map_err(Error::body)
+    } else {
+        serde_urlencoded::from_bytes(req.body()).map_err(Error::body)
+    }
 }
 
 #[inline]
