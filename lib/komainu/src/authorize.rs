@@ -64,7 +64,7 @@ where
         let client_scopes = client
             .scopes
             .iter()
-            .map(|scope| scope.borrow())
+            .map(Borrow::borrow)
             .collect::<HashSet<_>>();
 
         if !request_scopes.is_subset(&client_scopes) {
@@ -74,7 +74,7 @@ where
 
         let pkce_payload = if let Some(challenge) = query.get("code_challenge") {
             let method = if let Some(method) = query.get("challenge_code_method") {
-                PkceMethod::from_str(*method).map_err(Error::query)?
+                PkceMethod::from_str(method).map_err(Error::query)?
             } else {
                 PkceMethod::default()
             };

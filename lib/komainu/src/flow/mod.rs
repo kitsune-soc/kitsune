@@ -42,7 +42,7 @@ impl PkcePayload<'_> {
     #[inline]
     fn verify_s256(&self, code_verifier: &str) -> Result<()> {
         let decoded = base64_simd::URL_SAFE
-            .decode_to_vec(code_verifier)
+            .decode_to_vec(self.challenge.as_bytes())
             .inspect_err(|error| debug!(?error, "failed to decode pkce payload"))
             .map_err(Error::body)?;
 
@@ -58,7 +58,6 @@ impl PkcePayload<'_> {
     #[inline]
     fn verify_none(&self, code_verifier: &str) -> Result<()> {
         let challenge_bytes = self.challenge.as_bytes();
-
         if challenge_bytes.ct_eq(code_verifier.as_bytes()).into() {
             Ok(())
         } else {
