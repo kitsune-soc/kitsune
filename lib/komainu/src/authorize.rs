@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     params::ParamStorage,
-    Client, ClientExtractor, OAuthError, OptionExt,
+    Authorization, Client, ClientExtractor, OAuthError, OptionExt,
 };
 use std::{borrow::Borrow, collections::HashSet, future::Future};
 
@@ -13,7 +13,7 @@ pub trait Issuer {
         user_id: Self::UserId,
         client_id: &str,
         scopes: &[&str],
-    ) -> impl Future<Output = Result<String>> + Send;
+    ) -> impl Future<Output = Result<Authorization<'_>>> + Send;
 }
 
 pub struct AuthorizerExtractor<I, CE> {

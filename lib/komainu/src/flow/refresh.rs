@@ -13,7 +13,7 @@ pub trait Issuer {
         &self,
         client: &Client<'_>,
         refresh_token: &str,
-    ) -> impl Future<Output = Result<TokenResponse<'_>>>;
+    ) -> impl Future<Output = Result<TokenResponse<'_>>> + Send;
 }
 
 #[instrument(skip_all)]

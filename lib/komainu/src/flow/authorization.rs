@@ -1,22 +1,21 @@
 use super::{PkcePayload, TokenResponse};
-use crate::{error::Result, params::ParamStorage, Client, ClientExtractor, Error, OptionExt};
+use crate::{
+    error::Result, params::ParamStorage, Authorization, Client, ClientExtractor, Error, OptionExt,
+};
 use bytes::Bytes;
 use headers::HeaderMapExt;
 use std::future::Future;
 
-pub struct Authorization<'a> {
-    pub client: Client<'a>,
-    pub pkce: PkcePayload<'a>,
-}
-
 pub trait Issuer {
-    fn load_authorization(&self);
+    fn load_authorization(
+        &self,
+        auth_code: &str,
+    ) -> impl Future<Output = Result<Option<Authorization<'_>>>> + Send;
 
     fn issue_token(
         &self,
-        client: &Client<'_>,
-        auth_code: &str,
-    ) -> impl Future<Output = Result<TokenResponse<'_>>>;
+        authorization: &Authorization<'_>,
+    ) -> impl Future<Output = Result<TokenResponse<'_>>> + Send;
 }
 
 #[instrument(skip_all)]
@@ -66,7 +65,19 @@ where
         return Err(Error::Unauthorized);
     }
 
-    let token = token_issuer.issue_token(&client, code).await?;
+    let authorization = token_issuer
+        .load_authorization(code)
+        .await?
+        .or_unauthorized()?;
+
+    // This check is constant time :3
+    if client != authorization.client {
+        return Err(Error::Unauthorized);
+    }
+
+    // TODO: Verify PKCE challenge
+
+    let token = token_issuer.issue_token(&authorization).await?;
     let body = sonic_rs::to_vec(&token).unwrap();
 
     debug!("token successfully issued. building response");
