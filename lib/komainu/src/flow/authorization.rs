@@ -1,10 +1,17 @@
-use super::TokenResponse;
+use super::{PkcePayload, TokenResponse};
 use crate::{error::Result, params::ParamStorage, Client, ClientExtractor, Error, OptionExt};
 use bytes::Bytes;
 use headers::HeaderMapExt;
 use std::future::Future;
 
+pub struct Authorization<'a> {
+    pub client: Client<'a>,
+    pub pkce: PkcePayload<'a>,
+}
+
 pub trait Issuer {
+    fn load_authorization(&self);
+
     fn issue_token(
         &self,
         client: &Client<'_>,

@@ -3993,14 +3993,17 @@ dependencies = [
 name = "komainu"
 version = "0.0.1-pre.6"
 dependencies = [
+ "base64-simd",
  "bytes",
  "headers",
  "http",
  "serde",
  "serde_test",
  "serde_urlencoded",
+ "sha2",
  "sonic-rs",
  "strum",
+ "subtle",
  "thiserror 2.0.6",
  "tracing",
  "url",

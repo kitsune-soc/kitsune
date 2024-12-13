@@ -1,8 +1,8 @@
 use super::TokenResponse;
 use crate::{
     error::{Error, Result},
-    Client, ClientExtractor, OptionExt,
     params::ParamStorage,
+    Client, ClientExtractor, OptionExt,
 };
 use bytes::Bytes;
 use headers::HeaderMapExt;
