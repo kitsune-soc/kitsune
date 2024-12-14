@@ -76,20 +76,11 @@ pub trait ClientExtractor {
     ) -> impl Future<Output = Result<Client<'_>>> + Send;
 }
 
-#[derive(AsRefStr)]
-#[strum(serialize_all = "snake_case")]
-pub enum OAuthError {
-    InvalidRequest,
-    UnauthorizedClient,
-    AccessDenied,
-    UnsupportedResponseType,
-    InvalidScope,
-    ServerError,
-    TemporarilyUnavailable,
-}
-
 #[inline]
-fn deserialize_body<'a, T: serde::Deserialize<'a>>(req: &'a http::Request<Bytes>) -> Result<T> {
+fn deserialize_body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T>
+where
+    T: serde::Deserialize<'a>,
+{
     // Not part of the RFC, but a bunch of implementations allow this.
     // And because they allow this, clients make use of this.
     //

@@ -1,6 +1,6 @@
 use super::TokenResponse;
 use crate::{
-    error::{Error, Result},
+    error::{fallible, yield_error, Error, Result},
     params::ParamStorage,
     Client, ClientExtractor, OptionExt,
 };
@@ -21,12 +21,12 @@ pub async fn perform<CE, I>(
     req: http::Request<Bytes>,
     client_extractor: CE,
     token_issuer: I,
-) -> Result<http::Response<Bytes>>
+) -> http::Response<Bytes>
 where
     CE: ClientExtractor,
     I: Issuer,
 {
-    let body: ParamStorage<&str, &str> = crate::deserialize_body(&req)?;
+    let body: ParamStorage<&str, &str> = fallible!(crate::deserialize_body(&req));
 
     let basic_auth = req
         .headers()
@@ -39,33 +39,33 @@ where
 
         // As a fallback, try to read from the body.
         // Not recommended but some clients do this. Done to increase compatibility.
-        let client_id = body.get("client_id").or_missing_param()?;
-        let client_secret = body.get("client_secret").or_missing_param()?;
+        let client_id = fallible!(body.get("client_id").or_missing_param());
+        let client_secret = fallible!(body.get("client_secret").or_missing_param());
 
         (*client_id, *client_secret)
     };
 
-    let grant_type = body.get("grant_type").or_missing_param()?;
-    let refresh_token = body.get("refresh_token").or_missing_param()?;
+    let grant_type = fallible!(body.get("grant_type").or_missing_param());
+    let refresh_token = fallible!(body.get("refresh_token").or_missing_param());
 
     if *grant_type != "refresh_token" {
         debug!(?client_id, "grant_type is not refresh_token");
-        return Err(Error::Unauthorized);
+        yield_error!(Error::Unauthorized);
     }
 
-    let client = client_extractor
-        .extract(client_id, Some(client_secret))
-        .await?;
+    let client = fallible!(
+        client_extractor
+            .extract(client_id, Some(client_secret))
+            .await
+    );
 
-    let token = token_issuer.issue_token(&client, refresh_token).await?;
+    let token = fallible!(token_issuer.issue_token(&client, refresh_token).await);
     let body = sonic_rs::to_vec(&token).unwrap();
 
     debug!("token successfully issued. building response");
 
-    let response = http::Response::builder()
+    http::Response::builder()
         .status(http::StatusCode::OK)
         .body(body.into())
-        .unwrap();
-
-    Ok(response)
+        .unwrap()
 }
