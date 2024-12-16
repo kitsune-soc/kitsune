@@ -1,11 +1,11 @@
 use super::TokenResponse;
 use crate::{
     error::{fallible, yield_error, Error, Result},
+    extractor::ClientCredentials,
     params::ParamStorage,
     Client, ClientExtractor, OptionExt,
 };
 use bytes::Bytes;
-use headers::HeaderMapExt;
 use std::future::Future;
 
 pub trait Issuer {
@@ -26,24 +26,15 @@ where
     CE: ClientExtractor,
     I: Issuer,
 {
-    let body: ParamStorage<&str, &str> = fallible!(crate::deserialize_body(&req));
+    let body: ParamStorage<&str, &str> = fallible!(crate::extractor::body(&req));
 
-    let basic_auth = req
-        .headers()
-        .typed_get::<headers::Authorization<headers::authorization::Basic>>();
+    let client_credentials =
+        fallible!(ClientCredentials::extract(req.headers(), &body).or_unauthorized());
 
-    let (client_id, client_secret) = if let Some(ref auth) = basic_auth {
-        (auth.username(), auth.password())
-    } else {
-        debug!("attempting to read client credentials from body (naughty :3)");
-
-        // As a fallback, try to read from the body.
-        // Not recommended but some clients do this. Done to increase compatibility.
-        let client_id = fallible!(body.get("client_id").or_missing_param());
-        let client_secret = fallible!(body.get("client_secret").or_missing_param());
-
-        (*client_id, *client_secret)
-    };
+    let (client_id, client_secret) = (
+        client_credentials.client_id(),
+        client_credentials.client_secret(),
+    );
 
     let grant_type = fallible!(body.get("grant_type").or_missing_param());
     let refresh_token = fallible!(body.get("refresh_token").or_missing_param());
@@ -55,7 +46,10 @@ where
 
     let client = fallible!(
         client_extractor
-            .extract(client_id, Some(client_secret))
+            .extract(
+                client_credentials.client_id(),
+                Some(client.credentials.client_secret())
+            )
             .await
     );
 

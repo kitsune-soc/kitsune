@@ -1,8 +1,8 @@
 use crate::{
-    error::{Error, Result},
+    error::{Error, OAuthError, Result},
     flow::{PkceMethod, PkcePayload},
     params::ParamStorage,
-    Client, ClientExtractor, OAuthError, OptionExt, PreAuthorization,
+    Client, ClientExtractor, OptionExt, PreAuthorization,
 };
 use std::{
     borrow::{Borrow, Cow},

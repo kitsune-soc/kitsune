@@ -41,13 +41,12 @@ pub struct PkcePayload<'a> {
 impl PkcePayload<'_> {
     #[inline]
     fn verify_s256(&self, code_verifier: &str) -> Result<()> {
-        let decoded = base64_simd::URL_SAFE
+        let decoded = base64_simd::URL_SAFE_NO_PAD
             .decode_to_vec(self.challenge.as_bytes())
             .inspect_err(|error| debug!(?error, "failed to decode pkce payload"))
             .map_err(Error::body)?;
 
         let hash = Sha256::digest(code_verifier);
-
         if decoded.ct_eq(hash.as_slice()).into() {
             Ok(())
         } else {

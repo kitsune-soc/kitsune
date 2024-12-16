@@ -1,6 +1,6 @@
-use thiserror::Error;
 use serde::Serialize;
 use strum::AsRefStr;
+use thiserror::Error;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 

@@ -3,15 +3,15 @@ extern crate tracing;
 
 use self::flow::PkcePayload;
 use bytes::Bytes;
-use headers::HeaderMapExt;
+use memchr::memchr;
 use std::{borrow::Cow, future::Future};
-use strum::AsRefStr;
 use subtle::ConstantTimeEq;
 
 pub use self::error::{Error, Result};
 pub use self::params::ParamStorage;
 
 mod error;
+mod extractor;
 mod params;
 
 pub mod authorize;
@@ -74,21 +74,4 @@ pub trait ClientExtractor {
         client_id: &str,
         client_secret: Option<&str>,
     ) -> impl Future<Output = Result<Client<'_>>> + Send;
-}
-
-#[inline]
-fn deserialize_body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T>
-where
-    T: serde::Deserialize<'a>,
-{
-    // Not part of the RFC, but a bunch of implementations allow this.
-    // And because they allow this, clients make use of this.
-    //
-    // Done to increase compatibility.
-    let content_type = req.headers().typed_get::<headers::ContentType>();
-    if content_type == Some(headers::ContentType::json()) {
-        sonic_rs::from_slice(req.body()).map_err(Error::body)
-    } else {
-        serde_urlencoded::from_bytes(req.body()).map_err(Error::body)
-    }
 }
