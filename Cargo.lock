@@ -4007,6 +4007,7 @@ dependencies = [
  "subtle",
  "thiserror 2.0.7",
  "tracing",
+ "tracing-subscriber",
  "url",
 ]
 

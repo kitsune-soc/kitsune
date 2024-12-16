@@ -2,8 +2,6 @@
 extern crate tracing;
 
 use self::flow::PkcePayload;
-use bytes::Bytes;
-use memchr::memchr;
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 

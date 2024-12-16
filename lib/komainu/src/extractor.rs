@@ -1,8 +1,8 @@
 use crate::{
     error::{Error, Result},
     params::ParamStorage,
-    OptionExt,
 };
+use memchr::memchr;
 use bytes::Bytes;
 
 static URL_ENCODED_CONTENT_TYPE: http::HeaderValue =
@@ -128,9 +128,13 @@ impl BasicAuth {
 #[cfg(test)]
 mod test {
     use super::BasicAuth;
+    use std::env;
 
     #[test]
     fn parse_basic_auth_rfc() {
+        env::set_var("RUST_LOG", "debug");
+        tracing_subscriber::fmt::init();
+
         let mut map = http::HeaderMap::new();
         map.insert(
             http::header::AUTHORIZATION,

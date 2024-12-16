@@ -46,10 +46,7 @@ where
 
     let client = fallible!(
         client_extractor
-            .extract(
-                client_credentials.client_id(),
-                Some(client.credentials.client_secret())
-            )
+            .extract(client_id, Some(client_secret))
             .await
     );
 
