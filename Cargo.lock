@@ -3995,6 +3995,7 @@ version = "0.0.1-pre.6"
 dependencies = [
  "base64-simd",
  "bytes",
+ "divan",
  "http",
  "memchr",
  "serde",
@@ -4007,7 +4008,6 @@ dependencies = [
  "subtle",
  "thiserror 2.0.7",
  "tracing",
- "tracing-subscriber",
  "url",
 ]
 

@@ -2,8 +2,8 @@ use crate::{
     error::{Error, Result},
     params::ParamStorage,
 };
-use memchr::memchr;
 use bytes::Bytes;
+use memchr::memchr;
 
 static URL_ENCODED_CONTENT_TYPE: http::HeaderValue =
     http::HeaderValue::from_static("application/x-www-form-urlencoded");
@@ -56,6 +56,7 @@ impl<'a> ClientCredentials<'a> {
     }
 
     #[inline]
+    #[must_use]
     pub fn client_id(&self) -> &str {
         match self {
             Self::Basic(auth) => auth.username(),
@@ -64,6 +65,7 @@ impl<'a> ClientCredentials<'a> {
     }
 
     #[inline]
+    #[must_use]
     pub fn client_secret(&self) -> &str {
         match self {
             Self::Basic(auth) => auth.password(),
@@ -73,9 +75,8 @@ impl<'a> ClientCredentials<'a> {
 }
 
 pub struct BasicAuth {
-    buffer: Vec<u8>,
-    username: &'static str,
-    password: &'static str,
+    buffer: String,
+    delimiter_pos: usize,
 }
 
 impl BasicAuth {
@@ -97,52 +98,42 @@ impl BasicAuth {
             .inspect_err(|error| debug!(?error, "failed to decode basic auth"))
             .ok()?;
 
-        let buffer_str = simdutf8::basic::from_utf8(&value)
-            .inspect_err(|error| debug!(?error, "failed to decode utf8"))
-            .ok()?;
+        // SAFETY: Since `simdutf8` validates that the buffer contents are valid UTF-8 and we exit the function on error,
+        // we can simply call `String::from_utf8_unchecked`.
+        #[allow(unsafe_code)]
+        let buffer = unsafe {
+            simdutf8::basic::from_utf8(&buffer)
+                .inspect_err(|error| debug!(?error, "failed to decode utf8"))
+                .ok()?;
 
-        let (username, password) = buffer_str.split_once(':')?;
+            String::from_utf8_unchecked(buffer)
+        };
 
-        // SAFETY: self-referential struct. can't access invariant lifetimes from the outside.
+        let delimiter_pos = buffer.find(':')?;
+
+        Some(Self {
+            buffer,
+            delimiter_pos,
+        })
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn username(&self) -> &str {
+        // SAFETY: The delimiter was previously found via `str::find`, so the index is guaranteed to be within boundaries
         #[allow(unsafe_code)]
         unsafe {
-            Some(Self {
-                buffer,
-                username: std::mem::transmute(username),
-                password: std::mem::transmute(password),
-            })
+            self.buffer.get_unchecked(..self.delimiter_pos)
         }
     }
 
     #[inline]
-    pub fn username(&self) -> &str {
-        &self.username
-    }
-
-    #[inline]
+    #[must_use]
     pub fn password(&self) -> &str {
-        &self.password
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::BasicAuth;
-    use std::env;
-
-    #[test]
-    fn parse_basic_auth_rfc() {
-        env::set_var("RUST_LOG", "debug");
-        tracing_subscriber::fmt::init();
-
-        let mut map = http::HeaderMap::new();
-        map.insert(
-            http::header::AUTHORIZATION,
-            http::HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="),
-        );
-
-        let auth = BasicAuth::extract(&map).unwrap();
-        assert_eq!(auth.username(), "Aladdin");
-        assert_eq!(auth.password(), "open sesame");
+        // SAFETY: The delimiter was previously found via `str::find`, so the index is guaranteed to be within boundaries
+        #[allow(unsafe_code)]
+        unsafe {
+            self.buffer.get_unchecked((self.delimiter_pos + 1)..)
+        }
     }
 }

@@ -9,11 +9,11 @@ pub use self::error::{Error, Result};
 pub use self::params::ParamStorage;
 
 mod error;
-mod extractor;
-mod params;
 
 pub mod authorize;
+pub mod extractor;
 pub mod flow;
+pub mod params;
 
 trait OptionExt<T> {
     fn or_missing_param(self) -> Result<T>;

@@ -22,8 +22,8 @@ tracing.workspace = true
 url.workspace = true
 
 [dev-dependencies]
+divan.workspace = true
 serde_test.workspace = true
-tracing-subscriber.workspace = true
 
 [lints]
 workspace = true

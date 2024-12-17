@@ -9,6 +9,10 @@ fn verify_rfc_payload_s256() {
     ];
 
     let verifier_base64 = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+    assert_eq!(
+        base64_simd::URL_SAFE_NO_PAD.encode_to_string(verifier),
+        verifier_base64
+    );
 
     let challenge = [
         19, 211, 30, 150, 26, 26, 216, 236, 47, 22, 177, 12, 76, 152, 46, 8, 118, 168, 120, 173,
@@ -16,6 +20,10 @@ fn verify_rfc_payload_s256() {
     ];
 
     let challenge_base64 = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
+    assert_eq!(
+        base64_simd::URL_SAFE_NO_PAD.encode_to_string(challenge),
+        challenge_base64
+    );
 
     let payload = PkcePayload {
         method: PkceMethod::S256,
