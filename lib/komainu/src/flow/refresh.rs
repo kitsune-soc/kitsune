@@ -3,7 +3,7 @@ use crate::{
     error::{Error, Result},
     extract::ClientCredentials,
     params::ParamStorage,
-    Client, ClientExtractor, OptionExt,
+    Client, ClientExtractor,
 };
 use bytes::Bytes;
 use std::future::Future;

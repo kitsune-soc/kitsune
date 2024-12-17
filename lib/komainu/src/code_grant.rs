@@ -1,8 +1,5 @@
 use crate::{
-    error::{Error, OAuthError, Result},
-    flow::{PkceMethod, PkcePayload},
-    params::ParamStorage,
-    Client, ClientExtractor, OptionExt, PreAuthorization,
+    error::Error, flow::pkce, params::ParamStorage, AuthInstruction, Client, ClientExtractor,
 };
 use std::{
     borrow::{Borrow, Cow},
@@ -10,6 +7,32 @@ use std::{
     future::Future,
     str::FromStr,
 };
+use strum::{AsRefStr, Display};
+use thiserror::Error;
+
+trait OptionExt<T> {
+    fn or_invalid_request(self) -> Result<T, GrantError>;
+}
+
+impl<T> OptionExt<T> for Option<T> {
+    #[inline]
+    fn or_invalid_request(self) -> Result<T, GrantError> {
+        self.ok_or(GrantError::InvalidRequest)
+    }
+}
+
+#[derive(AsRefStr, Debug, Display, Error)]
+#[strum(serialize_all = "snake_case")]
+pub enum GrantError {
+    InvalidRequest,
+    UnauthorizedClient,
+    AccessDenied,
+    UnsupportedResponseType,
+    InvalidScope,
+    ServerError,
+    TemporarilyUnavailable,
+    Other(#[from] Error),
+}
 
 pub trait Issuer {
     type UserId;
@@ -17,8 +40,8 @@ pub trait Issuer {
     fn issue_code(
         &self,
         user_id: Self::UserId,
-        pre_authorization: PreAuthorization<'_, '_>,
-    ) -> impl Future<Output = Result<String>> + Send;
+        pre_authorization: AuthInstruction<'_, '_>,
+    ) -> impl Future<Output = Result<String, GrantError>> + Send;
 }
 
 pub struct AuthorizerExtractor<I, CE> {
@@ -38,26 +61,29 @@ where
     }
 
     #[instrument(skip_all)]
-    pub async fn extract<'a>(&'a self, req: &'a http::Request<()>) -> Result<Authorizer<'a, I>> {
+    pub async fn extract<'a>(
+        &'a self,
+        req: &'a http::Request<()>,
+    ) -> Result<Authorizer<'a, I>, GrantError> {
         let query: ParamStorage<&str, &str> =
-            serde_urlencoded::from_str(req.uri().query().or_missing_param()?)
+            serde_urlencoded::from_str(req.uri().query().or_invalid_request()?)
                 .map_err(Error::query)?;
 
-        let client_id = query.get("client_id").or_missing_param()?;
-        let response_type = query.get("response_type").or_missing_param()?;
+        let client_id = query.get("client_id").or_invalid_request()?;
+        let response_type = query.get("response_type").or_invalid_request()?;
         if *response_type != "code" {
             debug!(?client_id, "response_type not set to \"code\"");
-            return Err(Error::Unauthorized);
+            return Err(GrantError::AccessDenied);
         }
 
-        let scope = query.get("scope").or_missing_param()?;
-        let redirect_uri = query.get("redirect_uri").or_missing_param()?;
+        let scope = query.get("scope").or_invalid_request()?;
+        let redirect_uri = query.get("redirect_uri").or_invalid_request()?;
         let state = query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;
         if client.redirect_uri != *redirect_uri {
             debug!(?client_id, "redirect uri doesn't match");
-            return Err(Error::Unauthorized);
+            return Err(GrantError::AccessDenied);
         }
 
         let request_scopes = scope.split_whitespace().collect::<HashSet<_>>();
@@ -69,17 +95,17 @@ where
 
         if !request_scopes.is_subset(&client_scopes) {
             debug!(?client_id, "scopes aren't a subset");
-            return Err(Error::Unauthorized);
+            return Err(GrantError::AccessDenied);
         }
 
         let pkce_payload = if let Some(challenge) = query.get("code_challenge") {
             let method = if let Some(method) = query.get("challenge_code_method") {
-                PkceMethod::from_str(method).map_err(Error::query)?
+                pkce::Method::from_str(method).map_err(Error::query)?
             } else {
-                PkceMethod::default()
+                pkce::Method::default()
             };
 
-            Some(PkcePayload {
+            Some(pkce::Payload {
                 method,
                 challenge: Cow::Borrowed(challenge),
             })
@@ -109,7 +135,7 @@ macro_rules! return_err {
 pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
-    pkce_payload: Option<PkcePayload<'a>>,
+    pkce_payload: Option<pkce::Payload<'a>>,
     query: ParamStorage<&'a str, &'a str>,
     state: Option<&'a str>,
 }
@@ -153,27 +179,30 @@ where
     }
 
     #[inline]
+    fn build_error_response(&self, error: &GrantError) -> http::Response<()> {
+        let mut uri = return_err!(self.redirect_uri());
+        uri.query_pairs_mut().append_pair("error", error.as_ref());
+        Self::build_response(uri)
+    }
+
+    #[inline]
     #[instrument(skip_all)]
     pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
-        let pre_authorization = PreAuthorization {
+        let pre_authorization = AuthInstruction {
             client: &self.client,
             scopes,
             pkce_payload: self.pkce_payload.as_ref(),
         };
 
-        let mut url = return_err!(self.redirect_uri());
-
         let code = match self.issuer.issue_code(user_id, pre_authorization).await {
             Ok(code) => code,
             Err(error) => {
                 debug!(?error, "failed to issue code");
-                url.query_pairs_mut()
-                    .append_pair("error", OAuthError::TemporarilyUnavailable.as_ref());
-
-                return Self::build_response(url);
+                return self.build_error_response(&GrantError::TemporarilyUnavailable);
             }
         };
 
+        let mut url = return_err!(self.redirect_uri());
         url.query_pairs_mut().append_pair("code", &code);
 
         if let Some(state) = self.state {
@@ -187,10 +216,6 @@ where
     #[must_use]
     #[instrument(skip_all)]
     pub fn deny(self) -> http::Response<()> {
-        let mut url = return_err!(self.redirect_uri());
-        url.query_pairs_mut()
-            .append_pair("error", OAuthError::AccessDenied.as_ref());
-
-        Self::build_response(url)
+        self.build_error_response(&GrantError::AccessDenied)
     }
 }

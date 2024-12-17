@@ -1,9 +1,9 @@
-use super::TokenResponse;
 use crate::{
     error::{Error, Result},
     extract::ClientCredentials,
+    flow::TokenResponse,
     params::ParamStorage,
-    Authorization, ClientExtractor, OptionExt,
+    Authorization, ClientExtractor,
 };
 use bytes::Bytes;
 use std::future::Future;

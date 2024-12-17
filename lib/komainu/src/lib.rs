@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use self::flow::PkcePayload;
+use self::flow::pkce;
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 
@@ -10,38 +10,21 @@ pub use self::params::ParamStorage;
 
 mod error;
 
-pub mod authorize;
+pub mod code_grant;
 pub mod extract;
 pub mod flow;
 pub mod params;
 
-trait OptionExt<T> {
-    fn or_missing_param(self) -> Result<T>;
-    fn or_unauthorized(self) -> Result<T>;
-}
-
-impl<T> OptionExt<T> for Option<T> {
-    #[inline]
-    fn or_missing_param(self) -> Result<T> {
-        self.ok_or(Error::MissingParam)
-    }
-
-    #[inline]
-    fn or_unauthorized(self) -> Result<T> {
-        self.ok_or(Error::Unauthorized)
-    }
-}
-
 pub struct Authorization<'a> {
     pub code: Cow<'a, str>,
     pub client: Client<'a>,
-    pub pkce_payload: Option<PkcePayload<'a>>,
+    pub pkce_payload: Option<pkce::Payload<'a>>,
     pub scopes: Cow<'a, [Cow<'a, str>]>,
 }
 
-pub struct PreAuthorization<'a, 'b> {
+pub struct AuthInstruction<'a, 'b> {
     pub client: &'b Client<'a>,
-    pub pkce_payload: Option<&'b PkcePayload<'a>>,
+    pub pkce_payload: Option<&'b pkce::Payload<'a>>,
     pub scopes: &'b [&'b str],
 }
 
