@@ -62,7 +62,7 @@ where
     }
 
     #[instrument(skip_all)]
-    pub async fn extract<'a>(
+    pub async fn extract_raw<'a>(
         &'a self,
         req: &'a http::Request<()>,
     ) -> Result<Authorizer<'a, I>, GrantError> {
@@ -72,11 +72,6 @@ where
 
         let client_id = query.get("client_id").or_invalid_request()?;
         let response_type = query.get("response_type").or_invalid_request()?;
-        if *response_type != "code" {
-            debug!(?client_id, "response_type not set to \"code\"");
-            return Err(GrantError::AccessDenied);
-        }
-
         let scope = query.get("scope").map(Deref::deref).unwrap_or("");
         let state = query.get("state").map(|state| &**state);
 
@@ -86,6 +81,11 @@ where
                 debug!(?client_id, "redirect uri doesn't match");
                 return Err(GrantError::AccessDenied);
             }
+        }
+
+        if *response_type != "code" {
+            debug!(?client_id, "response_type not set to \"code\"");
+            return Err(GrantError::AccessDenied);
         }
 
         let request_scopes = scope.split_whitespace().collect::<HashSet<_>>();
