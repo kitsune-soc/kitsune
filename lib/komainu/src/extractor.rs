@@ -109,7 +109,7 @@ impl BasicAuth {
             String::from_utf8_unchecked(buffer)
         };
 
-        let delimiter_pos = buffer.find(':')?;
+        let delimiter_pos = memchr(b':', buffer.as_bytes())?;
 
         Some(Self {
             buffer,

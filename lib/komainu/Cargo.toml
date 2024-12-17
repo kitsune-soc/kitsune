@@ -31,6 +31,8 @@ url.workspace = true
 
 [dev-dependencies]
 divan.workspace = true
+headers.workspace = true
+rstest.workspace = true
 serde_test.workspace = true
 
 [lints]

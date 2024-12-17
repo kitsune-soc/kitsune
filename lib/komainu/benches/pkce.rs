@@ -2,6 +2,9 @@ use divan::black_box;
 use komainu::flow::{PkceMethod, PkcePayload};
 use std::borrow::Cow;
 
+#[global_allocator]
+static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
+
 #[divan::bench]
 fn s256() -> komainu::Result<()> {
     let verifier_base64 = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";

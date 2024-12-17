@@ -1,4 +1,5 @@
 use komainu::extractor::BasicAuth;
+use rstest::rstest;
 
 #[test]
 fn parse_basic_auth_rfc() {
@@ -13,9 +14,12 @@ fn parse_basic_auth_rfc() {
     assert_eq!(auth.password(), "open sesame");
 }
 
-#[test]
-fn empty_creds() {
-    let creds = ":";
+#[rstest]
+#[case("", "")]
+#[case("OwO", "")]
+#[case("", "UwU")]
+fn emptiness(#[case] username: &str, #[case] password: &str) {
+    let creds = format!("{username}:{password}");
     let encoded = base64_simd::STANDARD.encode_to_string(creds);
     let val = format!("Basic {encoded}");
 
@@ -26,13 +30,17 @@ fn empty_creds() {
     );
 
     let auth = BasicAuth::extract(&map).unwrap();
-    assert_eq!(auth.username(), "");
-    assert_eq!(auth.password(), "");
+    assert_eq!(auth.username(), username);
+    assert_eq!(auth.password(), password);
 }
 
-#[test]
-fn empty_username() {
-    let creds = ":UwU";
+#[rstest]
+#[case("pwease?? 🥺", "enter?? 👉👈")]
+#[case("hällö 💀", "tschüß 😔")]
+#[case("안녕하세요", "안녕")]
+#[case("🏳️‍⚧️", "🏳‍🌈")]
+fn unicode_works(#[case] username: &str, #[case] password: &str) {
+    let creds = format!("{username}:{password}");
     let encoded = base64_simd::STANDARD.encode_to_string(creds);
     let val = format!("Basic {encoded}");
 
@@ -43,23 +51,6 @@ fn empty_username() {
     );
 
     let auth = BasicAuth::extract(&map).unwrap();
-    assert_eq!(auth.username(), "");
-    assert_eq!(auth.password(), "UwU");
-}
-
-#[test]
-fn empty_password() {
-    let creds = "OwO:";
-    let encoded = base64_simd::STANDARD.encode_to_string(creds);
-    let val = format!("Basic {encoded}");
-
-    let mut map = http::HeaderMap::new();
-    map.insert(
-        http::header::AUTHORIZATION,
-        http::HeaderValue::from_str(val.as_str()).unwrap(),
-    );
-
-    let auth = BasicAuth::extract(&map).unwrap();
-    assert_eq!(auth.username(), "OwO");
-    assert_eq!(auth.password(), "");
+    assert_eq!(auth.username(), username);
+    assert_eq!(auth.password(), password);
 }
