@@ -97,6 +97,15 @@ where
     }
 }
 
+macro_rules! return_err {
+    ($result:expr) => {{
+        match { $result } {
+            Ok(val) => val,
+            Err(err) => return err,
+        }
+    }};
+}
+
 pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
@@ -132,6 +141,18 @@ where
     }
 
     #[inline]
+    fn redirect_uri(&self) -> Result<url::Url, http::Response<()>> {
+        url::Url::parse(&self.client.redirect_uri).map_err(|error| {
+            error!(?error, redirect_uri = ?self.client.redirect_uri, "invalid redirect uri");
+
+            http::Response::builder()
+                .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                .body(())
+                .unwrap()
+        })
+    }
+
+    #[inline]
     #[instrument(skip_all)]
     pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
         let pre_authorization = PreAuthorization {
@@ -140,13 +161,19 @@ where
             pkce_payload: self.pkce_payload.as_ref(),
         };
 
-        let code = self
-            .issuer
-            .issue_code(user_id, pre_authorization)
-            .await
-            .unwrap();
+        let mut url = return_err!(self.redirect_uri());
 
-        let mut url = url::Url::parse(&self.client.redirect_uri).unwrap();
+        let code = match self.issuer.issue_code(user_id, pre_authorization).await {
+            Ok(code) => code,
+            Err(error) => {
+                debug!(?error, "failed to issue code");
+                url.query_pairs_mut()
+                    .append_pair("error", OAuthError::TemporarilyUnavailable.as_ref());
+
+                return Self::build_response(url);
+            }
+        };
+
         url.query_pairs_mut().append_pair("code", &code);
 
         if let Some(state) = self.state {
@@ -160,7 +187,7 @@ where
     #[must_use]
     #[instrument(skip_all)]
     pub fn deny(self) -> http::Response<()> {
-        let mut url = url::Url::parse(&self.client.redirect_uri).unwrap();
+        let mut url = return_err!(self.redirect_uri());
         url.query_pairs_mut()
             .append_pair("error", OAuthError::AccessDenied.as_ref());
 

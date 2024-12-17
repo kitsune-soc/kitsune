@@ -25,7 +25,7 @@ mod headers {
 #[divan::bench_group]
 mod ours {
     use divan::{black_box, black_box_drop};
-    use komainu::extractor::BasicAuth;
+    use komainu::extract::BasicAuth;
 
     #[divan::bench]
     fn rfc_value(b: divan::Bencher<'_, '_>) {

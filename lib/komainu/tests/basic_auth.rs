@@ -1,4 +1,4 @@
-use komainu::extractor::BasicAuth;
+use komainu::extract::BasicAuth;
 use rstest::rstest;
 
 #[test]

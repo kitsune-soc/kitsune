@@ -11,7 +11,7 @@ pub use self::params::ParamStorage;
 mod error;
 
 pub mod authorize;
-pub mod extractor;
+pub mod extract;
 pub mod flow;
 pub mod params;
 
