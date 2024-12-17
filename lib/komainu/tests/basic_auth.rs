@@ -38,6 +38,7 @@ fn emptiness(#[case] username: &str, #[case] password: &str) {
 #[case("pwease?? 🥺", "enter?? 👉👈")]
 #[case("hällö 💀", "tschüß 😔")]
 #[case("안녕하세요", "안녕")]
+#[case("مرحبًا", "مع السلامة")]
 #[case("🏳️‍⚧️", "🏳‍🌈")]
 fn unicode_works(#[case] username: &str, #[case] password: &str) {
     let creds = format!("{username}:{password}");
