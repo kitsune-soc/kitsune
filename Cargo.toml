@@ -251,9 +251,6 @@ opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
     "rt-tokio",
 ] }
 owo-colors = { version = "4.1.0", features = ["supports-colors"] }
-oxide-auth = "0.6.1"
-oxide-auth-async = "0.2.1"
-oxide-auth-axum = "0.5.0"
 password-hash = { version = "0.5.0", features = ["std"] }
 paste = "1.0.15"
 pin-project-lite = "0.2.15"

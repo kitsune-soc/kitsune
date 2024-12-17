@@ -4,7 +4,7 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kitsune-soc/kitsune/rust.yml?style=for-the-badge)
 [![Maintenance: Experimental](https://img.shields.io/badge/maintainance-experimental-blue?style=for-the-badge)](https://gist.github.com/taiki-e/ad73eaea17e2e0372efb76ef6b38f17b)
-[![built with nix](https://builtwithnix.org/badge.svg)](https://builtwithnix.org)
+[![built with nix](https://img.shields.io/badge/builtwith-nix-7d81f7?logo=nixos&logoColor=white&style=for-the-badge)](https://builtwithnix.org)
 
 </div>
 
