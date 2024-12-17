@@ -5,6 +5,7 @@ use std::{
     borrow::{Borrow, Cow},
     collections::HashSet,
     future::Future,
+    ops::Deref,
     str::FromStr,
 };
 use strum::{AsRefStr, Display};
@@ -76,14 +77,15 @@ where
             return Err(GrantError::AccessDenied);
         }
 
-        let scope = query.get("scope").or_invalid_request()?;
-        let redirect_uri = query.get("redirect_uri").or_invalid_request()?;
+        let scope = query.get("scope").map(Deref::deref).unwrap_or("");
         let state = query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;
-        if client.redirect_uri != *redirect_uri {
-            debug!(?client_id, "redirect uri doesn't match");
-            return Err(GrantError::AccessDenied);
+        if let Some(redirect_uri) = query.get("redirect_uri") {
+            if client.redirect_uri != *redirect_uri {
+                debug!(?client_id, "redirect uri doesn't match");
+                return Err(GrantError::AccessDenied);
+            }
         }
 
         let request_scopes = scope.split_whitespace().collect::<HashSet<_>>();
