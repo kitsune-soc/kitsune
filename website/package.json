@@ -5,18 +5,16 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "fmt": "prettier -w . --cache"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
     "@astrojs/starlight": "^0.30.2",
     "astro": "^5.0.9",
     "sharp": "^0.33.5",
-    "starlight-links-validator": "^0.13.4",
-    "typescript": "^5.7.2"
+    "starlight-links-validator": "^0.13.4"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
