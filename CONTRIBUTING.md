@@ -11,7 +11,7 @@ Our tech stack mainly consists of the following:
 - PostgreSQL
 - SvelteKit
 - TypeScript
-- SCSS
+- TailwindCSS
 
 ## Finding issues to fix
 
