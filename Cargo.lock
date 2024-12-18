@@ -432,7 +432,7 @@ dependencies = [
  "smol_str",
  "sonic-rs",
  "speedy-uuid",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tokio",
  "tokio-util",
  "tracing",
@@ -718,7 +718,7 @@ name = "blowocking"
 version = "0.0.1-pre.6"
 dependencies = [
  "rayon",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tokio",
  "tracing",
 ]
@@ -774,7 +774,7 @@ dependencies = [
  "lol_html",
  "once_cell",
  "slab",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
 ]
 
 [[package]]
@@ -2068,7 +2068,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c936bfdafb507ebbf50b8074c54fa31c5be9a1e7e5f467dd659697041407d07c"
 dependencies = [
  "crc32fast",
- "miniz_oxide 0.8.1",
+ "miniz_oxide 0.8.2",
 ]
 
 [[package]]
@@ -2343,7 +2343,7 @@ dependencies = [
  "serde",
  "simdutf8",
  "sonic-rs",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tokio",
  "tracing",
  "triomphe",
@@ -2576,7 +2576,7 @@ dependencies = [
  "rand 0.8.5",
  "rustls",
  "rustls-native-certs",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tinyvec",
  "tokio",
  "tokio-rustls",
@@ -2600,7 +2600,7 @@ dependencies = [
  "rustls",
  "rustls-native-certs",
  "smallvec",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tokio",
  "tokio-rustls",
  "tracing",
@@ -2709,7 +2709,7 @@ dependencies = [
  "pkcs8",
  "ring",
  "scoped-futures",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tick-tock-mock",
  "tokio",
  "tracing",
@@ -2769,9 +2769,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-rustls"
-version = "0.27.3"
+version = "0.27.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08afdbb5c31130e3034af566421053ab03787c640246a446327f550d11bcb333"
+checksum = "f6884a48c6826ec44f524c7456b163cebe9e55a18d7b5e307cb4f100371cc767"
 dependencies = [
  "futures-util",
  "http",
@@ -3000,7 +3000,7 @@ checksum = "8cd653b443fbb9271d937a4b2c1c7489af95c284a56f84d76bbd00eac857cb1c"
 dependencies = [
  "bytes",
  "crc32fast",
- "miniz_oxide 0.8.1",
+ "miniz_oxide 0.8.2",
 ]
 
 [[package]]
@@ -3726,7 +3726,7 @@ dependencies = [
  "serde",
  "sonic-rs",
  "speedy-uuid",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tokio",
  "url",
 ]
@@ -3994,7 +3994,7 @@ dependencies = [
  "sonic-rs",
  "strum",
  "subtle",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "tracing",
  "url",
 ]
@@ -4421,9 +4421,9 @@ dependencies = [
 
 [[package]]
 name = "miniz_oxide"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2ef2593ffb6958c941575cee70c8e257438749971869c4ae5acf6f91a168a61"
+checksum = "4ffbe83022cedc1d264172192511ae958937694cd57ce297164951b8b3568394"
 dependencies = [
  "adler2",
 ]
@@ -4471,9 +4471,9 @@ dependencies = [
  "semver",
  "serde",
  "sonic-rs",
- "thiserror 2.0.7",
- "wasm-encoder 0.221.2",
- "wasmparser 0.221.2",
+ "thiserror 2.0.8",
+ "wasm-encoder 0.222.0",
+ "wasmparser 0.222.0",
  "wat",
 ]
 
@@ -4486,7 +4486,7 @@ dependencies = [
  "colored_json",
  "mrf-manifest",
  "sonic-rs",
- "wasmparser 0.221.2",
+ "wasmparser 0.222.0",
  "wat",
 ]
 
@@ -4967,7 +4967,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b7cafe60d6cf8e62e1b9b2ea516a089c008945bb5a275416789e7db0bc199dc"
 dependencies = [
  "memchr",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "ucd-trie",
 ]
 
@@ -5943,7 +5943,7 @@ name = "schaber"
 version = "0.0.1-pre.6"
 dependencies = [
  "lol_html",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
 ]
 
 [[package]]
@@ -6012,9 +6012,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework"
-version = "3.0.1"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1415a607e92bec364ea2cf9264646dcce0f91e6d65281bd6f2819cca3bf39c8"
+checksum = "81d3f8c9bfcc3cbb6b0179eb57042d75b1582bdc65c3cb95f3fa999509c03cbc"
 dependencies = [
  "bitflags 2.6.0",
  "core-foundation",
@@ -6025,9 +6025,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework-sys"
-version = "2.12.1"
+version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa39c7303dc58b5543c94d22c1766b0d31f2ee58306363ea622b10bbc075eaa2"
+checksum = "1863fd3768cd83c56a7f60faa4dc0d403f1b6df0a38c3c25f44b7894e45370d5"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -6410,7 +6410,7 @@ dependencies = [
  "fred",
  "serde",
  "serde_test",
- "thiserror 2.0.7",
+ "thiserror 2.0.8",
  "uuid",
  "uuid-simd",
 ]
@@ -6702,11 +6702,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.7"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93605438cbd668185516ab499d589afb7ee1859ea3d5fc8f6b0755e1c7443767"
+checksum = "08f5383f3e0071702bf93ab5ee99b52d26936be9dedd9413067cbdcddcb6141a"
 dependencies = [
- "thiserror-impl 2.0.7",
+ "thiserror-impl 2.0.8",
 ]
 
 [[package]]
@@ -6722,9 +6722,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.7"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1d8749b4531af2117677a5fcd12b1348a3fe2b81e36e61ffeac5c4aa3273e36"
+checksum = "f2f357fcec90b3caef6623a099691be676d033b40a058ac95d2a6ade6fa0c943"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7644,12 +7644,12 @@ dependencies = [
 
 [[package]]
 name = "wasm-encoder"
-version = "0.221.2"
+version = "0.222.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c17a3bd88f2155da63a1f2fcb8a56377a24f0b6dfed12733bb5f544e86f690c5"
+checksum = "3432682105d7e994565ef928ccf5856cf6af4ba3dddebedb737f61caed70f956"
 dependencies = [
  "leb128",
- "wasmparser 0.221.2",
+ "wasmparser 0.222.0",
 ]
 
 [[package]]
@@ -7697,9 +7697,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.221.2"
+version = "0.222.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9845c470a2e10b61dd42c385839cdd6496363ed63b5c9e420b5488b77bd22083"
+checksum = "4adf50fde1b1a49c1add6a80d47aea500c88db70551805853aa8b88f3ea27ab5"
 dependencies = [
  "bitflags 2.6.0",
  "hashbrown 0.15.2",
@@ -7953,22 +7953,22 @@ dependencies = [
 
 [[package]]
 name = "wast"
-version = "221.0.2"
+version = "222.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc4470b9de917ba199157d1f0ae104f2ae362be728c43e68c571c7715bd629e"
+checksum = "5ce7191f4b7da0dd300cc32476abae6457154e4625d9b1bc26890828a9a26f6e"
 dependencies = [
  "bumpalo",
  "leb128",
  "memchr",
  "unicode-width 0.2.0",
- "wasm-encoder 0.221.2",
+ "wasm-encoder 0.222.0",
 ]
 
 [[package]]
 name = "wat"
-version = "1.221.2"
+version = "1.222.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b1f3c6d82af47286494c6caea1d332037f5cbeeac82bbf5ef59cb8c201c466e"
+checksum = "8fde61b4b52f9a84ae31b5e8902a2cd3162ea45d8bf564c729c3288fe52f4334"
 dependencies = [
  "wast",
 ]
