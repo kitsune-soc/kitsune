@@ -14,7 +14,7 @@
     "@astrojs/starlight": "^0.30.2",
     "astro": "^5.0.9",
     "sharp": "^0.33.5",
-    "starlight-links-validator": "^0.13.4"
+    "starlight-links-validator": "^0.14.0"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
