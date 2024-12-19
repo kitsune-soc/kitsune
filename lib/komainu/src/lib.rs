@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use self::{error::Error, flow::pkce};
+use self::{error::Error, flow::pkce, scope::Scope};
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 
@@ -16,20 +16,20 @@ pub struct Authorization<'a> {
     pub code: Cow<'a, str>,
     pub client: Client<'a>,
     pub pkce_payload: Option<pkce::Payload<'a>>,
-    pub scopes: Cow<'a, [Cow<'a, str>]>,
+    pub scopes: Scope,
 }
 
 pub struct AuthInstruction<'a, 'b> {
     pub client: &'b Client<'a>,
     pub pkce_payload: Option<&'b pkce::Payload<'a>>,
-    pub scopes: &'b [&'b str],
+    pub scopes: &'b Scope,
 }
 
 #[derive(Clone)]
 pub struct Client<'a> {
     pub client_id: &'a str,
     pub client_secret: &'a str,
-    pub scopes: Cow<'a, [Cow<'a, str>]>,
+    pub scopes: Scope,
     pub redirect_uri: Cow<'a, str>,
 }
 

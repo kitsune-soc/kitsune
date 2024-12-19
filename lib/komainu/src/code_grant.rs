@@ -84,10 +84,9 @@ where
         }
 
         let request_scopes = scope.parse().unwrap();
-        let client_scopes = client.scopes.iter().map(Deref::deref).collect::<Scope>();
 
         // Check whether the client can actually perform the grant
-        if !client_scopes.can_perform(&request_scopes) {
+        if !client.scopes.can_perform(&request_scopes) {
             debug!(?client_id, "client can't issue the requested scopes");
             return Err(GrantError::AccessDenied);
         }
@@ -181,7 +180,7 @@ where
 
     #[inline]
     #[instrument(skip_all)]
-    pub async fn accept(self, user_id: I::UserId, scopes: &[&str]) -> http::Response<()> {
+    pub async fn accept(self, user_id: I::UserId, scopes: &Scope) -> http::Response<()> {
         let pre_authorization = AuthInstruction {
             client: &self.client,
             scopes,

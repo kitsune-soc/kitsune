@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Default, Deserialize)]
+#[derive(Clone, Default, Deserialize)]
 #[serde(transparent)]
 pub struct Scope {
     inner: HashSet<CompactString>,
@@ -15,6 +15,7 @@ pub struct Scope {
 impl FromStr for Scope {
     type Err = Infallible;
 
+    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(s.split_whitespace().collect())
     }
