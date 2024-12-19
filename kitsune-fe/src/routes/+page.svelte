@@ -2,9 +2,10 @@
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+
 	import type { PageData } from './$houdini';
-	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading?raw&width=2em&height=2em';
 	import { _registerSchema } from './+page';
+	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading?raw&width=2em&height=2em';
 
 	const { data }: { data: PageData } = $props();
 
