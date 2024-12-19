@@ -49,6 +49,6 @@ pub enum TokenResponse<'a> {
         expires_in: u64,
     },
     Error {
-        errorr: Error,
+        error: Error,
     },
 }
