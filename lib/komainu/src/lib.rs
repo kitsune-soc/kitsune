@@ -5,7 +5,7 @@ use self::flow::pkce;
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 
-pub use self::error::{Error, Result};
+pub use self::error::Error;
 pub use self::params::ParamStorage;
 
 mod error;
@@ -54,5 +54,5 @@ pub trait ClientExtractor {
         &self,
         client_id: &str,
         client_secret: Option<&str>,
-    ) -> impl Future<Output = Result<Client<'_>>> + Send;
+    ) -> impl Future<Output = Result<Client<'_>, Error>> + Send;
 }

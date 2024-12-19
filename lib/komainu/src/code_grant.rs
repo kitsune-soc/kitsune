@@ -72,7 +72,7 @@ where
 
         let client_id = query.get("client_id").or_invalid_request()?;
         let response_type = query.get("response_type").or_invalid_request()?;
-        let scope = query.get("scope").map(Deref::deref).unwrap_or("");
+        let scope = query.get("scope").map_or("", Deref::deref);
         let state = query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;

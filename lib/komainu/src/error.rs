@@ -2,8 +2,6 @@ use thiserror::Error;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
-pub type Result<T, E = Error> = std::result::Result<T, E>;
-
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Malformed body")]
@@ -24,12 +22,3 @@ impl Error {
         Self::Query(err.into())
     }
 }
-
-macro_rules! ensure {
-    ($cond:expr, $err:expr) => {{
-        if !{ $cond } {
-            return Err($err);
-        }
-    }};
-}
-pub(crate) use ensure;

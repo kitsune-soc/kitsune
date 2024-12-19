@@ -1,4 +1,4 @@
-use komainu::flow::{PkceMethod, PkcePayload};
+use komainu::flow::pkce;
 use std::borrow::Cow;
 
 #[test]
@@ -25,8 +25,8 @@ fn verify_rfc_payload_s256() {
         challenge_base64
     );
 
-    let payload = PkcePayload {
-        method: PkceMethod::S256,
+    let payload = pkce::Payload {
+        method: pkce::Method::S256,
         challenge: Cow::Borrowed(challenge_base64),
     };
     payload.verify(verifier_base64).unwrap();

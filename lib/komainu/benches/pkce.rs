@@ -1,17 +1,17 @@
 use divan::black_box;
-use komainu::flow::{PkceMethod, PkcePayload};
+use komainu::flow::pkce;
 use std::borrow::Cow;
 
 #[global_allocator]
 static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
 #[divan::bench]
-fn s256() -> komainu::Result<()> {
+fn s256() -> Result<(), komainu::flow::FlowError> {
     let verifier_base64 = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
     let challenge_base64 = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 
-    let payload = PkcePayload {
-        method: black_box(PkceMethod::S256),
+    let payload = pkce::Payload {
+        method: black_box(pkce::Method::S256),
         challenge: black_box(Cow::Borrowed(challenge_base64)),
     };
 
@@ -19,11 +19,11 @@ fn s256() -> komainu::Result<()> {
 }
 
 #[divan::bench]
-fn none() -> komainu::Result<()> {
+fn none() -> Result<(), komainu::flow::FlowError> {
     let value = "arbitrary value";
 
-    let payload = PkcePayload {
-        method: black_box(PkceMethod::None),
+    let payload = pkce::Payload {
+        method: black_box(pkce::Method::None),
         challenge: black_box(Cow::Borrowed(value)),
     };
 

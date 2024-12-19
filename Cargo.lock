@@ -3984,6 +3984,7 @@ dependencies = [
  "divan",
  "headers",
  "http",
+ "insta",
  "memchr",
  "rstest",
  "serde",

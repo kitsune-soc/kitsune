@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    params::ParamStorage,
-};
+use crate::{error::Error, params::ParamStorage};
 use bytes::Bytes;
 use memchr::memchr;
 
@@ -9,7 +6,7 @@ static URL_ENCODED_CONTENT_TYPE: http::HeaderValue =
     http::HeaderValue::from_static("application/x-www-form-urlencoded");
 
 #[inline]
-pub fn body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T>
+pub fn body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T, Error>
 where
     T: serde::Deserialize<'a>,
 {
