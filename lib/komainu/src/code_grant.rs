@@ -1,5 +1,5 @@
 use crate::{
-    error::Error, flow::pkce, params::ParamStorage, primitive::Scopes, AuthInstruction, Client,
+    error::Error, flow::pkce, params::ParamStorage, scope::Scope, AuthInstruction, Client,
     ClientExtractor,
 };
 use std::{borrow::Cow, future::Future, ops::Deref, str::FromStr};
@@ -83,8 +83,8 @@ where
             return Err(GrantError::AccessDenied);
         }
 
-        let request_scopes = scope.split_whitespace().collect::<Scopes>();
-        let client_scopes = client.scopes.iter().map(Deref::deref).collect::<Scopes>();
+        let request_scopes = scope.parse().unwrap();
+        let client_scopes = client.scopes.iter().map(Deref::deref).collect::<Scope>();
 
         // Check whether the client can actually perform the grant
         if !client_scopes.can_perform(&request_scopes) {

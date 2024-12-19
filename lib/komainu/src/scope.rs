@@ -8,11 +8,11 @@ use std::{
 
 #[derive(Default, Deserialize)]
 #[serde(transparent)]
-pub struct Scopes {
+pub struct Scope {
     inner: HashSet<CompactString>,
 }
 
-impl FromStr for Scopes {
+impl FromStr for Scope {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -20,7 +20,7 @@ impl FromStr for Scopes {
     }
 }
 
-impl Scopes {
+impl Scope {
     #[inline]
     #[must_use]
     pub fn new() -> Self {
@@ -58,24 +58,24 @@ impl Scopes {
     }
 }
 
-impl<Item> FromIterator<Item> for Scopes
+impl<Item> FromIterator<Item> for Scope
 where
     Item: Into<CompactString>,
 {
     #[inline]
     fn from_iter<T: IntoIterator<Item = Item>>(iter: T) -> Self {
-        let mut collection = Self::new();
-        for item in iter {
-            collection.insert(item.into());
-        }
-        collection
+        iter.into_iter().fold(Scope::new(), |mut acc, item| {
+            acc.insert(item.into());
+            acc
+        })
     }
 }
 
-impl IntoIterator for Scopes {
+impl IntoIterator for Scope {
     type Item = CompactString;
     type IntoIter = hash_set::IntoIter<Self::Item>;
 
+    #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
     }

@@ -10,7 +10,7 @@ pub mod error;
 pub mod extract;
 pub mod flow;
 pub mod params;
-pub mod primitive;
+pub mod scope;
 
 pub struct Authorization<'a> {
     pub code: Cow<'a, str>,
