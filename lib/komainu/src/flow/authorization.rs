@@ -1,6 +1,6 @@
 use crate::{
     extract::ClientCredentials,
-    flow::{FlowError, OptionExt, TokenResponse},
+    flow::{self, OptionExt, TokenResponse},
     params::ParamStorage,
     Authorization, ClientExtractor,
 };
@@ -11,12 +11,12 @@ pub trait Issuer {
     fn load_authorization(
         &self,
         auth_code: &str,
-    ) -> impl Future<Output = Result<Option<Authorization<'_>>, FlowError>> + Send;
+    ) -> impl Future<Output = Result<Option<Authorization<'_>>, flow::Error>> + Send;
 
     fn issue_token(
         &self,
         authorization: &Authorization<'_>,
-    ) -> impl Future<Output = Result<TokenResponse<'_>, FlowError>> + Send;
+    ) -> impl Future<Output = Result<TokenResponse<'_>, flow::Error>> + Send;
 }
 
 #[instrument(skip_all)]
@@ -24,7 +24,7 @@ pub async fn perform<CE, I>(
     req: http::Request<Bytes>,
     client_extractor: CE,
     token_issuer: I,
-) -> Result<http::Response<Bytes>, FlowError>
+) -> Result<http::Response<Bytes>, flow::Error>
 where
     CE: ClientExtractor,
     I: Issuer,
@@ -44,7 +44,7 @@ where
 
     if *grant_type != "authorization_code" {
         error!(?client_id, "grant_type is not authorization_code");
-        return Err(FlowError::UnsupportedGrantType);
+        return Err(flow::Error::UnsupportedGrantType);
     }
 
     let client = client_extractor
@@ -53,16 +53,16 @@ where
 
     if client.redirect_uri != *redirect_uri {
         error!(?client_id, "redirect uri doesn't match");
-        return Err(FlowError::InvalidClient);
+        return Err(flow::Error::InvalidClient);
     }
 
     let Some(authorization) = token_issuer.load_authorization(code).await? else {
-        return Err(FlowError::InvalidGrant);
+        return Err(flow::Error::InvalidGrant);
     };
 
     // This check is constant time :3
     if client != authorization.client {
-        return Err(FlowError::UnauthorizedClient);
+        return Err(flow::Error::UnauthorizedClient);
     }
 
     if let Some(ref pkce) = authorization.pkce_payload {

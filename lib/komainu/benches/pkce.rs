@@ -6,7 +6,7 @@ use std::borrow::Cow;
 static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 
 #[divan::bench]
-fn s256() -> Result<(), komainu::flow::FlowError> {
+fn s256() -> Result<(), komainu::flow::Error> {
     let verifier_base64 = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
     let challenge_base64 = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 
@@ -19,7 +19,7 @@ fn s256() -> Result<(), komainu::flow::FlowError> {
 }
 
 #[divan::bench]
-fn none() -> Result<(), komainu::flow::FlowError> {
+fn none() -> Result<(), komainu::flow::Error> {
     let value = "arbitrary value";
 
     let payload = pkce::Payload {

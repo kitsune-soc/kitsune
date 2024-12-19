@@ -8,20 +8,20 @@ pub mod pkce;
 pub mod refresh;
 
 trait OptionExt<T> {
-    fn or_invalid_request(self) -> Result<T, FlowError>;
+    fn or_invalid_request(self) -> Result<T, Error>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
     #[inline]
-    fn or_invalid_request(self) -> Result<T, FlowError> {
-        self.ok_or(FlowError::InvalidRequest)
+    fn or_invalid_request(self) -> Result<T, Error> {
+        self.ok_or(Error::InvalidRequest)
     }
 }
 
 #[derive(Debug, Display, Error, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-pub enum FlowError {
+pub enum Error {
     InvalidRequest,
     InvalidClient,
     InvalidGrant,
@@ -49,6 +49,6 @@ pub enum TokenResponse<'a> {
         expires_in: u64,
     },
     Error {
-        errorr: FlowError,
+        errorr: Error,
     },
 }

@@ -1,16 +1,12 @@
 #[macro_use]
 extern crate tracing;
 
-use self::flow::pkce;
+use self::{error::Error, flow::pkce};
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 
-pub use self::error::Error;
-pub use self::params::ParamStorage;
-
-mod error;
-
 pub mod code_grant;
+pub mod error;
 pub mod extract;
 pub mod flow;
 pub mod params;

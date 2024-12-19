@@ -1,6 +1,6 @@
 use crate::{
     extract::ClientCredentials,
-    flow::{FlowError, OptionExt, TokenResponse},
+    flow::{self, OptionExt, TokenResponse},
     params::ParamStorage,
     Client, ClientExtractor,
 };
@@ -12,7 +12,7 @@ pub trait Issuer {
         &self,
         client: &Client<'_>,
         refresh_token: &str,
-    ) -> impl Future<Output = Result<TokenResponse<'_>, FlowError>> + Send;
+    ) -> impl Future<Output = Result<TokenResponse<'_>, flow::Error>> + Send;
 }
 
 #[instrument(skip_all)]
@@ -20,7 +20,7 @@ pub async fn perform<CE, I>(
     req: http::Request<Bytes>,
     client_extractor: CE,
     token_issuer: I,
-) -> Result<http::Response<Bytes>, FlowError>
+) -> Result<http::Response<Bytes>, flow::Error>
 where
     CE: ClientExtractor,
     I: Issuer,
@@ -39,7 +39,7 @@ where
 
     if *grant_type != "refresh_token" {
         debug!(?client_id, "grant_type is not refresh_token");
-        return Err(FlowError::UnsupportedGrantType);
+        return Err(flow::Error::UnsupportedGrantType);
     }
 
     let client = client_extractor
