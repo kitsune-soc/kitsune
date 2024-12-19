@@ -112,6 +112,7 @@ chrono = { version = "0.4.39", default-features = false }
 clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
+compact_str = { version = "0.8.0", features = ["serde"] }
 const_format = "0.2.34"
 const-oid = { version = "0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }

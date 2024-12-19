@@ -19,8 +19,8 @@ pub trait Issuer {
 pub async fn perform<CE, I>(
     req: http::Request<Bytes>,
     client_extractor: CE,
-    token_issuer: I,
-) -> Result<http::Response<Bytes>, flow::Error>
+    token_issuer: &I,
+) -> Result<TokenResponse<'_>, flow::Error>
 where
     CE: ClientExtractor,
     I: Issuer,
@@ -46,15 +46,5 @@ where
         .extract(client_id, Some(client_secret))
         .await?;
 
-    let token = token_issuer.issue_token(&client, refresh_token).await?;
-    let body = sonic_rs::to_vec(&token).unwrap();
-
-    debug!("token successfully issued. building response");
-
-    let response = http::Response::builder()
-        .status(http::StatusCode::OK)
-        .body(body.into())
-        .unwrap();
-
-    Ok(response)
+    token_issuer.issue_token(&client, refresh_token).await
 }

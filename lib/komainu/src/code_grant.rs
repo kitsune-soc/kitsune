@@ -1,13 +1,8 @@
 use crate::{
-    error::Error, flow::pkce, params::ParamStorage, AuthInstruction, Client, ClientExtractor,
+    error::Error, flow::pkce, params::ParamStorage, primitive::Scopes, AuthInstruction, Client,
+    ClientExtractor,
 };
-use std::{
-    borrow::{Borrow, Cow},
-    collections::HashSet,
-    future::Future,
-    ops::Deref,
-    str::FromStr,
-};
+use std::{borrow::Cow, future::Future, ops::Deref, str::FromStr};
 use strum::{AsRefStr, Display};
 use thiserror::Error;
 
@@ -88,15 +83,12 @@ where
             return Err(GrantError::AccessDenied);
         }
 
-        let request_scopes = scope.split_whitespace().collect::<HashSet<_>>();
-        let client_scopes = client
-            .scopes
-            .iter()
-            .map(Borrow::borrow)
-            .collect::<HashSet<_>>();
+        let request_scopes = scope.split_whitespace().collect::<Scopes>();
+        let client_scopes = client.scopes.iter().map(Deref::deref).collect::<Scopes>();
 
-        if !request_scopes.is_subset(&client_scopes) {
-            debug!(?client_id, "scopes aren't a subset");
+        // Check whether the client can actually perform the grant
+        if !client_scopes.can_perform(&request_scopes) {
+            debug!(?client_id, "client can't issue the requested scopes");
             return Err(GrantError::AccessDenied);
         }
 

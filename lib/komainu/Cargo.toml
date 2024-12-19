@@ -16,6 +16,7 @@ harness = false
 [dependencies]
 base64-simd.workspace = true
 bytes.workspace = true
+compact_str.workspace = true
 http.workspace = true
 memchr.workspace = true
 serde.workspace = true
