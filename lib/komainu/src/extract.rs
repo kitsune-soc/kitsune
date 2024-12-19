@@ -105,7 +105,6 @@ impl BasicAuth {
 
             String::from_utf8_unchecked(buffer)
         };
-
         let delimiter_pos = memchr(b':', buffer.as_bytes())?;
 
         Some(Self {
@@ -117,7 +116,7 @@ impl BasicAuth {
     #[inline]
     #[must_use]
     pub fn username(&self) -> &str {
-        // SAFETY: The delimiter was previously found via `str::find`, so the index is guaranteed to be within boundaries
+        // SAFETY: The delimiter was previously found via `memchr`, so the index is guaranteed to be within boundaries
         #[allow(unsafe_code)]
         unsafe {
             self.buffer.get_unchecked(..self.delimiter_pos)
@@ -127,7 +126,7 @@ impl BasicAuth {
     #[inline]
     #[must_use]
     pub fn password(&self) -> &str {
-        // SAFETY: The delimiter was previously found via `str::find`, so the index is guaranteed to be within boundaries
+        // SAFETY: The delimiter was previously found via `memchr`, so the index is guaranteed to be within boundaries
         #[allow(unsafe_code)]
         unsafe {
             self.buffer.get_unchecked((self.delimiter_pos + 1)..)

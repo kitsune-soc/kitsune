@@ -3264,7 +3264,6 @@ dependencies = [
  "axum-flash",
  "blowocking",
  "bytes",
- "chrono",
  "clap",
  "color-eyre",
  "cursiv",

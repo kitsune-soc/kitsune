@@ -108,7 +108,6 @@ base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.9.0"
-chrono = { version = "0.4.39", default-features = false }
 clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"

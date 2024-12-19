@@ -24,7 +24,6 @@ axum-extra.workspace = true
 axum-flash.workspace = true
 blowocking.workspace = true
 bytes.workspace = true
-chrono.workspace = true
 clap.workspace = true
 color-eyre.workspace = true
 cursiv.workspace = true

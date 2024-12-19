@@ -1,5 +1,4 @@
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -31,24 +30,6 @@ pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
-
-#[inline]
-fn timestamp_to_chrono(ts: iso8601_timestamp::Timestamp) -> chrono::DateTime<Utc> {
-    let secs = ts
-        .duration_since(iso8601_timestamp::Timestamp::UNIX_EPOCH)
-        .whole_seconds();
-
-    chrono::DateTime::from_timestamp(secs, ts.nanosecond()).unwrap()
-}
-
-#[inline]
-fn chrono_to_timestamp(ts: chrono::DateTime<Utc>) -> iso8601_timestamp::Timestamp {
-    time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
-        .unwrap()
-        .replace_nanosecond(ts.timestamp_subsec_nanos())
-        .unwrap()
-        .into()
-}
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString, Serialize)]
 #[strum(serialize_all = "lowercase")]
