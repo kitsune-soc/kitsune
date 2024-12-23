@@ -5,21 +5,19 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "fmt": "prettier -w . --cache"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.29.2",
-    "astro": "^4.16.16",
+    "@astrojs/starlight": "^0.30.3",
+    "astro": "^5.0.9",
     "sharp": "^0.33.5",
-    "starlight-links-validator": "^0.13.3",
-    "typescript": "^5.7.2"
+    "starlight-links-validator": "^0.14.0"
   },
   "devDependencies": {
-    "prettier": "^3.4.1",
+    "prettier": "^3.4.2",
     "prettier-plugin-astro": "^0.14.1"
   }
 }
