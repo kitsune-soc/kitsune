@@ -14,7 +14,7 @@ struct TemplateDir;
 fn embed_loader(path: &str) -> Result<Option<String>, minijinja::Error> {
     let maybe_data = TemplateDir::get(path).map(|embedded_file| embedded_file.data);
     let maybe_template = maybe_data
-        .map(|data| str::from_utf8(&data).map(ToString::to_string))
+        .map(|data| simdutf8::basic::from_utf8(&data).map(ToString::to_string))
         .transpose()
         .map_err(|error| {
             minijinja::Error::new(minijinja::ErrorKind::CannotDeserialize, error.to_string())

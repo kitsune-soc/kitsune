@@ -83,7 +83,7 @@ resolver = "2"
 ahash = "0.8.11"
 aliri_braid = "0.4.0"
 arc-swap = "1.7.1"
-argh = "0.1.12"
+argh = "0.1.13"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.13", default-features = false, features = [
     "graphiql",
@@ -149,7 +149,7 @@ futures-test = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
-garde = { version = "0.20.0", features = [
+garde = { version = "0.21.0", features = [
     "derive",
     "email",
     "email-idna",
@@ -177,7 +177,7 @@ hyper-util = { version = "0.1.10", features = [
     "http2",
     "tokio",
 ] }
-hyper-rustls = { version = "0.27.4", default-features = false, features = [
+hyper-rustls = { version = "0.27.5", default-features = false, features = [
     "http1",
     "http2",
     "logging",
@@ -291,7 +291,7 @@ schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.24", features = ["serde"] }
 serde = { version = "1.0.216", features = ["derive"] }
-serde_json = "1.0.133"
+serde_json = "1.0.134"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
 serde_with = { version = "3.11.0", default-features = false, features = [
@@ -305,10 +305,10 @@ smol_str = { version = "0.3.2", features = ["serde"] }
 sonic-rs = "=0.3.14"
 strum = { version = "0.26.3", features = ["derive"] }
 subtle = "2.6.1"
-syn = { version = "2.0.90", features = ["full"] }
+syn = { version = "2.0.91", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.14.0"
-thiserror = "2.0.8"
+thiserror = "2.0.9"
 time = "0.3.37"
 tokio = { version = "1.42.0", features = ["full"] }
 tokio-postgres = "0.7.12"
@@ -342,7 +342,7 @@ triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
 ] }
 typed-builder = "0.20.0"
-typetag = "0.2.18"
+typetag = "0.2.19"
 unsize = "1.1.0"
 ureq = "2.12.1"
 url = "2.5.4"
@@ -352,7 +352,7 @@ uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.222.0"
 wasmparser = "0.222.0"
-wasmtime = { version = "27.0.0", default-features = false, features = [
+wasmtime = { version = "28.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -361,7 +361,7 @@ wasmtime = { version = "27.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "27.0.0", default-features = false }
+wasmtime-wasi = { version = "28.0.0", default-features = false }
 wat = "1.222.0"
 whatlang = "0.16.4"
 whichlang = "0.1.0"
