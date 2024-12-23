@@ -29,35 +29,33 @@ fn init_environment() -> minijinja::Environment<'static> {
     environment
 }
 
-fn spawn_watcher() {
-    let watcher = notify_debouncer_full::new_debouncer(
-        Duration::from_secs(1),
-        None,
-        |events: DebounceEventResult| {
-            let Ok(events) = events else {
-                return;
-            };
+fn event_handler(events: DebounceEventResult) {
+    let Ok(events) = events else {
+        return;
+    };
 
-            for event in events {
-                if matches!(
-                    event.event,
-                    notify::Event {
-                        kind: notify::EventKind::Create(..)
-                            | notify::EventKind::Modify(..)
-                            | notify::EventKind::Remove(..),
-                        ..
-                    }
-                ) {
-                    debug!(?event.paths, "reloading templates");
-
-                    if let Some(env) = ENVIRONMENT.get() {
-                        env.store(Arc::new(init_environment()));
-                    }
-                }
+    for event in events {
+        if matches!(
+            event.event,
+            notify::Event {
+                kind: notify::EventKind::Create(..)
+                    | notify::EventKind::Modify(..)
+                    | notify::EventKind::Remove(..),
+                ..
             }
-        },
-    )
-    .unwrap();
+        ) {
+            debug!(?event.paths, "reloading templates");
+
+            if let Some(env) = ENVIRONMENT.get() {
+                env.store(Arc::new(init_environment()));
+            }
+        }
+    }
+}
+
+fn spawn_watcher() {
+    let watcher =
+        notify_debouncer_full::new_debouncer(Duration::from_secs(1), None, event_handler).unwrap();
 
     let mut watcher = ManuallyDrop::new(watcher);
     let template_dir = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/templates"));
