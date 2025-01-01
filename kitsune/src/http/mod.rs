@@ -2,6 +2,7 @@ use crate::state::Zustand;
 use axum::{
     body::HttpBody,
     response::{Html, IntoResponse},
+    serve::ListenerExt,
 };
 use bytes::Bytes;
 use color_eyre::eyre;
@@ -89,10 +90,15 @@ pub async fn run(
     shutdown_signal: crate::signal::Receiver,
 ) -> eyre::Result<()> {
     let router = router::create(state, &server_config)?;
-    let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
+    let listener = TcpListener::bind(("0.0.0.0", server_config.port))
+        .await?
+        .tap_io(|stream| {
+            if let Err(error) = stream.set_nodelay(true) {
+                trace!(?error, "failed to set TCP_NODELAY for connection");
+            }
+        });
 
     axum::serve(listener, router)
-        .tcp_nodelay(true)
         .with_graceful_shutdown(shutdown_signal.wait())
         .await?;
 
