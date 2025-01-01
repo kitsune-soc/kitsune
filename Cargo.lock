@@ -1468,7 +1468,6 @@ name = "cursiv"
 version = "0.0.1-pre.6"
 dependencies = [
  "aliri_braid",
- "async-trait",
  "axum-core 0.5.0",
  "blake3",
  "cookie",

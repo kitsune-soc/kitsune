@@ -18,7 +18,6 @@ triomphe.workspace = true
 zeroize.workspace = true
 
 # `axum` feature
-async-trait = { workspace = true, optional = true }
 axum-core = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -26,7 +25,7 @@ futures-test.workspace = true
 tower.workspace = true
 
 [features]
-axum = ["dep:async-trait", "dep:axum-core"]
+axum = ["dep:axum-core"]
 
 [lints]
 workspace = true
