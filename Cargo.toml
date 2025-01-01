@@ -82,7 +82,7 @@ resolver = "2"
 ahash = "0.8.11"
 aliri_braid = "0.4.0"
 arc-swap = "1.7.1"
-argh = "0.1.12"
+argh = "0.1.13"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.13", default-features = false, features = [
     "graphiql",
@@ -94,9 +94,9 @@ async-graphql = { version = "7.0.13", default-features = false, features = [
 async-graphql-axum = "7.0.13"
 async-trait = "0.1.83"
 asynk-strim = "0.1.2"
-axum = { version = "0.7.9", features = ["macros", "multipart"] }
-axum-core = "0.4.5"
-axum-extra = { version = "0.9.6", features = [
+axum = { version = "0.8.1", features = ["macros", "multipart"] }
+axum-core = "0.5.0"
+axum-extra = { version = "0.10.0", features = [
     "cookie",
     "cookie-signed",
     "query",
@@ -136,7 +136,7 @@ either = { version = "1.13.0", default-features = false }
 enum_dispatch = "0.3.13"
 envy = "0.4.2"
 eyre = "0.6.12"
-fred = { version = "10.0.1", features = [
+fred = { version = "10.0.3", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
@@ -148,7 +148,7 @@ futures-test = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
-garde = { version = "0.20.0", features = [
+garde = { version = "0.21.0", features = [
     "derive",
     "email",
     "email-idna",
@@ -169,14 +169,14 @@ http-body = "1.0.1"
 http-body-util = "0.1.2"
 httpdate = "1.0.3"
 human-size = { version = "0.4.3", features = ["serde"] }
-hyper = "1.5.1"
+hyper = "1.5.2"
 hyper-util = { version = "0.1.10", features = [
     "client-legacy",
     "http1",
     "http2",
     "tokio",
 ] }
-hyper-rustls = { version = "0.27.3", default-features = false, features = [
+hyper-rustls = { version = "0.27.5", default-features = false, features = [
     "http1",
     "http2",
     "logging",
@@ -185,18 +185,18 @@ hyper-rustls = { version = "0.27.3", default-features = false, features = [
     "tls12",
 ] }
 icu_normalizer = "1.5.0"
-img-parts = "0.3.1"
+img-parts = "0.3.2"
 insta = { version = "1.41.1", default-features = false, features = [
     "glob",
     "json",
 ] }
-iso8601-timestamp = { version = "0.3.2", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.3.3", features = ["diesel-pg"] }
 isolang = { version = "2.4.0", features = [
     "english_names",
     "list_languages",
     "serde",
 ] }
-itertools = { version = "0.13.0", default-features = false }
+itertools = { version = "0.14.0", default-features = false }
 lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "efb4288d9b107b48609802193d57b29f7ae395a1", default-features = false }
 leb128 = "0.2.5"
 lettre = { version = "0.11.11", default-features = false, features = [
@@ -264,17 +264,17 @@ pulldown-cmark = { version = "0.12.2", default-features = false, features = [
     "html",
     "simd",
 ] }
-quick-xml = { version = "0.37.1", features = ["serialize"] }
-quote = "1.0.37"
+quick-xml = { version = "0.37.2", features = ["serialize"] }
+quote = "1.0.38"
 rand = "0.8.5"
 rand_xorshift = "0.3.0"
 rayon = "1.10.0"
-redb = { version = "2.3.0", features = ["logging"] }
+redb = { version = "2.4.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
 ring = { version = "0.17.8", features = ["std"] }
 rsa = "0.9.7"
-rstest = { version = "0.23.0", default-features = false }
+rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 rustc-hash = "2.1.0"
 rustls = { version = "0.23.20", default-features = false, features = [
@@ -284,19 +284,19 @@ rustls = { version = "0.23.20", default-features = false, features = [
     "tls12",
 ] }
 rustls-native-certs = "0.8.1"
-rusty-s3 = "0.5.0"
+rusty-s3 = "0.7.0"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
     "perf-inline",
 ] }
 schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
-semver = { version = "1.0.23", features = ["serde"] }
-serde = { version = "1.0.216", features = ["derive"] }
-serde_json = "1.0.133"
+semver = { version = "1.0.24", features = ["serde"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.134"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
-serde_with = { version = "3.11.0", default-features = false, features = [
+serde_with = { version = "3.12.0", default-features = false, features = [
     "alloc",
     "macros",
 ] }
@@ -307,10 +307,10 @@ smol_str = { version = "0.3.2", features = ["serde"] }
 sonic-rs = "=0.3.14"
 strum = { version = "0.26.3", features = ["derive"] }
 subtle = "2.6.1"
-syn = { version = "2.0.90", features = ["full"] }
+syn = { version = "2.0.94", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.14.0"
-thiserror = "2.0.6"
+thiserror = "2.0.9"
 time = "0.3.37"
 tokio = { version = "1.42.0", features = ["full"] }
 tokio-postgres = "0.7.12"
@@ -344,7 +344,7 @@ triomphe = { version = "0.1.14", default-features = false, features = [
     "unsize",
 ] }
 typed-builder = "0.20.0"
-typetag = "0.2.18"
+typetag = "0.2.19"
 unsize = "1.1.0"
 ureq = "2.12.1"
 url = "2.5.4"
@@ -352,9 +352,9 @@ urlencoding = "2.1.3"
 uuid = { version = "1.11.0", features = ["fast-rng", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.221.2"
-wasmparser = "0.221.2"
-wasmtime = { version = "27.0.0", default-features = false, features = [
+wasm-encoder = "0.222.0"
+wasmparser = "0.222.0"
+wasmtime = { version = "28.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
@@ -363,8 +363,8 @@ wasmtime = { version = "27.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "27.0.0", default-features = false }
-wat = "1.221.2"
+wasmtime-wasi = { version = "28.0.0", default-features = false }
+wat = "1.222.0"
 whatlang = "0.16.4"
 whichlang = "0.1.0"
 wit-bindgen = "0.36.0"
@@ -457,6 +457,13 @@ version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
 
 [patch.crates-io]
+# axum upgrade
+async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+axum-flash = { git = "https://github.com/aumetra/axum-flash.git", branch = "main" }
+oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
+oxide-auth-axum = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
+
 # Fix unmaintained advisory
 notify-types = { git = "https://github.com/notify-rs/notify.git", rev = "aacd41642345cb66b327d4eb2cdc15ba4016daaa" }
 # SIMD runtime detection and generic I/O wrapper
