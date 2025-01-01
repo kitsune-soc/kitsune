@@ -458,11 +458,11 @@ license = "AGPL-3.0-or-later"
 
 [patch.crates-io]
 # axum upgrade
-async-graphql = { git = "https://github.com/async-graphql/async-graphql.git", rev = "3132cd08367466f9ebff58c8edb77a60842f339d" }
-async-graphql-axum = { git = "https://github.com/async-graphql/async-graphql.git", rev = "3132cd08367466f9ebff58c8edb77a60842f339d" }
-axum-flash = { git = "https://github.com/davidpdrsn/axum-flash.git", rev = "0832703a0ca83b1ee35daaa8a199f68c2bcb4a90" }
-oxide-auth = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "88b02a676dc36dc0c77bf828a952a9e368558268" }
-oxide-auth-axum = { git = "https://github.com/HeroicKatora/oxide-auth.git", rev = "88b02a676dc36dc0c77bf828a952a9e368558268" }
+async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+axum-flash = { git = "https://github.com/aumetra/axum-flash.git", branch = "main" }
+oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
+oxide-auth-axum = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
 
 # Fix unmaintained advisory
 notify-types = { git = "https://github.com/notify-rs/notify.git", rev = "aacd41642345cb66b327d4eb2cdc15ba4016daaa" }

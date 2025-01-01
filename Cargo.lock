@@ -269,7 +269,7 @@ dependencies = [
 [[package]]
 name = "async-graphql"
 version = "7.0.13"
-source = "git+https://github.com/async-graphql/async-graphql.git?rev=3132cd08367466f9ebff58c8edb77a60842f339d#3132cd08367466f9ebff58c8edb77a60842f339d"
+source = "git+https://github.com/aumetra/async-graphql.git?branch=axum-0.8#3132cd08367466f9ebff58c8edb77a60842f339d"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -304,7 +304,7 @@ dependencies = [
 [[package]]
 name = "async-graphql-axum"
 version = "7.0.13"
-source = "git+https://github.com/async-graphql/async-graphql.git?rev=3132cd08367466f9ebff58c8edb77a60842f339d#3132cd08367466f9ebff58c8edb77a60842f339d"
+source = "git+https://github.com/aumetra/async-graphql.git?branch=axum-0.8#3132cd08367466f9ebff58c8edb77a60842f339d"
 dependencies = [
  "async-graphql",
  "axum 0.8.1",
@@ -320,7 +320,7 @@ dependencies = [
 [[package]]
 name = "async-graphql-derive"
 version = "7.0.13"
-source = "git+https://github.com/async-graphql/async-graphql.git?rev=3132cd08367466f9ebff58c8edb77a60842f339d#3132cd08367466f9ebff58c8edb77a60842f339d"
+source = "git+https://github.com/aumetra/async-graphql.git?branch=axum-0.8#3132cd08367466f9ebff58c8edb77a60842f339d"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -336,7 +336,7 @@ dependencies = [
 [[package]]
 name = "async-graphql-parser"
 version = "7.0.13"
-source = "git+https://github.com/async-graphql/async-graphql.git?rev=3132cd08367466f9ebff58c8edb77a60842f339d#3132cd08367466f9ebff58c8edb77a60842f339d"
+source = "git+https://github.com/aumetra/async-graphql.git?branch=axum-0.8#3132cd08367466f9ebff58c8edb77a60842f339d"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -347,7 +347,7 @@ dependencies = [
 [[package]]
 name = "async-graphql-value"
 version = "7.0.13"
-source = "git+https://github.com/async-graphql/async-graphql.git?rev=3132cd08367466f9ebff58c8edb77a60842f339d#3132cd08367466f9ebff58c8edb77a60842f339d"
+source = "git+https://github.com/aumetra/async-graphql.git?branch=axum-0.8#3132cd08367466f9ebff58c8edb77a60842f339d"
 dependencies = [
  "bytes",
  "indexmap 2.7.0",
@@ -585,7 +585,7 @@ dependencies = [
 [[package]]
 name = "axum-flash"
 version = "0.8.0"
-source = "git+https://github.com/davidpdrsn/axum-flash.git?rev=0832703a0ca83b1ee35daaa8a199f68c2bcb4a90#0832703a0ca83b1ee35daaa8a199f68c2bcb4a90"
+source = "git+https://github.com/aumetra/axum-flash.git?branch=main#0832703a0ca83b1ee35daaa8a199f68c2bcb4a90"
 dependencies = [
  "axum-core 0.5.0",
  "axum-extra",
@@ -4935,7 +4935,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth"
 version = "0.6.1"
-source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=88b02a676dc36dc0c77bf828a952a9e368558268#88b02a676dc36dc0c77bf828a952a9e368558268"
+source = "git+https://github.com/aumetra/oxide-auth.git?branch=axum-0.8#88b02a676dc36dc0c77bf828a952a9e368558268"
 dependencies = [
  "base64 0.21.7",
  "chrono",
@@ -4968,7 +4968,7 @@ dependencies = [
 [[package]]
 name = "oxide-auth-axum"
 version = "0.5.0"
-source = "git+https://github.com/HeroicKatora/oxide-auth.git?rev=88b02a676dc36dc0c77bf828a952a9e368558268#88b02a676dc36dc0c77bf828a952a9e368558268"
+source = "git+https://github.com/aumetra/oxide-auth.git?branch=axum-0.8#88b02a676dc36dc0c77bf828a952a9e368558268"
 dependencies = [
  "axum 0.8.1",
  "oxide-auth",
