@@ -2116,6 +2116,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3ea1ec5f8307826a5b71094dd91fc04d4ae75d5709b20ad351c7fb4815c86ec"
 
 [[package]]
+name = "flashy"
+version = "0.0.1-pre.6"
+dependencies = [
+ "base64-simd",
+ "cookie",
+ "http",
+ "serde",
+ "sonic-rs",
+ "tower 0.5.2",
+ "triomphe",
+ "zeroize",
+]
+
+[[package]]
 name = "flate2"
 version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
