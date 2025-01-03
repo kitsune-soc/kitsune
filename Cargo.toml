@@ -92,7 +92,7 @@ async-graphql = { version = "7.0.13", default-features = false, features = [
     "uuid",
 ] }
 async-graphql-axum = "7.0.13"
-async-trait = "0.1.83"
+async-trait = "0.1.84"
 asynk-strim = "0.1.2"
 axum = { version = "0.8.1", features = ["macros", "multipart"] }
 axum-core = "0.5.0"
@@ -218,7 +218,7 @@ mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.5.0", features = ["loader"] }
-moka = { version = "=0.12.7", features = ["sync"] }
+moka = { version = "0.12.9", features = ["sync"] }
 mrml = { version = "4.0.1", default-features = false, features = [
     "parse",
     "render",
@@ -309,7 +309,7 @@ strum = { version = "0.26.3", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.94", features = ["full"] }
 sync_wrapper = "1.0.2"
-tempfile = "3.14.0"
+tempfile = "3.15.0"
 thiserror = "2.0.9"
 time = "0.3.37"
 tokio = { version = "1.42.0", features = ["full"] }
