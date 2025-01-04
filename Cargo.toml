@@ -58,6 +58,7 @@ members = [
     "lib/blowocking",
     "lib/cursiv",
     "lib/fast-cjson",
+    "lib/flashy",
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
@@ -102,7 +103,6 @@ axum-extra = { version = "0.10.0", features = [
     "query",
     "typed-header",
 ] }
-axum-flash = "0.8.0"
 base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
@@ -113,7 +113,11 @@ color-eyre = "0.6.3"
 colored_json = "5.0.0"
 const_format = "0.2.34"
 const-oid = { version = "0.9.6", features = ["db"] }
-cookie = { version = "0.18.1", features = ["percent-encode"] }
+cookie = { version = "0.18.1", features = [
+    "key-expansion",
+    "percent-encode",
+    "signed",
+] }
 derive_builder = "0.20.2"
 derive_more = { version = "1.0.0", features = ["from"] }
 diesel = { version = "2.2.6", default-features = false, features = [
@@ -391,7 +395,6 @@ kitsune-mastodon = { path = "crates/kitsune-mastodon" }
 kitsune-observability = { path = "crates/kitsune-observability" }
 kitsune-oidc = { path = "crates/kitsune-oidc" }
 kitsune-s3 = { path = "crates/kitsune-s3" }
-kitsune-scss-compiler = { path = "crates/kitsune-scss-compiler" }
 kitsune-search = { path = "crates/kitsune-search" }
 kitsune-service = { path = "crates/kitsune-service" }
 kitsune-storage = { path = "crates/kitsune-storage" }
@@ -401,7 +404,6 @@ kitsune-url = { path = "crates/kitsune-url" }
 kitsune-util = { path = "crates/kitsune-util" }
 kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "crates/kitsune-webfinger" }
-kitsune = { path = "kitsune" }
 kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
@@ -409,10 +411,9 @@ athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
-geomjeungja = { path = "lib/geomjeungja" }
+flashy = { path = "lib/flashy", features = ["axum"] }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
-masto-id-convert = { path = "lib/masto-id-convert" }
 mrf-manifest = { path = "lib/mrf-manifest", features = [
     "decode",
     "encode",
@@ -460,7 +461,6 @@ license = "AGPL-3.0-or-later"
 # axum upgrade
 async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
 async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
-axum-flash = { git = "https://github.com/aumetra/axum-flash.git", branch = "main" }
 oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
 oxide-auth-axum = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
 

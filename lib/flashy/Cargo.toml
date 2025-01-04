@@ -1,0 +1,23 @@
+[package]
+name = "flashy"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+axum-core = { workspace = true, optional = true }
+cookie.workspace = true
+futures-test.workspace = true
+http.workspace = true
+pin-project-lite.workspace = true
+serde.workspace = true
+sonic-rs.workspace = true
+tower.workspace = true
+triomphe.workspace = true
+
+[features]
+axum = ["dep:axum-core"]
+
+[lints]
+workspace = true

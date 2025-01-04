@@ -583,22 +583,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-flash"
-version = "0.8.0"
-source = "git+https://github.com/aumetra/axum-flash.git?branch=main#0832703a0ca83b1ee35daaa8a199f68c2bcb4a90"
-dependencies = [
- "axum-core 0.5.0",
- "axum-extra",
- "base64 0.22.1",
- "cookie",
- "http",
- "serde",
- "serde_json",
- "tower-layer",
- "tower-service",
-]
-
-[[package]]
 name = "axum-macros"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1212,6 +1196,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ddef33a339a91ea89fb53151bd0a4689cfce27055c291dfa69945475d22c747"
 dependencies = [
  "base64 0.22.1",
+ "hkdf",
  "hmac",
  "percent-encoding",
  "rand 0.8.5",
@@ -2114,6 +2099,21 @@ name = "flagset"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3ea1ec5f8307826a5b71094dd91fc04d4ae75d5709b20ad351c7fb4815c86ec"
+
+[[package]]
+name = "flashy"
+version = "0.0.1-pre.6"
+dependencies = [
+ "axum-core 0.5.0",
+ "cookie",
+ "futures-test",
+ "http",
+ "pin-project-lite",
+ "serde",
+ "sonic-rs",
+ "tower 0.5.2",
+ "triomphe",
+]
 
 [[package]]
 name = "flate2"
@@ -3325,7 +3325,6 @@ dependencies = [
  "athena",
  "axum 0.8.1",
  "axum-extra",
- "axum-flash",
  "blowocking",
  "bytes",
  "chrono",
@@ -3334,6 +3333,7 @@ dependencies = [
  "cursiv",
  "diesel",
  "diesel-async",
+ "flashy",
  "fred",
  "futures-util",
  "headers",
