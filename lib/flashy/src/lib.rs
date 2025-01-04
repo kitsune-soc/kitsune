@@ -1,22 +1,58 @@
-use cookie::{Cookie, CookieJar, Expiration, SameSite};
+use cookie::{Cookie, Expiration, SameSite};
+use hex_simd::Out;
 use http::HeaderValue;
 use pin_project_lite::pin_project;
 use serde::{Deserialize, Serialize};
 use std::{
     future::Future,
+    ops::Deref,
     pin::Pin,
-    slice,
+    slice, str,
     sync::Mutex,
     task::{self, ready, Poll},
 };
+use subtle::ConstantTimeEq;
 use tower::{Layer, Service};
 use triomphe::Arc;
-
-pub use cookie::Key;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const COOKIE_NAME: &str = "FLASH_MESSAGES";
 
 type Flash = (Level, String);
+
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+pub struct Key([u8; blake3::KEY_LEN]);
+
+impl Key {
+    #[inline]
+    #[must_use]
+    pub fn new(inner: [u8; blake3::KEY_LEN]) -> Self {
+        Self(inner)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn derive_from(data: &[u8]) -> Self {
+        const CONTEXT: &str = "FLASHY-SIGN_COOKIE-BLAKE3-V1";
+
+        Self::new(blake3::derive_key(CONTEXT, data))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn generate() -> Self {
+        Self::new(rand::random())
+    }
+}
+
+impl Deref for Key {
+    type Target = [u8; blake3::KEY_LEN];
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub enum Level {
@@ -142,7 +178,15 @@ where
 
                     let encoded_messages = {
                         let guard = handle.0.lock().unwrap();
-                        sonic_rs::to_string(&guard.flashes).expect("failed to encode messages")
+                        let serialized =
+                            sonic_rs::to_string(&guard.flashes).expect("failed to encode messages");
+
+                        let signed = sign_data(&key, &serialized);
+                        #[allow(unsafe_code)]
+                        // SAFETY: the future returns correctly encoded UTF-8
+                        let signed = unsafe { str::from_utf8_unchecked(&signed) };
+
+                        format!("{signed}.{serialized}")
                     };
 
                     let mut cookie = Cookie::new(COOKIE_NAME, encoded_messages);
@@ -150,16 +194,10 @@ where
                     cookie.set_secure(true);
                     cookie.set_expires(Expiration::Session);
 
-                    let mut jar = CookieJar::new();
-                    let mut signed_jar = jar.signed_mut(&key);
-                    signed_jar.add(cookie);
+                    let encoded = cookie.encoded().to_string();
+                    let value = HeaderValue::from_bytes(encoded.as_ref()).unwrap();
 
-                    for cookie in jar.iter() {
-                        let encoded = cookie.encoded().to_string();
-                        let value = HeaderValue::from_bytes(encoded.as_ref()).unwrap();
-
-                        resp.headers_mut().insert(http::header::SET_COOKIE, value);
-                    }
+                    resp.headers_mut().append(http::header::SET_COOKIE, value);
 
                     return Poll::Ready(Ok(resp));
                 }
@@ -168,6 +206,34 @@ where
             self.set(this);
         }
     }
+}
+
+#[inline]
+fn sign_data(key: &Key, value: &str) -> [u8; blake3::OUT_LEN * 2] {
+    let hash = blake3::keyed_hash(key, value.as_bytes());
+
+    let mut out = [0; blake3::OUT_LEN * 2];
+    let enc_slice = hex_simd::encode(
+        hash.as_bytes(),
+        Out::from_slice(&mut out),
+        hex_simd::AsciiCase::Lower,
+    );
+    assert_eq!(enc_slice.len(), out.len());
+
+    out
+}
+
+#[inline]
+fn verify_data(key: &Key, mac: &str, value: &str) -> bool {
+    let mut out = [0; blake3::KEY_LEN];
+    let Ok(decoded_mac) = hex_simd::decode(mac.as_ref(), Out::from_slice(&mut out)) else {
+        return false;
+    };
+
+    blake3::keyed_hash(key, value.as_bytes())
+        .as_bytes()
+        .ct_eq(decoded_mac)
+        .into()
 }
 
 impl<S, ReqBody, ResBody> Service<http::Request<ReqBody>> for FlashService<S>
@@ -185,8 +251,8 @@ where
 
     #[inline]
     fn call(&mut self, mut req: http::Request<ReqBody>) -> Self::Future {
-        let mut jar = CookieJar::new();
-        for header in req.headers().get_all(http::header::COOKIE) {
+        let mut flash_cookie = None;
+        'outer: for header in req.headers().get_all(http::header::COOKIE) {
             let Ok(cookie_str) = header.to_str() else {
                 continue;
             };
@@ -197,15 +263,26 @@ where
                     continue;
                 };
 
-                jar.add_original(cookie);
+                if cookie.name() == COOKIE_NAME {
+                    flash_cookie = Some(cookie);
+                    break 'outer;
+                }
             }
         }
 
-        let signed_jar = jar.signed(&self.key);
-        let flashes = signed_jar
-            .get(COOKIE_NAME)
-            .and_then(|cookie| sonic_rs::from_str(cookie.value()).ok())
-            .unwrap_or_default();
+        let flashes = if let Some(flash_cookie) = flash_cookie {
+            if let Some((mac, value)) = flash_cookie.value().split_once('.') {
+                if verify_data(&self.key, mac, value) {
+                    sonic_rs::from_str(value).unwrap()
+                } else {
+                    Vec::new()
+                }
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        };
 
         let read_flashes = IncomingFlashes(Arc::new(flashes));
         let handle = FlashHandle(Arc::new(Mutex::new(HandleInner {

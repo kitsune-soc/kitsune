@@ -16,14 +16,15 @@ use tower_http_digest::VerifyDigestLayer;
 use tower_stop_using_brave::StopUsingBraveLayer;
 use tower_x_clacks_overhead::XClacksOverheadLayer;
 
+#[allow(clippy::too_many_lines)]
 pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Result<Router> {
     let router = Router::new()
         .route(
-            "/confirm-account/:confirmation_token",
+            "/confirm-account/{confirmation_token}",
             routing::get(handler::confirm_account::get),
         )
-        .route("/emojis/:id", routing::get(handler::custom_emojis::get))
-        .route("/media/:id", routing::get(handler::media::get))
+        .route("/emojis/{id}", routing::get(handler::custom_emojis::get))
+        .route("/media/{id}", routing::get(handler::media::get))
         .route(
             "/nodeinfo/2.1",
             routing::get(handler::nodeinfo::two_one::get),
@@ -42,27 +43,30 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
         .nest(
             "/posts",
             Router::new()
-                .route("/:id", routing::get(handler::posts::get))
-                .route("/:id/activity", routing::get(handler::posts::activity::get)),
+                .route("/{id}", routing::get(handler::posts::get))
+                .route(
+                    "/{id}/activity",
+                    routing::get(handler::posts::activity::get),
+                ),
         )
         .nest(
             "/users",
             Router::new()
-                .route("/:user_id", routing::get(handler::users::get))
+                .route("/{user_id}", routing::get(handler::users::get))
                 .route(
-                    "/:user_id/followers",
+                    "/{user_id}/followers",
                     routing::get(handler::users::followers::get),
                 )
                 .route(
-                    "/:user_id/following",
+                    "/{user_id}/following",
                     routing::get(handler::users::following::get),
                 )
                 .route(
-                    "/:user_id/inbox",
+                    "/{user_id}/inbox",
                     routing::post(handler::users::inbox::post).layer(VerifyDigestLayer::default()),
                 )
                 .route(
-                    "/:user_id/outbox",
+                    "/{user_id}/outbox",
                     routing::get(handler::users::outbox::get),
                 ),
         )
@@ -78,7 +82,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                     routing::get(handler::well_known::webfinger::get),
                 ),
         )
-        .route("/public/*path", routing::get(handler::public::get));
+        .route("/public/{*path}", routing::get(handler::public::get));
 
     #[cfg(feature = "oidc")]
     let router = router.route("/oidc/callback", routing::get(handler::oidc::callback::get));
@@ -110,19 +114,19 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                             "/accounts",
                             Router::new()
                                 .route(
-                                    "/:id",
+                                    "/{id}",
                                     routing::get(handler::mastodon::api::v1::accounts::get),
                                 )
                                 .route(
-                                    "/:id/follow",
+                                    "/{id}/follow",
                                     routing::post(handler::mastodon::api::v1::accounts::follow::post),
                                 )
                                 .route(
-                                    "/:id/statuses",
+                                    "/{id}/statuses",
                                     routing::get(handler::mastodon::api::v1::accounts::statuses::get),
                                 )
                                 .route(
-                                    "/:id/unfollow",
+                                    "/{id}/unfollow",
                                     routing::post(handler::mastodon::api::v1::accounts::unfollow::post),
                                 )
                                 .route(
@@ -164,13 +168,13 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                                     routing::get(handler::mastodon::api::v1::follow_requests::get),
                                 )
                                 .route(
-                                    "/:id/authorize",
+                                    "/{id}/authorize",
                                     routing::post(
                                         handler::mastodon::api::v1::follow_requests::accept::post,
                                     ),
                                 )
                                 .route(
-                                    "/:id/reject",
+                                    "/{id}/reject",
                                     routing::post(
                                         handler::mastodon::api::v1::follow_requests::reject::post,
                                     ),
@@ -192,7 +196,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                                     ),
                                 )
                                 .route(
-                                    "/:id",
+                                    "/{id}",
                                     routing::get(handler::mastodon::api::v1::media::get)
                                         .put(handler::mastodon::api::v1::media::put),
                                 ),
@@ -205,11 +209,11 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                                     routing::get(handler::mastodon::api::v1::notifications::get),
                                 )
                                 .route(
-                                    "/:id",
+                                    "/{id}",
                                     routing::get(handler::mastodon::api::v1::notifications::get_by_id),
                                 )
                                 .route(
-                                    "/:id/dismiss",
+                                    "/{id}/dismiss",
                                     routing::post(
                                         handler::mastodon::api::v1::notifications::dismiss::post,
                                     ),
@@ -229,49 +233,49 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                                     routing::post(handler::mastodon::api::v1::statuses::post),
                                 )
                                 .route(
-                                    "/:id",
+                                    "/{id}",
                                     routing::delete(handler::mastodon::api::v1::statuses::delete)
                                         .get(handler::mastodon::api::v1::statuses::get)
                                         .put(handler::mastodon::api::v1::statuses::put),
                                 )
                                 .route(
-                                    "/:id/context",
+                                    "/{id}/context",
                                     routing::get(handler::mastodon::api::v1::statuses::context::get),
                                 )
                                 .route(
-                                    "/:id/favourite",
+                                    "/{id}/favourite",
                                     routing::post(
                                         handler::mastodon::api::v1::statuses::favourite::post,
                                     ),
                                 )
                                 .route(
-                                    "/:id/favourited_by",
+                                    "/{id}/favourited_by",
                                     routing::get(
                                         handler::mastodon::api::v1::statuses::favourited_by::get,
                                     ),
                                 )
                                 .route(
-                                    "/:id/reblog",
+                                    "/{id}/reblog",
                                     routing::post(handler::mastodon::api::v1::statuses::reblog::post),
                                 )
                                 .route(
-                                    "/:id/reblogged_by",
+                                    "/{id}/reblogged_by",
                                     routing::get(
                                         handler::mastodon::api::v1::statuses::reblogged_by::get,
                                     ),
                                 )
                                 .route(
-                                    "/:id/source",
+                                    "/{id}/source",
                                     routing::get(handler::mastodon::api::v1::statuses::source::get),
                                 )
                                 .route(
-                                    "/:id/unfavourite",
+                                    "/{id}/unfavourite",
                                     routing::post(
                                         handler::mastodon::api::v1::statuses::unfavourite::post,
                                     ),
                                 )
                                 .route(
-                                    "/:id/unreblog",
+                                    "/{id}/unreblog",
                                     routing::post(handler::mastodon::api::v1::statuses::unreblog::post),
                                 ),
                         )
@@ -303,7 +307,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
                                     ),
                                 )
                                 .route(
-                                    "/:id",
+                                    "/{id}",
                                     routing::get(handler::mastodon::api::v1::media::get)
                                         .put(handler::mastodon::api::v1::media::put),
                                 ),

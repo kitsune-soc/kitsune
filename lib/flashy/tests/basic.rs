@@ -1,5 +1,4 @@
-use cookie::Key;
-use flashy::{FlashHandle, FlashLayer, IncomingFlashes, Level};
+use flashy::{FlashHandle, FlashLayer, IncomingFlashes, Key, Level};
 use http::header::{COOKIE, SET_COOKIE};
 use std::convert::Infallible;
 use tower::{Layer, ServiceExt};
