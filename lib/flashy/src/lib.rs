@@ -166,11 +166,15 @@ where
             let Ok(cookie_str) = header.to_str() else {
                 continue;
             };
-            let Ok(cookie) = Cookie::parse(cookie_str.to_string()) else {
-                continue;
-            };
 
-            jar.add_original(cookie);
+            let cookies = Cookie::split_parse_encoded(cookie_str.to_string());
+            for cookie in cookies {
+                let Ok(cookie) = cookie else {
+                    continue;
+                };
+
+                jar.add_original(cookie);
+            }
         }
 
         let signed_jar = jar.signed(&self.key);
