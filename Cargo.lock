@@ -2126,9 +2126,7 @@ dependencies = [
  "serde",
  "sonic-rs",
  "tower 0.5.2",
- "tracing",
  "triomphe",
- "zeroize",
 ]
 
 [[package]]

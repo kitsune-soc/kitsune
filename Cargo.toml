@@ -57,7 +57,8 @@ members = [
     "lib/athena",
     "lib/blowocking",
     "lib/cursiv",
-    "lib/fast-cjson", "lib/flashy",
+    "lib/fast-cjson",
+    "lib/flashy",
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
@@ -391,7 +392,6 @@ kitsune-mastodon = { path = "crates/kitsune-mastodon" }
 kitsune-observability = { path = "crates/kitsune-observability" }
 kitsune-oidc = { path = "crates/kitsune-oidc" }
 kitsune-s3 = { path = "crates/kitsune-s3" }
-kitsune-scss-compiler = { path = "crates/kitsune-scss-compiler" }
 kitsune-search = { path = "crates/kitsune-search" }
 kitsune-service = { path = "crates/kitsune-service" }
 kitsune-storage = { path = "crates/kitsune-storage" }
@@ -401,7 +401,6 @@ kitsune-url = { path = "crates/kitsune-url" }
 kitsune-util = { path = "crates/kitsune-util" }
 kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "crates/kitsune-webfinger" }
-kitsune = { path = "kitsune" }
 kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
@@ -409,10 +408,8 @@ athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
-geomjeungja = { path = "lib/geomjeungja" }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
-masto-id-convert = { path = "lib/masto-id-convert" }
 mrf-manifest = { path = "lib/mrf-manifest", features = [
     "decode",
     "encode",

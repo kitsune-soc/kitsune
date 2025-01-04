@@ -13,9 +13,7 @@ pin-project-lite.workspace = true
 serde.workspace = true
 sonic-rs.workspace = true
 tower.workspace = true
-tracing.workspace = true
 triomphe.workspace = true
-zeroize.workspace = true
 
 [lints]
 workspace = true
