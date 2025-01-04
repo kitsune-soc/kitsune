@@ -1196,7 +1196,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ddef33a339a91ea89fb53151bd0a4689cfce27055c291dfa69945475d22c747"
 dependencies = [
  "base64 0.22.1",
- "hkdf",
  "hmac",
  "percent-encoding",
  "rand 0.8.5",
@@ -2105,14 +2104,19 @@ name = "flashy"
 version = "0.0.1-pre.6"
 dependencies = [
  "axum-core 0.5.0",
+ "blake3",
  "cookie",
  "futures-test",
+ "hex-simd",
  "http",
  "pin-project-lite",
+ "rand 0.8.5",
  "serde",
  "sonic-rs",
+ "subtle",
  "tower 0.5.2",
  "triomphe",
+ "zeroize",
 ]
 
 [[package]]
