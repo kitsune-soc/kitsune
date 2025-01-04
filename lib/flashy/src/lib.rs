@@ -8,14 +8,14 @@ use std::{
     sync::Mutex,
     task::{self, ready, Poll},
 };
-use tower::Service;
+use tower::{Layer, Service};
 use triomphe::Arc;
 
 const COOKIE_NAME: &str = "FLASH_MESSAGES";
 
 type Flash = (Level, String);
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub enum Level {
     Debug,
     Info,
@@ -33,9 +33,10 @@ pub struct FlashHandle(Arc<Mutex<HandleInner>>);
 
 impl FlashHandle {
     #[inline]
-    pub fn push(&self, level: Level, message: String) {
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn push(&self, level: Level, message: impl ToString) {
         let mut guard = self.0.lock().unwrap();
-        guard.flashes.push((level, message));
+        guard.flashes.push((level, message.to_string()));
     }
 }
 
@@ -196,5 +197,26 @@ where
             fut: self.inner.call(req),
             key: Some(self.key.clone()),
         }
+    }
+}
+
+pub struct FlashLayer {
+    key: Key,
+}
+
+impl FlashLayer {
+    #[inline]
+    #[must_use]
+    pub fn new(key: Key) -> Self {
+        Self { key }
+    }
+}
+
+impl<S> Layer<S> for FlashLayer {
+    type Service = FlashService<S>;
+
+    #[inline]
+    fn layer(&self, inner: S) -> Self::Service {
+        FlashService::new(inner, self.key.clone())
     }
 }

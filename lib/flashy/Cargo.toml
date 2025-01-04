@@ -6,8 +6,8 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-base64-simd.workspace = true
 cookie.workspace = true
+futures-test.workspace = true
 http.workspace = true
 pin-project-lite.workspace = true
 serde.workspace = true
