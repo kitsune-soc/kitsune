@@ -13,10 +13,10 @@ use axum_extra::{
         SignedCookieJar,
     },
 };
-use axum_flash::{Flash, IncomingFlashes};
 use cursiv::CsrfHandle;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
+use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
 use kitsune_error::{Error, Result};
 use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
@@ -85,7 +85,7 @@ pub async fn get(
             users::table.find(id).get_result(db_conn).await
         })?
     } else {
-        let messages: Vec<(axum_flash::Level, &str)> = flash_messages.into_iter().collect();
+        let messages: Vec<(flashy::Level, &str)> = flash_messages.into_iter().collect();
         let page = crate::template::render(
             "oauth/login.html",
             minijinja::context! {
@@ -115,9 +115,9 @@ pub async fn post(
     State(db_pool): State<PgPool>,
     OriginalUri(original_url): OriginalUri,
     cookies: SignedCookieJar,
-    flash: Flash,
+    flash_handle: FlashHandle,
     Form(form): Form<LoginForm>,
-) -> Result<Either<(SignedCookieJar, Redirect), (Flash, Redirect)>> {
+) -> Result<Either<(SignedCookieJar, Redirect), Redirect>> {
     let redirect_to = if let Some(path_and_query) = original_url.path_and_query() {
         path_and_query.as_str()
     } else {
@@ -133,17 +133,13 @@ pub async fn post(
     })?;
 
     let Some(user) = user else {
-        return Ok(Either::E2((
-            flash.error(WRONG_EMAIL_OR_PASSWORD),
-            Redirect::to(redirect_to),
-        )));
+        flash_handle.push(flashy::Level::Error, WRONG_EMAIL_OR_PASSWORD);
+        return Ok(Either::E2(Redirect::to(redirect_to)));
     };
 
     if user.confirmed_at.is_none() {
-        return Ok(Either::E2((
-            flash.error(UNCONFIRMED_EMAIL_ADDRESS),
-            Redirect::to(redirect_to),
-        )));
+        flash_handle.push(flashy::Level::Error, UNCONFIRMED_EMAIL_ADDRESS);
+        return Ok(Either::E2(Redirect::to(redirect_to)));
     }
 
     let is_valid = blowocking::crypto(move || {
@@ -159,10 +155,8 @@ pub async fn post(
     .await??;
 
     if !is_valid {
-        return Ok(Either::E2((
-            flash.error(WRONG_EMAIL_OR_PASSWORD),
-            Redirect::to(redirect_to),
-        )));
+        flash_handle.push(flashy::Level::Error, WRONG_EMAIL_OR_PASSWORD);
+        return Ok(Either::E2(Redirect::to(redirect_to)));
     }
 
     // TODO: Bad because no expiration. Either encode an expiration into the cookie and make this basically a shitty JWT

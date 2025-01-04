@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use axum::response::IntoResponse;
 use axum::{body::Body, extract::FromRequest, response::Response};
 use bytes::{BufMut, Bytes, BytesMut};
@@ -10,7 +9,6 @@ use std::ops::{Deref, DerefMut};
 #[must_use]
 pub struct Json<T>(pub T);
 
-#[async_trait]
 impl<T, S> FromRequest<S> for Json<T>
 where
     T: DeserializeOwned,

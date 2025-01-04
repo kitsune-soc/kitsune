@@ -1,7 +1,6 @@
 use crate::state::Zustand;
-use async_trait::async_trait;
 use axum::{
-    extract::FromRequestParts,
+    extract::{FromRequestParts, OptionalFromRequestParts},
     response::{IntoResponse, Response},
     RequestPartsExt,
 };
@@ -38,7 +37,6 @@ pub struct UserData {
 /// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
 pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
 
-#[async_trait]
 impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
     for AuthExtractor<ENFORCE_EXPIRATION>
 {
@@ -77,5 +75,28 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
         let (user, account) = result?;
 
         Ok(Self(UserData { account, user }))
+    }
+}
+
+impl<const ENFORCE_EXPIRATION: bool> OptionalFromRequestParts<Zustand>
+    for AuthExtractor<ENFORCE_EXPIRATION>
+{
+    type Rejection = Response;
+
+    #[inline]
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &Zustand,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        // just silently swallow any auth errors
+        let value = if let Ok(value) =
+            <Self as FromRequestParts<_>>::from_request_parts(parts, state).await
+        {
+            Some(value)
+        } else {
+            None
+        };
+
+        Ok(value)
     }
 }

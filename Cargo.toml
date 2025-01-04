@@ -58,6 +58,7 @@ members = [
     "lib/blowocking",
     "lib/cursiv",
     "lib/fast-cjson",
+    "lib/flashy",
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
@@ -93,17 +94,16 @@ async-graphql = { version = "7.0.13", default-features = false, features = [
     "uuid",
 ] }
 async-graphql-axum = "7.0.13"
-async-trait = "0.1.83"
+async-trait = "0.1.84"
 asynk-strim = "0.1.2"
-axum = { version = "0.7.9", features = ["macros", "multipart"] }
-axum-core = "0.4.5"
-axum-extra = { version = "0.9.6", features = [
+axum = { version = "0.8.1", features = ["macros", "multipart"] }
+axum-core = "0.5.0"
+axum-extra = { version = "0.10.0", features = [
     "cookie",
     "cookie-signed",
     "query",
     "typed-header",
 ] }
-axum-flash = "0.8.0"
 base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
@@ -111,7 +111,7 @@ bytes = "1.9.0"
 clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
-compact_str = { version = "0.8.0", features = ["serde"] }
+compact_str = { version = "0.8.1", features = ["serde"] }
 const_format = "0.2.34"
 const-oid = { version = "0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
@@ -137,7 +137,7 @@ either = { version = "1.13.0", default-features = false }
 enum_dispatch = "0.3.13"
 envy = "0.4.2"
 eyre = "0.6.12"
-fred = { version = "10.0.1", features = [
+fred = { version = "10.0.3", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
@@ -186,18 +186,18 @@ hyper-rustls = { version = "0.27.5", default-features = false, features = [
     "tls12",
 ] }
 icu_normalizer = "1.5.0"
-img-parts = "0.3.1"
+img-parts = "0.3.2"
 insta = { version = "1.41.1", default-features = false, features = [
     "glob",
     "json",
 ] }
-iso8601-timestamp = { version = "0.3.2", features = ["diesel-pg"] }
+iso8601-timestamp = { version = "0.3.3", features = ["diesel-pg"] }
 isolang = { version = "2.4.0", features = [
     "english_names",
     "list_languages",
     "serde",
 ] }
-itertools = { version = "0.13.0", default-features = false }
+itertools = { version = "0.14.0", default-features = false }
 lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "8fdc7137af36b58eb2c2c38f718ddcb6f9f853ba", default-features = false }
 leb128 = "0.2.5"
 lettre = { version = "0.11.11", default-features = false, features = [
@@ -219,7 +219,7 @@ mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.5.0", features = ["loader"] }
-moka = { version = "=0.12.7", features = ["sync"] }
+moka = { version = "0.12.9", features = ["sync"] }
 mrml = { version = "4.0.1", default-features = false, features = [
     "parse",
     "render",
@@ -262,17 +262,17 @@ pulldown-cmark = { version = "0.12.2", default-features = false, features = [
     "html",
     "simd",
 ] }
-quick-xml = { version = "0.37.1", features = ["serialize"] }
-quote = "1.0.37"
+quick-xml = { version = "0.37.2", features = ["serialize"] }
+quote = "1.0.38"
 rand = "0.8.5"
 rand_xorshift = "0.3.0"
 rayon = "1.10.0"
-redb = { version = "2.3.0", features = ["logging"] }
+redb = { version = "2.4.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
 ring = { version = "0.17.8", features = ["std"] }
 rsa = "0.9.7"
-rstest = { version = "0.23.0", default-features = false }
+rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 rustc-hash = "2.1.0"
 rustls = { version = "0.23.20", default-features = false, features = [
@@ -282,7 +282,7 @@ rustls = { version = "0.23.20", default-features = false, features = [
     "tls12",
 ] }
 rustls-native-certs = "0.8.1"
-rusty-s3 = "0.5.0"
+rusty-s3 = "0.7.0"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
     "perf-inline",
@@ -290,11 +290,11 @@ sailfish = { version = "0.9.0", default-features = false, features = [
 schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.24", features = ["serde"] }
-serde = { version = "1.0.216", features = ["derive"] }
+serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
-serde_with = { version = "3.11.0", default-features = false, features = [
+serde_with = { version = "3.12.0", default-features = false, features = [
     "alloc",
     "macros",
 ] }
@@ -305,9 +305,9 @@ smol_str = { version = "0.3.2", features = ["serde"] }
 sonic-rs = "=0.3.14"
 strum = { version = "0.26.3", features = ["derive"] }
 subtle = "2.6.1"
-syn = { version = "2.0.91", features = ["full"] }
+syn = { version = "2.0.94", features = ["full"] }
 sync_wrapper = "1.0.2"
-tempfile = "3.14.0"
+tempfile = "3.15.0"
 thiserror = "2.0.9"
 time = "0.3.37"
 tokio = { version = "1.42.0", features = ["full"] }
@@ -389,7 +389,6 @@ kitsune-mastodon = { path = "crates/kitsune-mastodon" }
 kitsune-observability = { path = "crates/kitsune-observability" }
 kitsune-oidc = { path = "crates/kitsune-oidc" }
 kitsune-s3 = { path = "crates/kitsune-s3" }
-kitsune-scss-compiler = { path = "crates/kitsune-scss-compiler" }
 kitsune-search = { path = "crates/kitsune-search" }
 kitsune-service = { path = "crates/kitsune-service" }
 kitsune-storage = { path = "crates/kitsune-storage" }
@@ -399,7 +398,6 @@ kitsune-url = { path = "crates/kitsune-url" }
 kitsune-util = { path = "crates/kitsune-util" }
 kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "crates/kitsune-webfinger" }
-kitsune = { path = "kitsune" }
 kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
@@ -407,10 +405,9 @@ athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
-geomjeungja = { path = "lib/geomjeungja" }
+flashy = { path = "lib/flashy", features = ["axum"] }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
-masto-id-convert = { path = "lib/masto-id-convert" }
 mrf-manifest = { path = "lib/mrf-manifest", features = [
     "decode",
     "encode",
@@ -455,6 +452,10 @@ version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
 
 [patch.crates-io]
+# axum upgrade
+async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+
 # Fix unmaintained advisory
 notify-types = { git = "https://github.com/notify-rs/notify.git", rev = "aacd41642345cb66b327d4eb2cdc15ba4016daaa" }
 # SIMD runtime detection and generic I/O wrapper

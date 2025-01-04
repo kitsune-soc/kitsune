@@ -1,5 +1,4 @@
 use crate::state::Zustand;
-use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::{FromRequest, OriginalUri},
@@ -23,7 +22,6 @@ use scoped_futures::ScopedFutureExt;
 /// but not that the activity matches the object, so beware of that.
 pub struct SignedActivity(pub Account, pub Activity);
 
-#[async_trait]
 impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
