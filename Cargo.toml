@@ -103,7 +103,6 @@ axum-extra = { version = "0.10.0", features = [
     "query",
     "typed-header",
 ] }
-axum-flash = "0.8.0"
 base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
@@ -408,6 +407,7 @@ athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
+flashy = { path = "lib/flashy", features = ["axum"] }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
 mrf-manifest = { path = "lib/mrf-manifest", features = [
@@ -457,7 +457,6 @@ license = "AGPL-3.0-or-later"
 # axum upgrade
 async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
 async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
-axum-flash = { git = "https://github.com/aumetra/axum-flash.git", branch = "main" }
 oxide-auth = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
 oxide-auth-axum = { git = "https://github.com/aumetra/oxide-auth.git", branch = "axum-0.8" }
 

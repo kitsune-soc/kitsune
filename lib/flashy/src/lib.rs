@@ -242,3 +242,52 @@ impl<S> Layer<S> for FlashLayer {
         FlashService::new(inner, self.key.clone())
     }
 }
+
+#[cfg(feature = "axum")]
+mod axum_impl {
+    use crate::{FlashHandle, ReadFlashes};
+    use axum_core::extract::FromRequestParts;
+    use std::convert::Infallible;
+
+    impl<S> FromRequestParts<S> for ReadFlashes
+    where
+        S: Sync,
+    {
+        type Rejection = Infallible;
+
+        #[inline]
+        async fn from_request_parts(
+            parts: &mut http::request::Parts,
+            _state: &S,
+        ) -> Result<Self, Self::Rejection> {
+            let flashes = parts
+                .extensions
+                .get::<ReadFlashes>()
+                .expect("missing ReadFlashes. is FlashLayer mounted?")
+                .clone();
+
+            Ok(flashes)
+        }
+    }
+
+    impl<S> FromRequestParts<S> for FlashHandle
+    where
+        S: Sync,
+    {
+        type Rejection = Infallible;
+
+        #[inline]
+        async fn from_request_parts(
+            parts: &mut http::request::Parts,
+            _state: &S,
+        ) -> Result<Self, Self::Rejection> {
+            let handle = parts
+                .extensions
+                .get::<FlashHandle>()
+                .expect("missing FlashHandle. is FlashLayer mounted?")
+                .clone();
+
+            Ok(handle)
+        }
+    }
+}
