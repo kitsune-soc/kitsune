@@ -2122,9 +2122,11 @@ dependencies = [
  "base64-simd",
  "cookie",
  "http",
+ "pin-project-lite",
  "serde",
  "sonic-rs",
  "tower 0.5.2",
+ "tracing",
  "triomphe",
  "zeroize",
 ]

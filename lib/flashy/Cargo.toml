@@ -9,9 +9,11 @@ license = "MIT OR Apache-2.0"
 base64-simd.workspace = true
 cookie.workspace = true
 http.workspace = true
+pin-project-lite.workspace = true
 serde.workspace = true
 sonic-rs.workspace = true
 tower.workspace = true
+tracing.workspace = true
 triomphe.workspace = true
 zeroize.workspace = true
 
