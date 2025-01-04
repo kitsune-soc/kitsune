@@ -3,6 +3,7 @@ use crate::state::Zustand;
 use axum::{routing, Router};
 use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
+use flashy::FlashLayer;
 use kitsune_config::server;
 use std::time::Duration;
 use tower_http::{
@@ -333,6 +334,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
         .layer(CatchPanicLayer::new())
         .layer(CorsLayer::permissive())
         .layer(CsrfLayer::generate()) // TODO: Make this configurable instead of random
+        .layer(FlashLayer::generate()) // TODO: Make this configurable instead of random
         .layer(TimeoutLayer::new(Duration::from_secs(
             server_config.request_timeout_secs,
         )))

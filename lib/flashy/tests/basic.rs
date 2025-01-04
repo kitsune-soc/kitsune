@@ -1,5 +1,5 @@
 use cookie::Key;
-use flashy::{FlashHandle, FlashLayer, Level, ReadFlashes};
+use flashy::{FlashHandle, FlashLayer, IncomingFlashes, Level};
 use http::header::{COOKIE, SET_COOKIE};
 use std::convert::Infallible;
 use tower::{Layer, ServiceExt};
@@ -9,7 +9,7 @@ async fn roundtrip() {
     let flash_layer = FlashLayer::new(Key::generate());
 
     let service = flash_layer.layer(tower::service_fn(|req: http::Request<()>| async move {
-        let extracted = req.extensions().get::<ReadFlashes>().unwrap();
+        let extracted = req.extensions().get::<IncomingFlashes>().unwrap();
         assert!(extracted.is_empty());
 
         let handle = req.extensions().get::<FlashHandle>().unwrap();
@@ -28,7 +28,7 @@ async fn roundtrip() {
     let request = request.body(()).unwrap();
 
     let service = flash_layer.layer(tower::service_fn(|req: http::Request<()>| async move {
-        let extracted = req.extensions().get::<ReadFlashes>().unwrap();
+        let extracted = req.extensions().get::<IncomingFlashes>().unwrap();
         assert!(!extracted.is_empty());
 
         let mut iter = extracted.iter();

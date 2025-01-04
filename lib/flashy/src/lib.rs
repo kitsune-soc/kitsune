@@ -56,9 +56,9 @@ impl<'a> Iterator for FlashIter<'a> {
 }
 
 #[derive(Clone)]
-pub struct ReadFlashes(Arc<Vec<Flash>>);
+pub struct IncomingFlashes(Arc<Vec<Flash>>);
 
-impl ReadFlashes {
+impl IncomingFlashes {
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize {
@@ -78,7 +78,7 @@ impl ReadFlashes {
     }
 }
 
-impl<'a> IntoIterator for &'a ReadFlashes {
+impl<'a> IntoIterator for &'a IncomingFlashes {
     type IntoIter = FlashIter<'a>;
     type Item = (Level, &'a str);
 
@@ -88,6 +88,7 @@ impl<'a> IntoIterator for &'a ReadFlashes {
     }
 }
 
+#[derive(Clone)]
 pub struct FlashService<S> {
     inner: S,
     key: Key,
@@ -206,7 +207,7 @@ where
             .and_then(|cookie| sonic_rs::from_str(cookie.value()).ok())
             .unwrap_or_default();
 
-        let read_flashes = ReadFlashes(Arc::new(flashes));
+        let read_flashes = IncomingFlashes(Arc::new(flashes));
         let handle = FlashHandle(Arc::new(Mutex::new(HandleInner {
             flashes: Vec::new(),
         })));
@@ -222,6 +223,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct FlashLayer {
     key: Key,
 }
@@ -231,6 +233,12 @@ impl FlashLayer {
     #[must_use]
     pub fn new(key: Key) -> Self {
         Self { key }
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn generate() -> Self {
+        Self::new(Key::generate())
     }
 }
 
@@ -245,11 +253,11 @@ impl<S> Layer<S> for FlashLayer {
 
 #[cfg(feature = "axum")]
 mod axum_impl {
-    use crate::{FlashHandle, ReadFlashes};
+    use crate::{FlashHandle, IncomingFlashes};
     use axum_core::extract::FromRequestParts;
     use std::convert::Infallible;
 
-    impl<S> FromRequestParts<S> for ReadFlashes
+    impl<S> FromRequestParts<S> for IncomingFlashes
     where
         S: Sync,
     {
@@ -262,7 +270,7 @@ mod axum_impl {
         ) -> Result<Self, Self::Rejection> {
             let flashes = parts
                 .extensions
-                .get::<ReadFlashes>()
+                .get::<IncomingFlashes>()
                 .expect("missing ReadFlashes. is FlashLayer mounted?")
                 .clone();
 
