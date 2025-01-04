@@ -1,4 +1,4 @@
-use cookie::{Cookie, CookieJar, Expiration, Key, SameSite};
+use cookie::{Cookie, CookieJar, Expiration, SameSite};
 use http::HeaderValue;
 use pin_project_lite::pin_project;
 use serde::{Deserialize, Serialize};
@@ -10,6 +10,8 @@ use std::{
 };
 use tower::{Layer, Service};
 use triomphe::Arc;
+
+pub use cookie::Key;
 
 const COOKIE_NAME: &str = "FLASH_MESSAGES";
 
@@ -102,43 +104,41 @@ where
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         loop {
-            let this = {
-                match self.as_mut().project() {
-                    FlashFutureProj::Execute { handle, fut, key } => {
-                        let resp = ready!(fut.poll(cx))?;
-                        FlashFuture::Return {
-                            handle: handle.clone(),
-                            resp: Some(resp),
-                            key: key.take(),
-                        }
+            let this = match self.as_mut().project() {
+                FlashFutureProj::Execute { handle, fut, key } => {
+                    let resp = ready!(fut.poll(cx))?;
+                    FlashFuture::Return {
+                        handle: handle.clone(),
+                        resp: Some(resp),
+                        key: key.take(),
                     }
-                    FlashFutureProj::Return { handle, resp, key } => {
-                        let mut resp = resp.take().expect("missing response");
-                        let key = key.take().expect("missing key");
+                }
+                FlashFutureProj::Return { handle, resp, key } => {
+                    let mut resp = resp.take().expect("missing response");
+                    let key = key.take().expect("missing key");
 
-                        let encoded_messages = {
-                            let guard = handle.0.lock().unwrap();
-                            sonic_rs::to_string(&guard.flashes).expect("failed to encode messages")
-                        };
+                    let encoded_messages = {
+                        let guard = handle.0.lock().unwrap();
+                        sonic_rs::to_string(&guard.flashes).expect("failed to encode messages")
+                    };
 
-                        let mut cookie = Cookie::new(COOKIE_NAME, encoded_messages);
-                        cookie.set_same_site(SameSite::Strict);
-                        cookie.set_secure(true);
-                        cookie.set_expires(Expiration::Session);
+                    let mut cookie = Cookie::new(COOKIE_NAME, encoded_messages);
+                    cookie.set_same_site(SameSite::Strict);
+                    cookie.set_secure(true);
+                    cookie.set_expires(Expiration::Session);
 
-                        let mut jar = CookieJar::new();
-                        let mut signed_jar = jar.signed_mut(&key);
-                        signed_jar.add(cookie);
+                    let mut jar = CookieJar::new();
+                    let mut signed_jar = jar.signed_mut(&key);
+                    signed_jar.add(cookie);
 
-                        for cookie in jar.iter() {
-                            let encoded = cookie.encoded().to_string();
-                            let value = HeaderValue::from_bytes(encoded.as_ref()).unwrap();
+                    for cookie in jar.iter() {
+                        let encoded = cookie.encoded().to_string();
+                        let value = HeaderValue::from_bytes(encoded.as_ref()).unwrap();
 
-                            resp.headers_mut().insert(http::header::SET_COOKIE, value);
-                        }
-
-                        return Poll::Ready(Ok(resp));
+                        resp.headers_mut().insert(http::header::SET_COOKIE, value);
                     }
+
+                    return Poll::Ready(Ok(resp));
                 }
             };
 
