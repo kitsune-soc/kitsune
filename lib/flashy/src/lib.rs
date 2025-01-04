@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     future::Future,
     pin::Pin,
+    slice,
     sync::Mutex,
     task::{self, ready, Poll},
 };
@@ -42,6 +43,18 @@ impl FlashHandle {
     }
 }
 
+pub struct FlashIter<'a>(slice::Iter<'a, (Level, String)>);
+
+impl<'a> Iterator for FlashIter<'a> {
+    type Item = (Level, &'a str);
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let (level, msg) = self.0.next()?;
+        Some((*level, msg.as_str()))
+    }
+}
+
 #[derive(Clone)]
 pub struct ReadFlashes(Arc<Vec<Flash>>);
 
@@ -59,10 +72,19 @@ impl ReadFlashes {
     }
 
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = (Level, &str)> {
-        self.0
-            .iter()
-            .map(|(level, message)| (*level, message.as_str()))
+    #[must_use]
+    pub fn iter(&self) -> FlashIter<'_> {
+        self.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a ReadFlashes {
+    type IntoIter = FlashIter<'a>;
+    type Item = (Level, &'a str);
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        FlashIter(self.0.iter())
     }
 }
 
