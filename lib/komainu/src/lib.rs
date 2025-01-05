@@ -17,6 +17,7 @@ pub struct Authorization<'a> {
     pub client: Client<'a>,
     pub pkce_payload: Option<pkce::Payload<'a>>,
     pub scopes: Scope,
+    pub user_id: Cow<'a, str>,
 }
 
 pub struct AuthInstruction<'a, 'b> {
@@ -27,8 +28,8 @@ pub struct AuthInstruction<'a, 'b> {
 
 #[derive(Clone)]
 pub struct Client<'a> {
-    pub client_id: &'a str,
-    pub client_secret: &'a str,
+    pub client_id: Cow<'a, str>,
+    pub client_secret: Cow<'a, str>,
     pub scopes: Scope,
     pub redirect_uri: Cow<'a, str>,
 }

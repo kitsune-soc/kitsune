@@ -10,7 +10,6 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
-use oxide_auth::endpoint::Scope;
 use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
@@ -19,13 +18,14 @@ use time::Duration;
 use typed_builder::TypedBuilder;
 use url::Url;
 
+mod auth_issuer;
 mod authorizer;
-mod endpoint;
+mod client_extractor;
 mod issuer;
 mod registrar;
 mod solicitor;
 
-pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
+pub use self::solicitor::OAuthOwnerSolicitor;
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";

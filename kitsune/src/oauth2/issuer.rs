@@ -1,5 +1,3 @@
-use super::{chrono_to_timestamp, timestamp_to_chrono};
-use async_trait::async_trait;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
@@ -9,12 +7,6 @@ use kitsune_db::{
 };
 use kitsune_error::{Error, Result};
 use kitsune_util::generate_secret;
-use oxide_auth::primitives::{
-    grant::{Extensions, Grant},
-    issuer::{RefreshedToken, TokenType},
-    prelude::IssuedToken,
-};
-use oxide_auth_async::primitives::Issuer;
 use trials::attempt;
 
 #[derive(Clone)]

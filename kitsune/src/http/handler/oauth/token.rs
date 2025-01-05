@@ -1,11 +1,6 @@
 use crate::oauth2::OAuthEndpoint;
 use axum::{debug_handler, extract::State};
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
-use oxide_auth::endpoint::QueryParameter;
-use oxide_auth_async::endpoint::{
-    access_token::AccessTokenFlow, client_credentials::ClientCredentialsFlow, refresh::RefreshFlow,
-};
-use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 
 #[debug_handler(state = crate::state::Zustand)]
 pub async fn post(

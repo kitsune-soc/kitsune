@@ -3,6 +3,7 @@ use serde::Deserialize;
 use std::{
     collections::{hash_set, HashSet},
     convert::Infallible,
+    fmt::{self, Display},
     str::FromStr,
 };
 
@@ -56,6 +57,17 @@ impl Scope {
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &str> {
         self.inner.iter().map(CompactString::as_str)
+    }
+}
+
+impl Display for Scope {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for item in itertools::intersperse(self.iter(), " ") {
+            f.write_str(item)?;
+        }
+
+        Ok(())
     }
 }
 

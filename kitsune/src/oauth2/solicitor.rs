@@ -63,64 +63,7 @@ impl OAuthOwnerSolicitor {
                 OwnerConsent::Authorized(self.authenticated_user.id.to_string())
             }
             Some("deny") => OwnerConsent::Denied,
-            Some(..) | None => {
-                let client_id: Uuid = solicitation
-                    .pre_grant()
-                    .client_id
-                    .parse()
-                    .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
-
-                let app_name_result: Result<Option<String>> = attempt! { async
-                    with_connection!(self.db_pool, |db_conn| {
-                        oauth2_applications::table
-                            .find(client_id)
-                            .select(oauth2_applications::name)
-                            .get_result::<String>(db_conn)
-                            .await
-                            .optional()
-                    })?
-                };
-
-                let app_name = app_name_result
-                    .map_err(|_| WebError::InternalError(None))?
-                    .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
-
-                let scopes = solicitation
-                    .pre_grant()
-                    .scope
-                    .iter()
-                    .map(OAuthScope::from_str)
-                    .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
-                    .expect("[Bug] Scopes weren't normalised");
-
-                let user_id = self.authenticated_user.id.to_string();
-                let csrf_token = self.csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
-
-                let body = crate::template::render(
-                    "oauth/consent.html",
-                    minijinja::context! {
-                        authenticated_username => &self.authenticated_user.username,
-                        app_name => &app_name,
-                        csrf_token => csrf_token.as_str(),
-                        query => minijinja::context! {
-                            client_id => query.client_id,
-                            redirect_uri => query.redirect_uri,
-                            response_type => query.response_type,
-                            scope => query.scope,
-                            state => query.state.as_deref().unwrap_or(""),
-                        },
-                        scopes => &scopes,
-                    },
-                )
-                .unwrap();
-
-                OwnerConsent::InProgress(
-                    OAuthResponse::default()
-                        .content_type("text/html")
-                        .unwrap()
-                        .body(&body),
-                )
-            }
+            Some(..) | None => {}
         };
 
         Ok(consent)

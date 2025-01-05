@@ -19,8 +19,6 @@ use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
 use kitsune_error::{Error, Result};
-use oxide_auth_async::endpoint::authorization::AuthorizationFlow;
-use oxide_auth_axum::{OAuthRequest, OAuthResponse};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 
@@ -60,8 +58,9 @@ pub async fn get(
     cookies: SignedCookieJar,
     csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
-    oauth_req: OAuthRequest,
-) -> Result<Either3<OAuthResponse, Html<String>, Redirect>> {
+
+    request: axum::extract::Request,
+) -> Result<Either3<Html<String>, Html<String>, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = with_connection!(db_pool, |db_conn| {
@@ -106,11 +105,62 @@ pub async fn get(
     let extractor = komainu::code_grant::AuthorizerExtractor::new(todo!(), todo!());
     let authorizer = extractor.extract_raw(todo!()).await?;
 
-    let mut flow = AuthorizationFlow::prepare(oauth_endpoint.with_solicitor(solicitor))?;
-    AuthorizationFlow::execute(&mut flow, oauth_req)
-        .await
-        .map(Either3::E1)
-        .map_err(Error::from)
+    let client_id: Uuid = solicitation
+        .pre_grant()
+        .client_id
+        .parse()
+        .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
+
+    let app_name_result: Result<Option<String>> = attempt! { async
+        with_connection!(self.db_pool, |db_conn| {
+            oauth2_applications::table
+                .find(client_id)
+                .select(oauth2_applications::name)
+                .get_result::<String>(db_conn)
+                .await
+                .optional()
+        })?
+    };
+
+    let app_name = app_name_result
+        .map_err(|_| WebError::InternalError(None))?
+        .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
+
+    let scopes = solicitation
+        .pre_grant()
+        .scope
+        .iter()
+        .map(OAuthScope::from_str)
+        .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
+        .expect("[Bug] Scopes weren't normalised");
+
+    let user_id = authenticated_user.id.to_string();
+    let csrf_token = csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
+
+    let body = crate::template::render(
+        "oauth/consent.html",
+        minijinja::context! {
+            authenticated_username => &authenticated_user.username,
+            app_name => &app_name,
+            csrf_token => csrf_token.as_str(),
+            query => minijinja::context! {
+                client_id => query.client_id,
+                redirect_uri => query.redirect_uri,
+                response_type => query.response_type,
+                scope => query.scope,
+                state => query.state.as_deref().unwrap_or(""),
+            },
+            scopes => &scopes,
+        },
+    )
+    .unwrap();
+
+    OwnerConsent::InProgress(
+        OAuthResponse::default()
+            .content_type("text/html")
+            .unwrap()
+            .body(&body),
+    )
 }
 
 #[debug_handler(state = crate::state::Zustand)]
