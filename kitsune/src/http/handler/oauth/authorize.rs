@@ -17,7 +17,9 @@ use cursiv::{CsrfHandle, MessageRef};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
-use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
+use kitsune_db::{
+    model::user::User, schema::oauth2_applications, schema::users, with_connection, PgPool,
+};
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_url::UrlService;
 use komainu::code_grant::{self, Authorizer};
@@ -32,11 +34,7 @@ const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check you
 const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
 
 #[cfg(feature = "oidc")]
-use {
-    axum::extract::Query,
-    kitsune_db::{model::oauth2, schema::oauth2_applications},
-    kitsune_oidc::OidcService,
-};
+use {axum::extract::Query, kitsune_db::model::oauth2, kitsune_oidc::OidcService};
 
 #[cfg(feature = "oidc")]
 #[derive(Deserialize)]
