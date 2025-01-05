@@ -50,7 +50,7 @@ pub struct LoginForm {
 }
 
 #[allow(clippy::too_many_lines)]
-#[debug_handler(state = crate::state::Zustand)]
+#[cfg_attr(feature = "oidc", debug_handler(state = crate::state::Zustand))]
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
         State<Option<OidcService>>,
