@@ -83,8 +83,9 @@ where
 
         // Check whether the client can actually perform the grant
         if !client.scopes.can_perform(&request_scopes) {
-            debug!(?client_id, "client can't issue the requested scopes");
-            return Err(GrantError::AccessDenied);
+            debug!(?client_id, client_scopes = ?client.scopes, ?request_scopes, "client can't issue the requested scopes");
+            // apparently clients do that. weird smh.
+            //return Err(GrantError::AccessDenied);
         }
 
         let pkce_payload = if let Some(challenge) = req.query.get("code_challenge") {

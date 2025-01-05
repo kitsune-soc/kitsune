@@ -7,7 +7,7 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Clone, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(transparent)]
 pub struct Scope {
     inner: HashSet<CompactString>,

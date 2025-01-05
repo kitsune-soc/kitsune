@@ -70,7 +70,7 @@ where
     CI: crate::ClientExtractor,
     RI: self::refresh::Issuer,
 {
-    let grant_type = req.query.get("grant_type").map(Borrow::borrow);
+    let grant_type = req.body.get("grant_type").map(Borrow::borrow);
 
     let token_response = match grant_type {
         Some("authorization_code") => {

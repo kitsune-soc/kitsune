@@ -4,8 +4,7 @@ use crate::{error::Error, params::ParamStorage};
 use bytes::Bytes;
 use memchr::memchr;
 
-static URL_ENCODED_CONTENT_TYPE: http::HeaderValue =
-    http::HeaderValue::from_static("application/x-www-form-urlencoded");
+static JSON_CONTENT_TYPE: http::HeaderValue = http::HeaderValue::from_static("application/json");
 
 #[inline]
 pub fn body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T, Error>
@@ -17,10 +16,10 @@ where
     //
     // Done to increase compatibility.
     let content_type = req.headers().get(http::header::CONTENT_TYPE);
-    if content_type == Some(&URL_ENCODED_CONTENT_TYPE) {
-        serde_urlencoded::from_bytes(req.body()).map_err(Error::body)
-    } else {
+    if content_type == Some(&JSON_CONTENT_TYPE) {
         sonic_rs::from_slice(req.body()).map_err(Error::body)
+    } else {
+        serde_urlencoded::from_bytes(req.body()).map_err(Error::body)
     }
 }
 

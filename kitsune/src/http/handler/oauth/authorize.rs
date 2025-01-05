@@ -122,9 +122,8 @@ pub async fn get(
     let mut scopes = authorizer
         .scope()
         .iter()
-        .map(OAuthScope::from_str)
-        .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
-        .expect("[Bug] Scopes weren't normalised");
+        .filter_map(|scope| OAuthScope::from_str(scope).ok())
+        .collect::<Vec<OAuthScope>>();
 
     if scopes.is_empty() {
         // default to read scope if no scopes are defined
