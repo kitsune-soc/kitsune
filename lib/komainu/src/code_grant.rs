@@ -59,19 +59,15 @@ where
     #[instrument(skip_all)]
     pub async fn extract_raw<'a>(
         &'a self,
-        req: &'a http::Request<()>,
+        req: &'a crate::Request<'a>,
     ) -> Result<Authorizer<'a, I>, GrantError> {
-        let query: ParamStorage<&str, &str> =
-            serde_urlencoded::from_str(req.uri().query().or_invalid_request()?)
-                .map_err(Error::query)?;
-
-        let client_id = query.get("client_id").or_invalid_request()?;
-        let response_type = query.get("response_type").or_invalid_request()?;
-        let scope = query.get("scope").map_or("", Deref::deref);
-        let state = query.get("state").map(|state| &**state);
+        let client_id = req.query.get("client_id").or_invalid_request()?;
+        let response_type = req.query.get("response_type").or_invalid_request()?;
+        let scope = req.query.get("scope").map_or("", Deref::deref);
+        let state = req.query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;
-        if let Some(redirect_uri) = query.get("redirect_uri") {
+        if let Some(redirect_uri) = req.query.get("redirect_uri") {
             if client.redirect_uri != *redirect_uri {
                 debug!(?client_id, "redirect uri doesn't match");
                 return Err(GrantError::AccessDenied);
@@ -91,8 +87,8 @@ where
             return Err(GrantError::AccessDenied);
         }
 
-        let pkce_payload = if let Some(challenge) = query.get("code_challenge") {
-            let method = if let Some(method) = query.get("challenge_code_method") {
+        let pkce_payload = if let Some(challenge) = req.query.get("code_challenge") {
+            let method = if let Some(method) = req.query.get("challenge_code_method") {
                 pkce::Method::from_str(method).map_err(Error::query)?
             } else {
                 pkce::Method::default()
@@ -111,7 +107,7 @@ where
             client,
             pkce_payload,
             scope: request_scopes,
-            query,
+            query: &req.query,
             state,
         })
     }
@@ -131,7 +127,7 @@ pub struct Authorizer<'a, I> {
     client: Client<'a>,
     pkce_payload: Option<pkce::Payload<'a>>,
     scope: Scope,
-    query: ParamStorage<&'a str, &'a str>,
+    query: &'a ParamStorage<Cow<'a, str>, Cow<'a, str>>,
     state: Option<&'a str>,
 }
 
@@ -150,8 +146,8 @@ where
     }
 
     #[must_use]
-    pub fn query(&self) -> &ParamStorage<&'a str, &'a str> {
-        &self.query
+    pub fn query(&self) -> &ParamStorage<Cow<'a, str>, Cow<'a, str>> {
+        self.query
     }
 
     #[inline]

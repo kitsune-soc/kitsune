@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{error::Error, params::ParamStorage};
 use bytes::Bytes;
 use memchr::memchr;
@@ -33,7 +35,10 @@ pub enum ClientCredentials<'a> {
 impl<'a> ClientCredentials<'a> {
     #[inline]
     #[instrument(skip_all)]
-    pub fn extract(headers: &http::HeaderMap, body: &ParamStorage<&str, &'a str>) -> Option<Self> {
+    pub fn extract(
+        headers: &http::HeaderMap,
+        body: &'a ParamStorage<Cow<'_, str>, Cow<'a, str>>,
+    ) -> Option<Self> {
         if let Some(auth) = BasicAuth::extract(headers) {
             Some(Self::Basic(auth))
         } else {

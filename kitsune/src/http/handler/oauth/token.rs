@@ -1,12 +1,11 @@
-use crate::oauth2::OAuthEndpoint;
+use crate::http::extractor::Json;
 use axum::{debug_handler, extract::State};
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 
 #[debug_handler(state = crate::state::Zustand)]
 pub async fn post(
-    State(oauth_endpoint): State<OAuthEndpoint>,
-    oauth_req: OAuthRequest,
-) -> Result<OAuthResponse> {
+    request: axum::extract::Request,
+) -> Result<Json<komainu::flow::TokenResponse<'static>>> {
     let grant_type = oauth_req
         .body()
         .and_then(|body| body.unique_value("grant_type"))

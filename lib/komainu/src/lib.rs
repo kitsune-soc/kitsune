@@ -1,7 +1,13 @@
 #[macro_use]
 extern crate tracing;
 
-use self::{error::Error, flow::pkce, scope::Scope};
+use self::{
+    error::{BoxError, Error},
+    flow::pkce,
+    params::ParamStorage,
+    scope::Scope,
+};
+use http_body_util::BodyExt;
 use std::{borrow::Cow, future::Future};
 use subtle::ConstantTimeEq;
 
@@ -11,6 +17,36 @@ pub mod extract;
 pub mod flow;
 pub mod params;
 pub mod scope;
+
+pub struct Request<'a> {
+    pub headers: http::HeaderMap,
+    pub query: ParamStorage<Cow<'a, str>, Cow<'a, str>>,
+    pub body: ParamStorage<Cow<'a, str>, Cow<'a, str>>,
+}
+
+impl Request<'_> {
+    #[inline]
+    pub async fn read_from<B>(req: http::Request<B>) -> Result<Self, Error>
+    where
+        B: http_body::Body,
+        B::Error: Into<BoxError>,
+    {
+        let raw_query = req.uri().query().unwrap_or("");
+        let query = serde_urlencoded::from_str(raw_query).map_err(Error::query)?;
+
+        let (parts, body) = req.into_parts();
+        let collected = body.collect().await.map_err(Error::body)?.to_bytes();
+        let req = http::Request::from_parts(parts, collected);
+
+        let body = crate::extract::body(&req)?;
+
+        Ok(Self {
+            headers: req.headers().clone(),
+            query,
+            body,
+        })
+    }
+}
 
 pub struct Authorization<'a> {
     pub code: Cow<'a, str>,

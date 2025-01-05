@@ -4055,6 +4055,8 @@ dependencies = [
  "divan",
  "headers",
  "http",
+ "http-body",
+ "http-body-util",
  "insta",
  "itertools 0.14.0",
  "memchr",
