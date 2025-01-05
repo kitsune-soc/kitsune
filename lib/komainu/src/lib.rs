@@ -38,7 +38,9 @@ impl Request<'_> {
         let collected = body.collect().await.map_err(Error::body)?.to_bytes();
         let req = http::Request::from_parts(parts, collected);
 
-        let body = crate::extract::body(&req)?;
+        let body = crate::extract::body(&req)
+            .inspect_err(|error| debug!(?error, "couldnt deserialize body"))
+            .unwrap_or_default();
 
         Ok(Self {
             headers: req.headers().clone(),

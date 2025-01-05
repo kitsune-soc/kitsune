@@ -29,6 +29,7 @@ fn init_environment() -> minijinja::Environment<'static> {
     environment
 }
 
+#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
 fn event_handler(events: DebounceEventResult) {
     let Ok(events) = events else {
         return;
@@ -53,6 +54,7 @@ fn event_handler(events: DebounceEventResult) {
     }
 }
 
+#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
 fn spawn_watcher() {
     let watcher =
         notify_debouncer_full::new_debouncer(Duration::from_secs(1), None, event_handler).unwrap();
