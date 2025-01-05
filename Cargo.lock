@@ -3312,7 +3312,6 @@ dependencies = [
  "argon2",
  "async-graphql",
  "async-graphql-axum",
- "async-trait",
  "athena",
  "axum 0.8.1",
  "axum-extra",
