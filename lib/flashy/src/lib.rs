@@ -16,7 +16,8 @@ use tower::{Layer, Service};
 use triomphe::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-const COOKIE_NAME: &str = "FLASH_MESSAGES";
+const COOKIE_NAME: &str = "FLASHY-FLASH_MESSAGES";
+const KEY_CONTEXT: &str = "FLASHY-SIGN_COOKIE-BLAKE3-V1";
 
 type Flash = (Level, String);
 
@@ -33,9 +34,7 @@ impl Key {
     #[inline]
     #[must_use]
     pub fn derive_from(data: &[u8]) -> Self {
-        const CONTEXT: &str = "FLASHY-SIGN_COOKIE-BLAKE3-V1";
-
-        Self::new(blake3::derive_key(CONTEXT, data))
+        Self::new(blake3::derive_key(KEY_CONTEXT, data))
     }
 
     #[inline]

@@ -43,16 +43,18 @@ async fn roundtrip() {
 
 #[futures_test::test]
 async fn reject_invalid_signature() {
-    // this is correct:
-    // "FLASH_MESSAGES=Fk6s+EEdVwkMmBXJakw2oDlSZaErtG+6aHqAViCDhZ8%3D%5B%5B%22Success%22%2C%22YAY%22%5D%5D; SameSite=Strict; Secure"
-    //
-    // but we'll make it evil >:3
+    let correct_cookie_header = "FLASHY-FLASH_MESSAGES=b59fa319105e34641efc1dfd2be232c15e8d8be85c5bfb8c96c7aa17e581eab4.%5B%5B%22Success%22%2C%22YAY%22%5D%5D; SameSite=Strict; Secure";
+
+    // we'll make it evil >:3
     // instead of being "success" and "YAY", we'll make it "Error" and "NAY" :33
-    let cookie_header = "FLASH_MESSAGES=Fk6s+EEdVwkMmBXJakw2oDlSZaErtG+6aHqAViCDhZ8%3D%5B%5B%22Error%22%2C%22NAY%22%5D%5D; SameSite=Strict; Secure";
+    let wrong_cookie_header = correct_cookie_header
+        .replace("Success", "Error")
+        .replace("YAY", "NAY");
+
     let flash_layer = FlashLayer::new(Key::derive_from(KEY));
 
     let request = http::Request::builder()
-        .header(COOKIE, cookie_header)
+        .header(COOKIE, wrong_cookie_header)
         .body(())
         .unwrap();
 
@@ -60,6 +62,20 @@ async fn reject_invalid_signature() {
         // this should be empty because we ignore tampered with messages
         let extracted = req.extensions().get::<IncomingFlashes>().unwrap();
         assert!(extracted.is_empty());
+
+        Ok::<_, Infallible>(http::Response::new(()))
+    }));
+
+    service.oneshot(request).await.unwrap();
+
+    let request = http::Request::builder()
+        .header(COOKIE, correct_cookie_header)
+        .body(())
+        .unwrap();
+
+    let service = flash_layer.layer(tower::service_fn(|req: http::Request<()>| async move {
+        let extracted = req.extensions().get::<IncomingFlashes>().unwrap();
+        assert_eq!(extracted.len(), 1);
 
         Ok::<_, Infallible>(http::Response::new(()))
     }));
