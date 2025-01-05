@@ -3360,6 +3360,7 @@ dependencies = [
  "kitsune-util",
  "kitsune-wasm-mrf",
  "kitsune-webfinger",
+ "komainu",
  "mimalloc",
  "mime",
  "mime_guess",

@@ -103,6 +103,9 @@ pub async fn get(
         .db_pool(db_pool)
         .build();
 
+    let extractor = komainu::code_grant::AuthorizerExtractor::new(todo!(), todo!());
+    let authorizer = extractor.extract_raw(todo!()).await?;
+
     let mut flow = AuthorizationFlow::prepare(oauth_endpoint.with_solicitor(solicitor))?;
     AuthorizationFlow::execute(&mut flow, oauth_req)
         .await

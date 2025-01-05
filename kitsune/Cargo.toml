@@ -61,6 +61,7 @@ kitsune-url.workspace = true
 kitsune-util.workspace = true
 kitsune-wasm-mrf.workspace = true
 kitsune-webfinger.workspace = true
+komainu.workspace = true
 mimalloc.workspace = true
 mime.workspace = true
 mime_guess.workspace = true

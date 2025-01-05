@@ -347,7 +347,7 @@ mod axum_impl {
         ) -> Result<Self, Self::Rejection> {
             let flashes = parts
                 .extensions
-                .get::<IncomingFlashes>()
+                .get::<Self>()
                 .expect("missing ReadFlashes. is FlashLayer mounted?")
                 .clone();
 
@@ -368,7 +368,7 @@ mod axum_impl {
         ) -> Result<Self, Self::Rejection> {
             let handle = parts
                 .extensions
-                .get::<FlashHandle>()
+                .get::<Self>()
                 .expect("missing FlashHandle. is FlashLayer mounted?")
                 .clone();
 
