@@ -1,4 +1,4 @@
-use crate::oauth2::{ClientExtractor, CodeGrantIssuer, OAuthScope};
+use crate::oauth2::{ClientExtractor, CodeGrantIssuer, OAuthScope, SHOW_TOKEN_URI};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
     debug_handler,
@@ -19,9 +19,10 @@ use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
 use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;
-use std::str::FromStr;
+use std::{borrow::Borrow, str::FromStr};
 
 const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check your inbox!";
 const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
@@ -48,6 +49,8 @@ pub struct LoginForm {
     password: String,
 }
 
+#[allow(clippy::too_many_lines)]
+#[debug_handler(state = crate::state::Zustand)]
 pub async fn get(
     #[cfg(feature = "oidc")] (State(oidc_service), Query(query)): (
         State<Option<OidcService>>,
@@ -55,12 +58,13 @@ pub async fn get(
     ),
 
     State(db_pool): State<PgPool>,
+    State(url_service): State<UrlService>,
     cookies: SignedCookieJar,
     csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
 
     request: axum::extract::Request,
-) -> Result<Either4<Html<String>, Html<String>, http::Response<()>, Redirect>> {
+) -> Result<Either4<Html<String>, Html<String>, axum::response::Response, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = with_connection!(db_pool, |db_conn| {
@@ -102,8 +106,7 @@ pub async fn get(
         ClientExtractor::builder().db_pool(db_pool.clone()).build(),
     );
 
-    let (parts, _body) = request.into_parts();
-    let request = http::Request::from_parts(parts, ());
+    let request = komainu::Request::read_from(request).await?;
     let authorizer = extractor.extract_raw(&request).await?;
 
     let client_id: Uuid = authorizer.client().client_id.parse()?;
@@ -116,12 +119,17 @@ pub async fn get(
             .await
     })?;
 
-    let scopes = authorizer
+    let mut scopes = authorizer
         .scope()
         .iter()
         .map(OAuthScope::from_str)
         .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
         .expect("[Bug] Scopes weren't normalised");
+
+    if scopes.is_empty() {
+        // default to read scope if no scopes are defined
+        scopes.push(OAuthScope::Read);
+    }
 
     let user_id = authenticated_user.id.to_string();
 
@@ -131,18 +139,42 @@ pub async fn get(
             .get("csrf_token")
             .ok_or_else(|| kitsune_error!("missing csrf token"))?;
 
-        if !csrf_handle.verify(MessageRef::from_str(*csrf_token)) {
+        if !csrf_handle.verify(MessageRef::from_str(csrf_token.borrow())) {
             return Err(kitsune_error!(type = ErrorType::Forbidden, "invalid csrf token"));
         }
 
-        match *consent {
+        match consent.borrow() {
             "accept" => {
-                let scopes = authorizer.scope().clone();
-                let response = authorizer.accept(authenticated_user.id, &scopes).await;
+                let redirect_uri = authorizer.client().redirect_uri.clone();
+                let scopes = scopes.iter().map(AsRef::as_ref).collect();
+                let acceptor = match authorizer.accept(authenticated_user.id, &scopes).await {
+                    Ok(acceptor) => acceptor,
+                    Err(response) => {
+                        return Ok(Either4::E3(response.map(|()| axum::body::Body::empty())))
+                    }
+                };
 
-                Ok(Either4::E3(response))
+                if redirect_uri == SHOW_TOKEN_URI {
+                    let page = crate::template::render(
+                        "oauth/token.html",
+                        minijinja::context! {
+                            app_name => app_name,
+                            domain => url_service.domain(),
+                            token => acceptor.code(),
+                        },
+                    )
+                    .unwrap();
+
+                    Ok(Either4::E2(Html(page)))
+                } else {
+                    Ok(Either4::E3(
+                        acceptor.into_response().map(|()| axum::body::Body::empty()),
+                    ))
+                }
             }
-            "deny" => Ok(Either4::E3(authorizer.deny())),
+            "deny" => Ok(Either4::E3(
+                authorizer.deny().map(|()| axum::body::Body::empty()),
+            )),
             _ => return Err(kitsune_error!(type = ErrorType::BadRequest, "invalid consent param")),
         }
     } else {

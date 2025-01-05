@@ -1,5 +1,6 @@
+use bytes::Bytes;
 use serde::Serialize;
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 use strum::Display;
 use thiserror::Error;
 
@@ -51,4 +52,45 @@ pub enum TokenResponse<'a> {
     Error {
         error: Error,
     },
+}
+
+pub struct Impls<AI, CI, RI> {
+    pub auth_issuer: AI,
+    pub client_extractor: CI,
+    pub refresh_issuer: RI,
+}
+
+#[instrument(skip_all)]
+pub async fn dispatch<AI, CI, RI>(
+    req: &crate::Request<'_>,
+    impls: &Impls<AI, CI, RI>,
+) -> Result<http::Response<Bytes>, Error>
+where
+    AI: self::authorization::Issuer,
+    CI: crate::ClientExtractor,
+    RI: self::refresh::Issuer,
+{
+    let grant_type = req.query.get("grant_type").map(Borrow::borrow);
+
+    let token_response = match grant_type {
+        Some("authorization_code") => {
+            authorization::perform(req, &impls.client_extractor, &impls.auth_issuer).await?
+        }
+        Some("refresh_token") => {
+            refresh::perform(req, &impls.client_extractor, &impls.refresh_issuer).await?
+        }
+        _ => TokenResponse::Error {
+            error: Error::UnsupportedGrantType,
+        },
+    };
+
+    let mut response = http::Response::builder();
+    response = if matches!(token_response, TokenResponse::Success { .. }) {
+        response.status(http::StatusCode::OK)
+    } else {
+        response.status(http::StatusCode::BAD_REQUEST)
+    };
+
+    let body = Bytes::from(sonic_rs::to_vec(&token_response).unwrap());
+    Ok(response.body(body).unwrap())
 }

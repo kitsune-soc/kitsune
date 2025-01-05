@@ -122,6 +122,23 @@ macro_rules! return_err {
     }};
 }
 
+pub struct Acceptor {
+    response: http::Response<()>,
+    code: String,
+}
+
+impl Acceptor {
+    #[must_use]
+    pub fn code(&self) -> &str {
+        &self.code
+    }
+
+    #[must_use]
+    pub fn into_response(self) -> http::Response<()> {
+        self.response
+    }
+}
+
 pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
@@ -183,7 +200,11 @@ where
 
     #[inline]
     #[instrument(skip_all)]
-    pub async fn accept(self, user_id: I::UserId, scopes: &Scope) -> http::Response<()> {
+    pub async fn accept(
+        self,
+        user_id: I::UserId,
+        scopes: &Scope,
+    ) -> Result<Acceptor, http::Response<()>> {
         let pre_authorization = AuthInstruction {
             client: &self.client,
             scopes,
@@ -194,18 +215,25 @@ where
             Ok(code) => code,
             Err(error) => {
                 debug!(?error, "failed to issue code");
-                return self.build_error_response(&GrantError::TemporarilyUnavailable);
+                return Err(self.build_error_response(&GrantError::TemporarilyUnavailable));
             }
         };
 
-        let mut url = return_err!(self.redirect_uri());
+        let mut url = match self.redirect_uri() {
+            Ok(url) => url,
+            Err(error) => return Err(error),
+        };
+
         url.query_pairs_mut().append_pair("code", &code);
 
         if let Some(state) = self.state {
             url.query_pairs_mut().append_pair("state", state);
         }
 
-        Self::build_response(url)
+        Ok(Acceptor {
+            response: Self::build_response(url),
+            code,
+        })
     }
 
     #[inline]

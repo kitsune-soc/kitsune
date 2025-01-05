@@ -20,7 +20,7 @@ pub trait Issuer {
 #[instrument(skip_all)]
 pub async fn perform<'a, CE, I>(
     req: &'a crate::Request<'_>,
-    client_extractor: CE,
+    client_extractor: &CE,
     token_issuer: &'a I,
 ) -> Result<TokenResponse<'a>, flow::Error>
 where

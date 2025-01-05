@@ -10,6 +10,7 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
+use komainu::scope::Scope;
 use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
@@ -22,18 +23,17 @@ mod auth_code;
 mod client_extractor;
 mod code_grant;
 mod refresh;
-mod registrar;
 
 pub use self::{
     auth_code::Issuer as AuthIssuer, client_extractor::Extractor as ClientExtractor,
-    code_grant::Issuer as CodeGrantIssuer,
+    code_grant::Issuer as CodeGrantIssuer, refresh::Issuer as RefreshIssuer,
 };
-
-/// If the Redirect URI is equal to this string, show the token instead of redirecting the user
-const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 static AUTH_CODE_VALID_DURATION: Duration = Duration::minutes(10);
 static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
+
+/// If the Redirect URI is equal to this string, show the token instead of redirecting the user
+pub const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString, Serialize)]
 #[strum(serialize_all = "lowercase")]
