@@ -5,7 +5,9 @@ use komainu::{scope::Scope, ClientExtractor};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use trials::attempt;
+use typed_builder::TypedBuilder;
 
+#[derive(TypedBuilder)]
 pub struct Extractor {
     db_pool: kitsune_db::PgPool,
 }

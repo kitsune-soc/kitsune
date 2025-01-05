@@ -9,7 +9,7 @@ pub mod state;
 pub mod template;
 
 use self::{
-    oauth2::{OAuth2Service, OAuthEndpoint},
+    oauth2::OAuth2Service,
     state::{Service, SessionConfig, Zustand, ZustandInner},
 };
 use athena::JobQueue;
@@ -212,7 +212,6 @@ pub async fn initialise_state(
         #[cfg(feature = "mastodon-api")]
         mastodon_mapper,
         oauth2: oauth2_service,
-        oauth_endpoint: OAuthEndpoint::from(db_pool),
         #[cfg(feature = "oidc")]
         oidc: oidc_service,
         service: Service {

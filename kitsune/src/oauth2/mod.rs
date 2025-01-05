@@ -21,11 +21,15 @@ use url::Url;
 mod auth_issuer;
 mod authorizer;
 mod client_extractor;
+mod code_grant;
 mod issuer;
 mod registrar;
 mod solicitor;
 
-pub use self::solicitor::OAuthOwnerSolicitor;
+pub use self::{
+    auth_issuer::Issuer as AuthIssuer, client_extractor::Extractor as ClientExtractor,
+    code_grant::Issuer as CodeGrantIssuer, solicitor::OAuthOwnerSolicitor,
+};
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
 const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";

@@ -17,9 +17,11 @@ use komainu::{
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr, time::Duration};
 use trials::attempt;
+use typed_builder::TypedBuilder;
 
 const TOKEN_TTL: Duration = Duration::from_secs(3600);
 
+#[derive(TypedBuilder)]
 pub struct Issuer {
     db_pool: kitsune_db::PgPool,
 }

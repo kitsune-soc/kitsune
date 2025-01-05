@@ -1,4 +1,4 @@
-use crate::oauth2::{OAuthEndpoint, OAuthOwnerSolicitor};
+use crate::oauth2::{ClientExtractor, CodeGrantIssuer, OAuthScope};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
     debug_handler,
@@ -7,20 +7,21 @@ use axum::{
     Form,
 };
 use axum_extra::{
-    either::{Either, Either3},
+    either::{Either, Either4},
     extract::{
         cookie::{Cookie, Expiration, SameSite},
         SignedCookieJar,
     },
 };
-use cursiv::CsrfHandle;
+use cursiv::{CsrfHandle, MessageRef};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{model::user::User, schema::users, with_connection, PgPool};
-use kitsune_error::{Error, Result};
+use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
+use std::str::FromStr;
 
 const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check your inbox!";
 const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
@@ -54,13 +55,12 @@ pub async fn get(
     ),
 
     State(db_pool): State<PgPool>,
-    State(oauth_endpoint): State<OAuthEndpoint>,
     cookies: SignedCookieJar,
     csrf_handle: CsrfHandle,
     flash_messages: IncomingFlashes,
 
     request: axum::extract::Request,
-) -> Result<Either3<Html<String>, Html<String>, Redirect>> {
+) -> Result<Either4<Html<String>, Html<String>, http::Response<()>, Redirect>> {
     #[cfg(feature = "oidc")]
     if let Some(oidc_service) = oidc_service {
         let application = with_connection!(db_pool, |db_conn| {
@@ -75,13 +75,13 @@ pub async fn get(
             .authorisation_url(application.id, query.scope, query.state)
             .await?;
 
-        return Ok(Either3::E3(Redirect::to(auth_url.as_str())));
+        return Ok(Either4::E4(Redirect::to(auth_url.as_str())));
     }
 
     let authenticated_user = if let Some(user_id) = cookies.get("user_id") {
         let id = user_id.value().parse::<Uuid>()?;
         with_connection!(db_pool, |db_conn| {
-            users::table.find(id).get_result(db_conn).await
+            users::table.find(id).get_result::<User>(db_conn).await
         })?
     } else {
         let messages: Vec<(flashy::Level, &str)> = flash_messages.into_iter().collect();
@@ -93,74 +93,87 @@ pub async fn get(
         )
         .unwrap();
 
-        return Ok(Either3::E2(Html(page)));
+        return Ok(Either4::E2(Html(page)));
     };
 
-    let solicitor = OAuthOwnerSolicitor::builder()
-        .authenticated_user(authenticated_user)
-        .csrf_handle(csrf_handle)
-        .db_pool(db_pool)
-        .build();
+    // ToDo: move into state
+    let extractor = komainu::code_grant::AuthorizerExtractor::new(
+        CodeGrantIssuer::builder().db_pool(db_pool.clone()).build(),
+        ClientExtractor::builder().db_pool(db_pool.clone()).build(),
+    );
 
-    let extractor = komainu::code_grant::AuthorizerExtractor::new(todo!(), todo!());
-    let authorizer = extractor.extract_raw(todo!()).await?;
+    let (parts, _body) = request.into_parts();
+    let request = http::Request::from_parts(parts, ());
+    let authorizer = extractor.extract_raw(&request).await?;
 
-    let client_id: Uuid = solicitation
-        .pre_grant()
-        .client_id
-        .parse()
-        .map_err(|_| WebError::Endpoint(OAuthError::BadRequest))?;
+    let client_id: Uuid = authorizer.client().client_id.parse()?;
 
-    let app_name_result: Result<Option<String>> = attempt! { async
-        with_connection!(self.db_pool, |db_conn| {
-            oauth2_applications::table
-                .find(client_id)
-                .select(oauth2_applications::name)
-                .get_result::<String>(db_conn)
-                .await
-                .optional()
-        })?
-    };
+    let app_name = with_connection!(db_pool, |db_conn| {
+        oauth2_applications::table
+            .find(client_id)
+            .select(oauth2_applications::name)
+            .get_result::<String>(db_conn)
+            .await
+    })?;
 
-    let app_name = app_name_result
-        .map_err(|_| WebError::InternalError(None))?
-        .ok_or(WebError::Endpoint(OAuthError::DenySilently))?;
-
-    let scopes = solicitation
-        .pre_grant()
-        .scope
+    let scopes = authorizer
+        .scope()
         .iter()
         .map(OAuthScope::from_str)
         .collect::<Result<Vec<OAuthScope>, strum::ParseError>>()
         .expect("[Bug] Scopes weren't normalised");
 
     let user_id = authenticated_user.id.to_string();
-    let csrf_token = csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
 
-    let body = crate::template::render(
-        "oauth/consent.html",
-        minijinja::context! {
-            authenticated_username => &authenticated_user.username,
-            app_name => &app_name,
-            csrf_token => csrf_token.as_str(),
-            query => minijinja::context! {
-                client_id => query.client_id,
-                redirect_uri => query.redirect_uri,
-                response_type => query.response_type,
-                scope => query.scope,
-                state => query.state.as_deref().unwrap_or(""),
+    if let Some(consent) = authorizer.query().get("login_consent") {
+        let csrf_token = authorizer
+            .query()
+            .get("csrf_token")
+            .ok_or_else(|| kitsune_error!("missing csrf token"))?;
+
+        if !csrf_handle.verify(MessageRef::from_str(*csrf_token)) {
+            return Err(kitsune_error!(type = ErrorType::Forbidden, "invalid csrf token"));
+        }
+
+        match *consent {
+            "accept" => {
+                let scopes = authorizer.scope().clone();
+                let response = authorizer.accept(authenticated_user.id, &scopes).await;
+
+                Ok(Either4::E3(response))
+            }
+            "deny" => Ok(Either4::E3(authorizer.deny())),
+            _ => return Err(kitsune_error!(type = ErrorType::BadRequest, "invalid consent param")),
+        }
+    } else {
+        let csrf_token = csrf_handle.sign(user_id); // TODO: BAD DO NOT USE USER-ID
+
+        let client_id = authorizer.query().get("client_id");
+        let redirect_uri = authorizer.query().get("redirect_uri");
+        let response_type = authorizer.query().get("response_type");
+        let scope = authorizer.query().get("scope");
+        let state = authorizer.query().get("state");
+
+        let body = crate::template::render(
+            "oauth/consent.html",
+            minijinja::context! {
+                authenticated_username => &authenticated_user.username,
+                app_name => &app_name,
+                csrf_token => csrf_token.as_str(),
+                query => minijinja::context! {
+                    client_id => client_id,
+                    redirect_uri => redirect_uri,
+                    response_type => response_type,
+                    scope => scope,
+                    state => state,
+                },
+                scopes => &scopes,
             },
-            scopes => &scopes,
-        },
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    OwnerConsent::InProgress(
-        OAuthResponse::default()
-            .content_type("text/html")
-            .unwrap()
-            .body(&body),
-    )
+        Ok(Either4::E1(Html(body)))
+    }
 }
 
 #[debug_handler(state = crate::state::Zustand)]

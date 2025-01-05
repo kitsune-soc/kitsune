@@ -110,6 +110,7 @@ where
             issuer: &self.issuer,
             client,
             pkce_payload,
+            scope: request_scopes,
             query,
             state,
         })
@@ -129,6 +130,7 @@ pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
     pkce_payload: Option<pkce::Payload<'a>>,
+    scope: Scope,
     query: ParamStorage<&'a str, &'a str>,
     state: Option<&'a str>,
 }
@@ -140,6 +142,11 @@ where
     #[must_use]
     pub fn client(&self) -> &Client<'a> {
         &self.client
+    }
+
+    #[must_use]
+    pub fn scope(&self) -> &Scope {
+        &self.scope
     }
 
     #[must_use]
