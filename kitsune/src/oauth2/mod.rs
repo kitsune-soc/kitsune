@@ -24,11 +24,10 @@ mod client_extractor;
 mod code_grant;
 mod issuer;
 mod registrar;
-mod solicitor;
 
 pub use self::{
     auth_issuer::Issuer as AuthIssuer, client_extractor::Extractor as ClientExtractor,
-    code_grant::Issuer as CodeGrantIssuer, solicitor::OAuthOwnerSolicitor,
+    code_grant::Issuer as CodeGrantIssuer,
 };
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
