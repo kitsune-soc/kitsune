@@ -1,3 +1,4 @@
+use crate::oauth2::TOKEN_VALID_DURATION;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -15,11 +16,9 @@ use komainu::{
     scope::Scope,
 };
 use speedy_uuid::Uuid;
-use std::{borrow::Cow, str::FromStr, time::Duration};
+use std::{borrow::Cow, str::FromStr};
 use trials::attempt;
 use typed_builder::TypedBuilder;
-
-const TOKEN_TTL: Duration = Duration::from_secs(3600);
 
 #[derive(TypedBuilder)]
 pub struct Issuer {
@@ -79,7 +78,7 @@ impl authorization::Issuer for Issuer {
                         application_id: Some(application_id),
                         token: generate_secret().as_str(),
                         scopes: &scopes,
-                        expires_at: Timestamp::now_utc() + TOKEN_TTL,
+                        expires_at: Timestamp::now_utc() + TOKEN_VALID_DURATION,
                     })
                     .returning(oauth2::AccessToken::as_returning())
                     .get_result::<oauth2::AccessToken>(tx)

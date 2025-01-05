@@ -1,3 +1,4 @@
+use super::AUTH_CODE_VALID_DURATION;
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
@@ -5,11 +6,9 @@ use kitsune_db::{model::oauth2, schema::oauth2_authorization_codes, with_connect
 use kitsune_util::generate_secret;
 use komainu::code_grant;
 use speedy_uuid::Uuid;
-use std::{str::FromStr, time::Duration};
+use std::str::FromStr;
 use trials::attempt;
 use typed_builder::TypedBuilder;
-
-const CODE_TTL: Duration = Duration::from_secs(10 * 60);
 
 #[derive(TypedBuilder)]
 pub struct Issuer {
@@ -35,7 +34,7 @@ impl code_grant::Issuer for Issuer {
                         user_id,
                         application_id: client_id,
                         scopes: &scopes,
-                        expires_at: Timestamp::now_utc() + CODE_TTL,
+                        expires_at: Timestamp::now_utc() + AUTH_CODE_VALID_DURATION,
                     })
                     .returning(oauth2::AuthorizationCode::as_returning())
                     .get_result::<oauth2::AuthorizationCode>(db_conn)
