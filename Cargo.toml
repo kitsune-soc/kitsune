@@ -188,6 +188,7 @@ hyper-rustls = { version = "0.27.5", default-features = false, features = [
 ] }
 icu_normalizer = "1.5.0"
 img-parts = "0.3.2"
+indexmap = { version = "2.7.0", features = ["serde"] }
 insta = { version = "1.42.0", default-features = false, features = [
     "glob",
     "json",

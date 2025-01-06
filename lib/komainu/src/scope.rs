@@ -1,7 +1,7 @@
 use compact_str::CompactString;
+use indexmap::{set, IndexSet};
 use serde::Deserialize;
 use std::{
-    collections::{hash_set, HashSet},
     convert::Infallible,
     fmt::{self, Display},
     str::FromStr,
@@ -10,7 +10,7 @@ use std::{
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(transparent)]
 pub struct Scope {
-    inner: HashSet<CompactString>,
+    inner: IndexSet<CompactString>,
 }
 
 impl FromStr for Scope {
@@ -86,7 +86,7 @@ where
 
 impl IntoIterator for Scope {
     type Item = CompactString;
-    type IntoIter = hash_set::IntoIter<Self::Item>;
+    type IntoIter = set::IntoIter<Self::Item>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {

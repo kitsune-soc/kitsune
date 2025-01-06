@@ -20,6 +20,7 @@ compact_str.workspace = true
 http.workspace = true
 http-body.workspace = true
 http-body-util.workspace = true
+indexmap.workspace = true
 itertools.workspace = true
 memchr.workspace = true
 serde.workspace = true
