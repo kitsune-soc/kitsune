@@ -13,7 +13,19 @@ pub enum CowStr<'a> {
     Owned(CompactString),
 }
 
-impl CowStr<'_> {
+impl<'a> CowStr<'a> {
+    #[inline]
+    #[must_use]
+    pub fn borrowed(str: &'a str) -> Self {
+        Self::Borrowed(str)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn owned(str: impl Into<CompactString>) -> Self {
+        Self::Owned(str.into())
+    }
+
     #[inline]
     #[must_use]
     pub fn into_owned(self) -> CowStr<'static> {
