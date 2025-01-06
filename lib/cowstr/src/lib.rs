@@ -2,6 +2,10 @@ use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, ops::Deref};
 
+const _: () = {
+    assert!(std::mem::size_of::<CowStr<'static>>() == std::mem::size_of::<String>());
+};
+
 #[derive(Clone, Debug, Deserialize, Serialize, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(untagged)]
 pub enum CowStr<'a> {
