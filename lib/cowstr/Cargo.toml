@@ -1,0 +1,13 @@
+[package]
+name = "cowstr"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+compact_str.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true

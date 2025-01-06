@@ -56,6 +56,7 @@ members = [
 
     "lib/athena",
     "lib/blowocking",
+    "lib/cowstr",
     "lib/cursiv",
     "lib/fast-cjson",
     "lib/flashy",
@@ -403,6 +404,7 @@ kitsune-job-runner = { path = "kitsune-job-runner" }
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
 blowocking = { path = "lib/blowocking" }
+cowstr = { path = "lib/cowstr" }
 cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
 flashy = { path = "lib/flashy", features = ["axum"] }
