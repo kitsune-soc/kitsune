@@ -52,6 +52,7 @@ pub async fn explorer() -> Html<String> {
         .options(AltairConfigOptions {
             window_options: Some(AltairWindowOptions {
                 endpoint_url: Some("/graphql".into()),
+                subscriptions_endpoint: Some("/graphql/ws".into()),
                 ..AltairWindowOptions::default()
             }),
             ..AltairConfigOptions::default()

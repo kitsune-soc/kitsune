@@ -90,13 +90,17 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
     #[cfg(feature = "graphql-api")]
     let router = {
         use super::graphql;
+        use async_graphql_axum::GraphQLSubscription;
         use axum::Extension;
+
+        let schema = graphql::schema(state.clone());
 
         router.merge(
             Router::new()
                 .route("/graphql", routing::any(graphql::graphql))
+                .route_service("/graphql/ws", GraphQLSubscription::new(schema.clone()))
                 .route("/graphql-explorer", routing::get(graphql::explorer))
-                .layer(Extension(graphql::schema(state.clone()))),
+                .layer(Extension(schema)),
         )
     };
 

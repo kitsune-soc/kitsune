@@ -95,7 +95,7 @@ async-graphql = { version = "7.0.13", default-features = false, features = [
     "uuid",
 ] }
 async-graphql-axum = "7.0.13"
-async-trait = "0.1.84"
+async-trait = "0.1.85"
 asynk-strim = "0.1.2"
 axum = { version = "0.8.1", features = ["macros", "multipart"] }
 axum-core = "0.5.0"
