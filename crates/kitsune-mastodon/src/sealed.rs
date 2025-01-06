@@ -479,7 +479,12 @@ impl IntoMastodon for LinkPreview<Embed> {
         };
 
         let image = embed_data.thumb.map(|thumb| thumb.url.as_str().into());
-        let (html, width, height, embed_url) = match (embed_data.img, embed_data.video) {
+        let (html, width, height, embed_url) = match (
+            // otherwise the `diesel::RunQueryDsl` import will clash.
+            // and i would dislike the `.get(0)` even more.
+            <[_]>::first(&embed_data.imgs),
+            embed_data.video,
+        ) {
             (.., Some(vid)) => {
                 let width = vid.width.unwrap_or_default();
                 let height = vid.height.unwrap_or_default();

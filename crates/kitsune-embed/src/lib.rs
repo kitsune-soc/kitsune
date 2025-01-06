@@ -11,12 +11,12 @@ use kitsune_db::{
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_http_client::Client as HttpClient;
-use lantern_client_sdk::models::EmbedWithExpire;
+use lantern_embed_sdk::EmbedWithExpire;
 use schaber::Scraper;
 use smol_str::SmolStr;
 use std::{ops::ControlFlow, sync::LazyLock};
 
-pub use lantern_client_sdk::models::{Embed, EmbedType};
+pub use lantern_embed_sdk::{Embed, EmbedType};
 
 static LINK_SCRAPER: LazyLock<Scraper> = LazyLock::new(|| {
     Scraper::new("a:not(.mention, .hashtag)").expect("[Bug] Failed to parse link HTML selector")
