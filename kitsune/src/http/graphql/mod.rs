@@ -2,7 +2,9 @@ use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
-    extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
+    extensions::Tracing,
+    http::{AltairConfigOptions, AltairSource, AltairWindowOptions},
+    Context, EmptySubscription, Error, Result, Schema,
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
 use axum::{debug_handler, response::Html, Extension};
@@ -45,9 +47,15 @@ pub async fn graphql(
 
 #[allow(clippy::unused_async)]
 pub async fn explorer() -> Html<String> {
-    let source = GraphiQLSource::build()
-        .endpoint("/graphql")
+    let source = AltairSource::build()
         .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"))
+        .options(AltairConfigOptions {
+            window_options: Some(AltairWindowOptions {
+                endpoint_url: Some("/graphql".into()),
+                ..AltairWindowOptions::default()
+            }),
+            ..AltairConfigOptions::default()
+        })
         .finish();
 
     Html(source)

@@ -88,7 +88,7 @@ arc-swap = "1.7.1"
 argh = "0.1.13"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.13", default-features = false, features = [
-    "graphiql",
+    "altair",
     "tempfile",
     "time",
     "tracing",

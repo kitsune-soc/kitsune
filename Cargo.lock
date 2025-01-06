@@ -289,6 +289,7 @@ dependencies = [
  "num-traits",
  "pin-project-lite",
  "regex",
+ "schemars 0.8.21",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -4573,7 +4574,7 @@ dependencies = [
  "fast-cjson",
  "insta",
  "leb128",
- "schemars",
+ "schemars 1.0.0-alpha.17",
  "semver",
  "serde",
  "sonic-rs",
@@ -6085,16 +6086,40 @@ dependencies = [
 
 [[package]]
 name = "schemars"
+version = "0.8.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09c024468a378b7e36765cd36702b7a90cc3cba11654f6685c8f233408e89e92"
+dependencies = [
+ "dyn-clone",
+ "schemars_derive 0.8.21",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars"
 version = "1.0.0-alpha.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88ef2a6523400a2228db974a8ddc9e1d3deaa04f51bddd7832ef8d7e531bafcc"
 dependencies = [
  "dyn-clone",
  "ref-cast",
- "schemars_derive",
+ "schemars_derive 1.0.0-alpha.17",
  "semver",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1eee588578aff73f856ab961cd2f79e36bc45d7ded33a7562adba4667aecc0e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde_derive_internals",
+ "syn 2.0.95",
 ]
 
 [[package]]
