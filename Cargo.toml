@@ -109,7 +109,7 @@ base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.9.0"
-clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.24", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 compact_str = { version = "0.8.1", features = ["serde"] }
@@ -220,7 +220,7 @@ miette = { version = "7.4.0", features = ["fancy"] }
 mimalloc = "0.1.43"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
-minijinja = { version = "2.5.0", features = ["loader"] }
+minijinja = { version = "2.6.0", features = ["loader"] }
 moka = { version = "0.12.10", features = ["sync"] }
 mrml = { version = "4.0.1", default-features = false, features = [
     "parse",
@@ -293,7 +293,7 @@ schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.24", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = "1.0.135"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
 serde_with = { version = "3.12.0", default-features = false, features = [
