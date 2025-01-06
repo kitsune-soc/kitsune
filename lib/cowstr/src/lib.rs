@@ -6,7 +6,7 @@ const _: () = {
     assert!(std::mem::size_of::<CowStr<'static>>() == std::mem::size_of::<String>());
 };
 
-#[derive(Clone, Debug, Deserialize, Serialize, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Deserialize, Serialize, Hash)]
 #[serde(untagged)]
 pub enum CowStr<'a> {
     Borrowed(&'a str),
@@ -24,6 +24,12 @@ impl<'a> CowStr<'a> {
     #[must_use]
     pub fn owned(str: impl Into<CompactString>) -> Self {
         Self::Owned(str.into())
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn is_owned(&self) -> bool {
+        matches!(self, Self::Owned(..))
     }
 
     #[inline]
@@ -66,5 +72,82 @@ impl From<CompactString> for CowStr<'static> {
     #[inline]
     fn from(value: CompactString) -> Self {
         Self::Owned(value)
+    }
+}
+
+impl PartialEq for CowStr<'_> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        let lhs: &str = self.borrow();
+        let rhs: &str = other.borrow();
+
+        lhs.eq(rhs)
+    }
+}
+
+impl Eq for CowStr<'_> {}
+
+impl PartialOrd for CowStr<'_> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for CowStr<'_> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let lhs: &str = self.borrow();
+        let rhs: &str = other.borrow();
+
+        lhs.cmp(rhs)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::CowStr;
+    use compact_str::CompactString;
+    use std::borrow::Borrow;
+
+    const TEST_STR: &str = "hello world";
+
+    #[test]
+    fn borrowed() {
+        let borrowed_1 = CowStr::borrowed(TEST_STR);
+        let borrowed_2: CowStr<'_> = TEST_STR.into();
+
+        assert!(!borrowed_1.is_owned());
+        assert!(!borrowed_2.is_owned());
+
+        assert_eq!(borrowed_1, borrowed_2);
+        assert_eq!(Borrow::<str>::borrow(&borrowed_1), TEST_STR);
+    }
+
+    #[test]
+    fn owned() {
+        let owned_1 = CowStr::owned(TEST_STR);
+        let owned_2: CowStr<'_> = CompactString::from(TEST_STR).into();
+
+        assert!(owned_1.is_owned());
+        assert!(owned_2.is_owned());
+
+        assert_eq!(owned_1, owned_2);
+        assert_eq!(Borrow::<str>::borrow(&owned_1), TEST_STR);
+    }
+
+    #[test]
+    fn into_owned() {
+        let borrowed = CowStr::borrowed(TEST_STR);
+        let owned = {
+            let cloned = borrowed.clone();
+            assert!(!cloned.is_owned());
+            cloned.into_owned()
+        };
+
+        assert!(!borrowed.is_owned());
+        assert!(owned.is_owned());
+
+        assert_eq!(borrowed, owned);
     }
 }
