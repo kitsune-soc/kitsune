@@ -7,8 +7,8 @@
     "fmt": "prettier --write --ignore-unknown --cache ."
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.9",
-    "@tailwindcss/typography": "^0.5.15",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
     "@trivago/prettier-plugin-sort-imports": "^5.2.1",
     "prettier": "^3.4.2",
     "prettier-plugin-jinja-template": "^2.0.0",

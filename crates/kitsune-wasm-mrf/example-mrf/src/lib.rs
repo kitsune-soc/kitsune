@@ -1,4 +1,4 @@
-#![allow(clippy::missing_safety_doc, clippy::transmute_int_to_bool, unsafe_code)]
+#![allow(unsafe_code)]
 
 use self::{
     fep::mrf::keyvalue::Bucket,
