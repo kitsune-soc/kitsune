@@ -4055,6 +4055,7 @@ dependencies = [
  "bytes",
  "compact_str",
  "divan",
+ "futures-test",
  "headers",
  "http",
  "http-body",

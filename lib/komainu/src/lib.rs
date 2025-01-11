@@ -36,11 +36,13 @@ impl Request<'_> {
 
         let (parts, body) = req.into_parts();
         let collected = body.collect().await.map_err(Error::body)?.to_bytes();
-        let req = http::Request::from_parts(parts, collected);
+        let req = http::Request::from_parts(parts, collected.clone());
 
-        let body = crate::extract::body(&req)
-            .inspect_err(|error| debug!(?error, "couldnt deserialize body"))
-            .unwrap_or_default();
+        let body = if collected.is_empty() {
+            ParamStorage::default()
+        } else {
+            crate::extract::body(&req).map_err(Error::body)?
+        };
 
         Ok(Self {
             headers: req.headers().clone(),

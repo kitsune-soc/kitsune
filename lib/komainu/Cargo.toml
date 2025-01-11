@@ -36,6 +36,7 @@ url.workspace = true
 
 [dev-dependencies]
 divan.workspace = true
+futures-test.workspace = true
 headers.workspace = true
 insta.workspace = true
 rstest.workspace = true
