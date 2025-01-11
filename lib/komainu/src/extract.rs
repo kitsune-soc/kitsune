@@ -87,8 +87,14 @@ impl BasicAuth {
         let auth_bytes = auth.as_bytes();
 
         let space_location = memchr(b' ', auth_bytes)?;
-        let method = &auth_bytes[..space_location];
-        let value = &auth_bytes[(space_location + 1)..];
+        // SAFETY: The delimiter was previously found via `memchr`, so the index is guaranteed to be within boundaries
+        #[allow(unsafe_code)]
+        let (method, value) = unsafe {
+            (
+                auth_bytes.get_unchecked(..space_location),
+                auth_bytes.get_unchecked((space_location + 1)..),
+            )
+        };
 
         if method != b"Basic" {
             return None;
