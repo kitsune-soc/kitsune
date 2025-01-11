@@ -32,7 +32,7 @@ impl core::error::Error for Error {}
 /// Process a Mastodon snowflake in its u64 representation into a UUID v7 identifier
 #[inline]
 #[must_use]
-pub fn process_u64(masto_id: u64) -> Uuid {
+pub const fn process_u64(masto_id: u64) -> Uuid {
     let timestamp_ms = (masto_id >> 16) & 0xFF_FF_FF_FF_FF_FF;
     let sequence_data = masto_id & 0xFF_FF;
 
