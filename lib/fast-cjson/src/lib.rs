@@ -55,13 +55,22 @@ impl CanonicalFormatter {
     ///
     /// If we are not currently writing an object, pass through `writer`.
     #[inline]
-    fn writer<'a, W: io::Write + ?Sized>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a {
+    fn writer<'a, W>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a
+    where
+        W: io::Write + ?Sized,
+    {
         self.object_stack.last_mut().map_or_else(
-            || Either::Right(BufferedWriter::new(writer)),
+            || {
+                // TODO: This is anoying. Following the migration to the new trait solver, we have to box here to keep the code compiling.
+                // Because technically we don't really have to do this since the compiler, at this point, is already acutely aware that this implements `WriteExt`.
+                // But apparently we still need to box it?
+                let boxed = Box::new(BufferedWriter::new(writer)) as Box<dyn WriteExt + 'a>;
+                Either::Right(boxed)
+            },
             |object| {
-                let container = match &mut object.state {
-                    Collecting::Key(key) => key,
-                    Collecting::Value { value, .. } => value,
+                let container = match object.state {
+                    Collecting::Key(ref mut key) => key,
+                    Collecting::Value { ref mut value, .. } => value,
                 };
 
                 Either::Left(container)

@@ -57,8 +57,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .service
             .mrf
             .handle_incoming(activity.r#type.as_ref(), str_body)
-            .await
-            .map_err(Error::from)?
+            .await?
         else {
             debug!("sending rejection");
             return Err(StatusCode::BAD_REQUEST.into_response());
