@@ -14,7 +14,7 @@ kitsune-db.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
-lantern-embed-sdk.workspace = true
+lantern-client-sdk.workspace = true
 schaber.workspace = true
 smol_str.workspace = true
 
