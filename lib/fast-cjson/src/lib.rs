@@ -61,9 +61,12 @@ impl CanonicalFormatter {
     {
         self.object_stack.last_mut().map_or_else(
             || {
-                // TODO: This is anoying. Following the migration to the new trait solver, we have to box here to keep the code compiling.
-                // Because technically we don't really have to do this since the compiler, at this point, is already acutely aware that this implements `WriteExt`.
-                // But apparently we still need to box it?
+                // TODO: This is annoying. Following the migration to the new trait solver, we have to box here to keep the code compiling.
+                //
+                // It's weird that boxing solves it here since the trait solver still needs to prove that `BufferedWriter<&mut W>` implements `WriteExt` to allow for the coercion to the trait object.
+                // So returning the raw unboxed type should also make sense to the trait solver. But apparently it doesn't.
+                //
+                // How unfortunate. But at least, looking at the benchmark, it doesn't have _that much_ of an impact.
                 let boxed = Box::new(BufferedWriter::new(writer)) as Box<dyn WriteExt + 'a>;
                 Either::Right(boxed)
             },
