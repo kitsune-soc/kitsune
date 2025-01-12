@@ -26,7 +26,7 @@ mod tick_tock_mock {
     #[divan::bench]
     fn now(bencher: Bencher<'_, '_>) {
         let clock = Clock::new();
-        bencher.bench(|| black_box(clock.now()));
+        bencher.bench(|| black_box(&clock).now());
     }
 
     #[divan::bench]
@@ -34,7 +34,7 @@ mod tick_tock_mock {
         let (clock, mock) = Clock::mockable();
         mock.adjust(DeltaDirection::Add, Duration::from_secs(1));
 
-        bencher.bench(|| black_box(clock.now()));
+        bencher.bench(|| black_box(&clock).now());
     }
 }
 
