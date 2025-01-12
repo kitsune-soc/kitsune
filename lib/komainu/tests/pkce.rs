@@ -1,4 +1,5 @@
-use komainu::flow::pkce;
+use komainu::flow::{self, pkce};
+use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 
 #[test]
@@ -30,4 +31,51 @@ fn verify_rfc_payload_s256() {
         challenge: Cow::Borrowed(challenge_base64),
     };
     payload.verify(verifier_base64).unwrap();
+}
+
+#[test]
+fn verify_none() {
+    let challenge = "dr.pebber";
+    let payload = pkce::Payload {
+        method: pkce::Method::None,
+        challenge: Cow::Borrowed(challenge),
+    };
+    payload.verify(challenge).unwrap();
+}
+
+#[test]
+fn none_reject_different() {
+    let challenge = "fanter";
+    let verifier = "monsert";
+
+    let payload = pkce::Payload {
+        method: pkce::Method::None,
+        challenge: Cow::Borrowed(challenge),
+    };
+
+    payload.verify(challenge).unwrap();
+    assert!(matches!(
+        payload.verify(verifier).unwrap_err(),
+        flow::Error::InvalidGrant
+    ));
+}
+
+#[test]
+fn s256_reject_different() {
+    let challenge = "cokey cola";
+    let verifier = "spirte";
+
+    let encoded_challenge =
+        base64_simd::URL_SAFE_NO_PAD.encode_to_string(Sha256::digest(challenge));
+
+    let payload = pkce::Payload {
+        method: pkce::Method::S256,
+        challenge: Cow::Borrowed(&encoded_challenge),
+    };
+
+    payload.verify(challenge).unwrap();
+    assert!(matches!(
+        payload.verify(verifier).unwrap_err(),
+        flow::Error::InvalidGrant
+    ));
 }
