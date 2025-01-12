@@ -26,6 +26,7 @@ pub struct Request<'a> {
 
 impl Request<'_> {
     #[inline]
+    #[instrument(skip_all)]
     pub async fn read_from<B>(req: http::Request<B>) -> Result<Self, Error>
     where
         B: http_body::Body,

@@ -6,6 +6,7 @@ use std::borrow::Cow;
 static JSON_CONTENT_TYPE: http::HeaderValue = http::HeaderValue::from_static("application/json");
 
 #[inline]
+#[instrument(skip_all)]
 pub fn body<'a, T>(req: &'a http::Request<Bytes>) -> Result<T, Error>
 where
     T: serde::Deserialize<'a>,
@@ -81,6 +82,7 @@ pub struct BasicAuth {
 
 impl BasicAuth {
     #[inline]
+    #[instrument(skip_all)]
     pub fn extract(headers: &http::HeaderMap) -> Option<Self> {
         let auth = headers.get(http::header::AUTHORIZATION)?;
         let auth_bytes = auth.as_bytes();
