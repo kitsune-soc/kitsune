@@ -1,7 +1,7 @@
 use crate::{error::Error, flow};
 use serde::{Deserialize, Serialize};
 use sha2::{
-    digest::{crypto_common::BlockSizeUser, typenum},
+    digest::{typenum, OutputSizeUser},
     Digest, Sha256,
 };
 use std::borrow::Cow;
@@ -29,7 +29,7 @@ impl Payload<'_> {
         // at least it's zero allocations..
         const B64_ENGINE: base64_simd::Base64 = base64_simd::URL_SAFE_NO_PAD;
         const SHA256_HASH_LEN: usize =
-            <<Sha256 as BlockSizeUser>::BlockSize as typenum::Unsigned>::USIZE;
+            <<Sha256 as OutputSizeUser>::OutputSize as typenum::Unsigned>::USIZE;
 
         let decoded_len = B64_ENGINE
             .decoded_length(self.challenge.as_bytes())
