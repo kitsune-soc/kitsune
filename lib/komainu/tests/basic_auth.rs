@@ -14,6 +14,18 @@ fn parse_basic_auth_rfc() {
     assert_eq!(auth.password(), "open sesame");
 }
 
+#[test]
+fn require_basic_type() {
+    let mut map = http::HeaderMap::new();
+    map.insert(
+        http::header::AUTHORIZATION,
+        http::HeaderValue::from_static("Bearer token-idk"),
+    );
+
+    let auth = BasicAuth::extract(&map);
+    assert!(auth.is_none());
+}
+
 #[rstest]
 #[case("", "")]
 #[case("OwO", "")]
