@@ -47,7 +47,7 @@ where
             self.should_retry(request_start_time.as_time(), n_past_retries)
         {
             let delta = execute_after
-                .duration_since(SystemTime::now())
+                .duration_since(tick_tock_mock::now())
                 .expect("Some major clock fuckery happened");
 
             ControlFlow::Continue(delta)
@@ -75,7 +75,7 @@ where
     where
         R: JustRetryPolicy + Send,
     {
-        let start_time = SystemTime::now();
+        let start_time = tick_tock_mock::now();
         let mut retry_count = 0;
 
         loop {
