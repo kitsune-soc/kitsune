@@ -79,3 +79,15 @@ fn s256_reject_different() {
         flow::Error::InvalidGrant
     ));
 }
+
+#[test]
+fn s256_error_too_long() {
+    let encoded = base64_simd::URL_SAFE_NO_PAD.encode_to_string([0; 500]);
+    let payload = pkce::Payload {
+        method: pkce::Method::S256,
+        challenge: Cow::Borrowed(&encoded),
+    };
+
+    let error = payload.verify("").unwrap_err();
+    assert!(matches!(error, flow::Error::InvalidRequest));
+}

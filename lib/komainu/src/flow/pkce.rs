@@ -1,6 +1,9 @@
 use crate::{error::Error, flow};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use sha2::{
+    digest::{crypto_common::BlockSizeUser, typenum},
+    Digest, Sha256,
+};
 use std::borrow::Cow;
 use strum::{AsRefStr, EnumString};
 use subtle::ConstantTimeEq;
@@ -23,8 +26,26 @@ pub struct Payload<'a> {
 impl Payload<'_> {
     #[inline]
     fn verify_s256(&self, code_verifier: &str) -> Result<(), flow::Error> {
-        let decoded = base64_simd::URL_SAFE_NO_PAD
-            .decode_to_vec(self.challenge.as_bytes())
+        // at least it's zero allocations..
+        const B64_ENGINE: base64_simd::Base64 = base64_simd::URL_SAFE_NO_PAD;
+        const SHA256_HASH_LEN: usize =
+            <<Sha256 as BlockSizeUser>::BlockSize as typenum::Unsigned>::USIZE;
+
+        let decoded_len = B64_ENGINE
+            .decoded_length(self.challenge.as_bytes())
+            .inspect_err(|error| debug!(?error, "couldnt determine decoded length"))
+            .map_err(Error::body)?;
+
+        if decoded_len > SHA256_HASH_LEN {
+            return Err(flow::Error::InvalidRequest);
+        }
+
+        let mut decoded_buf = [0; SHA256_HASH_LEN];
+        let decoded = B64_ENGINE
+            .decode(
+                self.challenge.as_bytes(),
+                base64_simd::Out::from_slice(&mut decoded_buf),
+            )
             .inspect_err(|error| debug!(?error, "failed to decode pkce payload"))
             .map_err(Error::body)?;
 
