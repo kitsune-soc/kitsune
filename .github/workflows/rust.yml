@@ -117,5 +117,6 @@ jobs:
       - run: nix develop --impure --command bash -c "unset LD_LIBRARY_PATH && cargo nextest run --all-features"
         env:
           DATABASE_URL: "postgres://root@localhost:26257/test_db"
+          DB_SETUP_NO_TEMPLATE: "1"
           MINIO_URL: "http://127.0.0.1:9000"
           REDIS_URL: "redis://localhost"

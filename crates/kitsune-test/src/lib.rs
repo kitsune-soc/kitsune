@@ -46,12 +46,12 @@ where
 
     let mut admin_conn = AsyncPgConnection::establish(url.as_str()).await.unwrap();
 
-    admin_conn
-        .batch_execute(&format!(
-            "CREATE DATABASE {db_name} ENCODING 'UTF8' TEMPLATE template0"
-        ))
-        .await
-        .unwrap();
+    let mut query = format!("CREATE DATABASE {db_name} ENCODING 'UTF8'");
+    if env::var("DB_SETUP_NO_TEMPLATE").is_err() {
+        query.push_str(" TEMPLATE template0");
+    }
+
+    admin_conn.batch_execute(&query).await.unwrap();
 
     url.set_path(&db_name);
 
