@@ -101,6 +101,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+        command: ["start-single-node", "--insecure"]
       redis:
         image: valkey/valkey:alpine
         ports:
