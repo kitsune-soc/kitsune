@@ -80,3 +80,45 @@ jobs:
           DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
           MINIO_URL: "http://127.0.0.1:9000"
           REDIS_URL: "redis://localhost"
+
+  test-cockroach:
+    name: Test against CockroachDB
+    runs-on: ubuntu-latest
+    services:
+      minio:
+        image: bitnami/minio
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+      postgres:
+        image: cockroachdb/cockroach
+        ports:
+          - 26257:26257
+        options: >-
+          --health-cmd="cockroach sql --insecure -e 'SELECT 1'" 
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: valkey/valkey:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: Swatinem/rust-cache@v2
+      - uses: rui314/setup-mold@v1
+      - uses: taiki-e/install-action@nextest
+      - run: nix develop --impure --command bash -c "unset LD_LIBRARY_PATH && cargo nextest run --all-features"
+        env:
+          DATABASE_URL: "postgres://root@localhost:26257/defaultdb"
+          MINIO_URL: "http://127.0.0.1:9000"
+          REDIS_URL: "redis://localhost"
