@@ -37,12 +37,11 @@ url.workspace = true
 
 [dev-dependencies]
 divan.workspace = true
+fastrand.workspace = true
 futures-test.workspace = true
 headers.workspace = true
 http-serde.workspace = true
 insta.workspace = true
-rand.workspace = true
-rand_xorshift.workspace = true
 rstest.workspace = true
 serde_test.workspace = true
 

@@ -7,6 +7,9 @@ use std::str::FromStr;
 
 mod fixtures;
 
+#[allow(clippy::unreadable_literal)]
+const RNG_SEED: u64 = 0xBADD1E;
+
 #[derive(Serialize)]
 struct SerdeResponse {
     body: Option<String>,
@@ -43,6 +46,7 @@ impl From<http::Response<Bytes>> for SerdeResponse {
 
 #[futures_test::test]
 async fn success() {
+    fastrand::seed(RNG_SEED);
     let fixture = Fixture::generate();
 
     let uri = http::Uri::builder()

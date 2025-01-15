@@ -138,6 +138,7 @@ either = { version = "1.13.0", default-features = false }
 enum_dispatch = "0.3.13"
 envy = "0.4.2"
 eyre = "0.6.12"
+fastrand = "2.3.0"
 fred = { version = "10.0.3", features = [
     "enable-rustls-ring",
     "full-tracing",
