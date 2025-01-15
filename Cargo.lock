@@ -4077,6 +4077,7 @@ dependencies = [
  "itertools 0.14.0",
  "memchr",
  "rand 0.8.5",
+ "rand_xorshift",
  "rstest",
  "serde",
  "serde_test",

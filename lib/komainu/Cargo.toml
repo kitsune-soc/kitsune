@@ -42,6 +42,7 @@ headers.workspace = true
 http-serde.workspace = true
 insta.workspace = true
 rand.workspace = true
+rand_xorshift.workspace = true
 rstest.workspace = true
 serde_test.workspace = true
 

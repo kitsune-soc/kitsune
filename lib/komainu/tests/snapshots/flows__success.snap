@@ -5,7 +5,7 @@ expression: "SerdeResponse::from(acceptor.into_response())"
 {
   "body": null,
   "headers": {
-    "location": "http://client_1.example/?code=sn7A6s3FVFsptwK6"
+    "location": "http://client_1.example/?code=YSkam0dTW2DsMrIE"
   },
   "status": 302
 }

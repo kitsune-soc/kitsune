@@ -3,11 +3,15 @@ use komainu::{
     code_grant::AuthorizerExtractor,
     flow::{SuccessTokenResponse, TokenType},
 };
-use rand::distributions::{Alphanumeric, DistString};
+use rand::{
+    distributions::{Alphanumeric, DistString},
+    SeedableRng,
+};
+use rand_xorshift::XorShiftRng;
 use std::{
     borrow::Cow,
     collections::HashMap,
-    sync::{Arc, Mutex},
+    sync::{Arc, LazyLock, Mutex},
 };
 
 pub mod auth_flow;
@@ -17,9 +21,16 @@ pub mod refresh_flow;
 
 pub type AuthorizationStorage = Arc<Mutex<HashMap<String, komainu::Authorization<'static>>>>;
 
+#[allow(clippy::unreadable_literal)]
+const RNG_SEED: u64 = 0xBADD1E;
+
+static SEEDED_RNG: LazyLock<Mutex<XorShiftRng>> =
+    LazyLock::new(|| Mutex::new(XorShiftRng::seed_from_u64(RNG_SEED)));
+
 #[inline]
 fn generate_secret() -> String {
-    Alphanumeric.sample_string(&mut rand::thread_rng(), 16)
+    let mut guard = SEEDED_RNG.lock().unwrap();
+    Alphanumeric.sample_string(&mut *guard, 16)
 }
 
 #[derive(Clone)]
