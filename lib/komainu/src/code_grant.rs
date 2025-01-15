@@ -56,7 +56,7 @@ where
         }
     }
 
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub async fn extract_raw<'a>(
         &'a self,
         req: &'a crate::Request<'a>,
@@ -214,7 +214,7 @@ where
     }
 
     #[inline]
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub async fn accept(
         self,
         user_id: I::UserId,
@@ -253,7 +253,7 @@ where
 
     #[inline]
     #[must_use]
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub fn deny(self) -> http::Response<()> {
         self.build_error_response(&GrantError::AccessDenied)
     }

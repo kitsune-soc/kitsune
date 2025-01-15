@@ -13,7 +13,7 @@ pub trait Issuer {
     ) -> impl Future<Output = Result<TokenResponse<'_>, flow::Error>> + Send;
 }
 
-#[instrument(skip_all)]
+#[cfg_attr(not(coverage), instrument(skip_all))]
 pub async fn perform<'a, CE, I>(
     req: &'a crate::Request<'_>,
     client_extractor: &CE,

@@ -33,7 +33,7 @@ impl Payload<'_> {
     }
 
     #[inline]
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     fn verify_s256(&self, code_verifier: &str) -> Result<(), flow::Error> {
         // at least it's zero allocations..
         const B64_ENGINE: base64_simd::Base64 = base64_simd::URL_SAFE_NO_PAD;
@@ -67,7 +67,7 @@ impl Payload<'_> {
     }
 
     #[inline]
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     fn verify_none(&self, code_verifier: &str) -> Result<(), flow::Error> {
         let challenge_bytes = self.challenge.as_bytes();
         if challenge_bytes.ct_eq(code_verifier.as_bytes()).into() {

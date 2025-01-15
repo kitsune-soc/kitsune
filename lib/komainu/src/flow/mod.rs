@@ -80,7 +80,7 @@ pub struct Impls<AI, CI, RI> {
     pub refresh_issuer: RI,
 }
 
-#[instrument(skip_all)]
+#[cfg_attr(not(coverage), instrument(skip_all))]
 pub async fn dispatch<AI, CI, RI>(
     req: &crate::Request<'_>,
     impls: &Impls<AI, CI, RI>,
