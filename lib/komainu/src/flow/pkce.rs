@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use strum::{AsRefStr, EnumString};
 use subtle::ConstantTimeEq;
 
-#[derive(AsRefStr, Default, Deserialize, EnumString, Serialize)]
+#[derive(AsRefStr, Clone, Default, Deserialize, EnumString, Serialize)]
 #[strum(serialize_all = "snake_case")]
 pub enum Method {
     #[default]
@@ -17,13 +17,21 @@ pub enum Method {
     S256,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Payload<'a> {
     pub challenge: Cow<'a, str>,
     pub method: Method,
 }
 
 impl Payload<'_> {
+    #[must_use]
+    pub fn into_owned(self) -> Payload<'static> {
+        Payload {
+            challenge: self.challenge.into_owned().into(),
+            method: self.method,
+        }
+    }
+
     #[inline]
     #[instrument(skip(self))]
     fn verify_s256(&self, code_verifier: &str) -> Result<(), flow::Error> {

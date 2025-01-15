@@ -8,7 +8,7 @@ use kitsune_db::{
     with_connection, with_transaction,
 };
 use kitsune_util::generate_secret;
-use komainu::flow::{refresh, TokenType};
+use komainu::flow::{refresh, SuccessTokenResponse, TokenType};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use trials::attempt;
@@ -65,7 +65,7 @@ impl refresh::Issuer for Issuer {
         // ToDo: error handling
         let (access_token, refresh_token) = result.unwrap();
 
-        Ok(komainu::flow::TokenResponse::Success {
+        Ok(SuccessTokenResponse {
             access_token: Cow::Owned(access_token.token),
             token_type: TokenType::Bearer,
             refresh_token: Cow::Owned(refresh_token.token),
@@ -73,6 +73,7 @@ impl refresh::Issuer for Issuer {
                 .expires_at
                 .duration_since(Timestamp::now_utc())
                 .whole_seconds() as _,
-        })
+        }
+        .into())
     }
 }

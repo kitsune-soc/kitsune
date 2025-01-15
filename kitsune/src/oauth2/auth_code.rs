@@ -12,7 +12,7 @@ use kitsune_db::{
 };
 use kitsune_util::generate_secret;
 use komainu::{
-    flow::{authorization, TokenType},
+    flow::{authorization, SuccessTokenResponse, TokenType},
     scope::Scope,
 };
 use speedy_uuid::Uuid;
@@ -101,7 +101,7 @@ impl authorization::Issuer for Issuer {
         // ToDo: error handling
         let (access_token, refresh_token) = result.unwrap();
 
-        Ok(komainu::flow::TokenResponse::Success {
+        Ok(SuccessTokenResponse {
             access_token: Cow::Owned(access_token.token),
             token_type: TokenType::Bearer,
             refresh_token: Cow::Owned(refresh_token.token),
@@ -109,6 +109,7 @@ impl authorization::Issuer for Issuer {
                 .expires_at
                 .duration_since(Timestamp::now_utc())
                 .whole_seconds() as _,
-        })
+        }
+        .into())
     }
 }

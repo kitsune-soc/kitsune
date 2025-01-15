@@ -39,6 +39,7 @@ divan.workspace = true
 futures-test.workspace = true
 headers.workspace = true
 insta.workspace = true
+rand.workspace = true
 rstest.workspace = true
 serde_test.workspace = true
 

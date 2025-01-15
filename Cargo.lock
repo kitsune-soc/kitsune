@@ -4065,6 +4065,7 @@ dependencies = [
  "insta",
  "itertools 0.14.0",
  "memchr",
+ "rand 0.8.5",
  "rstest",
  "serde",
  "serde_test",

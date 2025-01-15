@@ -33,25 +33,45 @@ pub enum Error {
     Other(#[from] crate::error::Error),
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum TokenType {
     Bearer,
 }
 
+#[derive(Clone, Serialize)]
+pub struct SuccessTokenResponse<'a> {
+    pub access_token: Cow<'a, str>,
+    pub token_type: TokenType,
+    pub refresh_token: Cow<'a, str>,
+    pub expires_in: u64,
+}
+
+#[derive(Serialize)]
+pub struct ErrorTokenResponse {
+    pub error: Error,
+}
+
 #[derive(Serialize)]
 #[serde(untagged)]
 pub enum TokenResponse<'a> {
-    Success {
-        access_token: Cow<'a, str>,
-        token_type: TokenType,
-        refresh_token: Cow<'a, str>,
-        expires_in: u64,
-    },
-    Error {
-        error: Error,
-    },
+    Success(SuccessTokenResponse<'a>),
+    Error(ErrorTokenResponse),
+}
+
+impl<'a> From<SuccessTokenResponse<'a>> for TokenResponse<'a> {
+    #[inline]
+    fn from(value: SuccessTokenResponse<'a>) -> Self {
+        Self::Success(value)
+    }
+}
+
+impl From<ErrorTokenResponse> for TokenResponse<'_> {
+    #[inline]
+    fn from(value: ErrorTokenResponse) -> Self {
+        Self::Error(value)
+    }
 }
 
 pub struct Impls<AI, CI, RI> {
@@ -79,9 +99,10 @@ where
         Some("refresh_token") => {
             refresh::perform(req, &impls.client_extractor, &impls.refresh_issuer).await?
         }
-        _ => TokenResponse::Error {
+        _ => ErrorTokenResponse {
             error: Error::UnsupportedGrantType,
-        },
+        }
+        .into(),
     };
 
     let mut response = http::Response::builder();

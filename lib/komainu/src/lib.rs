@@ -8,7 +8,7 @@ use self::{
     scope::Scope,
 };
 use http_body_util::BodyExt;
-use std::{borrow::Cow, future::Future};
+use std::{borrow::Cow, fmt, future::Future};
 use subtle::ConstantTimeEq;
 
 pub mod code_grant;
@@ -53,12 +53,25 @@ impl Request<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct Authorization<'a> {
     pub code: Cow<'a, str>,
     pub client: Client<'a>,
     pub pkce_payload: Option<pkce::Payload<'a>>,
     pub scopes: Scope,
     pub user_id: Cow<'a, str>,
+}
+
+impl Authorization<'_> {
+    pub fn into_owned(self) -> Authorization<'static> {
+        Authorization {
+            code: self.code.into_owned().into(),
+            client: self.client.into_owned(),
+            pkce_payload: self.pkce_payload.map(pkce::Payload::into_owned),
+            scopes: self.scopes,
+            user_id: self.user_id.into_owned().into(),
+        }
+    }
 }
 
 pub struct AuthInstruction<'a, 'b> {
@@ -73,6 +86,30 @@ pub struct Client<'a> {
     pub client_secret: Cow<'a, str>,
     pub scopes: Scope,
     pub redirect_uri: Cow<'a, str>,
+}
+
+impl Client<'_> {
+    #[must_use]
+    pub fn into_owned(self) -> Client<'static> {
+        Client {
+            client_id: self.client_id.into_owned().into(),
+            client_secret: self.client_secret.into_owned().into(),
+            scopes: self.scopes,
+            redirect_uri: self.redirect_uri.into_owned().into(),
+        }
+    }
+}
+
+impl fmt::Debug for Client<'_> {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct(std::any::type_name::<Self>())
+            .field("client_id", &self.client_id)
+            .field("client_secret", &"[redacted]")
+            .field("scopes", &self.scopes)
+            .field("redirect_uri", &self.redirect_uri)
+            .finish_non_exhaustive()
+    }
 }
 
 impl PartialEq for Client<'_> {
