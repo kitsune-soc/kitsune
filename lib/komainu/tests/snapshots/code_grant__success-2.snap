@@ -1,5 +1,5 @@
 ---
-source: lib/komainu/tests/flows.rs
+source: lib/komainu/tests/code_grant.rs
 expression: "SerdeResponse::from(deny)"
 ---
 {

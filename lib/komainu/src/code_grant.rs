@@ -2,7 +2,7 @@ use crate::{
     error::Error, flow::pkce, params::ParamStorage, scope::Scope, AuthInstruction, Client,
     ClientExtractor,
 };
-use std::{borrow::Cow, future::Future, str::FromStr};
+use std::{borrow::Cow, fmt, future::Future, str::FromStr};
 use strum::{AsRefStr, Display};
 use thiserror::Error;
 
@@ -151,6 +151,14 @@ impl Acceptor {
     #[must_use]
     pub fn into_response(self) -> http::Response<()> {
         self.response
+    }
+}
+
+impl fmt::Debug for Acceptor {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct(std::any::type_name::<Self>())
+            .finish_non_exhaustive()
     }
 }
 
