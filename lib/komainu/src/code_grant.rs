@@ -2,7 +2,7 @@ use crate::{
     error::Error, flow::pkce, params::ParamStorage, scope::Scope, AuthInstruction, Client,
     ClientExtractor,
 };
-use std::{borrow::Cow, future::Future, ops::Deref, str::FromStr};
+use std::{borrow::Cow, future::Future, str::FromStr};
 use strum::{AsRefStr, Display};
 use thiserror::Error;
 
@@ -63,7 +63,7 @@ where
     ) -> Result<Authorizer<'a, I>, GrantError> {
         let client_id = req.query.get("client_id").or_invalid_request()?;
         let response_type = req.query.get("response_type").or_invalid_request()?;
-        let scope = req.query.get("scope").map_or("", Deref::deref);
+        let scope = req.query.get("scope");
         let state = req.query.get("state").map(|state| &**state);
 
         let client = self.client_extractor.extract(client_id, None).await?;
@@ -79,13 +79,27 @@ where
             return Err(GrantError::AccessDenied);
         }
 
-        let request_scopes = scope.parse().unwrap();
+        let request_scopes = if let Some(scope) = scope {
+            let scope = match Scope::from_str(scope) {
+                Ok(val) => val,
+                // Infallible so we have to do this shit to signal to the compiler "hey, this actually can't ever happen".
+                // Thanks for not stabilizing the never type.
+                //
+                // I'm so close to hacking the actual never type in here, I swear.
+                Err(err) => match err {},
+            };
 
-        // Check whether the client can actually perform the grant
-        if !client.scopes.can_perform(&request_scopes) {
-            debug!(?client_id, client_scopes = ?client.scopes, ?request_scopes, "client can't issue the requested scopes");
-            // apparently clients do that. weird smh.
-            //return Err(GrantError::AccessDenied);
+            Some(scope)
+        } else {
+            None
+        };
+
+        if let Some(ref request_scopes) = request_scopes {
+            // Check whether the client can actually perform the grant
+            if !client.scopes.can_perform(request_scopes) {
+                debug!(?client_id, client_scopes = ?client.scopes, ?request_scopes, "client can't issue the requested scopes");
+                return Err(GrantError::AccessDenied);
+            }
         }
 
         let pkce_payload = if let Some(challenge) = req.query.get("code_challenge") {
@@ -144,7 +158,7 @@ pub struct Authorizer<'a, I> {
     issuer: &'a I,
     client: Client<'a>,
     pkce_payload: Option<pkce::Payload<'a>>,
-    scope: Scope,
+    scope: Option<Scope>,
     query: &'a ParamStorage<Cow<'a, str>, Cow<'a, str>>,
     state: Option<&'a str>,
 }
@@ -159,8 +173,8 @@ where
     }
 
     #[must_use]
-    pub fn scope(&self) -> &Scope {
-        &self.scope
+    pub fn scope(&self) -> Option<&Scope> {
+        self.scope.as_ref()
     }
 
     #[must_use]

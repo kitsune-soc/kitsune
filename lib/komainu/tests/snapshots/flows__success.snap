@@ -1,0 +1,11 @@
+---
+source: lib/komainu/tests/flows.rs
+expression: "SerdeResponse::from(acceptor.into_response())"
+---
+{
+  "body": null,
+  "headers": {
+    "location": "http://client_1.example/?code=sn7A6s3FVFsptwK6"
+  },
+  "status": 302
+}

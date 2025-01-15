@@ -205,11 +205,14 @@ pub async fn get(
             .await
     })?;
 
-    let mut scopes = authorizer
-        .scope()
-        .iter()
-        .filter_map(|scope| OAuthScope::from_str(scope).ok())
-        .collect::<Vec<OAuthScope>>();
+    let mut scopes = if let Some(scope) = authorizer.scope() {
+        scope
+            .iter()
+            .filter_map(|scope| OAuthScope::from_str(scope).ok())
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     if scopes.is_empty() {
         // default to read scope if no scopes are defined

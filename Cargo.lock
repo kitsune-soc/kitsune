@@ -2759,6 +2759,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9171a2ea8a68358193d15dd5d70c1c10a2afc3e7e4c5bc92bc9f025cebd7359c"
 
 [[package]]
+name = "http-serde"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f056c8559e3757392c8d091e796416e4649d8e49e88b8d76df6c002f05027fd"
+dependencies = [
+ "http",
+ "serde",
+]
+
+[[package]]
 name = "http-signatures"
 version = "0.0.1-pre.6"
 dependencies = [
@@ -4061,6 +4071,7 @@ dependencies = [
  "http",
  "http-body",
  "http-body-util",
+ "http-serde",
  "indexmap 2.7.0",
  "insta",
  "itertools 0.14.0",
