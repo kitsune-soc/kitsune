@@ -34,7 +34,6 @@ pub enum Error {
 }
 
 #[derive(Clone, Serialize)]
-#[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum TokenType {
     Bearer,

@@ -18,7 +18,7 @@ pub mod refresh_flow;
 pub const RNG_SEED: u64 = 0xBADD1E;
 
 #[inline]
-fn generate_secret() -> String {
+pub fn generate_secret() -> String {
     (0..16).map(|_| fastrand::lowercase()).collect()
 }
 
