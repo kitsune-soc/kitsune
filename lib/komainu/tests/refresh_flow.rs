@@ -60,7 +60,7 @@ async fn success_basic() {
     let success_response = response.unwrap_success();
     assert_ne!(success_response.access_token, original_access_token);
 
-    insta::assert_json_snapshot!(response);
+    insta::assert_json_snapshot!(success_response);
 }
 
 #[futures_test::test]

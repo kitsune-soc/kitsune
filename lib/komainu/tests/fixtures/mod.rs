@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use self::client_extractor::ClientExtractor;
 use komainu::{
     code_grant::AuthorizerExtractor,

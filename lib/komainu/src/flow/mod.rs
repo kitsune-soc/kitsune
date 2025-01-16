@@ -61,7 +61,7 @@ pub enum TokenResponse<'a> {
 
 impl<'a> TokenResponse<'a> {
     #[must_use]
-    pub fn unwrap_success(&self) -> &SuccessTokenResponse<'a> {
+    pub fn unwrap_success(self) -> SuccessTokenResponse<'a> {
         match self {
             Self::Success(resp) => resp,
             Self::Error(..) => panic!("expected success, got error"),
@@ -69,7 +69,7 @@ impl<'a> TokenResponse<'a> {
     }
 
     #[must_use]
-    pub fn unwrap_error(&self) -> &ErrorTokenResponse {
+    pub fn unwrap_error(self) -> ErrorTokenResponse {
         match self {
             Self::Success(..) => panic!("expected error, got success"),
             Self::Error(resp) => resp,
