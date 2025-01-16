@@ -2,6 +2,7 @@ query stats {
 	instance {
 		description
 		localPostCount
+		registrationsOpen
 		userCount
 		version
 	}

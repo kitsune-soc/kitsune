@@ -8,7 +8,7 @@
 		children,
 		buttonType = 'primary',
 		loading = false,
-		...rest
+		...props
 	}: {
 		/**
 		 * The type of button to render.
@@ -20,12 +20,12 @@
 		children: Snippet;
 	} & HTMLButtonAttributes = $props();
 
-	let disabled = $derived(rest.disabled || loading);
+	let disabled = $derived(props.disabled || loading);
 </script>
 
 <button
-	{...rest}
-	class="min-h-1 rounded p-2 transition duration-500 {buttonType} {rest.class}"
+	{...props}
+	class="min-h-1 rounded p-2 transition duration-500 {buttonType} {props.class}"
 	class:cursor-not-allowed={disabled}
 	{disabled}
 >
