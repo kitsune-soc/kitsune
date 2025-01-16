@@ -11,7 +11,13 @@
 	} = $props();
 </script>
 
-<form class="grid grid-cols-1 gap-6" onsubmit={onregister}>
+<form
+	class="grid grid-cols-1 gap-6"
+	onsubmit={(e) => {
+		e.preventDefault();
+		onregister(e);
+	}}
+>
 	<label class="block" for="username">
 		Username
 		<Input type="text" name="username" placeholder="hangaku" disabled={processing} />
