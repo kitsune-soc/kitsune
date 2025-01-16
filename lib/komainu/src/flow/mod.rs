@@ -59,6 +59,24 @@ pub enum TokenResponse<'a> {
     Error(ErrorTokenResponse),
 }
 
+impl<'a> TokenResponse<'a> {
+    #[must_use]
+    pub fn unwrap_success(&self) -> &SuccessTokenResponse<'a> {
+        match self {
+            Self::Success(resp) => resp,
+            Self::Error(..) => panic!("expected success, got error"),
+        }
+    }
+
+    #[must_use]
+    pub fn unwrap_error(&self) -> &ErrorTokenResponse {
+        match self {
+            Self::Success(..) => panic!("expected error, got success"),
+            Self::Error(resp) => resp,
+        }
+    }
+}
+
 impl<'a> From<SuccessTokenResponse<'a>> for TokenResponse<'a> {
     #[inline]
     fn from(value: SuccessTokenResponse<'a>) -> Self {
@@ -105,7 +123,7 @@ where
     };
 
     let mut response = http::Response::builder();
-    response = if matches!(token_response, TokenResponse::Success { .. }) {
+    response = if matches!(token_response, TokenResponse::Success(..)) {
         response.status(http::StatusCode::OK)
     } else {
         response.status(http::StatusCode::BAD_REQUEST)

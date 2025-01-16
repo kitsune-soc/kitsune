@@ -42,8 +42,8 @@ impl AuthorizationStorage {
 
 #[derive(Clone)]
 pub struct TokenValue {
-    authorization: komainu::Authorization<'static>,
-    response: SuccessTokenResponse<'static>,
+    pub authorization: komainu::Authorization<'static>,
+    pub response: SuccessTokenResponse<'static>,
 }
 
 #[derive(Clone, Default)]
