@@ -170,7 +170,7 @@ async fn too_many_scopes() {
         .scheme("http")
         .authority("komainu.example")
         .path_and_query(
-            "/oauth/authorize?response_type=meoww&client_id=client_1&scope=read%20write%20follow",
+            "/oauth/authorize?response_type=code&client_id=client_1&scope=read%20write%20follow",
         )
         .build()
         .unwrap();
