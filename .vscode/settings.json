@@ -12,4 +12,5 @@
     // Ensure VSCode uses pnpm instead of npm
     "eslint.packageManager": "pnpm",
     "npm.packageManager": "pnpm",
+    "css.lint.unknownAtRules": "ignore",
 }

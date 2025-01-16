@@ -2,10 +2,10 @@
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+	import Input from '$lib/components/Input.svelte';
 
 	import type { PageData } from './$houdini';
 	import { _registerSchema } from './+page';
-	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading';
 
 	const { data }: { data: PageData } = $props();
 
@@ -110,54 +110,26 @@
 		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
 			<label class="block" for="username">
 				Username
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="text"
-					name="username"
-					placeholder="hangaku"
-				/>
+				<Input type="text" name="username" placeholder="hangaku" />
 			</label>
 
 			<label for="email">
 				Email address
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="email"
-					name="email"
-					placeholder="hangaku@kabuki.dd"
-				/>
+				<Input type="email" name="email" placeholder="hangaku@kabuki.dd" />
 			</label>
 
 			<label for="password">
 				Password
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="password"
-					name="password"
-				/>
+				<Input type="password" name="password" />
 			</label>
 
 			<label for="confirm-password">
 				Confirm Password
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="password"
-					name="confirm-password"
-				/>
+				<Input type="password" name="confirm-password" />
 			</label>
 
 			<p>
-				<Button class="w-full" disabled={registerButtonDisabled}>
-					{#if registerButtonDisabled}
-						<IconThreeDotsLoading class="m-auto h-8 w-8" />
-					{:else}
-						Register
-					{/if}
-				</Button>
+				<Button class="w-full" loading={registerButtonDisabled}>Register</Button>
 			</p>
 		</form>
 
