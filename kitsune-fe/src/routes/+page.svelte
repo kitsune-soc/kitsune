@@ -13,7 +13,7 @@
 	const stats = $derived({
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
 		registeredUsers: $statsStore.data?.instance.userCount ?? 0,
-		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true,
+		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true
 	});
 
 	const register = new RegisterUserStore();
@@ -23,7 +23,6 @@
 	let registerErrorDialogOpen = $state(false);
 
 	async function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
-		event.preventDefault();
 		registerButtonDisabled = true;
 
 		const formData = new FormData(event.currentTarget);
@@ -73,11 +72,13 @@
 <Dialog isOpen={registerErrorDialogOpen}>
 	<h2>Registration failed!</h2>
 
-	<ol>
-		{#each registerErrors as error}
-			<li>{error}</li>
-		{/each}
-	</ol>
+	{#if registerErrors.length > 0}
+		<ol>
+			{#each registerErrors as error}
+				<li>{error}</li>
+			{/each}
+		</ol>
+	{/if}
 
 	<button
 		class="border-grey rounded border-2 px-2 py-1"
