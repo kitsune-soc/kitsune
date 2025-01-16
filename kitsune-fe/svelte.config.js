@@ -26,7 +26,8 @@ const config = {
 		}),
 
 		alias: {
-			$houdini: './$houdini'
+			$houdini: './$houdini',
+			$assets: './src/assets'
 		},
 
 		version: {

@@ -13,6 +13,7 @@
 	});
 </script>
 
+<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
 {#snippet template(args: any)}
 	<Button {...args}>
 		{args.value}
