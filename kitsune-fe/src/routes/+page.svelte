@@ -2,7 +2,7 @@
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import Input from '$lib/components/Input.svelte';
+	import RegisterForm from '$lib/components/RegisterForm.svelte';
 
 	import type { PageData } from './$houdini';
 	import { _registerSchema } from './+page';
@@ -12,7 +12,8 @@
 	const statsStore = $derived(data.stats);
 	const stats = $derived({
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
-		registeredUsers: $statsStore.data?.instance.userCount ?? 0
+		registeredUsers: $statsStore.data?.instance.userCount ?? 0,
+		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true,
 	});
 
 	const register = new RegisterUserStore();
@@ -107,31 +108,9 @@
 	</div>
 
 	<div class="basis-1/4 max-lg:m-5">
-		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
-			<label class="block" for="username">
-				Username
-				<Input type="text" name="username" placeholder="hangaku" />
-			</label>
-
-			<label for="email">
-				Email address
-				<Input type="email" name="email" placeholder="hangaku@kabuki.dd" />
-			</label>
-
-			<label for="password">
-				Password
-				<Input type="password" name="password" />
-			</label>
-
-			<label for="confirm-password">
-				Confirm Password
-				<Input type="password" name="confirm-password" />
-			</label>
-
-			<p>
-				<Button class="w-full" loading={registerButtonDisabled}>Register</Button>
-			</p>
-		</form>
+		{#if stats.registrationsOpen}
+			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
+		{/if}
 
 		<Button class="w-full" buttonType="secondary" onclick={initiateLogin}>
 			Already have an account? Sign in
