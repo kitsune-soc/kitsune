@@ -1,0 +1,10 @@
+---
+source: lib/komainu/tests/auth_flow.rs
+expression: response
+---
+{
+  "access_token": "zisudtbgojtcgfsh",
+  "token_type": "Bearer",
+  "refresh_token": "mcnfelbaydmjbddc",
+  "expires_in": 1337
+}
