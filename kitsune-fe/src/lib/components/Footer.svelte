@@ -6,7 +6,7 @@
 </script>
 
 <footer
-	class="w-full place-content-between place-items-end text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3 lg:flex"
+	class="-z-50 w-full place-content-between place-items-end text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3 lg:flex"
 >
 	<div>
 		<p>
