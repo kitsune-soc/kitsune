@@ -193,3 +193,59 @@ async fn redirect_uri_mismatch() {
 
     assert!(matches!(error, flow::Error::InvalidClient));
 }
+
+#[futures_test::test]
+async fn different_client() {
+    fastrand::seed(RNG_SEED);
+
+    let fixtures = Fixture::generate();
+    let code = generate_secret();
+    let client = fixtures
+        .client_extractor
+        .extract("client_1", None)
+        .await
+        .unwrap();
+
+    let other_client = fixtures
+        .client_extractor
+        .extract("malicious_client_1", None)
+        .await
+        .unwrap();
+
+    fixtures.auth_storage.insert(komainu::Authorization {
+        code: code.clone().into(),
+        client: client.clone(),
+        pkce_payload: None,
+        scopes: Scope::new(),
+        user_id: "user_id".into(),
+    });
+
+    let body = sonic_rs::json!({
+        "grant_type": "authorization_code",
+        "code": code,
+
+        "client_id": other_client.client_id,
+        "client_secret": other_client.client_secret,
+        "redirect_uri": client.redirect_uri
+    });
+    let body = sonic_rs::to_string(&body).unwrap();
+
+    let req = http::Request::builder()
+        .header(http::header::CONTENT_TYPE, "application/json")
+        .body(body)
+        .unwrap();
+    let req = komainu::Request::read_from(req).await.unwrap();
+
+    let error =
+        match flow::authorization::perform(&req, &fixtures.client_extractor, &fixtures.auth_flow)
+            .await
+        {
+            Ok(..) => unreachable!(),
+            Err(err) => err,
+        };
+
+    assert!(
+        matches!(error, flow::Error::UnauthorizedClient),
+        "got: {error:?}"
+    );
+}

@@ -34,14 +34,23 @@ impl ClientExtractor {
 
 impl Default for ClientExtractor {
     fn default() -> Self {
-        Self::from_iter(
+        let extractor = Self::from_iter(
             [
                 ("client_1", Scope::from_iter(["read", "write"])),
                 ("client_2", Scope::from_iter(["follow", "push"])),
                 ("client_3", Scope::new()),
             ]
             .map(|(client_name, scopes)| define_client(client_name, scopes)),
-        )
+        );
+
+        extractor.insert(komainu::Client {
+            client_id: "malicious_client_1".into(),
+            client_secret: "malicious_client_1_sec".into(),
+            scopes: Scope::from_iter(["read", "write"]),
+            redirect_uri: "http://client_1.example".into(),
+        });
+
+        extractor
     }
 }
 
