@@ -99,7 +99,7 @@ async fn redirect_uri_mismatch() {
     let req = komainu::Request::read_from(req).await.unwrap();
 
     let err = match fixture.code_grant.extract_raw(&req).await {
-        Ok(..) => panic!(),
+        Ok(..) => unreachable!(),
         Err(err) => err,
     };
 
@@ -125,7 +125,7 @@ async fn invalid_response_type() {
     let req = komainu::Request::read_from(req).await.unwrap();
 
     let err = match fixture.code_grant.extract_raw(&req).await {
-        Ok(..) => panic!(),
+        Ok(..) => unreachable!(),
         Err(err) => err,
     };
 
@@ -182,7 +182,7 @@ async fn too_many_scopes() {
     let req = komainu::Request::read_from(req).await.unwrap();
 
     let err = match fixture.code_grant.extract_raw(&req).await {
-        Ok(..) => panic!(),
+        Ok(..) => unreachable!(),
         Err(err) => err,
     };
 
