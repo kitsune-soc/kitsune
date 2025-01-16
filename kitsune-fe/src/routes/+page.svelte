@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
@@ -92,7 +93,7 @@
 	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
 >
 	<div class="flex flex-col max-lg:place-items-center max-lg:text-center">
-		<img class="w-3/5" src="/kitsune_full.svg" alt="Kitsune logo" />
+		<Logo class="w-3/5" />
 
 		<h1>Federated microblogging</h1>
 
