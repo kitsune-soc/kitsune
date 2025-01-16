@@ -1,3 +1,4 @@
+import { paraglide } from '@inlang/paraglide-sveltekit/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 import houdini from 'houdini/vite';
@@ -11,6 +12,10 @@ export default defineConfig({
 		Icons({
 			autoInstall: true,
 			compiler: 'svelte'
+		}),
+		paraglide({
+			project: './project.inlang',
+			outdir: './src/lib/paraglide'
 		})
 	],
 	server: {
