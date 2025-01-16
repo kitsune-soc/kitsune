@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use strum::{AsRefStr, EnumString};
 use subtle::ConstantTimeEq;
 
-#[derive(AsRefStr, Clone, Default, Deserialize, EnumString, Serialize)]
+#[derive(AsRefStr, Clone, Debug, Default, Deserialize, EnumString, PartialEq, Serialize)]
 #[strum(serialize_all = "snake_case")]
 pub enum Method {
     #[default]

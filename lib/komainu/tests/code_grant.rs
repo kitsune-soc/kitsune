@@ -1,7 +1,7 @@
 use self::{fixtures::Fixture, util::SerdeResponse};
 use bytes::Bytes;
 use http_body_util::Empty;
-use komainu::{code_grant::GrantError, scope::Scope};
+use komainu::{code_grant::GrantError, flow::pkce, scope::Scope};
 use std::str::FromStr;
 
 mod fixtures;
@@ -187,4 +187,56 @@ async fn too_many_scopes() {
     };
 
     assert!(matches!(err, GrantError::AccessDenied));
+}
+
+#[futures_test::test]
+async fn success_with_pkce_method() {
+    fastrand::seed(RNG_SEED);
+    let fixture = Fixture::generate();
+
+    let uri = http::Uri::builder()
+        .scheme("http")
+        .authority("komainu.example")
+        .path_and_query("/oauth/authorize?response_type=code&client_id=client_1&code_challenge=challenge&challenge_code_method=none")
+        .build()
+        .unwrap();
+
+    let req = http::Request::builder()
+        .uri(uri)
+        .body(Empty::<Bytes>::new())
+        .unwrap();
+    let req = komainu::Request::read_from(req).await.unwrap();
+
+    let handle = fixture.code_grant.extract_raw(&req).await.unwrap();
+    let pkce = handle.pkce().unwrap();
+
+    assert_eq!(pkce.challenge, "challenge");
+    assert_eq!(pkce.method, pkce::Method::None);
+}
+
+#[futures_test::test]
+async fn success_without_pkce_method() {
+    fastrand::seed(RNG_SEED);
+    let fixture = Fixture::generate();
+
+    let uri = http::Uri::builder()
+        .scheme("http")
+        .authority("komainu.example")
+        .path_and_query(
+            "/oauth/authorize?response_type=code&client_id=client_1&code_challenge=challenge",
+        )
+        .build()
+        .unwrap();
+
+    let req = http::Request::builder()
+        .uri(uri)
+        .body(Empty::<Bytes>::new())
+        .unwrap();
+    let req = komainu::Request::read_from(req).await.unwrap();
+
+    let handle = fixture.code_grant.extract_raw(&req).await.unwrap();
+    let pkce = handle.pkce().unwrap();
+
+    assert_eq!(pkce.challenge, "challenge");
+    assert_eq!(pkce.method, pkce::Method::None);
 }

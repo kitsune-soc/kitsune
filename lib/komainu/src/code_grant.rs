@@ -181,6 +181,11 @@ where
     }
 
     #[must_use]
+    pub fn pkce(&self) -> Option<&pkce::Payload<'_>> {
+        self.pkce_payload.as_ref()
+    }
+
+    #[must_use]
     pub fn scope(&self) -> Option<&Scope> {
         self.scope.as_ref()
     }
