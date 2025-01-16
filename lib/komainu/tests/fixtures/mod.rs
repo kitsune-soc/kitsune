@@ -14,11 +14,30 @@ pub mod client_extractor;
 pub mod code_grant;
 pub mod refresh_flow;
 
-pub type AuthorizationStorage = Arc<Mutex<HashMap<String, komainu::Authorization<'static>>>>;
+#[allow(clippy::unreadable_literal)]
+pub const RNG_SEED: u64 = 0xBADD1E;
 
 #[inline]
 fn generate_secret() -> String {
     (0..16).map(|_| fastrand::lowercase()).collect()
+}
+
+#[derive(Clone, Default)]
+pub struct AuthorizationStorage {
+    inner: Arc<Mutex<HashMap<String, komainu::Authorization<'static>>>>,
+}
+
+impl AuthorizationStorage {
+    pub fn insert(&self, auth: komainu::Authorization<'_>) {
+        let auth = auth.into_owned();
+        let mut guard = self.inner.lock().unwrap();
+        guard.insert(auth.code.clone().into_owned(), auth);
+    }
+
+    pub fn get(&self, code: &str) -> Option<komainu::Authorization<'static>> {
+        let guard = self.inner.lock().unwrap();
+        guard.get(code).cloned()
+    }
 }
 
 #[derive(Clone)]
@@ -87,6 +106,7 @@ impl TokenStorage {
 #[derive(Clone)]
 pub struct Fixture {
     pub auth_flow: self::auth_flow::Issuer,
+    pub auth_storage: AuthorizationStorage,
     pub client_extractor: ClientExtractor,
     pub code_grant: Arc<AuthorizerExtractor<self::code_grant::Issuer, ClientExtractor>>,
     pub refresh_flow: self::refresh_flow::Issuer,
@@ -103,7 +123,8 @@ impl Fixture {
             self::code_grant::extractor(auth_storage.clone(), client_extractor.clone());
 
         Self {
-            auth_flow: self::auth_flow::Issuer::new(auth_storage, token_storage.clone()),
+            auth_flow: self::auth_flow::Issuer::new(auth_storage.clone(), token_storage.clone()),
+            auth_storage,
             client_extractor,
             code_grant: Arc::new(code_grant),
             refresh_flow: self::refresh_flow::Issuer::new(token_storage.clone()),

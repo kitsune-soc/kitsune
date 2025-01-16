@@ -30,8 +30,7 @@ impl code_grant::Issuer for Issuer {
             user_id: Cow::Owned(user_id),
         };
 
-        let mut guard = self.inner.lock().unwrap();
-        guard.insert(code.clone(), authorization);
+        self.inner.insert(authorization);
 
         Ok(code)
     }

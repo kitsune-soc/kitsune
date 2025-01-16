@@ -20,8 +20,7 @@ impl flow::authorization::Issuer for Issuer {
         &self,
         auth_code: &str,
     ) -> Result<Option<komainu::Authorization<'_>>, flow::Error> {
-        let guard = self.inner.lock().unwrap();
-        Ok(guard.get(auth_code).cloned())
+        Ok(self.inner.get(auth_code))
     }
 
     async fn issue_token(

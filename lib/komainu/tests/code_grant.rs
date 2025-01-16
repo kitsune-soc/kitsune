@@ -1,4 +1,7 @@
-use self::{fixtures::Fixture, util::SerdeResponse};
+use self::{
+    fixtures::{Fixture, RNG_SEED},
+    util::SerdeResponse,
+};
 use bytes::Bytes;
 use http_body_util::Empty;
 use komainu::{code_grant::GrantError, flow::pkce, scope::Scope};
@@ -6,9 +9,6 @@ use std::str::FromStr;
 
 mod fixtures;
 mod util;
-
-#[allow(clippy::unreadable_literal)]
-const RNG_SEED: u64 = 0xBADD1E;
 
 #[futures_test::test]
 async fn success_basic() {
