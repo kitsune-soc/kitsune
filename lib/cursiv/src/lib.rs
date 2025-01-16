@@ -9,7 +9,7 @@ mod handle;
 mod layer;
 mod service;
 
-const CSRF_COOKIE_NAME: &str = "CSRF_TOKEN";
+const CSRF_COOKIE_NAME: &str = "CURSIV-CSRF_TOKEN";
 const RANDOM_DATA_LEN: usize = 32;
 
 mod newtypes {

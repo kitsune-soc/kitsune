@@ -1,11 +1,11 @@
 use super::{super::user::User, application::Application};
 use crate::schema::oauth2_authorization_codes;
-use diesel::{Associations, Identifiable, Insertable, Queryable};
+use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-#[derive(Associations, Clone, Deserialize, Identifiable, Serialize, Queryable)]
+#[derive(Associations, Clone, Deserialize, Identifiable, Selectable, Serialize, Queryable)]
 #[diesel(
     belongs_to(Application),
     belongs_to(User),

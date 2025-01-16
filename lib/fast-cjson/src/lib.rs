@@ -55,13 +55,25 @@ impl CanonicalFormatter {
     ///
     /// If we are not currently writing an object, pass through `writer`.
     #[inline]
-    fn writer<'a, W: io::Write + ?Sized>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a {
+    fn writer<'a, W>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a
+    where
+        W: io::Write + ?Sized,
+    {
         self.object_stack.last_mut().map_or_else(
-            || Either::Right(BufferedWriter::new(writer)),
+            || {
+                // TODO: This is annoying. Following the migration to the new trait solver, we have to box here to keep the code compiling.
+                //
+                // It's weird that boxing solves it here since the trait solver still needs to prove that `BufferedWriter<&mut W>` implements `WriteExt` to allow for the coercion to the trait object.
+                // So returning the raw unboxed type should also make sense to the trait solver. But apparently it doesn't.
+                //
+                // How unfortunate. But at least, looking at the benchmark, it doesn't have _that much_ of an impact.
+                let boxed = Box::new(BufferedWriter::new(writer)) as Box<dyn WriteExt + 'a>;
+                Either::Right(boxed)
+            },
             |object| {
-                let container = match &mut object.state {
-                    Collecting::Key(key) => key,
-                    Collecting::Value { value, .. } => value,
+                let container = match object.state {
+                    Collecting::Key(ref mut key) => key,
+                    Collecting::Value { ref mut value, .. } => value,
                 };
 
                 Either::Left(container)

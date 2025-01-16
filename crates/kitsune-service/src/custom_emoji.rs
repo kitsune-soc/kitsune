@@ -1,5 +1,3 @@
-#![allow(unexpected_cfgs)] // garde expansion issue
-
 use super::attachment::{AttachmentService, Upload};
 use bytes::Bytes;
 use diesel::{

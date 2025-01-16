@@ -90,13 +90,26 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
     #[cfg(feature = "graphql-api")]
     let router = {
         use super::graphql;
-        use axum::Extension;
+        use async_graphql_axum::GraphQLSubscription;
+        use axum::{extract::DefaultBodyLimit, Extension};
+
+        let schema = graphql::schema(state.clone());
 
         router.merge(
             Router::new()
-                .route("/graphql", routing::any(graphql::graphql))
-                .route("/graphql-explorer", routing::get(graphql::explorer))
-                .layer(Extension(graphql::schema(state.clone()))),
+                .nest(
+                    "/graphql",
+                    Router::new()
+                        .route(
+                            "/",
+                            routing::any(graphql::graphql).layer(DefaultBodyLimit::max(
+                                server_config.max_upload_size.to_bytes() as usize,
+                            )),
+                        )
+                        .route("/explorer", routing::get(graphql::explorer))
+                        .route_service("/ws", GraphQLSubscription::new(schema.clone())),
+                )
+                .layer(Extension(schema)),
         )
     };
 

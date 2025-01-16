@@ -7,6 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 retry-policies.workspace = true
+tick-tock-mock.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 

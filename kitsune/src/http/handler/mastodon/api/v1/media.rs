@@ -51,7 +51,9 @@ pub async fn post(
 
                     upload = upload.content_type(content_type).stream(stream);
                 }
-                _ => continue,
+                _ => {
+                    // just ignore
+                }
             }
         }
     }

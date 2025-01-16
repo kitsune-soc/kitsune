@@ -1,5 +1,4 @@
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use chrono::Utc;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
@@ -11,7 +10,7 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
-use oxide_auth::endpoint::Scope;
+use komainu::scope::Scope;
 use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
@@ -20,35 +19,21 @@ use time::Duration;
 use typed_builder::TypedBuilder;
 use url::Url;
 
-mod authorizer;
-mod endpoint;
-mod issuer;
-mod registrar;
-mod solicitor;
+mod auth_code;
+mod client_extractor;
+mod code_grant;
+mod refresh;
 
-pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
+pub use self::{
+    auth_code::Issuer as AuthIssuer, client_extractor::Extractor as ClientExtractor,
+    code_grant::Issuer as CodeGrantIssuer, refresh::Issuer as RefreshIssuer,
+};
+
+static AUTH_CODE_VALID_DURATION: Duration = Duration::minutes(10);
+static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
-const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
-static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
-
-#[inline]
-fn timestamp_to_chrono(ts: iso8601_timestamp::Timestamp) -> chrono::DateTime<Utc> {
-    let secs = ts
-        .duration_since(iso8601_timestamp::Timestamp::UNIX_EPOCH)
-        .whole_seconds();
-
-    chrono::DateTime::from_timestamp(secs, ts.nanosecond()).unwrap()
-}
-
-#[inline]
-fn chrono_to_timestamp(ts: chrono::DateTime<Utc>) -> iso8601_timestamp::Timestamp {
-    time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
-        .unwrap()
-        .replace_nanosecond(ts.timestamp_subsec_nanos())
-        .unwrap()
-        .into()
-}
+pub const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 #[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString, Serialize)]
 #[strum(serialize_all = "lowercase")]
@@ -122,7 +107,7 @@ impl OAuth2Service {
                         application_id: application.id,
                         user_id,
                         scopes: scopes.as_str(),
-                        expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
+                        expires_at: Timestamp::now_utc() + AUTH_CODE_VALID_DURATION,
                     })
                     .get_result(db_conn)
                     .await

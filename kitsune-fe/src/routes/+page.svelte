@@ -5,7 +5,7 @@
 
 	import type { PageData } from './$houdini';
 	import { _registerSchema } from './+page';
-	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading?raw&width=2em&height=2em';
+	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading';
 
 	const { data }: { data: PageData } = $props();
 
@@ -153,9 +153,7 @@
 			<p>
 				<Button class="w-full" disabled={registerButtonDisabled}>
 					{#if registerButtonDisabled}
-						<!-- Work around unplugin-icons bug: <https://github.com/unplugin/unplugin-icons/issues/242> -->
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html IconThreeDotsLoading}
+						<IconThreeDotsLoading class="m-auto h-8 w-8" />
 					{:else}
 						Register
 					{/if}

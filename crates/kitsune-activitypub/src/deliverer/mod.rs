@@ -403,6 +403,5 @@ impl DelivererTrait for Deliverer {
             Action::UpdateAccount(account) => self.update_account(account).await,
             Action::UpdatePost(post) => self.update_post(post).await,
         }
-        .map_err(Into::into)
     }
 }

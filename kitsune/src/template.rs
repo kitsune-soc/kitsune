@@ -14,7 +14,7 @@ struct TemplateDir;
 fn embed_loader(path: &str) -> Result<Option<String>, minijinja::Error> {
     let maybe_data = TemplateDir::get(path).map(|embedded_file| embedded_file.data);
     let maybe_template = maybe_data
-        .map(|data| str::from_utf8(&data).map(ToString::to_string))
+        .map(|data| simdutf8::basic::from_utf8(&data).map(ToString::to_string))
         .transpose()
         .map_err(|error| {
             minijinja::Error::new(minijinja::ErrorKind::CannotDeserialize, error.to_string())
@@ -29,35 +29,35 @@ fn init_environment() -> minijinja::Environment<'static> {
     environment
 }
 
-fn spawn_watcher() {
-    let watcher = notify_debouncer_full::new_debouncer(
-        Duration::from_secs(1),
-        None,
-        |events: DebounceEventResult| {
-            let Ok(events) = events else {
-                return;
-            };
+#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
+fn event_handler(events: DebounceEventResult) {
+    let Ok(events) = events else {
+        return;
+    };
 
-            for event in events {
-                if matches!(
-                    event.event,
-                    notify::Event {
-                        kind: notify::EventKind::Create(..)
-                            | notify::EventKind::Modify(..)
-                            | notify::EventKind::Remove(..),
-                        ..
-                    }
-                ) {
-                    debug!("reloading templates");
-
-                    if let Some(env) = ENVIRONMENT.get() {
-                        env.store(Arc::new(init_environment()));
-                    }
-                }
+    for event in events {
+        if matches!(
+            event.event,
+            notify::Event {
+                kind: notify::EventKind::Create(..)
+                    | notify::EventKind::Modify(..)
+                    | notify::EventKind::Remove(..),
+                ..
             }
-        },
-    )
-    .unwrap();
+        ) {
+            debug!(?event.paths, "reloading templates");
+
+            if let Some(env) = ENVIRONMENT.get() {
+                env.store(Arc::new(init_environment()));
+            }
+        }
+    }
+}
+
+#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
+fn spawn_watcher() {
+    let watcher =
+        notify_debouncer_full::new_debouncer(Duration::from_secs(1), None, event_handler).unwrap();
 
     let mut watcher = ManuallyDrop::new(watcher);
     let template_dir = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/templates"));

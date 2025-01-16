@@ -9,7 +9,6 @@ license = "MIT OR Apache-2.0"
 axum-core = { workspace = true, optional = true }
 blake3.workspace = true
 cookie.workspace = true
-futures-test.workspace = true
 hex-simd.workspace = true
 http.workspace = true
 pin-project-lite.workspace = true
@@ -20,6 +19,9 @@ subtle.workspace = true
 tower.workspace = true
 triomphe.workspace = true
 zeroize.workspace = true
+
+[dev-dependencies]
+futures-test.workspace = true
 
 [features]
 axum = ["dep:axum-core"]

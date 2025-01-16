@@ -1,0 +1,10 @@
+---
+source: lib/komainu/tests/refresh_flow.rs
+expression: response
+---
+{
+  "access_token": "kltugigbzriuurdb",
+  "token_type": "Bearer",
+  "refresh_token": "zisudtbgojtcgfsh",
+  "expires_in": 1337
+}

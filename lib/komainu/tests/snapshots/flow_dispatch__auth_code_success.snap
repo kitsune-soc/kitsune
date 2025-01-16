@@ -1,0 +1,9 @@
+---
+source: lib/komainu/tests/flow_dispatch.rs
+expression: "SerdeResponse::from(response)"
+---
+{
+  "body": "{\"access_token\":\"zisudtbgojtcgfsh\",\"token_type\":\"Bearer\",\"refresh_token\":\"mcnfelbaydmjbddc\",\"expires_in\":1337}",
+  "headers": {},
+  "status": 200
+}
