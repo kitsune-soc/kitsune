@@ -1,32 +1,33 @@
-<script module>
+<script lang="ts" module>
+	import Button from '$lib/components/Button.svelte';
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import { fn } from '@storybook/test';
 
-	import Button from './Button.svelte';
-
-	// More on how to set up stories at: https://storybook.js.org/docs/writing-stories
 	const { Story } = defineMeta({
-		title: 'Example/Button',
+		title: 'Button',
 		component: Button,
 		tags: ['autodocs'],
-		argTypes: {
-			backgroundColor: { control: 'color' },
-			size: {
-				control: { type: 'select' },
-				options: ['small', 'medium', 'large']
-			}
-		},
 		args: {
-			onClick: fn()
+			onclick: fn()
 		}
 	});
 </script>
 
-<!-- More on writing stories with args: https://storybook.js.org/docs/writing-stories/args -->
-<Story name="Primary" args={{ primary: true, label: 'Button' }} />
+{#snippet template(args: any)}
+	<Button {...args}>
+		{args.value}
+	</Button>
+{/snippet}
 
-<Story name="Secondary" args={{ label: 'Button' }} />
+<Story name="Default" args={{ value: 'Enabled' }} children={template} />
 
-<Story name="Large" args={{ size: 'large', label: 'Button' }} />
+<Story name="Primary" args={{ value: 'Primary', buttonType: 'primary' }} children={template} />
+<Story
+	name="Secondary"
+	args={{ value: 'Secondary', buttonType: 'secondary' }}
+	children={template}
+/>
+<Story name="Danger" args={{ value: 'Danger', buttonType: 'danger' }} children={template} />
 
-<Story name="Small" args={{ size: 'small', label: 'Button' }} />
+<Story name="Disabled" args={{ value: 'Disabled', disabled: true }} children={template} />
+<Story name="Loading" args={{ value: 'Loading', loading: true }} children={template} />

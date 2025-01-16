@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { version as frontendVersion } from '$app/environment';
+	import Footer from '$lib/components/Footer.svelte';
 	import { i18n } from '$lib/i18n';
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 
@@ -23,15 +24,5 @@
 <ParaglideJS {i18n}>
 	{@render children()}
 
-	<footer class="w-full text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3">
-		<p>
-			Backend version: {backendVersion}
-			<br />Frontend version: {frontendVersion}
-		</p>
-
-		<span>
-			Powered by
-			<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
-		</span>
-	</footer>
+	<Footer {backendVersion} {frontendVersion} />
 </ParaglideJS>
