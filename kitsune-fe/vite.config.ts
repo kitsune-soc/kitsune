@@ -7,7 +7,8 @@ export default defineConfig({
 	plugins: [houdini(), sveltekit()],
 	server: {
 		proxy: {
-			'/graphql': 'http://localhost:5000'
+			'/graphql': 'http://localhost:5000',
+			'/public': 'http://localhost:5000'
 		}
 	},
 	test: {
