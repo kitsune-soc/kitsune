@@ -8,10 +8,6 @@
 		@apply prose prose-slate prose-invert font-mono;
 	}
 
-	a {
-		/*@apply text-pink-400;*/
-	}
-
 	::-webkit-scrollbar {
 		@apply h-2.5 w-2.5;
 	}

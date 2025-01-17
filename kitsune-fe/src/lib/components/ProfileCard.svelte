@@ -3,32 +3,13 @@
 	import defaultHeader from '$assets/default-header.png';
 	import type { FullUser } from '$lib/types/User';
 
-	import { DateTime } from 'luxon';
-
 	let {
 		name,
 		username,
 		description,
 		avatarUrl = defaultAvatar,
-		headerUrl = defaultHeader,
-		createdAt: rawCreatedAt
+		headerUrl = defaultHeader
 	}: FullUser = $props();
-
-	const parsedCreatedAt = new Date(rawCreatedAt);
-
-	function formatRelative(date: Date): string {
-		return DateTime.fromJSDate(date).toRelative()!;
-	}
-
-	let createdAt = $state(formatRelative(parsedCreatedAt));
-
-	$effect(() => {
-		const interval = setInterval(() => {
-			createdAt = formatRelative(parsedCreatedAt);
-		}, 5_000);
-
-		return () => clearInterval(interval);
-	});
 </script>
 
 <div class="max-w-96 rounded border-2 border-gray-200 bg-dark-1">
