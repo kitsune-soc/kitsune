@@ -12,7 +12,4 @@ vite.config.ts.timestamp-*
 
 $houdini
 
-# Paraglide
-src/lib/paraglide
-
 *storybook.log

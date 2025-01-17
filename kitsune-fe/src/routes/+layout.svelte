@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { version as frontendVersion } from '$app/environment';
 	import Footer from '$lib/components/Footer.svelte';
-	import { i18n } from '$lib/i18n';
-	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 
 	import type { Snippet } from 'svelte';
 
@@ -21,8 +19,6 @@
 	<meta name="darkreader-lock" />
 </svelte:head>
 
-<ParaglideJS {i18n}>
-	{@render children()}
+{@render children()}
 
-	<Footer {backendVersion} {frontendVersion} />
-</ParaglideJS>
+<Footer {backendVersion} {frontendVersion} />
