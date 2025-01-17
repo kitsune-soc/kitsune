@@ -29,6 +29,6 @@ export default ts.config(
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', '$houdini/', 'src/lib/paraglide']
+		ignores: ['build/', '.svelte-kit/', 'dist/', '$houdini/']
 	}
 );
