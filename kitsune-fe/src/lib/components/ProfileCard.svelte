@@ -26,5 +26,5 @@
 		</figcaption>
 	</figure>
 
-	<p class="m-3 leading-snug">{description}</p>
+	<p class="m-3">{description}</p>
 </div>
