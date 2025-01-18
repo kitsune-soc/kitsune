@@ -40,6 +40,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: ^3.2.4
         version: 3.2.4(react@18.3.1)(storybook@8.5.0(prettier@3.4.2))
+      '@faker-js/faker':
+        specifier: ^9.4.0
+        version: 9.4.0
       '@iconify/svelte':
         specifier: ^4.2.0
         version: 4.2.0(svelte@5.18.0)
@@ -79,6 +82,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@3.4.17)
+      '@tanstack/svelte-virtual':
+        specifier: ^3.11.2
+        version: 3.11.2(svelte@5.18.0)
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^5.2.1
         version: 5.2.1(prettier-plugin-svelte@3.3.3(prettier@3.4.2)(svelte@5.18.0))(prettier@3.4.2)(svelte@5.18.0)
@@ -489,6 +495,10 @@ packages:
 
   '@expressive-code/plugin-text-markers@0.40.0':
     resolution: {integrity: sha512-NvorTEKWHfSE8yg9aUJn6Kb2zUah8VxvCg4HwnHq62AMW8Yu1WwtjLgqCiLIA17EcWlWKsq5dfs4q0K/hVe0mQ==, tarball: https://registry.npmjs.org/@expressive-code/plugin-text-markers/-/plugin-text-markers-0.40.0.tgz}
+
+  '@faker-js/faker@9.4.0':
+    resolution: {integrity: sha512-85+k0AxaZSTowL0gXp8zYWDIrWclTbRPg/pm/V0dSFZ6W6D4lhcG3uuZl4zLsEKfEvs69xDbLN2cHQudwp95JA==, tarball: https://registry.npmjs.org/@faker-js/faker/-/faker-9.4.0.tgz}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@graphql-tools/executor@1.3.12':
     resolution: {integrity: sha512-FzLXZQJOZHB75SecYFOIEEHw/qcxkRFViw0lVqHpaL07c+GqDxv6VOto0FZCIiV9RgGdyRj3O8lXDCp9Cw1MbA==, tarball: https://registry.npmjs.org/@graphql-tools/executor/-/executor-1.3.12.tgz}
@@ -1205,6 +1215,14 @@ packages:
     resolution: {integrity: sha512-0wDLwCVF5V3x3b1SGXPCDcdsbDHMBe+lkFzBRaHeLvNi+nrrnZ1lA18u+OTWO8iSWU2GxUOCvlXtDuqftc1oiA==, tarball: https://registry.npmjs.org/@tailwindcss/typography/-/typography-0.5.16.tgz}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
+
+  '@tanstack/svelte-virtual@3.11.2':
+    resolution: {integrity: sha512-o0VWDf8GlkZ8S5E2GjQq39qhZIB6U1Kej05/aTdxIQy18c022CxYgGWUydmrWJE3DV2ZA/q+Zm30oqnSRhQ4Lw==, tarball: https://registry.npmjs.org/@tanstack/svelte-virtual/-/svelte-virtual-3.11.2.tgz}
+    peerDependencies:
+      svelte: ^3.48.0 || ^4.0.0 || ^5.0.0
+
+  '@tanstack/virtual-core@3.11.2':
+    resolution: {integrity: sha512-vTtpNt7mKCiZ1pwU9hfKPhpdVO2sVzFQsxoVBGtOSHxlrRRzYr8iQ2TlwbAcRYCcEiZ9ECAM8kBzH0v2+VzfKw==, tarball: https://registry.npmjs.org/@tanstack/virtual-core/-/virtual-core-3.11.2.tgz}
 
   '@testing-library/dom@10.4.0':
     resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==, tarball: https://registry.npmjs.org/@testing-library/dom/-/dom-10.4.0.tgz}
@@ -4616,6 +4634,8 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.40.0
 
+  '@faker-js/faker@9.4.0': {}
+
   '@graphql-tools/executor@1.3.12(graphql@15.10.1)':
     dependencies:
       '@graphql-tools/utils': 10.7.2(graphql@15.10.1)
@@ -5390,6 +5410,13 @@ snapshots:
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.17
+
+  '@tanstack/svelte-virtual@3.11.2(svelte@5.18.0)':
+    dependencies:
+      '@tanstack/virtual-core': 3.11.2
+      svelte: 5.18.0
+
+  '@tanstack/virtual-core@3.11.2': {}
 
   '@testing-library/dom@10.4.0':
     dependencies:
