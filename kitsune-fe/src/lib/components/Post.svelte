@@ -13,19 +13,19 @@
 	</div>
 
 	<div class="ml-3 w-full">
-		<div class="flex flex-row justify-between">
-			<div class="mb-1.5">
-				<strong>{user.name}</strong>
+		<div>
+			<strong>{user.name}</strong>
 
-				<a class="break-keep text-shade2-light no-underline" href="/users/{user.id}">
-					{user.username}
-				</a>
-			</div>
+			<a class="break-keep text-shade2-light no-underline" href="/users/{user.id}">
+				{user.username}
+			</a>
 		</div>
 
-		{content}
+		<div class="my-2">
+			{content}
+		</div>
 
-		<div class="mt-2 flex flex-row justify-between">
+		<div class="flex flex-row justify-between">
 			<InteractionButton icon="material-symbols:reply-rounded" count={replyCount} />
 			<InteractionButton icon="material-symbols:repeat-rounded" count={repostCount} />
 			<InteractionButton icon="material-symbols:star-rounded" count={likeCount} />

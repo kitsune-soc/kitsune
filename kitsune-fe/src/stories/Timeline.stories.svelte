@@ -3,6 +3,7 @@
 	import type { Post } from '$lib/types/Post';
 	import { faker } from '@faker-js/faker';
 	import { defineMeta } from '@storybook/addon-svelte-csf';
+	import { fn } from '@storybook/test';
 
 	import exampleAvatar from './assets/profile_pic.png';
 
@@ -23,12 +24,15 @@
 		};
 	}
 
-	let posts = new Array(10_000).fill(true).map(() => generateRandomPost());
+	let posts = new Array(5_000).fill(true).map(() => generateRandomPost());
 
 	const { Story } = defineMeta({
 		title: 'Timeline',
 		component: Timeline,
-		tags: ['autodocs']
+		tags: ['autodocs'],
+		args: {
+			onendreached: fn()
+		}
 	});
 </script>
 
