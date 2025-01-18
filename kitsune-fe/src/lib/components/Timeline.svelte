@@ -4,7 +4,8 @@
 
 	import PostComponent from './Post.svelte';
 
-	let { posts }: { posts: Array<Post> } = $props();
+	let { posts, onendreached: onReachedEnd }: { posts: Array<Post>; onendreached?: () => void } =
+		$props();
 
 	let timelineElement: HTMLDivElement | undefined = $state();
 
@@ -12,15 +13,28 @@
 		createWindowVirtualizer<HTMLDivElement>({
 			count: posts.length,
 			scrollMargin: timelineElement?.offsetTop ?? 0,
-			estimateSize: () => 45
+			// good enough guess
+			estimateSize: () => 100,
+			// give a big enough buffer for us to load more posts
+			overscan: 5
 		})
 	);
 
 	let virtualItems = $derived($virtualizer.getVirtualItems());
 	let virtualElements: HTMLDivElement[] = $state([]);
 
+	// Recompute the size of the virtual list.
+	// Otherwise we can't possibly correctly reach the bottom of the list.
 	$effect(() => {
 		virtualElements.forEach((element) => $virtualizer.measureElement(element));
+	});
+
+	// Emit event when we reached the end
+	$effect(() => {
+		let [lastItem] = virtualItems.toReversed();
+		if (lastItem.index === posts.length - 1) {
+			onReachedEnd ? onReachedEnd() : {};
+		}
 	});
 </script>
 
