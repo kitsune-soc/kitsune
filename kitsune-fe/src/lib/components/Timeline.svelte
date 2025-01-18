@@ -31,7 +31,11 @@
 			: 0}px);"
 	>
 		{#each virtualItems as row}
-			<div bind:this={virtualElements[row.index]} data-index={row.index}>
+			<div
+				class="border-b border-gray-200 border-opacity-50"
+				bind:this={virtualElements[row.index]}
+				data-index={row.index}
+			>
 				<PostComponent {...posts[row.index]} />
 			</div>
 		{/each}
