@@ -2,3 +2,6 @@
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# Ignore auto-downloaded GQL schema
+schema.graphql

@@ -1,18 +1,20 @@
 <script lang="ts">
+	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+	import RegisterForm from '$lib/components/RegisterForm.svelte';
 
 	import type { PageData } from './$houdini';
 	import { _registerSchema } from './+page';
-	import IconThreeDotsLoading from '~icons/eos-icons/three-dots-loading';
 
 	const { data }: { data: PageData } = $props();
 
 	const statsStore = $derived(data.stats);
 	const stats = $derived({
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
-		registeredUsers: $statsStore.data?.instance.userCount ?? 0
+		registeredUsers: $statsStore.data?.instance.userCount ?? 0,
+		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true
 	});
 
 	const register = new RegisterUserStore();
@@ -22,7 +24,6 @@
 	let registerErrorDialogOpen = $state(false);
 
 	async function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
-		event.preventDefault();
 		registerButtonDisabled = true;
 
 		const formData = new FormData(event.currentTarget);
@@ -72,11 +73,13 @@
 <Dialog isOpen={registerErrorDialogOpen}>
 	<h2>Registration failed!</h2>
 
-	<ol>
-		{#each registerErrors as error}
-			<li>{error}</li>
-		{/each}
-	</ol>
+	{#if registerErrors.length > 0}
+		<ol>
+			{#each registerErrors as error}
+				<li>{error}</li>
+			{/each}
+		</ol>
+	{/if}
 
 	<button
 		class="border-grey rounded border-2 px-2 py-1"
@@ -90,7 +93,7 @@
 	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
 >
 	<div class="flex flex-col max-lg:place-items-center max-lg:text-center">
-		<img class="w-3/5" src="/kitsune_full.svg" alt="Kitsune logo" />
+		<Logo class="w-3/5" />
 
 		<h1>Federated microblogging</h1>
 
@@ -107,59 +110,9 @@
 	</div>
 
 	<div class="basis-1/4 max-lg:m-5">
-		<form class="grid grid-cols-1 gap-6" onsubmit={doRegister}>
-			<label class="block" for="username">
-				Username
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="text"
-					name="username"
-					placeholder="hangaku"
-				/>
-			</label>
-
-			<label for="email">
-				Email address
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="email"
-					name="email"
-					placeholder="hangaku@kabuki.dd"
-				/>
-			</label>
-
-			<label for="password">
-				Password
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="password"
-					name="password"
-				/>
-			</label>
-
-			<label for="confirm-password">
-				Confirm Password
-
-				<input
-					class="w-full border-0 border-b-2 border-gray-200 bg-transparent"
-					type="password"
-					name="confirm-password"
-				/>
-			</label>
-
-			<p>
-				<Button class="w-full" disabled={registerButtonDisabled}>
-					{#if registerButtonDisabled}
-						<IconThreeDotsLoading class="m-auto h-8 w-8" />
-					{:else}
-						Register
-					{/if}
-				</Button>
-			</p>
-		</form>
+		{#if stats.registrationsOpen}
+			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
+		{/if}
 
 		<Button class="w-full" buttonType="secondary" onclick={initiateLogin}>
 			Already have an account? Sign in
