@@ -4,8 +4,7 @@
 
 	import PostComponent from './Post.svelte';
 
-	let { posts, onendreached: onReachedEnd }: { posts: Array<Post>; onendreached?: () => void } =
-		$props();
+	let { posts, onendreached }: { posts: Array<Post>; onendreached?: () => void } = $props();
 
 	let timelineElement: HTMLDivElement | undefined = $state();
 
@@ -29,11 +28,12 @@
 		virtualElements.forEach((element) => $virtualizer.measureElement(element));
 	});
 
-	// Emit event when we reached the end
+	// Emit event when we reached the end.
+	// The callee has to debounce the events themselves.
 	$effect(() => {
 		let [lastItem] = virtualItems.toReversed();
 		if (lastItem.index === posts.length - 1) {
-			onReachedEnd ? onReachedEnd() : {};
+			if (onendreached) onendreached();
 		}
 	});
 </script>
