@@ -2,14 +2,12 @@ use crate::{
     ctx::Context,
     mrf_wit::v1::fep::mrf::http_client::{self, Error, Request, Response, ResponseBody},
 };
-use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use http_body_util::{BodyDataStream, BodyExt};
 use wasmtime::component::Resource;
 
 pub type Body = BodyDataStream<kitsune_http_client::ResponseBody>;
 
-#[async_trait]
 impl http_client::Host for Context {
     async fn do_request(&mut self, request: Request) -> Result<Response, Resource<Error>> {
         let method = http::Method::from_bytes(request.method.as_bytes())
@@ -50,7 +48,6 @@ impl http_client::Host for Context {
     }
 }
 
-#[async_trait]
 impl http_client::HostResponseBody for Context {
     async fn next(
         &mut self,
@@ -71,7 +68,6 @@ impl http_client::HostResponseBody for Context {
     }
 }
 
-#[async_trait]
 impl http_client::HostError for Context {
     async fn drop(&mut self, _rep: Resource<Error>) -> wasmtime::Result<()> {
         Ok(())

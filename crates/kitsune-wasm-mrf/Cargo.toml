@@ -7,7 +7,6 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait.workspace = true
 blake3.workspace = true
 color-eyre.workspace = true
 derive_more.workspace = true
