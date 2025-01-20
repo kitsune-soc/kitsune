@@ -109,7 +109,7 @@ base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.9.0"
-clap = { version = "4.5.26", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.27", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 compact_str = { version = "0.8.1", features = ["serde"] }
@@ -151,7 +151,7 @@ futures-test = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false, features = [
     "alloc",
 ] }
-garde = { version = "0.21.1", features = [
+garde = { version = "0.22.0", features = [
     "derive",
     "email",
     "email-idna",
@@ -190,7 +190,7 @@ hyper-rustls = { version = "0.27.5", default-features = false, features = [
 ] }
 icu_normalizer = "1.5.0"
 img-parts = "0.3.3"
-indexmap = { version = "2.7.0", features = ["serde"] }
+indexmap = { version = "2.7.1", features = ["serde"] }
 insta = { version = "1.42.0", default-features = false, features = [
     "glob",
     "json",
@@ -293,9 +293,9 @@ sailfish = { version = "0.9.0", default-features = false, features = [
 ] }
 schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
-semver = { version = "1.0.24", features = ["serde"] }
+semver = { version = "1.0.25", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.135"
+serde_json = "1.0.137"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
 serde_with = { version = "3.12.0", default-features = false, features = [
@@ -356,16 +356,17 @@ uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.223.0"
 wasmparser = "0.223.0"
-wasmtime = { version = "28.0.1", default-features = false, features = [
+wasmtime = { version = "29.0.0", default-features = false, features = [
     "addr2line",
     "async",
     "component-model",
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
+    "pulley",
     "runtime",
 ] }
-wasmtime-wasi = { version = "28.0.1", default-features = false }
+wasmtime-wasi = { version = "29.0.0", default-features = false }
 wat = "1.223.0"
 whatlang = "0.16.4"
 whichlang = "0.1.0"
