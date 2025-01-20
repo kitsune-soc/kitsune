@@ -358,12 +358,12 @@ wasm-encoder = "0.223.0"
 wasmparser = "0.223.0"
 wasmtime = { version = "29.0.0", default-features = false, features = [
     "addr2line",
+    "all-arch",
     "async",
     "component-model",
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
-    "pulley",
     "runtime",
 ] }
 wasmtime-wasi = { version = "29.0.0", default-features = false }
@@ -463,3 +463,5 @@ license = "AGPL-3.0-or-later"
 # axum upgrade
 async-graphql = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
 async-graphql-axum = { git = "https://github.com/aumetra/async-graphql.git", branch = "axum-0.8" }
+
+sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", branch = "aw/fix-imports" }
