@@ -6,7 +6,7 @@
 </script>
 
 <button
-	class="flex flex-row gap-1.5"
+	class="flex cursor-pointer flex-row gap-1.5"
 	onclick={() => {
 		if (oninteract) oninteract();
 	}}

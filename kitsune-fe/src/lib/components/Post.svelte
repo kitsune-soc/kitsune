@@ -29,7 +29,9 @@
 			<InteractionButton icon="material-symbols:reply-rounded" count={replyCount} />
 			<InteractionButton icon="material-symbols:repeat-rounded" count={repostCount} />
 			<InteractionButton icon="material-symbols:star-rounded" count={likeCount} />
+
 			<InteractionButton icon="material-symbols:menu-rounded" />
+
 			<a class="no-underline hover:underline" href="/posts/{id}">
 				<RelativeTime time={createdAt} />
 			</a>
