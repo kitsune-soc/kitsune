@@ -1,0 +1,16 @@
+[package]
+name = "jason"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_pointer_width = "64")'.dependencies]
+sonic-rs.workspace = true
+
+[lints]
+workspace = true

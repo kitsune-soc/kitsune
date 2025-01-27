@@ -63,6 +63,7 @@ members = [
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
+    "lib/jason",
     "lib/just-retry",
     "lib/komainu",
     "lib/masto-id-convert",
@@ -413,6 +414,7 @@ cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
 flashy = { path = "lib/flashy", features = ["axum"] }
 http-signatures = { path = "lib/http-signatures" }
+jason = { path = "lib/jason" }
 just-retry = { path = "lib/just-retry" }
 komainu = { path = "lib/komainu" }
 mrf-manifest = { path = "lib/mrf-manifest", features = [
