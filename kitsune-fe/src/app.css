@@ -1,10 +1,12 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss";
+@import "../../theme.css";
+
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
 
 @layer base {
 	body {
-		@apply min-h-screen min-w-max bg-gradient-to-bl from-dark-2 via-dark-1 to-slate-950 bg-fixed bg-no-repeat;
+		@apply from-dark-2 via-dark-1 min-h-screen min-w-max bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
 		@apply prose prose-slate prose-invert font-mono leading-snug;
 	}
 

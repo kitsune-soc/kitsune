@@ -46,7 +46,7 @@
 	>
 		{#each virtualItems as row}
 			<div
-				class="border-b border-gray-200 border-opacity-50"
+				class="border-opacity-50 border-b border-gray-200"
 				bind:this={virtualElements[row.index]}
 				data-index={row.index}
 			>
