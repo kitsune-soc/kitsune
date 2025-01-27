@@ -2,23 +2,3 @@
 @import '../../theme.css';
 
 @plugin "@tailwindcss/forms";
-@plugin "@tailwindcss/typography";
-
-@layer base {
-	body {
-		@apply from-dark-2 via-dark-1 min-h-screen min-w-max bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
-		@apply prose prose-invert font-mono leading-snug;
-	}
-
-	::-webkit-scrollbar {
-		@apply h-2.5 w-2.5;
-	}
-
-	::-webkit-scrollbar-track {
-		@apply shadow-lg;
-	}
-
-	::-webkit-scrollbar-thumb {
-		@apply bg-shade2-light;
-	}
-}

@@ -19,9 +19,6 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@4.0.0)
-      '@tailwindcss/typography':
-        specifier: ^0.5.16
-        version: 0.5.16(tailwindcss@4.0.0)
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^5.2.1
         version: 5.2.1(prettier-plugin-svelte@3.3.3(prettier@3.4.2)(svelte@5.19.3))(prettier@3.4.2)(svelte@5.19.3)
@@ -66,7 +63,7 @@ importers:
         version: 8.5.2(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)
       '@storybook/sveltekit':
         specifier: ^8.5.2
-        version: 8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
+        version: 8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
       '@storybook/test':
         specifier: ^8.5.2
         version: 8.5.2(storybook@8.5.2(prettier@3.4.2))
@@ -82,9 +79,6 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@4.0.0)
-      '@tailwindcss/typography':
-        specifier: ^0.5.16
-        version: 0.5.16(tailwindcss@4.0.0)
       '@tailwindcss/vite':
         specifier: ^4.0.0
         version: 4.0.0(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
@@ -1282,11 +1276,6 @@ packages:
   '@tailwindcss/oxide@4.0.0':
     resolution: {integrity: sha512-W3FjpJgy4VV1JiL7iBYDf2n/WkeDg1Il+0Q7eWnqPyvkPPCo/Mbwc5BiaT7dfBNV6tQKAhVE34rU5xl8pSl50w==, tarball: https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.0.0.tgz}
     engines: {node: '>= 10'}
-
-  '@tailwindcss/typography@0.5.16':
-    resolution: {integrity: sha512-0wDLwCVF5V3x3b1SGXPCDcdsbDHMBe+lkFzBRaHeLvNi+nrrnZ1lA18u+OTWO8iSWU2GxUOCvlXtDuqftc1oiA==, tarball: https://registry.npmjs.org/@tailwindcss/typography/-/typography-0.5.16.tgz}
-    peerDependencies:
-      tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
   '@tailwindcss/vite@4.0.0':
     resolution: {integrity: sha512-4uukMiU9gHui8KMPMdWic5SP1O/tmQ1NFSRNrQWmcop5evAVl/LZ6/LuWL3quEiecp2RBcRWwqJrG+mFXlRlew==, tarball: https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.0.0.tgz}
@@ -2800,12 +2789,6 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==, tarball: https://registry.npmjs.org/locate-path/-/locate-path-6.0.0.tgz}
     engines: {node: '>=10'}
 
-  lodash.castarray@4.4.0:
-    resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==, tarball: https://registry.npmjs.org/lodash.castarray/-/lodash.castarray-4.4.0.tgz}
-
-  lodash.isplainobject@4.0.6:
-    resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==, tarball: https://registry.npmjs.org/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz}
-
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==, tarball: https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz}
 
@@ -3297,16 +3280,19 @@ packages:
       ts-node:
         optional: true
 
-  postcss-load-config@4.0.2:
-    resolution: {integrity: sha512-bSVhyJGL00wMVoPUzAVAnbEoWyqRxkjv64tUl427SKnPrENtq6hJwUojroMz2VB+Q1edmi4IfrAPpami5VVgMQ==, tarball: https://registry.npmjs.org/postcss-load-config/-/postcss-load-config-4.0.2.tgz}
-    engines: {node: '>= 14'}
+  postcss-load-config@5.1.0:
+    resolution: {integrity: sha512-G5AJ+IX0aD0dygOE0yFZQ/huFFMSNneyfp0e3/bT05a8OfPC5FUoZRPfGijUdGOJNMewJiwzcHJXFafFzeKFVA==, tarball: https://registry.npmjs.org/postcss-load-config/-/postcss-load-config-5.1.0.tgz}
+    engines: {node: '>= 18'}
     peerDependencies:
+      jiti: '>=1.21.0'
       postcss: '>=8.0.9'
-      ts-node: '>=9.0.0'
+      tsx: ^4.8.1
     peerDependenciesMeta:
+      jiti:
+        optional: true
       postcss:
         optional: true
-      ts-node:
+      tsx:
         optional: true
 
   postcss-nested@6.2.0:
@@ -3326,10 +3312,6 @@ packages:
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.4.29
-
-  postcss-selector-parser@6.0.10:
-    resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==, tarball: https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.0.10.tgz}
-    engines: {node: '>=4'}
 
   postcss-selector-parser@6.1.2:
     resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==, tarball: https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.1.2.tgz}
@@ -5305,7 +5287,7 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       storybook: 8.5.2(prettier@3.4.2)
 
-  '@storybook/svelte-vite@8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
+  '@storybook/svelte-vite@8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
     dependencies:
       '@storybook/builder-vite': 8.5.2(storybook@8.5.2(prettier@3.4.2))(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
       '@storybook/svelte': 8.5.2(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)
@@ -5313,7 +5295,7 @@ snapshots:
       magic-string: 0.30.17
       storybook: 8.5.2(prettier@3.4.2)
       svelte: 5.19.3
-      svelte-preprocess: 5.1.4(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(svelte@5.19.3)(typescript@5.7.3)
+      svelte-preprocess: 5.1.4(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(svelte@5.19.3)(typescript@5.7.3)
       svelte2tsx: 0.7.34(svelte@5.19.3)(typescript@5.7.3)
       sveltedoc-parser: 4.2.1
       ts-dedent: 2.2.0
@@ -5346,12 +5328,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@storybook/sveltekit@8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
+  '@storybook/sveltekit@8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
     dependencies:
       '@storybook/addon-actions': 8.5.2(storybook@8.5.2(prettier@3.4.2))
       '@storybook/builder-vite': 8.5.2(storybook@8.5.2(prettier@3.4.2))(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
       '@storybook/svelte': 8.5.2(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)
-      '@storybook/svelte-vite': 8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
+      '@storybook/svelte-vite': 8.5.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)))(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(storybook@8.5.2(prettier@3.4.2))(svelte@5.19.3)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
       storybook: 8.5.2(prettier@3.4.2)
       svelte: 5.19.3
       vite: 6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0)
@@ -5499,14 +5481,6 @@ snapshots:
       '@tailwindcss/oxide-linux-x64-musl': 4.0.0
       '@tailwindcss/oxide-win32-arm64-msvc': 4.0.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.0.0
-
-  '@tailwindcss/typography@0.5.16(tailwindcss@4.0.0)':
-    dependencies:
-      lodash.castarray: 4.4.0
-      lodash.isplainobject: 4.0.6
-      lodash.merge: 4.6.2
-      postcss-selector-parser: 6.0.10
-      tailwindcss: 4.0.0
 
   '@tailwindcss/vite@4.0.0(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
     dependencies:
@@ -7323,10 +7297,6 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
-  lodash.castarray@4.4.0: {}
-
-  lodash.isplainobject@4.0.6: {}
-
   lodash.merge@4.6.2: {}
 
   lodash@4.17.21: {}
@@ -8085,11 +8055,12 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.1
 
-  postcss-load-config@4.0.2(postcss@8.5.1):
+  postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1):
     dependencies:
       lilconfig: 3.1.3
       yaml: 2.7.0
     optionalDependencies:
+      jiti: 2.4.2
       postcss: 8.5.1
     optional: true
 
@@ -8105,11 +8076,6 @@ snapshots:
   postcss-scss@4.0.9(postcss@8.5.1):
     dependencies:
       postcss: 8.5.1
-
-  postcss-selector-parser@6.0.10:
-    dependencies:
-      cssesc: 3.0.0
-      util-deprecate: 1.0.2
 
   postcss-selector-parser@6.1.2:
     dependencies:
@@ -8686,7 +8652,7 @@ snapshots:
     optionalDependencies:
       svelte: 5.19.3
 
-  svelte-preprocess@5.1.4(postcss-load-config@4.0.2(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(svelte@5.19.3)(typescript@5.7.3):
+  svelte-preprocess@5.1.4(postcss-load-config@5.1.0(jiti@2.4.2)(postcss@8.5.1))(postcss@8.5.1)(sass@1.81.0)(svelte@5.19.3)(typescript@5.7.3):
     dependencies:
       '@types/pug': 2.0.10
       detect-indent: 6.1.0
@@ -8696,7 +8662,7 @@ snapshots:
       svelte: 5.19.3
     optionalDependencies:
       postcss: 8.5.1
-      postcss-load-config: 4.0.2(postcss@8.5.1)
+      postcss-load-config: 5.1.0(jiti@2.4.2)(postcss@8.5.1)
       sass: 1.81.0
       typescript: 5.7.3
 

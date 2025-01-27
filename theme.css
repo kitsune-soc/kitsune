@@ -8,4 +8,30 @@
 
 	--color-shade2-dark: #935d7e;
 	--color-shade2-light: #d68fbc;
+
+	--color-body-text: oklch(0.872 0.01 258.338);
+}
+
+@layer base {
+	body {
+		@apply from-dark-2 via-dark-1 min-h-screen min-w-max bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
+		@apply text-body-text font-mono;
+		@apply max-w-[65ch];
+  }
+
+  strong {
+    @apply text-white;
+  }
+
+	::-webkit-scrollbar {
+		@apply h-2.5 w-2.5;
+	}
+
+	::-webkit-scrollbar-track {
+		@apply shadow-lg;
+	}
+
+	::-webkit-scrollbar-thumb {
+		@apply bg-shade2-light;
+	}
 }
