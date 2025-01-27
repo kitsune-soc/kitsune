@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "../../theme.css";
+@import 'tailwindcss';
+@import '../../theme.css';
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
@@ -7,7 +7,7 @@
 @layer base {
 	body {
 		@apply from-dark-2 via-dark-1 min-h-screen min-w-max bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
-		@apply prose prose-slate prose-invert font-mono leading-snug;
+		@apply prose prose-invert font-mono leading-snug;
 	}
 
 	::-webkit-scrollbar {

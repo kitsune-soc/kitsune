@@ -40,7 +40,7 @@
 	@reference "../../app.css";
 
 	.primary {
-		@apply bg-shade1-dark hover:enabled:bg-shade2-dark disabled:text-dark-1 [&:not(:hover)]:text-dark-1;
+		@apply bg-shade1-dark hover:enabled:bg-shade2-dark disabled:text-dark-1 not-hover:text-dark-1;
 	}
 
 	.secondary {
