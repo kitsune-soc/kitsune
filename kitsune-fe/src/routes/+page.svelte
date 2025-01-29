@@ -92,8 +92,8 @@
 <div
 	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
 >
-	<div class="flex flex-col max-lg:place-items-center max-lg:text-center">
-		<Logo class="w-3/5" />
+	<div class="flex basis-1/4 flex-col max-lg:place-items-center max-lg:text-center">
+		<Logo class=" max-w-3/4" />
 
 		<h1>Federated microblogging</h1>
 

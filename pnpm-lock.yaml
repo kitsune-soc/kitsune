@@ -19,6 +19,9 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@4.0.0)
+      '@tailwindcss/typography':
+        specifier: ^0.5.16
+        version: 0.5.16(tailwindcss@4.0.0)
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^5.2.2
         version: 5.2.2(prettier-plugin-svelte@3.3.3(prettier@3.4.2)(svelte@5.19.5))(prettier@3.4.2)(svelte@5.19.5)
@@ -79,6 +82,9 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@4.0.0)
+      '@tailwindcss/typography':
+        specifier: ^0.5.16
+        version: 0.5.16(tailwindcss@4.0.0)
       '@tailwindcss/vite':
         specifier: ^4.0.0
         version: 4.0.0(vite@6.0.11(@types/node@22.12.0)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))
@@ -1276,6 +1282,11 @@ packages:
   '@tailwindcss/oxide@4.0.0':
     resolution: {integrity: sha512-W3FjpJgy4VV1JiL7iBYDf2n/WkeDg1Il+0Q7eWnqPyvkPPCo/Mbwc5BiaT7dfBNV6tQKAhVE34rU5xl8pSl50w==, tarball: https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.0.0.tgz}
     engines: {node: '>= 10'}
+
+  '@tailwindcss/typography@0.5.16':
+    resolution: {integrity: sha512-0wDLwCVF5V3x3b1SGXPCDcdsbDHMBe+lkFzBRaHeLvNi+nrrnZ1lA18u+OTWO8iSWU2GxUOCvlXtDuqftc1oiA==, tarball: https://registry.npmjs.org/@tailwindcss/typography/-/typography-0.5.16.tgz}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
   '@tailwindcss/vite@4.0.0':
     resolution: {integrity: sha512-4uukMiU9gHui8KMPMdWic5SP1O/tmQ1NFSRNrQWmcop5evAVl/LZ6/LuWL3quEiecp2RBcRWwqJrG+mFXlRlew==, tarball: https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.0.0.tgz}
@@ -2789,6 +2800,12 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==, tarball: https://registry.npmjs.org/locate-path/-/locate-path-6.0.0.tgz}
     engines: {node: '>=10'}
 
+  lodash.castarray@4.4.0:
+    resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==, tarball: https://registry.npmjs.org/lodash.castarray/-/lodash.castarray-4.4.0.tgz}
+
+  lodash.isplainobject@4.0.6:
+    resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==, tarball: https://registry.npmjs.org/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==, tarball: https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz}
 
@@ -3312,6 +3329,10 @@ packages:
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.4.29
+
+  postcss-selector-parser@6.0.10:
+    resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==, tarball: https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.0.10.tgz}
+    engines: {node: '>=4'}
 
   postcss-selector-parser@6.1.2:
     resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==, tarball: https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.1.2.tgz}
@@ -5482,6 +5503,14 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.0.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.0.0
 
+  '@tailwindcss/typography@0.5.16(tailwindcss@4.0.0)':
+    dependencies:
+      lodash.castarray: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.merge: 4.6.2
+      postcss-selector-parser: 6.0.10
+      tailwindcss: 4.0.0
+
   '@tailwindcss/vite@4.0.0(vite@6.0.11(@types/node@22.12.0)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(yaml@2.7.0))':
     dependencies:
       '@tailwindcss/node': 4.0.0
@@ -7297,6 +7326,10 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.castarray@4.4.0: {}
+
+  lodash.isplainobject@4.0.6: {}
+
   lodash.merge@4.6.2: {}
 
   lodash@4.17.21: {}
@@ -8076,6 +8109,11 @@ snapshots:
   postcss-scss@4.0.9(postcss@8.5.1):
     dependencies:
       postcss: 8.5.1
+
+  postcss-selector-parser@6.0.10:
+    dependencies:
+      cssesc: 3.0.0
+      util-deprecate: 1.0.2
 
   postcss-selector-parser@6.1.2:
     dependencies:

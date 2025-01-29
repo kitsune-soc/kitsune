@@ -2,3 +2,4 @@
 @import '../../theme.css';
 
 @plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
