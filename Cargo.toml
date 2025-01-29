@@ -268,8 +268,8 @@ pulldown-cmark = { version = "0.12.2", default-features = false, features = [
 ] }
 quick-xml = { version = "0.37.2", features = ["serialize"] }
 quote = "1.0.38"
-rand = "0.9.0"
-rand_xorshift = "0.4.0"
+rand = "0.8.5"
+rand_xorshift = "0.3.0"
 rayon = "1.10.0"
 redb = { version = "2.4.0", features = ["logging"] }
 regex = "1.11.1"
