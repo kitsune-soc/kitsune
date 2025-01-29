@@ -22,7 +22,7 @@
 		</div>
 
 		<div class="my-2">
-			{content}
+			{@html content}
 		</div>
 
 		<div class="flex flex-row justify-between">

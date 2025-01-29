@@ -1,0 +1,13 @@
+query LoadPost($id: UUID!) {
+	getPostById(id: $id) @loading {
+		id
+		account {
+			id
+			displayName
+			username
+		}
+		subject
+		content
+		createdAt
+	}
+}

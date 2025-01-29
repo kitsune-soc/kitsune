@@ -12,7 +12,7 @@
 	}: FullUser = $props();
 </script>
 
-<div class="bg-dark-1 max-w-96 rounded border-2 border-gray-200">
+<div class="bg-dark-1 max-w-96 rounded-md border-2 border-gray-200">
 	<figure class="relative m-0">
 		<div class="h-44 bg-cover opacity-50" style="background-image: url({headerUrl})"></div>
 

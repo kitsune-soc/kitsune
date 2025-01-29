@@ -82,7 +82,7 @@
 	{/if}
 
 	<button
-		class="border-grey rounded border-2 px-2 py-1"
+		class="border-grey rounded-md border-2 px-2 py-1"
 		onclick={() => (registerErrorDialogOpen = false)}
 	>
 		Close
