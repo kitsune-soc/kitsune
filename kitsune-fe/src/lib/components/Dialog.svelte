@@ -20,7 +20,7 @@
 </script>
 
 <dialog
-	class="prose prose-slate prose-invert bg-dark-1 rounded-md p-5 backdrop:bg-black/50"
+	class="prose prose-invert bg-dark-1 rounded-md p-5 backdrop:bg-black/50"
 	bind:this={dialog}
 	{...props}
 >

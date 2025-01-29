@@ -1,5 +1,5 @@
 query LoadPost($id: UUID!) {
-	getPostById(id: $id) @loading {
+	getPostById(id: $id) {
 		id
 		account {
 			id

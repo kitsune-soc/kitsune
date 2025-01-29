@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { PendingValue } from '$houdini';
 	import Post from '$lib/components/Post.svelte';
 
 	import type { PageData } from './$houdini';
@@ -10,7 +9,7 @@
 
 	let post = $derived($postStore.data?.getPostById);
 	let user = $derived.by(() => {
-		if (!post || post === PendingValue) return undefined;
+		if (!post) return undefined;
 
 		return {
 			id: post.account.id,
@@ -21,7 +20,7 @@
 </script>
 
 <main class="flex min-h-screen w-screen place-items-center justify-center">
-	{#if post && user && post !== PendingValue}
+	{#if post && user}
 		<div class="rounded-md border border-gray-200">
 			<Post
 				id={post.id}

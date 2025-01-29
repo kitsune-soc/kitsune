@@ -4,9 +4,9 @@
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
+	import { registerSchema } from '$lib/schemas/register';
 
 	import type { PageData } from './$houdini';
-	import { _registerSchema } from './+page';
 
 	const { data }: { data: PageData } = $props();
 
@@ -27,7 +27,7 @@
 		registerButtonDisabled = true;
 
 		const formData = new FormData(event.currentTarget);
-		const validatedData = await _registerSchema.safeParseAsync(
+		const validatedData = await registerSchema.safeParseAsync(
 			Object.fromEntries(formData.entries())
 		);
 

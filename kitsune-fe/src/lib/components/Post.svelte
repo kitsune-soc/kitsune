@@ -17,7 +17,7 @@
 			<strong>{user.name}</strong>
 
 			<a class="text-shade2-light break-keep no-underline" href="/users/{user.id}">
-				{user.username}
+				@{user.username}
 			</a>
 		</div>
 
