@@ -8,6 +8,7 @@ query LoadPost($id: UUID!) {
 		}
 		subject
 		content
+		visibility
 		url
 		createdAt
 	}

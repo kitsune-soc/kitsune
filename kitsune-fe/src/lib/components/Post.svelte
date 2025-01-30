@@ -2,12 +2,14 @@
 	import type { Post } from '$lib/types/Post';
 
 	import InteractionButton from './InteractionButton.svelte';
+	import PostVisibility from './PostVisibility.svelte';
 	import RelativeTime from './RelativeTime.svelte';
 
 	let {
 		id,
 		user,
 		content,
+		visibility,
 		createdAt,
 		replyCount,
 		likeCount,
@@ -26,12 +28,16 @@
 		</div>
 
 		<div class="ml-3 w-full">
-			<div>
-				<strong>{user.name}</strong>
+			<div class="flex flex-row justify-between">
+				<div>
+					<strong>{user.name}</strong>
 
-				<a class="text-shade2-light break-keep no-underline" href="/users/{user.id}">
-					@{user.username}
-				</a>
+					<a class="text-shade2-light break-keep no-underline" href="/users/{user.id}">
+						@{user.username}
+					</a>
+				</div>
+
+				<PostVisibility {visibility} />
 			</div>
 
 			<div class="my-2">

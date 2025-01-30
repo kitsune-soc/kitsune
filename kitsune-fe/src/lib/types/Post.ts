@@ -1,3 +1,5 @@
+import type { Visibility$options } from '$houdini';
+
 import type { User } from './User';
 
 type Post = {
@@ -9,6 +11,7 @@ type Post = {
 	repostCount: number;
 	url: string;
 	createdAt: string | Date;
+	visibility: Visibility$options;
 };
 
 export type { Post };
