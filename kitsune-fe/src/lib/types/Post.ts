@@ -7,6 +7,7 @@ type Post = {
 	replyCount: number;
 	likeCount: number;
 	repostCount: number;
+	url: string;
 	createdAt: string | Date;
 };
 

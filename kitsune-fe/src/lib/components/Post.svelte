@@ -12,10 +12,11 @@
 		replyCount,
 		likeCount,
 		repostCount,
+		url: absolutePostUrl,
 		primary = true
 	}: Post & { primary?: boolean } = $props();
 
-	let postLink = $derived(`/posts/${id}`);
+	let postUrl = $derived(`/posts/${id}`);
 </script>
 
 {#snippet renderPost()}
@@ -45,7 +46,7 @@
 
 				<InteractionButton icon="material-symbols:menu-rounded" />
 
-				<a class="no-underline hover:underline" href={postLink}>
+				<a class="no-underline hover:underline" href={absolutePostUrl}>
 					<RelativeTime time={createdAt} />
 				</a>
 			</div>
@@ -56,7 +57,7 @@
 {#if primary}
 	{@render renderPost()}
 {:else}
-	<a href={postLink} class="no-underline">
+	<a href={postUrl} class="no-underline">
 		{@render renderPost()}
 	</a>
 {/if}

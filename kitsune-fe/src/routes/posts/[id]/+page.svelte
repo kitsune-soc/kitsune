@@ -26,6 +26,7 @@
 				id={post.id}
 				{user}
 				content={post.content}
+				url={post.url}
 				createdAt={post.createdAt}
 				likeCount={0}
 				replyCount={0}
