@@ -90,7 +90,7 @@
 </Dialog>
 
 <div
-	class="flex min-h-screen w-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
+	class="flex min-h-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
 >
 	<div class="flex basis-1/4 flex-col max-lg:place-items-center max-lg:text-center">
 		<Logo class=" max-w-3/4" />
@@ -109,7 +109,7 @@
 		</ul>
 	</div>
 
-	<div class="basis-1/4 max-lg:m-5">
+	<div class="z-10 basis-1/4 max-lg:m-5">
 		{#if stats.registrationsOpen}
 			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
 		{/if}

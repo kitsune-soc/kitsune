@@ -12,8 +12,8 @@
 
 @layer base {
 	body {
-		@apply from-dark-2 via-dark-1 min-h-screen min-w-max bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
-		@apply prose prose-invert font-mono;
+		@apply from-dark-2 via-dark-1 bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
+		@apply prose prose-invert font-mono max-w-none;
   	}
 
 	::-webkit-scrollbar {
@@ -28,3 +28,9 @@
 		@apply bg-shade2-light;
 	}
 }
+
+@layer utilities {
+	.max-w-prose {
+	  max-width: 80ch;
+	}
+  }

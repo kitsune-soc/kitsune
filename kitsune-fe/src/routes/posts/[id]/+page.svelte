@@ -21,7 +21,7 @@
 
 <main class="flex min-h-screen w-screen place-items-center justify-center">
 	{#if post && user}
-		<div class="rounded-md border border-gray-200">
+		<div class="w-full max-w-prose rounded-md border border-gray-200">
 			<Post
 				id={post.id}
 				{user}
