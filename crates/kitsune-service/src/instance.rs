@@ -6,7 +6,16 @@ use kitsune_db::{
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
+use rand::seq::IteratorRandom;
 use smol_str::SmolStr;
+use std::ops::RangeInclusive;
+
+const STATISTICS_RANGE: RangeInclusive<u64> = 24..=1312_1312;
+
+#[inline]
+fn random_statistic() -> u64 {
+    STATISTICS_RANGE.choose(&mut rand::thread_rng()).unwrap()
+}
 
 #[kitsune_service]
 pub struct InstanceService {
@@ -16,6 +25,7 @@ pub struct InstanceService {
     #[builder(setter(into))]
     description: SmolStr,
     character_limit: usize,
+    randomize_statistics: bool,
     registrations_open: bool,
 }
 
@@ -36,6 +46,10 @@ impl InstanceService {
     }
 
     pub async fn known_instances(&self) -> Result<u64> {
+        if self.randomize_statistics {
+            return Ok(random_statistic());
+        }
+
         with_connection!(self.db_pool, |db_conn| {
             accounts::table
                 .filter(accounts::local.eq(false))
@@ -50,6 +64,10 @@ impl InstanceService {
     }
 
     pub async fn local_post_count(&self) -> Result<u64> {
+        if self.randomize_statistics {
+            return Ok(random_statistic());
+        }
+
         with_connection!(self.db_pool, |db_conn| {
             posts::table
                 .filter(posts::is_local.eq(true))
@@ -67,6 +85,10 @@ impl InstanceService {
     }
 
     pub async fn user_count(&self) -> Result<u64> {
+        if self.randomize_statistics {
+            return Ok(random_statistic());
+        }
+
         with_connection!(self.db_pool, |db_conn| {
             users::table
                 .count()

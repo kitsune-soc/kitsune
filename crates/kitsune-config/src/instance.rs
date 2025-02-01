@@ -17,5 +17,6 @@ pub struct Configuration {
     pub webfinger_domain: Option<SmolStr>,
     pub character_limit: usize,
     pub federation_filter: FederationFilterConfiguration,
+    pub randomize_statistics: bool,
     pub registrations_open: bool,
 }
