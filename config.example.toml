@@ -103,6 +103,14 @@ description = "https://www.youtube.com/watch?v=6lnnPnr_0SU"
 # This is the maximum length of posts that can be posted on your instance
 # On Mastodon it's 500, on most other implementations it's freely configurable
 character-limit = 5000
+# Randomize the statistics of your server
+#
+# Kitsune will expose certain statistics about your server by default.
+# Set this value to `true` to serve randomized statistics instead.
+#
+# Why you'd want this can have many reasons, one of them being privacy reasons.
+# Perhaps you don't want to expose accurate information about your server publicly.
+randomize-statistics = false
 # Registrations open
 #
 # This signals to clients whether your registrations are currently open or not.
