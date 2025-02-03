@@ -126,8 +126,8 @@ pub async fn initialise_state(
         .db_pool(db_pool.clone())
         .description(config.instance.description.clone())
         .name(config.instance.name.clone())
-        .randomize_statistics(config.instance.randomize_statistics)
         .registrations_open(config.instance.registrations_open)
+        .statistics_mode(config.instance.statistics_mode)
         .build();
 
     let mailing_service = MailingService::builder()
