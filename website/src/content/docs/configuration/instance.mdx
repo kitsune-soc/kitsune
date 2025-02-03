@@ -56,15 +56,19 @@ Similar to `name`, this setting adjusts the description on the landing page and 
 
 This setting sets the character limit specific to your instance.
 
-## `randomize-statistics`
+## `statistics-mode`
 
-Randomize the statistics of your server
+Control how statistics about your server are reported.
 
-Kitsune will expose certain statistics about your server by default.  
-Set this value to `true` to serve randomized statistics instead.
+Possible values:
 
-Why you'd want this can have many reasons, one of them being privacy reasons.  
-Perhaps you don't want to expose accurate information about your server publicly.
+- `regular`: Return accurate statistics read from the database
+- `zero`: Set all the statistics to zero
+- `random`: Set all the statistics to random values
+
+The settings `zero` and `random` are great if you don't want crawlers to figure out how many people are on your instance.  
+
+<Aside type="caution">Booting your instance into `random` mode might upset techbros</Aside>
 
 ## `registrations-open`
 
