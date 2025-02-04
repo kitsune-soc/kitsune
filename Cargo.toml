@@ -351,7 +351,7 @@ unsize = "1.1.0"
 ureq = "3.0.4"
 url = "2.5.4"
 urlencoding = "2.1.3"
-uuid = { version = "1.12.1", features = ["fast-rng", "v7"] }
+uuid = { version = "1.12.1", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.224.0"

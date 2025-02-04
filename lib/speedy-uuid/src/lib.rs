@@ -4,7 +4,7 @@ use std::{
     str::{self, FromStr},
 };
 use thiserror::Error;
-use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
+use uuid_simd::{AsciiCase, Out, UuidExt};
 
 #[cfg(feature = "diesel")]
 use diesel::{deserialize::FromSqlRow, expression::AsExpression};
@@ -27,9 +27,15 @@ pub enum Error {
 pub struct Uuid(pub uuid::Uuid);
 
 impl Uuid {
+    #[inline]
     fn as_ascii_bytes(&self) -> [u8; 36] {
         let mut dst = [0; 36];
-        let _ = format_hyphenated(self.0.as_bytes(), Out::from_mut(&mut dst), AsciiCase::Lower);
+        let _ = uuid_simd::format_hyphenated(
+            self.0.as_bytes(),
+            Out::from_mut(&mut dst),
+            AsciiCase::Lower,
+        );
+
         dst
     }
 
@@ -38,18 +44,25 @@ impl Uuid {
     }
 
     #[must_use]
-    pub fn max() -> Self {
+    pub const fn max() -> Self {
         Self(uuid::Uuid::max())
+    }
+
+    #[must_use]
+    pub const fn nil() -> Self {
+        Self(uuid::Uuid::nil())
+    }
+}
+
+impl Uuid {
+    #[must_use]
+    pub fn new_v4() -> Self {
+        Self(uuid::Uuid::new_v4())
     }
 
     #[must_use]
     pub fn new_v7(ts: uuid::Timestamp) -> Self {
         Self(uuid::Uuid::new_v7(ts))
-    }
-
-    #[must_use]
-    pub fn nil() -> Self {
-        Self(uuid::Uuid::nil())
     }
 
     #[must_use]
@@ -85,6 +98,7 @@ impl DerefMut for Uuid {
 }
 
 impl fmt::Display for Uuid {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = self.as_ascii_bytes();
 
