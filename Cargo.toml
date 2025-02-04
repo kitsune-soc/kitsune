@@ -2,6 +2,9 @@
 backtrace = { opt-level = 3 }
 num-bigint-dig = { opt-level = 3 }
 
+[profile.bench]
+inherits = "dist"
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
