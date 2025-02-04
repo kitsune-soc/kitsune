@@ -8,6 +8,15 @@ pub enum FederationFilterConfiguration {
     Deny { domains: Vec<SmolStr> },
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum StatisticsMode {
+    #[serde(alias = "dansup")]
+    Random,
+    Regular,
+    Zero,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Configuration {
@@ -18,4 +27,5 @@ pub struct Configuration {
     pub character_limit: usize,
     pub federation_filter: FederationFilterConfiguration,
     pub registrations_open: bool,
+    pub statistics_mode: StatisticsMode,
 }

@@ -108,6 +108,15 @@ character-limit = 5000
 # This signals to clients whether your registrations are currently open or not.
 # It will also hard-enforce the closed signups inside of Kitsune, returning an error when a signup is attempted.
 registrations-open = true
+# Statistics settings of your server
+#
+# Set to `regular` to just return actual statistics.
+# Set to `zero` to return all zeroes.
+# Set this value to `random` to serve randomized statistics instead.
+#
+# Why you'd want this can have many reasons, one of them being privacy reasons.
+# Perhaps you don't want to expose accurate information about your server publicly.
+statistics-mode = "regular"
 
 # Federation filters
 #

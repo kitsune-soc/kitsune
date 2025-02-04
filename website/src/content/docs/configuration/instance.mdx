@@ -56,6 +56,20 @@ Similar to `name`, this setting adjusts the description on the landing page and 
 
 This setting sets the character limit specific to your instance.
 
+## `statistics-mode`
+
+Control how statistics about your server are reported.
+
+Possible values:
+
+- `regular`: Return accurate statistics read from the database
+- `zero`: Set all the statistics to zero
+- `random`: Set all the statistics to random values
+
+The settings `zero` and `random` are great if you don't want crawlers to figure out how many people are on your instance.  
+
+<Aside type="caution">Booting your instance into `random` mode might upset techbros</Aside>
+
 ## `registrations-open`
 
 Determines whether your instance accepts new users or not. When set to `false`, the registration APIs will return a failure code.
