@@ -448,8 +448,7 @@ needless_return = "allow"
 no_effect_underscore_binding = "allow"
 
 [workspace.lints.rust]
-forbidden_lint_groups = "allow"
-rust_2018_idioms = { level = "forbid", priority = -1 }
+rust_2018_idioms = { level = "deny", priority = -1 }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }
 unsafe_code = "deny"
 
