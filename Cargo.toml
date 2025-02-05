@@ -281,7 +281,7 @@ ring = { version = "0.17.8", features = ["std"] }
 rsa = "0.9.7"
 rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
-rustc-hash = "2.1.0"
+rustc-hash = "2.1.1"
 rustls = { version = "0.23.22", default-features = false, features = [
     "logging",
     "ring",
@@ -321,7 +321,7 @@ tokio = { version = "1.43.0", features = ["full"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
 tokio-util = { version = "0.7.13", features = ["io", "rt"] }
-toml = { version = "0.8.19", default-features = false, features = ["parse"] }
+toml = { version = "0.8.20", default-features = false, features = ["parse"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.2", features = [
     "catch-panic",

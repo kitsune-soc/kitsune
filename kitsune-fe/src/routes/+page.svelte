@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { loadOAuthApp } from '$lib/oauth/client.svelte';
+	import { loadOAuthToken } from '$lib/oauth/token.svelte';
 	import { registerSchema } from '$lib/schemas/register';
 
 	import type { PageData } from './$houdini';
@@ -72,10 +74,23 @@
 		loginInProcess = true;
 
 		const oauthApp = await loadOAuthApp();
-		const oauthUrl = `${window.location.origin}/oauth/authorize?response_type=code&client_id=${oauthApp.id}&redirect_uri=${encodeURIComponent(oauthApp.redirectUri)}&scope=${encodeURIComponent('read write follow')}`;
+		const oauthUrl = new URL(`${window.location.origin}/oauth/authorize`);
+
+		oauthUrl.searchParams.set('response_type', 'code');
+		oauthUrl.searchParams.set('client_id', oauthApp.id);
+		oauthUrl.searchParams.set('redirect_uri', encodeURIComponent(oauthApp.redirectUri));
+		oauthUrl.searchParams.set('scope', encodeURIComponent(['read', 'write', 'follow'].join(' ')));
 
 		window.location.assign(oauthUrl);
 	}
+
+	loadOAuthToken().then((token) => {
+		if (!token) {
+			return;
+		}
+
+		goto('/timeline/home');
+	});
 </script>
 
 <Dialog isOpen={registerErrorDialogOpen}>
