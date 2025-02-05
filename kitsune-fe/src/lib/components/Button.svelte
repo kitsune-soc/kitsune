@@ -25,7 +25,8 @@
 
 <button
 	{...props}
-	class="min-h-1 cursor-pointer rounded-md p-2 transition duration-500 {buttonType} {props.class}"
+	class="min-h-1 rounded-md p-2 transition duration-500 {buttonType} {props.class}"
+	class:cursor-pointer={!disabled}
 	class:cursor-not-allowed={disabled}
 	{disabled}
 >

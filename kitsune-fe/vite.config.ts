@@ -10,6 +10,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			'/graphql': 'http://localhost:5000',
+			'/oauth/': 'http://localhost:5000',
 			'/public': 'http://localhost:5000'
 		}
 	},

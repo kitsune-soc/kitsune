@@ -4,6 +4,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
+	import { loadOAuthApp } from '$lib/oauth/client.svelte';
 	import { registerSchema } from '$lib/schemas/register';
 
 	import type { PageData } from './$houdini';
@@ -65,8 +66,15 @@
 		}
 	}
 
-	function initiateLogin() {
-		alert('logging in wwowowowowowo');
+	let loginInProcess = $state(false);
+
+	async function initiateLogin() {
+		loginInProcess = true;
+
+		const oauthApp = await loadOAuthApp();
+		const oauthUrl = `${window.location.origin}/oauth/authorize?response_type=code&client_id=${oauthApp.id}&redirect_uri=${encodeURIComponent(oauthApp.redirectUri)}&scope=${encodeURIComponent('read write follow')}`;
+
+		window.location.assign(oauthUrl);
 	}
 </script>
 
@@ -114,7 +122,7 @@
 			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
 		{/if}
 
-		<Button class="w-full" buttonType="secondary" onclick={initiateLogin}>
+		<Button class="w-full" buttonType="secondary" onclick={initiateLogin} loading={loginInProcess}>
 			Already have an account? Sign in
 		</Button>
 	</div>
