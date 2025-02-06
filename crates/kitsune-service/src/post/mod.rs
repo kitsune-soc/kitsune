@@ -592,9 +592,10 @@ impl PostService {
         } else {
             update_post.content.clone()
         };
+
         if let Some(content) = &mut content {
             content.clean_html();
-        };
+        }
 
         // If a new language code was submitted, we should update the post language accordingly
         // If the language code is not provided, only the updated body, perform language detection normally

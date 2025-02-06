@@ -29,7 +29,6 @@ where
         let mut cookie = Cookie::build(CSRF_COOKIE_NAME)
             .expires(Expiration::Session)
             .same_site(SameSite::Strict)
-            .secure(true)
             .build();
 
         let guard = this.handle.inner.lock().unwrap();

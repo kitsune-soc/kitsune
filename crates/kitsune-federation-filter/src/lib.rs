@@ -64,8 +64,8 @@ impl FederationFilter {
             .ok_or_else(|| kitsune_error!("missing host component"))?;
 
         let allowed = match self.filter {
-            FilterMode::Allow { .. } => self.domains.is_match(host),
-            FilterMode::Deny { .. } => !self.domains.is_match(host),
+            FilterMode::Allow => self.domains.is_match(host),
+            FilterMode::Deny => !self.domains.is_match(host),
         };
         Ok(allowed)
     }

@@ -188,10 +188,10 @@ where
                         format!("{signed}.{serialized}")
                     };
 
-                    let mut cookie = Cookie::new(COOKIE_NAME, encoded_messages);
-                    cookie.set_same_site(SameSite::Strict);
-                    cookie.set_secure(true);
-                    cookie.set_expires(Expiration::Session);
+                    let cookie = Cookie::build((COOKIE_NAME, encoded_messages))
+                        .same_site(SameSite::Strict)
+                        .expires(Expiration::Session)
+                        .build();
 
                     let encoded = cookie.encoded().to_string();
                     let value = HeaderValue::from_bytes(encoded.as_ref()).unwrap();

@@ -1,6 +1,7 @@
 pub mod v1 {
     wasmtime::component::bindgen!({
         async: true,
+        tracing: true,
         world: "mrf",
     });
 }

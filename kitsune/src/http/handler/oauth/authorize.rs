@@ -311,7 +311,7 @@ pub async fn post(
     let user_id_cookie = Cookie::build(("user_id", user.id.to_string()))
         .same_site(SameSite::Strict)
         .expires(Expiration::Session)
-        .secure(true);
+        .build();
 
     Ok(Either::E1((
         cookies.add(user_id_cookie),

@@ -18,6 +18,6 @@ pub const PROJECT_IDENTIFIER: &str = const {
 pub const USER_AGENT: &str = concatcp!(PROJECT_IDENTIFIER, "/", VERSION);
 pub const VERSION: &str = concatcp!(
     env!("CARGO_PKG_VERSION"),
-    "-",
+    "+",
     git_version!(fallback = "unknown")
 );
