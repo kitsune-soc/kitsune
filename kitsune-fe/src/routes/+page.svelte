@@ -78,8 +78,8 @@
 
 		oauthUrl.searchParams.set('response_type', 'code');
 		oauthUrl.searchParams.set('client_id', oauthApp.id);
-		oauthUrl.searchParams.set('redirect_uri', encodeURIComponent(oauthApp.redirectUri));
-		oauthUrl.searchParams.set('scope', encodeURIComponent(['read', 'write', 'follow'].join(' ')));
+		oauthUrl.searchParams.set('redirect_uri', oauthApp.redirectUri);
+		oauthUrl.searchParams.set('scope', 'read write follow');
 
 		window.location.assign(oauthUrl);
 	}
