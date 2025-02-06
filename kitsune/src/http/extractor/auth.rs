@@ -35,7 +35,7 @@ pub struct UserData {
 ///
 /// The const generics parameter `ENFORCE_EXPIRATION` lets you toggle whether the extractor should ignore the expiration date.
 /// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
-pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
+pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool = true>(pub UserData);
 
 impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
     for AuthExtractor<ENFORCE_EXPIRATION>
@@ -89,13 +89,9 @@ impl<const ENFORCE_EXPIRATION: bool> OptionalFromRequestParts<Zustand>
         state: &Zustand,
     ) -> Result<Option<Self>, Self::Rejection> {
         // just silently swallow any auth errors
-        let value = if let Ok(value) =
-            <Self as FromRequestParts<_>>::from_request_parts(parts, state).await
-        {
-            Some(value)
-        } else {
-            None
-        };
+        let value = <Self as FromRequestParts<_>>::from_request_parts(parts, state)
+            .await
+            .ok();
 
         Ok(value)
     }

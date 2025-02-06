@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const _registerSchema = z
+const registerSchema = z
 	.object({
 		username: z.string().min(1),
 		email: z.string().email(),
@@ -12,4 +12,4 @@ const _registerSchema = z
 		path: ['confirm-password']
 	});
 
-export { _registerSchema };
+export { registerSchema };

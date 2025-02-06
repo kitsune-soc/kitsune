@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { version as frontendVersion } from '$app/environment';
+	import Footer from '$lib/components/Footer.svelte';
 
 	import type { Snippet } from 'svelte';
+	import { pwaInfo } from 'virtual:pwa-info';
 
 	import '../app.css';
 	import type { PageData } from './$houdini';
@@ -10,24 +12,19 @@
 
 	let backendVersionStore = $derived(data.version);
 	let backendVersion = $derived($backendVersionStore.data?.instance.version ?? '[unknown]');
+
+	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
 
 <svelte:head>
 	<title>Kitsune Ⓐ🏴</title>
 	<!-- Disable dark reader -->
 	<meta name="darkreader-lock" />
+
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html webManifestLink}
 </svelte:head>
 
 {@render children()}
 
-<footer class="w-full text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3">
-	<p>
-		Backend version: {backendVersion}
-		<br />Frontend version: {frontendVersion}
-	</p>
-
-	<span>
-		Powered by
-		<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
-	</span>
-</footer>
+<Footer {backendVersion} {frontendVersion} />

@@ -74,11 +74,9 @@ where
         state: &S,
     ) -> Result<Option<Self>, Self::Rejection> {
         // just silently swallow the error
-        let value = if let Ok(value) = <Self as FromRequest<_>>::from_request(req, state).await {
-            Some(value)
-        } else {
-            None
-        };
+        let value = <Self as FromRequest<_>>::from_request(req, state)
+            .await
+            .ok();
 
         Ok(value)
     }

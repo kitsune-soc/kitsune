@@ -12,13 +12,5 @@ export default new HoudiniClient({
 				url: `/graphql/ws`
 			})
 		)
-	],
-	fetchParams() {
-		//const session = getClientSession();
-		return {
-			headers: {
-				//...session.headers
-			}
-		};
-	}
+	]
 });

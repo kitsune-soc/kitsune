@@ -94,6 +94,8 @@ impl authorization::Issuer for Issuer {
                     .get_result::<oauth2::RefreshToken>(tx)
                     .await?;
 
+                diesel::delete(oauth2_authorization_codes::table.find(&authorization.code)).execute(tx).await?;
+
                 Ok::<_, kitsune_error::Error>((access_token, refresh_token))
             })?
         };
