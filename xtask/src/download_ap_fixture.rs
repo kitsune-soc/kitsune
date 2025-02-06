@@ -9,11 +9,11 @@ fn compute_filename(url: &str) -> String {
 
 pub fn download(url: &str) -> eyre::Result<()> {
     let response = ureq::get(url)
-        .set("Accept", "application/activity+json")
+        .header("Accept", "application/activity+json")
         .call()?;
 
-    let body = response.into_string()?;
-    let json: sonic_rs::Value = sonic_rs::from_str(&body)?;
+    let body = response.into_body().read_to_vec()?;
+    let json: sonic_rs::Value = sonic_rs::from_slice(&body)?;
 
     let (_schema, rest) = json
         .as_object()

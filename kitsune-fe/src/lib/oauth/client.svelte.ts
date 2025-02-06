@@ -2,10 +2,11 @@ import { RegisterOAuthAppStore } from '$houdini';
 
 import { z } from 'zod';
 
-const OAUTH_STORAGE_KEY = 'oauth_app';
+const OAUTH_APP_STORAGE_KEY = 'oauth_app';
 const OAUTH_APP_SCHEMA = z.object({
-	id: z.string().min(1),
-	secret: z.string().min(1)
+	id: z.string().nonempty(),
+	secret: z.string().nonempty(),
+	redirectUri: z.string().url().nonempty()
 });
 
 const REGISTER_APP = new RegisterOAuthAppStore();
@@ -36,11 +37,11 @@ async function registerOAuthApp(): Promise<OAuthApplicationTy> {
 
 async function registerAndStore(): Promise<void> {
 	const oauthApp = await registerOAuthApp();
-	localStorage.setItem(OAUTH_STORAGE_KEY, JSON.stringify(oauthApp));
+	localStorage.setItem(OAUTH_APP_STORAGE_KEY, JSON.stringify(oauthApp));
 }
 
 async function loadOAuthApp(): Promise<OAuthApplicationTy> {
-	const rawApp = localStorage.getItem(OAUTH_STORAGE_KEY);
+	const rawApp = localStorage.getItem(OAUTH_APP_STORAGE_KEY);
 
 	if (rawApp) {
 		try {
@@ -58,18 +59,4 @@ async function loadOAuthApp(): Promise<OAuthApplicationTy> {
 	}
 }
 
-class OAuthApplication {
-	#data = $state<OAuthApplicationTy | undefined>();
-
-	get data() {
-		return this.#data;
-	}
-
-	constructor() {
-		loadOAuthApp()
-			.then((loadedApp) => (this.#data = loadedApp))
-			.catch(console.error);
-	}
-}
-
-export { OAuthApplication };
+export { loadOAuthApp };

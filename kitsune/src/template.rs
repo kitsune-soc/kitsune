@@ -1,8 +1,7 @@
 use arc_swap::ArcSwapAny;
 use core::str;
-use notify_debouncer_full::{notify, DebounceEventResult};
 use rust_embed::RustEmbed;
-use std::{mem::ManuallyDrop, path::Path, sync::OnceLock, time::Duration};
+use std::sync::OnceLock;
 use triomphe::Arc;
 
 static ENVIRONMENT: OnceLock<ArcSwapAny<Arc<minijinja::Environment<'static>>>> = OnceLock::new();
@@ -29,8 +28,10 @@ fn init_environment() -> minijinja::Environment<'static> {
     environment
 }
 
-#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
-fn event_handler(events: DebounceEventResult) {
+#[cfg(debug_assertions)]
+fn event_handler(events: notify_debouncer_full::DebounceEventResult) {
+    use notify_debouncer_full::notify;
+
     let Ok(events) = events else {
         return;
     };
@@ -54,8 +55,11 @@ fn event_handler(events: DebounceEventResult) {
     }
 }
 
-#[cfg_attr(not(debug_assertions), allow(dead_code))] // for release builds
+#[cfg(debug_assertions)]
 fn spawn_watcher() {
+    use notify_debouncer_full::notify;
+    use std::{mem::ManuallyDrop, path::Path, time::Duration};
+
     let watcher =
         notify_debouncer_full::new_debouncer(Duration::from_secs(1), None, event_handler).unwrap();
 

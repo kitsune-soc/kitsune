@@ -2,5 +2,6 @@ mutation RegisterOAuthApp($redirectUri: String!) {
 	registerOauthApplication(name: "Kitsune FE", redirectUri: $redirectUri) {
 		id
 		secret
+		redirectUri
 	}
 }

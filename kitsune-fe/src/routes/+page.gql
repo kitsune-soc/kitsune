@@ -1,7 +1,12 @@
 query stats {
 	instance {
+		captcha {
+			backend
+			key
+		}
 		description
 		localPostCount
+		registrationsOpen
 		userCount
 		version
 	}

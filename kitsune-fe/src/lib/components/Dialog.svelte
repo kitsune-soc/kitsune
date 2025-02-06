@@ -5,7 +5,7 @@
 	const {
 		children,
 		isOpen,
-		...rest
+		...props
 	}: { children: Snippet; isOpen: boolean } & HTMLDialogAttributes = $props();
 
 	let dialog: HTMLDialogElement;
@@ -20,9 +20,9 @@
 </script>
 
 <dialog
-	class="prose prose-slate prose-invert rounded bg-dark-1 p-5 backdrop:bg-black/50"
+	class="prose prose-invert bg-dark-1 rounded-md p-5 backdrop:bg-black/50"
 	bind:this={dialog}
-	{...rest}
+	{...props}
 >
 	{@render children()}
 </dialog>
