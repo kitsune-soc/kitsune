@@ -31,6 +31,8 @@
 	// Emit event when we reached the end.
 	// The callee has to debounce the events themselves.
 	$effect(() => {
+		if (virtualElements.length === 0) return;
+
 		let [lastItem] = virtualItems.toReversed();
 		if (lastItem.index === posts.length - 1) {
 			if (onendreached) onendreached();
@@ -50,7 +52,7 @@
 				bind:this={virtualElements[row.index]}
 				data-index={row.index}
 			>
-				<PostComponent {...posts[row.index]} />
+				<PostComponent primary={false} {...posts[row.index]} />
 			</div>
 		{/each}
 	</div>

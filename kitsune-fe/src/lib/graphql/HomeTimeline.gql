@@ -1,0 +1,29 @@
+query LoadHomeTimeline($after: String, $first: Int) {
+	homeTimeline(after: $after, first: $first) {
+		pageInfo {
+			hasNextPage
+			endCursor
+		}
+		nodes {
+			id
+			isSensitive
+			subject
+			content
+			visibility
+			url
+			createdAt
+			account {
+				id
+				displayName
+				username
+				url
+				avatar {
+					url
+				}
+				header {
+					url
+				}
+			}
+		}
+	}
+}
