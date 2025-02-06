@@ -97,6 +97,9 @@ importers:
       '@types/eslint':
         specifier: ^9.6.1
         version: 9.6.1
+      '@types/lodash':
+        specifier: ^4.17.15
+        version: 4.17.15
       '@types/luxon':
         specifier: ^3.4.2
         version: 3.4.2
@@ -124,6 +127,9 @@ importers:
       houdini-svelte:
         specifier: 2.1.4
         version: 2.1.4(@sveltejs/kit@2.17.1(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.19.8)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(terser@5.38.0)(yaml@2.7.0)))(svelte@5.19.8)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(terser@5.38.0)(yaml@2.7.0)))(svelte@5.19.8)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(terser@5.38.0)(yaml@2.7.0))
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       luxon:
         specifier: ^3.5.0
         version: 3.5.0
@@ -1875,6 +1881,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==, tarball: https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.15.tgz}
+
+  '@types/lodash@4.17.15':
+    resolution: {integrity: sha512-w/P33JFeySuhN6JLkysYUK2gEmy9kHHFN7E8ro0tkfmlDOgxBDzWEZ/J8cWA+fHqFevpswDTFZnDx+R9lbL6xw==, tarball: https://registry.npmjs.org/@types/lodash/-/lodash-4.17.15.tgz}
 
   '@types/luxon@3.4.2':
     resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==, tarball: https://registry.npmjs.org/@types/luxon/-/luxon-3.4.2.tgz}
@@ -7393,6 +7402,8 @@ snapshots:
   '@types/js-yaml@4.0.9': {}
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/lodash@4.17.15': {}
 
   '@types/luxon@3.4.2': {}
 
