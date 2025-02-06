@@ -3307,6 +3307,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9028f49264629065d057f340a86acb84867925865f73bbf8d47b4d149a7e88b8"
 
 [[package]]
+name = "jason"
+version = "0.0.1-pre.6"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sonic-rs",
+]
+
+[[package]]
 name = "js-sys"
 version = "0.3.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
