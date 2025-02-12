@@ -6,7 +6,6 @@ use kitsune_core::consts::PROJECT_IDENTIFIER;
 use opentelemetry::trace::{noop::NoopTracer, Tracer, TracerProvider};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
-use opentelemetry_sdk::runtime::Tokio;
 use std::{env, fmt};
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
@@ -30,7 +29,7 @@ impl fmt::Debug for HttpClientAdapter {
 
 #[async_trait]
 impl HttpClient for HttpClientAdapter {
-    async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Bytes>, HttpError> {
+    async fn send_bytes(&self, request: Request<Bytes>) -> Result<Response<Bytes>, HttpError> {
         let (parts, body) = request.into_parts();
         let request = Request::from_parts(parts, body.into());
 
@@ -81,8 +80,8 @@ pub fn initialise(config: &Configuration) -> eyre::Result<()> {
                 .build()?,
         };
 
-        let tracer = opentelemetry_sdk::trace::TracerProvider::builder()
-            .with_batch_exporter(trace_exporter, Tokio)
+        let tracer = opentelemetry_sdk::trace::SdkTracerProvider::builder()
+            .with_batch_exporter(trace_exporter)
             .build()
             .tracer(PROJECT_IDENTIFIER);
 

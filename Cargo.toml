@@ -112,7 +112,7 @@ base64-simd = "0.8.0"
 blake3 = "1.5.5"
 bubble-bath = "0.2.1"
 bytes = "1.10.0"
-clap = { version = "4.5.28", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.29", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 compact_str = { version = "0.8.1", features = ["serde"] }
@@ -165,9 +165,9 @@ git-version = "0.3.9"
 globset = "0.4.15"
 headers = "0.4.0"
 hex-simd = "0.8.0"
-hickory-resolver = { version = "0.25.0-alpha.4", default-features = false, features = [
+hickory-resolver = { version = "0.25.0-alpha.5", default-features = false, features = [
     "dns-over-rustls",
-    "native-certs",
+    "rustls-platform-verifier",
     "tokio-runtime",
 ] }
 http = "1.2.0"
@@ -242,11 +242,11 @@ openidconnect = { version = "4.0.0", default-features = false, features = [
     "accept-string-booleans",
     "timing-resistant-secret-traits",
 ] }
-opentelemetry = { version = "0.27.1", default-features = false, features = [
+opentelemetry = { version = "0.28.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry-http = "0.27.0"
-opentelemetry-otlp = { version = "0.27.0", default-features = false, features = [
+opentelemetry-http = "0.28.0"
+opentelemetry-otlp = { version = "0.28.0", default-features = false, features = [
     "grpc-tonic",
     "http-json",
     "http-proto",
@@ -254,7 +254,7 @@ opentelemetry-otlp = { version = "0.27.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.27.1", default-features = false, features = [
+opentelemetry_sdk = { version = "0.28.0", default-features = false, features = [
     "rt-tokio",
 ] }
 owo-colors = { version = "4.1.0", features = ["supports-colors"] }
@@ -265,7 +265,7 @@ pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
 pretty_assertions = "1.4.1"
 proc-macro2 = "1.0.93"
-pulldown-cmark = { version = "0.12.2", default-features = false, features = [
+pulldown-cmark = { version = "0.13.0", default-features = false, features = [
     "html",
     "simd",
 ] }
@@ -282,7 +282,7 @@ rsa = "0.9.7"
 rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
 rustc-hash = "2.1.1"
-rustls = { version = "0.23.22", default-features = false, features = [
+rustls = { version = "0.23.23", default-features = false, features = [
     "logging",
     "ring",
     "std",
@@ -309,8 +309,8 @@ sha2 = "0.10.8"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 slab = "0.4.9"
 smol_str = { version = "0.3.2", features = ["serde"] }
-sonic-rs = "0.4.0-rc3"
-strum = { version = "0.26.3", features = ["derive"] }
+sonic-rs = "0.4.0-rc4"
+strum = { version = "0.27.0", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.98", features = ["full"] }
 sync_wrapper = "1.0.2"
@@ -342,7 +342,7 @@ tower-http = { version = "0.6.2", features = [
 ] }
 tracing = "0.1.41"
 tracing-error = "0.2.1"
-tracing-opentelemetry = { version = "0.28.0", default-features = false }
+tracing-opentelemetry = { version = "0.29.0", default-features = false }
 tracing-subscriber = "0.3.19"
 triomphe = { version = "0.1.14", default-features = false, features = [
     "arc-swap",
@@ -351,7 +351,7 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.20.0"
 typetag = "0.2.19"
 unsize = "1.1.0"
-ureq = "3.0.4"
+ureq = "3.0.5"
 url = "2.5.4"
 urlencoding = "2.1.3"
 uuid = { version = "1.13.1", features = ["fast-rng", "v4", "v7"] }
