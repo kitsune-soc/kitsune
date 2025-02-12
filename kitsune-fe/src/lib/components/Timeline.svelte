@@ -2,7 +2,7 @@
 	import type { Post } from '$lib/types/Post';
 	import { createWindowVirtualizer } from '@tanstack/svelte-virtual';
 
-	import PostComponent from './Post.svelte';
+	import { Post as PostComponent } from './post';
 
 	let { posts, onendreached }: { posts: Array<Post>; onendreached?: () => void } = $props();
 
