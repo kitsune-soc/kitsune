@@ -31,6 +31,6 @@
 
 @layer utilities {
 	.max-w-prose {
-	  max-width: 80ch;
+	  max-width: min(80ch, 95%);
 	}
   }

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import Button from './Button.svelte';
-	import Input from './Input.svelte';
+	import { Button, Input } from './input';
 
 	let {
 		onregister,

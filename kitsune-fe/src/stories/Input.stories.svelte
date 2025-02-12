@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import Input from '$lib/components/Input.svelte';
+	import { Input } from '$lib/components/input';
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import { fn } from '@storybook/test';
 

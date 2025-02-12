@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
-	import Button from '$lib/components/Button.svelte';
+	import { Button } from '$lib/components/input';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { loadOAuthApp } from '$lib/oauth/client.svelte';
