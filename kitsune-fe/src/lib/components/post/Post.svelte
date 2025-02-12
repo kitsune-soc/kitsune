@@ -3,7 +3,7 @@
 
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
-	import RelativeTime from './RelativeTime.svelte';
+	import RelativeTime from '../RelativeTime.svelte';
 
 	let {
 		id,
