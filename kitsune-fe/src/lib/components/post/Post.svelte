@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Post } from '$lib/types/Post';
 
+	import RelativeTime from '../RelativeTime.svelte';
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
-	import RelativeTime from '../RelativeTime.svelte';
 
 	let {
 		id,
