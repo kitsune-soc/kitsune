@@ -3959,6 +3959,7 @@ dependencies = [
  "kitsune-url",
  "kitsune-util",
  "kitsune-webfinger",
+ "memmap2",
  "mime",
  "password-hash",
  "pkcs8",
@@ -4483,6 +4484,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2cffa4ad52c6f791f4f8b15f0c05f9824b2ced1160e88cc393d64fff9a8ac64"
 dependencies = [
  "rustix",
+]
+
+[[package]]
+name = "memmap2"
+version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd3f7eed9d3848f8b98834af67102b720745c4ec028fcd0aa0239277e7de374f"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
