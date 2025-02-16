@@ -13,7 +13,7 @@
       url = "github:oxalica/rust-overlay";
     };
 
-    crane.url = "github:ipetkov/crane";
+    crane.url = "github:ipetkov/crane/a5cbb5715849a80707477865f67803528c696d9d"; # ToDo: unpin when this stuff doesn't break anymore.
     pnpm2nix = {
       inputs = {
         flake-utils.follows = "flake-utils";
