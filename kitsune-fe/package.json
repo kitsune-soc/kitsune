@@ -19,6 +19,7 @@
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^3.2.4",
+		"@eslint/js": "^9.20.0",
 		"@faker-js/faker": "^9.5.0",
 		"@iconify/svelte": "^4.2.0",
 		"@storybook/addon-essentials": "^8.5.6",

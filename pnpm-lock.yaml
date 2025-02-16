@@ -43,6 +43,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: ^3.2.4
         version: 3.2.4(react@19.0.0)(storybook@8.5.6(prettier@3.5.1))
+      '@eslint/js':
+        specifier: ^9.20.0
+        version: 9.20.0
       '@faker-js/faker':
         specifier: ^9.5.0
         version: 9.5.0
@@ -2783,8 +2786,8 @@ packages:
   esrap@1.2.2:
     resolution: {integrity: sha512-F2pSJklxx1BlQIQgooczXCPHmcWpn6EsP5oo73LQfonG9fIlIENQ8vMmfGXeojP9MrkzUNAfyU5vdFlR9shHAw==, tarball: https://registry.npmjs.org/esrap/-/esrap-1.2.2.tgz}
 
-  esrap@1.4.4:
-    resolution: {integrity: sha512-tDN6xP/r/b3WmdpWm7LybrD252hY52IokcycPnO+WHfhFF0+n5AWtcLLK7VNV6m0uYgVRhGVs8OkZwRyfC7HzQ==, tarball: https://registry.npmjs.org/esrap/-/esrap-1.4.4.tgz}
+  esrap@1.4.5:
+    resolution: {integrity: sha512-CjNMjkBWWZeHn+VX+gS8YvFwJ5+NDhg8aWZBSFJPR8qQduDNjbJodA2WcwCm7uQa5Rjqj+nZvVmceg1RbHFB9g==, tarball: https://registry.npmjs.org/esrap/-/esrap-1.4.5.tgz}
 
   esrecurse@4.3.0:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==, tarball: https://registry.npmjs.org/esrecurse/-/esrecurse-4.3.0.tgz}
@@ -6990,7 +6993,7 @@ snapshots:
       '@sveltejs/vite-plugin-svelte': 5.0.3(svelte@5.20.1)(vite@6.1.0(@types/node@22.13.4)(jiti@2.4.2)(lightningcss@1.29.1)(sass@1.81.0)(terser@5.39.0)(yaml@2.7.0))
       dedent: 1.5.3
       es-toolkit: 1.32.0
-      esrap: 1.4.4
+      esrap: 1.4.5
       magic-string: 0.30.17
       svelte: 5.20.1
       svelte-ast-print: 0.4.2(svelte@5.20.1)
@@ -8530,7 +8533,7 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.0
       '@types/estree': 1.0.6
 
-  esrap@1.4.4:
+  esrap@1.4.5:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
@@ -11087,7 +11090,7 @@ snapshots:
       axobject-query: 4.1.0
       clsx: 2.1.1
       esm-env: 1.2.2
-      esrap: 1.4.4
+      esrap: 1.4.5
       is-reference: 3.0.3
       locate-character: 3.0.0
       magic-string: 0.30.17
