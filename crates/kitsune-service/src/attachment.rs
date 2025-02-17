@@ -185,6 +185,7 @@ impl AttachmentService {
             while let Some(chunk) = stream.try_next().await? {
                 tempfile.write_all(&chunk).await?;
             }
+            tempfile.flush().await?;
 
             // SAFETY: Idk man. We vibe, we vibe.
             #[allow(unsafe_code)]
