@@ -221,6 +221,7 @@ logos = "0.15.0"
 lol_html = "2.2.0"
 meilisearch-sdk = { version = "0.27.1", default-features = false }
 memchr = "2.7.4"
+memmap2 = "0.9.5"
 miette = { version = "7.5.0", features = ["fancy"] }
 mimalloc = "0.1.43"
 mime = "0.3.17"

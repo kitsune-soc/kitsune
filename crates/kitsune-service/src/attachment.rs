@@ -1,4 +1,4 @@
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -16,8 +16,11 @@ use kitsune_error::{kitsune_error, Error, ErrorType, Result};
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
+use memmap2::Mmap;
 use speedy_uuid::Uuid;
 use std::pin::pin;
+use tempfile::tempfile;
+use tokio::{fs::File, io::AsyncWriteExt};
 use typed_builder::TypedBuilder;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
@@ -178,22 +181,26 @@ impl AttachmentService {
         if is_image_type_with_supported_metadata(&upload.content_type) {
             let mut stream = pin!(upload.stream);
 
-            let mut img_bytes = BytesMut::new();
-            while let Some(chunk) = stream.next().await.transpose()? {
-                img_bytes.extend_from_slice(&chunk);
+            let mut tempfile = File::from_std(tempfile()?);
+            while let Some(chunk) = stream.try_next().await? {
+                tempfile.write_all(&chunk).await?;
             }
+            tempfile.flush().await?;
 
-            let img_bytes = img_bytes.freeze();
-            let final_bytes = DynImage::from_bytes(img_bytes)?
+            // SAFETY: Idk man. We vibe, we vibe.
+            #[allow(unsafe_code)]
+            let tempfile_mmap = unsafe { Mmap::map(&tempfile)? };
+            let img_bytes = Bytes::from_owner(tempfile_mmap);
+
+            let encoder = DynImage::from_bytes(img_bytes)?
                 .ok_or(img_parts::Error::WrongSignature)
                 .map(|mut image| {
                     image.set_exif(None);
-                    image.encoder().bytes()
+                    image.encoder()
                 })?;
 
-            self.storage_backend
-                .put(&upload.path, stream::once(async { Ok(final_bytes) }))
-                .await?;
+            let clean_stream = stream::iter(encoder.map(Ok::<_, kitsune_error::Error>));
+            self.storage_backend.put(&upload.path, clean_stream).await?;
         } else {
             self.storage_backend
                 .put(&upload.path, upload.stream)
