@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import { Visibility } from '$houdini';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
 	import { faker } from '@faker-js/faker';
@@ -6,7 +7,6 @@
 	import { fn } from '@storybook/test';
 
 	import exampleAvatar from './assets/profile_pic.png';
-	import { Visibility } from '$houdini';
 
 	function generateRandomPost(): Post {
 		const id = faker.string.uuid();
@@ -26,7 +26,7 @@
 			repostCount: faker.number.int({ max: 100 }),
 			likeCount: faker.number.int({ max: 400 }),
 			url: `/posts/${id}`,
-			visibility: visibilities[Math.floor(Math.random() * visibilities.length)],
+			visibility: visibilities[Math.floor(Math.random() * visibilities.length)]
 		};
 	}
 

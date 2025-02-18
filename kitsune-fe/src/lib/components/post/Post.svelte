@@ -13,8 +13,8 @@
 		createdAt,
 		replyCount,
 		likeCount,
-		repostCount,
-		primary = true
+		repostCount
+		//primary = true
 	}: Post & { primary?: boolean } = $props();
 
 	let postUrl = $derived(`/posts/${id}`);
@@ -70,4 +70,3 @@
 {/if}-->
 
 {@render renderPost()}
-
