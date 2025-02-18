@@ -91,7 +91,7 @@ arc-swap = "1.7.1"
 argh = "0.1.13"
 argon2 = { version = "0.5.3", features = ["std"] }
 async-graphql = { version = "7.0.15", default-features = false, features = [
-    "altair",
+    "graphiql",
     "tempfile",
     "time",
     "tracing",
@@ -109,13 +109,14 @@ axum-extra = { version = "0.10.0", features = [
     "typed-header",
 ] }
 base64-simd = "0.8.0"
-blake3 = "1.5.5"
+blake3 = "1.6.0"
 bubble-bath = "0.2.1"
 bytes = "1.10.0"
-clap = { version = "4.5.29", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.30", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 compact_str = { version = "0.8.1", features = ["serde"] }
+console-subscriber = { version = "0.4.1", features = ["parking_lot"] }
 const_format = "0.2.34"
 const-oid = { version = "0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
@@ -207,7 +208,7 @@ isolang = { version = "2.4.0", features = [
 itertools = { version = "0.14.0", default-features = false }
 lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "547922fb657f924ff595b78d38b17094fd25be21", default-features = false }
 leb128 = "0.2.5"
-lettre = { version = "0.11.12", default-features = false, features = [
+lettre = { version = "0.11.13", default-features = false, features = [
     "builder",
     "hostname",
     "pool",
@@ -219,7 +220,7 @@ lettre = { version = "0.11.12", default-features = false, features = [
 lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
 lol_html = "2.2.0"
-meilisearch-sdk = { version = "0.27.1", default-features = false }
+meilisearch-sdk = { version = "0.28.0", default-features = false }
 memchr = "2.7.4"
 memmap2 = "0.9.5"
 miette = { version = "7.5.0", features = ["fancy"] }
@@ -311,14 +312,14 @@ simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 slab = "0.4.9"
 smol_str = { version = "0.3.2", features = ["serde"] }
 sonic-rs = "0.4.0-rc4"
-strum = { version = "0.27.0", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.98", features = ["full"] }
 sync_wrapper = "1.0.2"
-tempfile = "3.17.0"
+tempfile = "3.17.1"
 thiserror = "2.0.11"
 time = "0.3.37"
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1.43.0", features = ["full", "tracing"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
 tokio-util = { version = "0.7.13", features = ["io", "rt"] }
@@ -344,7 +345,10 @@ tower-http = { version = "0.6.2", features = [
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-opentelemetry = { version = "0.29.0", default-features = false }
-tracing-subscriber = "0.3.19"
+tracing-subscriber = { version = "0.3.19", features = [
+    "env-filter",
+    "parking_lot",
+] }
 triomphe = { version = "0.1.14", default-features = false, features = [
     "arc-swap",
     "unsize",
@@ -355,7 +359,7 @@ unsize = "1.1.0"
 ureq = "3.0.5"
 url = "2.5.4"
 urlencoding = "2.1.3"
-uuid = { version = "1.13.1", features = ["fast-rng", "v4", "v7"] }
+uuid = { version = "1.13.2", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.225.0"

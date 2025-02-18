@@ -1,5 +1,6 @@
 use crate::error::Result;
 use fred::{clients::Pool, types::scripts::Script, util::NONE};
+use futures_util::FutureExt;
 use rand::Rng;
 use smol_str::SmolStr;
 use std::{ops::RangeInclusive, sync::LazyLock, time::Duration};
@@ -28,6 +29,7 @@ impl ScheduledJobActor {
                 (self.queue_name.as_str(), self.scheduled_queue_name.as_str()),
                 NONE,
             )
+            .boxed()
             .await?;
 
         Ok(())
