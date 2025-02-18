@@ -16,6 +16,7 @@ athena.workspace = true
 clap.workspace = true
 color-eyre.workspace = true
 fred.workspace = true
+futures-util.workspace = true
 just-retry.workspace = true
 kitsune-config.workspace = true
 kitsune-core.workspace = true

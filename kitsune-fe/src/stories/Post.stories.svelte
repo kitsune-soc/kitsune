@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import PostComponent from '$lib/components/Post.svelte';
+	import { Post as PostComponent } from '$lib/components/post';
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 
 	import exampleAvatar from './assets/profile_pic.png';

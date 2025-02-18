@@ -3,6 +3,7 @@ xtask = "run --package xtask --"
 
 [build]
 rustdocflags = ["--document-private-items"]
+rustflags = ["--cfg", "tokio_unstable"]
 
 [registries.crates-io]
 protocol = "sparse"

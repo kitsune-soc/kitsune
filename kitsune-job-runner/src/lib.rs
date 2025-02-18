@@ -6,6 +6,7 @@ use color_eyre::eyre;
 use fred::{
     clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
+use futures_util::FutureExt;
 use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
@@ -125,6 +126,7 @@ pub async fn run_dispatcher(
             )
         })
         .retry(just_retry::backoff_policy())
+        .boxed()
         .await;
 
         let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, job_tracker.wait()).await;

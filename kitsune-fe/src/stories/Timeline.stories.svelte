@@ -6,21 +6,27 @@
 	import { fn } from '@storybook/test';
 
 	import exampleAvatar from './assets/profile_pic.png';
+	import { Visibility } from '$houdini';
 
 	function generateRandomPost(): Post {
+		const id = faker.string.uuid();
+		const visibilities = Object.values(Visibility);
+
 		return {
-			id: faker.string.uuid(),
+			id,
 			user: {
 				id: faker.string.uuid(),
 				name: faker.person.fullName(),
-				username: `@${faker.internet.username()}@${faker.internet.domainName()}`,
+				username: `${faker.internet.username()}@${faker.internet.domainName()}`,
 				avatarUrl: exampleAvatar
 			},
 			content: faker.hacker.phrase(),
 			createdAt: new Date(),
 			replyCount: faker.number.int({ max: 20 }),
 			repostCount: faker.number.int({ max: 100 }),
-			likeCount: faker.number.int({ max: 400 })
+			likeCount: faker.number.int({ max: 400 }),
+			url: `/posts/${id}`,
+			visibility: visibilities[Math.floor(Math.random() * visibilities.length)],
 		};
 	}
 

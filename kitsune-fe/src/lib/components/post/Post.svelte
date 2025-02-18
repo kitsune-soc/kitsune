@@ -14,7 +14,6 @@
 		replyCount,
 		likeCount,
 		repostCount,
-		url: absolutePostUrl,
 		primary = true
 	}: Post & { primary?: boolean } = $props();
 
@@ -45,6 +44,8 @@
 				{@html content}
 			</div>
 
+			<!-- ToDo: Make the post clickable without a link element. The link element fucks up screenreaders -->
+
 			<div class="flex flex-row justify-between">
 				<InteractionButton icon="material-symbols:reply-rounded" count={replyCount} />
 				<InteractionButton icon="material-symbols:repeat-rounded" count={repostCount} />
@@ -52,7 +53,7 @@
 
 				<InteractionButton icon="material-symbols:menu-rounded" />
 
-				<a class="no-underline hover:underline" href={absolutePostUrl}>
+				<a class="no-underline hover:underline" href={postUrl}>
 					<RelativeTime time={createdAt} />
 				</a>
 			</div>
@@ -60,10 +61,13 @@
 	</article>
 {/snippet}
 
-{#if primary}
+<!--{#if primary}
 	{@render renderPost()}
 {:else}
-	<a href={postUrl} class="no-underline">
+	<a href={postUrl} class="no-underline" tabindex={-1}>
 		{@render renderPost()}
 	</a>
-{/if}
+{/if}-->
+
+{@render renderPost()}
+

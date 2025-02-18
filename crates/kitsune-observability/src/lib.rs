@@ -6,14 +6,10 @@ use kitsune_core::consts::PROJECT_IDENTIFIER;
 use opentelemetry::trace::{noop::NoopTracer, Tracer, TracerProvider};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
-use std::{env, fmt};
+use std::fmt;
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
-use tracing_subscriber::{
-    filter::{LevelFilter, Targets},
-    layer::SubscriberExt,
-    Layer as _, Registry,
-};
+use tracing_subscriber::{filter::LevelFilter, layer::SubscriberExt, Layer as _, Registry};
 
 #[derive(Clone)]
 struct HttpClientAdapter {
@@ -30,9 +26,7 @@ impl fmt::Debug for HttpClientAdapter {
 #[async_trait]
 impl HttpClient for HttpClientAdapter {
     async fn send_bytes(&self, request: Request<Bytes>) -> Result<Response<Bytes>, HttpError> {
-        let (parts, body) = request.into_parts();
-        let request = Request::from_parts(parts, body.into());
-
+        let request = request.map(Into::into);
         let response = self.inner.execute(request).await?.into_inner();
 
         let (parts, body) = response.into_parts();
@@ -46,15 +40,15 @@ fn initialise_logging<T>(tracer: T) -> eyre::Result<()>
 where
     T: Tracer + PreSampledTracer + Send + Sync + 'static,
 {
-    let env_filter = env::var("RUST_LOG")
-        .map_err(eyre::Report::from)
-        .and_then(|targets| targets.parse().wrap_err("Failed to parse RUST_LOG value"))
-        .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
+    let env_filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
 
     let subscriber = Registry::default()
-        .with(tracing_subscriber::fmt::layer().with_filter(env_filter))
+        .with(console_subscriber::spawn())
         .with(ErrorLayer::default())
-        .with(OpenTelemetryLayer::new(tracer));
+        .with(OpenTelemetryLayer::new(tracer))
+        .with(tracing_subscriber::fmt::layer().with_filter(env_filter));
 
     tracing::subscriber::set_global_default(subscriber)
         .wrap_err("Couldn't install the global tracing subscriber")?;
