@@ -2,7 +2,6 @@
 extern crate tracing;
 
 use self::{error::Error, flow::pkce, scope::Scope};
-use std::future::Future;
 
 pub use self::primitive::{Authorization, Client, Request};
 

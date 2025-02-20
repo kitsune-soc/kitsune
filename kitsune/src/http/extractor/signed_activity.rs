@@ -1,17 +1,17 @@
 use crate::state::Zustand;
 use axum::{
+    RequestExt,
     body::Body,
     extract::{FromRequest, OriginalUri},
     response::{IntoResponse, Response},
-    RequestExt,
 };
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::traits::fetcher::AccountFetchOptions;
-use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
-use kitsune_error::{bail, Error, ErrorType, Result};
+use kitsune_db::{PgPool, model::account::Account, schema::accounts, with_connection};
+use kitsune_error::{Error, ErrorType, Result, bail};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;

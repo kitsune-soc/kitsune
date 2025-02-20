@@ -1,4 +1,4 @@
-use crate::fixtures::{generate_secret, TokenStorage};
+use crate::fixtures::{TokenStorage, generate_secret};
 use komainu::flow::refresh;
 use std::borrow::Cow;
 

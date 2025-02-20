@@ -2,10 +2,10 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use std::iter;
 use syn::{
+    Token, Visibility,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     spanned::Spanned,
-    Token, Visibility,
 };
 
 struct Attributes {

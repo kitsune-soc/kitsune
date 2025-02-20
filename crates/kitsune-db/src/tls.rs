@@ -1,6 +1,6 @@
 use diesel::{ConnectionError, ConnectionResult};
-use diesel_async::{pooled_connection::ManagerConfig, AsyncPgConnection};
-use futures_util::{future::BoxFuture, FutureExt};
+use diesel_async::{AsyncPgConnection, pooled_connection::ManagerConfig};
+use futures_util::{FutureExt, future::BoxFuture};
 
 pub fn pool_config() -> ManagerConfig<AsyncPgConnection> {
     let mut config = ManagerConfig::default();

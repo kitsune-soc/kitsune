@@ -8,9 +8,8 @@ use kitsune_db::{
     with_connection,
 };
 use kitsune_error::Result;
-use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
+use kitsune_type::ap::{Activity, ActivityType, ObjectField, ap_context};
 use kitsune_util::try_join;
-use std::future::Future;
 
 pub trait IntoActivity {
     type Output;

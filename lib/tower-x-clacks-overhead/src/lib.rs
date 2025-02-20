@@ -1,7 +1,6 @@
-use http::{header::InvalidHeaderValue, HeaderName, HeaderValue, Response};
+use http::{HeaderName, HeaderValue, Response, header::InvalidHeaderValue};
 use pin_project_lite::pin_project;
 use std::{
-    future::Future,
     pin::Pin,
     task::{self, Poll},
 };
@@ -118,10 +117,10 @@ impl<S> Layer<S> for XClacksOverheadLayer {
 
 #[cfg(test)]
 mod test {
-    use crate::{XClacksOverheadLayer, HEADER_NAME};
+    use crate::{HEADER_NAME, XClacksOverheadLayer};
     use http::{Request, Response};
     use std::convert::Infallible;
-    use tower::{service_fn, Layer, ServiceExt};
+    use tower::{Layer, ServiceExt, service_fn};
 
     #[futures_test::test]
     async fn add_header() {

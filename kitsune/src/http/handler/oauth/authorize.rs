@@ -1,16 +1,15 @@
 use crate::oauth2::{ClientExtractor, CodeGrantIssuer, OAuthScope, SHOW_TOKEN_URI};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use axum::{
-    debug_handler,
+    Form, debug_handler,
     extract::{OriginalUri, State},
     response::{Html, IntoResponse, Redirect},
-    Form,
 };
 use axum_extra::{
     either::{Either, Either3},
     extract::{
-        cookie::{Cookie, Expiration, SameSite},
         SignedCookieJar,
+        cookie::{Cookie, Expiration, SameSite},
     },
 };
 use cursiv::{CsrfHandle, MessageRef};
@@ -18,9 +17,9 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{
-    model::user::User, schema::oauth2_applications, schema::users, with_connection, PgPool,
+    PgPool, model::user::User, schema::oauth2_applications, schema::users, with_connection,
 };
-use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_url::UrlService;
 use komainu::code_grant::{self, Authorizer};
 use serde::Deserialize;

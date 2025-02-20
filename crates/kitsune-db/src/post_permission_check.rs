@@ -3,10 +3,10 @@ use crate::{
     schema::{accounts_follows, posts, posts_mentions},
 };
 use diesel::{
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods,
     pg::Pg,
     query_dsl::{filter_dsl::FilterDsl, select_dsl::SelectDsl},
     sql_types::Bool,
-    BoolExpressionMethods, BoxableExpression, ExpressionMethods,
 };
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;

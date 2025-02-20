@@ -4,14 +4,14 @@ use core::{
     marker::PhantomData,
 };
 use serde::{
-    de::{
-        self,
-        value::{EnumAccessDeserializer, MapAccessDeserializer},
-        Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
-    },
     Serialize,
+    de::{
+        self, Deserialize, Deserializer, EnumAccess, IgnoredAny, IntoDeserializer, MapAccess,
+        SeqAccess,
+        value::{EnumAccessDeserializer, MapAccessDeserializer},
+    },
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
+use serde_with::{DeserializeAs, SerializeAs, de::DeserializeAsWrap};
 
 // XXX: Conceptually, we could decompose it into `First` and a helper type that filters successfully
 // deserialised elements in a JSON-LD set. In practice, however, the latter type cannot be

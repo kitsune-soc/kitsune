@@ -1,15 +1,16 @@
 use super::{Result, SearchBackend, SearchIndex, SearchItem, SearchResultReference};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use diesel_full_text_search::{websearch_to_tsquery_with_search_config, TsVectorExtensions};
+use diesel_full_text_search::{TsVectorExtensions, websearch_to_tsquery_with_search_config};
 use futures_util::TryStreamExt;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_db::{
+    PgPool,
     function::iso_code_to_language,
     lang::LanguageIsoCode,
     model::post::Visibility,
     schema::{accounts, posts},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use speedy_uuid::Uuid;

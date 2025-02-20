@@ -14,7 +14,7 @@ mod std {
 
 #[divan::bench_group]
 mod tick_tock_mock {
-    use divan::{black_box, Bencher};
+    use divan::{Bencher, black_box};
     use std::time::{Duration, SystemTime};
     use tick_tock_mock::{Clock, DeltaDirection};
 

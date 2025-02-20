@@ -1,17 +1,18 @@
 use super::handle::handle;
 use hyper::{Request, Uri};
 use iso8601_timestamp::Timestamp;
-use kitsune_activitypub::{fetcher::MAX_FETCH_DEPTH, Fetcher};
+use kitsune_activitypub::{Fetcher, fetcher::MAX_FETCH_DEPTH};
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
+use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
 use kitsune_test::{build_ap_response, database_test, language_detection_config};
 use kitsune_type::ap::{
+    Object, ObjectType, PUBLIC_IDENTIFIER,
     actor::{Actor, ActorType, PublicKey},
-    ap_context, Object, ObjectType, PUBLIC_IDENTIFIER,
+    ap_context,
 };
 use kitsune_webfinger::Webfinger;
 use std::{

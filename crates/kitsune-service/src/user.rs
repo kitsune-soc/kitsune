@@ -2,28 +2,29 @@ use super::{
     captcha::CaptchaService,
     job::{Enqueue, JobService},
 };
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
 use diesel_async::RunQueryDsl;
 use futures_util::future::OptionFuture;
 use garde::Validate;
 use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
+    PgPool,
     model::{
         account::{ActorType, NewAccount},
         preference::Preferences,
         user::{NewUser, User},
     },
     schema::{accounts, accounts_preferences, users},
-    with_transaction, PgPool,
+    with_transaction,
 };
 use kitsune_derive::kitsune_service;
-use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, bail, kitsune_error};
 use kitsune_jobs::mailing::confirmation::SendConfirmationMail;
 use kitsune_url::UrlService;
 use kitsune_util::{generate_secret, try_join};
 use rsa::{
-    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
     RsaPrivateKey,
+    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
 };
 use speedy_uuid::Uuid;
 use std::fmt::Write;
@@ -303,10 +304,12 @@ mod test {
             .username("äumeträ".into())
             .build();
 
-        assert!(register
-            .validate_with(&RegisterContext {
-                allow_non_ascii: false
-            })
-            .is_err());
+        assert!(
+            register
+                .validate_with(&RegisterContext {
+                    allow_non_ascii: false
+                })
+                .is_err()
+        );
     }
 }

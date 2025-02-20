@@ -15,7 +15,7 @@ use std::{
 };
 
 #[cfg(feature = "decode")]
-pub use self::decode::{decode, DecodeError, SectionRange};
+pub use self::decode::{DecodeError, SectionRange, decode};
 #[cfg(feature = "encode")]
 pub use self::encode::encode;
 #[cfg(feature = "serialise")]

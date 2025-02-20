@@ -5,7 +5,7 @@
 //!
 
 use logos::{Lexer, Logos, Span};
-use std::{borrow::Cow, error::Error, fmt, future::Future};
+use std::{borrow::Cow, error::Error, fmt};
 
 /// Boxed error
 pub type BoxError = Box<dyn Error + Send + Sync>;

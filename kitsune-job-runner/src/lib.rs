@@ -11,11 +11,11 @@ use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{AsyncSmtpTransport, Tokio1Executor},
     MailSender, MailingService,
+    lettre::{AsyncSmtpTransport, Tokio1Executor},
 };
 use kitsune_federation::{
-    activitypub::PrepareDeliverer as PrepareActivityPubDeliverer, PrepareDeliverer,
+    PrepareDeliverer, activitypub::PrepareDeliverer as PrepareActivityPubDeliverer,
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};

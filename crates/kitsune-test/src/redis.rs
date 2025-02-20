@@ -2,7 +2,7 @@ use fred::{
     clients::Client,
     error::Error,
     interfaces::{ClientLike, KeysInterface, ServerInterface},
-    types::{config::Config, SetOptions, Value},
+    types::{SetOptions, Value, config::Config},
 };
 use rand::Rng;
 use std::{ops::RangeInclusive, time::Duration};

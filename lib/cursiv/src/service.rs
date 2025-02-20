@@ -1,6 +1,6 @@
-use crate::{handle::Shared, CsrfData, CsrfHandle, ResponseFuture, CSRF_COOKIE_NAME};
+use crate::{CSRF_COOKIE_NAME, CsrfData, CsrfHandle, ResponseFuture, handle::Shared};
 use cookie::Cookie;
-use http::{header, Request, Response};
+use http::{Request, Response, header};
 use std::{
     sync::Mutex,
     task::{self, Poll},

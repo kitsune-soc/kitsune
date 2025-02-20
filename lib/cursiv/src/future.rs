@@ -1,11 +1,10 @@
-use crate::{CsrfHandle, CSRF_COOKIE_NAME};
+use crate::{CSRF_COOKIE_NAME, CsrfHandle};
 use cookie::{Cookie, Expiration, SameSite};
-use http::{header, HeaderValue, Response};
+use http::{HeaderValue, Response, header};
 use pin_project_lite::pin_project;
 use std::{
-    future::Future,
     pin::Pin,
-    task::{self, ready, Poll},
+    task::{self, Poll, ready},
 };
 
 pin_project! {

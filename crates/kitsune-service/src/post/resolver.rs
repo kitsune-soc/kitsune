@@ -148,7 +148,7 @@ mod test {
     #[allow(clippy::too_many_lines)]
     async fn parse_post() {
         redis_test(|redis_pool| async move {
-            database_test(|db_pool| async move {
+            database_test(async |db_pool| {
                 let post = "Hello @0x0@corteximplant.com! How are you doing? :blobhaj_happy: :blobhaj_sad@example.com:";
 
                 let client = service_fn(|req: Request<_>| async move {

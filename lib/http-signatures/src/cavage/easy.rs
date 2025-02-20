@@ -5,13 +5,12 @@
 //!
 
 use crate::{
-    cavage::{SafetyCheckError, SignatureHeader},
     BoxError, SIGNATURE_HEADER,
+    cavage::{SafetyCheckError, SignatureHeader},
 };
-use http::{header::DATE, HeaderValue, Method};
+use http::{HeaderValue, Method, header::DATE};
 use miette::Diagnostic;
 use scoped_futures::ScopedFutureWrapper;
-use std::future::Future;
 use thiserror::Error;
 use tracing::{debug, instrument};
 

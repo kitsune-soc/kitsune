@@ -2,8 +2,8 @@ use self::{actor::Actor, object::MediaAttachment};
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, DefaultOnNull, OneOrMany};
-use sonic_rs::{json, Value};
+use serde_with::{DefaultOnNull, OneOrMany, serde_as, skip_serializing_none};
+use sonic_rs::{Value, json};
 use strum::AsRefStr;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";

@@ -3,12 +3,13 @@ extern crate tracing;
 
 use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream, StreamExt, TryStreamExt};
+use futures_util::{StreamExt, TryStreamExt, stream};
 use http::Uri;
 use iso8601_timestamp::Timestamp;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
-use kitsune_core::traits::{fetcher::PostFetchOptions, Fetcher as FetcherTrait};
+use kitsune_core::traits::{Fetcher as FetcherTrait, fetcher::PostFetchOptions};
 use kitsune_db::{
+    PgPool,
     model::{
         account::Account,
         custom_emoji::PostCustomEmoji,
@@ -19,14 +20,14 @@ use kitsune_db::{
     schema::{
         media_attachments, posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
     },
-    with_transaction, PgPool,
+    with_transaction,
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{kitsune_error, Error, Result};
+use kitsune_error::{Error, Result, kitsune_error};
 use kitsune_language::Language;
 use kitsune_search::{AnySearchBackend, SearchBackend};
-use kitsune_type::ap::{object::MediaAttachment, Object, Tag, TagType};
-use kitsune_util::{convert::timestamp_to_uuid, process, sanitize::CleanHtmlExt, CowBox};
+use kitsune_type::ap::{Object, Tag, TagType, object::MediaAttachment};
+use kitsune_util::{CowBox, convert::timestamp_to_uuid, process, sanitize::CleanHtmlExt};
 use speedy_uuid::Uuid;
 use typed_builder::TypedBuilder;
 
@@ -36,7 +37,7 @@ pub mod inbox_resolver;
 pub mod mapping;
 
 pub use self::{
-    deliverer::{core::Deliverer as CoreDeliverer, Deliverer},
+    deliverer::{Deliverer, core::Deliverer as CoreDeliverer},
     fetcher::Fetcher,
     inbox_resolver::InboxResolver,
 };

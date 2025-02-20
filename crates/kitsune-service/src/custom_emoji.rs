@@ -10,9 +10,10 @@ use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_core::consts::MAX_EMOJI_SHORTCODE_LENGTH;
 use kitsune_db::{
+    PgPool,
     model::{custom_emoji::CustomEmoji, media_attachment::MediaAttachment},
     schema::{custom_emojis, media_attachments, posts, posts_custom_emojis},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};

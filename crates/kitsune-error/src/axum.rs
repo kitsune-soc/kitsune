@@ -21,8 +21,8 @@ impl From<Error> for Response {
 }
 
 macro_rules! dispatch_response {
-    ($value:expr_2021, $body:expr_2021; {
-        $($error_ty:pat => $status_code:expr_2021),* $(,)?
+    ($value:expr, $body:expr; {
+        $($error_ty:pat => $status_code:expr),* $(,)?
     }) => {{
         match $value {
             $(

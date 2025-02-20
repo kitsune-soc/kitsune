@@ -1,11 +1,11 @@
 use crate::{error::EnumConversionError, schema::accounts};
 use diesel::{
+    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsChangeset, AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
 };
 use iso8601_timestamp::Timestamp;
 use kitsune_type::ap::actor::ActorType as ApActorType;

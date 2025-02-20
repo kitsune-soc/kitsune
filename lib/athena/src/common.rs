@@ -1,7 +1,7 @@
 use crate::{
+    JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
     consts::MIN_IDLE_TIME,
     error::{Error, Result},
-    JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
 };
 use ahash::HashMap;
 use futures_util::TryStreamExt;

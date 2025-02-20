@@ -4,7 +4,7 @@ use kitsune_wasm_mrf::{MrfModule, MrfService, Outcome};
 use smol_str::SmolStr;
 use std::{borrow::Cow, convert::Infallible};
 use tempfile::NamedTempFile;
-use wasmtime::{component::Component, Config, Engine};
+use wasmtime::{Config, Engine, component::Component};
 
 const WASM_COMPONENT: &[u8] = include_bytes!("http_client_test.component.wasm");
 

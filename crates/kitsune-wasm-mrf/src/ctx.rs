@@ -5,8 +5,8 @@ use crate::{
 use slab::Slab;
 use triomphe::Arc;
 use wasmtime::{
-    component::{Resource, ResourceTable},
     Engine, Store, StoreLimits, StoreLimitsBuilder,
+    component::{Resource, ResourceTable},
 };
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 

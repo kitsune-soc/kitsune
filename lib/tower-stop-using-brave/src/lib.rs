@@ -1,7 +1,7 @@
 use either::Either;
 use http::{
-    header::{LOCATION, USER_AGENT},
     HeaderValue, Request, Response, StatusCode,
+    header::{LOCATION, USER_AGENT},
 };
 use regex::Regex;
 use std::{
@@ -76,13 +76,13 @@ impl<S> Layer<S> for StopUsingBraveLayer {
 
 #[cfg(test)]
 mod test {
-    use crate::{StopUsingBraveLayer, REDIRECT_URL};
+    use crate::{REDIRECT_URL, StopUsingBraveLayer};
     use http::{
-        header::{LOCATION, USER_AGENT},
         Request, Response, StatusCode,
+        header::{LOCATION, USER_AGENT},
     };
     use std::convert::Infallible;
-    use tower::{service_fn, Layer, ServiceExt};
+    use tower::{Layer, ServiceExt, service_fn};
 
     const BRAVE_USER_AGENTS: &[&str] = &[
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Brave/120.0.0.0",

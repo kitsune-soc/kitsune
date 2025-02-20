@@ -1,4 +1,4 @@
-use crate::fixtures::{client_extractor::ClientExtractor, generate_secret, AuthorizationStorage};
+use crate::fixtures::{AuthorizationStorage, client_extractor::ClientExtractor, generate_secret};
 use komainu::{
     code_grant::{self, AuthorizerExtractor},
     flow::pkce,

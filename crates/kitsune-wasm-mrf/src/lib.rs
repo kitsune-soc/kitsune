@@ -3,14 +3,14 @@ extern crate tracing;
 
 use self::{
     cache::Cache,
-    ctx::{construct_store, Context},
+    ctx::{Context, construct_store},
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
-use color_eyre::{eyre, Section};
+use color_eyre::{Section, eyre};
 use fred::{
     clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
-use futures_util::{stream, StreamExt, TryStreamExt};
+use futures_util::{StreamExt, TryStreamExt, stream};
 use kitsune_config::mrf::{
     AllocationStrategy, Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
@@ -31,8 +31,8 @@ use tokio::fs;
 use triomphe::Arc;
 use walkdir::WalkDir;
 use wasmtime::{
-    component::{Component, Linker},
     Config, Engine, InstanceAllocationStrategy, Store,
+    component::{Component, Linker},
 };
 
 mod cache;

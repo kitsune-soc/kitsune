@@ -1,8 +1,8 @@
 use crate::{
-    error::Error, flow::pkce, params::ParamStorage, scope::Scope, AuthInstruction, Client,
-    ClientExtractor,
+    AuthInstruction, Client, ClientExtractor, error::Error, flow::pkce, params::ParamStorage,
+    scope::Scope,
 };
-use std::{borrow::Cow, fmt, future::Future, str::FromStr};
+use std::{borrow::Cow, fmt, str::FromStr};
 use strum::{AsRefStr, Display};
 use thiserror::Error;
 
@@ -130,7 +130,7 @@ where
 }
 
 macro_rules! return_err {
-    ($result:expr_2021) => {{
+    ($result:expr) => {{
         match { $result } {
             Ok(val) => val,
             Err(err) => return err,

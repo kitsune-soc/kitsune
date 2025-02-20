@@ -9,19 +9,19 @@ use http::HeaderValue;
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
 use hyper::{
+    HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
     body::Bytes,
     header::{HeaderName, USER_AGENT},
-    HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
 };
 use hyper_rustls::HttpsConnectorBuilder;
 use hyper_util::{
-    client::legacy::{connect::HttpConnector, Client as HyperClient},
+    client::legacy::{Client as HyperClient, connect::HttpConnector},
     rt::TokioExecutor,
 };
 use kitsune_type::jsonld::RdfNode;
 use serde::de::DeserializeOwned;
 use std::{error::Error as StdError, fmt, time::Duration};
-use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
+use tower::{BoxError, Service, ServiceBuilder, ServiceExt, layer::util::Identity, util::Either};
 use tower_http::{
     decompression::DecompressionLayer,
     follow_redirect::{FollowRedirectLayer, RequestUri},

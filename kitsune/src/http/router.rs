@@ -1,6 +1,6 @@
-use super::{handler, middleware, serve_frontend, trace_layer, X_REQUEST_ID};
+use super::{X_REQUEST_ID, handler, middleware, serve_frontend, trace_layer};
 use crate::state::Zustand;
-use axum::{routing, Router};
+use axum::{Router, routing};
 use color_eyre::eyre::{self, Context};
 use cursiv::CsrfLayer;
 use flashy::FlashLayer;
@@ -91,7 +91,7 @@ pub fn create(state: Zustand, server_config: &server::Configuration) -> eyre::Re
     let router = {
         use super::graphql;
         use async_graphql_axum::GraphQLSubscription;
-        use axum::{extract::DefaultBodyLimit, Extension};
+        use axum::{Extension, extract::DefaultBodyLimit};
 
         let schema = graphql::schema(state.clone());
 

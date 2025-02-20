@@ -1,8 +1,8 @@
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_derive::kitsune_service;
-use kitsune_error::{kitsune_error, Result};
-use kitsune_type::ap::{actor::Actor, Activity, Object};
+use kitsune_error::{Result, kitsune_error};
+use kitsune_type::ap::{Activity, Object, actor::Actor};
 use url::Url;
 
 pub trait Entity {

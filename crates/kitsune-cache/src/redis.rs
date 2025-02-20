@@ -1,7 +1,7 @@
 use super::CacheBackend;
 use fred::{clients::Pool, interfaces::KeysInterface, types::Expiration};
 use kitsune_error::Result;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 use typed_builder::TypedBuilder;
 

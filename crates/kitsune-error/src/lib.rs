@@ -15,17 +15,17 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[macro_export]
 macro_rules! bail {
-    ($(type = $type:expr_2021,)? $msg:expr_2021) => {
+    ($(type = $type:expr,)? $msg:expr) => {
         return Err($crate::kitsune_error!($(type = $type,)? $msg).into());
     };
 }
 
 #[macro_export]
 macro_rules! kitsune_error {
-    (type = $type:expr_2021, $msg:expr_2021) => {
+    (type = $type:expr, $msg:expr) => {
         $crate::Error::msg($msg).with_context({ $type }.into())
     };
-    ($msg:expr_2021) => {
+    ($msg:expr) => {
         $crate::kitsune_error!(type = $crate::ErrorType::Other, $msg)
     };
 }

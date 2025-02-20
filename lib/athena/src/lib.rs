@@ -3,7 +3,7 @@ extern crate tracing;
 
 use self::error::{BoxError, Result};
 use async_trait::async_trait;
-use futures_util::{Future, Stream};
+use futures_util::Stream;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;

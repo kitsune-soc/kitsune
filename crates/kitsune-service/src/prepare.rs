@@ -3,16 +3,16 @@ use fred::{
     clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha, AnyCaptcha};
+use kitsune_captcha::{AnyCaptcha, hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
 use kitsune_config::{cache, captcha, email, language_detection, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
     MailSender,
+    lettre::{AsyncSmtpTransport, Tokio1Executor, message::Mailbox},
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
-use serde::{de::DeserializeOwned, Serialize};
+use kitsune_storage::{AnyStorageBackend, fs::Storage as FsStorage, s3::Storage as S3Storage};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{fmt::Display, str::FromStr, time::Duration};
 use tokio::sync::OnceCell;
 use triomphe::Arc;

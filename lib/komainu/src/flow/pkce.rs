@@ -1,8 +1,8 @@
 use crate::{error::Error, flow};
 use serde::{Deserialize, Serialize};
 use sha2::{
-    digest::{typenum, OutputSizeUser},
     Digest, Sha256,
+    digest::{OutputSizeUser, typenum},
 };
 use std::borrow::Cow;
 use strum::{AsRefStr, EnumString};

@@ -1,13 +1,14 @@
 use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::{stream::FuturesUnordered, FutureExt, TryFutureExt, TryStreamExt};
+use futures_util::{FutureExt, TryFutureExt, TryStreamExt, stream::FuturesUnordered};
 use garde::Validate;
 use kitsune_core::{consts::API_MAX_LIMIT, traits::Fetcher};
 use kitsune_db::{
+    PgPool,
     model::{account::Account, post::Post},
     schema::{accounts, posts},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;

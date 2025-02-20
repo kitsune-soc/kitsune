@@ -4,7 +4,7 @@ use self::{
     fep::mrf::keyvalue::Bucket,
     wasi::logging::logging::{self, Level},
 };
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 
 wit_bindgen::generate!({
     with: {

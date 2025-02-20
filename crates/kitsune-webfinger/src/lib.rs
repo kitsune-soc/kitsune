@@ -3,9 +3,9 @@ extern crate tracing;
 
 use async_trait::async_trait;
 use fred::clients::Pool as RedisPool;
-use http::{header::ACCEPT, HeaderValue, Request, StatusCode};
+use http::{HeaderValue, Request, StatusCode, header::ACCEPT};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
-use kitsune_core::traits::{resolver::AccountResource, Resolver};
+use kitsune_core::traits::{Resolver, resolver::AccountResource};
 use kitsune_error::Result;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;

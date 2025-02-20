@@ -7,15 +7,15 @@ extern crate tracing;
 use crate::util::OpaqueDebug;
 use async_trait::async_trait;
 use hickory_resolver::{
-    config::{ResolverConfig, ResolverOpts},
     TokioResolver,
+    config::{ResolverConfig, ResolverOpts},
 };
 use rand::{
-    distributions::{Alphanumeric, DistString},
     RngCore,
+    distributions::{Alphanumeric, DistString},
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{convert::Infallible, future::Future, ops::Deref};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use std::{convert::Infallible, ops::Deref};
 use thiserror::Error;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;

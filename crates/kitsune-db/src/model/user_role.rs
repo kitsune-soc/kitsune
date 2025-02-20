@@ -1,12 +1,12 @@
 use super::user::User;
 use crate::{error::EnumConversionError, schema::users_roles};
 use diesel::{
+    AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
 };
 use iso8601_timestamp::Timestamp;
 use num_derive::FromPrimitive;

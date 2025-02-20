@@ -1,19 +1,19 @@
 use async_trait::async_trait;
 use headers::{ContentType, HeaderMapExt};
-use http::{header::ACCEPT, HeaderValue, Request};
+use http::{HeaderValue, Request, header::ACCEPT};
 use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::{
+    Fetcher as FetcherTrait, Resolver,
     coerce::CoerceResolver,
     fetcher::{AccountFetchOptions, PostFetchOptions},
-    Fetcher as FetcherTrait, Resolver,
 };
 use kitsune_db::{
-    model::{account::Account, custom_emoji::CustomEmoji, post::Post},
     PgPool,
+    model::{account::Account, custom_emoji::CustomEmoji, post::Post},
 };
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{bail, Error, Result};
+use kitsune_error::{Error, Result, bail};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_type::jsonld::RdfNode;

@@ -12,7 +12,7 @@ use kitsune_db::{
 };
 use kitsune_util::generate_secret;
 use komainu::{
-    flow::{authorization, SuccessTokenResponse, TokenType},
+    flow::{SuccessTokenResponse, TokenType, authorization},
     scope::Scope,
 };
 use speedy_uuid::Uuid;

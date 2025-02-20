@@ -1,8 +1,8 @@
-use self::fixtures::{generate_secret, Fixture, RNG_SEED};
+use self::fixtures::{Fixture, RNG_SEED, generate_secret};
 use komainu::{
+    ClientExtractor,
     flow::{self, pkce},
     scope::Scope,
-    ClientExtractor,
 };
 
 mod fixtures;

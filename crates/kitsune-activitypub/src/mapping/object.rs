@@ -1,7 +1,7 @@
-use super::{util::BaseToCc, State};
+use super::{State, util::BaseToCc};
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
+use futures_util::{FutureExt, TryFutureExt, TryStreamExt, future::OptionFuture};
 use kitsune_db::{
     model::{
         account::Account,
@@ -13,17 +13,17 @@ use kitsune_db::{
     schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
     with_connection,
 };
-use kitsune_error::{bail, kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, bail, kitsune_error};
 use kitsune_type::ap::{
+    Object, ObjectType, Tag, TagType,
     actor::{Actor, PublicKey},
     ap_context,
     emoji::Emoji,
     object::{MediaAttachment, MediaAttachmentType},
-    Object, ObjectType, Tag, TagType,
 };
 use kitsune_util::try_join;
 use mime::Mime;
-use std::{future::Future, str::FromStr};
+use std::str::FromStr;
 
 pub trait IntoObject {
     type Output;
@@ -46,7 +46,7 @@ impl IntoObject for DbMediaAttachment {
             _ => {
                 return Err(
                     kitsune_error!(type = ErrorType::UnsupportedMediaType, "unsupported media type"),
-                )
+                );
             }
         };
         let url = state.service.attachment.get_url(self.id).await?;

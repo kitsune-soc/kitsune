@@ -4,7 +4,7 @@ use diesel_async::RunQueryDsl;
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
+use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_db::{
     model::{account::Account, media_attachment::MediaAttachment},
     schema::{accounts, media_attachments},
@@ -21,7 +21,7 @@ use triomphe::Arc;
 
 #[tokio::test]
 async fn fetch_actor() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
@@ -60,7 +60,7 @@ async fn fetch_actor() {
 
 #[tokio::test]
 async fn fetch_emoji() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool|  {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
@@ -111,7 +111,7 @@ async fn fetch_emoji() {
 
 #[tokio::test]
 async fn fetch_note() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()

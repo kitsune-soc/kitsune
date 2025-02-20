@@ -1,7 +1,7 @@
 use super::{
+    LimitContext,
     attachment::{AttachmentService, Upload},
     job::{Enqueue, JobService},
-    LimitContext,
 };
 use bytes::Bytes;
 use derive_builder::Builder;
@@ -13,8 +13,9 @@ use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::traits::{fetcher::AccountFetchOptions, Fetcher, Resolver};
+use kitsune_core::traits::{Fetcher, Resolver, fetcher::AccountFetchOptions};
 use kitsune_db::{
+    PgPool,
     function::now,
     model::{
         account::{Account, UpdateAccount},
@@ -25,7 +26,7 @@ use kitsune_db::{
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};

@@ -1,4 +1,4 @@
-use crate::http::graphql::{types::Account, ContextExt};
+use crate::http::graphql::{ContextExt, types::Account};
 use async_graphql::{Context, Object, Result};
 use speedy_uuid::Uuid;
 

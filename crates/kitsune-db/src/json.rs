@@ -1,12 +1,12 @@
 use diesel::{
+    AsExpression, FromSqlRow,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, IsNull, ToSql},
     sql_types::Jsonb,
-    AsExpression, FromSqlRow,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use sonic_rs::writer::BufferedWriter;
 use std::{
     error::Error,

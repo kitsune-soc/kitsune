@@ -2,7 +2,7 @@ use sonic_rs::writer::WriteExt;
 use std::{fmt, io, mem::MaybeUninit};
 
 macro_rules! for_both {
-    ($owner:ident, $matcher:pat => $impl:expr_2021) => {{
+    ($owner:ident, $matcher:pat => $impl:expr) => {{
         match $owner {
             Self::Left($matcher) => $impl,
             Self::Right($matcher) => $impl,

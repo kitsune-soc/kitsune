@@ -42,7 +42,7 @@ fn serve_frontend<B>(
     Error = Infallible,
     Future = impl Send + use<B>,
 > + Clone
-       + use<B>
++ use<B>
 where
     B: Send + 'static,
 {

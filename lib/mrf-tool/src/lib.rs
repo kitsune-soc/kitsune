@@ -1,6 +1,6 @@
 use self::args::{ManifestSubcommand, ModuleSubcommand, ToolArgs, ToolSubcommand};
 use clap::Parser;
-use color_eyre::{eyre::bail, Result};
+use color_eyre::{Result, eyre::bail};
 use std::{ffi::OsString, io::Write, path::Path};
 
 pub use self::fs::{DummyFs, Filesystem, NativeFs};

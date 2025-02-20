@@ -2,7 +2,7 @@ use crate::{
     http::extractor::AgnosticForm,
     oauth2::{CreateApp, OAuth2Service},
 };
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use kitsune_error::Result;
 use kitsune_type::mastodon::App;
 use serde::Deserialize;

@@ -462,7 +462,7 @@ unsafe_code = "deny"
 
 [workspace.package]
 authors = ["The Kitsune authors"]
-edition = "2021"
+edition = "2024"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
 

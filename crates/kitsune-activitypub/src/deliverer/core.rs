@@ -1,4 +1,4 @@
-use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
+use futures_util::{Stream, StreamExt, stream::FuturesUnordered};
 use http::{Method, Request};
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_error::{Error, Result};

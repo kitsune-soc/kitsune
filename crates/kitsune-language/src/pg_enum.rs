@@ -1,5 +1,5 @@
 use crate::supported_languages;
-use diesel::{pg::Pg, row::NamedRow, QueryResult, QueryableByName};
+use diesel::{QueryResult, QueryableByName, pg::Pg, row::NamedRow};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::fmt::Write;
 

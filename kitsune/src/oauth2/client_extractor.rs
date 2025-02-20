@@ -1,7 +1,7 @@
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{model::oauth2, schema::oauth2_applications, with_connection};
-use komainu::{scope::Scope, ClientExtractor};
+use komainu::{ClientExtractor, scope::Scope};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use trials::attempt;

@@ -3,10 +3,10 @@ use core::{
     marker::PhantomData,
 };
 use serde::{
-    de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
     Serialize,
+    de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
+use serde_with::{DeserializeAs, SerializeAs, de::DeserializeAsWrap};
 
 /// Deserialises the first element of a JSON-LD set.
 #[allow(dead_code)] // Used inside `serde_as` macro.

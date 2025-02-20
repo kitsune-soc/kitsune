@@ -57,9 +57,9 @@ impl StorageBackend for Storage {
 
 #[cfg(test)]
 mod test {
-    use crate::{fs::Storage, StorageBackend};
+    use crate::{StorageBackend, fs::Storage};
     use bytes::{BufMut, BytesMut};
-    use futures_util::{future, stream, TryStreamExt};
+    use futures_util::{TryStreamExt, future, stream};
     use std::str;
     use tempfile::TempDir;
 

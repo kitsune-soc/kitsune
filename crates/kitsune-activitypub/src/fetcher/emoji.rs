@@ -10,7 +10,7 @@ use kitsune_db::{
     schema::{custom_emojis, media_attachments},
     with_connection, with_transaction,
 };
-use kitsune_error::{kitsune_error, Error, Result};
+use kitsune_error::{Error, Result, kitsune_error};
 use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 use url::Url;

@@ -1,17 +1,17 @@
 use kitsune_activitypub::{
-    deliverer::Service as ActivityPubDelivererService, Deliverer as ActivityPubDeliverer,
-    Fetcher as ActivityPubFetcher, InboxResolver,
+    Deliverer as ActivityPubDeliverer, Fetcher as ActivityPubFetcher, InboxResolver,
+    deliverer::Service as ActivityPubDelivererService,
 };
 use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::{
+    Deliverer, Fetcher,
     coerce::{CoerceDeliverer, CoerceFetcher, CoerceResolver},
     resolver::AccountResource,
-    Deliverer, Fetcher,
 };
 use kitsune_db::{
-    model::{account::Account, post::Post},
     PgPool,
+    model::{account::Account, post::Post},
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_search::AnySearchBackend;

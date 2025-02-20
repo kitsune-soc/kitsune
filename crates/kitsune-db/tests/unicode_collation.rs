@@ -65,7 +65,7 @@ async fn create_user(conn: &mut AsyncPgConnection, username: &str) -> Result<Use
 
 #[tokio::test]
 async fn accounts_username() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         with_connection_panicky!(db_pool, |conn| {
             let initial_insert = create_account(conn, "aumetra").await;
             assert!(initial_insert.is_ok());
@@ -88,7 +88,7 @@ async fn accounts_username() {
 
 #[tokio::test]
 async fn users_username() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         with_connection_panicky!(db_pool, |conn| {
             let initial_insert = create_user(conn, "aumetra").await;
             assert!(initial_insert.is_ok());

@@ -1,5 +1,5 @@
 use super::Fetcher;
-use crate::{process_new_object, ProcessNewObject};
+use crate::{ProcessNewObject, process_new_object};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;

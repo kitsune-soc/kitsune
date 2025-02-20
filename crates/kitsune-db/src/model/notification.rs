@@ -1,11 +1,11 @@
 use crate::{error::EnumConversionError, schema::notifications};
 use diesel::{
+    AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::SmallInt,
-    AsExpression, FromSqlRow, Identifiable, Insertable, Queryable, Selectable,
 };
 use iso8601_timestamp::Timestamp;
 use kitsune_type::mastodon::notification::NotificationType as MastodonNotification;

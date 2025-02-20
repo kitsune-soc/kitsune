@@ -1,4 +1,4 @@
-use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
+use crate::{CaptchaBackend, ChallengeStatus, Result, error::CaptchaVerification};
 use http::Request;
 use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};

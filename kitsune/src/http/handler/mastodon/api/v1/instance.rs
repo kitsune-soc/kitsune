@@ -1,10 +1,10 @@
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use kitsune_core::consts::VERSION;
 use kitsune_error::Result;
 use kitsune_service::instance::InstanceService;
 use kitsune_type::mastodon::{
-    instance::{Stats, Urls},
     Instance,
+    instance::{Stats, Urls},
 };
 use kitsune_url::UrlService;
 

@@ -1,5 +1,5 @@
-use futures_util::{future::BoxFuture, FutureExt};
-use hickory_resolver::{lookup_ip::LookupIpIntoIter, TokioResolver};
+use futures_util::{FutureExt, future::BoxFuture};
+use hickory_resolver::{TokioResolver, lookup_ip::LookupIpIntoIter};
 use hyper_util::client::legacy::connect::dns::Name;
 use std::{
     net::SocketAddr,

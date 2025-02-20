@@ -6,8 +6,8 @@ use crate::{
     },
 };
 use axum::{
-    extract::{OriginalUri, Query, State},
     Json,
+    extract::{OriginalUri, Query, State},
 };
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt};
 use kitsune_error::{Error, Result};

@@ -2,9 +2,10 @@ use axum::response::{Html, IntoResponse, Redirect, Response};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
+    PgPool,
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};

@@ -1,10 +1,10 @@
 use crate::http::extractor::{AuthExtractor, MastodonAuthExtractor};
-use axum::{debug_handler, extract::State, Json};
+use axum::{Json, debug_handler, extract::State};
 use axum_extra::extract::Query;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::StreamExt;
-use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
+use kitsune_db::{PgPool, model::account::Account, schema::accounts, with_connection};
 use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::relationship::Relationship;

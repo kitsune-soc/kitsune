@@ -9,7 +9,7 @@ use kitsune_db::{
     schema::accounts,
     with_connection, with_transaction,
 };
-use kitsune_error::{kitsune_error, Error, Result};
+use kitsune_error::{Error, Result, kitsune_error};
 use kitsune_search::SearchBackend;
 use kitsune_type::ap::actor::Actor;
 use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};

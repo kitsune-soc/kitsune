@@ -1,9 +1,8 @@
 use crate::{
+    Authorization, ClientExtractor,
     extract::ClientCredentials,
     flow::{self, OptionExt, TokenResponse},
-    Authorization, ClientExtractor,
 };
-use std::future::Future;
 
 pub trait Issuer {
     fn load_authorization(

@@ -1,6 +1,6 @@
 use bytes::{BufMut, BytesMut};
-use futures_util::{future, stream, TryStreamExt};
-use kitsune_storage::{s3::Storage, StorageBackend};
+use futures_util::{TryStreamExt, future, stream};
+use kitsune_storage::{StorageBackend, s3::Storage};
 use rusty_s3::{Bucket, Credentials, UrlStyle};
 use std::{env, str};
 
