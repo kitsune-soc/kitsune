@@ -87,14 +87,19 @@ where
                 }
             };
 
-            if let ControlFlow::Continue(delta) =
-                JustRetryPolicy::should_retry(&retry_policy, StartTime::At(start_time), retry_count)
-            {
-                debug!(?delta, "retrying after backoff");
-                tokio::time::sleep(delta).await;
-            } else {
-                debug!("not retrying");
-                break result;
+            match JustRetryPolicy::should_retry(
+                &retry_policy,
+                StartTime::At(start_time),
+                retry_count,
+            ) {
+                ControlFlow::Continue(delta) => {
+                    debug!(?delta, "retrying after backoff");
+                    tokio::time::sleep(delta).await;
+                }
+                ControlFlow::Break(()) => {
+                    debug!("not retrying");
+                    break result;
+                }
             }
 
             retry_count += 1;

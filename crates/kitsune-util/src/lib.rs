@@ -53,7 +53,7 @@ impl<T> Deref for CowBox<'_, T> {
     fn deref(&self) -> &Self::Target {
         match self {
             Self::Borrowed(borrow) => borrow,
-            Self::Boxed(ref owned) => owned,
+            Self::Boxed(owned) => owned,
         }
     }
 }

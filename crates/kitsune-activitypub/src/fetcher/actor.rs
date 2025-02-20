@@ -128,16 +128,14 @@ impl Fetcher {
                 .get_result::<Account>(tx)
                 .await?;
 
-            let avatar_id = if let Some(icon) = actor.icon {
-                process_attachments(tx, &account, &[icon]).await?.pop()
-            } else {
-                None
+            let avatar_id = match actor.icon {
+                Some(icon) => process_attachments(tx, &account, &[icon]).await?.pop(),
+                _ => None,
             };
 
-            let header_id = if let Some(image) = actor.image {
-                process_attachments(tx, &account, &[image]).await?.pop()
-            } else {
-                None
+            let header_id = match actor.image {
+                Some(image) => process_attachments(tx, &account, &[image]).await?.pop(),
+                _ => None,
             };
 
             let mut update_changeset = UpdateAccountMedia::default();

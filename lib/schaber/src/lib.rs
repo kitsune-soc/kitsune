@@ -11,7 +11,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// Ignore any content handler "errors", since we use these errors
 /// as our means of communicating control flow
 macro_rules! handle_error {
-    ($error_expr:expr) => {{
+    ($error_expr:expr_2021) => {{
         match { $error_expr } {
             Err(::lol_html::errors::RewritingError::ContentHandlerError(..)) => return Ok(()),
             other => other,

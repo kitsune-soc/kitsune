@@ -54,11 +54,12 @@ where
     where
         A: SeqAccess<'de>,
     {
-        let value = if let Some(value) = seq.next_element::<DeserializeAsWrap<_, U>>()? {
-            while let Some(IgnoredAny) = seq.next_element()? {}
-            value.into_inner()
-        } else {
-            U::deserialize_as(().into_deserializer())?
+        let value = match seq.next_element::<DeserializeAsWrap<_, U>>()? {
+            Some(value) => {
+                while let Some(IgnoredAny) = seq.next_element()? {}
+                value.into_inner()
+            }
+            _ => U::deserialize_as(().into_deserializer())?,
         };
 
         Ok(value)

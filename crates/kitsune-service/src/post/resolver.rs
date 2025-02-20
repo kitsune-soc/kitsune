@@ -34,21 +34,22 @@ impl PostResolver {
                     .domain(mention.domain.as_deref())
                     .build();
 
-                if let Some(account) = self.account.get(get_user).await? {
-                    let mut mention_text = String::new();
-                    Element::Mention(mention.clone()).render(&mut mention_text);
-                    let _ = mentioned_accounts.send((account.id, mention_text));
+                match self.account.get(get_user).await? {
+                    Some(account) => {
+                        let mut mention_text = String::new();
+                        Element::Mention(mention.clone()).render(&mut mention_text);
+                        let _ = mentioned_accounts.send((account.id, mention_text));
 
-                    Element::Html(Html {
-                        tag: Cow::Borrowed("a"),
-                        attributes: vec![
-                            (Cow::Borrowed("class"), Cow::Borrowed("mention")),
-                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
-                        ],
-                        content: Box::new(Element::Mention(mention)),
-                    })
-                } else {
-                    Element::Mention(mention)
+                        Element::Html(Html {
+                            tag: Cow::Borrowed("a"),
+                            attributes: vec![
+                                (Cow::Borrowed("class"), Cow::Borrowed("mention")),
+                                (Cow::Borrowed("href"), Cow::Owned(account.url)),
+                            ],
+                            content: Box::new(Element::Mention(mention)),
+                        })
+                    }
+                    _ => Element::Mention(mention),
                 }
             }
             Element::Link(link) => Element::Html(Html {

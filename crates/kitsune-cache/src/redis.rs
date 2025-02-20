@@ -64,11 +64,12 @@ where
         let key = self.compute_key(key);
 
         debug!(%key, "Fetching cache entry");
-        if let Some(serialised) = self.conn_pool.get::<Option<String>, _>(&key).await? {
-            let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
-            Ok(Some(deserialised))
-        } else {
-            Ok(None)
+        match self.conn_pool.get::<Option<String>, _>(&key).await? {
+            Some(serialised) => {
+                let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
+                Ok(Some(deserialised))
+            }
+            _ => Ok(None),
         }
     }
 

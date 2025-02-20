@@ -38,10 +38,11 @@ fn serve_frontend<B>(
     server_config: &server::Configuration,
 ) -> impl Service<
     http::Request<B>,
-    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError>>,
+    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError> + use<B>>,
     Error = Infallible,
-    Future = impl Send,
+    Future = impl Send + use<B>,
 > + Clone
+       + use<B>
 where
     B: Send + 'static,
 {

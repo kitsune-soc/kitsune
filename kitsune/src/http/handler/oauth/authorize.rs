@@ -205,13 +205,12 @@ pub async fn get(
             .await
     })?;
 
-    let mut scopes = if let Some(scope) = authorizer.scope() {
-        scope
+    let mut scopes = match authorizer.scope() {
+        Some(scope) => scope
             .iter()
             .filter_map(|scope| OAuthScope::from_str(scope).ok())
-            .collect()
-    } else {
-        Vec::new()
+            .collect(),
+        _ => Vec::new(),
     };
 
     if scopes.is_empty() {
@@ -265,10 +264,9 @@ pub async fn post(
     flash_handle: FlashHandle,
     Form(form): Form<LoginForm>,
 ) -> Result<Either<(SignedCookieJar, Redirect), Redirect>> {
-    let redirect_to = if let Some(path_and_query) = original_url.path_and_query() {
-        path_and_query.as_str()
-    } else {
-        original_url.path()
+    let redirect_to = match original_url.path_and_query() {
+        Some(path_and_query) => path_and_query.as_str(),
+        _ => original_url.path(),
     };
 
     let user = with_connection!(db_pool, |db_conn| {

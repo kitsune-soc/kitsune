@@ -32,11 +32,14 @@ where
             .build();
 
         let guard = this.handle.inner.lock().unwrap();
-        if let Some(ref set_data) = guard.set_data {
-            let value = format!("{}.{}", set_data.hash, set_data.message);
-            cookie.set_value(value);
-        } else {
-            cookie.make_removal();
+        match guard.set_data {
+            Some(ref set_data) => {
+                let value = format!("{}.{}", set_data.hash, set_data.message);
+                cookie.set_value(value);
+            }
+            _ => {
+                cookie.make_removal();
+            }
         }
 
         let encoded_cookie = cookie.encoded().to_string();

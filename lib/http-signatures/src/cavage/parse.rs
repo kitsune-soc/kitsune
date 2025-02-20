@@ -75,7 +75,7 @@ impl Token {
 }
 
 macro_rules! ensure {
-    ($self:expr, $value:expr, $pattern:expr) => {{
+    ($self:expr_2021, $value:expr_2021, $pattern:expr_2021) => {{
         let value = match $value {
             Ok(val) => val,
             Err(err) => {

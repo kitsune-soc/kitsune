@@ -2,7 +2,7 @@
 /// a small no-op function that gives the compiler some trait bound hints
 #[macro_export]
 macro_rules! try_join {
-    ($($try_future:expr),+$(,)?) => {{
+    ($($try_future:expr_2021),+$(,)?) => {{
         /// Hack around the [bogus "higher-ranked lifetime" errors](https://github.com/rust-lang/rust/issues/102211)
         ///
         /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with proving the bound

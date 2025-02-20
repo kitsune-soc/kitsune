@@ -42,8 +42,8 @@ pub struct FederationFilter {
 impl FederationFilter {
     pub fn new(config: &FederationFilterConfiguration) -> Result<Self> {
         let (filter, globs) = match config {
-            FederationFilterConfiguration::Allow { ref domains } => (FilterMode::Allow, domains),
-            FederationFilterConfiguration::Deny { ref domains } => (FilterMode::Deny, domains),
+            FederationFilterConfiguration::Allow { domains } => (FilterMode::Allow, domains),
+            FederationFilterConfiguration::Deny { domains } => (FilterMode::Deny, domains),
         };
 
         let mut globset = GlobSetBuilder::new();

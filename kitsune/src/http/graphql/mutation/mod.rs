@@ -19,7 +19,7 @@ fn handle_upload(
     file: Upload,
     description: Option<String>,
 ) -> Result<
-    attachment::Upload<impl Stream<Item = Result<Bytes, kitsune_error::Error>> + Send + 'static>,
+    attachment::Upload<impl Stream<Item = Result<Bytes, kitsune_error::Error>> + Send + use<>>,
 > {
     let user_data = ctx.user_data()?;
     let value = file.value(ctx)?;

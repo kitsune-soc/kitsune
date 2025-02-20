@@ -15,10 +15,9 @@ impl CaptchaService {
     }
 
     pub async fn verify_token(&self, token: &str) -> Result<ChallengeStatus> {
-        if let Some(backend) = &self.backend {
-            Ok(backend.verify(token).await?)
-        } else {
-            Ok(ChallengeStatus::Verified)
+        match &self.backend {
+            Some(backend) => Ok(backend.verify(token).await?),
+            _ => Ok(ChallengeStatus::Verified),
         }
     }
 }

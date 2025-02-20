@@ -25,7 +25,7 @@ use kitsune_oidc::OidcService;
 
 #[macro_export]
 macro_rules! impl_from_ref {
-    ($source:path; [ $($target:path => $extract_impl:expr),+ ]) => {
+    ($source:path; [ $($target:path => $extract_impl:expr_2021),+ ]) => {
         $(
             impl ::axum::extract::FromRef<$source> for $target {
                 fn from_ref(input: &$source) -> Self {

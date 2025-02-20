@@ -469,13 +469,12 @@ impl PostService {
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
         );
 
-        let link_preview_url = if let Some(ref embed_client) = self.embed_client {
-            embed_client
+        let link_preview_url = match self.embed_client {
+            Some(ref embed_client) => embed_client
                 .fetch_embed_for_fragment(&content)
                 .await?
-                .map(|fragment_embed| fragment_embed.url)
-        } else {
-            None
+                .map(|fragment_embed| fragment_embed.url),
+            _ => None,
         };
 
         let id = Uuid::now_v7();
@@ -619,15 +618,12 @@ impl PostService {
             None => (Vec::new(), Vec::new(), None),
         };
 
-        let link_preview_url = if let (Some(embed_client), Some(content)) =
-            (self.embed_client.as_ref(), content.as_ref())
-        {
-            embed_client
+        let link_preview_url = match (self.embed_client.as_ref(), content.as_ref()) {
+            (Some(embed_client), Some(content)) => embed_client
                 .fetch_embed_for_fragment(content)
                 .await?
-                .map(|fragment_embed| fragment_embed.url)
-        } else {
-            None
+                .map(|fragment_embed| fragment_embed.url),
+            _ => None,
         };
 
         let post = with_transaction!(self.db_pool, |tx| {

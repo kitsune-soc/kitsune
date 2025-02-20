@@ -218,8 +218,8 @@ async fn preprocess_object(
     };
 
     let visibility = Visibility::from_activitypub(&user, &object).unwrap();
-    let in_reply_to_id = if let Some(ref in_reply_to) = object.in_reply_to {
-        fetcher
+    let in_reply_to_id = match object.in_reply_to {
+        Some(ref in_reply_to) => fetcher
             .fetch_post(
                 PostFetchOptions::builder()
                     .url(in_reply_to)
@@ -227,9 +227,8 @@ async fn preprocess_object(
                     .build(),
             )
             .await?
-            .map(|post| post.id)
-    } else {
-        None
+            .map(|post| post.id),
+        _ => None,
     };
 
     if object.media_type.as_deref() == Some("text/markdown") {

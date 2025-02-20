@@ -111,7 +111,10 @@ impl Client {
         Ok(())
     }
 
-    pub async fn get_object(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>>> {
+    pub async fn get_object(
+        &self,
+        path: &str,
+    ) -> Result<impl Stream<Item = Result<Bytes>> + use<>> {
         let get_action = self.bucket.get_object(Some(&self.credentials), path);
 
         let request = Request::builder()

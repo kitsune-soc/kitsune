@@ -56,7 +56,7 @@ async fn fetch_infinitely_long_reply_chain() {
                         published: Timestamp::UNIX_EPOCH,
                     };
 
-                    if let Some(note_id) = req.uri().path_and_query().unwrap().as_str().strip_prefix("/notes/") {
+                    if let Some(note_id) = req.uri().path_and_query().unwrap().as_str().strip_prefix("/notes/") { 
                         let note_id = note_id.parse::<u32>().unwrap();
                         let note = Object {
                             context: ap_context(),

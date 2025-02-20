@@ -127,7 +127,7 @@ impl AttachmentService {
     pub async fn stream_file(
         &self,
         media_attachment: &MediaAttachment,
-    ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+    ) -> Result<impl Stream<Item = Result<Bytes>> + use<>> {
         // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self.storage_backend.get(file_path.as_str()).await?;

@@ -130,7 +130,7 @@ where
 }
 
 macro_rules! return_err {
-    ($result:expr) => {{
+    ($result:expr_2021) => {{
         match { $result } {
             Ok(val) => val,
             Err(err) => return err,

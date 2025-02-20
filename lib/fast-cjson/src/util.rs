@@ -2,7 +2,7 @@ use sonic_rs::writer::WriteExt;
 use std::{fmt, io, mem::MaybeUninit};
 
 macro_rules! for_both {
-    ($owner:ident, $matcher:pat => $impl:expr) => {{
+    ($owner:ident, $matcher:pat => $impl:expr_2021) => {{
         match $owner {
             Self::Left($matcher) => $impl,
             Self::Right($matcher) => $impl,
@@ -54,6 +54,6 @@ where
     #[inline]
     #[allow(unsafe_code)] // We just dispatch over already unsafe implementations
     unsafe fn flush_len(&mut self, additional: usize) -> io::Result<()> {
-        for_both!(self, inner => inner.flush_len(additional))
+        unsafe { for_both!(self, inner => inner.flush_len(additional)) }
     }
 }

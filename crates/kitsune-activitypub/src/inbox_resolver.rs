@@ -30,7 +30,7 @@ impl InboxResolver {
     pub async fn resolve_followers(
         &self,
         account: &Account,
-    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + use<'_>> {
         with_connection!(self.db_pool, |db_conn| {
             accounts_follows::table
                 .filter(accounts_follows::account_id.eq(account.id))
@@ -56,7 +56,7 @@ impl InboxResolver {
     pub async fn resolve(
         &self,
         post: &Post,
-    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + use<'_>> {
         let (account, mentioned_inbox_stream) = with_connection!(self.db_pool, |db_conn| {
             let account = accounts::table
                 .find(post.account_id)

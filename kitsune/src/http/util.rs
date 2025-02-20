@@ -14,7 +14,7 @@ use tokio_util::io::ReaderStream;
 #[allow(dead_code)] // Not used when the Mastodon API feature is deactivated
 pub async fn buffer_multipart_to_tempfile(
     field: &mut multipart::Field<'_>,
-) -> Result<impl Stream<Item = Result<Bytes>> + Send + 'static> {
+) -> Result<impl Stream<Item = Result<Bytes>> + Send + use<>> {
     let tempfile = tempfile().unwrap();
     let mut tempfile = File::from_std(tempfile);
 

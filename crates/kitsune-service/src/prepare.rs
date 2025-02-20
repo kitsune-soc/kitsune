@@ -28,7 +28,7 @@ where
     let cache = match config {
         cache::Configuration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         cache::Configuration::None => NoopCache.into(),
-        cache::Configuration::Redis(ref redis_config) => {
+        cache::Configuration::Redis(redis_config) => {
             static REDIS_POOL: OnceCell<RedisPool> = OnceCell::const_new();
 
             let pool = REDIS_POOL
@@ -76,10 +76,10 @@ pub fn captcha(client: kitsune_http_client::Client, config: &captcha::Configurat
 
 pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBackend> {
     let storage = match config {
-        storage::Configuration::Fs(ref fs_config) => {
+        storage::Configuration::Fs(fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
-        storage::Configuration::S3(ref s3_config) => {
+        storage::Configuration::S3(s3_config) => {
             let path_style = if s3_config.force_path_style {
                 rusty_s3::UrlStyle::Path
             } else {

@@ -15,7 +15,7 @@ use tower::service_fn;
 use triomphe::Arc;
 
 macro_rules! assert_blocked {
-    ($error:expr) => {
+    ($error:expr_2021) => {
         assert_display_eq!($error, "instance is blocked")
     };
 }

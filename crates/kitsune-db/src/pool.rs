@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! with_connection {
-    ($pool:expr, |$conn_name:ident| $code:block) => {{
+    ($pool:expr_2021, |$conn_name:ident| $code:block) => {{
         let mut conn = $pool.get().await?;
         let $conn_name = &mut *conn;
         async { $code }.await
@@ -9,7 +9,7 @@ macro_rules! with_connection {
 
 #[macro_export]
 macro_rules! with_connection_panicky {
-    ($pool:expr, $($other:tt)*) => {{
+    ($pool:expr_2021, $($other:tt)*) => {{
         let result: ::std::result::Result<_, $crate::diesel_async::pooled_connection::bb8::RunError> = $crate::trials::attempt! { async
             $crate::with_connection!($pool, $($other)*)
         };
@@ -19,7 +19,7 @@ macro_rules! with_connection_panicky {
 
 #[macro_export]
 macro_rules! with_transaction {
-    ($pool:expr, |$conn_name:ident| $code:block) => {{
+    ($pool:expr_2021, |$conn_name:ident| $code:block) => {{
         use $crate::diesel_async::AsyncConnection;
 
         let mut conn = $pool.get().await?;
