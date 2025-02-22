@@ -63,7 +63,11 @@ where
     .await
     .expect("Failed to connect to database");
 
-    provide_resource(pool, func, async |_pool| {
+    provide_resource(pool, func, async |pool| {
+        // close all existing connections to the database
+        drop(pool);
+
+        // force deletion just in case we missed something. it's whatever.
         admin_conn
             .batch_execute(&format!("DROP DATABASE {db_name} WITH (FORCE)"))
             .await
