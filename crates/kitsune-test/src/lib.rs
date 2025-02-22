@@ -64,10 +64,12 @@ where
 
     provide_resource(pool, func, async |_pool| {
         // Drop the newly created database. We don't need it anymore.
-        admin_conn
+        if let Err(error) = admin_conn
             .batch_execute(&format!("DROP DATABASE {db_name}"))
             .await
-            .unwrap();
+        {
+            eprintln!("failed to drop database. sorry. error: {error:?}");
+        }
     })
     .await
 }

@@ -8,7 +8,7 @@ use wasmtime::{
     Engine, Store, StoreLimits, StoreLimitsBuilder,
     component::{Resource, ResourceTable},
 };
-use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::{IoView, WasiCtx, WasiCtxBuilder, WasiView};
 
 pub struct KvContext {
     pub module_name: Option<String>,
@@ -53,7 +53,9 @@ impl WasiView for Context {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi_ctx
     }
+}
 
+impl IoView for Context {
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.resource_table
     }
