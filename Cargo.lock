@@ -3697,7 +3697,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "rustls",
- "rustls-native-certs",
+ "rustls-platform-verifier",
  "serde",
  "sonic-rs",
  "speedy-uuid",
