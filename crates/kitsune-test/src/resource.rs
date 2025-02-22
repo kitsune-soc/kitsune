@@ -3,15 +3,17 @@ use std::panic;
 
 /// Provide a resource to the `run` closure, catch any panics that may occur while polling the future returned by `run`,
 /// then run the `cleanup` closure, and resume any panic unwinds that were caught
-pub async fn provide_resource<Resource, Run, Cleanup, RunOutput>(
+pub async fn provide_resource<Resource, Run, Cleanup, RunFut, CleanupFut>(
     resource: Resource,
     run: Run,
     cleanup: Cleanup,
-) -> RunOutput
+) -> RunFut::Output
 where
     Resource: Clone,
-    Run: AsyncFnOnce(Resource) -> RunOutput,
-    Cleanup: AsyncFnOnce(Resource),
+    Run: FnOnce(Resource) -> RunFut,
+    RunFut: Future,
+    Cleanup: FnOnce(Resource) -> CleanupFut,
+    CleanupFut: Future,
 {
     let out = CatchPanic::new(run(resource.clone())).await;
     cleanup(resource).await;

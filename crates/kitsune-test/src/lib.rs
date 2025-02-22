@@ -32,9 +32,10 @@ where
         .unwrap()
 }
 
-pub async fn database_test<F, O>(func: F) -> O
+pub async fn database_test<F, Fut>(func: F) -> Fut::Output
 where
-    F: AsyncFnOnce(PgPool) -> O,
+    F: FnOnce(PgPool) -> Fut,
+    Fut: Future,
 {
     let db_url = env::var("DATABASE_URL").unwrap();
     let mut url = Url::parse(&db_url).unwrap();
@@ -63,13 +64,10 @@ where
     .expect("Failed to connect to database");
 
     provide_resource(pool, func, async |_pool| {
-        // Drop the newly created database. We don't need it anymore.
-        if let Err(error) = admin_conn
-            .batch_execute(&format!("DROP DATABASE {db_name}"))
+        admin_conn
+            .batch_execute(&format!("DROP DATABASE {db_name} WITH (FORCE)"))
             .await
-        {
-            eprintln!("failed to drop database. sorry. error: {error:?}");
-        }
+            .unwrap();
     })
     .await
 }
@@ -82,9 +80,10 @@ pub fn language_detection_config() -> language_detection::Configuration {
     }
 }
 
-pub async fn minio_test<F, O>(func: F) -> O
+pub async fn minio_test<F, Fut>(func: F) -> Fut::Output
 where
-    F: AsyncFnOnce(Arc<kitsune_s3::Client>) -> O,
+    F: FnOnce(Arc<kitsune_s3::Client>) -> Fut,
+    Fut: Future,
 {
     let endpoint = env::var("MINIO_URL").unwrap();
     let endpoint = endpoint.parse().unwrap();
@@ -107,15 +106,16 @@ where
 
     client.create_bucket().await.unwrap();
 
-    provide_resource(client, func, async |client| {
+    provide_resource(client, func, |client| async move {
         client.delete_bucket().await.unwrap();
     })
     .await
 }
 
-pub async fn redis_test<F, O>(func: F) -> O
+pub async fn redis_test<F, Fut>(func: F) -> Fut::Output
 where
-    F: AsyncFnOnce(RedisPool) -> O,
+    F: FnOnce(RedisPool) -> Fut,
+    Fut: Future,
 {
     let redis_url = env::var("REDIS_URL").unwrap();
     let mut config = RedisConfig::from_url(&redis_url).unwrap();
@@ -126,7 +126,7 @@ where
     let pool = RedisPool::new(config, None, None, None, 5).unwrap();
     pool.init().await.unwrap();
 
-    provide_resource(pool, func, async |pool| {
+    provide_resource(pool, func, |pool| async move {
         pool.custom::<(), ()>(fred::cmd!("FLUSHDB"), vec![])
             .await
             .unwrap();
