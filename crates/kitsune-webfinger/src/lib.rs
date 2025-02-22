@@ -3,9 +3,9 @@ extern crate tracing;
 
 use async_trait::async_trait;
 use fred::clients::Pool as RedisPool;
-use http::{header::ACCEPT, HeaderValue, Request, StatusCode};
+use http::{HeaderValue, Request, StatusCode, header::ACCEPT};
 use kitsune_cache::{ArcCache, CacheBackend, RedisCache};
-use kitsune_core::traits::{resolver::AccountResource, Resolver};
+use kitsune_core::traits::{Resolver, resolver::AccountResource};
 use kitsune_error::Result;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
@@ -56,13 +56,13 @@ impl Resolver for Webfinger {
     /// This does *not* check that the resolved ActivityPub actor's
     /// `acct:{preferredUsername}@{domain}` URI points back to the resolved `acct:` resource,
     /// which the caller should check by themselves before trusting the result.
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     async fn resolve_account(
         &self,
         username: &str,
         domain: &str,
     ) -> Result<Option<AccountResource>> {
-        // XXX: Assigning the arguments to local bindings because the `#[instrument]` attribute
+        // XXX: Assigning the arguments to local bindings because the `#[cfg_attr(not(coverage), instrument)]` attribute
         // desugars to an `async move {}` block, inside which mutating the function arguments would
         // upset the borrowck
         // cf. <https://github.com/tokio-rs/tracing/issues/2717>

@@ -1,6 +1,6 @@
 use crate::{CsrfData, HashRef, Message, MessageRef, RANDOM_DATA_LEN};
 use hex_simd::{AsOut, AsciiCase};
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use std::{fmt::Display, sync::Mutex};
 use triomphe::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};

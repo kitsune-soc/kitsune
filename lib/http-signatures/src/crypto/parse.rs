@@ -7,8 +7,8 @@ use const_oid::db::{rfc5912::RSA_ENCRYPTION, rfc8410::ID_ED_25519};
 use miette::Diagnostic;
 use pkcs8::{Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef};
 use ring::signature::{
-    Ed25519KeyPair, RsaKeyPair, UnparsedPublicKey, VerificationAlgorithm, ED25519,
-    RSA_PKCS1_2048_8192_SHA256,
+    ED25519, Ed25519KeyPair, RSA_PKCS1_2048_8192_SHA256, RsaKeyPair, UnparsedPublicKey,
+    VerificationAlgorithm,
 };
 use thiserror::Error;
 

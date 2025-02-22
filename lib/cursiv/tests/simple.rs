@@ -1,7 +1,7 @@
 use cursiv::{CsrfHandle, CsrfLayer, Message};
-use http::{header, Request, Response};
+use http::{Request, Response, header};
 use std::{convert::Infallible, future};
-use tower::{service_fn, Layer, Service, ServiceExt};
+use tower::{Layer, Service, ServiceExt, service_fn};
 
 fn common() -> impl Service<Request<()>, Response = Response<()>, Error = Infallible> {
     let key = blake3::derive_key("wawa", b"bartmoss");

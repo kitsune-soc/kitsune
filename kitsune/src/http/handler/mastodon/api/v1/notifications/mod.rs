@@ -6,16 +6,15 @@ use crate::{
     },
 };
 use axum::{
-    debug_handler,
+    Json, debug_handler,
     extract::{OriginalUri, Path, State},
-    Json,
 };
 use axum_extra::extract::Query;
 use futures_util::{TryFutureExt, TryStreamExt};
-use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::notification::{GetNotifications, NotificationService};
-use kitsune_type::mastodon::{notification::NotificationType, Notification};
+use kitsune_type::mastodon::{Notification, notification::NotificationType};
 use kitsune_url::UrlService;
 use serde::Deserialize;
 use speedy_uuid::Uuid;

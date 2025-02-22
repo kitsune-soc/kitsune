@@ -105,6 +105,11 @@ world mrf {
     import keyvalue;
     import wasi:logging/logging;
 
+    /// Return the JSON schema of the configuration
+    /// 
+    /// Must be a valid JSON schema if you decide to return a value
+    export config-schema: func() -> option<string>;
+
     /// Transform an ActivityPub activity
     export transform: func(configuration: string, direction: direction, activity: string) -> result<string, error>;
 }

@@ -1,5 +1,5 @@
 use compact_str::CompactString;
-use indexmap::{set, IndexSet};
+use indexmap::{IndexSet, set};
 use serde::Deserialize;
 use std::{
     convert::Infallible,

@@ -5,11 +5,11 @@ use http::header::CONTENT_TYPE;
 use kitsune_http_client::Body as HttpBody;
 use meilisearch_sdk::{errors::Error as MeilisearchError, request::Method};
 use pin_project_lite::pin_project;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{
     io,
     pin::Pin,
-    task::{self, ready, Poll},
+    task::{self, Poll, ready},
 };
 
 const BUFFER_SIZE: usize = 1024;

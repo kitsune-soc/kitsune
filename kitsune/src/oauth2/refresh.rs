@@ -8,7 +8,7 @@ use kitsune_db::{
     with_connection, with_transaction,
 };
 use kitsune_util::generate_secret;
-use komainu::flow::{refresh, SuccessTokenResponse, TokenType};
+use komainu::flow::{SuccessTokenResponse, TokenType, refresh};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
 use trials::attempt;

@@ -1,6 +1,6 @@
 use crate::{
-    mapping::{self, IntoActivity},
     InboxResolver,
+    mapping::{self, IntoActivity},
 };
 use async_trait::async_trait;
 use diesel::{
@@ -10,15 +10,16 @@ use diesel::{
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
 use iso8601_timestamp::Timestamp;
-use kitsune_core::traits::{deliverer::Action, Deliverer as DelivererTrait};
+use kitsune_core::traits::{Deliverer as DelivererTrait, deliverer::Action};
 use kitsune_db::{
+    PgPool,
     model::{account::Account, favourite::Favourite, follower::Follow, post::Post, user::User},
     schema::{accounts, posts, users},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_error::Result;
 use kitsune_service::attachment::AttachmentService;
-use kitsune_type::ap::{ap_context, Activity, ActivityType, ObjectField};
+use kitsune_type::ap::{Activity, ActivityType, ObjectField, ap_context};
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use triomphe::Arc;

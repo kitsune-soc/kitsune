@@ -9,7 +9,7 @@ use kitsune_db::{
     schema::accounts,
     with_connection, with_transaction,
 };
-use kitsune_error::{kitsune_error, Error, Result};
+use kitsune_error::{Error, Result, kitsune_error};
 use kitsune_search::SearchBackend;
 use kitsune_type::ap::actor::Actor;
 use kitsune_util::{convert::timestamp_to_uuid, sanitize::CleanHtmlExt};
@@ -21,7 +21,7 @@ impl Fetcher {
     /// # Panics
     ///
     /// - Panics if the URL doesn't contain a host section
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     pub(crate) async fn fetch_actor(
         &self,
         opts: AccountFetchOptions<'_>,
@@ -128,16 +128,14 @@ impl Fetcher {
                 .get_result::<Account>(tx)
                 .await?;
 
-            let avatar_id = if let Some(icon) = actor.icon {
-                process_attachments(tx, &account, &[icon]).await?.pop()
-            } else {
-                None
+            let avatar_id = match actor.icon {
+                Some(icon) => process_attachments(tx, &account, &[icon]).await?.pop(),
+                _ => None,
             };
 
-            let header_id = if let Some(image) = actor.image {
-                process_attachments(tx, &account, &[image]).await?.pop()
-            } else {
-                None
+            let header_id = match actor.image {
+                Some(image) => process_attachments(tx, &account, &[image]).await?.pop(),
+                _ => None,
             };
 
             let mut update_changeset = UpdateAccountMedia::default();

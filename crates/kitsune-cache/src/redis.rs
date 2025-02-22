@@ -1,7 +1,7 @@
 use super::CacheBackend;
 use fred::{clients::Pool, interfaces::KeysInterface, types::Expiration};
 use kitsune_error::Result;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 use typed_builder::TypedBuilder;
 
@@ -49,7 +49,7 @@ where
     K: Display + Send + Sync + ?Sized,
     V: Serialize + DeserializeOwned + Send + Sync,
 {
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn delete(&self, key: &K) -> Result<()> {
         let key = self.compute_key(key);
 
@@ -59,20 +59,21 @@ where
         Ok(())
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn get(&self, key: &K) -> Result<Option<V>> {
         let key = self.compute_key(key);
 
         debug!(%key, "Fetching cache entry");
-        if let Some(serialised) = self.conn_pool.get::<Option<String>, _>(&key).await? {
-            let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
-            Ok(Some(deserialised))
-        } else {
-            Ok(None)
+        match self.conn_pool.get::<Option<String>, _>(&key).await? {
+            Some(serialised) => {
+                let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
+                Ok(Some(deserialised))
+            }
+            _ => Ok(None),
         }
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn set(&self, key: &K, value: &V) -> Result<()> {
         let key = self.compute_key(key);
         let serialised = sonic_rs::to_string(value)?;

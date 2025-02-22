@@ -159,12 +159,11 @@ use core::{
     marker::PhantomData,
 };
 use serde::{
-    de::{
-        self,
-        value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
-        Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
-    },
     Deserialize,
+    de::{
+        self, Deserializer, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+        value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+    },
 };
 use serde_with::DeserializeAs;
 
@@ -309,7 +308,7 @@ where
 mod tests {
     use super::{First, FirstOk, Id};
     use serde::Deserialize;
-    use serde_with::{serde_as, OneOrMany};
+    use serde_with::{OneOrMany, serde_as};
 
     /// Checks that the types work for some random real-world-ish use cases.
     #[test]

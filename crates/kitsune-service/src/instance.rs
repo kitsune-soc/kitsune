@@ -2,14 +2,15 @@ use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_config::instance::StatisticsMode;
 use kitsune_db::{
+    PgPool,
     schema::{accounts, posts, users},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use rand::seq::IteratorRandom;
 use smol_str::SmolStr;
-use std::{future::Future, ops::RangeInclusive};
+use std::ops::RangeInclusive;
 
 const STATISTICS_RANGE: RangeInclusive<u64> = 24..=1312_1312;
 

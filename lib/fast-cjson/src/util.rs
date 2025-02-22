@@ -54,6 +54,6 @@ where
     #[inline]
     #[allow(unsafe_code)] // We just dispatch over already unsafe implementations
     unsafe fn flush_len(&mut self, additional: usize) -> io::Result<()> {
-        for_both!(self, inner => inner.flush_len(additional))
+        unsafe { for_both!(self, inner => inner.flush_len(additional)) }
     }
 }

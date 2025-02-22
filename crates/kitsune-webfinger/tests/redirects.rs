@@ -1,10 +1,10 @@
 use http_body_util::Full;
-use hyper::{body::Bytes, Request, Response, StatusCode};
+use hyper::{Request, Response, StatusCode, body::Bytes};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
 use kitsune_type::webfinger::Resource;
-use kitsune_webfinger::{Webfinger, MAX_JRD_REDIRECTS};
+use kitsune_webfinger::{MAX_JRD_REDIRECTS, Webfinger};
 use pretty_assertions::assert_eq;
 use std::convert::Infallible;
 use tower::service_fn;

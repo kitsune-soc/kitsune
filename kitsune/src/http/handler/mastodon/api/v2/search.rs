@@ -2,7 +2,7 @@ use crate::{
     consts::default_limit,
     http::extractor::{AuthExtractor, MastodonAuthExtractor},
 };
-use axum::{debug_handler, extract::State, Json};
+use axum::{Json, debug_handler, extract::State};
 use axum_extra::{either::Either, extract::Query};
 use http::StatusCode;
 use kitsune_core::consts::API_MAX_LIMIT;

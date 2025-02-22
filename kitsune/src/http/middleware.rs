@@ -1,8 +1,8 @@
 use axum::body::Body;
 use axum::{
+    RequestExt,
     middleware::Next,
     response::{IntoResponse, Response},
-    RequestExt,
 };
 use headers::{ContentType, HeaderMapExt};
 use http::{Request, StatusCode};

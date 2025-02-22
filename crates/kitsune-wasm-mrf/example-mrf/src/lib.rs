@@ -1,10 +1,10 @@
-#![allow(unsafe_code)]
+#![allow(unsafe_code, unsafe_op_in_unsafe_fn)]
 
 use self::{
     fep::mrf::keyvalue::Bucket,
     wasi::logging::logging::{self, Level},
 };
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 
 wit_bindgen::generate!({
     with: {
@@ -23,6 +23,10 @@ fn generate_random_key() -> String {
 struct Mrf;
 
 impl Guest for Mrf {
+    fn config_schema() -> Option<String> {
+        None
+    }
+
     fn transform(
         _config: String,
         _direction: Direction,

@@ -2,8 +2,8 @@
 
 use athena::{JobContextRepository, JobDetails, JobQueue, RedisJobQueue, Runnable};
 use futures_util::{
-    stream::{self, BoxStream},
     StreamExt,
+    stream::{self, BoxStream},
 };
 use kitsune_test::redis_test;
 use speedy_uuid::Uuid;

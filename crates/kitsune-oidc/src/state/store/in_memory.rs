@@ -1,6 +1,6 @@
 use super::Store;
 use crate::state::LoginState;
-use kitsune_error::{kitsune_error, ErrorType, Result};
+use kitsune_error::{ErrorType, Result, kitsune_error};
 use moka::sync::Cache;
 
 #[derive(Clone)]

@@ -1,7 +1,7 @@
 use crate::{
     http::graphql::{
-        types::{OAuth2Application, User},
         ContextExt,
+        types::{OAuth2Application, User},
     },
     oauth2::CreateApp,
 };

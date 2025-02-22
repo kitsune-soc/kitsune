@@ -8,8 +8,8 @@ macro_rules! try_join {
         /// Asserts `Send` bounds via its type signature and helps the compiler a little bit with proving the bound
         #[inline(always)]
         fn assert_send<O>(
-            fut: impl ::core::future::Future<Output = O> + Send,
-        ) -> impl ::core::future::Future<Output = O> + Send {
+            fut: impl Future<Output = O> + Send,
+        ) -> impl Future<Output = O> + Send {
             fut
         }
 

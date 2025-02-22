@@ -1,15 +1,15 @@
 use async_trait::async_trait;
 use eyre::WrapErr;
 use http_body_util::BodyExt;
-use kitsune_config::{open_telemetry::Transport, Configuration};
+use kitsune_config::{Configuration, open_telemetry::Transport};
 use kitsune_core::consts::PROJECT_IDENTIFIER;
-use opentelemetry::trace::{noop::NoopTracer, Tracer, TracerProvider};
+use opentelemetry::trace::{Tracer, TracerProvider, noop::NoopTracer};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use std::fmt;
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
-use tracing_subscriber::{filter::LevelFilter, layer::SubscriberExt, Layer as _, Registry};
+use tracing_subscriber::{Layer as _, Registry, filter::LevelFilter, layer::SubscriberExt};
 
 #[derive(Clone)]
 struct HttpClientAdapter {

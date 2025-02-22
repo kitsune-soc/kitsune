@@ -7,9 +7,10 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use kitsune_db::{
+    PgPool,
     model::notification::{NewNotification, Notification, NotificationType},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};

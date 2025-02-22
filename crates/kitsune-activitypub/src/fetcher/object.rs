@@ -1,5 +1,5 @@
 use super::Fetcher;
-use crate::{process_new_object, ProcessNewObject};
+use crate::{ProcessNewObject, process_new_object};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
@@ -11,7 +11,7 @@ use kitsune_error::Result;
 pub const MAX_FETCH_DEPTH: u32 = 8;
 
 impl Fetcher {
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     pub(crate) async fn fetch_object(&self, url: &str, call_depth: u32) -> Result<Option<Post>> {
         if call_depth > MAX_FETCH_DEPTH {
             return Ok(None);

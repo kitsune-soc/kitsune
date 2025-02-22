@@ -134,7 +134,7 @@ impl FromStr for Uuid {
 mod async_graphql_impl {
     use super::Uuid;
     use async_graphql::{
-        connection::CursorType, InputValueError, InputValueResult, Scalar, ScalarType, Value,
+        InputValueError, InputValueResult, Scalar, ScalarType, Value, connection::CursorType,
     };
     use std::str::FromStr;
 
@@ -234,8 +234,8 @@ mod redis_impl {
 mod serde_impl {
     use crate::Uuid;
     use serde::{
-        de::{self, Error as _},
         Deserialize, Serialize,
+        de::{self, Error as _},
     };
     use std::{fmt, str};
 

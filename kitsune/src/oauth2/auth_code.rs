@@ -12,7 +12,7 @@ use kitsune_db::{
 };
 use kitsune_util::generate_secret;
 use komainu::{
-    flow::{authorization, SuccessTokenResponse, TokenType},
+    flow::{SuccessTokenResponse, TokenType, authorization},
     scope::Scope,
 };
 use speedy_uuid::Uuid;
@@ -26,7 +26,7 @@ pub struct Issuer {
 }
 
 impl authorization::Issuer for Issuer {
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     async fn load_authorization(
         &self,
         auth_code: &str,
@@ -61,7 +61,7 @@ impl authorization::Issuer for Issuer {
         }))
     }
 
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     async fn issue_token(
         &self,
         authorization: &komainu::Authorization<'_>,

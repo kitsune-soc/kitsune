@@ -3,9 +3,9 @@ use icu_normalizer::ComposingNormalizer;
 use memchr::memchr3;
 use serde::Serialize;
 use sonic_rs::{
+    Serializer,
     format::{CompactFormatter, Formatter},
     writer::{BufferedWriter, WriteExt},
-    Serializer,
 };
 use std::{
     collections::BTreeMap,

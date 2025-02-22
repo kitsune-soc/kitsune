@@ -2,7 +2,6 @@ use crate::mrf_wit::v1::fep::mrf::keyvalue;
 use color_eyre::eyre;
 use derive_more::From;
 use enum_dispatch::enum_dispatch;
-use std::future::Future;
 use wasmtime::component::Resource;
 
 pub use self::{

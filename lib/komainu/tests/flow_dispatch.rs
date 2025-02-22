@@ -1,11 +1,11 @@
 use self::{
-    fixtures::{generate_secret, Fixture, TokenValue, RNG_SEED},
+    fixtures::{Fixture, RNG_SEED, TokenValue, generate_secret},
     util::SerdeResponse,
 };
 use komainu::{
+    ClientExtractor,
     flow::{self, SuccessTokenResponse, TokenType},
     scope::Scope,
-    ClientExtractor,
 };
 
 mod fixtures;

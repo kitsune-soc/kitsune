@@ -19,7 +19,7 @@ use kitsune_db::PgPool;
 use kitsune_email::MailingService;
 use kitsune_embed::Client as EmbedClient;
 use kitsune_federation::{
-    activitypub::PrepareFetcher as PrepareActivityPubFetcher, PrepareFetcher,
+    PrepareFetcher, activitypub::PrepareFetcher as PrepareActivityPubFetcher,
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::KitsuneContextRepo;

@@ -1,10 +1,11 @@
-use axum::{debug_handler, extract::State, Json};
+use axum::{Json, debug_handler, extract::State};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::consts::VERSION;
 use kitsune_db::{
+    PgPool,
     schema::{posts, users},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_error::Result;
 use kitsune_service::user::UserService;

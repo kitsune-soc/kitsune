@@ -1,19 +1,20 @@
 use super::{
+    LimitContext,
     instance::InstanceService,
     job::{Enqueue, JobService},
     notification::NotificationService,
-    LimitContext,
 };
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, OptionalExtension,
     QueryDsl, SelectableHelper,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{stream::BoxStream, Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt, stream::BoxStream};
 use garde::Validate;
 use iso8601_timestamp::Timestamp;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_db::{
+    PgPool,
     model::{
         account::Account,
         custom_emoji::PostCustomEmoji,
@@ -30,11 +31,11 @@ use kitsune_db::{
         posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
         users_roles,
     },
-    with_connection, with_transaction, PgPool,
+    with_connection, with_transaction,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_embed::Client as EmbedClient;
-use kitsune_error::{bail, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, bail};
 use kitsune_jobs::deliver::{
     create::DeliverCreate,
     delete::DeliverDelete,
@@ -55,13 +56,7 @@ pub use self::resolver::PostResolver;
 use self::resolver::ResolvedPost;
 
 macro_rules! min_character_limit {
-    ($self:ident) => {{
-        if $self.media_ids.is_empty() {
-            1
-        } else {
-            0
-        }
-    }};
+    ($self:ident) => {{ if $self.media_ids.is_empty() { 1 } else { 0 } }};
 }
 
 pub struct PostValidationContext {
@@ -469,13 +464,12 @@ impl PostService {
             |lang| Language::from_639_1(&lang).unwrap_or_else(|| detect_language(&content)),
         );
 
-        let link_preview_url = if let Some(ref embed_client) = self.embed_client {
-            embed_client
+        let link_preview_url = match self.embed_client {
+            Some(ref embed_client) => embed_client
                 .fetch_embed_for_fragment(&content)
                 .await?
-                .map(|fragment_embed| fragment_embed.url)
-        } else {
-            None
+                .map(|fragment_embed| fragment_embed.url),
+            _ => None,
         };
 
         let id = Uuid::now_v7();
@@ -619,15 +613,12 @@ impl PostService {
             None => (Vec::new(), Vec::new(), None),
         };
 
-        let link_preview_url = if let (Some(embed_client), Some(content)) =
-            (self.embed_client.as_ref(), content.as_ref())
-        {
-            embed_client
+        let link_preview_url = match (self.embed_client.as_ref(), content.as_ref()) {
+            (Some(embed_client), Some(content)) => embed_client
                 .fetch_embed_for_fragment(content)
                 .await?
-                .map(|fragment_embed| fragment_embed.url)
-        } else {
-            None
+                .map(|fragment_embed| fragment_embed.url),
+            _ => None,
         };
 
         let post = with_transaction!(self.db_pool, |tx| {
@@ -1166,30 +1157,38 @@ mod test {
             .content("world".into())
             .build();
 
-        assert!(create_post
-            .validate_with(&PostValidationContext {
-                character_limit: 20,
-            })
-            .is_ok());
+        assert!(
+            create_post
+                .validate_with(&PostValidationContext {
+                    character_limit: 20,
+                })
+                .is_ok()
+        );
 
-        assert!(create_post
-            .validate_with(&PostValidationContext { character_limit: 5 })
-            .is_err());
+        assert!(
+            create_post
+                .validate_with(&PostValidationContext { character_limit: 5 })
+                .is_err()
+        );
 
-        assert!(create_post
-            .validate_with(&PostValidationContext { character_limit: 2 })
-            .is_err());
+        assert!(
+            create_post
+                .validate_with(&PostValidationContext { character_limit: 2 })
+                .is_err()
+        );
 
         let create_post = CreatePost::builder()
             .author_id(Uuid::now_v7())
             .content(String::new())
             .build();
 
-        assert!(create_post
-            .validate_with(&PostValidationContext {
-                character_limit: 25
-            })
-            .is_err());
+        assert!(
+            create_post
+                .validate_with(&PostValidationContext {
+                    character_limit: 25
+                })
+                .is_err()
+        );
 
         let create_post = CreatePost::builder()
             .author_id(Uuid::now_v7())
@@ -1197,11 +1196,13 @@ mod test {
             .content(String::new())
             .build();
 
-        assert!(create_post
-            .validate_with(&PostValidationContext {
-                character_limit: 25
-            })
-            .is_ok());
+        assert!(
+            create_post
+                .validate_with(&PostValidationContext {
+                    character_limit: 25
+                })
+                .is_ok()
+        );
     }
 
     #[test]
@@ -1213,18 +1214,24 @@ mod test {
             .content(Some("world".into()))
             .build();
 
-        assert!(update_post
-            .validate_with(&PostValidationContext {
-                character_limit: 20,
-            })
-            .is_ok());
+        assert!(
+            update_post
+                .validate_with(&PostValidationContext {
+                    character_limit: 20,
+                })
+                .is_ok()
+        );
 
-        assert!(update_post
-            .validate_with(&PostValidationContext { character_limit: 5 })
-            .is_err());
+        assert!(
+            update_post
+                .validate_with(&PostValidationContext { character_limit: 5 })
+                .is_err()
+        );
 
-        assert!(update_post
-            .validate_with(&PostValidationContext { character_limit: 2 })
-            .is_err());
+        assert!(
+            update_post
+                .validate_with(&PostValidationContext { character_limit: 2 })
+                .is_err()
+        );
     }
 }

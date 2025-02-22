@@ -1,4 +1,4 @@
-use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
+use futures_util::{Stream, StreamExt, stream::FuturesUnordered};
 use http::{Method, Request};
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_error::{Error, Result};
@@ -23,7 +23,7 @@ pub struct Deliverer {
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%inbox_url, activity_url = %activity.id)))]
     pub async fn deliver(
         &self,
         inbox_url: &str,

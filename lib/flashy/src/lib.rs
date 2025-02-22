@@ -4,12 +4,11 @@ use http::HeaderValue;
 use pin_project_lite::pin_project;
 use serde::{Deserialize, Serialize};
 use std::{
-    future::Future,
     ops::Deref,
     pin::Pin,
     slice, str,
     sync::Mutex,
-    task::{self, ready, Poll},
+    task::{self, Poll, ready},
 };
 use subtle::ConstantTimeEq;
 use tower::{Layer, Service};

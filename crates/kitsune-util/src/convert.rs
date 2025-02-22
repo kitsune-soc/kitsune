@@ -1,5 +1,5 @@
 use iso8601_timestamp::Timestamp;
-use speedy_uuid::{uuid, Uuid};
+use speedy_uuid::{Uuid, uuid};
 
 #[inline]
 #[must_use]

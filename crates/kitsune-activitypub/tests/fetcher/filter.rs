@@ -1,10 +1,10 @@
 use super::handle::handle;
 use http_body_util::Empty;
-use hyper::{body::Bytes, Request, Response};
+use hyper::{Request, Response, body::Bytes};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
+use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -50,15 +50,19 @@ async fn federation_allow() {
             .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .build();
 
-        assert_blocked!(fetcher
-            .fetch_post("https://example.com/fakeobject".into())
-            .await
-            .unwrap_err());
+        assert_blocked!(
+            fetcher
+                .fetch_post("https://example.com/fakeobject".into())
+                .await
+                .unwrap_err()
+        );
 
-        assert_blocked!(fetcher
-            .fetch_post("https://other.badstuff.com/otherfake".into())
-            .await
-            .unwrap_err());
+        assert_blocked!(
+            fetcher
+                .fetch_post("https://other.badstuff.com/otherfake".into())
+                .await
+                .unwrap_err()
+        );
 
         let client = Client::builder().service(service_fn(handle));
         let fetcher = builder
@@ -106,15 +110,19 @@ async fn federation_deny() {
             .post_cache(Arc::new(NoopCache.into()))
             .build();
 
-        assert_blocked!(fetcher
-            .fetch_post("https://example.com/fakeobject".into())
-            .await
-            .unwrap_err());
+        assert_blocked!(
+            fetcher
+                .fetch_post("https://example.com/fakeobject".into())
+                .await
+                .unwrap_err()
+        );
 
-        assert_blocked!(fetcher
-            .fetch_post("https://other.badstuff.com/otherfake".into())
-            .await
-            .unwrap_err());
+        assert_blocked!(
+            fetcher
+                .fetch_post("https://other.badstuff.com/otherfake".into())
+                .await
+                .unwrap_err()
+        );
     })
     .await;
 }

@@ -1,13 +1,13 @@
 use crate::state::Zustand;
 use axum::{
+    RequestPartsExt,
     extract::{FromRequestParts, OptionalFromRequestParts},
     response::{IntoResponse, Response},
-    RequestPartsExt,
 };
 use axum_extra::TypedHeader;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use headers::{authorization::Bearer, Authorization};
+use headers::{Authorization, authorization::Bearer};
 use http::request::Parts;
 use kitsune_db::{
     model::{account::Account, user::User},

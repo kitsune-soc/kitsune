@@ -12,7 +12,7 @@ use kitsune_config::{
 };
 use kitsune_db::PgPool;
 use resource::provide_resource;
-use std::{env, future::Future};
+use std::env;
 use triomphe::Arc;
 use url::Url;
 use uuid::Uuid;
@@ -63,10 +63,13 @@ where
     .await
     .expect("Failed to connect to database");
 
-    provide_resource(pool, func, |_pool| async move {
-        // Drop the newly created database. We don't need it anymore.
+    provide_resource(pool, func, async |pool| {
+        // close all existing connections to the database
+        drop(pool);
+
+        // force deletion just in case we missed something. it's whatever.
         admin_conn
-            .batch_execute(&format!("DROP DATABASE {db_name}"))
+            .batch_execute(&format!("DROP DATABASE {db_name} WITH (FORCE)"))
             .await
             .unwrap();
     })

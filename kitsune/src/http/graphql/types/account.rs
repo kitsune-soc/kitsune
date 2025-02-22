@@ -1,8 +1,8 @@
 use super::{MediaAttachment, Post};
 use crate::{consts::API_DEFAULT_LIMIT, http::graphql::ContextExt};
 use async_graphql::{
-    connection::{self, Connection, Edge},
     ComplexObject, Context, Result, SimpleObject,
+    connection::{self, Connection, Edge},
 };
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;

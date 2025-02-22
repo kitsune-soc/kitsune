@@ -16,7 +16,7 @@ impl Runnable for DeliverDelete {
     type Context = JobRunnerContext;
     type Error = kitsune_error::Error;
 
-    #[instrument(skip_all, fields(post_id = %self.post_id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(post_id = %self.post_id)))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let post = with_connection!(ctx.db_pool, |db_conn| {
             posts::table

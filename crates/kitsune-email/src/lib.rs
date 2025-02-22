@@ -1,8 +1,8 @@
 use crate::traits::RenderableEmail;
 use kitsune_error::{Error, Result};
 use lettre::{
-    message::{Mailbox, MultiPart},
     AsyncTransport, Message,
+    message::{Mailbox, MultiPart},
 };
 use std::iter;
 use triomphe::Arc;

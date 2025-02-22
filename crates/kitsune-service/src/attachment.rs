@@ -2,17 +2,18 @@ use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use futures_util::{stream, Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt, stream};
 use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
+    PgPool,
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
-use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
@@ -127,7 +128,7 @@ impl AttachmentService {
     pub async fn stream_file(
         &self,
         media_attachment: &MediaAttachment,
-    ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+    ) -> Result<impl Stream<Item = Result<Bytes>> + use<>> {
         // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self.storage_backend.get(file_path.as_str()).await?;
@@ -231,12 +232,12 @@ mod test {
     use crate::attachment::{AttachmentService, Upload};
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncPgConnection, RunQueryDsl};
-    use futures_util::{future, stream, StreamExt};
+    use futures_util::{StreamExt, future, stream};
     use http::{Request, Response};
     use http_body_util::Empty;
     use img_parts::{
-        jpeg::{markers, JpegSegment},
         ImageEXIF,
+        jpeg::{JpegSegment, markers},
     };
     use iso8601_timestamp::Timestamp;
     use kitsune_db::{
@@ -258,7 +259,7 @@ mod test {
 
     #[tokio::test]
     async fn upload_jpeg() {
-        database_test(|db_pool| async move {
+        database_test(async |db_pool|  {
             let client = Client::builder().service(service_fn(handle));
 
             let account_id = with_connection_panicky!(db_pool, |db_conn| {

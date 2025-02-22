@@ -1,4 +1,4 @@
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 use http::{Method, Request, Uri};
 
 #[global_allocator]

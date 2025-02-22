@@ -1,8 +1,8 @@
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
-use kitsune_error::{kitsune_error, ErrorType, Result};
+use kitsune_error::{ErrorType, Result, kitsune_error};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::AccountService;
 use kitsune_type::mastodon;

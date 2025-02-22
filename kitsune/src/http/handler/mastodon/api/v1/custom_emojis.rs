@@ -1,5 +1,5 @@
 use crate::http::extractor::MastodonAuthExtractor;
-use axum::{debug_handler, extract::State, Json};
+use axum::{Json, debug_handler, extract::State};
 use futures_util::{TryFutureExt, TryStreamExt};
 use kitsune_error::{Error, Result};
 use kitsune_mastodon::MastodonMapper;

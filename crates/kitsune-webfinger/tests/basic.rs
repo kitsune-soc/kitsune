@@ -1,5 +1,5 @@
 use http_body_util::Full;
-use hyper::{body::Bytes, Request, Response};
+use hyper::{Request, Response, body::Bytes};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;

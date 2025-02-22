@@ -3,10 +3,10 @@ use crate::http::{
     util::buffer_multipart_to_tempfile,
 };
 use axum::{
-    extract::{Multipart, State},
     Json,
+    extract::{Multipart, State},
 };
-use kitsune_error::{bail, kitsune_error, ErrorType, Result};
+use kitsune_error::{ErrorType, Result, bail, kitsune_error};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::{
     account::{AccountService, Update},

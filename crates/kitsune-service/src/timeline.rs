@@ -4,10 +4,11 @@ use diesel_async::RunQueryDsl;
 use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use kitsune_db::{
+    PgPool,
     model::post::{Post, Visibility},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_mentions},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};

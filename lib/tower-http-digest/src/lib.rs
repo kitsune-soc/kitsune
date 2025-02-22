@@ -7,11 +7,11 @@ use http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use http_body::{Body as HttpBody, Frame};
 use memchr::memchr;
 use pin_project_lite::pin_project;
-use sha2::{digest::FixedOutput, Digest, Sha256, Sha512};
+use sha2::{Digest, Sha256, Sha512, digest::FixedOutput};
 use std::{
     future::{self, Ready},
     pin::Pin,
-    task::{self, ready, Poll},
+    task::{self, Poll, ready},
 };
 use subtle::ConstantTimeEq;
 use tower::{BoxError, Layer, Service};

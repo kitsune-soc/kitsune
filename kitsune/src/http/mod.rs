@@ -38,10 +38,11 @@ fn serve_frontend<B>(
     server_config: &server::Configuration,
 ) -> impl Service<
     http::Request<B>,
-    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError>>,
+    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError> + use<B>>,
     Error = Infallible,
-    Future = impl Send,
+    Future = impl Send + use<B>,
 > + Clone
++ use<B>
 where
     B: Send + 'static,
 {
@@ -83,7 +84,7 @@ fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> 
     })
 }
 
-#[instrument(skip_all, fields(port = %server_config.port))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(port = %server_config.port)))]
 pub async fn run(
     state: Zustand,
     server_config: server::Configuration,

@@ -279,7 +279,7 @@ rayon = "1.10.0"
 redb = { version = "2.4.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
-ring = { version = "0.17.9", features = ["std"] }
+ring = { version = "0.17.11", features = ["std"] }
 rsa = "0.9.7"
 rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
@@ -290,7 +290,7 @@ rustls = { version = "0.23.23", default-features = false, features = [
     "std",
     "tls12",
 ] }
-rustls-native-certs = "0.8.1"
+rustls-platform-verifier = "0.5.0"
 rusty-s3 = "0.7.0"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",
@@ -299,8 +299,8 @@ sailfish = { version = "0.9.0", default-features = false, features = [
 schemars = { version = "1.0.0-alpha.17", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.25", features = ["serde"] }
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.138"
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.139"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
 serde_with = { version = "3.12.0", default-features = false, features = [
@@ -356,15 +356,15 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.20.0"
 typetag = "0.2.19"
 unsize = "1.1.0"
-ureq = "3.0.5"
+ureq = "3.0.6"
 url = "2.5.4"
 urlencoding = "2.1.3"
-uuid = { version = "1.13.2", features = ["fast-rng", "v4", "v7"] }
+uuid = { version = "1.14.0", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.225.0"
-wasmparser = "0.225.0"
-wasmtime = { version = "29.0.1", default-features = false, features = [
+wasm-encoder = "0.226.0"
+wasmparser = "0.226.0"
+wasmtime = { version = "30.0.1", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
@@ -374,8 +374,8 @@ wasmtime = { version = "29.0.1", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "29.0.1", default-features = false }
-wat = "1.225.0"
+wasmtime-wasi = { version = "30.0.1", default-features = false }
+wat = "1.226.0"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
 wit-bindgen = "0.39.0"
@@ -462,7 +462,7 @@ unsafe_code = "deny"
 
 [workspace.package]
 authors = ["The Kitsune authors"]
-edition = "2021"
+edition = "2024"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
 

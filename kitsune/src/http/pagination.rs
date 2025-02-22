@@ -1,6 +1,6 @@
 use axum::{
-    response::{IntoResponseParts, ResponseParts},
     Json,
+    response::{IntoResponseParts, ResponseParts},
 };
 use http::{Error as HttpError, HeaderValue};
 use kitsune_error::Error;

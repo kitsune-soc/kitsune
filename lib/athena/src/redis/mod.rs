@@ -1,8 +1,8 @@
 use self::scheduled::ScheduledJobActor;
 use crate::{
+    Error, JobContextRepository, JobData, JobDetails, JobResult, KeeperOfTheSecrets, Outcome,
     consts::{BLOCK_TIME, MAX_RETRIES, MIN_IDLE_TIME},
     error::Result,
-    Error, JobContextRepository, JobData, JobDetails, JobResult, KeeperOfTheSecrets, Outcome,
 };
 use async_trait::async_trait;
 use either::Either;
@@ -10,14 +10,14 @@ use fred::{
     clients::Pool,
     interfaces::{SortedSetsInterface, StreamsInterface},
     types::{
-        streams::{XReadResponse, XReadValue, XID},
         FromValue, Value,
+        streams::{XID, XReadResponse, XReadValue},
     },
 };
 use iso8601_timestamp::Timestamp;
 use just_retry::{
-    retry_policies::{policies::ExponentialBackoff, Jitter},
     JustRetryPolicy, StartTime,
+    retry_policies::{Jitter, policies::ExponentialBackoff},
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;

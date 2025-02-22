@@ -1,6 +1,6 @@
 #![cfg(feature = "async-graphql")]
 
-use async_graphql::{connection::CursorType, ScalarType};
+use async_graphql::{ScalarType, connection::CursorType};
 use speedy_uuid::Uuid;
 
 const UUID: &str = "38058daf-b2cd-4832-902a-83583ac07e28";

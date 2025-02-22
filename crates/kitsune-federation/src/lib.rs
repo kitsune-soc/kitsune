@@ -1,6 +1,6 @@
 use kitsune_core::traits::{
-    coerce::{CoerceDeliverer, CoerceFetcher},
     Deliverer, Fetcher,
+    coerce::{CoerceDeliverer, CoerceFetcher},
 };
 use triomphe::Arc;
 use typed_builder::TypedBuilder;

@@ -3,8 +3,8 @@ use fred::{
     clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
 use futures_util::{
-    stream::{self, BoxStream},
     StreamExt,
+    stream::{self, BoxStream},
 };
 use iso8601_timestamp::Timestamp;
 use speedy_uuid::Uuid;

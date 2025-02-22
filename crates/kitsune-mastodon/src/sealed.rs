@@ -3,9 +3,10 @@ use diesel::{
     OptionalExtension, QueryDsl, SelectableHelper,
 };
 use diesel_async::RunQueryDsl;
-use futures_util::{future::OptionFuture, FutureExt, TryFutureExt, TryStreamExt};
+use futures_util::{FutureExt, TryFutureExt, TryStreamExt, future::OptionFuture};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
+    PgPool,
     model::{
         account::Account as DbAccount,
         custom_emoji::{CustomEmoji as DbCustomEmoji, PostCustomEmoji as DbPostCustomEmoji},
@@ -23,27 +24,27 @@ use kitsune_db::{
         accounts, accounts_follows, custom_emojis, media_attachments, notifications, posts,
         posts_favourites,
     },
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_embed::{Embed, EmbedType};
 use kitsune_error::{Error, Result};
 use kitsune_service::attachment::AttachmentService;
 use kitsune_type::mastodon::{
+    Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
     account::Source,
     media_attachment::MediaType,
     preview_card::PreviewType,
     relationship::Relationship,
     status::{Mention, StatusSource},
-    Account, CustomEmoji, MediaAttachment, Notification, PreviewCard, Status,
 };
 use kitsune_url::UrlService;
 use kitsune_util::try_join;
 use mime::Mime;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
-use std::{fmt::Write, future::Future, str::FromStr};
+use std::{fmt::Write, str::FromStr};
 
 #[derive(Clone, Copy)]
 pub struct MapperState<'a> {
@@ -456,7 +457,9 @@ impl IntoMastodon for LinkPreview<Embed> {
 
     async fn into_mastodon(self, _state: MapperState<'_>) -> Result<Self::Output> {
         let kitsune_db::json::Json(Embed::V1(embed_data)) = self.embed_data else {
-            panic!("Incompatible embed data found in database than known to our SDK. Please update Kitsune");
+            panic!(
+                "Incompatible embed data found in database than known to our SDK. Please update Kitsune"
+            );
         };
 
         let title = embed_data.title.unwrap_or_default().as_str().into();

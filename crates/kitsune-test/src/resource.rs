@@ -1,5 +1,5 @@
 use crate::catch_panic::CatchPanic;
-use std::{future::Future, panic};
+use std::panic;
 
 /// Provide a resource to the `run` closure, catch any panics that may occur while polling the future returned by `run`,
 /// then run the `cleanup` closure, and resume any panic unwinds that were caught

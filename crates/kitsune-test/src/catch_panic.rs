@@ -1,6 +1,5 @@
 use pin_project_lite::pin_project;
 use std::{
-    future::Future,
     ops::Not,
     panic::{self, AssertUnwindSafe},
     pin::Pin,

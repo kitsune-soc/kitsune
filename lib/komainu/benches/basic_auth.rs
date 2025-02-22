@@ -4,7 +4,7 @@ static GLOBAL: divan::AllocProfiler = divan::AllocProfiler::system();
 #[divan::bench_group]
 mod headers {
     use divan::{black_box, black_box_drop};
-    use headers::{authorization::Basic, Authorization, HeaderMapExt};
+    use headers::{Authorization, HeaderMapExt, authorization::Basic};
 
     #[divan::bench]
     fn rfc_value(b: divan::Bencher<'_, '_>) {

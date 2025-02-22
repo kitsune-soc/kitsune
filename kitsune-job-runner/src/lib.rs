@@ -11,11 +11,11 @@ use just_retry::RetryExt;
 use kitsune_config::job_queue::Configuration;
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{AsyncSmtpTransport, Tokio1Executor},
     MailSender, MailingService,
+    lettre::{AsyncSmtpTransport, Tokio1Executor},
 };
 use kitsune_federation::{
-    activitypub::PrepareDeliverer as PrepareActivityPubDeliverer, PrepareDeliverer,
+    PrepareDeliverer, activitypub::PrepareDeliverer as PrepareActivityPubDeliverer,
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
@@ -58,7 +58,7 @@ pub async fn prepare_job_queue(
     Ok(Arc::new(queue).coerce())
 }
 
-#[instrument(skip(http_client, job_queue, state))]
+#[cfg_attr(not(coverage), instrument(skip(http_client, job_queue, state)))]
 pub async fn run_dispatcher(
     http_client: kitsune_http_client::Client,
     job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo> + '_>,

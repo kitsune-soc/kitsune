@@ -3,7 +3,7 @@ extern crate tracing;
 
 use enum_dispatch::enum_dispatch;
 use kitsune_error::Result;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::fmt::Display;
 use triomphe::Arc;
 

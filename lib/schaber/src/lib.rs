@@ -1,7 +1,7 @@
 use lol_html::{
+    ElementContentHandlers, HandlerResult, HtmlRewriter, Selector, Settings,
     errors::{RewritingError, SelectorError},
     html_content::Element,
-    ElementContentHandlers, HandlerResult, HtmlRewriter, Selector, Settings,
 };
 use std::{borrow::Cow, ops::ControlFlow, str::FromStr};
 use thiserror::Error;

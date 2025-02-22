@@ -1,9 +1,8 @@
 use crate::{
+    Client, ClientExtractor,
     extract::ClientCredentials,
     flow::{self, OptionExt, TokenResponse},
-    Client, ClientExtractor,
 };
-use std::future::Future;
 
 pub trait Issuer {
     fn issue_token(

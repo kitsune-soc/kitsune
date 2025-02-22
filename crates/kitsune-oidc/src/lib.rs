@@ -1,15 +1,15 @@
 use crate::state::{
-    store::{InMemory as InMemoryStore, Redis as RedisStore},
     LoginState, OAuth2LoginState, Store,
+    store::{InMemory as InMemoryStore, Redis as RedisStore},
 };
 use fred::{clients::Pool as RedisPool, types::config::Config as RedisConfig};
 use kitsune_config::oidc::{Configuration, StoreConfiguration};
 use kitsune_derive::kitsune_service;
-use kitsune_error::{bail, kitsune_error, Result};
+use kitsune_error::{Result, bail, kitsune_error};
 use openidconnect::{
-    core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
     AccessTokenHash, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
     OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
+    core::{CoreAuthenticationFlow, CoreClient, CoreProviderMetadata},
 };
 use speedy_uuid::Uuid;
 use url::Url;

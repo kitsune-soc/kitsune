@@ -4,8 +4,8 @@
 use std::{
     cell::RefCell,
     sync::{
-        atomic::{AtomicI64, Ordering},
         Arc, Weak,
+        atomic::{AtomicI64, Ordering},
     },
     time::{Duration, SystemTime},
 };

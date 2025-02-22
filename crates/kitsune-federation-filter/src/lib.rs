@@ -1,8 +1,8 @@
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_derive::kitsune_service;
-use kitsune_error::{kitsune_error, Result};
-use kitsune_type::ap::{actor::Actor, Activity, Object};
+use kitsune_error::{Result, kitsune_error};
+use kitsune_type::ap::{Activity, Object, actor::Actor};
 use url::Url;
 
 pub trait Entity {
@@ -42,8 +42,8 @@ pub struct FederationFilter {
 impl FederationFilter {
     pub fn new(config: &FederationFilterConfiguration) -> Result<Self> {
         let (filter, globs) = match config {
-            FederationFilterConfiguration::Allow { ref domains } => (FilterMode::Allow, domains),
-            FederationFilterConfiguration::Deny { ref domains } => (FilterMode::Deny, domains),
+            FederationFilterConfiguration::Allow { domains } => (FilterMode::Allow, domains),
+            FederationFilterConfiguration::Deny { domains } => (FilterMode::Deny, domains),
         };
 
         let mut globset = GlobSetBuilder::new();

@@ -1,12 +1,12 @@
 use bytes::Bytes;
 use futures_util::{Stream, StreamExt, TryStreamExt};
 use http::{
-    header::{CONTENT_LENGTH, ETAG},
     Request,
+    header::{CONTENT_LENGTH, ETAG},
 };
-use kitsune_error::{bail, Error, Result};
+use kitsune_error::{Error, Result, bail};
 use kitsune_http_client::{Body, Client as HttpClient, Response};
-use rusty_s3::{actions::CreateMultipartUpload, Bucket, Credentials, S3Action};
+use rusty_s3::{Bucket, Credentials, S3Action, actions::CreateMultipartUpload};
 use serde::Serialize;
 use std::{ops::Deref, pin::pin, time::Duration};
 use typed_builder::TypedBuilder;
@@ -111,7 +111,10 @@ impl Client {
         Ok(())
     }
 
-    pub async fn get_object(&self, path: &str) -> Result<impl Stream<Item = Result<Bytes>>> {
+    pub async fn get_object(
+        &self,
+        path: &str,
+    ) -> Result<impl Stream<Item = Result<Bytes>> + use<>> {
         let get_action = self.bucket.get_object(Some(&self.credentials), path);
 
         let request = Request::builder()
@@ -227,8 +230,8 @@ impl Client {
 #[cfg(test)]
 mod test {
     use crate::CreateBucketConfiguration;
-    use futures_util::{future, stream, TryStreamExt};
-    use kitsune_error::{kitsune_error, Error};
+    use futures_util::{TryStreamExt, future, stream};
+    use kitsune_error::{Error, kitsune_error};
     use kitsune_test::minio_test;
 
     const TEST_DATA: &[u8] = b"https://open.spotify.com/track/6VNNakpjSH8LNBX7fSGhUv";
@@ -250,7 +253,7 @@ mod test {
 
     #[tokio::test]
     async fn full_test() {
-        minio_test(|client| async move {
+        minio_test(async |client| {
             client
                 .put_object(
                     "good song",
@@ -280,7 +283,7 @@ mod test {
 
     #[tokio::test]
     async fn abort_request_works() {
-        minio_test(|client| async move {
+        minio_test(async |client| {
             let result = client
                 .put_object(
                     "this will break horribly",

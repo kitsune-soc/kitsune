@@ -2,10 +2,10 @@ use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
-    extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
+    Context, EmptySubscription, Error, Result, Schema, extensions::Tracing, http::GraphiQLSource,
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
-use axum::{debug_handler, response::Html, Extension};
+use axum::{Extension, debug_handler, response::Html};
 
 type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 
