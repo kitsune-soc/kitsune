@@ -1,4 +1,4 @@
-#![allow(unsafe_code)]
+#![allow(unsafe_code, unsafe_op_in_unsafe_fn)]
 
 use self::fep::mrf::http_client;
 use std::str;
@@ -12,6 +12,10 @@ wit_bindgen::generate!({
 struct Mrf;
 
 impl Guest for Mrf {
+    fn config_schema() -> Option<String> {
+        None
+    }
+
     fn transform(
         _configuration: String,
         _direction: Direction,
