@@ -13,7 +13,7 @@ pub struct Extractor {
 }
 
 impl ClientExtractor for Extractor {
-    #[instrument(skip_all, fields(client_id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(client_id)))]
     async fn extract(
         &self,
         client_id: &str,

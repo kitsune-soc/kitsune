@@ -215,7 +215,7 @@ where
     /// Verify whether the TXT records of the FQDN pass the verification strategy
     ///
     /// Returns `Ok(())` when the check succeeded and the token is present
-    #[instrument(skip_all, fields(%self.fqdn))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%self.fqdn)))]
     pub async fn verify(&self) -> Result<()> {
         let txt_records = self
             .resolver

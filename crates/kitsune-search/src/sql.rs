@@ -34,7 +34,7 @@ impl SearchBackend for SearchService {
         Ok(())
     }
 
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     async fn search(
         &self,
         index: SearchIndex,

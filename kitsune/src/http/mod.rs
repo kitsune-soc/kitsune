@@ -84,7 +84,7 @@ fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> 
     })
 }
 
-#[instrument(skip_all, fields(port = %server_config.port))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(port = %server_config.port)))]
 pub async fn run(
     state: Zustand,
     server_config: server::Configuration,

@@ -21,7 +21,7 @@ impl Fetcher {
     /// # Panics
     ///
     /// - Panics if the URL doesn't contain a host section
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     pub(crate) async fn fetch_actor(
         &self,
         opts: AccountFetchOptions<'_>,

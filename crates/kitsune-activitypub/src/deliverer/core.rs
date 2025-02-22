@@ -23,7 +23,7 @@ pub struct Deliverer {
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%inbox_url, activity_url = %activity.id)))]
     pub async fn deliver(
         &self,
         inbox_url: &str,

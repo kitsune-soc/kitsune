@@ -50,7 +50,7 @@ pub struct LoginForm {
     password: String,
 }
 
-#[instrument(skip_all)]
+#[cfg_attr(not(coverage), instrument(skip_all))]
 fn build_login_page<I>(
     authenticated_user: &User,
     app_name: &str,
@@ -92,7 +92,7 @@ where
     Html(body)
 }
 
-#[instrument(skip_all)]
+#[cfg_attr(not(coverage), instrument(skip_all))]
 async fn process_consent<I>(
     authenticated_user: &User,
     app_name: &str,

@@ -82,7 +82,7 @@ impl PostResolver {
     ///
     /// - List of mentioned accounts, represented as `(Account ID, Mention text)`
     /// - Content with the mentions replaced by links
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub async fn resolve(&self, content: &str) -> Result<ResolvedPost> {
         let (mentioned_account_ids_acc, mentioned_account_ids) = mpsc::channel();
         let (custom_emoji_ids_sen, custom_emoji_ids_rec) = mpsc::channel();

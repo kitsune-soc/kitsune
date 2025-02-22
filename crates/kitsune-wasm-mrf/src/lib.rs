@@ -77,7 +77,7 @@ where
 }
 
 #[inline]
-#[instrument(skip_all, fields(module_path = %module_path.display()))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(module_path = %module_path.display())))]
 fn load_mrf_module(
     cache: Option<&Cache>,
     engine: &Engine,
@@ -161,7 +161,7 @@ impl MrfService {
         .into())
     }
 
-    #[instrument(skip_all, fields(module_dir = %config.module_dir))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(module_dir = %config.module_dir)))]
     pub async fn from_config(
         config: &MrfConfiguration,
         http_client: kitsune_http_client::Client,

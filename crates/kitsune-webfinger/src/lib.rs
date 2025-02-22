@@ -56,13 +56,13 @@ impl Resolver for Webfinger {
     /// This does *not* check that the resolved ActivityPub actor's
     /// `acct:{preferredUsername}@{domain}` URI points back to the resolved `acct:` resource,
     /// which the caller should check by themselves before trusting the result.
-    #[instrument(skip(self))]
+    #[cfg_attr(not(coverage), instrument(skip(self)))]
     async fn resolve_account(
         &self,
         username: &str,
         domain: &str,
     ) -> Result<Option<AccountResource>> {
-        // XXX: Assigning the arguments to local bindings because the `#[instrument]` attribute
+        // XXX: Assigning the arguments to local bindings because the `#[cfg_attr(not(coverage), instrument)]` attribute
         // desugars to an `async move {}` block, inside which mutating the function arguments would
         // upset the borrowck
         // cf. <https://github.com/tokio-rs/tracing/issues/2717>

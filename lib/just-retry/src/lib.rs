@@ -70,7 +70,7 @@ where
     T: Send,
     E: Debug + Send,
 {
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     async fn retry<R>(&mut self, retry_policy: R) -> Fut::Output
     where
         R: JustRetryPolicy + Send,

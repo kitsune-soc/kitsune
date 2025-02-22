@@ -58,7 +58,7 @@ pub async fn prepare_job_queue(
     Ok(Arc::new(queue).coerce())
 }
 
-#[instrument(skip(http_client, job_queue, state))]
+#[cfg_attr(not(coverage), instrument(skip(http_client, job_queue, state)))]
 pub async fn run_dispatcher(
     http_client: kitsune_http_client::Client,
     job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo> + '_>,

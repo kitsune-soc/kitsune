@@ -27,7 +27,7 @@ impl InboxResolver {
         Self { db_pool }
     }
 
-    #[instrument(skip_all, fields(account_id = %account.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(account_id = %account.id)))]
     pub async fn resolve_followers(
         &self,
         account: &Account,
@@ -53,7 +53,7 @@ impl InboxResolver {
         .map_err(Error::from)
     }
 
-    #[instrument(skip_all, fields(post_id = %post.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(post_id = %post.id)))]
     pub async fn resolve(
         &self,
         post: &Post,

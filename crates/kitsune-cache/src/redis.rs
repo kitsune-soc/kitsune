@@ -49,7 +49,7 @@ where
     K: Display + Send + Sync + ?Sized,
     V: Serialize + DeserializeOwned + Send + Sync,
 {
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn delete(&self, key: &K) -> Result<()> {
         let key = self.compute_key(key);
 
@@ -59,7 +59,7 @@ where
         Ok(())
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn get(&self, key: &K) -> Result<Option<V>> {
         let key = self.compute_key(key);
 
@@ -73,7 +73,7 @@ where
         }
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn set(&self, key: &K, value: &V) -> Result<()> {
         let key = self.compute_key(key);
         let serialised = sonic_rs::to_string(value)?;

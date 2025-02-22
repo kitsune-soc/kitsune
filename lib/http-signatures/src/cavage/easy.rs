@@ -67,7 +67,7 @@ pub enum Error {
 ///
 /// This will fail if the key algorithm is unsupported. For a list of supported algorithms, check [`crate::crypto::parse::private_key`]
 #[inline]
-#[instrument(skip_all, fields(key_id))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(key_id)))]
 pub async fn sign<B>(
     mut req: http::Request<B>,
     key_id: &str,
@@ -121,7 +121,7 @@ pub async fn sign<B>(
 /// The closure is expected to return a future which resolves into a result which contains a PEM-encoded PKCS#8 verifying key.
 /// You don't need to supply any more information. The library will figure out the rest.
 #[inline]
-#[instrument(skip_all)]
+#[cfg_attr(not(coverage), instrument(skip_all))]
 pub async fn verify<'a, B, F, Fut, E>(req: &'a http::Request<B>, get_key: F) -> Result<(), Error>
 where
     for<'k_id> F: Fn(&'k_id str) -> ScopedFutureWrapper<'k_id, 'a, Fut>,
