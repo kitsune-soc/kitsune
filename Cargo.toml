@@ -279,7 +279,7 @@ rayon = "1.10.0"
 redb = { version = "2.4.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
-ring = { version = "0.17.11", features = ["std"] }
+ring = { version = "0.17.13", features = ["std"] }
 rsa = "0.9.7"
 rstest = { version = "0.24.0", default-features = false }
 rust-embed = { version = "8.5.0", features = ["include-exclude"] }
