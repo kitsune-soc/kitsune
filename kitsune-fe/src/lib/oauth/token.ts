@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 
-import { loadOAuthApp } from './client.svelte';
+import { loadOAuthApp } from './client';
 
 const OAUTH_TOKEN_STORAGE_KEY = 'oauth_token';
 const OAUTH_TOKEN_STORAGE_SCHEMA = z.object({

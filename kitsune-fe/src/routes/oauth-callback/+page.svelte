@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { fetchOAuthToken } from '$lib/oauth/token.svelte';
+	import { fetchOAuthToken } from '$lib/oauth/token';
 	import Icon from '@iconify/svelte';
 
 	const oauthCode = page.url.searchParams.get('code');

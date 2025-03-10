@@ -46,7 +46,7 @@
 			? virtualItems[0].start - $virtualizer.options.scrollMargin
 			: 0}px);"
 	>
-		{#each virtualItems as row}
+		{#each virtualItems as row (row.index)}
 			<div
 				class="border-opacity-50 border-b border-gray-200"
 				bind:this={virtualElements[row.index]}
