@@ -15,7 +15,10 @@ pub struct ConfirmAccount<'a> {
 impl RenderableEmail for ConfirmAccount<'_> {
     fn render_email(&self) -> Result<RenderedEmail> {
         let rendered_mjml = self.render()?;
-        let parsed_mjml = Mjml::parse(rendered_mjml)?;
+        let parsed_mjml = {
+            let parser_output = Mjml::parse(rendered_mjml)?;
+            parser_output.element
+        };
 
         let title = parsed_mjml
             .get_title()

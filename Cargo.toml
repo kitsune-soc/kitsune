@@ -118,7 +118,7 @@ colored_json = "5.0.0"
 compact_str = { version = "0.9.0", features = ["serde"] }
 console-subscriber = { version = "0.4.1", features = ["parking_lot"] }
 const_format = "0.2.34"
-const-oid = { version = "0.10.0", features = ["db"] }
+const-oid = { version = "=0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "2.0.1", features = ["from"] }
