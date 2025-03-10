@@ -5,8 +5,8 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { Button } from '$lib/components/input';
-	import { loadOAuthApp } from '$lib/oauth/client.svelte';
-	import { loadOAuthToken } from '$lib/oauth/token.svelte';
+	import { loadOAuthApp } from '$lib/oauth/client';
+	import { loadOAuthToken } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
 
 	import type { PageData } from './$houdini';
@@ -98,7 +98,7 @@
 
 	{#if registerErrors.length > 0}
 		<ol>
-			{#each registerErrors as error}
+			{#each registerErrors as error, index (index)}
 				<li>{error}</li>
 			{/each}
 		</ol>

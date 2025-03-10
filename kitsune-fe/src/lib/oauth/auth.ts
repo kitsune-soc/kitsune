@@ -2,7 +2,7 @@ import { type ClientPlugin } from '$houdini';
 
 import { merge } from 'lodash';
 
-import { loadOAuthToken } from './token.svelte';
+import { loadOAuthToken } from './token';
 
 const houdiniPlugin: ClientPlugin = () => {
 	return {

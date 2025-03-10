@@ -1,5 +1,5 @@
 import { HoudiniClient, subscription } from '$houdini';
-import { houdiniPlugin as authPlugin } from '$lib/oauth/auth.svelte';
+import { houdiniPlugin as authPlugin } from '$lib/oauth/auth';
 
 import { createClient } from 'graphql-ws';
 
