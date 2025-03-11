@@ -13,6 +13,4 @@ in
       cp -R ${packages.frontend} $out/kitsune-fe
     '';
   };
-
-  kitsune-cli = packages.cli;
 }

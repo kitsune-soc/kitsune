@@ -24,7 +24,6 @@ We will get back to you, assign you the issue if you're up for it, and answer qu
 - `crates/`: Sub-crates Kitsune consists of
 - `docs/`: Documentation in form of an [mdBook](https://rust-lang.github.io/mdBook/)
 - `kitsune/`: Main Kitsune server binary
-- `kitsune-cli/`: Kitsune CLI binary
 - `kitsune-fe/`: Kitsune frontend project
 - `kitsune-job-runner/`: Kitsune dedicated job runner
 - `lib/`: Libraries made for Kitsune but with no dependencies on Kitsune-specific code. Easily usable by other projects
