@@ -58,23 +58,6 @@ in
 rec {
   default = main;
 
-  cli = craneLib.buildPackage (
-    commonArgs
-    // {
-      pname = "kitsune-cli";
-      cargoExtraArgs = commonArgs.cargoExtraArgs + " --bin kitsune-cli";
-      inherit cargoArtifacts;
-      doCheck = false;
-    }
-  );
-
-  cli-docker = pkgs.dockerTools.buildLayeredImage {
-    name = "kitsune-cli";
-    tag = "latest";
-    contents = [ pkgs.dockerTools.caCertificates cli ];
-    config.Cmd = [ "${cli}/bin/kitsune-cli" ];
-  };
-
   job-runner = craneLib.buildPackage (
     commonArgs
     // {
