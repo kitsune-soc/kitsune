@@ -54,7 +54,6 @@ members = [
     "crates/kitsune-webfinger",
 
     "kitsune",
-    "kitsune-cli",
     "kitsune-job-runner",
 
     "lib/athena",
@@ -137,10 +136,8 @@ diesel-async = { version = "0.5.2", features = [
 diesel_full_text_search = { version = "2.2.0", default-features = false }
 diesel_migrations = "2.2.0"
 divan = "0.1.17"
-dotenvy = "0.15.7"
 either = { version = "1.15.0", default-features = false }
 enum_dispatch = "0.3.13"
-envy = "0.4.2"
 eyre = "0.6.12"
 fastrand = "2.3.0"
 fred = { version = "10.1.0", features = [

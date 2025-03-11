@@ -36,10 +36,6 @@ in
           type = types.package;
           default = pkgs.kitsune;
         };
-        cli = mkOption {
-          type = types.package;
-          default = pkgs.kitsune-cli;
-        };
       };
 
       dataDir = mkOption {
@@ -68,7 +64,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ cfg.packages.cli ];
+    environment.systemPackages = [ ];
 
     users.users.kitsune = {
       isSystemUser = true;

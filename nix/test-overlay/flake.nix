@@ -20,7 +20,6 @@
           packages = rec {
             default = kitsune;
             inherit (pkgs) kitsune;
-            inherit (pkgs) kitsune-cli;
           };
         }
       );
