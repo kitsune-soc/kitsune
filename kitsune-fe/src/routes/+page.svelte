@@ -5,11 +5,11 @@
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { Button } from '$lib/components/input';
 	import { loadOAuthApp } from '$lib/oauth/client';
+	import { tokenStore } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
 	import Icon from '@iconify/svelte';
 
 	import type { PageData } from './$houdini';
-	import { tokenStore } from '$lib/oauth/token';
 
 	const { data }: { data: PageData } = $props();
 
@@ -86,7 +86,7 @@
 	});
 </script>
 
-<div class="hero min-h-screen -mt-18">
+<div class="hero -mt-18 min-h-screen">
 	<div class="hero-content w-full flex-col justify-between lg:flex-row">
 		<div class="text-center lg:text-left">
 			<Logo class="max-w-3/4" />
@@ -94,6 +94,7 @@
 			<h1>Federated microblogging.</h1>
 
 			<p>
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html stats.description}
 			</p>
 		</div>

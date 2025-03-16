@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { version as frontendVersion } from '$app/environment';
-	import Footer from '$lib/components/Footer.svelte';
 	import Drawer from '$lib/components/Drawer.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 
 	import type { Snippet } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
