@@ -24,7 +24,9 @@
 		<ul class="menu menu-horizontal">
 			{#if isLoggedIn}
 				<li>
-					<a href="#" onclick={logout}><Icon class="h-5 w-auto" icon="mdi:logout" /> Logout</a>
+					<button class="btn" onclick={logout}>
+						<Icon class="h-5 w-auto" icon="mdi:logout" /> Logout
+					</button>
 				</li>
 			{/if}
 		</ul>
