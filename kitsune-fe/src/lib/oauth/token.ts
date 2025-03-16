@@ -86,4 +86,8 @@ async function loadOAuthToken(): Promise<OAuthTokenStorageTy | undefined> {
 	return oauthToken;
 }
 
-export { fetchOAuthToken, loadOAuthToken };
+function clearTokenStorage() {
+	localStorage.removeItem(OAUTH_TOKEN_STORAGE_KEY);
+}
+
+export { clearTokenStorage, fetchOAuthToken, loadOAuthToken };

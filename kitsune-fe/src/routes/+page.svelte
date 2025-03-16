@@ -89,7 +89,7 @@
 	});
 </script>
 
-<div class="hero min-h-screen">
+<div class="hero min-h-screen -mt-18">
 	<div class="hero-content w-full flex-col justify-between lg:flex-row">
 		<div class="text-center lg:text-left">
 			<Logo class="max-w-3/4" />
