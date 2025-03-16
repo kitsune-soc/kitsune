@@ -4,7 +4,6 @@
 	import { RegisterUserStore } from '$houdini';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
-	import { Button } from '$lib/components/input';
 	import { loadOAuthApp } from '$lib/oauth/client';
 	import { loadOAuthToken } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
@@ -137,8 +136,8 @@
 			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
 		{/if}
 
-		<Button class="w-full" buttonType="secondary" onclick={initiateLogin} loading={loginInProcess}>
+		<button class="w-full btn btn-neutral" onclick={initiateLogin} loading={loginInProcess}>
 			Already have an account? Sign in
-		</Button>
+		</button>
 	</div>
 </div>

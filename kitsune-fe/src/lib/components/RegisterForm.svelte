@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Button, Input } from './input';
-
 	let {
 		onregister,
 		processing
@@ -17,27 +15,35 @@
 		onregister(e);
 	}}
 >
-	<label class="block" for="username">
+	<div>
+	<label for="username">
 		Username
-		<Input type="text" name="username" placeholder="hangaku" disabled={processing} />
 	</label>
+	<input class="input w-full validator" type="text" name="username" placeholder="hangaku" required  disabled={processing} />
+</div>
 
+<div>
 	<label for="email">
 		Email address
-		<Input type="email" name="email" placeholder="hangaku@kabuki.dd" disabled={processing} />
 	</label>
+	<input class="input w-full validator" type="email" name="email" placeholder="hangaku@kabuki.dd" required disabled={processing} />
+</div>
 
+<div>
 	<label for="password">
 		Password
-		<Input type="password" name="password" disabled={processing} />
 	</label>
+	<input class="input w-full validator" type="password" name="password" required  disabled={processing} />
+</div>
 
+<div>
 	<label for="confirm-password">
 		Confirm Password
-		<Input type="password" name="confirm-password" disabled={processing} />
 	</label>
+	<input class="input w-full validator" type="password" name="confirm-password" required  disabled={processing} />
+</div>
 
 	<p>
-		<Button class="w-full" loading={processing}>Register</Button>
+		<button class="w-full btn btn-primary" loading={processing}>Register</button>
 	</p>
 </form>
