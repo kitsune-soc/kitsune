@@ -31,6 +31,15 @@
 	}
 </script>
 
+{#snippet sidebarItem(name: string, icon: string, url: string)}
+	<li>
+		<a href={url}>
+			<Icon class="h-4 w-auto" {icon} />
+			{name}
+		</a>
+	</li>
+{/snippet}
+
 <div class="drawer">
 	<input id={drawerItemName} type="checkbox" class="drawer-toggle" />
 	<div class="drawer-content flex flex-col">
@@ -45,30 +54,13 @@
 			<!-- Sidebar content here -->
 			<li>Timelines</li>
 			{#each Object.entries(timelines) as [name, data]}
-				<li>
-					<a href={data.url}>
-						<Icon class="h-4 w-auto" icon={data.icon} />
-						{name}
-					</a>
-				</li>
+				{@render sidebarItem(name, data.icon, data.url)}
 			{/each}
 
 			<li>Settings</li>
-			<li>
-				<a href="/settings/account">
-					<Icon class="h-4 w-auto" icon="mdi:account-settings" /> Account
-				</a>
-			</li>
-			<li>
-				<a href="/settings/frontend">
-					<Icon class="h-4 w-auto" icon="mdi:settings" /> Frontend
-				</a>
-			</li>
-			<li>
-				<a href="/settings/admin">
-					<Icon class="h-4 w-auto" icon="mdi:administrator" /> Administrator
-				</a>
-			</li>
+			{@render sidebarItem('Account', 'mdi:account-settings', '/settings/account')}
+			{@render sidebarItem('Frontend', 'mdi:settings', '/settings/frontend')}
+			{@render sidebarItem('Administrator', 'mdi:administrator', '/settings/admin')}
 
 			<div class="divider"></div>
 
