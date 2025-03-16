@@ -5,20 +5,18 @@
 		$props();
 </script>
 
-<footer
-	class="w-full place-content-between place-items-end text-sm max-lg:mb-5 max-lg:text-center lg:fixed lg:bottom-3 lg:left-3 lg:flex"
->
-	<div>
-		<p>
-			Backend version: {backendVersion}
-			<br />Frontend version: {frontendVersion}
-		</p>
+<footer class="text-sm max-lg:text-center lg:fixed lg:bottom-3 lg:left-3">
+	<p>
+		Backend version: {backendVersion}
+		<br />Frontend version: {frontendVersion}
+	</p>
 
-		<span>
-			Powered by
-			<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
-		</span>
-	</div>
-
-	<Hangaku class="hidden w-64 -scale-x-100 xl:inline" />
+	<span>
+		Powered by
+		<a target="_blank" href="https://github.com/kitsune-soc/kitsune">Kitsune</a>
+	</span>
 </footer>
+
+<div class="fixed right-3 bottom-3 hidden w-64 -scale-x-100 lg:flex">
+	<Hangaku />
+</div>

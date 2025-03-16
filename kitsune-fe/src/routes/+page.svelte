@@ -15,6 +15,8 @@
 
 	const statsStore = $derived(data.stats);
 	const stats = $derived({
+		characterLimit: $statsStore.data?.instance.characterLimit ?? 0,
+		description: $statsStore.data?.instance.description ?? '',
 		postCount: $statsStore.data?.instance.localPostCount ?? 0,
 		registeredUsers: $statsStore.data?.instance.userCount ?? 0,
 		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true
@@ -88,44 +90,67 @@
 </script>
 
 <div class="hero min-h-screen">
-	<div class="hero-content w-full flex-col justify-evenly lg:flex-row">
+	<div class="hero-content w-full flex-col justify-between lg:flex-row">
 		<div class="text-center lg:text-left">
 			<Logo class="max-w-3/4" />
 
-			<h1>Federated microblogging</h1>
+			<h1>Federated microblogging.</h1>
 
-			Statistics:
-
-			<ul class="list-none p-0">
-				<li>
-					<strong>{stats.registeredUsers}</strong> registered users
-				</li>
-				<li>
-					<strong>{stats.postCount}</strong> posts
-				</li>
-			</ul>
+			<p>
+				{@html stats.description}
+			</p>
 		</div>
 
-		<div class="card bg-base-100 z-10 max-w-md p-10 shadow-2xl">
-			{#if stats.registrationsOpen}
-				{#if registerErrors.length !== 0}
-					<div role="alert" class="alert alert-error mb-5">
-						<Icon class="h-6 w-auto opacity-70" icon="mdi:error-outline" />
-						<ol class="list-none p-0">
-							{#each registerErrors as error, index (index)}
-								<li>{error}</li>
-							{/each}
-						</ol>
+		<div class="join join-vertical max-w-md gap-3">
+			<div class="bg-base-100 stats shadow">
+				<div class="stat place-items-center">
+					<div class="stat-title">Registered Users</div>
+					<div class="stat-value">
+						{stats.registeredUsers}
 					</div>
+				</div>
+
+				<div class="stat place-items-center">
+					<div class="stat-title">Authored posts</div>
+					<div class="stat-value">
+						{stats.postCount}
+					</div>
+				</div>
+
+				<div class="stat place-items-center">
+					<div class="stat-title">Character limit</div>
+					<div class="stat-value">
+						{stats.characterLimit}
+					</div>
+				</div>
+			</div>
+
+			<div class="card bg-base-100 p-10 shadow-2xl">
+				{#if stats.registrationsOpen}
+					{#if registerErrors.length !== 0}
+						<div role="alert" class="alert alert-error mb-5">
+							<Icon class="h-6 w-auto opacity-70" icon="mdi:error-outline" />
+							<ol class="list-none p-0">
+								{#each registerErrors as error, index (index)}
+									<li>{error}</li>
+								{/each}
+							</ol>
+						</div>
+					{/if}
+
+					<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
+					<div class="divider">OR</div>
 				{/if}
 
-				<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
-				<div class="divider">OR</div>
-			{/if}
-
-			<Button class="w-full" buttonType="neutral" onclick={initiateLogin} loading={loginInProcess}>
-				Already have an account? Sign in
-			</Button>
+				<Button
+					class="w-full"
+					buttonType="neutral"
+					onclick={initiateLogin}
+					loading={loginInProcess}
+				>
+					Already have an account? Sign in
+				</Button>
+			</div>
 		</div>
 	</div>
 </div>
