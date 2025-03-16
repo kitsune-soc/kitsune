@@ -2,11 +2,12 @@
 	import { goto } from '$app/navigation';
 	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
-	import Dialog from '$lib/components/Dialog.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
+	import { Button } from '$lib/components/input';
 	import { loadOAuthApp } from '$lib/oauth/client';
 	import { loadOAuthToken } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
+	import Icon from '@iconify/svelte';
 
 	import type { PageData } from './$houdini';
 
@@ -23,7 +24,6 @@
 
 	let registerButtonDisabled = $state(false);
 	let registerErrors: string[] = $state([]);
-	let registerErrorDialogOpen = $state(false);
 
 	async function doRegister(event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) {
 		registerButtonDisabled = true;
@@ -41,7 +41,6 @@
 			registerErrors = Object.values(formattedErrors).flatMap((error) =>
 				'_errors' in error ? error._errors : error
 			);
-			registerErrorDialogOpen = true;
 			registerButtonDisabled = false;
 
 			return;
@@ -51,17 +50,13 @@
 			const result = await register.mutate(validatedData.data);
 			if (result.errors) {
 				registerErrors = result.errors.map((error) => error.message);
-				registerErrorDialogOpen = true;
 			} else {
-				event.currentTarget.reset();
 				initiateLogin();
 			}
 		} catch (reason: unknown) {
 			if (reason instanceof Error) {
 				registerErrors = [reason.message];
 			}
-
-			registerErrorDialogOpen = true;
 		} finally {
 			registerButtonDisabled = false;
 		}
@@ -92,52 +87,45 @@
 	});
 </script>
 
-<Dialog isOpen={registerErrorDialogOpen}>
-	<h2>Registration failed!</h2>
+<div class="hero min-h-screen">
+	<div class="hero-content w-full flex-col justify-evenly lg:flex-row">
+		<div class="text-center lg:text-left">
+			<Logo class="max-w-3/4" />
 
-	{#if registerErrors.length > 0}
-		<ol>
-			{#each registerErrors as error, index (index)}
-				<li>{error}</li>
-			{/each}
-		</ol>
-	{/if}
+			<h1>Federated microblogging</h1>
 
-	<button
-		class="border-grey rounded-md border-2 px-2 py-1"
-		onclick={() => (registerErrorDialogOpen = false)}
-	>
-		Close
-	</button>
-</Dialog>
+			Statistics:
 
-<div
-	class="flex min-h-screen flex-col max-lg:mt-5 lg:flex-row lg:place-content-evenly lg:items-center"
->
-	<div class="flex basis-1/4 flex-col max-lg:place-items-center max-lg:text-center">
-		<Logo class=" max-w-3/4" />
+			<ul class="list-none p-0">
+				<li>
+					<strong>{stats.registeredUsers}</strong> registered users
+				</li>
+				<li>
+					<strong>{stats.postCount}</strong> posts
+				</li>
+			</ul>
+		</div>
 
-		<h1>Federated microblogging</h1>
+		<div class="card bg-base-100 z-10 max-w-md p-10 shadow-2xl">
+			{#if stats.registrationsOpen}
+				{#if registerErrors.length !== 0}
+					<div role="alert" class="alert alert-error mb-5">
+						<Icon class="h-6 w-auto opacity-70" icon="mdi:error-outline" />
+						<ol class="list-none p-0">
+							{#each registerErrors as error, index (index)}
+								<li>{error}</li>
+							{/each}
+						</ol>
+					</div>
+				{/if}
 
-		Statistics:
+				<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
+				<div class="divider">OR</div>
+			{/if}
 
-		<ul class="list-none p-0">
-			<li>
-				<strong>{stats.registeredUsers}</strong> registered users
-			</li>
-			<li>
-				<strong>{stats.postCount}</strong> posts
-			</li>
-		</ul>
-	</div>
-
-	<div class="z-10 basis-1/4 max-lg:m-5">
-		{#if stats.registrationsOpen}
-			<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
-		{/if}
-
-		<button class="w-full btn btn-neutral" onclick={initiateLogin} loading={loginInProcess}>
-			Already have an account? Sign in
-		</button>
+			<Button class="w-full" buttonType="neutral" onclick={initiateLogin} loading={loginInProcess}>
+				Already have an account? Sign in
+			</Button>
+		</div>
 	</div>
 </div>

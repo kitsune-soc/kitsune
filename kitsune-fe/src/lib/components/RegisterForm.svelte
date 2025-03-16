@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Button, Input } from './input';
+
 	let {
 		onregister,
 		processing
@@ -16,34 +18,30 @@
 	}}
 >
 	<div>
-	<label for="username">
-		Username
-	</label>
-	<input class="input w-full validator" type="text" name="username" placeholder="hangaku" required  disabled={processing} />
-</div>
+		<label for="username"> Username </label>
+		<Input type="text" name="username" placeholder="hangaku" required disabled={processing} />
+	</div>
 
-<div>
-	<label for="email">
-		Email address
-	</label>
-	<input class="input w-full validator" type="email" name="email" placeholder="hangaku@kabuki.dd" required disabled={processing} />
-</div>
+	<div>
+		<label for="email"> Email address </label>
+		<Input
+			type="email"
+			name="email"
+			placeholder="hangaku@kabuki.dd"
+			required
+			disabled={processing}
+		/>
+	</div>
 
-<div>
-	<label for="password">
-		Password
-	</label>
-	<input class="input w-full validator" type="password" name="password" required  disabled={processing} />
-</div>
+	<div>
+		<label for="password"> Password </label>
+		<Input type="password" name="password" required disabled={processing} />
+	</div>
 
-<div>
-	<label for="confirm-password">
-		Confirm Password
-	</label>
-	<input class="input w-full validator" type="password" name="confirm-password" required  disabled={processing} />
-</div>
+	<div>
+		<label for="confirm-password"> Confirm Password </label>
+		<Input type="password" name="confirm-password" required disabled={processing} />
+	</div>
 
-	<p>
-		<button class="w-full btn btn-primary" loading={processing}>Register</button>
-	</p>
+	<Button class="w-full" loading={processing}>Register</Button>
 </form>
