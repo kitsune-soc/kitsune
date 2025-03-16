@@ -67,6 +67,6 @@
 	loadTimeline();
 </script>
 
-<main class="m-auto max-w-prose">
+<main class="m-auto mt-18 max-w-prose">
 	<Timeline {posts} {onendreached} />
 </main>
