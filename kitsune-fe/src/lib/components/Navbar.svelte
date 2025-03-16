@@ -1,25 +1,16 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { clearTokenStorage, loadOAuthToken } from "$lib/oauth/token";
+	import { clearTokenStorage, tokenStore } from "$lib/oauth/token";
 	import Icon from "@iconify/svelte";
 
     let { drawerItemName }: { drawerItemName: string; } = $props();
 
-    let isLoggedIn = $state(false);
-
-    async function checkLoggedIn() {
-        const token = await loadOAuthToken();
-        isLoggedIn = (token !== undefined);
-    }
+    const isLoggedIn = $derived($tokenStore !== undefined);
 
     function logout() {
         clearTokenStorage();
         goto("/");
     }
-
-    $effect(() => {
-        checkLoggedIn();
-    });
 </script>
 
 <nav class="navbar bg-base-300 w-full not-prose fixed">

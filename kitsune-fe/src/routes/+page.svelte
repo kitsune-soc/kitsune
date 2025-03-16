@@ -5,11 +5,11 @@
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { Button } from '$lib/components/input';
 	import { loadOAuthApp } from '$lib/oauth/client';
-	import { loadOAuthToken } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
 	import Icon from '@iconify/svelte';
 
 	import type { PageData } from './$houdini';
+	import { tokenStore } from '$lib/oauth/token';
 
 	const { data }: { data: PageData } = $props();
 
@@ -80,11 +80,8 @@
 		window.location.assign(oauthUrl);
 	}
 
-	loadOAuthToken().then((token) => {
-		if (!token) {
-			return;
-		}
-
+	tokenStore.subscribe((newToken) => {
+		if (!newToken) return;
 		goto('/timeline/home');
 	});
 </script>
