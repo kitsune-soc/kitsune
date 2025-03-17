@@ -1,15 +1,16 @@
 import { type ClientPlugin } from '$houdini';
 
 import { merge } from 'lodash';
+import { get } from 'svelte/store';
 
-import { loadOAuthToken } from './token';
+import { tokenStore } from './token';
 
 const houdiniPlugin: ClientPlugin = () => {
 	return {
 		async beforeNetwork(ctx, { next }): Promise<void> {
 			const headers: Record<string, string> = {};
 
-			const token = await loadOAuthToken();
+			const token = get(tokenStore);
 			if (token) {
 				headers['Authorization'] = `Bearer ${token.accessToken}`;
 			}

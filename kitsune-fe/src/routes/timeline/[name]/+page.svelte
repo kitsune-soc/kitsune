@@ -4,10 +4,12 @@
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
 
-	const name = page.params.name;
-	if (name !== 'home') {
-		alert('FUCK');
-	}
+	const name = $derived(page.params.name);
+	$effect(() => {
+		if (name !== 'home') {
+			alert('FUCK');
+		}
+	});
 
 	let homeTimeline = new LoadHomeTimelineStore();
 	let posts: Post[] = $state([]);
@@ -67,6 +69,6 @@
 	loadTimeline();
 </script>
 
-<main class="m-auto max-w-prose">
+<main class="m-auto mt-18 max-w-prose">
 	<Timeline {posts} {onendreached} />
 </main>

@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { SvelteKitPWA, type SvelteKitPWAOptions } from '@vite-pwa/sveltekit';
 
 import houdini from 'houdini/vite';
+import Icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vitest/config';
 
 const pwaOptions: Partial<SvelteKitPWAOptions> = {
@@ -14,7 +15,20 @@ const pwaOptions: Partial<SvelteKitPWAOptions> = {
 };
 
 export default defineConfig({
-	plugins: [houdini(), sveltekit(), SvelteKitPWA(pwaOptions), tailwindcss()],
+	plugins: [
+		houdini(),
+		Icons({
+			autoInstall: true,
+			compiler: 'svelte',
+			iconCustomizer(collection, icon, props) {
+				props.width = '1.2rem';
+				props.height = '1.2rem';
+			}
+		}),
+		sveltekit(),
+		SvelteKitPWA(pwaOptions),
+		tailwindcss()
+	],
 	server: {
 		proxy: {
 			'/graphql': 'http://localhost:5000',

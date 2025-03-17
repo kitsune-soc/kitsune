@@ -4,6 +4,7 @@ query stats {
 			backend
 			key
 		}
+		characterLimit
 		description
 		localPostCount
 		registrationsOpen

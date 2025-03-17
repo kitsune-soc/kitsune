@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { writable } from 'svelte/store';
 import { z } from 'zod';
 
 import { loadOAuthApp } from './client';
@@ -19,20 +20,83 @@ const OAUTH_TOKEN_SCHEMA = z.object({
 
 type OAuthTokenStorageTy = z.infer<typeof OAUTH_TOKEN_STORAGE_SCHEMA>;
 
-async function storeTokenResponse(body: unknown): Promise<void> {
+/**
+ * Attempt to load the OAuth token from local storage
+ *
+ * @returns OAuth token structure if the data was present and well formed, returns `undefined` otherwise
+ */
+function loadFromStorage(): OAuthTokenStorageTy | undefined {
+	const data = localStorage.getItem(OAUTH_TOKEN_STORAGE_KEY);
+	if (!data) {
+		return undefined;
+	}
+
+	const parseResult = OAUTH_TOKEN_STORAGE_SCHEMA.safeParse(JSON.parse(data));
+	if (parseResult.success) {
+		return parseResult.data;
+	} else {
+		console.error(`Failed to parse OAuth token from local storage`);
+		console.error(parseResult.error);
+		return undefined;
+	}
+}
+
+// initially attempt to load the token from local storage. if that doesn't work, just leave it undefined.
+const tokenStore = writable<OAuthTokenStorageTy | undefined>(undefined, (set) => {
+	const maybeToken = loadFromStorage();
+
+	if (maybeToken) {
+		set(maybeToken);
+	} else {
+		clearTokenStorage();
+	}
+});
+
+// register a refresh callback when the token expires
+tokenStore.subscribe((newToken) => {
+	if (!newToken) return;
+
+	const difference = DateTime.fromJSDate(newToken.expiresAt).diffNow();
+
+	setTimeout(async () => {
+		console.log('token expired. refreshing..');
+		await refreshOAuthToken(newToken);
+	}, difference.toMillis());
+});
+
+// persist store changes to local storage
+tokenStore.subscribe((newToken) => {
+	if (newToken) {
+		localStorage.setItem(OAUTH_TOKEN_STORAGE_KEY, JSON.stringify(newToken));
+	} else {
+		localStorage.removeItem(OAUTH_TOKEN_STORAGE_KEY);
+	}
+});
+
+/**
+ * Helper function for parsing an opaque object into a structure appropriate to be stored internally as an OAuth token
+ *
+ * @param body Opaque object read from the body of a completed OAuth flow
+ * @returns Parsed and constructed OAuth token structure
+ */
+async function parseResponseBody(body: unknown): Promise<OAuthTokenStorageTy> {
 	const responseBody = await OAUTH_TOKEN_SCHEMA.parseAsync(body);
 	const expiresAt = DateTime.now().plus({ seconds: responseBody.expires_in }).toJSDate();
 
-	const stored: OAuthTokenStorageTy = {
+	return {
 		accessToken: responseBody.access_token,
 		refreshToken: responseBody.refresh_token,
 		expiresAt
 	};
-
-	localStorage.setItem(OAUTH_TOKEN_STORAGE_KEY, JSON.stringify(stored));
 }
 
-async function fetchOAuthToken(oauthCode: string): Promise<OAuthTokenStorageTy> {
+/**
+ * Fetch an OAuth token from your access code and set the token store to the result.
+ * This function has no return value since we modify the store.
+ *
+ * @param oauthCode Code sent to the token endpoint as part of the authorization code challenge
+ */
+async function fetchOAuthToken(oauthCode: string): Promise<void> {
 	const oauthApp = await loadOAuthApp();
 
 	const body = new URLSearchParams({
@@ -43,16 +107,20 @@ async function fetchOAuthToken(oauthCode: string): Promise<OAuthTokenStorageTy> 
 		code: oauthCode
 	});
 
-	const response = await fetch(`${window.location.origin}/oauth/token`, {
+	const response = await fetch(`/oauth/token`, {
 		method: 'POST',
 		body: body.toString()
 	});
 
-	await storeTokenResponse(await response.json());
-	return (await loadOAuthToken())!;
+	tokenStore.set(await parseResponseBody(await response.json()));
 }
 
-async function refreshOAuthToken(token: OAuthTokenStorageTy): Promise<OAuthTokenStorageTy> {
+/**
+ * Run the OAuth refresh flow and set the token store to the result
+ *
+ * @param token Token as stored in the token storage
+ */
+async function refreshOAuthToken(token: OAuthTokenStorageTy): Promise<void> {
 	const oauthApp = await loadOAuthApp();
 
 	const body = new URLSearchParams({
@@ -63,27 +131,19 @@ async function refreshOAuthToken(token: OAuthTokenStorageTy): Promise<OAuthToken
 		refresh_token: token.refreshToken
 	});
 
-	const response = await fetch(`${window.location.origin}/oauth/token`, {
+	const response = await fetch(`/oauth/token`, {
 		method: 'POST',
 		body: body.toString()
 	});
 
-	await storeTokenResponse(await response.json());
-	return (await loadOAuthToken())!;
+	tokenStore.set(await parseResponseBody(await response.json()));
 }
 
-async function loadOAuthToken(): Promise<OAuthTokenStorageTy | undefined> {
-	const loaded = localStorage.getItem(OAUTH_TOKEN_STORAGE_KEY);
-	if (!loaded) {
-		return undefined;
-	}
-
-	let oauthToken = await OAUTH_TOKEN_STORAGE_SCHEMA.parseAsync(JSON.parse(loaded));
-	if (new Date() > oauthToken.expiresAt) {
-		oauthToken = await refreshOAuthToken(oauthToken);
-	}
-
-	return oauthToken;
+/**
+ * Remove the token from memory and persistent storage
+ */
+function clearTokenStorage() {
+	tokenStore.set(undefined);
 }
 
-export { fetchOAuthToken, loadOAuthToken };
+export { clearTokenStorage, fetchOAuthToken, tokenStore };

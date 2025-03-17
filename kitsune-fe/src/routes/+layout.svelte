@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { version as frontendVersion } from '$app/environment';
 	import Footer from '$lib/components/Footer.svelte';
+	import { Drawer } from '$lib/components/drawer';
 
 	import type { Snippet } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
@@ -25,6 +26,7 @@
 	{@html webManifestLink}
 </svelte:head>
 
-{@render children()}
-
-<Footer {backendVersion} {frontendVersion} />
+<Drawer>
+	{@render children()}
+	<Footer {backendVersion} {frontendVersion} />
+</Drawer>

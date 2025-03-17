@@ -1,4 +1,4 @@
-@theme {
+/*@theme {
 	--color-dark-1: #1c1626;
 	--color-dark-2: #2b233a;
 	--color-dark-3: #042f40;
@@ -8,11 +8,11 @@
 
 	--color-shade2-dark: #935d7e;
 	--color-shade2-light: #d68fbc;
-}
+}*/
 
 @layer base {
 	body {
-		@apply from-dark-2 via-dark-1 bg-gradient-to-bl to-slate-950 bg-fixed bg-no-repeat;
+		@apply from-base-100 via-base-200 to-base-300 bg-gradient-to-bl bg-fixed bg-no-repeat min-h-screen;
 		@apply prose prose-invert font-mono max-w-none;
   	}
 
@@ -25,7 +25,7 @@
 	}
 
 	::-webkit-scrollbar-thumb {
-		@apply bg-shade2-light;
+		@apply bg-pink-400;
 	}
 }
 
@@ -33,4 +33,4 @@
 	.max-w-prose {
 	  max-width: min(80ch, 95%);
 	}
-  }
+}

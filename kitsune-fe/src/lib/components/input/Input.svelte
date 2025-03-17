@@ -4,7 +4,4 @@
 	let props: HTMLInputAttributes = $props();
 </script>
 
-<input
-	{...props}
-	class="w-full border-0 border-b-2 border-gray-200 bg-transparent disabled:cursor-not-allowed {props.class}"
-/>
+<input {...props} class="input validator w-full {props.class}" />
