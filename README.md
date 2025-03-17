@@ -8,6 +8,8 @@
 
 </div>
 
+<img align="right" style="scale: -100% 100%;" height="200" src="./assets/hangaku.svg" />
+
 Kitsune is an open-source social media server utilising the ActivityPub protocol.
 Utilising the capabilities of ActivityPub, you can interact with people on Mastodon, Misskey, Akkoma, etc.
 Due to its decentralised nature, you can self-host Kitsune on your own hardware and still interact with everyone!
@@ -25,6 +27,12 @@ Both chat options are bridged. Feel free to join whichever you're more comfortab
 
 This software is far from production-ready. Breaking changes might happen.
 So, as long as this disclaimer is here, make sure to double check all the changes before you update your installation.
+
+## Screenshots
+
+| Kitsune default                      | Cyberpunk mode                      |
+| ------------------------------------ | ----------------------------------- |
+| ![](./assets/landing_screenshot.png) | ![](./assets/landing_cyberpunk.png) |
 
 ## Contributing
 
