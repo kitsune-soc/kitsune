@@ -21,7 +21,7 @@
 		}
 	});
 
-	let icon = $derived.by(() => {
+	let Icon = $derived.by(() => {
 		switch (visibility) {
 			case 'PUBLIC':
 				return IconGlobe;
@@ -36,5 +36,5 @@
 </script>
 
 <span class="opacity-50" title={tooltip}>
-	<icon class="opacity-50"></icon>
+	<Icon class="opacity-50" />
 </span>
