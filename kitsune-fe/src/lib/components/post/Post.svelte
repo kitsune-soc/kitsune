@@ -4,11 +4,10 @@
 	import RelativeTime from '../RelativeTime.svelte';
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
-
-	import IconReply from '~icons/mdi/reply';
-	import IconRepeat from '~icons/mdi/repeat';
-	import IconStar from '~icons/mdi/star';
 	import IconMenu from '~icons/mdi/menu';
+	import IconRepeat from '~icons/mdi/repeat';
+	import IconReply from '~icons/mdi/reply';
+	import IconStar from '~icons/mdi/star';
 
 	let {
 		id,

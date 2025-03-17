@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-
-	import IconAdministrator from '~icons/mdi/administrator';
-	import IconAccountSettings from '~icons/mdi/account-settings';
-	import IconSettings from '~icons/mdi/settings';
-	import IconHome from '~icons/mdi/home';
-	import IconPeople from '~icons/mdi/people';
-	import IconGlobe from '~icons/mdi/globe';
-	import IconLogout from '~icons/mdi/logout';
-
 	import { clearTokenStorage } from '$lib/oauth/token';
+
 	import type { Component } from 'svelte';
+
+	import IconAccountSettings from '~icons/mdi/account-settings';
+	import IconAdministrator from '~icons/mdi/administrator';
+	import IconGlobe from '~icons/mdi/globe';
+	import IconHome from '~icons/mdi/home';
+	import IconLogout from '~icons/mdi/logout';
+	import IconPeople from '~icons/mdi/people';
+	import IconSettings from '~icons/mdi/settings';
 
 	let timelines: Record<string, { icon: Component; url: string }> = {
 		Home: {

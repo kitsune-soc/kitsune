@@ -8,9 +8,8 @@
 	import { tokenStore } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
 
-	import IconErrorOutline from '~icons/mdi/error-outline';
-
 	import type { PageData } from './$houdini';
+	import IconErrorOutline from '~icons/mdi/error-outline';
 
 	const { data }: { data: PageData } = $props();
 

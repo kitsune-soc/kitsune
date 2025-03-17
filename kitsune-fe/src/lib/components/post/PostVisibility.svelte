@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Visibility$options } from '$houdini';
 
-	import IconGlobe from '~icons/mdi/globe';
-	import IconLockOpen from '~icons/mdi/lock-open';
-	import IconLock from '~icons/mdi/lock';
 	import IconEmailOutline from '~icons/mdi/email-outline';
+	import IconGlobe from '~icons/mdi/globe';
+	import IconLock from '~icons/mdi/lock';
+	import IconLockOpen from '~icons/mdi/lock-open';
 
 	let { visibility }: { visibility: Visibility$options } = $props();
 

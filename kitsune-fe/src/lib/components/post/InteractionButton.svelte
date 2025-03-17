@@ -1,8 +1,11 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
 
-	let { icon: Icon, count, oninteract }: { icon: Component; count?: number; oninteract?: () => void } =
-		$props();
+	let {
+		icon: Icon,
+		count,
+		oninteract
+	}: { icon: Component; count?: number; oninteract?: () => void } = $props();
 </script>
 
 <button
