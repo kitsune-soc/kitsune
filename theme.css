@@ -1,4 +1,4 @@
-@theme {
+/*@theme {
 	--color-dark-1: #1c1626;
 	--color-dark-2: #2b233a;
 	--color-dark-3: #042f40;
@@ -8,7 +8,7 @@
 
 	--color-shade2-dark: #935d7e;
 	--color-shade2-light: #d68fbc;
-}
+}*/
 
 @layer base {
 	body {
@@ -25,7 +25,7 @@
 	}
 
 	::-webkit-scrollbar-thumb {
-		@apply bg-shade2-light;
+		@apply bg-pink-400;
 	}
 }
 
