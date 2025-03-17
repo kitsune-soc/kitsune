@@ -3,5 +3,7 @@
 
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
-	themes: synthwave --default;
+	themes:
+		synthwave --default,
+		cyberpunk;
 }

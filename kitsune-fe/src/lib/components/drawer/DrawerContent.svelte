@@ -4,6 +4,7 @@
 
 	import type { Component } from 'svelte';
 
+	import CyberpunkMode from '../CyberpunkMode.svelte';
 	import IconAccountSettings from '~icons/mdi/account-settings';
 	import IconAdministrator from '~icons/mdi/administrator';
 	import IconGlobe from '~icons/mdi/globe';
@@ -52,6 +53,10 @@
 	{@render sidebarItem('Account', IconAccountSettings, '/settings/account')}
 	{@render sidebarItem('Frontend', IconSettings, '/settings/frontend')}
 	{@render sidebarItem('Administrator', IconAdministrator, '/settings/admin')}
+
+	<div class="divider"></div>
+
+	<CyberpunkMode />
 
 	<div class="divider"></div>
 
