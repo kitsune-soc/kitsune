@@ -7,20 +7,27 @@ const UI_SETTINGS_SCHEMA = z.object({
 });
 type UiSettingsTy = z.infer<typeof UI_SETTINGS_SCHEMA>;
 
-// attempt to load settings from local storage
-const uiSettings = writable<UiSettingsTy>({ cyberpunkMode: false }, (set) => {
-	const maybeSettings = localStorage.getItem(UI_SETTINGS_KEY);
-	if (!maybeSettings) {
-		return;
-	}
+/**
+ * UI settings in form of a Svelte store. Will persist to local storage on change.
+ */
+const uiSettings = writable<UiSettingsTy>(
+	{ cyberpunkMode: false },
 
-	const parseResult = UI_SETTINGS_SCHEMA.safeParse(JSON.parse(maybeSettings));
-	if (parseResult.success) {
-		set(parseResult.data);
-	} else {
-		console.log('failed to load settings from local storage');
+	// attempt to load settings from local storage
+	(set) => {
+		const maybeSettings = localStorage.getItem(UI_SETTINGS_KEY);
+		if (!maybeSettings) {
+			return;
+		}
+
+		const parseResult = UI_SETTINGS_SCHEMA.safeParse(JSON.parse(maybeSettings));
+		if (parseResult.success) {
+			set(parseResult.data);
+		} else {
+			console.log('failed to load settings from local storage');
+		}
 	}
-});
+);
 
 // store in local storage on change
 uiSettings.subscribe((newSettings) => {
