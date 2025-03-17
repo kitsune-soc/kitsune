@@ -16,7 +16,7 @@
 		{@render children()}
 	</div>
 
-	<div class="drawer-side">
+	<div class="drawer-side z-20">
 		<label for={drawerItemName} aria-label="close sidebar" class="drawer-overlay"> </label>
 		<DrawerContent />
 	</div>

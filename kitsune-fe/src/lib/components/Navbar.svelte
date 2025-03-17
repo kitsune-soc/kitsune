@@ -4,7 +4,7 @@
 	let { drawerItemName }: { drawerItemName: string } = $props();
 </script>
 
-<nav class="navbar bg-base-300 not-prose fixed w-full">
+<nav class="navbar bg-base-300/50 not-prose fixed z-10 w-full backdrop-blur-sm">
 	<div class="flex-none">
 		<label for={drawerItemName} aria-label="open sidebar" class="btn btn-square btn-ghost">
 			<IconMenu class="h-6" />
