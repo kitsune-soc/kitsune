@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { Visibility$options } from '$houdini';
-	import Icon from '@iconify/svelte';
+
+	import IconGlobe from '~icons/mdi/globe';
+	import IconLockOpen from '~icons/mdi/lock-open';
+	import IconLock from '~icons/mdi/lock';
+	import IconEmailOutline from '~icons/mdi/email-outline';
 
 	let { visibility }: { visibility: Visibility$options } = $props();
 
@@ -17,20 +21,20 @@
 		}
 	});
 
-	let iconName = $derived.by(() => {
+	let icon = $derived.by(() => {
 		switch (visibility) {
 			case 'PUBLIC':
-				return 'material-symbols:globe';
+				return IconGlobe;
 			case 'UNLISTED':
-				return 'material-symbols:lock-open-right';
+				return IconLockOpen;
 			case 'FOLLOWER_ONLY':
-				return 'material-symbols:lock';
+				return IconLock;
 			case 'MENTION_ONLY':
-				return 'material-symbols:mail';
+				return IconEmailOutline;
 		}
 	});
 </script>
 
-<span title={tooltip}>
-	<Icon class="h-auto w-5 opacity-50" icon={iconName} />
+<span class="opacity-50" title={tooltip}>
+	<icon class="opacity-50"></icon>
 </span>

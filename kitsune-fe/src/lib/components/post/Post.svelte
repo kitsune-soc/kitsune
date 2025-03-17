@@ -5,6 +5,11 @@
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
 
+	import IconReply from '~icons/mdi/reply';
+	import IconRepeat from '~icons/mdi/repeat';
+	import IconStar from '~icons/mdi/star';
+	import IconMenu from '~icons/mdi/menu';
+
 	let {
 		id,
 		user,
@@ -47,11 +52,11 @@
 			<!-- ToDo: Make the post clickable without a link element. The link element fucks up screenreaders -->
 
 			<div class="flex flex-row justify-between">
-				<InteractionButton icon="material-symbols:reply-rounded" count={replyCount} />
-				<InteractionButton icon="material-symbols:repeat-rounded" count={repostCount} />
-				<InteractionButton icon="material-symbols:star-rounded" count={likeCount} />
+				<InteractionButton icon={IconReply} count={replyCount} />
+				<InteractionButton icon={IconRepeat} count={repostCount} />
+				<InteractionButton icon={IconStar} count={likeCount} />
 
-				<InteractionButton icon="material-symbols:menu-rounded" />
+				<InteractionButton icon={IconMenu} />
 
 				<a class="no-underline hover:underline" href={postUrl}>
 					<RelativeTime time={createdAt} />

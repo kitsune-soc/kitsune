@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { Component } from 'svelte';
 
-	let { icon, count, oninteract }: { icon: string; count?: number; oninteract?: () => void } =
+	let { icon: Icon, count, oninteract }: { icon: Component; count?: number; oninteract?: () => void } =
 		$props();
 </script>
 
@@ -11,7 +11,7 @@
 		if (oninteract) oninteract();
 	}}
 >
-	<Icon {icon} class="h-auto w-5" />
+	<Icon />
 
 	{#if count && count > 0}
 		{count}

@@ -7,7 +7,8 @@
 	import { loadOAuthApp } from '$lib/oauth/client';
 	import { tokenStore } from '$lib/oauth/token';
 	import { registerSchema } from '$lib/schemas/register';
-	import Icon from '@iconify/svelte';
+
+	import IconErrorOutline from '~icons/mdi/error-outline';
 
 	import type { PageData } from './$houdini';
 
@@ -127,7 +128,7 @@
 				{#if stats.registrationsOpen}
 					{#if registerErrors.length !== 0}
 						<div role="alert" class="alert alert-error mb-5">
-							<Icon class="h-6 w-auto opacity-70" icon="mdi:error-outline" />
+							<IconErrorOutline class="opacity-70" />
 							<ol class="list-none p-0">
 								{#each registerErrors as error, index (index)}
 									<li>{error}</li>
