@@ -14,7 +14,7 @@
 
 	const { data }: { data: PageData } = $props();
 
-	const statsStore = $derived(data.stats);
+	const statsStore = $derived(data.LoadStatistics);
 	const stats = $derived({
 		characterLimit: $statsStore.data?.instance.characterLimit ?? 0,
 		description: $statsStore.data?.instance.description ?? '',

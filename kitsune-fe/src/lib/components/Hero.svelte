@@ -5,7 +5,7 @@
 	let { children, ...props }: HTMLAttributes<HTMLElement> & { children: Snippet } = $props();
 </script>
 
-<div class="hero min-h-screen lg:-mt-16">
+<div class="hero min-h-screen lg:-mt-21">
 	<main {...props} class="hero-content {props.class}">
 		{@render children()}
 	</main>

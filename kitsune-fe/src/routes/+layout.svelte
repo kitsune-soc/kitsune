@@ -11,7 +11,7 @@
 
 	const { children, data }: { children: Snippet; data: PageData } = $props();
 
-	let backendVersionStore = $derived(data.version);
+	let backendVersionStore = $derived(data.LoadVersion);
 	let backendVersion = $derived($backendVersionStore.data?.instance.version ?? '[unknown]');
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');

@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	//import { page } from '$app/state';
 	import { LoadHomeTimelineStore } from '$houdini';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
 
-	const name = $derived(page.params.name);
-	$effect(() => {
-		if (name !== 'home') {
-			alert('FUCK');
-		}
-	});
+	//const name = $derived(page.params.name);
 
 	let homeTimeline = new LoadHomeTimelineStore();
 	let posts: Post[] = $state([]);

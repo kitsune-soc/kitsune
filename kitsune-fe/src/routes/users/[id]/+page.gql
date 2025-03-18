@@ -1,0 +1,13 @@
+query LoadAccount($id: UUID!) {
+	getAccountById(id: $id) {
+		id
+		displayName
+		username
+		avatar {
+			url
+		}
+		header {
+			url
+		}
+	}
+}
