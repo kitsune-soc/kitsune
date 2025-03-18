@@ -43,7 +43,7 @@
 	</li>
 {/snippet}
 
-<ul class="menu bg-base-200 min-h-full w-80 p-4">
+<ul class="menu bg-base-200 m-0 min-h-full w-60 p-4">
 	<li>Timelines</li>
 	{#each Object.entries(timelines) as [name, data] (name)}
 		{@render sidebarItem(name, data.icon, data.url)}

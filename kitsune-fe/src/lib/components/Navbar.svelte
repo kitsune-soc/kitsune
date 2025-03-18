@@ -4,14 +4,14 @@
 	let { drawerItemName }: { drawerItemName: string } = $props();
 </script>
 
-<nav class="navbar bg-base-300/50 not-prose fixed z-10 w-full backdrop-blur-sm">
-	<div class="flex-none">
+<nav class="navbar bg-base-300/50 not-prose sticky top-0 z-10 w-full shadow-sm backdrop-blur-sm">
+	<div class="navbar-start">
 		<label for={drawerItemName} aria-label="open sidebar" class="btn btn-square btn-ghost">
 			<IconMenu class="h-6" />
 		</label>
 	</div>
-	<div class="mx-2 flex-1 px-2 text-3xl font-bold">Kitsune</div>
-	<div class="hidden flex-none lg:block">
-		<ul class="menu menu-horizontal"></ul>
+	<div class="navbar-center">
+		<div class="text-3xl font-bold">Kitsune</div>
 	</div>
+	<div class="navbar-end"></div>
 </nav>
