@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import Hero from '$lib/components/Hero.svelte';
-
 	import type { PageData } from './$houdini';
 	import IconErrorOutline from '~icons/mdi/error-outline';
 
-	let id = $derived(page.params.id);
 	let { data }: { data: PageData } = $props();
 
 	let loadAccount = $derived(data.LoadAccount);
-
 	let errors = $derived($loadAccount.errors);
+
 	let account: {
 		id: string;
 		displayName: string;
@@ -26,7 +22,7 @@
 	});
 </script>
 
-<main class="m-auto">
+<main class="m-auto max-w-prose">
 	{#if errors}
 		<div role="alert" class="alert alert-error shadow-xl">
 			<IconErrorOutline />
