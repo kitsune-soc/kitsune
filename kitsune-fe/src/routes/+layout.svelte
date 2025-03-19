@@ -4,6 +4,7 @@
 	import { Drawer } from '$lib/components/drawer';
 
 	import type { Snippet } from 'svelte';
+	import 'svelte-medium-image-zoom/dist/styles.css';
 	import { pwaInfo } from 'virtual:pwa-info';
 
 	import '../app.css';

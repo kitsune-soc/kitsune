@@ -2,6 +2,8 @@
 	import defaultAvatar from '$assets/default-avatar.png';
 	import defaultHeader from '$assets/default-header.png';
 
+	import Zoom from 'svelte-medium-image-zoom';
+
 	import type { PageData } from './$houdini';
 	import IconErrorOutline from '~icons/mdi/error-outline';
 
@@ -48,7 +50,9 @@
 				>
 					<div class="avatar">
 						<div class="w-24 rounded">
-							<img class="m-0" src={account.avatarUrl} alt="Avatar" />
+							<Zoom>
+								<img class="m-0" src={account.avatarUrl} alt="Avatar" />
+							</Zoom>
 						</div>
 					</div>
 
