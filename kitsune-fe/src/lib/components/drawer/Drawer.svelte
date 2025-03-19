@@ -22,7 +22,9 @@
 	<input bind:this={drawerToggle} id={drawerItemName} type="checkbox" class="drawer-toggle" />
 	<div class="drawer-content flex flex-col">
 		<Navbar {drawerItemName} />
-		{@render children()}
+		<div>
+			{@render children()}
+		</div>
 	</div>
 
 	<div class="drawer-side z-20">

@@ -1,27 +1,25 @@
-query LoadHomeTimeline($after: String, $first: Int) {
-	homeTimeline(after: $after, first: $first) {
-		pageInfo {
-			hasNextPage
-			endCursor
-		}
-		nodes {
-			id
-			isSensitive
-			subject
-			content
-			visibility
-			url
-			createdAt
-			account {
+query LoadHomeTimeline {
+	homeTimeline(first: 15) @paginate {
+		edges {
+			node {
 				id
-				displayName
-				username
+				isSensitive
+				subject
+				content
+				visibility
 				url
-				avatar {
+				createdAt
+				account {
+					id
+					displayName
+					username
 					url
-				}
-				header {
-					url
+					avatar {
+						url
+					}
+					header {
+						url
+					}
 				}
 			}
 		}

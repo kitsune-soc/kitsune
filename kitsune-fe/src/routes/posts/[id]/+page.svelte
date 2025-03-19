@@ -19,9 +19,9 @@
 	});
 </script>
 
-<main class="flex min-h-screen w-screen place-items-center justify-center">
+<main class="flex flex-col items-center">
 	{#if post && user}
-		<div class="w-full max-w-prose rounded-md border border-gray-200">
+		<div class="w-full max-w-prose">
 			<Post
 				id={post.id}
 				{user}

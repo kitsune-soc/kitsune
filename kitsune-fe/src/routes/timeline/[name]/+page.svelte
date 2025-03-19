@@ -7,21 +7,10 @@
 	//const name = $derived(page.params.name);
 
 	let homeTimeline = new LoadHomeTimelineStore();
-	let posts: Post[] = $state([]);
-	let reachedEnd = $state(false);
-
-	let timelineMeta: { loadingNewPosts: boolean; after?: string } = $state({
-		loadingNewPosts: false,
-		after: undefined
-	});
-
-	async function loadTimeline() {
-		const result = await homeTimeline.fetch({
-			variables: { after: timelineMeta.after }
-		});
-
-		const mappedPosts =
-			result.data?.homeTimeline.nodes.map((post): Post => {
+	let posts: Post[] = $derived(
+		$homeTimeline.data?.homeTimeline.edges
+			.map((edge) => edge.node)
+			.map((post): Post => {
 				return {
 					id: post.id,
 					user: {
@@ -37,12 +26,23 @@
 					createdAt: post.createdAt,
 					visibility: post.visibility
 				};
-			}) ?? [];
+			}) ?? []
+	);
+	let lastPostLength = $state(0);
 
-		reachedEnd = mappedPosts.length === 0;
+	let reachedEnd = $state(false);
 
-		posts = posts.concat(mappedPosts);
-		timelineMeta.after = result.data?.homeTimeline.pageInfo.endCursor ?? undefined;
+	let timelineMeta: { loadingNewPosts: boolean } = $state({
+		loadingNewPosts: false
+	});
+
+	async function loadTimeline() {
+		const result = await homeTimeline.loadNextPage();
+		reachedEnd = lastPostLength === result.data?.homeTimeline.edges.length;
+		lastPostLength = result.data?.homeTimeline.edges.length ?? lastPostLength;
+
+		console.log(`reached end: ${reachedEnd}`);
+		console.log(`last post length: ${lastPostLength}`);
 	}
 
 	async function onendreached() {
@@ -61,9 +61,9 @@
 	}
 
 	// initial timeline load
-	loadTimeline();
+	homeTimeline.fetch();
 </script>
 
-<main class="m-auto mt-18 max-w-prose">
+<main class="m-auto max-w-prose">
 	<Timeline {posts} {onendreached} />
 </main>

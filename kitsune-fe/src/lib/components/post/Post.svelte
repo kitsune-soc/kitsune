@@ -25,7 +25,7 @@
 </script>
 
 {#snippet renderPost()}
-	<article class="flex w-full flex-row p-3">
+	<article class="card bg-base-100 join join-horizontal w-full p-5 shadow-xl">
 		<div class="w-16">
 			<img class="m-0 h-auto w-full rounded" src={user.avatarUrl} alt="{user.username} avatar" />
 		</div>
