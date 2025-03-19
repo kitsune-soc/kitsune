@@ -1,4 +1,7 @@
 <script lang="ts">
+	import defaultAvatar from '$assets/default-avatar.png';
+	import defaultHeader from '$assets/default-header.png';
+
 	import type { PageData } from './$houdini';
 	import IconErrorOutline from '~icons/mdi/error-outline';
 
@@ -9,20 +12,20 @@
 
 	let account: {
 		id: string;
-		displayName: string;
+		displayName?: string;
 		username: string;
 		headerUrl: string;
 		avatarUrl: string;
 	} = $derived({
 		id: $loadAccount.data?.getAccountById?.id ?? '',
-		displayName: $loadAccount.data?.getAccountById?.displayName ?? '',
+		displayName: $loadAccount.data?.getAccountById?.displayName ?? undefined,
 		username: $loadAccount.data?.getAccountById?.username ?? '',
-		headerUrl: $loadAccount.data?.getAccountById?.header?.url ?? '',
-		avatarUrl: $loadAccount.data?.getAccountById?.avatar?.url ?? ''
+		headerUrl: $loadAccount.data?.getAccountById?.header?.url ?? defaultHeader,
+		avatarUrl: $loadAccount.data?.getAccountById?.avatar?.url ?? defaultAvatar
 	});
 </script>
 
-<main class="m-auto max-w-prose">
+<main class="m-auto w-full max-w-prose">
 	{#if errors}
 		<div role="alert" class="alert alert-error shadow-xl">
 			<IconErrorOutline />
@@ -35,15 +38,29 @@
 			</span>
 		</div>
 	{:else}
-		<h1>
-			Account of "{account.displayName}" (Username: {account.username})
+		<div class="card image-full w-full shadow-xl">
+			<figure class="m-0">
+				<img class="h-full w-full" src={account.headerUrl} alt="Header" />
+			</figure>
+			<div class="card-body flex justify-end">
+				<div
+					class="card bg-base-100 text-base-content join join-horizontal max-w-1/2 items-end gap-3 p-3 shadow-xl"
+				>
+					<div class="avatar">
+						<div class="w-24 rounded">
+							<img class="m-0" src={account.avatarUrl} alt="Avatar" />
+						</div>
+					</div>
 
-			<img src={account.headerUrl} alt="owo" />
-			<img src={account.avatarUrl} alt="uwu" />
-
-			<p class="text-center">
-				Your ID is: <span class="card bg-base-100 p-5 shadow">{account.id}</span>
-			</p>
-		</h1>
+					<div class="join join-vertical">
+						{account.displayName ?? account.username}
+						<span class="font-bold">
+							@{account.username}
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<p>And here we display all the posts. Yep.</p>
 	{/if}
 </main>
