@@ -1,8 +1,7 @@
 <script lang="ts">
 	import defaultAvatar from '$assets/default-avatar.png';
 	import defaultHeader from '$assets/default-header.png';
-
-	import Zoom from 'svelte-medium-image-zoom';
+	import Zoom from '$lib/components/Zoom.svelte';
 
 	import type { PageData } from './$houdini';
 	import IconErrorOutline from '~icons/mdi/error-outline';
