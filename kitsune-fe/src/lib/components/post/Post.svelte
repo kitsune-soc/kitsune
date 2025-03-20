@@ -2,6 +2,7 @@
 	import type { Post } from '$lib/types/Post';
 
 	import RelativeTime from '../RelativeTime.svelte';
+	import Attachments from './Attachments.svelte';
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
 	import IconMenu from '~icons/mdi/menu';
@@ -13,6 +14,7 @@
 		id,
 		user,
 		content,
+		attachments,
 		visibility,
 		createdAt,
 		replyCount,
@@ -47,6 +49,8 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html content}
 			</div>
+
+			<Attachments {attachments} />
 
 			<!-- ToDo: Make the post clickable without a link element. The link element fucks up screenreaders -->
 

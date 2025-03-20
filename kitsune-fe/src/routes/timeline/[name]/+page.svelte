@@ -5,6 +5,11 @@
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
 
+	import type { PageData } from './$houdini';
+
+	let { data }: { data: PageData } = $props();
+	let characterLimitStore = $derived(data.LoadCharacterLimit);
+
 	//const name = $derived(page.params.name);
 
 	let homeTimeline = new LoadHomeTimelineStore();
@@ -20,6 +25,7 @@
 						username: post.account.username
 					},
 					content: post.content,
+					attachments: post.attachments,
 					replyCount: 0,
 					likeCount: 0,
 					repostCount: 0,
@@ -38,12 +44,14 @@
 	});
 
 	async function loadTimeline() {
+		console.log(`last post length before: ${lastPostLength}`);
+
 		const result = await homeTimeline.loadNextPage();
 		reachedEnd = lastPostLength === result.data?.homeTimeline.edges.length;
 		lastPostLength = result.data?.homeTimeline.edges.length ?? lastPostLength;
 
 		console.log(`reached end: ${reachedEnd}`);
-		console.log(`last post length: ${lastPostLength}`);
+		console.log(`last post length after: ${lastPostLength}`);
 	}
 
 	async function onendreached() {
@@ -61,12 +69,16 @@
 		timelineMeta.loadingNewPosts = false;
 	}
 
+	function onnewpost() {
+		homeTimeline.loadPreviousPage();
+	}
+
 	// initial timeline load
 	homeTimeline.fetch();
 </script>
 
 <main class="m-auto max-w-prose">
-	<NewPost characterLimit={13} />
+	<NewPost characterLimit={$characterLimitStore?.data?.instance.characterLimit ?? 0} {onnewpost} />
 	<div class="divider"></div>
 	<Timeline {posts} {onendreached} />
 </main>

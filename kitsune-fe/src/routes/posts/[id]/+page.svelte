@@ -26,6 +26,7 @@
 				id={post.id}
 				{user}
 				content={post.content}
+				attachments={post.attachments}
 				visibility={post.visibility}
 				url={post.url}
 				createdAt={post.createdAt}

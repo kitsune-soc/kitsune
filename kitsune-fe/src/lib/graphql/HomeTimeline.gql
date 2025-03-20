@@ -6,6 +6,11 @@ query LoadHomeTimeline {
 				isSensitive
 				subject
 				content
+				attachments {
+					contentType
+					description
+					url
+				}
 				visibility
 				url
 				createdAt
