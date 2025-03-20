@@ -8,7 +8,7 @@
 </script>
 
 <div class="toast toast-center z-50">
-	{#each $toastStore as toast, idx ([idx, toast])}
+	{#each $toastStore as toast (toast)}
 		<div
 			transition:fade
 			class="alert"
