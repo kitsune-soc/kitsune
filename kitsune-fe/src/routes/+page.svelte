@@ -100,7 +100,7 @@
 	</div>
 
 	<div class="join join-vertical gap-3">
-		<div class="bg-base-100 stats shadow">
+		<div class="bg-base-100 stats max-sm:stats-vertical shadow">
 			<div class="stat place-items-center">
 				<div class="stat-title">Registered Users</div>
 				<div class="stat-value">
