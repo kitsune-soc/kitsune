@@ -13,7 +13,9 @@
 		</label>
 	</div>
 	<div class="navbar-center">
-		<div class="text-3xl font-bold">Kitsune</div>
+		<div class="text-3xl font-bold">
+			<a href="/">Kitsune</a>
+		</div>
 	</div>
 	<div class="navbar-end"></div>
 </nav>

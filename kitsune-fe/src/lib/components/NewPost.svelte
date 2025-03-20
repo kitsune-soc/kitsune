@@ -44,7 +44,7 @@
 	const visibilityOptions: Record<Visibility$options, { name: string }> = {
 		PUBLIC: { name: 'Public' },
 		UNLISTED: { name: 'Unlisted' },
-		FOLLOWER_ONLY: { name: 'Follower only' },
+		FOLLOWER_ONLY: { name: 'Followers only' },
 		MENTION_ONLY: { name: 'Mention only' }
 	};
 </script>
