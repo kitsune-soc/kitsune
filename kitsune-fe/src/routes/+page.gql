@@ -1,4 +1,4 @@
-query stats {
+query LoadStatistics {
 	instance {
 		captcha {
 			backend

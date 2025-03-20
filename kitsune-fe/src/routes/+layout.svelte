@@ -2,6 +2,7 @@
 	import { version as frontendVersion } from '$app/environment';
 	import Footer from '$lib/components/Footer.svelte';
 	import { Drawer } from '$lib/components/drawer';
+	import { ToastProvider } from '$lib/components/toast';
 
 	import type { Snippet } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
@@ -11,7 +12,7 @@
 
 	const { children, data }: { children: Snippet; data: PageData } = $props();
 
-	let backendVersionStore = $derived(data.version);
+	let backendVersionStore = $derived(data.LoadVersion);
 	let backendVersion = $derived($backendVersionStore.data?.instance.version ?? '[unknown]');
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
@@ -26,7 +27,9 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<Drawer>
-	{@render children()}
-	<Footer {backendVersion} {frontendVersion} />
-</Drawer>
+<ToastProvider>
+	<Drawer>
+		{@render children()}
+		<Footer {backendVersion} {frontendVersion} />
+	</Drawer>
+</ToastProvider>

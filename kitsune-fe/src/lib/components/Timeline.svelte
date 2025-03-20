@@ -46,13 +46,10 @@
 			? virtualItems[0].start - $virtualizer.options.scrollMargin
 			: 0}px);"
 	>
-		{#each virtualItems as row (row.index)}
-			<div
-				class="border-opacity-50 border-b border-gray-200"
-				bind:this={virtualElements[row.index]}
-				data-index={row.index}
-			>
+		{#each virtualItems as row (posts[row.index].id)}
+			<div bind:this={virtualElements[row.index]} data-index={row.index}>
 				<PostComponent primary={false} {...posts[row.index]} />
+				<div class="divider"></div>
 			</div>
 		{/each}
 	</div>

@@ -1,0 +1,5 @@
+mutation CreatePost($content: String!, $visibility: Visibility!) {
+	createPost(content: $content, isSensitive: false, visibility: $visibility) {
+		id
+	}
+}

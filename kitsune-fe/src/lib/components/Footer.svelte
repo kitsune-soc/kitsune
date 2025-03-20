@@ -17,6 +17,6 @@
 	</span>
 </footer>
 
-<div class="fixed right-3 bottom-3 hidden w-64 -scale-x-100 lg:flex">
+<div class="fixed right-3 bottom-3 hidden w-64 -scale-x-100 2xl:flex">
 	<Hangaku />
 </div>
