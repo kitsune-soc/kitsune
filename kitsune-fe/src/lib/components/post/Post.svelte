@@ -43,7 +43,7 @@
 				<PostVisibility {visibility} />
 			</div>
 
-			<div class="whitespace-pre">
+			<div class="break-all whitespace-pre-wrap">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html content}
 			</div>

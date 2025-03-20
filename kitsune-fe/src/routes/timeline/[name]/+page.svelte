@@ -1,6 +1,7 @@
 <script lang="ts">
 	//import { page } from '$app/state';
 	import { LoadHomeTimelineStore } from '$houdini';
+	import NewPost from '$lib/components/NewPost.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
 
@@ -10,7 +11,7 @@
 	let posts: Post[] = $derived(
 		$homeTimeline.data?.homeTimeline.edges
 			.map((edge) => edge.node)
-			.map((post): Post => {
+			.map((post) => {
 				return {
 					id: post.id,
 					user: {
@@ -65,5 +66,7 @@
 </script>
 
 <main class="m-auto max-w-prose">
+	<NewPost characterLimit={13} />
+	<div class="divider"></div>
 	<Timeline {posts} {onendreached} />
 </main>

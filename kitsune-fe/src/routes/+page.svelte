@@ -99,7 +99,7 @@
 		</p>
 	</div>
 
-	<div class="join join-vertical max-w-md gap-3">
+	<div class="join join-vertical gap-3">
 		<div class="bg-base-100 stats shadow">
 			<div class="stat place-items-center">
 				<div class="stat-title">Registered Users</div>
