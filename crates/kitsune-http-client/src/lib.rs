@@ -4,7 +4,7 @@
 use self::{resolver::Resolver, util::BoxCloneService};
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
-use hickory_resolver::config::{ResolverConfig, ResolverOpts};
+use hickory_resolver::{config::ResolverConfig, name_server::TokioConnectionProvider};
 use http::HeaderValue;
 use http_body::Body as HttpBody;
 use http_body_util::{BodyExt, BodyStream, Limited};
@@ -165,10 +165,11 @@ impl ClientBuilder {
     #[must_use]
     pub fn build(mut self) -> Client {
         let resolver = self.dns_resolver.take().unwrap_or_else(|| {
-            hickory_resolver::TokioResolver::tokio(
+            hickory_resolver::Resolver::builder_with_config(
                 ResolverConfig::quad9_tls(),
-                ResolverOpts::default(),
+                TokioConnectionProvider::default(),
             )
+            .build()
             .into()
         });
 

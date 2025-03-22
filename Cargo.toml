@@ -89,14 +89,14 @@ aliri_braid = "0.4.0"
 arc-swap = "1.7.1"
 argh = "0.1.13"
 argon2 = { version = "0.5.3", features = ["std"] }
-async-graphql = { version = "7.0.15", default-features = false, features = [
+async-graphql = { version = "7.0.16", default-features = false, features = [
     "graphiql",
     "tempfile",
     "time",
     "tracing",
     "uuid",
 ] }
-async-graphql-axum = "7.0.15"
+async-graphql-axum = "7.0.16"
 async-trait = "0.1.88"
 asynk-strim = "0.1.2"
 axum = { version = "0.8.1", features = ["macros", "multipart"] }
@@ -108,7 +108,7 @@ axum-extra = { version = "0.10.0", features = [
     "typed-header",
 ] }
 base64-simd = "0.8.0"
-blake3 = "1.6.1"
+blake3 = "1.7.0"
 bubble-bath = "0.2.1"
 bytes = "1.10.1"
 clap = { version = "4.5.32", features = ["derive", "wrap_help"] }
@@ -163,10 +163,10 @@ git-version = "0.3.9"
 globset = "0.4.16"
 headers = "0.4.0"
 hex-simd = "0.8.0"
-hickory-resolver = { version = "0.25.0-alpha.5", default-features = false, features = [
-    "dns-over-rustls",
+hickory-resolver = { version = "0.25.1", default-features = false, features = [
     "rustls-platform-verifier",
-    "tokio-runtime",
+    "tls-ring",
+    "tokio",
 ] }
 http = "1.3.1"
 http-body = "1.0.1"
@@ -221,7 +221,7 @@ meilisearch-sdk = { version = "0.28.0", default-features = false }
 memchr = "2.7.4"
 memmap2 = "0.9.5"
 miette = { version = "7.5.0", features = ["fancy"] }
-mimalloc = "0.1.43"
+mimalloc = "0.1.44"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.8.0", features = ["loader"] }
@@ -241,11 +241,11 @@ openidconnect = { version = "4.0.0", default-features = false, features = [
     "accept-string-booleans",
     "timing-resistant-secret-traits",
 ] }
-opentelemetry = { version = "0.28.0", default-features = false, features = [
+opentelemetry = { version = "0.29.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry-http = "0.28.0"
-opentelemetry-otlp = { version = "0.28.0", default-features = false, features = [
+opentelemetry-http = "0.29.0"
+opentelemetry-otlp = { version = "0.29.0", default-features = false, features = [
     "grpc-tonic",
     "http-json",
     "http-proto",
@@ -253,7 +253,7 @@ opentelemetry-otlp = { version = "0.28.0", default-features = false, features = 
     "tls-roots",
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.28.0", default-features = false, features = [
+opentelemetry_sdk = { version = "0.29.0", default-features = false, features = [
     "rt-tokio",
 ] }
 owo-colors = { version = "4.2.0", features = ["supports-colors"] }
@@ -313,9 +313,9 @@ strum = { version = "0.27.1", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.100", features = ["full"] }
 sync_wrapper = "1.0.2"
-tempfile = "3.19.0"
+tempfile = "3.19.1"
 thiserror = "2.0.12"
-time = "0.3.39"
+time = "0.3.40"
 tokio = { version = "1.44.1", features = ["full", "tracing"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
@@ -350,7 +350,7 @@ triomphe = { version = "0.1.14", default-features = false, features = [
     "arc-swap",
     "unsize",
 ] }
-typed-builder = "0.20.1"
+typed-builder = "0.21.0"
 typetag = "0.2.20"
 unsize = "1.1.0"
 ureq = "3.0.10"
@@ -361,7 +361,7 @@ uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.227.1"
 wasmparser = "0.227.1"
-wasmtime = { version = "30.0.2", default-features = false, features = [
+wasmtime = { version = "31.0.0", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
@@ -371,7 +371,7 @@ wasmtime = { version = "30.0.2", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "30.0.2", default-features = false }
+wasmtime-wasi = { version = "31.0.0", default-features = false }
 wat = "1.227.1"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
@@ -462,3 +462,6 @@ authors = ["The Kitsune authors"]
 edition = "2024"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
+
+[patch.crates-io]
+tracing-opentelemetry = { git = "https://github.com/tokio-rs/tracing-opentelemetry.git", rev = "8ef39f7ccca2717f5b828500391a56ff90dea481" }
