@@ -88,7 +88,7 @@
 </script>
 
 <Hero class="w-full flex-col justify-between lg:flex-row">
-	<div class="text-center lg:text-left">
+	<div class="flex flex-col max-lg:items-center max-lg:text-center">
 		<Logo class="max-w-3/4" />
 
 		<h1>Federated microblogging.</h1>
@@ -99,7 +99,7 @@
 		</p>
 	</div>
 
-	<div class="join join-vertical gap-3">
+	<div class="flex flex-col gap-3">
 		<div class="bg-base-100 stats max-sm:stats-vertical shadow">
 			<div class="stat place-items-center">
 				<div class="stat-title">Registered Users</div>

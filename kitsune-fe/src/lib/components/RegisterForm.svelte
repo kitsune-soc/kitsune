@@ -17,31 +17,27 @@
 		onregister(e);
 	}}
 >
-	<div>
-		<label for="username"> Username </label>
-		<Input type="text" name="username" placeholder="hangaku" required disabled={processing} />
-	</div>
+	<fieldset class="contents" disabled={processing}>
+		<div>
+			<label for="username"> Username </label>
+			<Input type="text" name="username" placeholder="hangaku" required />
+		</div>
 
-	<div>
-		<label for="email"> Email address </label>
-		<Input
-			type="email"
-			name="email"
-			placeholder="hangaku@kabuki.dd"
-			required
-			disabled={processing}
-		/>
-	</div>
+		<div>
+			<label for="email"> Email address </label>
+			<Input type="email" name="email" placeholder="hangaku@kabuki.dd" required />
+		</div>
 
-	<div>
-		<label for="password"> Password </label>
-		<Input type="password" name="password" required disabled={processing} />
-	</div>
+		<div>
+			<label for="password"> Password </label>
+			<Input type="password" name="password" required />
+		</div>
 
-	<div>
-		<label for="confirm-password"> Confirm Password </label>
-		<Input type="password" name="confirm-password" required disabled={processing} />
-	</div>
+		<div>
+			<label for="confirm-password"> Confirm Password </label>
+			<Input type="password" name="confirm-password" required />
+		</div>
 
-	<Button class="w-full" loading={processing}>Register</Button>
+		<Button class="w-full" loading={processing}>Register</Button>
+	</fieldset>
 </form>

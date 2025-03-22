@@ -103,7 +103,7 @@
 			</figure>
 			<div class="card-body flex justify-end">
 				<div
-					class="card bg-base-100 text-base-content join join-horizontal max-w-1/2 items-end gap-3 p-3 shadow-xl"
+					class="card bg-base-100 text-base-content flex max-w-1/2 flex-row items-end gap-3 p-3 shadow-xl"
 				>
 					<div class="avatar">
 						<div class="w-24 rounded">
@@ -113,7 +113,7 @@
 						</div>
 					</div>
 
-					<div class="join join-vertical">
+					<div class="flex flex-col">
 						{account.displayName ?? account.username}
 						<span class="font-bold">
 							@{account.username}
