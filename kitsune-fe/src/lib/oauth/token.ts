@@ -1,3 +1,5 @@
+import { browser } from '$app/environment';
+
 import { DateTime } from 'luxon';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
@@ -21,12 +23,33 @@ const OAUTH_TOKEN_SCHEMA = z.object({
 type OAuthTokenStorageTy = z.infer<typeof OAUTH_TOKEN_STORAGE_SCHEMA>;
 
 /**
+ * Returns the regular local storage if we are in a browser environment.
+ * But it returns a stub if we are in a different environment, such as pre-render or SSR.
+ *
+ * @returns Storage appropriate for the current environment
+ */
+function localStorage(): Storage {
+	if (browser) {
+		return window.localStorage;
+	} else {
+		return {
+			clear: () => {},
+			getItem: () => null,
+			setItem: () => {},
+			removeItem: () => {},
+			key: () => null,
+			length: 0
+		};
+	}
+}
+
+/**
  * Attempt to load the OAuth token from local storage
  *
  * @returns OAuth token structure if the data was present and well formed, returns `undefined` otherwise
  */
 function loadFromStorage(): OAuthTokenStorageTy | undefined {
-	const data = localStorage.getItem(OAUTH_TOKEN_STORAGE_KEY);
+	const data = localStorage().getItem(OAUTH_TOKEN_STORAGE_KEY);
 	if (!data) {
 		return undefined;
 	}
@@ -67,9 +90,9 @@ tokenStore.subscribe((newToken) => {
 // persist store changes to local storage
 tokenStore.subscribe((newToken) => {
 	if (newToken) {
-		localStorage.setItem(OAUTH_TOKEN_STORAGE_KEY, JSON.stringify(newToken));
+		localStorage().setItem(OAUTH_TOKEN_STORAGE_KEY, JSON.stringify(newToken));
 	} else {
-		localStorage.removeItem(OAUTH_TOKEN_STORAGE_KEY);
+		localStorage().removeItem(OAUTH_TOKEN_STORAGE_KEY);
 	}
 });
 
