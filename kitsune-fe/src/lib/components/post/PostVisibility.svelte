@@ -6,7 +6,10 @@
 	import IconLock from '~icons/mdi/lock';
 	import IconLockOpen from '~icons/mdi/lock-open';
 
-	let { visibility }: { visibility: Visibility$options } = $props();
+	let {
+		halfVisible = true,
+		visibility
+	}: { halfVisible?: boolean; visibility: Visibility$options } = $props();
 
 	let tooltip = $derived.by(() => {
 		switch (visibility) {
@@ -35,6 +38,6 @@
 	});
 </script>
 
-<span class="opacity-50" title={tooltip}>
-	<Icon class="opacity-50" />
+<span class:opacity-50={halfVisible} title={tooltip}>
+	<Icon />
 </span>

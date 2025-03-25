@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import Logo from '$assets/Logo.svelte';
 	import { RegisterUserStore } from '$houdini';
+	import Hero from '$lib/components/Hero.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { Button } from '$lib/components/input';
 	import { loadOAuthApp } from '$lib/oauth/client';
@@ -13,7 +14,7 @@
 
 	const { data }: { data: PageData } = $props();
 
-	const statsStore = $derived(data.stats);
+	const statsStore = $derived(data.LoadStatistics);
 	const stats = $derived({
 		characterLimit: $statsStore.data?.instance.characterLimit ?? 0,
 		description: $statsStore.data?.instance.description ?? '',
@@ -86,69 +87,62 @@
 	});
 </script>
 
-<div class="hero min-h-screen">
-	<div class="hero-content w-full flex-col justify-between lg:flex-row">
-		<div class="text-center lg:text-left">
-			<Logo class="max-w-3/4" />
+<Hero class="w-full flex-col justify-between lg:flex-row">
+	<div class="flex flex-col max-lg:items-center max-lg:text-center">
+		<Logo class="max-w-3/4" />
 
-			<h1>Federated microblogging.</h1>
+		<h1>Federated microblogging.</h1>
 
-			<p>
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{@html stats.description}
-			</p>
-		</div>
+		<p>
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html stats.description}
+		</p>
+	</div>
 
-		<div class="join join-vertical max-w-md gap-3">
-			<div class="bg-base-100 stats shadow">
-				<div class="stat place-items-center">
-					<div class="stat-title">Registered Users</div>
-					<div class="stat-value">
-						{stats.registeredUsers}
-					</div>
-				</div>
-
-				<div class="stat place-items-center">
-					<div class="stat-title">Authored posts</div>
-					<div class="stat-value">
-						{stats.postCount}
-					</div>
-				</div>
-
-				<div class="stat place-items-center">
-					<div class="stat-title">Character limit</div>
-					<div class="stat-value">
-						{stats.characterLimit}
-					</div>
+	<div class="flex flex-col gap-3">
+		<div class="bg-base-100 stats max-sm:stats-vertical shadow">
+			<div class="stat place-items-center">
+				<div class="stat-title">Registered Users</div>
+				<div class="stat-value">
+					{stats.registeredUsers}
 				</div>
 			</div>
 
-			<div class="card bg-base-100 p-10 shadow-2xl">
-				{#if stats.registrationsOpen}
-					{#if registerErrors.length !== 0}
-						<div role="alert" class="alert alert-error mb-5">
-							<IconErrorOutline class="opacity-70" />
-							<ol class="list-none p-0">
-								{#each registerErrors as error, index (index)}
-									<li>{error}</li>
-								{/each}
-							</ol>
-						</div>
-					{/if}
+			<div class="stat place-items-center">
+				<div class="stat-title">Authored posts</div>
+				<div class="stat-value">
+					{stats.postCount}
+				</div>
+			</div>
 
-					<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
-					<div class="divider">OR</div>
+			<div class="stat place-items-center">
+				<div class="stat-title">Character limit</div>
+				<div class="stat-value">
+					{stats.characterLimit}
+				</div>
+			</div>
+		</div>
+
+		<div class="card bg-base-100 p-10 shadow-2xl">
+			{#if stats.registrationsOpen}
+				{#if registerErrors.length !== 0}
+					<div role="alert" class="alert alert-error mb-5">
+						<IconErrorOutline class="opacity-70" />
+						<ol class="list-none p-0">
+							{#each registerErrors as error, index (index)}
+								<li>{error}</li>
+							{/each}
+						</ol>
+					</div>
 				{/if}
 
-				<Button
-					class="w-full"
-					buttonType="neutral"
-					onclick={initiateLogin}
-					loading={loginInProcess}
-				>
-					Already have an account? Sign in
-				</Button>
-			</div>
+				<RegisterForm onregister={doRegister} processing={registerButtonDisabled} />
+				<div class="divider">OR</div>
+			{/if}
+
+			<Button class="w-full" buttonType="neutral" onclick={initiateLogin} loading={loginInProcess}>
+				Already have an account? Sign in
+			</Button>
 		</div>
 	</div>
-</div>
+</Hero>

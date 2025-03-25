@@ -7,8 +7,7 @@ extern crate tracing;
 use crate::util::OpaqueDebug;
 use async_trait::async_trait;
 use hickory_resolver::{
-    TokioResolver,
-    config::{ResolverConfig, ResolverOpts},
+    Resolver, TokioResolver, config::ResolverConfig, name_server::TokioConnectionProvider,
 };
 use rand::{
     RngCore,
@@ -160,12 +159,15 @@ impl VerificationStrategy for KeyValueStrategy {
 /// Construct the default resolver used by this library
 #[must_use]
 pub fn default_resolver() -> Arc<dyn DnsResolver> {
-    Arc::new(TokioResolver::tokio(
-        // Per-default hickory-resolver would use Google's DNS servers.
-        // Since Google is kinda disgusting, we use Quad9 instead.
-        ResolverConfig::quad9_tls(),
-        ResolverOpts::default(),
-    ))
+    Arc::new(
+        Resolver::builder_with_config(
+            // Per-default hickory-resolver would use Google's DNS servers.
+            // Since Google is kinda disgusting, we use Quad9 instead.
+            ResolverConfig::quad9_tls(),
+            TokioConnectionProvider::default(),
+        )
+        .build(),
+    )
     .unsize(Coercion!(to dyn DnsResolver))
 }
 

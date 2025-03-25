@@ -1,0 +1,43 @@
+query LoadAccount($id: UUID!) {
+	getAccountById(id: $id) {
+		id
+		displayName
+		username
+		avatar {
+			url
+		}
+		header {
+			url
+		}
+		posts(first: 15) @paginate {
+			edges {
+				node {
+					id
+					isSensitive
+					subject
+					content
+					attachments {
+						contentType
+						description
+						url
+					}
+					visibility
+					url
+					createdAt
+					account {
+						id
+						displayName
+						username
+						url
+						avatar {
+							url
+						}
+						header {
+							url
+						}
+					}
+				}
+			}
+		}
+	}
+}

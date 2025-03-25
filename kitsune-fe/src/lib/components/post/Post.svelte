@@ -2,6 +2,7 @@
 	import type { Post } from '$lib/types/Post';
 
 	import RelativeTime from '../RelativeTime.svelte';
+	import Attachments from './Attachments.svelte';
 	import InteractionButton from './InteractionButton.svelte';
 	import PostVisibility from './PostVisibility.svelte';
 	import IconMenu from '~icons/mdi/menu';
@@ -13,6 +14,7 @@
 		id,
 		user,
 		content,
+		attachments,
 		visibility,
 		createdAt,
 		replyCount,
@@ -25,7 +27,7 @@
 </script>
 
 {#snippet renderPost()}
-	<article class="flex w-full flex-row p-3">
+	<article class="card bg-base-100 flex w-full flex-row p-5 shadow-xl">
 		<div class="w-16">
 			<img class="m-0 h-auto w-full rounded" src={user.avatarUrl} alt="{user.username} avatar" />
 		</div>
@@ -43,10 +45,12 @@
 				<PostVisibility {visibility} />
 			</div>
 
-			<div class="whitespace-pre">
+			<div class="break-all whitespace-pre-wrap">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html content}
 			</div>
+
+			<Attachments {attachments} />
 
 			<!-- ToDo: Make the post clickable without a link element. The link element fucks up screenreaders -->
 
