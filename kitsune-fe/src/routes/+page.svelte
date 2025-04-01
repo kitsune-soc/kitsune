@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Logo from '$assets/Logo.svelte';
-	import { RegisterUserStore } from '$houdini';
+	import { GQL_RegisterUser } from '$houdini';
 	import Hero from '$lib/components/Hero.svelte';
 	import RegisterForm from '$lib/components/RegisterForm.svelte';
 	import { Button } from '$lib/components/input';
@@ -22,8 +22,6 @@
 		registeredUsers: $statsStore.data?.instance.userCount ?? 0,
 		registrationsOpen: $statsStore.data?.instance.registrationsOpen ?? true
 	});
-
-	const register = new RegisterUserStore();
 
 	let registerButtonDisabled = $state(false);
 	let registerErrors: string[] = $state([]);
@@ -50,7 +48,7 @@
 		}
 
 		try {
-			const result = await register.mutate(validatedData.data);
+			const result = await GQL_RegisterUser.mutate(validatedData.data);
 			if (result.errors) {
 				registerErrors = result.errors.map((error) => error.message);
 			} else {

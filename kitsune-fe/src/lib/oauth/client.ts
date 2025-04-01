@@ -1,4 +1,4 @@
-import { RegisterOAuthAppStore } from '$houdini';
+import { GQL_RegisterOAuthApp } from '$houdini';
 
 import { z } from 'zod';
 
@@ -9,15 +9,13 @@ const OAUTH_APP_SCHEMA = z.object({
 	redirectUri: z.string().url().nonempty()
 });
 
-const REGISTER_APP = new RegisterOAuthAppStore();
-
 type OAuthApplicationTy = z.infer<typeof OAUTH_APP_SCHEMA>;
 
 async function registerOAuthApp(): Promise<OAuthApplicationTy> {
 	const redirectUri = `${window.location.origin}/oauth-callback`;
 
 	try {
-		const response = await REGISTER_APP.mutate({
+		const response = await GQL_RegisterOAuthApp.mutate({
 			redirectUri
 		});
 
