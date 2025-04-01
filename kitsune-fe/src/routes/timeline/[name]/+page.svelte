@@ -1,9 +1,11 @@
 <script lang="ts">
 	//import { page } from '$app/state';
-	import { LoadHomeTimelineStore } from '$houdini';
+	import { GQL_LoadHomeTimeline } from '$houdini';
 	import NewPost from '$lib/components/NewPost.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import type { Post } from '$lib/types/Post';
+
+	import { onMount } from 'svelte';
 
 	import type { PageData } from './$houdini';
 
@@ -12,9 +14,8 @@
 
 	//const name = $derived(page.params.name);
 
-	let homeTimeline = new LoadHomeTimelineStore();
 	let posts: Post[] = $derived(
-		$homeTimeline.data?.homeTimeline.edges
+		$GQL_LoadHomeTimeline.data?.homeTimeline.edges
 			.map((edge) => edge.node)
 			.map((post) => {
 				return {
@@ -46,7 +47,7 @@
 	async function loadTimeline() {
 		console.log(`last post length before: ${lastPostLength}`);
 
-		const result = await homeTimeline.loadNextPage();
+		const result = await GQL_LoadHomeTimeline.loadNextPage();
 		reachedEnd = lastPostLength === result.data?.homeTimeline.edges.length;
 		lastPostLength = result.data?.homeTimeline.edges.length ?? lastPostLength;
 
@@ -70,11 +71,11 @@
 	}
 
 	function onnewpost() {
-		homeTimeline.loadPreviousPage();
+		GQL_LoadHomeTimeline.loadPreviousPage();
 	}
 
 	// initial timeline load
-	homeTimeline.fetch();
+	onMount(() => GQL_LoadHomeTimeline.fetch());
 </script>
 
 <main class="m-auto max-w-prose">

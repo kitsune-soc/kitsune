@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Visibility$options } from '$houdini';
-	import { CreatePostStore } from '$houdini';
+	import { GQL_CreatePost } from '$houdini';
 
 	import { PostVisibility } from './post';
 	import { pushToast } from './toast';
@@ -18,10 +18,8 @@
 	let visibilityDropdown: HTMLDetailsElement | undefined = $state();
 	let errors: string[] | undefined = $state();
 
-	const createPost = new CreatePostStore();
-
 	async function submitPost(): Promise<void> {
-		const result = await createPost.mutate({
+		const result = await GQL_CreatePost.mutate({
 			content,
 			visibility
 		});
