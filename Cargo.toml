@@ -108,7 +108,7 @@ axum-extra = { version = "0.10.1", features = [
     "typed-header",
 ] }
 base64-simd = "0.8.0"
-blake3 = "1.8.0"
+blake3 = "1.8.1"
 bubble-bath = "0.2.1"
 bytes = "1.10.1"
 clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
@@ -121,7 +121,7 @@ const-oid = { version = "=0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "2.0.1", features = ["from"] }
-diesel = { version = "2.2.8", default-features = false, features = [
+diesel = { version = "2.2.9", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
     "uuid",
@@ -135,7 +135,7 @@ diesel-async = { version = "0.5.2", features = [
 ] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
 diesel_migrations = "2.2.0"
-divan = "0.1.17"
+divan = "0.1.21"
 either = { version = "1.15.0", default-features = false }
 enum_dispatch = "0.3.13"
 eyre = "0.6.12"
@@ -191,7 +191,7 @@ hyper-rustls = { version = "0.27.5", default-features = false, features = [
 ] }
 icu_normalizer = "1.5.0"
 img-parts = "0.3.3"
-indexmap = { version = "2.8.0", features = ["serde"] }
+indexmap = { version = "2.9.0", features = ["serde"] }
 insta = { version = "1.42.2", default-features = false, features = [
     "glob",
     "json",
@@ -221,7 +221,7 @@ meilisearch-sdk = { version = "0.28.0", default-features = false }
 memchr = "2.7.4"
 memmap2 = "0.9.5"
 miette = { version = "7.5.0", features = ["fancy"] }
-mimalloc = "0.1.44"
+mimalloc = "0.1.46"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
 minijinja = { version = "2.9.0", features = ["loader"] }
@@ -241,7 +241,7 @@ openidconnect = { version = "4.0.0", default-features = false, features = [
     "accept-string-booleans",
     "timing-resistant-secret-traits",
 ] }
-opentelemetry = { version = "0.29.0", default-features = false, features = [
+opentelemetry = { version = "0.29.1", default-features = false, features = [
     "trace",
 ] }
 opentelemetry-http = "0.29.0"
@@ -279,9 +279,9 @@ retry-policies = "0.4.0"
 ring = { version = "0.17.14", features = ["std"] }
 rsa = "0.9.8"
 rstest = { version = "0.25.0", default-features = false }
-rust-embed = { version = "8.6.0", features = ["include-exclude"] }
+rust-embed = { version = "8.7.0", features = ["include-exclude"] }
 rustc-hash = "2.1.1"
-rustls = { version = "0.23.25", default-features = false, features = [
+rustls = { version = "0.23.26", default-features = false, features = [
     "logging",
     "ring",
     "std",
@@ -308,7 +308,7 @@ sha2 = "0.10.8"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 slab = "0.4.9"
 smol_str = { version = "0.3.2", features = ["serde"] }
-sonic-rs = "0.4.1"
+sonic-rs = "0.5.0"
 strum = { version = "0.27.1", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.100", features = ["full"] }
