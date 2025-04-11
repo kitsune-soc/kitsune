@@ -7,10 +7,7 @@ use futures_util::Stream;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use std::{
-    any::{Any, TypeId},
-    ptr,
-};
+use std::any::Any;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
 use unsize::{CoerceUnsize, Coercion};
@@ -46,24 +43,6 @@ pub struct JobDetails<C> {
 #[typetag::serde]
 pub trait Keepable: Any + Send + Sync + 'static {}
 
-// Hack around <https://github.com/rust-lang/rust/issues/65991> because it's not stable yet.
-// So I had to implement trait downcasting myself.
-//
-// TODO: Remove this once <https://github.com/rust-lang/rust/issues/65991> is stabilized.
-#[inline]
-fn downcast_to<T>(obj: &dyn Keepable) -> Option<&T>
-where
-    T: Keepable + 'static,
-{
-    if obj.type_id() == TypeId::of::<T>() {
-        #[allow(unsafe_code)]
-        // SAFETY: the `TypeId` equality check ensures this type cast is correct
-        Some(unsafe { &*ptr::from_ref::<dyn Keepable>(obj).cast::<T>() })
-    } else {
-        None
-    }
-}
-
 #[typetag::serde]
 impl Keepable for String {}
 
@@ -98,7 +77,7 @@ impl KeeperOfTheSecrets {
     {
         self.inner
             .as_ref()
-            .and_then(|item| downcast_to(item.as_ref()))
+            .and_then(|item| (item as &dyn Any).downcast_ref())
     }
 }
 
