@@ -76,7 +76,7 @@ impl KeeperOfTheSecrets {
         T: Keepable + 'static,
     {
         self.inner
-            .as_ref()
+            .as_deref()
             .and_then(|item| (item as &dyn Any).downcast_ref())
     }
 }
