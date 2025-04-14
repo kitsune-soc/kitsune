@@ -30,7 +30,7 @@
 </script>
 
 <div class="flex gap-2" {...pinInput.root}>
-	{#each pinInput.inputs as input}
+	{#each pinInput.inputs as input, idx (idx)}
 		<input {...input} class="input w-9" />
 	{/each}
 </div>
