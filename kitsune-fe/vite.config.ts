@@ -1,3 +1,4 @@
+import SvelteFluent from '@nubolab-ffwd/svelte-fluent/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { SvelteKitPWA, type SvelteKitPWAOptions } from '@vite-pwa/sveltekit';
@@ -27,6 +28,7 @@ export default defineConfig({
 		}),
 		sveltekit(),
 		SvelteKitPWA(pwaOptions),
+		SvelteFluent(),
 		tailwindcss()
 	],
 	server: {
