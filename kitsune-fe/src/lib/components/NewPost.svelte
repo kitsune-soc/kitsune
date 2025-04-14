@@ -2,6 +2,8 @@
 	import type { Visibility$options } from '$houdini';
 	import { GQL_CreatePost } from '$houdini';
 
+	import { Select } from 'melt/builders';
+
 	import { PostVisibility } from './post';
 	import { pushToast } from './toast';
 
@@ -13,10 +15,21 @@
 	let isOverLimit = $derived(remainingCharacters < 0);
 	let postDisabled = $derived(content.length === 0 || isOverLimit);
 
-	let visibility: Visibility$options = $state('PUBLIC');
-
-	let visibilityDropdown: HTMLDetailsElement | undefined = $state();
 	let errors: string[] | undefined = $state();
+
+	const visibilityOptions: Record<Visibility$options, { name: string }> = {
+		PUBLIC: { name: 'Public' },
+		UNLISTED: { name: 'Unlisted' },
+		FOLLOWER_ONLY: { name: 'Followers only' },
+		MENTION_ONLY: { name: 'Mention only' }
+	};
+
+	const visibilitySelect = new Select<Visibility$options>({
+		sameWidth: false,
+		value: 'PUBLIC'
+	});
+
+	let visibility = $derived(visibilitySelect.value!);
 
 	async function submitPost(): Promise<void> {
 		const result = await GQL_CreatePost.mutate({
@@ -38,13 +51,6 @@
 			});
 		}
 	}
-
-	const visibilityOptions: Record<Visibility$options, { name: string }> = {
-		PUBLIC: { name: 'Public' },
-		UNLISTED: { name: 'Unlisted' },
-		FOLLOWER_ONLY: { name: 'Followers only' },
-		MENTION_ONLY: { name: 'Mention only' }
-	};
 </script>
 
 <div class="card bg-base-300 shadow-xl">
@@ -71,30 +77,23 @@
 			</div>
 
 			<div>
-				<details bind:this={visibilityDropdown} class="dropdown">
-					<summary class="btn btn-neutral m-1">
-						<PostVisibility halfVisible={false} {visibility} />
-						{visibilityOptions[visibility].name}
-					</summary>
-					<ul class="menu dropdown-content bg-base-100 rounded-box z-1 m-0 w-52 p-2 shadow-xl">
+				<button {...visibilitySelect.trigger} class="btn btn-neutral m-1">
+					<PostVisibility halfVisible={false} {visibility} />
+					{visibilityOptions[visibility].name}
+				</button>
+
+				<div class="bg-base-100 rounded-box shadow-xl" {...visibilitySelect.content}>
+					<ul class="menu m-0 p-2">
 						{#each Object.entries(visibilityOptions) as [key, value] (key)}
 							<li>
-								<button
-									onclick={() => {
-										visibility = key as Visibility$options;
-
-										if (visibilityDropdown) {
-											visibilityDropdown.open = false;
-										}
-									}}
-								>
+								<button {...visibilitySelect.getOption(key as Visibility$options)}>
 									<PostVisibility halfVisible={false} visibility={key as Visibility$options} />
 									{value.name}
 								</button>
 							</li>
 						{/each}
 					</ul>
-				</details>
+				</div>
 
 				<button class="btn btn-primary" onclick={() => submitPost()} disabled={postDisabled}>
 					Post

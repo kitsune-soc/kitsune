@@ -1,23 +1,37 @@
 <script lang="ts">
+	import { createDialog, melt } from '@melt-ui/svelte';
+
 	import type { Snippet } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	let { children }: { children: Snippet } = $props();
 
-	let zoomed = $state(false);
+	const {
+		elements: { trigger, overlay, content, portalled },
+		states: { open }
+	} = createDialog({
+		forceVisible: true
+	});
 </script>
 
-{#if zoomed}
-	<dialog open class="modal">
-		<div class="modal-box p-0">
+<button class="contents cursor-zoom-in" use:melt={$trigger}>
+	{@render children()}
+</button>
+
+{#if $open}
+	<div use:melt={$portalled}>
+		<div
+			class="fixed inset-0 z-50 bg-black/50"
+			transition:fade={{ duration: 150 }}
+			use:melt={$overlay}
+		></div>
+
+		<div
+			class="fixed top-1/2 left-1/2 z-50 max-h-[85vh] -translate-x-1/2 -translate-y-1/2"
+			transition:fade={{ duration: 150 }}
+			use:melt={$content}
+		>
 			{@render children()}
 		</div>
-
-		<form method="dialog" class="modal-backdrop" onsubmit={() => (zoomed = false)}>
-			<button class="!cursor-zoom-out">close</button>
-		</form>
-	</dialog>
-{:else}
-	<button class="contents cursor-zoom-in" onclick={() => (zoomed = true)}>
-		{@render children()}
-	</button>
+	</div>
 {/if}
