@@ -1,22 +1,37 @@
+<script lang="ts" module>
+	import { Toaster } from 'melt/builders';
+
+	type ToastData = {
+		severity: 'info' | 'error' | 'success';
+		message: string;
+	};
+
+	const toaster = new Toaster<ToastData>();
+	const pushToast = toaster.addToast;
+
+	export { pushToast };
+</script>
+
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	import { toastStore } from '.';
-
 	let { children }: { children: Snippet } = $props();
 </script>
 
-<div class="toast toast-center z-50">
-	{#each $toastStore as toast (toast)}
+<div {...toaster.root} class="toast toast-center">
+	{#each toaster.toasts as toast (toast.id)}
 		<div
+			{...toast.content}
 			transition:fade
 			class="alert"
-			class:alert-error={toast.severity === 'error'}
-			class:alert-info={toast.severity === 'info'}
-			class:alert-success={toast.severity === 'success'}
+			class:alert-error={toast.data.severity === 'error'}
+			class:alert-info={toast.data.severity === 'info'}
+			class:alert-success={toast.data.severity === 'success'}
 		>
-			{toast.message}
+			<span {...toast.description}>
+				{toast.data.message}
+			</span>
 		</div>
 	{/each}
 </div>
