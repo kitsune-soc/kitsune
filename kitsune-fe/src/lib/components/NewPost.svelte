@@ -46,8 +46,10 @@
 			if (onnewpost) onnewpost();
 
 			pushToast({
-				severity: 'success',
-				message: 'Post created!'
+				data: {
+					severity: 'success',
+					message: 'Post created!'
+				}
 			});
 		}
 	}
