@@ -21,7 +21,6 @@ pub use self::redis::JobQueue as RedisJobQueue;
 
 mod common;
 mod error;
-mod macros;
 #[cfg(feature = "redis")]
 mod redis;
 
