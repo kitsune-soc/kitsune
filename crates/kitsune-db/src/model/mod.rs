@@ -2,6 +2,7 @@ pub mod account;
 pub mod custom_emoji;
 pub mod favourite;
 pub mod follower;
+pub mod job;
 pub mod job_context;
 pub mod link_preview;
 pub mod media_attachment;

@@ -53,6 +53,7 @@
           in
           {
             formatter = pkgs.nixpkgs-fmt;
+
             packages = {
               devenv-up = self.devShells.${system}.default.config.procfileScript;
             } // (import ./nix/packages.nix) {

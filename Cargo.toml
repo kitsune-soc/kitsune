@@ -108,10 +108,10 @@ axum-extra = { version = "0.10.1", features = [
     "typed-header",
 ] }
 base64-simd = "0.8.0"
-blake3 = "1.8.1"
+blake3 = "1.8.2"
 bubble-bath = "0.2.1"
 bytes = "1.10.1"
-clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.37", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.3"
 colored_json = "5.0.0"
 compact_str = { version = "0.9.0", features = ["serde"] }
@@ -133,6 +133,7 @@ diesel-async = { version = "0.5.2", features = [
     "postgres",
     "tokio",
 ] }
+diesel-derive-enum = { version = "3.0.0-beta.1", features = ["postgres"] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
 diesel_migrations = "2.2.0"
 divan = "0.1.21"
@@ -216,7 +217,7 @@ lettre = { version = "0.11.15", default-features = false, features = [
 ] }
 lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
-lol_html = "2.2.0"
+lol_html = "2.3.0"
 meilisearch-sdk = { version = "0.28.0", default-features = false }
 memchr = "2.7.4"
 memmap2 = "0.9.5"
@@ -263,7 +264,7 @@ pin-project-lite = "0.2.16"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
 postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
 pretty_assertions = "1.4.1"
-proc-macro2 = "1.0.94"
+proc-macro2 = "1.0.95"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = [
     "html",
     "simd",
@@ -273,7 +274,7 @@ quote = "1.0.40"
 rand = "=0.8.5"
 rand_xorshift = "=0.3.0"
 rayon = "1.10.0"
-redb = { version = "2.4.0", features = ["logging"] }
+redb = { version = "2.5.0", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.4.0"
 ring = { version = "0.17.14", features = ["std"] }
@@ -319,7 +320,7 @@ time = "0.3.41"
 tokio = { version = "1.44.2", features = ["full", "tracing"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
-tokio-util = { version = "0.7.14", features = ["io", "rt"] }
+tokio-util = { version = "0.7.15", features = ["io", "rt"] }
 toml = { version = "0.8.20", default-features = false, features = ["parse"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.2", features = [
@@ -353,15 +354,15 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.21.0"
 typetag = "0.2.20"
 unsize = "1.1.0"
-ureq = "3.0.10"
+ureq = "3.0.11"
 url = "2.5.4"
 urlencoding = "2.1.3"
 uuid = { version = "1.16.0", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.228.0"
-wasmparser = "0.228.0"
-wasmtime = { version = "31.0.0", default-features = false, features = [
+wasm-encoder = "0.229.0"
+wasmparser = "0.229.0"
+wasmtime = { version = "32.0.0", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
@@ -371,8 +372,8 @@ wasmtime = { version = "31.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "31.0.0", default-features = false }
-wat = "1.228.0"
+wasmtime-wasi = { version = "32.0.0", default-features = false }
+wat = "1.229.0"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
 wit-bindgen = "0.41.0"

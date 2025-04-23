@@ -7,7 +7,10 @@ use futures_util::Stream;
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
-use std::any::Any;
+use std::{
+    any::Any,
+    fmt::{self, Debug},
+};
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
 use unsize::{CoerceUnsize, Coercion};
@@ -77,6 +80,13 @@ impl KeeperOfTheSecrets {
         self.inner
             .as_deref()
             .and_then(|item| (item as &dyn Any).downcast_ref())
+    }
+}
+
+impl Debug for KeeperOfTheSecrets {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct(std::any::type_name::<Self>())
+            .finish_non_exhaustive()
     }
 }
 

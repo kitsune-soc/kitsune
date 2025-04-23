@@ -55,7 +55,7 @@ async fn boot() -> eyre::Result<()> {
         http_client,
         job_queue,
         dispatcher_state,
-        config.job_queue.num_workers.get(),
+        config.job_queue.num_workers().get(),
     ));
 
     tokio::select! {

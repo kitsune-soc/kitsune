@@ -10,6 +10,7 @@ build = "build.rs"
 blowocking.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
+diesel-derive-enum.workspace = true
 diesel_full_text_search.workspace = true
 diesel_migrations.workspace = true
 futures-util.workspace = true
