@@ -84,6 +84,20 @@ impl KitsuneContextRepo {
     pub fn new(db_pool: PgPool) -> Self {
         Self { db_pool }
     }
+
+    pub async fn remove_context_ops<C>(
+        conn: &mut C,
+        job_id: Uuid,
+    ) -> Result<(), diesel::result::Error>
+    where
+        C: diesel_async::AsyncConnection<Backend = diesel::pg::Pg>,
+    {
+        diesel::delete(job_context::table.find(job_id))
+            .execute(conn)
+            .await?;
+
+        Ok(())
+    }
 }
 
 impl JobContextRepository for KitsuneContextRepo {
@@ -110,9 +124,7 @@ impl JobContextRepository for KitsuneContextRepo {
 
     async fn remove_context(&self, job_id: Uuid) -> Result<(), Self::Error> {
         with_connection!(self.db_pool, |conn| {
-            diesel::delete(job_context::table.find(job_id))
-                .execute(conn)
-                .await
+            Self::remove_context_ops(conn, job_id).await
         })?;
 
         Ok(())

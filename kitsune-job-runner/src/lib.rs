@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
+use self::db_queue::DbQueue;
 use athena::{Coerce, JobContextRepository, JobQueue, RedisJobQueue, TaskTracker};
 use color_eyre::eyre;
 use fred::{
@@ -8,7 +9,7 @@ use fred::{
 };
 use futures_util::FutureExt;
 use just_retry::RetryExt;
-use kitsune_config::job_queue::Configuration;
+use kitsune_config::job_queue::{Configuration, RedisConfiguration};
 use kitsune_db::PgPool;
 use kitsune_email::{
     MailSender, MailingService,
@@ -26,6 +27,8 @@ use std::time::Duration;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
 
+pub mod db_queue;
+
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 
 #[derive(TypedBuilder)]
@@ -38,12 +41,17 @@ pub struct JobDispatcherState {
     url_service: UrlService,
 }
 
-pub async fn prepare_job_queue(
-    db_pool: PgPool,
-    config: &Configuration,
-) -> eyre::Result<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
-    let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
+fn build_db_queue(context_repo: KitsuneContextRepo, db_pool: PgPool) -> DbQueue {
+    DbQueue::builder()
+        .context_repo(context_repo)
+        .db_pool(db_pool)
+        .build()
+}
 
+async fn build_redis_queue(
+    context_repo: KitsuneContextRepo,
+    config: &RedisConfiguration,
+) -> eyre::Result<RedisJobQueue<KitsuneContextRepo>> {
     let config = RedisConfig::from_url(config.redis_url.as_str())?;
     // TODO: Make pool size configurable
     let redis_pool = RedisPool::new(config, None, None, None, 10)?;
@@ -55,7 +63,29 @@ pub async fn prepare_job_queue(
         .queue_name("kitsune-jobs")
         .build();
 
-    Ok(Arc::new(queue).coerce())
+    Ok(queue)
+}
+
+pub async fn prepare_job_queue(
+    db_pool: PgPool,
+    config: &Configuration,
+) -> eyre::Result<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
+    let context_repo = KitsuneContextRepo::builder()
+        .db_pool(db_pool.clone())
+        .build();
+
+    let queue = match config {
+        Configuration::Database(..) => {
+            let queue = build_db_queue(context_repo, db_pool);
+            Arc::new(queue).coerce()
+        }
+        Configuration::Redis(redis_config) => {
+            let queue = build_redis_queue(context_repo, redis_config).await?;
+            Arc::new(queue).coerce()
+        }
+    };
+
+    Ok(queue)
 }
 
 #[cfg_attr(not(coverage), instrument(skip(http_client, job_queue, state)))]

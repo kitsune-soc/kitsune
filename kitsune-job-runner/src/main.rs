@@ -72,7 +72,7 @@ async fn main() -> eyre::Result<()> {
         http_client,
         job_queue,
         state,
-        config.job_queue.num_workers.into(),
+        config.job_queue.num_workers().into(),
     )
     .await;
 

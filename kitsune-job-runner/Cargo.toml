@@ -12,11 +12,15 @@ license = false
 eula = false
 
 [dependencies]
+async-trait.workspace = true
 athena.workspace = true
 clap.workspace = true
 color-eyre.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
 fred.workspace = true
 futures-util.workspace = true
+iso8601-timestamp.workspace = true
 just-retry.workspace = true
 kitsune-config.workspace = true
 kitsune-core.workspace = true
@@ -34,6 +38,7 @@ kitsune-wasm-mrf.workspace = true
 mimalloc.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+trials.workspace = true
 triomphe.workspace = true
 typed-builder.workspace = true
 
