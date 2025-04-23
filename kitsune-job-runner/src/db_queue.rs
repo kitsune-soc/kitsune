@@ -128,8 +128,6 @@ impl athena::JobQueue for DbQueue {
     }
 
     async fn complete_job(&self, state: &JobResult<'_>) -> Result<()> {
-        // TODO: wrap the whole thing in a transaction, i guess?
-
         let delete_job = match state.outcome {
             Outcome::Fail { fail_count } => {
                 let backoff = ExponentialBackoff::builder()
