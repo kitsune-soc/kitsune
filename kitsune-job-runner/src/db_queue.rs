@@ -168,19 +168,16 @@ impl athena::JobQueue for DbQueue {
 
         if delete_job {
             let result: eyre::Result<()> = attempt! { async
-                with_connection!(self.db_pool, |conn| {
+                with_transaction!(self.db_pool, |tx| {
+                    Self::ContextRepository::remove_context_ops(tx, state.job_id).await?;
+
                     diesel::delete(jobs::table.find(state.job_id))
-                        .execute(conn)
+                        .execute(tx)
                         .await
                 })?;
             };
 
             result.map_err(|err| athena::Error::Other(err.into()))?;
-
-            self.context_repository()
-                .remove_context(state.job_id)
-                .await
-                .map_err(|err| athena::Error::ContextRepository(err.into()))?;
         }
 
         Ok(())
