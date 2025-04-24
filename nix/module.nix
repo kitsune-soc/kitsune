@@ -1,28 +1,9 @@
 { config, lib, pkgs, ... }:
 let
   inherit (lib) types mkEnableOption mkOption;
-  inherit (builtins) toJSON;
   cfg = config.services.kitsune;
   format = pkgs.formats.toml { };
   configFile = format.generate "config.toml" cfg.config;
-
-  # based on gist linked in <https://discourse.nixos.org/t/problems-with-types-oneof-and-submodules/15197>
-  taggedSubmodule = typeTag: options:
-    let
-      submodule = types.submodule {
-        freeformType = format.type;
-        options = options // {
-          type = mkOption {
-            type = types.enum [ typeTag ];
-          };
-        };
-      };
-    in
-    submodule // {
-      check = v: (submodule.check v) && (v.type == typeTag);
-    };
-  oneOfTagged = definitions:
-    types.oneOf (lib.attrValues (lib.mapAttrs taggedSubmodule definitions));
 in
 {
   options = {
@@ -45,7 +26,7 @@ in
       };
 
       config = mkOption {
-        type = types.attrOf (types.nullOr [ types.bool types.int types.str ]);
+        type = types.attrs;
         default = {
           database = {
             url = "postgres://kitsune:kitsune@localhost/kitsune";

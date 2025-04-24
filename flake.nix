@@ -52,8 +52,9 @@
             pkgs = import nixpkgs { inherit overlays system; };
           in
           {
+            checks = (import ./nix/checks.nix) { inherit crane pkgs; debugBuild = inputs.debugBuild; };
             formatter = pkgs.nixpkgs-fmt;
-
+            devShells = (import ./nix/devshells.nix) { inherit devenv pkgs inputs; };
             packages = {
               devenv-up = self.devShells.${system}.default.config.procfileScript;
             } // (import ./nix/packages.nix) {
@@ -62,8 +63,6 @@
               debugBuild = inputs.debugBuild;
               mkPnpmPackage = pnpm2nix.packages.${system}.mkPnpmPackage;
             };
-
-            devShells = (import ./nix/devshells.nix) { inherit devenv pkgs inputs; };
           }
         )
       // {

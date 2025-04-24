@@ -5,23 +5,8 @@ let
   stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv;
   rustToolchain = pkgs.rust-bin.stable.latest.minimal;
 
-  rustPlatform = pkgs.makeRustPlatform {
-    cargo = rustToolchain;
-    rustc = rustToolchain;
-    inherit stdenv;
-  };
-
   craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
-
-  src = pkgs.lib.cleanSourceWith {
-    src = pkgs.lib.cleanSource ./..;
-    filter =
-      name: type:
-      let
-        baseName = baseNameOf (toString name);
-      in
-        !(baseName == "flake.lock" || pkgs.lib.hasSuffix ".nix" baseName);
-  };
+  src = pkgs.lib.cleanSource ./..;
 
   commonArgs =
     let
@@ -43,14 +28,10 @@ let
       CARGO_PROFILE = "dev";
     });
 
-  cargoToml = builtins.fromTOML (builtins.readFile ./../Cargo.toml);
-  version = cargoToml.workspace.package.version;
-
   cargoArtifacts = craneLib.buildDepsOnly (
     commonArgs
     // {
       pname = "kitsune-workspace";
-      src = craneLib.cleanCargoSource src;
       doCheck = false;
     }
   );
