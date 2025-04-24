@@ -463,3 +463,6 @@ authors = ["The Kitsune authors"]
 edition = "2024"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
+
+[patch.crates-io]
+lol_html = { git = "https://github.com/cloudflare/lol-html.git", rev = "41960f9bb073e34c476516b878123076f8aae182" }

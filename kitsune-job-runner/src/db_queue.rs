@@ -156,15 +156,15 @@ impl athena::JobQueue for DbQueue {
 
                     result.map_err(|err| athena::Error::Other(err.into()))?;
 
-                    false // Do not delete the job if we were able to retry it one more time
+                    ControlFlow::Continue(()) // Do not delete the job if we were able to retry it one more time
                 } else {
-                    true // We hit the maximum amount of retries, we won't re-enqueue the job, so we can just delete it
+                    ControlFlow::Break(()) // We hit the maximum amount of retries, we won't re-enqueue the job, so we can just delete it
                 }
             }
-            Outcome::Success => true, // Execution succeeded, we don't need the job anymore
+            Outcome::Success => ControlFlow::Break(()), // Execution succeeded, we don't need the job anymore
         };
 
-        if delete_job {
+        if delete_job.is_break() {
             let result: eyre::Result<()> = attempt! { async
                 with_transaction!(self.db_pool, |tx| {
                     Self::ContextRepository::remove_context_ops(tx, state.job_id).await?;
