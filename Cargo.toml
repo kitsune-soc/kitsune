@@ -121,7 +121,7 @@ const-oid = { version = "=0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "2.0.1", features = ["from"] }
-diesel = { version = "2.2.9", default-features = false, features = [
+diesel = { version = "2.2.10", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
     "uuid",
@@ -218,7 +218,6 @@ lettre = { version = "0.11.15", default-features = false, features = [
 lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
 lol_html = "2.3.0"
-meilisearch-sdk = { version = "0.28.0", default-features = false }
 memchr = "2.7.4"
 memmap2 = "0.9.5"
 miette = { version = "7.5.0", features = ["fancy"] }
@@ -288,7 +287,7 @@ rustls = { version = "0.23.26", default-features = false, features = [
     "std",
     "tls12",
 ] }
-rustls-platform-verifier = "0.5.1"
+rustls-platform-verifier = "0.5.2"
 rusty-s3 = "0.7.0"
 sailfish = { version = "0.9.0", default-features = false, features = [
     "derive",

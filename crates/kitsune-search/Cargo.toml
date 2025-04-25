@@ -20,7 +20,6 @@ kitsune-derive.workspace = true
 kitsune-error.workspace = true
 kitsune-http-client.workspace = true
 kitsune-language.workspace = true
-meilisearch-sdk.workspace = true
 pin-project-lite.workspace = true
 serde.workspace = true
 serde_urlencoded.workspace = true
