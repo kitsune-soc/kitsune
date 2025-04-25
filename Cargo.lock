@@ -3972,23 +3972,17 @@ dependencies = [
 name = "kitsune-search"
 version = "0.0.1-pre.6"
 dependencies = [
- "async-trait",
- "bytes",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
  "enum_dispatch",
  "futures-util",
- "http",
  "kitsune-config",
  "kitsune-db",
  "kitsune-derive",
  "kitsune-error",
- "kitsune-http-client",
  "kitsune-language",
- "pin-project-lite",
  "serde",
- "serde_urlencoded",
  "speedy-uuid",
  "strum 0.27.1",
  "tracing",
