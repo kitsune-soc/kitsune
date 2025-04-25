@@ -6,24 +6,17 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait.workspace = true
-bytes.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
 enum_dispatch.workspace = true
 futures-util.workspace = true
-http.workspace = true
 kitsune-config.workspace = true
 kitsune-db.workspace = true
 kitsune-derive.workspace = true
 kitsune-error.workspace = true
-kitsune-http-client.workspace = true
 kitsune-language.workspace = true
-meilisearch-sdk.workspace = true
-pin-project-lite.workspace = true
 serde.workspace = true
-serde_urlencoded.workspace = true
 speedy-uuid.workspace = true
 strum.workspace = true
 tracing.workspace = true

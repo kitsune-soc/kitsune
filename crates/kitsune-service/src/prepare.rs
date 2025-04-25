@@ -1,4 +1,3 @@
-use eyre::WrapErr;
 use fred::{
     clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
@@ -130,13 +129,6 @@ pub async fn search(
     db_pool: &PgPool,
 ) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
-        search::Configuration::Meilisearch(config) => {
-            kitsune_search::MeiliSearchService::new(&config.instance_url, &config.api_key)
-                .await
-                .map_err(kitsune_error::Error::into_error)
-                .wrap_err("Failed to connect to Meilisearch")?
-                .into()
-        }
         search::Configuration::Sql => SqlSearchService::builder()
             .db_pool(db_pool.clone())
             .language_detection_config(language_detection_config)
