@@ -57,12 +57,6 @@ importers:
       '@iconify-json/mdi':
         specifier: ^1.2.3
         version: 1.2.3
-      '@melt-ui/pp':
-        specifier: ^0.3.2
-        version: 0.3.2(@melt-ui/svelte@0.86.6(svelte@5.28.2))(svelte@5.28.2)
-      '@melt-ui/svelte':
-        specifier: ^0.86.6
-        version: 0.86.6(svelte@5.28.2)
       '@nubolab-ffwd/svelte-fluent':
         specifier: ^1.0.3
         version: 1.0.3(@fluent/bundle@0.18.0)(jsdom@26.1.0)(rollup@4.40.2)(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.81.0)(terser@5.39.0)(yaml@2.7.0))
@@ -120,6 +114,9 @@ importers:
       '@vite-pwa/sveltekit':
         specifier: ^1.0.0
         version: 1.0.0(@sveltejs/kit@2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.81.0)(terser@5.39.0)(yaml@2.7.0)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.81.0)(terser@5.39.0)(yaml@2.7.0)))(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.81.0)(terser@5.39.0)(yaml@2.7.0))(workbox-build@7.3.0)(workbox-window@7.3.0)
+      bits-ui:
+        specifier: ^1.4.6
+        version: 1.4.6(svelte@5.28.2)
       daisyui:
         specifier: ^5.0.35
         version: 5.0.35
@@ -153,9 +150,6 @@ importers:
       luxon:
         specifier: ^3.6.1
         version: 3.6.1
-      melt:
-        specifier: ^0.30.1
-        version: 0.30.1(@floating-ui/dom@1.7.0)(svelte@5.28.2)
       powerglitch:
         specifier: ^2.4.0
         version: 2.4.0
@@ -180,6 +174,9 @@ importers:
       svelte-check:
         specifier: ^4.1.7
         version: 4.1.7(picomatch@4.0.2)(svelte@5.28.2)(typescript@5.8.3)
+      svelte-sonner:
+        specifier: ^0.3.28
+        version: 0.3.28(svelte@5.28.2)
       tailwindcss:
         specifier: ^4.1.5
         version: 4.1.5
@@ -1377,10 +1374,6 @@ packages:
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==, tarball: https://registry.npmjs.org/@isaacs/cliui/-/cliui-8.0.2.tgz}
     engines: {node: '>=12'}
 
-  '@jest/schemas@29.6.3':
-    resolution: {integrity: sha512-mo5j5X+jIZmJQveBKeS/clAueipV7KgiX1vMgCxam1RNYiqE1w62n0/tJJnHtjW8ZHcQco5gY85jA3mi0L+nSA==, tarball: https://registry.npmjs.org/@jest/schemas/-/schemas-29.6.3.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
   '@jridgewell/gen-mapping@0.3.8':
     resolution: {integrity: sha512-imAbBGkb+ebQyxKgzv5Hu2nmROxoDOXHh80evxdoXNOrvAnVx7zimzc1Oo5h9RlfV4vPXaE2iM5pOFbvOCClWA==, tarball: https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.8.tgz}
     engines: {node: '>=6.0.0'}
@@ -1417,17 +1410,6 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
-
-  '@melt-ui/pp@0.3.2':
-    resolution: {integrity: sha512-xKkPvaIAFinklLXcQOpwZ8YSpqAFxykjWf8Y/fSJQwsixV/0rcFs07hJ49hJjPy5vItvw5Qa0uOjzFUbXzBypQ==, tarball: https://registry.npmjs.org/@melt-ui/pp/-/pp-0.3.2.tgz}
-    peerDependencies:
-      '@melt-ui/svelte': '>= 0.29.0'
-      svelte: ^3.55.0 || ^4.0.0 || ^5.0.0-next.1
-
-  '@melt-ui/svelte@0.86.6':
-    resolution: {integrity: sha512-Jer+M7DgIwT5IHfTayb4Iw/fkkxWNmC/mqn/nMh9JrbPbkxmyabfLQnhJ+JDn5HK77f84j34lubO3iqFtYAfMg==, tarball: https://registry.npmjs.org/@melt-ui/svelte/-/svelte-0.86.6.tgz}
-    peerDependencies:
-      svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.118
 
   '@modelcontextprotocol/sdk@1.11.0':
     resolution: {integrity: sha512-k/1pb70eD638anoi0e8wUGAlbMJXyvdV4p62Ko+EZ7eBe1xMx8Uhak1R5DgfoofsK5IBBnRwsYGTaLZl+6/+RQ==, tarball: https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.11.0.tgz}
@@ -1742,9 +1724,6 @@ packages:
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==, tarball: https://registry.npmjs.org/@shikijs/vscode-textmate/-/vscode-textmate-10.0.2.tgz}
-
-  '@sinclair/typebox@0.27.8':
-    resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==, tarball: https://registry.npmjs.org/@sinclair/typebox/-/typebox-0.27.8.tgz}
 
   '@storybook/addon-actions@8.6.12':
     resolution: {integrity: sha512-B5kfiRvi35oJ0NIo53CGH66H471A3XTzrfaa6SxXEJsgxxSeKScG5YeXcCvLiZfvANRQ7QDsmzPUgg0o3hdMXw==, tarball: https://registry.npmjs.org/@storybook/addon-actions/-/addon-actions-8.6.12.tgz}
@@ -2445,10 +2424,6 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==, tarball: https://registry.npmjs.org/available-typed-arrays/-/available-typed-arrays-1.0.7.tgz}
     engines: {node: '>= 0.4'}
 
-  axe-core@4.9.1:
-    resolution: {integrity: sha512-QbUdXJVTpvUTHU7871ppZkdOLBeGUKBQWHkHrvN2V9IQWGMt61zf3B45BtzjxEJzYuj0JBjBZP/hmYS/R9pmAw==, tarball: https://registry.npmjs.org/axe-core/-/axe-core-4.9.1.tgz}
-    engines: {node: '>=4'}
-
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==, tarball: https://registry.npmjs.org/axobject-query/-/axobject-query-4.1.0.tgz}
     engines: {node: '>= 0.4'}
@@ -2489,6 +2464,12 @@ packages:
   better-opn@3.0.2:
     resolution: {integrity: sha512-aVNobHnJqLiUelTaHat9DZ1qM2w0C0Eym4LPI/3JxOnSokGVdsl1T1kN7TFvsEAD8G47A6VKQ0TVHqbBnYMJlQ==, tarball: https://registry.npmjs.org/better-opn/-/better-opn-3.0.2.tgz}
     engines: {node: '>=12.0.0'}
+
+  bits-ui@1.4.6:
+    resolution: {integrity: sha512-EN2niBF9iBe03GzSJ64I369DA/pRdoC7sCKVAqIxMkxrk/ClfDurzNJkf4RMK6EFOxeqWzTVFJTGyPdmBAy6Lw==, tarball: https://registry.npmjs.org/bits-ui/-/bits-ui-1.4.6.tgz}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.11.0
 
   blob-to-buffer@1.2.9:
     resolution: {integrity: sha512-BF033y5fN6OCofD3vgHmNtwZWRcq9NLyyxyILx9hfMy1sXYy4ojFl765hJ2lP0YaN2fuxPaLO2Vzzoxy0FLFFA==, tarball: https://registry.npmjs.org/blob-to-buffer/-/blob-to-buffer-1.2.9.tgz}
@@ -2870,10 +2851,6 @@ packages:
 
   dfa@1.2.0:
     resolution: {integrity: sha512-ED3jP8saaweFTjeGX8HQPjeC1YYyZs98jGNZx6IiBvxW7JG5v492kamAQB3m2wop07CvU/RQmzcKr6bgcC5D/Q==, tarball: https://registry.npmjs.org/dfa/-/dfa-1.2.0.tgz}
-
-  diff-sequences@29.6.3:
-    resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==, tarball: https://registry.npmjs.org/diff-sequences/-/diff-sequences-29.6.3.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
   diff@5.2.0:
     resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==, tarball: https://registry.npmjs.org/diff/-/diff-5.2.0.tgz}
@@ -3274,9 +3251,6 @@ packages:
   flattie@1.1.1:
     resolution: {integrity: sha512-9UbaD6XdAL97+k/n+N7JwX46K/M6Zc6KcFYskrYL8wbBV/Uyk0CTAMY0VT+qiK5PM7AIc9aTWYtq65U7T+aCNQ==, tarball: https://registry.npmjs.org/flattie/-/flattie-1.1.1.tgz}
     engines: {node: '>=8'}
-
-  focus-trap@7.6.4:
-    resolution: {integrity: sha512-xx560wGBk7seZ6y933idtjJQc1l+ck+pI3sKvhKozdBV1dRZoKhkW5xoCaFv9tQiX5RH1xfSxjuNu6g+lmN/gw==, tarball: https://registry.npmjs.org/focus-trap/-/focus-trap-7.6.4.tgz}
 
   fontkit@2.0.4:
     resolution: {integrity: sha512-syetQadaUEDNdxdugga9CpEYVaQIxOwk7GlwZWWZ19//qW4zE5bknOKeMBDYAASwnpaSHKJITRLMF9m1fp3s6g==, tarball: https://registry.npmjs.org/fontkit/-/fontkit-2.0.4.tgz}
@@ -3837,22 +3811,6 @@ packages:
   javascript-natural-sort@0.7.1:
     resolution: {integrity: sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==, tarball: https://registry.npmjs.org/javascript-natural-sort/-/javascript-natural-sort-0.7.1.tgz}
 
-  jest-axe@9.0.0:
-    resolution: {integrity: sha512-Xt7O0+wIpW31lv0SO1wQZUTyJE7DEmnDEZeTt9/S9L5WUywxrv8BrgvTuQEqujtfaQOcJ70p4wg7UUgK1E2F5g==, tarball: https://registry.npmjs.org/jest-axe/-/jest-axe-9.0.0.tgz}
-    engines: {node: '>= 16.0.0'}
-
-  jest-diff@29.7.0:
-    resolution: {integrity: sha512-LMIgiIrhigmPrs03JHpxUh2yISK3vLFPkAodPeo0+BuF7wA2FoQbkEg1u8gBYBThncu7e1oEDUfIXVuTqLRUjw==, tarball: https://registry.npmjs.org/jest-diff/-/jest-diff-29.7.0.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  jest-get-type@29.6.3:
-    resolution: {integrity: sha512-zrteXnqYxfQh7l5FHyL38jL39di8H8rHoecLH3JNxH3BwOrBsNeabdap5e0I23lD4HHI8W5VFBZqG4Eaq5LNcw==, tarball: https://registry.npmjs.org/jest-get-type/-/jest-get-type-29.6.3.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  jest-matcher-utils@29.2.2:
-    resolution: {integrity: sha512-4DkJ1sDPT+UX2MR7Y3od6KtvRi9Im1ZGLGgdLFLm4lPexbTaCgJW5NN3IOXlQHF7NSHY/VHhflQ+WoKtD/vyCw==, tarball: https://registry.npmjs.org/jest-matcher-utils/-/jest-matcher-utils-29.2.2.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
   jiti@2.4.2:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==, tarball: https://registry.npmjs.org/jiti/-/jiti-2.4.2.tgz}
     hasBin: true
@@ -4158,12 +4116,6 @@ packages:
     resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==, tarball: https://registry.npmjs.org/media-typer/-/media-typer-1.1.0.tgz}
     engines: {node: '>= 0.8'}
 
-  melt@0.30.1:
-    resolution: {integrity: sha512-Z3X3IMknWSbXFlzQA6On18kdGf1a+Kgqu/TxxvchjGGiS3RINd96PrlLU2Bl/SOxF+UWLLYmH1fohwiMz9UsQQ==, tarball: https://registry.npmjs.org/melt/-/melt-0.30.1.tgz}
-    peerDependencies:
-      '@floating-ui/dom': ^1.6.0
-      svelte: ^5.0.0
-
   memfs@3.5.3:
     resolution: {integrity: sha512-UERzLsxzllchadvbPs5aolHh65ISpKpM+ccLbOJ8/vvpBKmAWf+la7dXFy7Mr0ySHbdHrFv5kGFCUHHe6GFEmw==, tarball: https://registry.npmjs.org/memfs/-/memfs-3.5.3.tgz}
     engines: {node: '>= 4.0.0'}
@@ -4357,11 +4309,6 @@ packages:
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==, tarball: https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
-  nanoid@5.1.5:
-    resolution: {integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==, tarball: https://registry.npmjs.org/nanoid/-/nanoid-5.1.5.tgz}
-    engines: {node: ^18 || >=20}
     hasBin: true
 
   natural-compare@1.4.0:
@@ -4765,10 +4712,6 @@ packages:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==, tarball: https://registry.npmjs.org/pretty-format/-/pretty-format-27.5.1.tgz}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
 
-  pretty-format@29.7.0:
-    resolution: {integrity: sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ==, tarball: https://registry.npmjs.org/pretty-format/-/pretty-format-29.7.0.tgz}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
   prismjs@1.30.0:
     resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==, tarball: https://registry.npmjs.org/prismjs/-/prismjs-1.30.0.tgz}
     engines: {node: '>=6'}
@@ -4836,9 +4779,6 @@ packages:
 
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==, tarball: https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz}
-
-  react-is@18.3.1:
-    resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==, tarball: https://registry.npmjs.org/react-is/-/react-is-18.3.1.tgz}
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==, tarball: https://registry.npmjs.org/react/-/react-19.1.0.tgz}
@@ -5365,6 +5305,17 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  svelte-sonner@0.3.28:
+    resolution: {integrity: sha512-K3AmlySeFifF/cKgsYNv5uXqMVNln0NBAacOYgmkQStLa/UoU0LhfAACU6Gr+YYC8bOCHdVmFNoKuDbMEsppJg==, tarball: https://registry.npmjs.org/svelte-sonner/-/svelte-sonner-0.3.28.tgz}
+    peerDependencies:
+      svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
+
+  svelte-toolbelt@0.7.1:
+    resolution: {integrity: sha512-HcBOcR17Vx9bjaOceUvxkY3nGmbBmCBBbuWLLEWO6jtmWH8f/QoWmbyUfQZrpDINH39en1b8mptfPQT9VKQ1xQ==, tarball: https://registry.npmjs.org/svelte-toolbelt/-/svelte-toolbelt-0.7.1.tgz}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.0.0
 
   svelte2tsx@0.7.37:
     resolution: {integrity: sha512-uQCWibXwUNPGQBGTZP1axIpFGFHTXXN30/ppodLVXCnX23U1nzEhqiVtFSEQjtUK3pFVxPhdnfyxD6ikxMCzPQ==, tarball: https://registry.npmjs.org/svelte2tsx/-/svelte2tsx-0.7.37.tgz}
@@ -7405,10 +7356,6 @@ snapshots:
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
-  '@jest/schemas@29.6.3':
-    dependencies:
-      '@sinclair/typebox': 0.27.8
-
   '@jridgewell/gen-mapping@0.3.8':
     dependencies:
       '@jridgewell/set-array': 1.2.1
@@ -7472,23 +7419,6 @@ snapshots:
       '@types/mdx': 2.0.13
       '@types/react': 19.0.7
       react: 19.1.0
-
-  '@melt-ui/pp@0.3.2(@melt-ui/svelte@0.86.6(svelte@5.28.2))(svelte@5.28.2)':
-    dependencies:
-      '@melt-ui/svelte': 0.86.6(svelte@5.28.2)
-      estree-walker: 3.0.3
-      magic-string: 0.30.17
-      svelte: 5.28.2
-
-  '@melt-ui/svelte@0.86.6(svelte@5.28.2)':
-    dependencies:
-      '@floating-ui/core': 1.7.0
-      '@floating-ui/dom': 1.7.0
-      '@internationalized/date': 3.8.0
-      dequal: 2.0.3
-      focus-trap: 7.6.4
-      nanoid: 5.1.5
-      svelte: 5.28.2
 
   '@modelcontextprotocol/sdk@1.11.0':
     dependencies:
@@ -7760,8 +7690,6 @@ snapshots:
       '@types/hast': 3.0.4
 
   '@shikijs/vscode-textmate@10.0.2': {}
-
-  '@sinclair/typebox@0.27.8': {}
 
   '@storybook/addon-actions@8.6.12(storybook@8.6.12(prettier@3.5.3))':
     dependencies:
@@ -8709,8 +8637,6 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axe-core@4.9.1: {}
-
   axobject-query@4.1.0: {}
 
   babel-plugin-polyfill-corejs2@0.4.13(@babel/core@7.27.1):
@@ -8756,6 +8682,17 @@ snapshots:
   better-opn@3.0.2:
     dependencies:
       open: 8.4.2
+
+  bits-ui@1.4.6(svelte@5.28.2):
+    dependencies:
+      '@floating-ui/core': 1.7.0
+      '@floating-ui/dom': 1.7.0
+      '@internationalized/date': 3.8.0
+      esm-env: 1.2.2
+      runed: 0.23.4(svelte@5.28.2)
+      svelte: 5.28.2
+      svelte-toolbelt: 0.7.1(svelte@5.28.2)
+      tabbable: 6.2.0
 
   blob-to-buffer@1.2.9: {}
 
@@ -9086,8 +9023,6 @@ snapshots:
       dequal: 2.0.3
 
   dfa@1.2.0: {}
-
-  diff-sequences@29.6.3: {}
 
   diff@5.2.0: {}
 
@@ -9666,10 +9601,6 @@ snapshots:
   flatted@3.3.3: {}
 
   flattie@1.1.1: {}
-
-  focus-trap@7.6.4:
-    dependencies:
-      tabbable: 6.2.0
 
   fontkit@2.0.4:
     dependencies:
@@ -10386,29 +10317,6 @@ snapshots:
 
   javascript-natural-sort@0.7.1: {}
 
-  jest-axe@9.0.0:
-    dependencies:
-      axe-core: 4.9.1
-      chalk: 4.1.2
-      jest-matcher-utils: 29.2.2
-      lodash.merge: 4.6.2
-
-  jest-diff@29.7.0:
-    dependencies:
-      chalk: 4.1.2
-      diff-sequences: 29.6.3
-      jest-get-type: 29.6.3
-      pretty-format: 29.7.0
-
-  jest-get-type@29.6.3: {}
-
-  jest-matcher-utils@29.2.2:
-    dependencies:
-      chalk: 4.1.2
-      jest-diff: 29.7.0
-      jest-get-type: 29.6.3
-      pretty-format: 29.7.0
-
   jiti@2.4.2: {}
 
   js-tokens@4.0.0: {}
@@ -10796,15 +10704,6 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  melt@0.30.1(@floating-ui/dom@1.7.0)(svelte@5.28.2):
-    dependencies:
-      '@floating-ui/dom': 1.7.0
-      dequal: 2.0.3
-      jest-axe: 9.0.0
-      nanoid: 5.1.5
-      runed: 0.23.4(svelte@5.28.2)
-      svelte: 5.28.2
-
   memfs@3.5.3:
     dependencies:
       fs-monkey: 1.0.6
@@ -11149,8 +11048,6 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nanoid@5.1.5: {}
-
   natural-compare@1.4.0: {}
 
   negotiator@1.0.0: {}
@@ -11488,12 +11385,6 @@ snapshots:
       ansi-styles: 5.2.0
       react-is: 17.0.2
 
-  pretty-format@29.7.0:
-    dependencies:
-      '@jest/schemas': 29.6.3
-      ansi-styles: 5.2.0
-      react-is: 18.3.1
-
   prismjs@1.30.0: {}
 
   process@0.11.10: {}
@@ -11550,8 +11441,6 @@ snapshots:
       scheduler: 0.26.0
 
   react-is@17.0.2: {}
-
-  react-is@18.3.1: {}
 
   react@19.1.0: {}
 
@@ -12303,6 +12192,17 @@ snapshots:
       postcss-load-config: 5.1.0(jiti@2.4.2)(postcss@8.5.3)
       sass: 1.81.0
       typescript: 5.8.3
+
+  svelte-sonner@0.3.28(svelte@5.28.2):
+    dependencies:
+      svelte: 5.28.2
+
+  svelte-toolbelt@0.7.1(svelte@5.28.2):
+    dependencies:
+      clsx: 2.1.1
+      runed: 0.23.4(svelte@5.28.2)
+      style-to-object: 1.0.8
+      svelte: 5.28.2
 
   svelte2tsx@0.7.37(svelte@5.28.2)(typescript@5.8.3):
     dependencies:

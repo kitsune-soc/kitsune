@@ -2,9 +2,9 @@
 	import { version as frontendVersion } from '$app/environment';
 	import Footer from '$lib/components/Footer.svelte';
 	import { Drawer } from '$lib/components/drawer';
-	import { ToastProvider } from '$lib/components/toast';
 
 	import type { Snippet } from 'svelte';
+	import { Toaster } from 'svelte-sonner';
 	import { pwaInfo } from 'virtual:pwa-info';
 
 	import '../app.css';
@@ -27,9 +27,21 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<ToastProvider>
-	<Drawer>
-		{@render children()}
-		<Footer {backendVersion} {frontendVersion} />
-	</Drawer>
-</ToastProvider>
+<Toaster
+	position="bottom-center"
+	toastOptions={{
+		unstyled: true,
+		classes: {
+			toast: 'alert',
+			error: 'alert-error',
+			info: 'alert-info',
+			success: 'alert-success',
+			warning: 'alert-warning'
+		}
+	}}
+/>
+
+<Drawer>
+	{@render children()}
+	<Footer {backendVersion} {frontendVersion} />
+</Drawer>

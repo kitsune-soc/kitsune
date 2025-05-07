@@ -3,6 +3,7 @@ use smol_str::SmolStr;
 use std::num::NonZero;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct DatabaseConfiguration {
     pub num_workers: NonZero<usize>,
 }

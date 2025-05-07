@@ -2,10 +2,11 @@
 	import type { Visibility$options } from '$houdini';
 	import { GQL_CreatePost } from '$houdini';
 
-	import { Select } from 'melt/builders';
+	import { Select } from 'bits-ui';
+	import { values } from 'lodash';
+	import { toast } from 'svelte-sonner';
 
 	import { PostVisibility } from './post';
-	import { pushToast } from './toast';
 
 	let { characterLimit, onnewpost }: { characterLimit: number; onnewpost?: () => void } = $props();
 
@@ -23,13 +24,12 @@
 		FOLLOWER_ONLY: { name: 'Followers only' },
 		MENTION_ONLY: { name: 'Mention only' }
 	};
+	const items = Object.entries(visibilityOptions).map(([value, { name: label }]) => ({
+		value,
+		label
+	}));
 
-	const visibilitySelect = new Select<Visibility$options>({
-		sameWidth: false,
-		value: 'PUBLIC'
-	});
-
-	let visibility = $derived(visibilitySelect.value!);
+	let visibility: Visibility$options = $state('PUBLIC');
 
 	async function submitPost(): Promise<void> {
 		const result = await GQL_CreatePost.mutate({
@@ -45,12 +45,7 @@
 			content = '';
 			if (onnewpost) onnewpost();
 
-			pushToast({
-				data: {
-					severity: 'success',
-					message: 'Post created!'
-				}
-			});
+			toast.success('Post created!');
 		}
 	}
 </script>
@@ -79,23 +74,32 @@
 			</div>
 
 			<div>
-				<button {...visibilitySelect.trigger} class="btn btn-neutral m-1">
-					<PostVisibility halfVisible={false} {visibility} />
-					{visibilityOptions[visibility].name}
-				</button>
+				<Select.Root type="single" bind:value={visibility} {items}>
+					<Select.Trigger class="btn btn-neutral m-1">
+						<PostVisibility halfVisible={false} {visibility} />
+						{visibilityOptions[visibility].name}
+					</Select.Trigger>
 
-				<div class="bg-base-100 rounded-box shadow-xl" {...visibilitySelect.content}>
-					<ul class="menu m-0 p-2">
-						{#each Object.entries(visibilityOptions) as [key, value] (key)}
-							<li>
-								<button {...visibilitySelect.getOption(key as Visibility$options)}>
-									<PostVisibility halfVisible={false} visibility={key as Visibility$options} />
-									{value.name}
-								</button>
-							</li>
-						{/each}
-					</ul>
-				</div>
+					<Select.Portal>
+						<Select.Content class="bg-base-100 rounded-box shadow-xl">
+							<ul class="menu m-0 p-2">
+								{#each items as item, i (i + item.value)}
+									<Select.Item value={item.value} label={item.label}>
+										<li class="m-0">
+											<button>
+												<PostVisibility
+													halfVisible={false}
+													visibility={item.value as Visibility$options}
+												/>
+												{item.label}
+											</button>
+										</li>
+									</Select.Item>
+								{/each}
+							</ul>
+						</Select.Content>
+					</Select.Portal>
+				</Select.Root>
 
 				<button class="btn btn-primary" onclick={() => submitPost()} disabled={postDisabled}>
 					Post
