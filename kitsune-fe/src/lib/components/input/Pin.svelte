@@ -35,6 +35,22 @@
 	});
 </script>
 
+{#snippet Cell(cell: CellProps)}
+	<PinInput.Cell {cell} class="input w-9">
+		{#if cell.char}
+			<div>
+				{cell.char}
+			</div>
+		{/if}
+
+		{#if cell.hasFakeCaret}
+			<div class="animate-caret-blink absolute inset-0 flex items-center justify-center">
+				<div class="bg-base-content h-3/5 w-px"></div>
+			</div>
+		{/if}
+	</PinInput.Cell>
+{/snippet}
+
 <PinInput.Root
 	bind:value
 	class="group/pininput flex gap-2"
@@ -51,19 +67,3 @@
 		{/each}
 	{/snippet}
 </PinInput.Root>
-
-{#snippet Cell(cell: CellProps)}
-	<PinInput.Cell {cell} class="input w-9">
-		{#if cell.char}
-			<div>
-				{cell.char}
-			</div>
-		{/if}
-
-		{#if cell.hasFakeCaret}
-			<div class="animate-caret-blink absolute inset-0 flex items-center justify-center">
-				<div class="bg-base-content h-3/5 w-px"></div>
-			</div>
-		{/if}
-	</PinInput.Cell>
-{/snippet}
