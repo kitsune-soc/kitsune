@@ -6,7 +6,6 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash.workspace = true
 argon2.workspace = true
 asynk-strim.workspace = true
 athena.workspace = true

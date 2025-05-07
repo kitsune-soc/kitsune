@@ -1,4 +1,3 @@
-use ahash::AHashSet;
 use diesel::{QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt, stream::FuturesUnordered};
@@ -14,6 +13,7 @@ use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_search::{SearchBackend, SearchIndex};
 use speedy_uuid::Uuid;
+use std::collections::HashSet;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
 use url::Url;
@@ -26,7 +26,7 @@ pub enum SearchResult {
 #[derive(TypedBuilder, Validate)]
 pub struct Search<'a> {
     #[garde(skip)]
-    indices: AHashSet<SearchIndex>,
+    indices: HashSet<SearchIndex>,
     #[garde(skip)]
     query: &'a str,
     #[garde(range(max = API_MAX_LIMIT as u64))]

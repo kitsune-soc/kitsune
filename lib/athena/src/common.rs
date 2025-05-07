@@ -3,11 +3,10 @@ use crate::{
     consts::MIN_IDLE_TIME,
     error::{Error, Result},
 };
-use ahash::HashMap;
 use futures_util::TryStreamExt;
 use just_retry::RetryExt;
 use speedy_uuid::Uuid;
-use std::{pin::pin, time::Duration};
+use std::{collections::HashMap, pin::pin, time::Duration};
 use tokio::time::Instant;
 use tokio_util::task::TaskTracker;
 use triomphe::Arc;

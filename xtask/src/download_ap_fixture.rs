@@ -9,7 +9,7 @@ fn compute_filename(url: &str) -> String {
 
 pub fn download(url: &str) -> eyre::Result<()> {
     let response = ureq::get(url)
-        .header("Accept", "application/activity+json")
+        .header("Accept", "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\", application/activity+json")
         .call()?;
 
     let body = response.into_body().read_to_vec()?;

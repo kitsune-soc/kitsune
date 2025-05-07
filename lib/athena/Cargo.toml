@@ -10,7 +10,6 @@ name = "basic_queue"
 required-features = ["redis"]
 
 [dependencies]
-ahash.workspace = true
 async-trait.workspace = true
 either = { workspace = true, optional = true }
 futures-util.workspace = true

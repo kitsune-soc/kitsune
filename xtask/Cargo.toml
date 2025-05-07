@@ -6,7 +6,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-argh.workspace = true
+clap.workspace = true
 eyre.workspace = true
 sonic-rs.workspace = true
 tracing.workspace = true
