@@ -38,6 +38,6 @@
 	});
 </script>
 
-<span class:opacity-50={halfVisible} title={tooltip}>
+<span class="w-fit" class:opacity-50={halfVisible} title={tooltip}>
 	<Icon />
 </span>
