@@ -34,7 +34,7 @@ macro_rules! dispatch_response {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        debug!(error = ?self.inner);
+        debug!(error = ?self.error());
 
         if let Some(garde_report) = self.error().downcast_ref::<garde::Report>() {
             let body = match sonic_rs::to_string(&garde_report) {
