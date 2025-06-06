@@ -13,6 +13,7 @@ fn establish_conn(config: &str) -> BoxFuture<'_, ConnectionResult<AsyncPgConnect
     async {
         let rustls_config = rustls::ClientConfig::builder()
             .with_platform_verifier()
+            .map_err(|err| ConnectionError::BadConnection(err.to_string()))?
             .with_no_client_auth();
 
         let tls = tokio_postgres_rustls::MakeRustlsConnect::new(rustls_config);

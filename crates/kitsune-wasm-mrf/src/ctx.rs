@@ -8,7 +8,7 @@ use wasmtime::{
     Engine, Store, StoreLimits, StoreLimitsBuilder,
     component::{Resource, ResourceTable},
 };
-use wasmtime_wasi::{IoView, WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView};
 
 pub struct KvContext {
     pub module_name: Option<String>,
