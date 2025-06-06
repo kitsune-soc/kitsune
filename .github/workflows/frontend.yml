@@ -15,7 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build frontend
         working-directory: ./kitsune-fe
         run: nix develop ..#frontend --command bash -c "pnpm i && pnpm build"
@@ -26,7 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Run linter
         working-directory: ./kitsune-fe
         run: nix develop ..#frontend --command bash -c "pnpm i && pnpm lint"
