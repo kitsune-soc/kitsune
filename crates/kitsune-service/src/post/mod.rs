@@ -148,6 +148,7 @@ pub struct CreatePost {
 }
 
 #[derive(Clone, TypedBuilder)]
+#[allow(clippy::struct_field_names)]
 pub struct DeletePost {
     /// ID of the account that is associated with the user
     account_id: Uuid,

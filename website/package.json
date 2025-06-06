@@ -11,9 +11,9 @@
     "fmt": "prettier -w . --cache"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.34.2",
-    "astro": "^5.7.11",
-    "sharp": "^0.34.1",
+    "@astrojs/starlight": "^0.34.3",
+    "astro": "^5.9.0",
+    "sharp": "^0.34.2",
     "starlight-links-validator": "^0.16.0"
   },
   "devDependencies": {

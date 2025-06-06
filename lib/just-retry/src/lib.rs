@@ -12,7 +12,7 @@ pub enum StartTime {
     /// Implies the start time is at `n`
     At(SystemTime),
 
-    /// Implies the start time is irrelevant to the policy and we will imply pass  
+    /// Implies the start time is irrelevant to the policy and we will imply pass\
     /// [`SystemTime::UNIX_EPOCH`] to it to avoid syscalls
     Irrelevant,
 }

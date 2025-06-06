@@ -62,7 +62,7 @@
 	{disabled}
 >
 	{#snippet children({ cells })}
-		{#each cells as cell}
+		{#each cells as cell, i (i)}
 			{@render Cell(cell)}
 		{/each}
 	{/snippet}

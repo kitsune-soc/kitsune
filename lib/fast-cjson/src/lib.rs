@@ -85,8 +85,7 @@ impl CanonicalFormatter {
     #[inline]
     fn obj_mut(&mut self) -> io::Result<&mut Object> {
         self.object_stack.last_mut().ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::Other,
+            io::Error::other(
                 "Serializer called an object method without calling begin_object first",
             )
         })
@@ -237,8 +236,7 @@ impl Formatter for CanonicalFormatter {
     #[inline]
     fn end_object<W: io::Write + ?Sized>(&mut self, writer: &mut W) -> io::Result<()> {
         let object = self.object_stack.pop().ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::Other,
+            io::Error::other(
                 "sonic_rs called Formatter::end_object object method
                  without calling begin_object first",
             )

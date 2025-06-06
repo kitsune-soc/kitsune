@@ -23,6 +23,14 @@ expression: schema
     }
   ],
   "$defs": {
+    "ActivitySet": {
+      "description": "Wrapper around a hash set intended for use with the `activityTypes` field",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "ApiVersion": {
       "description": "Version of the API used",
       "oneOf": [
@@ -38,19 +46,15 @@ expression: schema
       "type": "object",
       "properties": {
         "activityTypes": {
-          "description": "Activity types passed to the MRF module\n\n `*` matching all types",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
+          "description": "Activity types passed to the MRF module\n\n`*` matching all types",
+          "$ref": "#/$defs/ActivitySet"
         },
         "apiVersion": {
           "description": "Version of the MRF API",
           "$ref": "#/$defs/ApiVersion"
         },
         "configSchema": {
-          "description": "JSON schema of the configuration passed to the module\n\n This is optional but can be used for automatically generating a configuration UI",
+          "description": "JSON schema of the configuration passed to the module\n\nThis is optional but can be used for automatically generating a configuration UI",
           "anyOf": [
             {
               "$ref": "#/$defs/Schema"

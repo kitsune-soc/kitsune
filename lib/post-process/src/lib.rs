@@ -43,13 +43,11 @@ fn enforce_prefix<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> bool {
 fn emoji_split<'a>(lexer: &Lexer<'a, PostElement<'a>>) -> (&'a str, Option<&'a str>) {
     let slice = lexer.slice().trim_matches(':');
 
-    let emoji_data = if let Some((shortcode, domain)) = slice.split_once('@') {
+    if let Some((shortcode, domain)) = slice.split_once('@') {
         (shortcode, Some(domain))
     } else {
         (slice, None)
-    };
-
-    emoji_data
+    }
 }
 
 #[inline]
