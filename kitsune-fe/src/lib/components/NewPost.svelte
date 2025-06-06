@@ -3,7 +3,6 @@
 	import { GQL_CreatePost } from '$houdini';
 
 	import { Select } from 'bits-ui';
-	import { values } from 'lodash';
 	import { toast } from 'svelte-sonner';
 
 	import { PostVisibility } from './post';
