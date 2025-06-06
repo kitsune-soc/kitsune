@@ -34,7 +34,7 @@ impl IntoActivity for Account {
             id: format!("{account_url}#update"),
             r#type: ActivityType::Update,
             actor: account_url,
-            object: ObjectField::Actor(self.into_object(state).await?),
+            object: ObjectField::Actor(Box::new(self.into_object(state).await?)),
             published: Timestamp::now_utc(),
         })
     }
@@ -176,7 +176,7 @@ impl IntoActivity for Post {
                 r#type: ActivityType::Create,
                 actor: account_url,
                 published: created_at,
-                object: ObjectField::Object(object),
+                object: ObjectField::Object(Box::new(object)),
             })
         }
     }
@@ -202,7 +202,7 @@ impl IntoActivity for Post {
                 r#type: ActivityType::Delete,
                 actor: account_url,
                 published: Timestamp::now_utc(),
-                object: ObjectField::Object(object),
+                object: ObjectField::Object(Box::new(object)),
             }
         };
 

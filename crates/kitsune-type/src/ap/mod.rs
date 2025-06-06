@@ -53,8 +53,8 @@ pub enum ActivityType {
 #[serde(untagged)]
 pub enum ObjectField {
     Activity(Box<Activity>),
-    Actor(Actor),
-    Object(Object),
+    Actor(Box<Actor>),
+    Object(Box<Object>),
     Url(String),
     // We really just need the ID from a tombstone object.
     // These are used by, for example, Mastodon in the object field of `Delete` activities.
@@ -83,7 +83,7 @@ impl ObjectField {
     }
 
     #[must_use]
-    pub fn into_actor(self) -> Option<Actor> {
+    pub fn into_actor(self) -> Option<Box<Actor>> {
         match self {
             Self::Actor(actor) => Some(actor),
             _ => None,
@@ -91,7 +91,7 @@ impl ObjectField {
     }
 
     #[must_use]
-    pub fn into_object(self) -> Option<Object> {
+    pub fn into_object(self) -> Option<Box<Object>> {
         match self {
             Self::Object(object) => Some(object),
             _ => None,

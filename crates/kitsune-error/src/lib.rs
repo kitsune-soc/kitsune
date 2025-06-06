@@ -71,9 +71,13 @@ pub struct ErrorContext {
 }
 
 #[derive(Debug)]
-pub struct Error {
+struct ErrorInner {
     ctx: ErrorContext,
     inner: eyre::Report,
+}
+
+pub struct Error {
+    inner: Box<ErrorInner>,
 }
 
 impl Error {
@@ -84,8 +88,10 @@ impl Error {
         E: Into<eyre::Report>,
     {
         Self {
-            ctx,
-            inner: err.into(),
+            inner: Box::new(ErrorInner {
+                ctx,
+                inner: err.into(),
+            }),
         }
     }
 
@@ -100,23 +106,30 @@ impl Error {
     #[inline]
     #[must_use]
     pub fn context(&self) -> &ErrorContext {
-        &self.ctx
-    }
-
-    #[inline]
-    pub fn error(&self) -> &eyre::Report {
-        &self.inner
-    }
-
-    #[inline]
-    pub fn into_error(self) -> eyre::Report {
-        self.inner
+        &self.inner.ctx
     }
 
     #[inline]
     #[must_use]
-    pub fn with_context(self, ctx: ErrorContext) -> Self {
-        Self { ctx, ..self }
+    pub fn into_context(self) -> ErrorContext {
+        self.inner.ctx
+    }
+
+    #[inline]
+    pub fn error(&self) -> &eyre::Report {
+        &self.inner.inner
+    }
+
+    #[inline]
+    pub fn into_error(self) -> eyre::Report {
+        self.inner.inner
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn with_context(mut self, ctx: ErrorContext) -> Self {
+        self.inner.ctx = ctx;
+        self
     }
 }
 
@@ -134,13 +147,19 @@ where
 impl From<Error> for BoxError {
     #[inline]
     fn from(value: Error) -> Self {
-        BoxError::from(value.inner)
+        BoxError::from(value.into_error())
+    }
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 
 impl fmt::Display for Error {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        <eyre::Report as fmt::Display>::fmt(&self.inner, f)
+        <eyre::Report as fmt::Display>::fmt(self.error(), f)
     }
 }

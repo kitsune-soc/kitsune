@@ -36,7 +36,7 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         debug!(error = ?self.inner);
 
-        if let Some(garde_report) = self.inner.downcast_ref::<garde::Report>() {
+        if let Some(garde_report) = self.error().downcast_ref::<garde::Report>() {
             let body = match sonic_rs::to_string(&garde_report) {
                 Ok(body) => body,
                 Err(error) => return Error::from(error).into_response(),
@@ -45,7 +45,7 @@ impl IntoResponse for Error {
             return to_response(StatusCode::BAD_REQUEST, Some(body));
         }
 
-        dispatch_response!(self.ctx.ty, self.ctx.body.into_inner(); {
+        dispatch_response!(self.context().ty, self.into_context().body.into_inner(); {
             ErrorType::BadRequest => StatusCode::BAD_REQUEST,
             ErrorType::Forbidden => StatusCode::FORBIDDEN,
             ErrorType::NotFound => StatusCode::NOT_FOUND,

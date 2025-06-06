@@ -54,6 +54,7 @@ async fn execute_request(client: &HttpClient, req: Request<Body>) -> Result<Resp
 }
 
 #[derive(TypedBuilder)]
+#[allow(clippy::struct_field_names)]
 pub struct Client {
     bucket: Bucket,
     credentials: Credentials,
