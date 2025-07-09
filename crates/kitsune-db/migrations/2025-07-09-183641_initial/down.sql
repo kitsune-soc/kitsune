@@ -22,6 +22,9 @@ DROP TABLE oauth2_access_tokens;
 DROP TABLE oauth2_authorization_codes;
 DROP TABLE oauth2_applications;
 
+DROP TABLE jobs;
+DROP TYPE job_state;
+
 DROP TABLE job_context;
 
 DROP TABLE posts_mentions;
