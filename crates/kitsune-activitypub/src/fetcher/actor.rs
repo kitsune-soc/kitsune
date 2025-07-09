@@ -22,6 +22,7 @@ impl Fetcher {
     ///
     /// - Panics if the URL doesn't contain a host section
     #[cfg_attr(not(coverage), instrument(skip(self)))]
+    #[allow(clippy::too_many_lines)]
     pub(crate) async fn fetch_actor(
         &self,
         opts: AccountFetchOptions<'_>,

@@ -111,7 +111,7 @@ base64-simd = "0.8.0"
 blake3 = "1.8.2"
 bubble-bath = "0.2.1"
 bytes = "1.10.1"
-clap = { version = "4.5.39", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.40", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.5"
 colored_json = "5.0.0"
 compact_str = { version = "0.9.0", features = ["serde"] }
@@ -121,13 +121,13 @@ const-oid = { version = "=0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "2.0.1", features = ["from"] }
-diesel = { version = "2.2.10", default-features = false, features = [
+diesel = { version = "2.2.11", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
     "uuid",
     "with-deprecated",
 ] }
-diesel-async = { version = "0.5.2", features = [
+diesel-async = { version = "0.6.1", features = [
     "async-connection-wrapper",
     "bb8",
     "postgres",
@@ -176,13 +176,13 @@ http-serde = "2.1.1"
 httpdate = "1.0.3"
 human-size = { version = "0.4.3", features = ["serde"] }
 hyper = "1.6.0"
-hyper-util = { version = "0.1.14", features = [
+hyper-util = { version = "0.1.15", features = [
     "client-legacy",
     "http1",
     "http2",
     "tokio",
 ] }
-hyper-rustls = { version = "0.27.6", default-features = false, features = [
+hyper-rustls = { version = "0.27.7", default-features = false, features = [
     "http1",
     "http2",
     "logging",
@@ -192,7 +192,7 @@ hyper-rustls = { version = "0.27.6", default-features = false, features = [
 ] }
 icu_normalizer = "2.0.0"
 img-parts = "0.3.3"
-indexmap = { version = "2.9.0", features = ["serde"] }
+indexmap = { version = "2.10.0", features = ["serde"] }
 insta = { version = "1.43.1", default-features = false, features = [
     "glob",
     "json",
@@ -217,14 +217,14 @@ lettre = { version = "0.11.17", default-features = false, features = [
 ] }
 lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
-lol_html = "2.4.0"
-memchr = "2.7.4"
+lol_html = "2.5.0"
+memchr = "2.7.5"
 memmap2 = "0.9.5"
 miette = { version = "7.6.0", features = ["fancy"] }
-mimalloc = "0.1.46"
+mimalloc = "0.1.47"
 mime = "0.3.17"
 mime_guess = { version = "2.0.5", default-features = false }
-minijinja = { version = "2.10.2", features = ["loader"] }
+minijinja = { version = "2.11.0", features = ["loader"] }
 moka = { version = "0.12.10", features = ["sync"] }
 mrml = { version = "5.0.0", default-features = false, features = [
     "parse",
@@ -235,7 +235,7 @@ num-derive = "0.4.2"
 num-traits = "0.2.19"
 oauth2 = { version = "5.0.0", default-features = false }
 olpc-cjson = "0.1.4"
-openidconnect = { version = "4.0.0", default-features = false, features = [
+openidconnect = { version = "4.0.1", default-features = false, features = [
     # Accept these two, per specification invalid, cases to increase compatibility
     "accept-rfc3339-timestamps",
     "accept-string-booleans",
@@ -256,19 +256,19 @@ opentelemetry-otlp = { version = "0.30.0", default-features = false, features = 
 opentelemetry_sdk = { version = "0.30.0", default-features = false, features = [
     "rt-tokio",
 ] }
-owo-colors = { version = "4.2.1", features = ["supports-colors"] }
+owo-colors = { version = "4.2.2", features = ["supports-colors"] }
 password-hash = { version = "0.5.0", features = ["std"] }
 paste = "1.0.15"
 pin-project-lite = "0.2.16"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
-postcard = { version = "1.1.1", default-features = false, features = ["alloc"] }
+postcard = { version = "1.1.2", default-features = false, features = ["alloc"] }
 pretty_assertions = "1.4.1"
 proc-macro2 = "1.0.95"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = [
     "html",
     "simd",
 ] }
-quick-xml = { version = "0.37.5", features = ["serialize"] }
+quick-xml = { version = "0.38.0", features = ["serialize"] }
 quote = "1.0.40"
 rand = "=0.8.5"
 rand_xorshift = "=0.3.0"
@@ -281,7 +281,7 @@ rsa = "0.9.8"
 rstest = { version = "0.25.0", default-features = false }
 rust-embed = { version = "8.7.2", features = ["include-exclude"] }
 rustc-hash = "2.1.1"
-rustls = { version = "0.23.27", default-features = false, features = [
+rustls = { version = "0.23.28", default-features = false, features = [
     "logging",
     "ring",
     "std",
@@ -289,38 +289,38 @@ rustls = { version = "0.23.27", default-features = false, features = [
 ] }
 rustls-platform-verifier = "0.6.0"
 rusty-s3 = "0.7.0"
-sailfish = { version = "0.9.0", default-features = false, features = [
+sailfish = { version = "0.9.1", default-features = false, features = [
     "derive",
     "perf-inline",
 ] }
-schemars = { version = "1.0.0-alpha.20", features = ["semver1"] }
+schemars = { version = "1.0.4", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.26", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
-serde_with = { version = "3.12.0", default-features = false, features = [
+serde_with = { version = "3.14.0", default-features = false, features = [
     "alloc",
     "macros",
 ] }
 sha2 = "0.10.9"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
-slab = "0.4.9"
+slab = "0.4.10"
 smol_str = { version = "0.3.2", features = ["serde"] }
-sonic-rs = "0.5.1"
+sonic-rs = "0.5.2"
 strum = { version = "0.27.1", features = ["derive"] }
 subtle = "2.6.1"
-syn = { version = "2.0.101", features = ["full"] }
+syn = { version = "2.0.104", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 time = "0.3.41"
-tokio = { version = "1.45.1", features = ["full", "tracing"] }
+tokio = { version = "1.46.1", features = ["full", "tracing"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
 tokio-util = { version = "0.7.15", features = ["io", "rt"] }
-toml = { version = "0.8.22", default-features = false, features = ["parse"] }
+toml = { version = "0.9.0", default-features = false, features = ["parse", "serde"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.6", features = [
     "catch-panic",
@@ -353,15 +353,15 @@ triomphe = { version = "0.1.14", default-features = false, features = [
 typed-builder = "0.21.0"
 typetag = "0.2.20"
 unsize = "1.1.0"
-ureq = "3.0.11"
+ureq = "3.0.12"
 url = "2.5.4"
 urlencoding = "2.1.3"
 uuid = { version = "1.17.0", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.233.0"
-wasmparser = "0.233.0"
-wasmtime = { version = "33.0.0", default-features = false, features = [
+wasm-encoder = "0.235.0"
+wasmparser = "0.235.0"
+wasmtime = { version = "34.0.1", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
@@ -371,11 +371,11 @@ wasmtime = { version = "33.0.0", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "33.0.0", default-features = false }
-wat = "1.233.0"
+wasmtime-wasi = { version = "34.0.1", default-features = false }
+wat = "1.235.0"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
-wit-bindgen = "0.42.1"
+wit-bindgen = "0.43.0"
 zeroize = { version = "1.8.1", features = ["derive"] }
 zxcvbn = { version = "3.1.0", default-features = false }
 
