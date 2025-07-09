@@ -6,16 +6,13 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-bubble-bath = "0.2.0"
-iso8601-timestamp = { workspace = true }
-kitsune-type = { workspace = true }
-pulldown-cmark = { version = "0.12.2", default-features = false, features = [
-    "html",
-    "simd",
-] }
-rand = "0.8.5"
-speedy-uuid = { workspace = true }
-tokio = { workspace = true, features = ["macros"] }
+bubble-bath.workspace = true
+iso8601-timestamp.workspace = true
+kitsune-type.workspace = true
+pulldown-cmark.workspace = true
+rand.workspace = true
+speedy-uuid.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true

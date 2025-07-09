@@ -2,6 +2,7 @@ use crate::state::Zustand;
 use axum::{
     body::HttpBody,
     response::{Html, IntoResponse},
+    serve::ListenerExt,
 };
 use bytes::Bytes;
 use color_eyre::eyre;
@@ -37,10 +38,11 @@ fn serve_frontend<B>(
     server_config: &server::Configuration,
 ) -> impl Service<
     http::Request<B>,
-    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError>>,
+    Response = http::Response<impl HttpBody<Data = Bytes, Error = BoxError> + use<B>>,
     Error = Infallible,
-    Future = impl Send,
+    Future = impl Send + use<B>,
 > + Clone
++ use<B>
 where
     B: Send + 'static,
 {
@@ -82,17 +84,22 @@ fn trace_layer<B>() -> TraceLayer<HttpMakeClassifier, impl MakeSpan<B> + Clone> 
     })
 }
 
-#[instrument(skip_all, fields(port = %server_config.port))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(port = %server_config.port)))]
 pub async fn run(
     state: Zustand,
     server_config: server::Configuration,
     shutdown_signal: crate::signal::Receiver,
 ) -> eyre::Result<()> {
     let router = router::create(state, &server_config)?;
-    let listener = TcpListener::bind(("0.0.0.0", server_config.port)).await?;
+    let listener = TcpListener::bind(("0.0.0.0", server_config.port))
+        .await?
+        .tap_io(|stream| {
+            if let Err(error) = stream.set_nodelay(true) {
+                trace!(?error, "failed to set TCP_NODELAY for connection");
+            }
+        });
 
     axum::serve(listener, router)
-        .tcp_nodelay(true)
         .with_graceful_shutdown(shutdown_signal.wait())
         .await?;
 

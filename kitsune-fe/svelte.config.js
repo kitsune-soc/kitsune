@@ -6,17 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 const path = fileURLToPath(new URL('package.json', import.meta.url));
 const pkg = JSON.parse(readFileSync(path, 'utf8'));
-
-/** @type {import('@sveltejs/kit').Config} */
+/** @type {import('@sveltejs/kit').Config}*/
 const config = {
-	compilerOptions: {
-		runes: true
-	},
-
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
 	preprocess: [vitePreprocess()],
-
 	kit: {
 		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
@@ -28,15 +22,13 @@ const config = {
 			precompress: false,
 			strict: true
 		}),
-
 		alias: {
-			$houdini: './$houdini'
+			$houdini: './$houdini',
+			$assets: './src/assets'
 		},
-
 		version: {
 			name: pkg.version
 		}
 	}
 };
-
 export default config;

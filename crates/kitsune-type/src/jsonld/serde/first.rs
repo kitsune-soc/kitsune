@@ -3,10 +3,10 @@ use core::{
     marker::PhantomData,
 };
 use serde::{
-    de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
     Serialize,
+    de::{self, Deserialize, Deserializer, IgnoredAny, IntoDeserializer, SeqAccess},
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
+use serde_with::{DeserializeAs, SerializeAs, de::DeserializeAsWrap};
 
 /// Deserialises the first element of a JSON-LD set.
 #[allow(dead_code)] // Used inside `serde_as` macro.
@@ -54,11 +54,12 @@ where
     where
         A: SeqAccess<'de>,
     {
-        let value = if let Some(value) = seq.next_element::<DeserializeAsWrap<_, U>>()? {
-            while let Some(IgnoredAny) = seq.next_element()? {}
-            value.into_inner()
-        } else {
-            U::deserialize_as(().into_deserializer())?
+        let value = match seq.next_element::<DeserializeAsWrap<_, U>>()? {
+            Some(value) => {
+                while let Some(IgnoredAny) = seq.next_element()? {}
+                value.into_inner()
+            }
+            _ => U::deserialize_as(().into_deserializer())?,
         };
 
         Ok(value)

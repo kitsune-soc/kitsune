@@ -3,14 +3,13 @@ extern crate tracing;
 
 use diesel::Connection;
 use diesel_async::{
-    async_connection_wrapper::AsyncConnectionWrapper,
-    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncPgConnection,
+    async_connection_wrapper::AsyncConnectionWrapper,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use kitsune_config::database::Configuration as DatabaseConfig;
 use kitsune_error::{Error, Result};
-use tracing_log::LogTracer;
 
 pub type PgPool = Pool<AsyncPgConnection>;
 
@@ -34,8 +33,6 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 /// Connect to the database and run any pending migrations
 pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
-    LogTracer::init().ok();
-
     blowocking::io({
         let conn_str = config.url.clone();
 

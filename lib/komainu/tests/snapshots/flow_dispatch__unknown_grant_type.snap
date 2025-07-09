@@ -1,0 +1,9 @@
+---
+source: lib/komainu/tests/flow_dispatch.rs
+expression: "SerdeResponse::from(response)"
+---
+{
+  "body": "{\"error\":\"unsupported_grant_type\"}",
+  "headers": {},
+  "status": 400
+}

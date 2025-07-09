@@ -34,21 +34,22 @@ impl PostResolver {
                     .domain(mention.domain.as_deref())
                     .build();
 
-                if let Some(account) = self.account.get(get_user).await? {
-                    let mut mention_text = String::new();
-                    Element::Mention(mention.clone()).render(&mut mention_text);
-                    let _ = mentioned_accounts.send((account.id, mention_text));
+                match self.account.get(get_user).await? {
+                    Some(account) => {
+                        let mut mention_text = String::new();
+                        Element::Mention(mention.clone()).render(&mut mention_text);
+                        let _ = mentioned_accounts.send((account.id, mention_text));
 
-                    Element::Html(Html {
-                        tag: Cow::Borrowed("a"),
-                        attributes: vec![
-                            (Cow::Borrowed("class"), Cow::Borrowed("mention")),
-                            (Cow::Borrowed("href"), Cow::Owned(account.url)),
-                        ],
-                        content: Box::new(Element::Mention(mention)),
-                    })
-                } else {
-                    Element::Mention(mention)
+                        Element::Html(Html {
+                            tag: Cow::Borrowed("a"),
+                            attributes: vec![
+                                (Cow::Borrowed("class"), Cow::Borrowed("mention")),
+                                (Cow::Borrowed("href"), Cow::Owned(account.url)),
+                            ],
+                            content: Box::new(Element::Mention(mention)),
+                        })
+                    }
+                    _ => Element::Mention(mention),
                 }
             }
             Element::Link(link) => Element::Html(Html {
@@ -81,7 +82,7 @@ impl PostResolver {
     ///
     /// - List of mentioned accounts, represented as `(Account ID, Mention text)`
     /// - Content with the mentions replaced by links
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub async fn resolve(&self, content: &str) -> Result<ResolvedPost> {
         let (mentioned_account_ids_acc, mentioned_account_ids) = mpsc::channel();
         let (custom_emoji_ids_sen, custom_emoji_ids_rec) = mpsc::channel();
@@ -147,7 +148,7 @@ mod test {
     #[allow(clippy::too_many_lines)]
     async fn parse_post() {
         redis_test(|redis_pool| async move {
-            database_test(|db_pool| async move {
+            database_test(async |db_pool| {
                 let post = "Hello @0x0@corteximplant.com! How are you doing? :blobhaj_happy: :blobhaj_sad@example.com:";
 
                 let client = service_fn(|req: Request<_>| async move {
@@ -165,10 +166,10 @@ mod test {
                 });
                 let client = Client::builder().service(client);
 
-                let webfinger = Arc::new(Webfinger::with_client(client.clone(), Arc::new(NoopCache.into()))).coerce();
+                let webfinger = Arc::new(Webfinger::new(client.clone(), Arc::new(NoopCache.into()))).coerce();
 
                 let fetcher = Fetcher::builder()
-                    .client(client)
+                    .http_client(client)
                     .db_pool(db_pool.clone())
                     .embed_client(None)
                     .federation_filter(
@@ -186,9 +187,9 @@ mod test {
 
                 let context_repo = KitsuneContextRepo::builder().db_pool(db_pool.clone()).build();
                 let job_queue = RedisJobQueue::builder()
+                    .conn_pool(redis_pool)
                     .context_repository(context_repo)
                     .queue_name("parse_mentions_test")
-                    .redis_pool(redis_pool)
                     .build();
 
                 let job_service = JobService::builder().job_queue(Arc::new(job_queue).coerce()).build();

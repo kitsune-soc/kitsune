@@ -4,10 +4,9 @@
 
 use crate::StorageBackend;
 use bytes::Bytes;
-use futures_util::{Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, TryStreamExt};
 use kitsune_error::Result;
-use std::path::PathBuf;
-use std::pin::pin;
+use std::{path::PathBuf, pin::pin};
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
@@ -47,7 +46,7 @@ impl StorageBackend for Storage {
     {
         let mut input_stream = pin!(input_stream);
         let mut file = File::create(self.storage_dir.join(path)).await?;
-        while let Some(chunk) = input_stream.next().await.transpose()? {
+        while let Some(chunk) = input_stream.try_next().await? {
             file.write_all(&chunk).await?;
         }
         file.flush().await?;
@@ -58,9 +57,9 @@ impl StorageBackend for Storage {
 
 #[cfg(test)]
 mod test {
-    use crate::{fs::Storage, StorageBackend};
+    use crate::{StorageBackend, fs::Storage};
     use bytes::{BufMut, BytesMut};
-    use futures_util::{future, stream, TryStreamExt};
+    use futures_util::{TryStreamExt, future, stream};
     use std::str;
     use tempfile::TempDir;
 
@@ -111,10 +110,8 @@ mod test {
             .await
             .unwrap();
 
-        let data = storage
-            .get("hello-world")
-            .await
-            .unwrap()
+        let data_stream = storage.get("hello-world").await.unwrap();
+        let data = data_stream
             .try_fold(BytesMut::new(), |mut acc, chunk| {
                 acc.put(chunk);
                 future::ok(acc)

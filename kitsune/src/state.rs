@@ -1,4 +1,4 @@
-use crate::oauth2::{OAuth2Service, OAuthEndpoint};
+use crate::oauth2::OAuth2Service;
 use axum_extra::extract::cookie;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::Fetcher;
@@ -75,7 +75,6 @@ impl_from_ref! {
 #[derive(Clone)]
 pub struct SessionConfig {
     pub cookie_key: cookie::Key,
-    pub flash_config: axum_flash::Config,
 }
 
 impl SessionConfig {
@@ -83,21 +82,15 @@ impl SessionConfig {
     #[must_use]
     pub fn generate() -> Self {
         let cookie_key = cookie::Key::generate();
-        let flash_config =
-            axum_flash::Config::new(axum_flash::Key::generate()).use_secure_cookies(true);
 
-        Self {
-            cookie_key,
-            flash_config,
-        }
+        Self { cookie_key }
     }
 }
 
 impl_from_ref! {
     Zustand;
     [
-        cookie::Key => |input: &Zustand| input.session_config.cookie_key.clone(),
-        axum_flash::Config => |input: &Zustand| input.session_config.flash_config.clone()
+        cookie::Key => |input: &Zustand| input.session_config.cookie_key.clone()
     ]
 }
 
@@ -105,7 +98,6 @@ impl_from_ref! {
     Zustand;
     [
         OAuth2Service => |input: &Zustand| input.oauth2.clone(),
-        OAuthEndpoint => |input: &Zustand| input.oauth_endpoint.clone(),
         SessionConfig => |input: &Zustand| input.session_config.clone()
     ]
 }
@@ -148,7 +140,6 @@ pub struct ZustandInner {
     #[cfg(feature = "mastodon-api")]
     pub mastodon_mapper: MastodonMapper,
     pub oauth2: OAuth2Service,
-    pub oauth_endpoint: OAuthEndpoint,
     #[cfg(feature = "oidc")]
     pub oidc: Option<OidcService>,
     pub service: Service,

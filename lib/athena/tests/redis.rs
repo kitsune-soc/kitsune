@@ -2,8 +2,8 @@
 
 use athena::{JobContextRepository, JobDetails, JobQueue, RedisJobQueue, Runnable};
 use futures_util::{
-    stream::{self, BoxStream},
     StreamExt,
+    stream::{self, BoxStream},
 };
 use kitsune_test::redis_test;
 use speedy_uuid::Uuid;
@@ -62,9 +62,9 @@ impl JobContextRepository for ContextRepo {
 async fn basic_schedule() {
     redis_test(|pool| async move {
         let queue = RedisJobQueue::builder()
+            .conn_pool(pool)
             .context_repository(ContextRepo)
             .queue_name("test_queue")
-            .redis_pool(pool)
             .build();
 
         queue

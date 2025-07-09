@@ -3,12 +3,11 @@ use crate::http::{
     util::buffer_multipart_to_tempfile,
 };
 use axum::{
-    debug_handler,
+    Json, debug_handler,
     extract::{Multipart, Path, State},
-    Json,
 };
 use futures_util::TryFutureExt;
-use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::attachment::{AttachmentService, Update, Upload};
 use kitsune_type::mastodon::MediaAttachment;
@@ -51,7 +50,9 @@ pub async fn post(
 
                     upload = upload.content_type(content_type).stream(stream);
                 }
-                _ => continue,
+                _ => {
+                    // just ignore
+                }
             }
         }
     }

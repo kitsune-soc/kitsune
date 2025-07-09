@@ -1,6 +1,6 @@
-use crate::{handle::Shared, CsrfData, CsrfHandle, ResponseFuture, CSRF_COOKIE_NAME};
+use crate::{CSRF_COOKIE_NAME, CsrfData, CsrfHandle, ResponseFuture, handle::Shared};
 use cookie::Cookie;
-use http::{header, Request, Response};
+use http::{Request, Response, header};
 use std::{
     sync::Mutex,
     task::{self, Poll},
@@ -35,25 +35,34 @@ where
     }
 
     fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
-        let csrf_cookie = req
-            .headers()
-            .get_all(header::COOKIE)
-            .into_iter()
-            .filter_map(|value| value.to_str().ok()) // Filter out all the values that aren't valid UTF-8
-            .flat_map(Cookie::split_parse_encoded) // Parse all the cookie headers and flatten the resulting iterator into a contiguous one
-            .flatten() // Call `.flatten()` to turn `Result<Cookie, Error>` -> `Cookie`, ignoring all the errors
-            .find(|cookie| cookie.name() == CSRF_COOKIE_NAME); // Find the cookie with the name of our CSRF cookie
+        let read_data = {
+            let mut csrf_data = None;
+            'outer: for header in req.headers().get_all(header::COOKIE) {
+                let Ok(value_str) = header.to_str() else {
+                    continue;
+                };
 
-        let read_data = if let Some(csrf_cookie) = csrf_cookie {
-            csrf_cookie
-                .value_trimmed()
-                .split_once('.')
-                .map(|(hash, message)| CsrfData {
-                    hash: hash.into(),
-                    message: message.into(),
-                })
-        } else {
-            None
+                for cookie in Cookie::split_parse_encoded(value_str) {
+                    let Ok(cookie) = cookie else {
+                        continue;
+                    };
+
+                    if cookie.name() == CSRF_COOKIE_NAME {
+                        let Some((hash, message)) = cookie.value_trimmed().split_once('.') else {
+                            continue;
+                        };
+
+                        csrf_data = Some(CsrfData {
+                            hash: hash.into(),
+                            message: message.into(),
+                        });
+
+                        break 'outer;
+                    }
+                }
+            }
+
+            csrf_data
         };
 
         let handle = CsrfHandle {

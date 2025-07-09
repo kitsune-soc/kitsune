@@ -1,8 +1,10 @@
 use athena::{JobContextRepository, JobDetails, JobQueue, RedisJobQueue, Runnable};
-use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
 use futures_util::{
-    stream::{self, BoxStream},
     StreamExt,
+    stream::{self, BoxStream},
 };
 use iso8601_timestamp::Timestamp;
 use speedy_uuid::Uuid;
@@ -65,9 +67,9 @@ async fn main() {
     pool.init().await.unwrap();
 
     let queue = RedisJobQueue::builder()
+        .conn_pool(pool)
         .context_repository(ContextRepo)
         .queue_name("test_queue")
-        .redis_pool(pool)
         .build();
 
     for _ in 0..100 {

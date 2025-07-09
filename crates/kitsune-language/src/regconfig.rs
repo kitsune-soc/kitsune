@@ -2,7 +2,7 @@ use crate::{
     consts::{DB_ENUM_NAME, DB_FUNCTION_NAME},
     supported_languages,
 };
-use diesel::{deserialize, pg::Pg, row::NamedRow, sql_types, QueryableByName};
+use diesel::{QueryableByName, deserialize, pg::Pg, row::NamedRow, sql_types};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::{collections::HashSet, fmt::Write};
 

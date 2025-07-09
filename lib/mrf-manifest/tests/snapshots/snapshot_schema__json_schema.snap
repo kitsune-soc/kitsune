@@ -3,52 +3,65 @@ source: lib/mrf-manifest/tests/snapshot_schema.rs
 expression: schema
 ---
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Manifest",
   "description": "Manifest of MRF modules",
   "oneOf": [
     {
       "description": "Manifest v1",
       "type": "object",
+      "properties": {
+        "manifestVersion": {
+          "type": "string",
+          "const": "v1"
+        }
+      },
+      "$ref": "#/$defs/ManifestV1",
       "required": [
-        "activityTypes",
-        "apiVersion",
-        "manifestVersion",
-        "name",
-        "version"
-      ],
+        "manifestVersion"
+      ]
+    }
+  ],
+  "$defs": {
+    "ActivitySet": {
+      "description": "Wrapper around a hash set intended for use with the `activityTypes` field",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "ApiVersion": {
+      "description": "Version of the API used",
+      "oneOf": [
+        {
+          "description": "Version 1",
+          "type": "string",
+          "const": "v1"
+        }
+      ]
+    },
+    "ManifestV1": {
+      "description": "Manifest v1",
+      "type": "object",
       "properties": {
         "activityTypes": {
           "description": "Activity types passed to the MRF module\n\n`*` matching all types",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
+          "$ref": "#/$defs/ActivitySet"
         },
         "apiVersion": {
           "description": "Version of the MRF API",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ApiVersion"
-            }
-          ]
+          "$ref": "#/$defs/ApiVersion"
         },
         "configSchema": {
           "description": "JSON schema of the configuration passed to the module\n\nThis is optional but can be used for automatically generating a configuration UI",
           "anyOf": [
             {
-              "$ref": "#/definitions/RootSchema"
+              "$ref": "#/$defs/Schema"
             },
             {
               "type": "null"
             }
-          ]
-        },
-        "manifestVersion": {
-          "type": "string",
-          "enum": [
-            "v1"
           ]
         },
         "name": {
@@ -57,782 +70,25 @@ expression: schema
         },
         "version": {
           "description": "Version of the MRF module",
-          "type": "string",
-          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
-        }
-      }
-    }
-  ],
-  "definitions": {
-    "ApiVersion": {
-      "description": "Version of the API used",
-      "oneOf": [
-        {
-          "description": "Version 1",
-          "type": "string",
-          "enum": [
-            "v1"
-          ]
-        }
-      ]
-    },
-    "InstanceType": {
-      "description": "The possible types of values in JSON Schema documents.\n\nSee [JSON Schema 4.2.1. Instance Data Model](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-4.2.1).",
-      "type": "string",
-      "enum": [
-        "null",
-        "boolean",
-        "object",
-        "array",
-        "number",
-        "string",
-        "integer"
-      ]
-    },
-    "RootSchema": {
-      "description": "The root object of a JSON Schema document.",
-      "type": "object",
-      "properties": {
-        "$id": {
-          "description": "The `$id` keyword.\n\nSee [JSON Schema 8.2.2. The \"$id\" Keyword](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.2.2).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "$ref": {
-          "description": "The `$ref` keyword.\n\nSee [JSON Schema 8.2.4.1. Direct References with \"$ref\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.2.4.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "$schema": {
-          "description": "The `$schema` keyword.\n\nSee [JSON Schema 8.1.1. The \"$schema\" Keyword](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.1.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "additionalItems": {
-          "description": "The `additionalItems` keyword.\n\nSee [JSON Schema 9.3.1.2. \"additionalItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.2).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "additionalProperties": {
-          "description": "The `additionalProperties` keyword.\n\nSee [JSON Schema 9.3.2.3. \"additionalProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.3).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allOf": {
-          "description": "The `allOf` keyword.\n\nSee [JSON Schema 9.2.1.1. \"allOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.1).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "anyOf": {
-          "description": "The `anyOf` keyword.\n\nSee [JSON Schema 9.2.1.2. \"anyOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.2).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "const": {
-          "description": "The `const` keyword.\n\nSee [JSON Schema Validation 6.1.3. \"const\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.3)"
-        },
-        "contains": {
-          "description": "The `contains` keyword.\n\nSee [JSON Schema 9.3.1.4. \"contains\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.4).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "default": {
-          "description": "The `default` keyword.\n\nSee [JSON Schema Validation 9.2. \"default\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.2)."
-        },
-        "definitions": {
-          "description": "The `definitions` keyword.\n\nIn JSON Schema draft 2019-09 this was replaced by $defs, but in Schemars this is still serialized as `definitions` for backward-compatibility.\n\nSee [JSON Schema 8.2.5. Schema Re-Use With \"$defs\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.2.5), and [JSON Schema (draft 07) 9. Schema Re-Use With \"definitions\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-9).",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "deprecated": {
-          "description": "The `deprecated` keyword.\n\nSee [JSON Schema Validation 9.3. \"deprecated\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.3).",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "The `description` keyword.\n\nSee [JSON Schema Validation 9.1. \"title\" and \"description\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "else": {
-          "description": "The `else` keyword.\n\nSee [JSON Schema 9.2.2.3. \"else\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.3).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "enum": {
-          "description": "The `enum` keyword.\n\nSee [JSON Schema Validation 6.1.2. \"enum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.2)",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": true
-        },
-        "examples": {
-          "description": "The `examples` keyword.\n\nSee [JSON Schema Validation 9.5. \"examples\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.5).",
-          "type": "array",
-          "items": true
-        },
-        "exclusiveMaximum": {
-          "description": "The `exclusiveMaximum` keyword.\n\nSee [JSON Schema Validation 6.2.3. \"exclusiveMaximum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.3).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "exclusiveMinimum": {
-          "description": "The `exclusiveMinimum` keyword.\n\nSee [JSON Schema Validation 6.2.5. \"exclusiveMinimum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.5).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "format": {
-          "description": "The `format` keyword.\n\nSee [JSON Schema Validation 7. A Vocabulary for Semantic Content With \"format\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-7).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "if": {
-          "description": "The `if` keyword.\n\nSee [JSON Schema 9.2.2.1. \"if\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "items": {
-          "description": "The `items` keyword.\n\nSee [JSON Schema 9.3.1.1. \"items\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SingleOrVec_for_Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "maxItems": {
-          "description": "The `maxItems` keyword.\n\nSee [JSON Schema Validation 6.4.1. \"maxItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maxLength": {
-          "description": "The `maxLength` keyword.\n\nSee [JSON Schema Validation 6.3.1. \"maxLength\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maxProperties": {
-          "description": "The `maxProperties` keyword.\n\nSee [JSON Schema Validation 6.5.1. \"maxProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maximum": {
-          "description": "The `maximum` keyword.\n\nSee [JSON Schema Validation 6.2.2. \"maximum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.2).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "minItems": {
-          "description": "The `minItems` keyword.\n\nSee [JSON Schema Validation 6.4.2. \"minItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minLength": {
-          "description": "The `minLength` keyword.\n\nSee [JSON Schema Validation 6.3.2. \"minLength\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minProperties": {
-          "description": "The `minProperties` keyword.\n\nSee [JSON Schema Validation 6.5.2. \"minProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minimum": {
-          "description": "The `minimum` keyword.\n\nSee [JSON Schema Validation 6.2.4. \"minimum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.4).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "multipleOf": {
-          "description": "The `multipleOf` keyword.\n\nSee [JSON Schema Validation 6.2.1. \"multipleOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.1).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "not": {
-          "description": "The `not` keyword.\n\nSee [JSON Schema 9.2.1.4. \"not\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.4).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "oneOf": {
-          "description": "The `oneOf` keyword.\n\nSee [JSON Schema 9.2.1.3. \"oneOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.3).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "pattern": {
-          "description": "The `pattern` keyword.\n\nSee [JSON Schema Validation 6.3.3. \"pattern\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.3).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "patternProperties": {
-          "description": "The `patternProperties` keyword.\n\nSee [JSON Schema 9.3.2.2. \"patternProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.2).",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "properties": {
-          "description": "The `properties` keyword.\n\nSee [JSON Schema 9.3.2.1. \"properties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.1).",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "propertyNames": {
-          "description": "The `propertyNames` keyword.\n\nSee [JSON Schema 9.3.2.5. \"propertyNames\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.5).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "readOnly": {
-          "description": "The `readOnly` keyword.\n\nSee [JSON Schema Validation 9.4. \"readOnly\" and \"writeOnly\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.4).",
-          "type": "boolean"
-        },
-        "required": {
-          "description": "The `required` keyword.\n\nSee [JSON Schema Validation 6.5.3. \"required\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.3).",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "then": {
-          "description": "The `then` keyword.\n\nSee [JSON Schema 9.2.2.2. \"then\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.2).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "title": {
-          "description": "The `title` keyword.\n\nSee [JSON Schema Validation 9.1. \"title\" and \"description\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "type": {
-          "description": "The `type` keyword.\n\nSee [JSON Schema Validation 6.1.1. \"type\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.1) and [JSON Schema 4.2.1. Instance Data Model](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-4.2.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SingleOrVec_for_InstanceType"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "uniqueItems": {
-          "description": "The `uniqueItems` keyword.\n\nSee [JSON Schema Validation 6.4.3. \"uniqueItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.3).",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "writeOnly": {
-          "description": "The `writeOnly` keyword.\n\nSee [JSON Schema Validation 9.4. \"readOnly\" and \"writeOnly\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.4).",
-          "type": "boolean"
+          "$ref": "#/$defs/SemVer"
         }
       },
-      "additionalProperties": true
+      "required": [
+        "apiVersion",
+        "name",
+        "version",
+        "activityTypes"
+      ]
     },
     "Schema": {
-      "description": "A JSON Schema.",
-      "anyOf": [
-        {
-          "description": "A trivial boolean JSON Schema.\n\nThe schema `true` matches everything (always passes validation), whereas the schema `false` matches nothing (always fails validation).",
-          "type": "boolean"
-        },
-        {
-          "description": "A JSON Schema object.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/SchemaObject"
-            }
-          ]
-        }
+      "type": [
+        "object",
+        "boolean"
       ]
     },
-    "SchemaObject": {
-      "description": "A JSON Schema object.",
-      "type": "object",
-      "properties": {
-        "$id": {
-          "description": "The `$id` keyword.\n\nSee [JSON Schema 8.2.2. The \"$id\" Keyword](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.2.2).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "$ref": {
-          "description": "The `$ref` keyword.\n\nSee [JSON Schema 8.2.4.1. Direct References with \"$ref\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-8.2.4.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "additionalItems": {
-          "description": "The `additionalItems` keyword.\n\nSee [JSON Schema 9.3.1.2. \"additionalItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.2).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "additionalProperties": {
-          "description": "The `additionalProperties` keyword.\n\nSee [JSON Schema 9.3.2.3. \"additionalProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.3).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allOf": {
-          "description": "The `allOf` keyword.\n\nSee [JSON Schema 9.2.1.1. \"allOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.1).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "anyOf": {
-          "description": "The `anyOf` keyword.\n\nSee [JSON Schema 9.2.1.2. \"anyOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.2).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "const": {
-          "description": "The `const` keyword.\n\nSee [JSON Schema Validation 6.1.3. \"const\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.3)"
-        },
-        "contains": {
-          "description": "The `contains` keyword.\n\nSee [JSON Schema 9.3.1.4. \"contains\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.4).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "default": {
-          "description": "The `default` keyword.\n\nSee [JSON Schema Validation 9.2. \"default\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.2)."
-        },
-        "deprecated": {
-          "description": "The `deprecated` keyword.\n\nSee [JSON Schema Validation 9.3. \"deprecated\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.3).",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "The `description` keyword.\n\nSee [JSON Schema Validation 9.1. \"title\" and \"description\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "else": {
-          "description": "The `else` keyword.\n\nSee [JSON Schema 9.2.2.3. \"else\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.3).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "enum": {
-          "description": "The `enum` keyword.\n\nSee [JSON Schema Validation 6.1.2. \"enum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.2)",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": true
-        },
-        "examples": {
-          "description": "The `examples` keyword.\n\nSee [JSON Schema Validation 9.5. \"examples\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.5).",
-          "type": "array",
-          "items": true
-        },
-        "exclusiveMaximum": {
-          "description": "The `exclusiveMaximum` keyword.\n\nSee [JSON Schema Validation 6.2.3. \"exclusiveMaximum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.3).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "exclusiveMinimum": {
-          "description": "The `exclusiveMinimum` keyword.\n\nSee [JSON Schema Validation 6.2.5. \"exclusiveMinimum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.5).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "format": {
-          "description": "The `format` keyword.\n\nSee [JSON Schema Validation 7. A Vocabulary for Semantic Content With \"format\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-7).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "if": {
-          "description": "The `if` keyword.\n\nSee [JSON Schema 9.2.2.1. \"if\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "items": {
-          "description": "The `items` keyword.\n\nSee [JSON Schema 9.3.1.1. \"items\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SingleOrVec_for_Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "maxItems": {
-          "description": "The `maxItems` keyword.\n\nSee [JSON Schema Validation 6.4.1. \"maxItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maxLength": {
-          "description": "The `maxLength` keyword.\n\nSee [JSON Schema Validation 6.3.1. \"maxLength\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maxProperties": {
-          "description": "The `maxProperties` keyword.\n\nSee [JSON Schema Validation 6.5.1. \"maxProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.1).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "maximum": {
-          "description": "The `maximum` keyword.\n\nSee [JSON Schema Validation 6.2.2. \"maximum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.2).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "minItems": {
-          "description": "The `minItems` keyword.\n\nSee [JSON Schema Validation 6.4.2. \"minItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minLength": {
-          "description": "The `minLength` keyword.\n\nSee [JSON Schema Validation 6.3.2. \"minLength\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minProperties": {
-          "description": "The `minProperties` keyword.\n\nSee [JSON Schema Validation 6.5.2. \"minProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.2).",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "minimum": {
-          "description": "The `minimum` keyword.\n\nSee [JSON Schema Validation 6.2.4. \"minimum\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.4).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "multipleOf": {
-          "description": "The `multipleOf` keyword.\n\nSee [JSON Schema Validation 6.2.1. \"multipleOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.2.1).",
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "not": {
-          "description": "The `not` keyword.\n\nSee [JSON Schema 9.2.1.4. \"not\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.4).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "oneOf": {
-          "description": "The `oneOf` keyword.\n\nSee [JSON Schema 9.2.1.3. \"oneOf\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.1.3).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "pattern": {
-          "description": "The `pattern` keyword.\n\nSee [JSON Schema Validation 6.3.3. \"pattern\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.3.3).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "patternProperties": {
-          "description": "The `patternProperties` keyword.\n\nSee [JSON Schema 9.3.2.2. \"patternProperties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.2).",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "properties": {
-          "description": "The `properties` keyword.\n\nSee [JSON Schema 9.3.2.1. \"properties\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.1).",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Schema"
-          }
-        },
-        "propertyNames": {
-          "description": "The `propertyNames` keyword.\n\nSee [JSON Schema 9.3.2.5. \"propertyNames\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.2.5).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "readOnly": {
-          "description": "The `readOnly` keyword.\n\nSee [JSON Schema Validation 9.4. \"readOnly\" and \"writeOnly\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.4).",
-          "type": "boolean"
-        },
-        "required": {
-          "description": "The `required` keyword.\n\nSee [JSON Schema Validation 6.5.3. \"required\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.5.3).",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "then": {
-          "description": "The `then` keyword.\n\nSee [JSON Schema 9.2.2.2. \"then\"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.2.2.2).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Schema"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "title": {
-          "description": "The `title` keyword.\n\nSee [JSON Schema Validation 9.1. \"title\" and \"description\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.1).",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "type": {
-          "description": "The `type` keyword.\n\nSee [JSON Schema Validation 6.1.1. \"type\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.1.1) and [JSON Schema 4.2.1. Instance Data Model](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-4.2.1).",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SingleOrVec_for_InstanceType"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "uniqueItems": {
-          "description": "The `uniqueItems` keyword.\n\nSee [JSON Schema Validation 6.4.3. \"uniqueItems\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-6.4.3).",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "writeOnly": {
-          "description": "The `writeOnly` keyword.\n\nSee [JSON Schema Validation 9.4. \"readOnly\" and \"writeOnly\"](https://tools.ietf.org/html/draft-handrews-json-schema-validation-02#section-9.4).",
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": true
-    },
-    "SingleOrVec_for_InstanceType": {
-      "description": "A type which can be serialized as a single item, or multiple items.\n\nIn some contexts, a `Single` may be semantically distinct from a `Vec` containing only item.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/InstanceType"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/InstanceType"
-          }
-        }
-      ]
-    },
-    "SingleOrVec_for_Schema": {
-      "description": "A type which can be serialized as a single item, or multiple items.\n\nIn some contexts, a `Single` may be semantically distinct from a `Vec` containing only item.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/Schema"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Schema"
-          }
-        }
-      ]
+    "SemVer": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
     }
   }
 }

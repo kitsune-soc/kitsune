@@ -3,9 +3,9 @@ use icu_normalizer::ComposingNormalizer;
 use memchr::memchr3;
 use serde::Serialize;
 use sonic_rs::{
+    Serializer,
     format::{CompactFormatter, Formatter},
     writer::{BufferedWriter, WriteExt},
-    Serializer,
 };
 use std::{
     collections::BTreeMap,
@@ -55,13 +55,25 @@ impl CanonicalFormatter {
     ///
     /// If we are not currently writing an object, pass through `writer`.
     #[inline]
-    fn writer<'a, W: io::Write + ?Sized>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a {
+    fn writer<'a, W>(&'a mut self, writer: &'a mut W) -> impl WriteExt + 'a
+    where
+        W: io::Write + ?Sized,
+    {
         self.object_stack.last_mut().map_or_else(
-            || Either::Right(BufferedWriter::new(writer)),
+            || {
+                // TODO: This is annoying. Following the migration to the new trait solver, we have to box here to keep the code compiling.
+                //
+                // It's weird that boxing solves it here since the trait solver still needs to prove that `BufferedWriter<&mut W>` implements `WriteExt` to allow for the coercion to the trait object.
+                // So returning the raw unboxed type should also make sense to the trait solver. But apparently it doesn't.
+                //
+                // How unfortunate. But at least, looking at the benchmark, it doesn't have _that much_ of an impact.
+                let boxed = Box::new(BufferedWriter::new(writer)) as Box<dyn WriteExt + 'a>;
+                Either::Right(boxed)
+            },
             |object| {
-                let container = match &mut object.state {
-                    Collecting::Key(key) => key,
-                    Collecting::Value { value, .. } => value,
+                let container = match object.state {
+                    Collecting::Key(ref mut key) => key,
+                    Collecting::Value { ref mut value, .. } => value,
                 };
 
                 Either::Left(container)
@@ -73,8 +85,7 @@ impl CanonicalFormatter {
     #[inline]
     fn obj_mut(&mut self) -> io::Result<&mut Object> {
         self.object_stack.last_mut().ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::Other,
+            io::Error::other(
                 "Serializer called an object method without calling begin_object first",
             )
         })
@@ -225,8 +236,7 @@ impl Formatter for CanonicalFormatter {
     #[inline]
     fn end_object<W: io::Write + ?Sized>(&mut self, writer: &mut W) -> io::Result<()> {
         let object = self.object_stack.pop().ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::Other,
+            io::Error::other(
                 "sonic_rs called Formatter::end_object object method
                  without calling begin_object first",
             )

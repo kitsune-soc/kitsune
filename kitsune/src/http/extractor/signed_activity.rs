@@ -1,18 +1,17 @@
 use crate::state::Zustand;
-use async_trait::async_trait;
 use axum::{
+    RequestExt,
     body::Body,
     extract::{FromRequest, OriginalUri},
     response::{IntoResponse, Response},
-    RequestExt,
 };
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::traits::fetcher::AccountFetchOptions;
-use kitsune_db::{model::account::Account, schema::accounts, with_connection, PgPool};
-use kitsune_error::{bail, Error, ErrorType, Result};
+use kitsune_db::{PgPool, model::account::Account, schema::accounts, with_connection};
+use kitsune_error::{Error, ErrorType, Result, bail};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
 use scoped_futures::ScopedFutureExt;
@@ -23,7 +22,6 @@ use scoped_futures::ScopedFutureExt;
 /// but not that the activity matches the object, so beware of that.
 pub struct SignedActivity(pub Account, pub Activity);
 
-#[async_trait]
 impl FromRequest<Zustand, Body> for SignedActivity {
     type Rejection = Response;
 
@@ -59,8 +57,7 @@ impl FromRequest<Zustand, Body> for SignedActivity {
             .service
             .mrf
             .handle_incoming(activity.r#type.as_ref(), str_body)
-            .await
-            .map_err(Error::from)?
+            .await?
         else {
             debug!("sending rejection");
             return Err(StatusCode::BAD_REQUEST.into_response());

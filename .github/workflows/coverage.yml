@@ -33,7 +33,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis
+        image: valkey/valkey:alpine
         ports:
           - 6379:6379
         options: >-
@@ -50,7 +50,7 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate code coverage
-        run: cargo llvm-cov nextest --all-features --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov nextest --all-features --workspace --codecov --output-path codecov.json
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost/test_db"
           MINIO_URL: "http://127.0.0.1:9000"
@@ -58,6 +58,6 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: lcov.info
+          files: codecov.json
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

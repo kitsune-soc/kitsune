@@ -1,5 +1,5 @@
 use super::SignatureHeader;
-use http::{header::DATE, Method, Request};
+use http::{Method, Request, header::DATE};
 use miette::Diagnostic;
 use std::{
     cmp::min,

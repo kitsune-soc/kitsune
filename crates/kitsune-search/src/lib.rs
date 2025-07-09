@@ -8,16 +8,13 @@ use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 use strum::{AsRefStr, EnumIter};
 
-mod meilisearch;
 mod sql;
 
-pub use self::meilisearch::MeiliSearchService;
 pub use self::sql::SearchService as SqlSearchService;
 
 #[derive(Clone)]
 #[enum_dispatch(SearchBackend)]
 pub enum AnySearchBackend {
-    Meilisearch(MeiliSearchService),
     Noop(NoopSearchService),
     Sql(SqlSearchService),
 }

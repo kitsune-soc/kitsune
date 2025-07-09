@@ -4,7 +4,7 @@ use hyper::{Request, Response};
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
+use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_http_client::Client;
 use kitsune_search::NoopSearchService;
@@ -47,7 +47,7 @@ async fn fetch_actor_with_custom_acct() {
         let client = Client::builder().service(client);
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -58,7 +58,7 @@ async fn fetch_actor_with_custom_acct() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -125,7 +125,7 @@ async fn ignore_fake_webfinger_acct() {
         let client = Client::builder().service(client);
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -136,7 +136,7 @@ async fn ignore_fake_webfinger_acct() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

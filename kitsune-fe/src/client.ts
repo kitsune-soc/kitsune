@@ -1,15 +1,16 @@
-import { HoudiniClient, getClientSession } from '$houdini';
-import { houdiniPlugin as authPlugin } from '$lib/oauth/auth.svelte';
+import { HoudiniClient, subscription } from '$houdini';
+import { houdiniPlugin as authPlugin } from '$lib/oauth/auth';
+
+import { createClient } from 'graphql-ws';
 
 export default new HoudiniClient({
-	url: `${import.meta.env.VITE_BACKEND_URL ?? ''}/graphql`,
-	plugins: [authPlugin],
-	fetchParams() {
-		const session = getClientSession();
-		return {
-			headers: {
-				...session.headers
-			}
-		};
-	}
+	url: `/graphql`,
+	plugins: [
+		authPlugin,
+		subscription(() =>
+			createClient({
+				url: `/graphql/ws`
+			})
+		)
+	]
 });

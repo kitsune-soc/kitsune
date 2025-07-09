@@ -4,7 +4,6 @@ use bytes::Bytes;
 use derive_more::From;
 use futures_util::{Stream, StreamExt};
 use kitsune_error::Result;
-use std::future::Future;
 
 pub mod fs;
 pub mod s3;

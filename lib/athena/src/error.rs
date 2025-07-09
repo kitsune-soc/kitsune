@@ -9,9 +9,12 @@ pub enum Error {
     #[error(transparent)]
     ContextRepository(BoxError),
 
+    #[error(transparent)]
+    Other(BoxError),
+
     #[cfg(feature = "redis")]
     #[error(transparent)]
-    Redis(#[from] fred::error::RedisError),
+    Redis(#[from] fred::error::Error),
 
     #[cfg(feature = "redis")]
     #[error(transparent)]

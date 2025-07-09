@@ -1,9 +1,9 @@
 use const_oid::db::rfc5912::RSA_ENCRYPTION;
 use http_signatures::BoxError;
 use pkcs8::{
-    der::{asn1::BitStringRef, EncodePem},
-    spki::AlgorithmIdentifier,
     LineEnding, SubjectPublicKeyInfoRef,
+    der::{EncodePem, asn1::BitStringRef},
+    spki::AlgorithmIdentifier,
 };
 use scoped_futures::ScopedFutureExt;
 use std::{future, time::Duration};
@@ -20,12 +20,14 @@ fn basic_signature() {
     let signature_string =
         http_signatures::cavage::signature_string::construct(&req, &signature_header).unwrap();
 
-    assert!(http_signatures::crypto::verify(
-        signature_string.as_bytes(),
-        signature_header.signature,
-        &public_key
-    )
-    .is_ok());
+    assert!(
+        http_signatures::crypto::verify(
+            signature_string.as_bytes(),
+            signature_header.signature,
+            &public_key
+        )
+        .is_ok()
+    );
 }
 
 #[tokio::test]

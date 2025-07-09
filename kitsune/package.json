@@ -1,0 +1,19 @@
+{
+  "name": "kitsune",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i styles/app.css -o assets/app.css --minify",
+    "dev": "tailwindcss -i styles/app.css -o assets/app.css --watch",
+    "fmt": "prettier --write --ignore-unknown --cache ."
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-jinja-template": "^2.1.0",
+    "prettier-plugin-tailwindcss": "^0.6.13",
+    "tailwindcss": "^4.1.11"
+  }
+}

@@ -1,0 +1,20 @@
+query LoadPost($id: UUID!) {
+	getPostById(id: $id) {
+		id
+		account {
+			id
+			displayName
+			username
+		}
+		subject
+		content
+		attachments {
+			contentType
+			description
+			url
+		}
+		visibility
+		url
+		createdAt
+	}
+}

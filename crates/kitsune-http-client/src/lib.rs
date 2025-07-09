@@ -1,22 +1,26 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-use self::util::BoxCloneService;
+use self::{resolver::Resolver, util::BoxCloneService};
 use bytes::Buf;
 use futures_util::{Stream, StreamExt};
+use hickory_resolver::{config::ResolverConfig, name_server::TokioConnectionProvider};
+use http::HeaderValue;
 use http_body_util::{BodyStream, Limited};
 use hyper::{
+    HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
     body::Bytes,
     header::{HeaderName, USER_AGENT},
-    http::{self, HeaderValue},
-    HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
 };
 use hyper_rustls::HttpsConnectorBuilder;
-use hyper_util::{client::legacy::Client as HyperClient, rt::TokioExecutor};
+use hyper_util::{
+    client::legacy::{Client as HyperClient, connect::HttpConnector},
+    rt::TokioExecutor,
+};
 use kitsune_type::jsonld::RdfNode;
 use serde::de::DeserializeOwned;
 use std::{error::Error as StdError, fmt, time::Duration};
-use tower::{layer::util::Identity, util::Either, BoxError, Service, ServiceBuilder, ServiceExt};
+use tower::{BoxError, Service, ServiceBuilder, ServiceExt, layer::util::Identity, util::Either};
 use tower_http::{
     decompression::DecompressionLayer,
     follow_redirect::{FollowRedirectLayer, RequestUri},
@@ -25,6 +29,7 @@ use tower_http::{
 };
 
 mod body;
+mod resolver;
 mod util;
 
 type BoxBody<E = BoxError> = http_body_util::combinators::BoxBody<Bytes, E>;
@@ -33,8 +38,14 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// Default body limit of 1MB
 const DEFAULT_BODY_LIMIT: usize = 1024 * 1024;
 
+/// Default request timeout of 30s (same as Firefox)
+const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// Alias for our internal HTTP body type
 pub use self::body::Body;
+
+/// Response body type
+pub type ResponseBody = BoxBody;
 
 /// Client error type
 pub struct Error {
@@ -43,8 +54,7 @@ pub struct Error {
 
 impl Error {
     #[inline]
-    #[doc(hidden)]
-    pub fn new<E>(inner: E) -> Self
+    fn new<E>(inner: E) -> Self
     where
         E: Into<BoxError>,
     {
@@ -72,6 +82,7 @@ impl StdError for Error {}
 pub struct ClientBuilder {
     content_length_limit: Option<usize>,
     default_headers: HeaderMap,
+    dns_resolver: Option<Resolver>,
     timeout: Option<Duration>,
 }
 
@@ -112,6 +123,15 @@ impl ClientBuilder {
         Ok(self)
     }
 
+    /// Set a hickory DNS resolver you want this client to use
+    ///
+    /// Otherwise it creates a new one which connects to Quad9 via DNS-over-TLS
+    #[must_use]
+    pub fn dns_resolver(mut self, resolver: impl Into<Resolver>) -> Self {
+        self.dns_resolver = Some(resolver.into());
+        self
+    }
+
     /// Set the User-Agent header
     ///
     /// Defaults to `kitsune-http-client`
@@ -142,14 +162,23 @@ impl ClientBuilder {
     ///
     /// Yes, this operation is infallible
     #[must_use]
-    pub fn build(self) -> Client {
+    pub fn build(mut self) -> Client {
+        let resolver = self.dns_resolver.take().unwrap_or_else(|| {
+            hickory_resolver::Resolver::builder_with_config(
+                ResolverConfig::quad9_tls(),
+                TokioConnectionProvider::default(),
+            )
+            .build()
+            .into()
+        });
+
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()
             .expect("Failed to fetch native certificates")
             .https_or_http()
             .enable_http1()
             .enable_http2()
-            .build();
+            .wrap_connector(HttpConnector::new_with_resolver(resolver));
 
         let client = HyperClient::builder(TokioExecutor::new())
             .build(connector)
@@ -206,10 +235,13 @@ impl Default for ClientBuilder {
         let builder = ClientBuilder {
             content_length_limit: Some(DEFAULT_BODY_LIMIT),
             default_headers: HeaderMap::default(),
-            timeout: Option::default(),
+            dns_resolver: None,
+            timeout: Some(DEFAULT_REQUEST_TIMEOUT),
         };
 
-        builder.user_agent("kitsune-http-client").unwrap()
+        builder
+            .user_agent(kitsune_core::consts::USER_AGENT)
+            .unwrap()
     }
 }
 
@@ -388,7 +420,7 @@ impl Response {
             if Uri::try_from(id)
                 .map_err(Error::new)?
                 .authority()
-                .map_or(true, |node_authority| *node_authority != server_authority)
+                .is_none_or(|node_authority| *node_authority != server_authority)
             {
                 return Err(Error::new(BoxError::from(
                     "Authority of `@id` doesn't belong to the originating server",

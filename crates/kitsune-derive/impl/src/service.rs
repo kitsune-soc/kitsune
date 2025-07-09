@@ -2,10 +2,10 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use std::iter;
 use syn::{
+    Token, Visibility,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     spanned::Spanned,
-    Token, Visibility,
 };
 
 struct Attributes {
@@ -48,7 +48,7 @@ fn expand_builder(
     let inner_builder_name = format_ident!("{inner_struct_name}Builder");
 
     let num_lifetimes = parsed_struct.generics.lifetimes().count();
-    let lifetimes = iter::repeat(quote!('_)).take(num_lifetimes);
+    let lifetimes = iter::repeat_n(quote!('_), num_lifetimes);
 
     let attrs = quote! {
         #[derive(::kitsune_derive::typed_builder::TypedBuilder)]

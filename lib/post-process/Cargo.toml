@@ -10,13 +10,13 @@ name = "simple"
 harness = false
 
 [dependencies]
-logos = "0.14.2"
+logos.workspace = true
 
 [dev-dependencies]
-divan = "0.1.15"
-futures-executor = "0.3.31"
-insta = { version = "1.41.1", features = ["glob"] }
-pretty_assertions = "1.4.1"
+divan.workspace = true
+futures-executor.workspace = true
+insta.workspace = true
+pretty_assertions.workspace = true
 
 [lints]
 workspace = true

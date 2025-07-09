@@ -6,12 +6,12 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-globset = "0.4.15"
-kitsune-config = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-type = { workspace = true }
-url = "2.5.3"
+globset.workspace = true
+kitsune-config.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-type.workspace = true
+url.workspace = true
 
 [lints]
 workspace = true

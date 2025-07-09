@@ -1,17 +1,17 @@
 use super::Store;
 use crate::state::LoginState;
-use fred::{clients::RedisPool, interfaces::KeysInterface};
+use fred::{clients::Pool, interfaces::KeysInterface};
 use kitsune_error::Result;
 
 const REDIS_PREFIX: &str = "OIDC-LOGIN-STATE";
 
 #[derive(Clone)]
 pub struct Redis {
-    pool: RedisPool,
+    pool: Pool,
 }
 
 impl Redis {
-    pub fn new(pool: RedisPool) -> Self {
+    pub fn new(pool: Pool) -> Self {
         Self { pool }
     }
 

@@ -2,8 +2,8 @@ use self::{actor::Actor, object::MediaAttachment};
 use crate::jsonld::{self, RdfNode};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, DefaultOnNull, OneOrMany};
-use sonic_rs::{json, Value};
+use serde_with::{DefaultOnNull, OneOrMany, serde_as, skip_serializing_none};
+use sonic_rs::{Value, json};
 use strum::AsRefStr;
 
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
@@ -53,8 +53,8 @@ pub enum ActivityType {
 #[serde(untagged)]
 pub enum ObjectField {
     Activity(Box<Activity>),
-    Actor(Actor),
-    Object(Object),
+    Actor(Box<Actor>),
+    Object(Box<Object>),
     Url(String),
     // We really just need the ID from a tombstone object.
     // These are used by, for example, Mastodon in the object field of `Delete` activities.
@@ -66,38 +66,35 @@ impl ObjectField {
     #[must_use]
     pub fn id(&self) -> &str {
         match self {
-            Self::Activity(ref activity) => &activity.id,
-            Self::Actor(ref actor) => &actor.id,
-            Self::Object(ref object) => &object.id,
-            Self::Url(ref url) => url,
-            Self::Tombstone { ref id } => id,
+            Self::Activity(activity) => &activity.id,
+            Self::Actor(actor) => &actor.id,
+            Self::Object(object) => &object.id,
+            Self::Url(url) => url,
+            Self::Tombstone { id } => id,
         }
     }
 
     #[must_use]
     pub fn into_activity(self) -> Option<Box<Activity>> {
-        if let Self::Activity(activity) = self {
-            Some(activity)
-        } else {
-            None
+        match self {
+            Self::Activity(activity) => Some(activity),
+            _ => None,
         }
     }
 
     #[must_use]
-    pub fn into_actor(self) -> Option<Actor> {
-        if let Self::Actor(actor) = self {
-            Some(actor)
-        } else {
-            None
+    pub fn into_actor(self) -> Option<Box<Actor>> {
+        match self {
+            Self::Actor(actor) => Some(actor),
+            _ => None,
         }
     }
 
     #[must_use]
-    pub fn into_object(self) -> Option<Object> {
-        if let Self::Object(object) = self {
-            Some(object)
-        } else {
-            None
+    pub fn into_object(self) -> Option<Box<Object>> {
+        match self {
+            Self::Object(object) => Some(object),
+            _ => None,
         }
     }
 }

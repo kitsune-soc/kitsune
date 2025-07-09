@@ -1,17 +1,17 @@
 use kitsune_activitypub::{
-    deliverer::Service as ActivityPubDelivererService, Deliverer as ActivityPubDeliverer,
-    Fetcher as ActivityPubFetcher, InboxResolver,
+    Deliverer as ActivityPubDeliverer, Fetcher as ActivityPubFetcher, InboxResolver,
+    deliverer::Service as ActivityPubDelivererService,
 };
 use kitsune_cache::ArcCache;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_core::traits::{
+    Deliverer, Fetcher,
     coerce::{CoerceDeliverer, CoerceFetcher, CoerceResolver},
     resolver::AccountResource,
-    Deliverer, Fetcher,
 };
 use kitsune_db::{
-    model::{account::Account, post::Post},
     PgPool,
+    model::{account::Account, post::Post},
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_search::AnySearchBackend;
@@ -27,6 +27,7 @@ pub struct PrepareDeliverer {
     attachment_service: AttachmentService,
     db_pool: PgPool,
     federation_filter: FederationFilter,
+    http_client: kitsune_http_client::Client,
     mrf_service: MrfService,
     url_service: UrlService,
 }
@@ -38,6 +39,7 @@ pub struct PrepareFetcher {
     db_pool: PgPool,
     embed_client: Option<kitsune_embed::Client>,
     federation_filter: FederationFilter,
+    http_client: kitsune_http_client::Client,
     language_detection_config: LanguageDetectionConfig,
     post_cache: ArcCache<str, Post>,
     search_backend: AnySearchBackend,
@@ -47,6 +49,7 @@ pub struct PrepareFetcher {
 pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer> {
     let core_deliverer = kitsune_activitypub::CoreDeliverer::builder()
         .federation_filter(prepare.federation_filter)
+        .http_client(prepare.http_client)
         .mrf_service(prepare.mrf_service)
         .build();
 
@@ -67,13 +70,14 @@ pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer>
 
 #[inline]
 pub(crate) fn prepare_fetcher(prepare: PrepareFetcher) -> Arc<dyn Fetcher> {
-    let webfinger = Webfinger::new(prepare.account_resource_cache);
+    let webfinger = Webfinger::new(prepare.http_client.clone(), prepare.account_resource_cache);
 
     ActivityPubFetcher::builder()
         .account_cache(prepare.account_cache)
         .db_pool(prepare.db_pool.clone())
         .embed_client(prepare.embed_client)
         .federation_filter(prepare.federation_filter.clone())
+        .http_client(prepare.http_client)
         .language_detection_config(prepare.language_detection_config)
         .post_cache(prepare.post_cache)
         .resolver(Arc::new(webfinger).coerce())

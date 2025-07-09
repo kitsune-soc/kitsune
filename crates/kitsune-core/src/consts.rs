@@ -8,7 +8,7 @@ pub const MAX_MEDIA_DESCRIPTION_LENGTH: usize = 5000;
 pub const PROJECT_IDENTIFIER: &str = const {
     const FALLBACK_NAME: &str = "kitsune";
 
-    if let Some(package_name) = option_env!("CARGO_PRIMARY_PACKAGE") {
+    if let Some(package_name) = option_env!("CARGO_BIN_NAME") {
         package_name
     } else {
         FALLBACK_NAME
@@ -18,6 +18,6 @@ pub const PROJECT_IDENTIFIER: &str = const {
 pub const USER_AGENT: &str = concatcp!(PROJECT_IDENTIFIER, "/", VERSION);
 pub const VERSION: &str = concatcp!(
     env!("CARGO_PKG_VERSION"),
-    "-",
+    "+",
     git_version!(fallback = "unknown")
 );

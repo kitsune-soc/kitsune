@@ -1,14 +1,13 @@
 use crate::state::Zustand;
-use async_trait::async_trait;
 use axum::{
-    extract::FromRequestParts,
-    response::{IntoResponse, Response},
     RequestPartsExt,
+    extract::{FromRequestParts, OptionalFromRequestParts},
+    response::{IntoResponse, Response},
 };
 use axum_extra::TypedHeader;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use headers::{authorization::Bearer, Authorization};
+use headers::{Authorization, authorization::Bearer};
 use http::request::Parts;
 use kitsune_db::{
     model::{account::Account, user::User},
@@ -36,9 +35,8 @@ pub struct UserData {
 ///
 /// The const generics parameter `ENFORCE_EXPIRATION` lets you toggle whether the extractor should ignore the expiration date.
 /// This is needed for compatibility with the Mastodon API, more information in the docs of the [`MastodonAuthExtractor`] type alias.
-pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool>(pub UserData);
+pub struct AuthExtractor<const ENFORCE_EXPIRATION: bool = true>(pub UserData);
 
-#[async_trait]
 impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
     for AuthExtractor<ENFORCE_EXPIRATION>
 {
@@ -77,5 +75,24 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
         let (user, account) = result?;
 
         Ok(Self(UserData { account, user }))
+    }
+}
+
+impl<const ENFORCE_EXPIRATION: bool> OptionalFromRequestParts<Zustand>
+    for AuthExtractor<ENFORCE_EXPIRATION>
+{
+    type Rejection = Response;
+
+    #[inline]
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &Zustand,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        // just silently swallow any auth errors
+        let value = <Self as FromRequestParts<_>>::from_request_parts(parts, state)
+            .await
+            .ok();
+
+        Ok(value)
     }
 }

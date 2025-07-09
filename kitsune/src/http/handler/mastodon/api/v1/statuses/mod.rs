@@ -1,14 +1,13 @@
 use crate::http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor};
 use axum::{
-    debug_handler,
+    Json, debug_handler,
     extract::{Path, State},
-    Json,
 };
 use http::StatusCode;
 use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::post::{CreatePost, DeletePost, PostService, UpdatePost};
-use kitsune_type::mastodon::{status::Visibility, Status};
+use kitsune_type::mastodon::{Status, status::Visibility};
 use serde::Deserialize;
 use speedy_uuid::Uuid;
 

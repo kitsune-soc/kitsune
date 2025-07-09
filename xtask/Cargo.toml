@@ -6,15 +6,12 @@ license.workspace = true
 publish = false
 
 [dependencies]
-argh = "0.1.12"
-eyre = "0.6.12"
-sonic-rs = { workspace = true }
-tracing = { version = "0.1.40", default-features = false }
-tracing-subscriber = { version = "0.3.18", default-features = false, features = [
-    "ansi",
-    "fmt",
-] }
-ureq = "2.10.1"
+argh.workspace = true
+eyre.workspace = true
+sonic-rs.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+ureq.workspace = true
 
 [lints]
 workspace = true

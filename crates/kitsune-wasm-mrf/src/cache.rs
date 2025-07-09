@@ -24,7 +24,7 @@ impl Cache {
     }
 
     #[inline]
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub fn load(
         &self,
         engine: &wasmtime::Engine,
@@ -59,7 +59,7 @@ impl Cache {
     }
 
     #[inline]
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     pub fn store(&self, component_src: &[u8], component: &Component) -> Result<()> {
         let hash = blake3::hash(component_src);
         let serialized_component = component.serialize().map_err(eyre::Report::msg)?;

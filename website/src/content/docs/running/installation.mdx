@@ -16,7 +16,8 @@ In order to build Kitsune, need a few dependencies. These are:
 2. PostgreSQL as a dedicated DBMS
 3. Redis for the job queue
 4. [NodeJS](https://nodejs.org/en) v16+
-5. Reverse Proxy (recommended: [Caddy](https://caddyserver.com/docs/install))
+5. [pnpm](https://pnpm.io/) for NodeJS package management
+6. Reverse Proxy (recommended: [Caddy](https://caddyserver.com/docs/install))
 
 Yes, that's really it. We don't need more. Kitsune is designed to use as few native dependencies as possible to make building from source easy!
 
@@ -53,7 +54,7 @@ Next, move into the newly created directory and then into the `kitsune-fe` direc
 To do this run:
 
 ```bash
-npm i && npm run build
+pnpm i && pnpm build
 ```
 
 Now move out of the directory and back into the main one. Then build the binaries in release mode.  
@@ -66,7 +67,6 @@ cargo build --profile=dist
 After the command finished there should be the following three binaries inside the `target/dist` directory:
 
 - `kitsune`: The main Kitsune application. This is the heart of the whole application.
-- `kitsune-cli`: The Kitsune CLI utility. Used to give users roles and clear the job scheduler table.
 - `kitsune-job-runner`: The dedicated Kitsune job runner
 
 That's it for the building part but before we can actually run our instance, we need to configure it first.

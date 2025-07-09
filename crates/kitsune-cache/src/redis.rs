@@ -1,7 +1,7 @@
 use super::CacheBackend;
-use fred::{clients::RedisPool, interfaces::KeysInterface, types::Expiration};
+use fred::{clients::Pool, interfaces::KeysInterface, types::Expiration};
 use kitsune_error::Result;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 use typed_builder::TypedBuilder;
 
@@ -10,11 +10,11 @@ pub struct Redis<K, V>
 where
     K: ?Sized,
 {
+    conn_pool: Pool,
     #[builder(default = "DEFAULT-REDIS-CACHER".into())]
     namespace: String,
     #[builder(setter(into))]
     prefix: String,
-    redis_conn: RedisPool,
     ttl: Duration,
 
     // Type phantom data
@@ -28,12 +28,12 @@ impl<K, V> Redis<K, V>
 where
     K: ?Sized,
 {
-    pub fn new<P>(redis_conn: RedisPool, prefix: P, ttl: Duration) -> Self
+    pub fn new<P>(conn_pool: Pool, prefix: P, ttl: Duration) -> Self
     where
         P: Into<String>,
     {
         Self::builder()
-            .redis_conn(redis_conn)
+            .conn_pool(conn_pool)
             .prefix(prefix)
             .ttl(ttl)
             .build()
@@ -49,37 +49,38 @@ where
     K: Display + Send + Sync + ?Sized,
     V: Serialize + DeserializeOwned + Send + Sync,
 {
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn delete(&self, key: &K) -> Result<()> {
         let key = self.compute_key(key);
 
         debug!(%key, "Deleting cache entry");
-        let () = self.redis_conn.del(key).await?;
+        let () = self.conn_pool.del(key).await?;
 
         Ok(())
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn get(&self, key: &K) -> Result<Option<V>> {
         let key = self.compute_key(key);
 
         debug!(%key, "Fetching cache entry");
-        if let Some(serialised) = self.redis_conn.get::<Option<String>, _>(&key).await? {
-            let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
-            Ok(Some(deserialised))
-        } else {
-            Ok(None)
+        match self.conn_pool.get::<Option<String>, _>(&key).await? {
+            Some(serialised) => {
+                let deserialised = sonic_rs::from_slice(serialised.as_bytes())?;
+                Ok(Some(deserialised))
+            }
+            _ => Ok(None),
         }
     }
 
-    #[instrument(skip_all, fields(%key))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%key)))]
     async fn set(&self, key: &K, value: &V) -> Result<()> {
         let key = self.compute_key(key);
         let serialised = sonic_rs::to_string(value)?;
 
         debug!(%key, ttl = ?self.ttl, "Setting cache entry");
         let () = self
-            .redis_conn
+            .conn_pool
             .set(
                 key,
                 serialised,
@@ -101,7 +102,7 @@ where
         Self {
             namespace: self.namespace.clone(),
             prefix: self.prefix.clone(),
-            redis_conn: self.redis_conn.clone(),
+            conn_pool: self.conn_pool.clone(),
             ttl: self.ttl,
             _key: PhantomData,
             _value: PhantomData,

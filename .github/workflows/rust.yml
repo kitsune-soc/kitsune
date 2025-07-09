@@ -10,6 +10,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "full"
   RUST_LOG: "debug"
   RUSTFLAGS: "-C debuginfo=0"
 
@@ -20,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
@@ -32,7 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix develop --impure -c cargo fmt --all -- --check
 
   test:
@@ -60,7 +59,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis
+        image: valkey/valkey:alpine
         ports:
           - 6379:6379
         options: >-
@@ -71,7 +70,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: Swatinem/rust-cache@v2
       - uses: rui314/setup-mold@v1
       - uses: taiki-e/install-action@nextest

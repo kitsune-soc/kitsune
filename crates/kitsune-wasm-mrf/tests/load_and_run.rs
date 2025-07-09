@@ -1,23 +1,10 @@
 use kitsune_wasm_mrf::{MrfModule, MrfService, Outcome};
-use mrf_manifest::{ActivitySet, ApiVersion, ManifestV1};
 use smol_str::SmolStr;
-use std::{borrow::Cow, collections::BTreeSet};
+use std::borrow::Cow;
 use tempfile::NamedTempFile;
-use wasmtime::{component::Component, Config, Engine};
+use wasmtime::{Config, Engine, component::Component};
 
 const WASM_COMPONENT: &[u8] = include_bytes!("example_mrf.component.wasm");
-
-fn dummy_manifest() -> ManifestV1<'static> {
-    ManifestV1 {
-        api_version: ApiVersion::V1,
-        name: "dummy".into(),
-        version: "1.0.0".parse().unwrap(),
-        activity_types: ActivitySet::from(
-            [Cow::Borrowed("*")].into_iter().collect::<BTreeSet<_>>(),
-        ),
-        config_schema: None,
-    }
-}
 
 #[tokio::test]
 async fn basic() {
@@ -31,13 +18,19 @@ async fn basic() {
     let engine = Engine::new(&config).unwrap();
     let component = Component::new(&engine, WASM_COMPONENT).unwrap();
 
+    let (manifest, ..) = mrf_manifest::decode(WASM_COMPONENT).unwrap().unwrap();
+    let mrf_manifest::Manifest::V1(manifest) = manifest else {
+        panic!();
+    };
+
     let service = MrfService::from_components(
         engine,
         vec![MrfModule {
             component,
             config: SmolStr::default(),
-            manifest: dummy_manifest(),
+            manifest,
         }],
+        kitsune_http_client::Client::default(),
         fs_backend.into(),
     )
     .unwrap();

@@ -1,4 +1,4 @@
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use kitsune_type::nodeinfo::well_known::{Link, WellKnown};
 use kitsune_url::UrlService;
 

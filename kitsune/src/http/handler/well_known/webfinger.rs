@@ -1,6 +1,6 @@
 use axum::{
-    extract::{Query, State},
     Json,
+    extract::{Query, State},
 };
 use axum_extra::either::Either;
 use http::StatusCode;
@@ -51,16 +51,16 @@ pub async fn get(
 
 #[cfg(test)]
 mod tests {
-    use super::{get, WebfingerQuery};
+    use super::{WebfingerQuery, get};
     use athena::{Coerce, RedisJobQueue};
     use axum::{
-        extract::{Query, State},
         Json,
+        extract::{Query, State},
     };
     use axum_extra::either::Either;
     use bytes::Bytes;
     use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-    use fred::clients::RedisPool;
+    use fred::clients::Pool as RedisPool;
     use http::{Request, Response, StatusCode};
     use http_body_util::Empty;
     use kitsune_activitypub::Fetcher;
@@ -68,9 +68,10 @@ mod tests {
     use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_core::traits::coerce::{CoerceFetcher, CoerceResolver};
     use kitsune_db::{
+        PgPool,
         model::account::{ActorType, NewAccount},
         schema::accounts,
-        with_connection_panicky, PgPool,
+        with_connection_panicky,
     };
     use kitsune_error::Error;
     use kitsune_federation_filter::FederationFilter;
@@ -108,17 +109,21 @@ mod tests {
         let client = Client::builder().service(service_fn(handle));
 
         let attachment_service = AttachmentService::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .url_service(url_service.clone())
             .storage_backend(storage)
             .media_proxy_enabled(false)
             .build();
 
-        let resolver = Arc::new(Webfinger::new(Arc::new(NoopCache.into()))).coerce();
+        let resolver = Arc::new(Webfinger::new(
+            Client::default(),
+            Arc::new(NoopCache.into()),
+        ))
+        .coerce();
 
         let fetcher = Fetcher::builder()
-            .client(client)
+            .http_client(client)
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
@@ -139,9 +144,9 @@ mod tests {
             .db_pool(db_pool.clone())
             .build();
         let job_queue = RedisJobQueue::builder()
+            .conn_pool(redis_pool)
             .context_repository(context_repo)
             .queue_name("webfinger_test")
-            .redis_pool(redis_pool)
             .build();
 
         let job_service = JobService::builder()
@@ -160,8 +165,8 @@ mod tests {
 
     #[tokio::test]
     async fn basic() {
-        database_test(|db_pool| {
-            redis_test(|redis_pool| async move {
+        database_test(async |db_pool| {
+            redis_test(async |redis_pool| {
                 let account_id =
                     with_connection_panicky!(db_pool, |db_conn| { prepare_db(db_conn).await });
                 let account_url = format!("https://example.com/users/{account_id}");
@@ -217,14 +222,15 @@ mod tests {
 
                 assert!(matches!(response, Either::E2(StatusCode::NOT_FOUND)));
             })
+            .await;
         })
         .await;
     }
 
     #[tokio::test]
     async fn custom_domain() {
-        database_test(|db_pool| {
-            redis_test(|redis_pool| async move {
+        database_test(async |db_pool| {
+            redis_test(async |redis_pool| {
                 with_connection_panicky!(db_pool, |db_conn| {
                     prepare_db(db_conn).await;
                 });
@@ -268,6 +274,7 @@ mod tests {
 
                 assert_eq!(resource.subject, "acct:alice@alice.example");
             })
+            .await;
         })
         .await;
     }

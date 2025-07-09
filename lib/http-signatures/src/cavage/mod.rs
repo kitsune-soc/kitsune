@@ -12,8 +12,8 @@
 
 use derive_builder::Builder;
 
-pub use self::parse::{parse, ParseError};
-pub use self::safety_check::{is_safe, SafetyCheckError};
+pub use self::parse::{ParseError, parse};
+pub use self::safety_check::{SafetyCheckError, is_safe};
 pub use self::serialise::serialise;
 
 mod parse;

@@ -1,19 +1,18 @@
-use askama::Template;
-use askama_axum::IntoResponse;
-use axum::response::{Redirect, Response};
-use chrono::Utc;
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
+    PgPool,
     model::oauth2,
     schema::{oauth2_applications, oauth2_authorization_codes},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, Result};
 use kitsune_url::UrlService;
 use kitsune_util::generate_secret;
-use oxide_auth::endpoint::Scope;
+use komainu::scope::Scope;
+use serde::Serialize;
 use speedy_uuid::Uuid;
 use std::str::{self, FromStr};
 use strum::{AsRefStr, EnumIter, EnumMessage, EnumString};
@@ -21,37 +20,23 @@ use time::Duration;
 use typed_builder::TypedBuilder;
 use url::Url;
 
-mod authorizer;
-mod endpoint;
-mod issuer;
-mod registrar;
-mod solicitor;
+mod auth_code;
+mod client_extractor;
+mod code_grant;
+mod refresh;
 
-pub use self::{endpoint::OAuthEndpoint, solicitor::OAuthOwnerSolicitor};
+pub use self::{
+    auth_code::Issuer as AuthIssuer, client_extractor::Extractor as ClientExtractor,
+    code_grant::Issuer as CodeGrantIssuer, refresh::Issuer as RefreshIssuer,
+};
+
+static AUTH_CODE_VALID_DURATION: Duration = Duration::minutes(10);
+static TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// If the Redirect URI is equal to this string, show the token instead of redirecting the user
-const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
-static AUTH_TOKEN_VALID_DURATION: Duration = Duration::minutes(10);
+pub const SHOW_TOKEN_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
-#[inline]
-fn timestamp_to_chrono(ts: iso8601_timestamp::Timestamp) -> chrono::DateTime<Utc> {
-    let secs = ts
-        .duration_since(iso8601_timestamp::Timestamp::UNIX_EPOCH)
-        .whole_seconds();
-
-    chrono::DateTime::from_timestamp(secs, ts.nanosecond()).unwrap()
-}
-
-#[inline]
-fn chrono_to_timestamp(ts: chrono::DateTime<Utc>) -> iso8601_timestamp::Timestamp {
-    time::OffsetDateTime::from_unix_timestamp(ts.timestamp())
-        .unwrap()
-        .replace_nanosecond(ts.timestamp_subsec_nanos())
-        .unwrap()
-        .into()
-}
-
-#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString)]
+#[derive(AsRefStr, Clone, Copy, Debug, EnumIter, EnumMessage, EnumString, Serialize)]
 #[strum(serialize_all = "lowercase")]
 pub enum OAuthScope {
     #[strum(message = "Read admin-related data", serialize = "admin:read")]
@@ -76,14 +61,6 @@ pub struct AuthorisationCode {
 pub struct CreateApp {
     name: String,
     redirect_uris: String,
-}
-
-#[derive(Template)]
-#[template(path = "oauth/token.html")]
-struct ShowTokenPage {
-    app_name: String,
-    domain: String,
-    token: String,
 }
 
 #[kitsune_service]
@@ -131,19 +108,24 @@ impl OAuth2Service {
                         application_id: application.id,
                         user_id,
                         scopes: scopes.as_str(),
-                        expires_at: Timestamp::now_utc() + AUTH_TOKEN_VALID_DURATION,
+                        expires_at: Timestamp::now_utc() + AUTH_CODE_VALID_DURATION,
                     })
                     .get_result(db_conn)
                     .await
             })?;
 
         if application.redirect_uri == SHOW_TOKEN_URI {
-            Ok(ShowTokenPage {
-                app_name: application.name,
-                domain: self.url_service.domain().into(),
-                token: authorization_code.code,
-            }
-            .into_response())
+            let page = crate::template::render(
+                "oauth/token.html",
+                minijinja::context! {
+                    app_name => application.name,
+                    domain => self.url_service.domain(),
+                    token => authorization_code.code,
+                },
+            )
+            .unwrap();
+
+            Ok(Html(page).into_response())
         } else {
             let mut url = Url::from_str(&application.redirect_uri)?;
             url.query_pairs_mut()

@@ -1,0 +1,36 @@
+/*@theme {
+	--color-dark-1: #1c1626;
+	--color-dark-2: #2b233a;
+	--color-dark-3: #042f40;
+
+	--color-shade1-dark: #ff9e55;
+	--color-shade1-light: #afd7fa;
+
+	--color-shade2-dark: #935d7e;
+	--color-shade2-light: #d68fbc;
+}*/
+
+@layer base {
+	body {
+		@apply from-base-100 via-base-200 to-base-300 bg-gradient-to-bl bg-fixed bg-no-repeat min-h-screen;
+		@apply prose prose-invert font-mono max-w-none;
+  	}
+
+	::-webkit-scrollbar {
+		@apply h-2.5 w-2.5;
+	}
+
+	::-webkit-scrollbar-track {
+		@apply shadow-lg;
+	}
+
+	::-webkit-scrollbar-thumb {
+		@apply bg-pink-400;
+	}
+}
+
+@layer utilities {
+	.max-w-prose {
+	  max-width: min(80ch, 95%);
+	}
+}

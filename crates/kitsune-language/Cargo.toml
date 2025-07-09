@@ -6,17 +6,13 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-kitsune-config = { workspace = true }
-isolang = { version = "2.4.0", features = [
-    "english_names",
-    "list_languages",
-    "serde",
-] }
-rustc-hash = "2.0.0"
-whatlang = "0.16.4"
-whichlang = "0.1.0"
+diesel.workspace = true
+diesel-async.workspace = true
+kitsune-config.workspace = true
+isolang.workspace = true
+rustc-hash.workspace = true
+whatlang.workspace = true
+whichlang.workspace = true
 
 [lints]
 workspace = true

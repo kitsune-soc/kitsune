@@ -7,7 +7,7 @@ export default defineConfig({
   site: 'https://joinkitsune.org',
   integrations: [
     starlight({
-      customCss: ['./src/styles/global.scss'],
+      customCss: ['./src/styles/global.css'],
       plugins: [starlightLinksValidator()],
       sidebar: [
         {
@@ -23,10 +23,18 @@ export default defineConfig({
           autogenerate: { directory: 'spec' },
         },
       ],
-      social: {
-        github: 'https://github.com/kitsune-soc/kitsune',
-        mastodon: 'https://floss.social/@kitsune',
-      },
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/kitsune-soc/kitsune',
+        },
+        {
+          icon: 'mastodon',
+          label: 'Fediverse',
+          href: 'https://floss.social/@kitsune',
+        },
+      ],
       title: 'Kitsune',
     }),
   ],

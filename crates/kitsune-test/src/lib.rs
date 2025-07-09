@@ -1,7 +1,8 @@
 use bytes::Bytes;
 use diesel_async::{AsyncConnection, AsyncPgConnection, SimpleAsyncConnection};
-use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
-use futures_util::Future;
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
 use http::header::CONTENT_TYPE;
 use http_body_util::Full;
 use isolang::Language;
@@ -62,10 +63,13 @@ where
     .await
     .expect("Failed to connect to database");
 
-    provide_resource(pool, func, |_pool| async move {
-        // Drop the newly created database. We don't need it anymore.
+    provide_resource(pool, func, async |pool| {
+        // close all existing connections to the database
+        drop(pool);
+
+        // force deletion just in case we missed something. it's whatever.
         admin_conn
-            .batch_execute(&format!("DROP DATABASE {db_name}"))
+            .batch_execute(&format!("DROP DATABASE {db_name} WITH (FORCE)"))
             .await
             .unwrap();
     })

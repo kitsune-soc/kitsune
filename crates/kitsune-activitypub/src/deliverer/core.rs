@@ -1,6 +1,5 @@
-use futures_util::{stream::FuturesUnordered, Stream, StreamExt};
+use futures_util::{Stream, StreamExt, stream::FuturesUnordered};
 use http::{Method, Request};
-use kitsune_core::consts::USER_AGENT;
 use kitsune_db::model::{account::Account, user::User};
 use kitsune_error::{Error, Result};
 use kitsune_federation_filter::FederationFilter;
@@ -17,15 +16,14 @@ use url::Url;
 /// Does not need to be Arc wrapped for cheap cloning. It's inherently cheap to clone.
 #[derive(Clone, TypedBuilder)]
 pub struct Deliverer {
-    #[builder(default = Client::builder().user_agent(USER_AGENT).unwrap().build())]
-    client: Client,
+    http_client: Client,
     federation_filter: FederationFilter,
     mrf_service: MrfService,
 }
 
 impl Deliverer {
     /// Deliver the activity to an inbox
-    #[instrument(skip_all, fields(%inbox_url, activity_url = %activity.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%inbox_url, activity_url = %activity.id)))]
     pub async fn deliver(
         &self,
         inbox_url: &str,
@@ -55,7 +53,7 @@ impl Deliverer {
             .body(body.into())?;
 
         let response = self
-            .client
+            .http_client
             .execute_signed(request, &account.public_key_id, &user.private_key)
             .await?;
 

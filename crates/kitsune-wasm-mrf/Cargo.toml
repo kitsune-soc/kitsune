@@ -7,44 +7,38 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-async-trait = "0.1.83"
-blake3 = "1.5.4"
-color-eyre = "0.6.3"
-derive_more = { version = "1.0.0", features = ["from"] }
-enum_dispatch = "0.3.13"
-fred = { workspace = true }
-futures-util = { version = "0.3.31", default-features = false, features = [
-    "alloc",
-] }
-kitsune-config = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-type = { workspace = true }
-mrf-manifest = { workspace = true, features = ["decode"] }
-redb = { version = "2.2.0", features = ["logging"] }
-slab = "0.4.9"
-smol_str = "0.3.2"
-sonic-rs = { workspace = true }
-tokio = { workspace = true, features = ["fs"] }
-tracing = "0.1.40"
-triomphe = { workspace = true }
-walkdir = "2.5.0"
-wasmtime = { version = "26.0.0", default-features = false, features = [
-    "addr2line",
-    "async",
-    "component-model",
-    "cranelift",
-    "parallel-compilation",
-    "pooling-allocator",
-    "runtime",
-] }
-wasmtime-wasi = { version = "26.0.0", default-features = false }
+blake3.workspace = true
+color-eyre.workspace = true
+derive_more.workspace = true
+enum_dispatch.workspace = true
+fred.workspace = true
+futures-util.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+kitsune-config.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-http-client.workspace = true
+kitsune-type.workspace = true
+mrf-manifest.workspace = true
+redb.workspace = true
+slab.workspace = true
+smol_str.workspace = true
+sonic-rs.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+triomphe.workspace = true
+walkdir.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true
 
 [dev-dependencies]
-tempfile = "3.13.0"
-tokio = { workspace = true, features = ["macros", "rt"] }
-tracing-subscriber = "0.3.18"
-wat = "1.219.1"
+bytes.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+tower.workspace = true
+tracing-subscriber.workspace = true
+wat.workspace = true
 
 [lints]
 workspace = true

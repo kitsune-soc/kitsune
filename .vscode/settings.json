@@ -3,7 +3,14 @@
     "rust-analyzer.cargo.buildScripts.enable": true,
     "editor.formatOnSave": true,
     "rust-analyzer.showUnlinkedFileNotification": false,
-    "rust-analyzer.cargo.features": [
-        "oidc"
-    ]
+
+    "search.exclude": {
+        // Avoid polluting search results with lockfile content
+        "pnpm-lock.yaml": true,
+        "Cargo.lock": true
+    },
+    // Ensure VSCode uses pnpm instead of npm
+    "eslint.packageManager": "pnpm",
+    "npm.packageManager": "pnpm",
+    "css.lint.unknownAtRules": "ignore",
 }

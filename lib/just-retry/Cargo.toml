@@ -6,9 +6,10 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-retry-policies = "0.4.0"
-tokio = { workspace = true, features = ["time"] }
-tracing = "0.1.40"
+retry-policies.workspace = true
+tick-tock-mock.workspace = true
+tokio.workspace = true
+tracing.workspace = true
 
 [lints]
 workspace = true

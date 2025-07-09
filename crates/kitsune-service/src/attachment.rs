@@ -1,23 +1,27 @@
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use derive_builder::Builder;
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use futures_util::{stream, Stream, StreamExt, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryStreamExt, stream};
 use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
+    PgPool,
     model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
     schema::media_attachments,
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
-use kitsune_error::{kitsune_error, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_http_client::Client;
 use kitsune_storage::{AnyStorageBackend, StorageBackend};
 use kitsune_url::UrlService;
+use memmap2::Mmap;
 use speedy_uuid::Uuid;
 use std::pin::pin;
+use tempfile::tempfile;
+use tokio::{fs::File, io::AsyncWriteExt};
 use typed_builder::TypedBuilder;
 
 const ALLOWED_FILETYPES: &[mime::Name<'_>] = &[mime::IMAGE, mime::VIDEO, mime::AUDIO];
@@ -84,7 +88,7 @@ pub struct AttachmentService {
             .unwrap()
             .build()
     )]
-    client: Client,
+    http_client: Client,
     db_pool: PgPool,
     media_proxy_enabled: bool,
     #[builder(setter(into))]
@@ -124,7 +128,7 @@ impl AttachmentService {
     pub async fn stream_file(
         &self,
         media_attachment: &MediaAttachment,
-    ) -> Result<impl Stream<Item = Result<Bytes>> + 'static> {
+    ) -> Result<impl Stream<Item = Result<Bytes>> + use<>> {
         // TODO: Find way to avoid boxing the streams here
         if let Some(ref file_path) = media_attachment.file_path {
             let stream = self.storage_backend.get(file_path.as_str()).await?;
@@ -132,7 +136,7 @@ impl AttachmentService {
             Ok(stream.map_err(Error::from).boxed())
         } else if self.media_proxy_enabled {
             Ok(self
-                .client
+                .http_client
                 .get(media_attachment.remote_url.as_ref().unwrap())
                 .await?
                 .stream()
@@ -178,22 +182,26 @@ impl AttachmentService {
         if is_image_type_with_supported_metadata(&upload.content_type) {
             let mut stream = pin!(upload.stream);
 
-            let mut img_bytes = BytesMut::new();
-            while let Some(chunk) = stream.next().await.transpose()? {
-                img_bytes.extend_from_slice(&chunk);
+            let mut tempfile = File::from_std(tempfile()?);
+            while let Some(chunk) = stream.try_next().await? {
+                tempfile.write_all(&chunk).await?;
             }
+            tempfile.flush().await?;
 
-            let img_bytes = img_bytes.freeze();
-            let final_bytes = DynImage::from_bytes(img_bytes)?
+            // SAFETY: Idk man. We vibe, we vibe.
+            #[allow(unsafe_code)]
+            let tempfile_mmap = unsafe { Mmap::map(&tempfile)? };
+            let img_bytes = Bytes::from_owner(tempfile_mmap);
+
+            let encoder = DynImage::from_bytes(img_bytes)?
                 .ok_or(img_parts::Error::WrongSignature)
                 .map(|mut image| {
                     image.set_exif(None);
-                    image.encoder().bytes()
+                    image.encoder()
                 })?;
 
-            self.storage_backend
-                .put(&upload.path, stream::once(async { Ok(final_bytes) }))
-                .await?;
+            let clean_stream = stream::iter(encoder.map(Ok::<_, kitsune_error::Error>));
+            self.storage_backend.put(&upload.path, clean_stream).await?;
         } else {
             self.storage_backend
                 .put(&upload.path, upload.stream)
@@ -224,12 +232,12 @@ mod test {
     use crate::attachment::{AttachmentService, Upload};
     use bytes::{Bytes, BytesMut};
     use diesel_async::{AsyncPgConnection, RunQueryDsl};
-    use futures_util::{future, stream, StreamExt};
+    use futures_util::{StreamExt, future, stream};
     use http::{Request, Response};
     use http_body_util::Empty;
     use img_parts::{
-        jpeg::{markers, JpegSegment},
         ImageEXIF,
+        jpeg::{JpegSegment, markers},
     };
     use iso8601_timestamp::Timestamp;
     use kitsune_db::{
@@ -251,7 +259,7 @@ mod test {
 
     #[tokio::test]
     async fn upload_jpeg() {
-        database_test(|db_pool| async move {
+        database_test(async |db_pool|  {
             let client = Client::builder().service(service_fn(handle));
 
             let account_id = with_connection_panicky!(db_pool, |db_conn| {
@@ -267,7 +275,7 @@ mod test {
                 .build();
 
             let attachment_service = AttachmentService::builder()
-                .client(client)
+                .http_client(client)
                 .db_pool(db_pool)
                 .url_service(url_service)
                 .storage_backend(storage)

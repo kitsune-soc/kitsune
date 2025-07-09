@@ -2,6 +2,9 @@
 backtrace = { opt-level = 3 }
 num-bigint-dig = { opt-level = 3 }
 
+[profile.bench]
+inherits = "dist"
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
@@ -38,7 +41,6 @@ members = [
     "crates/kitsune-observability",
     "crates/kitsune-oidc",
     "crates/kitsune-s3",
-    "crates/kitsune-scss-compiler",
     "crates/kitsune-search",
     "crates/kitsune-service",
     "crates/kitsune-storage",
@@ -48,20 +50,23 @@ members = [
     "crates/kitsune-util",
     "crates/kitsune-wasm-mrf",
     "crates/kitsune-wasm-mrf/example-mrf",
+    "crates/kitsune-wasm-mrf/tests/http-client",
     "crates/kitsune-webfinger",
 
     "kitsune",
-    "kitsune-cli",
     "kitsune-job-runner",
 
     "lib/athena",
     "lib/blowocking",
+    "lib/cowstr",
     "lib/cursiv",
     "lib/fast-cjson",
+    "lib/flashy",
     "lib/geomjeungja",
     "lib/http-signatures",
     "lib/http-signatures-cli",
     "lib/just-retry",
+    "lib/komainu",
     "lib/masto-id-convert",
     "lib/mrf-manifest",
     "lib/mrf-tool",
@@ -79,45 +84,303 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-askama = { version = "0.12.1", default-features = false, features = [
-    "with-axum",
+ahash = "0.8.12"
+aliri_braid = "0.4.0"
+arc-swap = "1.7.1"
+argh = "0.1.13"
+argon2 = { version = "0.5.3", features = ["std"] }
+async-graphql = { version = "7.0.17", default-features = false, features = [
+    "graphiql",
+    "tempfile",
+    "time",
+    "tracing",
+    "uuid",
 ] }
+async-graphql-axum = "7.0.17"
+async-trait = "0.1.88"
 asynk-strim = "0.1.2"
-clap = { version = "4.5.20", features = ["derive", "wrap_help"] }
-diesel = { version = "2.2.4", default-features = false, features = [
+axum = { version = "0.8.4", features = ["macros", "multipart"] }
+axum-core = "0.5.2"
+axum-extra = { version = "0.10.1", features = [
+    "cookie",
+    "cookie-signed",
+    "query",
+    "typed-header",
+] }
+base64-simd = "0.8.0"
+blake3 = "1.8.2"
+bubble-bath = "0.2.1"
+bytes = "1.10.1"
+clap = { version = "4.5.40", features = ["derive", "wrap_help"] }
+color-eyre = "0.6.5"
+colored_json = "5.0.0"
+compact_str = { version = "0.9.0", features = ["serde"] }
+console-subscriber = { version = "0.4.1", features = ["parking_lot"] }
+const_format = "0.2.34"
+const-oid = { version = "=0.9.6", features = ["db"] }
+cookie = { version = "0.18.1", features = ["percent-encode"] }
+derive_builder = "0.20.2"
+derive_more = { version = "2.0.1", features = ["from"] }
+diesel = { version = "2.2.11", default-features = false, features = [
     "32-column-tables",
+    "postgres_backend",
+    "uuid",
     "with-deprecated",
 ] }
-diesel-async = { version = "0.5.1", features = [
+diesel-async = { version = "0.6.1", features = [
     "async-connection-wrapper",
     "bb8",
     "postgres",
     "tokio",
 ] }
+diesel-derive-enum = { version = "3.0.0-beta.1", features = ["postgres"] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }
-fred = { version = "9.3.0", features = [
+diesel_migrations = "2.2.0"
+divan = "0.1.21"
+either = { version = "1.15.0", default-features = false }
+enum_dispatch = "0.3.13"
+eyre = "0.6.12"
+fastrand = "2.3.0"
+fred = { version = "10.1.0", features = [
     "enable-rustls-ring",
     "full-tracing",
     "i-scripts",
     "sha-1",
     "unix-sockets",
 ] }
-garde = { version = "0.20.0", features = [
+futures-executor = "0.3.31"
+futures-test = "0.3.31"
+futures-util = { version = "0.3.31", default-features = false, features = [
+    "alloc",
+] }
+garde = { version = "0.22.0", features = [
     "derive",
     "email",
     "email-idna",
     "regex",
     "serde",
 ] }
-iso8601-timestamp = "0.3.0"
-itertools = { version = "0.13.0", default-features = false }
-moka = { version = "=0.12.7", features = ["sync"] }
+git-version = "0.3.9"
+globset = "0.4.16"
+headers = "0.4.1"
+hex-simd = "0.8.0"
+hickory-resolver = { version = "0.25.2", default-features = false, features = [
+    "rustls-platform-verifier",
+    "tls-ring",
+    "tokio",
+] }
+http = "1.3.1"
+http-body = "1.0.1"
+http-body-util = "0.1.3"
+http-serde = "2.1.1"
+httpdate = "1.0.3"
+human-size = { version = "0.4.3", features = ["serde"] }
+hyper = "1.6.0"
+hyper-util = { version = "0.1.15", features = [
+    "client-legacy",
+    "http1",
+    "http2",
+    "tokio",
+] }
+hyper-rustls = { version = "0.27.7", default-features = false, features = [
+    "http1",
+    "http2",
+    "logging",
+    "native-tokio",
+    "ring",
+    "tls12",
+] }
+icu_normalizer = "2.0.0"
+img-parts = "0.3.3"
+indexmap = { version = "2.10.0", features = ["serde"] }
+insta = { version = "1.43.1", default-features = false, features = [
+    "glob",
+    "json",
+] }
+iso8601-timestamp = { version = "0.3.3", features = ["diesel-pg"] }
+isolang = { version = "2.4.0", features = [
+    "english_names",
+    "list_languages",
+    "serde",
+] }
+itertools = { version = "0.14.0", default-features = false }
+lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "547922fb657f924ff595b78d38b17094fd25be21", default-features = false }
+leb128 = "0.2.5"
+lettre = { version = "0.11.17", default-features = false, features = [
+    "builder",
+    "hostname",
+    "pool",
+    "smtp-transport",
+    "tokio1",
+    "tokio1-rustls-tls",
+    "tracing",
+] }
+lexical-parse-integer = { version = "1.0.5", default-features = false }
+logos = "0.15.0"
+lol_html = "2.5.0"
+memchr = "2.7.5"
+memmap2 = "0.9.5"
+miette = { version = "7.6.0", features = ["fancy"] }
+mimalloc = "0.1.47"
+mime = "0.3.17"
+mime_guess = { version = "2.0.5", default-features = false }
+minijinja = { version = "2.11.0", features = ["loader"] }
+moka = { version = "0.12.10", features = ["sync"] }
+mrml = { version = "5.0.0", default-features = false, features = [
+    "parse",
+    "render",
+] }
+notify-debouncer-full = "0.5.0"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+oauth2 = { version = "5.0.0", default-features = false }
+olpc-cjson = "0.1.4"
+openidconnect = { version = "4.0.1", default-features = false, features = [
+    # Accept these two, per specification invalid, cases to increase compatibility
+    "accept-rfc3339-timestamps",
+    "accept-string-booleans",
+    "timing-resistant-secret-traits",
+] }
+opentelemetry = { version = "0.30.0", default-features = false, features = [
+    "trace",
+] }
+opentelemetry-http = "0.30.0"
+opentelemetry-otlp = { version = "0.30.0", default-features = false, features = [
+    "grpc-tonic",
+    "http-json",
+    "http-proto",
+    "tls",
+    "tls-roots",
+    "trace",
+] }
+opentelemetry_sdk = { version = "0.30.0", default-features = false, features = [
+    "rt-tokio",
+] }
+owo-colors = { version = "4.2.2", features = ["supports-colors"] }
+password-hash = { version = "0.5.0", features = ["std"] }
+paste = "1.0.15"
+pin-project-lite = "0.2.16"
+pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
+postcard = { version = "1.1.2", default-features = false, features = ["alloc"] }
+pretty_assertions = "1.4.1"
+proc-macro2 = "1.0.95"
+pulldown-cmark = { version = "0.13.0", default-features = false, features = [
+    "html",
+    "simd",
+] }
+quick-xml = { version = "0.38.0", features = ["serialize"] }
+quote = "1.0.40"
+rand = "=0.8.5"
+rand_xorshift = "=0.3.0"
+rayon = "1.10.0"
+redb = { version = "2.6.0", features = ["logging"] }
+regex = "1.11.1"
+retry-policies = "0.5.1"
+ring = { version = "0.17.14", features = ["std"] }
+rsa = "0.9.8"
+rstest = { version = "0.25.0", default-features = false }
+rust-embed = { version = "8.7.2", features = ["include-exclude"] }
+rustc-hash = "2.1.1"
+rustls = { version = "0.23.28", default-features = false, features = [
+    "logging",
+    "ring",
+    "std",
+    "tls12",
+] }
+rustls-platform-verifier = "0.6.0"
+rusty-s3 = "0.7.0"
+sailfish = { version = "0.9.1", default-features = false, features = [
+    "derive",
+    "perf-inline",
+] }
+schemars = { version = "1.0.4", features = ["semver1"] }
+scoped-futures = { version = "0.1.4", default-features = false }
+semver = { version = "1.0.26", features = ["serde"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_test = "1.0.177"
+serde_urlencoded = "0.7.1"
+serde_with = { version = "3.14.0", default-features = false, features = [
+    "alloc",
+    "macros",
+] }
+sha2 = "0.10.9"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
-sonic-rs = "0.3.14"
-tokio = "1.41.0"
+slab = "0.4.10"
+smol_str = { version = "0.3.2", features = ["serde"] }
+sonic-rs = "0.5.2"
+strum = { version = "0.27.1", features = ["derive"] }
+subtle = "2.6.1"
+syn = { version = "2.0.104", features = ["full"] }
+sync_wrapper = "1.0.2"
+tempfile = "3.20.0"
+thiserror = "2.0.12"
+time = "0.3.41"
+tokio = { version = "1.46.1", features = ["full", "tracing"] }
+tokio-postgres = "0.7.13"
+tokio-postgres-rustls = "0.13.0"
+tokio-util = { version = "0.7.15", features = ["io", "rt"] }
+toml = { version = "0.9.0", default-features = false, features = [
+    "parse",
+    "serde",
+] }
+tower = { version = "0.5.2", default-features = false, features = ["util"] }
+tower-http = { version = "0.6.6", features = [
+    "catch-panic",
+    "cors",
+
+    # Explicitly exclude `zstd`
+    # It's not widely adopted and takes a long time to build
+    "decompression-br",
+    "decompression-deflate",
+    "decompression-gzip",
+
+    "follow-redirect",
+    "fs",
+    "map-response-body",
+    "request-id",
+    "timeout",
+    "trace",
+] }
+tracing = "0.1.41"
+tracing-error = "0.2.1"
+tracing-opentelemetry = { version = "0.31.0", default-features = false }
+tracing-subscriber = { version = "0.3.19", features = [
+    "env-filter",
+    "parking_lot",
+] }
 triomphe = { version = "0.1.14", default-features = false, features = [
+    "arc-swap",
     "unsize",
 ] }
+typed-builder = "0.21.0"
+typetag = "0.2.20"
+unsize = "1.1.0"
+ureq = "3.0.12"
+url = "2.5.4"
+urlencoding = "2.1.3"
+uuid = { version = "1.17.0", features = ["fast-rng", "v4", "v7"] }
+uuid-simd = { version = "0.8.0", features = ["uuid"] }
+walkdir = "2.5.0"
+wasm-encoder = "0.235.0"
+wasmparser = "0.235.0"
+wasmtime = { version = "34.0.1", default-features = false, features = [
+    "addr2line",
+    "all-arch",
+    "async",
+    "component-model",
+    "cranelift",
+    "parallel-compilation",
+    "pooling-allocator",
+    "runtime",
+] }
+wasmtime-wasi = { version = "34.0.1", default-features = false }
+wat = "1.235.0"
+whatlang = "0.16.4"
+whichlang = "0.1.1"
+wit-bindgen = "0.43.0"
+zeroize = { version = "1.8.1", features = ["derive"] }
+zxcvbn = { version = "3.1.0", default-features = false }
 
 # Local workspace dependencies (crate directory)
 kitsune-activitypub = { path = "crates/kitsune-activitypub" }
@@ -139,7 +402,6 @@ kitsune-mastodon = { path = "crates/kitsune-mastodon" }
 kitsune-observability = { path = "crates/kitsune-observability" }
 kitsune-oidc = { path = "crates/kitsune-oidc" }
 kitsune-s3 = { path = "crates/kitsune-s3" }
-kitsune-scss-compiler = { path = "crates/kitsune-scss-compiler" }
 kitsune-search = { path = "crates/kitsune-search" }
 kitsune-service = { path = "crates/kitsune-service" }
 kitsune-storage = { path = "crates/kitsune-storage" }
@@ -149,22 +411,30 @@ kitsune-url = { path = "crates/kitsune-url" }
 kitsune-util = { path = "crates/kitsune-util" }
 kitsune-wasm-mrf = { path = "crates/kitsune-wasm-mrf" }
 kitsune-webfinger = { path = "crates/kitsune-webfinger" }
-kitsune = { path = "kitsune" }
 kitsune-job-runner = { path = "kitsune-job-runner" }
 
 # Local workspace dependences (lib directory)
 athena = { path = "lib/athena", features = ["redis"] }
-blowocking = { path = "lib/blowocking", default-features = false }
-cursiv = { path = "lib/cursiv" }
+blowocking = { path = "lib/blowocking" }
+cowstr = { path = "lib/cowstr" }
+cursiv = { path = "lib/cursiv", features = ["axum"] }
 fast-cjson = { path = "lib/fast-cjson" }
-geomjeungja = { path = "lib/geomjeungja" }
+flashy = { path = "lib/flashy", features = ["axum"] }
 http-signatures = { path = "lib/http-signatures" }
 just-retry = { path = "lib/just-retry" }
-masto-id-convert = { path = "lib/masto-id-convert" }
-mrf-manifest = { path = "lib/mrf-manifest" }
+komainu = { path = "lib/komainu" }
+mrf-manifest = { path = "lib/mrf-manifest", features = [
+    "decode",
+    "encode",
+    "serialise",
+] }
 post-process = { path = "lib/post-process" }
 schaber = { path = "lib/schaber" }
-speedy-uuid = { path = "lib/speedy-uuid", features = ["serde"] }
+speedy-uuid = { path = "lib/speedy-uuid", features = [
+    "diesel",
+    "redis",
+    "serde",
+] }
 tick-tock-mock = { path = "lib/tick-tock-mock" }
 tower-http-digest = { path = "lib/tower-http-digest" }
 tower-stop-using-brave = { path = "lib/tower-stop-using-brave" }
@@ -179,6 +449,7 @@ cast_lossless = "allow"
 cast_possible_truncation = "allow"
 cast_possible_wrap = "allow"
 cast_sign_loss = "allow"
+doc_comment_double_space_linebreaks = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
@@ -186,16 +457,12 @@ needless_return = "allow"
 no_effect_underscore_binding = "allow"
 
 [workspace.lints.rust]
-forbidden_lint_groups = "allow"
-rust_2018_idioms = { level = "forbid", priority = -1 }
+rust_2018_idioms = { level = "deny", priority = -1 }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }
 unsafe_code = "deny"
 
 [workspace.package]
 authors = ["The Kitsune authors"]
-edition = "2021"
+edition = "2024"
 version = "0.0.1-pre.6"
 license = "AGPL-3.0-or-later"
-
-[patch.crates-io]
-# SIMD runtime detection and generic I/O wrapper
-sonic-rs = { git = "https://github.com/aumetra/sonic-rs.git", rev = "12df930a57ff9f07eb16111a3da1feff3dc8e5ad" }

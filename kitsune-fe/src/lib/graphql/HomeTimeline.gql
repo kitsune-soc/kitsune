@@ -1,0 +1,32 @@
+query LoadHomeTimeline {
+	homeTimeline(first: 15) @paginate {
+		edges {
+			node {
+				id
+				isSensitive
+				subject
+				content
+				attachments {
+					contentType
+					description
+					url
+				}
+				visibility
+				url
+				createdAt
+				account {
+					id
+					displayName
+					username
+					url
+					avatar {
+						url
+					}
+					header {
+						url
+					}
+				}
+			}
+		}
+	}
+}

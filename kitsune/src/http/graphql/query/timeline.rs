@@ -1,10 +1,10 @@
 use crate::{
     consts::API_DEFAULT_LIMIT,
-    http::graphql::{types::Post, ContextExt},
+    http::graphql::{ContextExt, types::Post},
 };
 use async_graphql::{
-    connection::{self, Connection, Edge},
     Context, Object, Result,
+    connection::{self, Connection, Edge},
 };
 use futures_util::TryStreamExt;
 use kitsune_service::timeline::{GetHome, GetPublic};

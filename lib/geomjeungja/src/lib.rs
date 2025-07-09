@@ -7,15 +7,14 @@ extern crate tracing;
 use crate::util::OpaqueDebug;
 use async_trait::async_trait;
 use hickory_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    TokioAsyncResolver,
+    Resolver, TokioResolver, config::ResolverConfig, name_server::TokioConnectionProvider,
 };
 use rand::{
-    distributions::{Alphanumeric, DistString},
     RngCore,
+    distributions::{Alphanumeric, DistString},
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{convert::Infallible, future::Future, ops::Deref};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use std::{convert::Infallible, ops::Deref};
 use thiserror::Error;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
@@ -71,7 +70,7 @@ pub trait DnsResolver: Send + Sync {
 }
 
 #[async_trait]
-impl DnsResolver for TokioAsyncResolver {
+impl DnsResolver for TokioResolver {
     async fn lookup_txt(&self, fqdn: &str) -> Result<Vec<String>, BoxError> {
         let records =
             self.txt_lookup(fqdn)
@@ -160,10 +159,15 @@ impl VerificationStrategy for KeyValueStrategy {
 /// Construct the default resolver used by this library
 #[must_use]
 pub fn default_resolver() -> Arc<dyn DnsResolver> {
-    Arc::new(TokioAsyncResolver::tokio(
-        ResolverConfig::default(),
-        ResolverOpts::default(),
-    ))
+    Arc::new(
+        Resolver::builder_with_config(
+            // Per-default hickory-resolver would use Google's DNS servers.
+            // Since Google is kinda disgusting, we use Quad9 instead.
+            ResolverConfig::quad9_tls(),
+            TokioConnectionProvider::default(),
+        )
+        .build(),
+    )
     .unsize(Coercion!(to dyn DnsResolver))
 }
 
@@ -213,7 +217,7 @@ where
     /// Verify whether the TXT records of the FQDN pass the verification strategy
     ///
     /// Returns `Ok(())` when the check succeeded and the token is present
-    #[instrument(skip_all, fields(%self.fqdn))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(%self.fqdn)))]
     pub async fn verify(&self) -> Result<()> {
         let txt_records = self
             .resolver
@@ -266,7 +270,7 @@ mod test {
             .strategy(dummy)
             .build();
 
-        assert!(verifier.verify().await.is_ok());
+        verifier.verify().await.unwrap();
     }
 
     #[tokio::test]

@@ -6,49 +6,28 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-asynk-strim = { workspace = true }
-bytes = "1.8.0"
-futures-util = { version = "0.3.31", default-features = false, features = [
-    "alloc",
-] }
-http-body = "1.0.1"
-http-body-util = "0.1.2"
-http-signatures = { workspace = true }
-hyper = "1.5.0"
-hyper-util = { version = "0.1.10", features = [
-    "client-legacy",
-    "http1",
-    "http2",
-    "tokio",
-] }
-hyper-rustls = { version = "0.27.3", default-features = false, features = [
-    "http1",
-    "http2",
-    "logging",
-    "native-tokio",
-    "ring",
-    "tls12",
-] }
-kitsune-type = { workspace = true }
-pin-project = "1.1.7"
-serde = "1.0.214"
-simdutf8 = { workspace = true }
-sonic-rs = { workspace = true }
-tower = { version = "0.5.1", features = ["util"] }
-tower-http = { version = "0.6.1", features = [
-    # Explicitly exclude `zstd`
-    # It's not widely adopted and takes a long time to build
-    "decompression-br",
-    "decompression-deflate",
-    "decompression-gzip",
-
-    "follow-redirect",
-    "map-response-body",
-    "timeout",
-] }
+asynk-strim.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+hickory-resolver.workspace = true
+http.workspace = true
+http-body.workspace = true
+http-body-util.workspace = true
+http-signatures.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
+hyper-rustls.workspace = true
+kitsune-core.workspace = true
+kitsune-type.workspace = true
+pin-project-lite.workspace = true
+serde.workspace = true
+simdutf8.workspace = true
+sonic-rs.workspace = true
+tower.workspace = true
+tower-http.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt"] }
+tokio.workspace = true
 
 [lints]
 workspace = true

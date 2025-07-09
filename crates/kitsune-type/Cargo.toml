@@ -6,21 +6,18 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-iso8601-timestamp = { workspace = true }
-serde = { version = "1.0.214", features = ["derive"] }
-serde_with = { version = "3.11.0", default-features = false, features = [
-    "alloc",
-    "macros",
-] }
-smol_str = { version = "0.3.2", features = ["serde"] }
-sonic-rs = { workspace = true }
-speedy-uuid = { workspace = true, features = ["diesel"] }
-strum = { version = "0.26.3", features = ["derive"] }
+iso8601-timestamp.workspace = true
+serde.workspace = true
+serde_with.workspace = true
+smol_str.workspace = true
+sonic-rs.workspace = true
+speedy-uuid.workspace = true
+strum.workspace = true
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
-rstest = { version = "0.23.0", default-features = false }
-serde_test = "1"
+pretty_assertions.workspace = true
+rstest.workspace = true
+serde_test.workspace = true
 
 [lints]
 workspace = true

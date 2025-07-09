@@ -1,9 +1,9 @@
 use crate::{error::IsoCodeConversionError, schema::sql_types};
 use diesel::{
+    AsExpression, FromSqlRow,
     deserialize::FromSql,
     pg::Pg,
     serialize::{self, ToSql},
-    AsExpression, FromSqlRow,
 };
 use serde::{Deserialize, Serialize};
 use std::{

@@ -1,5 +1,5 @@
 use super::handle_upload;
-use crate::http::graphql::{types::Account, ContextExt};
+use crate::http::graphql::{ContextExt, types::Account};
 use async_graphql::{Context, Error, Object, Result, Upload};
 use kitsune_service::account::Update;
 

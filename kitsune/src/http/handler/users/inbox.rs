@@ -3,7 +3,7 @@ use axum::{debug_handler, extract::State};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_activitypub::{process_new_object, update_object, ProcessNewObject};
+use kitsune_activitypub::{ProcessNewObject, process_new_object, update_object};
 use kitsune_db::{
     model::{
         account::Account,
@@ -17,7 +17,7 @@ use kitsune_db::{
     schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
     with_connection,
 };
-use kitsune_error::{bail, Error, ErrorType, Result};
+use kitsune_error::{Error, ErrorType, Result, bail};
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::deliver::accept::DeliverAccept;
 use kitsune_service::job::Enqueue;
@@ -75,7 +75,7 @@ async fn create_activity(state: &Zustand, author: Account, activity: Activity) -
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
             .language_detection_config(state.language_detection_config)
-            .object(Box::new(object))
+            .object(object)
             .search_backend(state.service.search.backend())
             .build();
         process_new_object(process_data).await?;
@@ -255,7 +255,7 @@ async fn update_activity(state: &Zustand, author: Account, activity: Activity) -
             .embed_client(state.embed_client.as_ref())
             .fetcher(&state.fetcher)
             .language_detection_config(state.language_detection_config)
-            .object(Box::new(object))
+            .object(object)
             .search_backend(state.service.search.backend())
             .build();
 

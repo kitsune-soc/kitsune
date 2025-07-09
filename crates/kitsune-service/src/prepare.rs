@@ -1,19 +1,17 @@
-use eyre::WrapErr;
-use fred::clients::RedisPool;
-use fred::interfaces::ClientLike;
-use fred::types::RedisConfig;
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
 use kitsune_cache::{ArcCache, InMemoryCache, NoopCache, RedisCache};
-use kitsune_captcha::AnyCaptcha;
-use kitsune_captcha::{hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
+use kitsune_captcha::{AnyCaptcha, hcaptcha::Captcha as HCaptcha, mcaptcha::Captcha as MCaptcha};
 use kitsune_config::{cache, captcha, email, language_detection, search, storage};
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{message::Mailbox, AsyncSmtpTransport, Tokio1Executor},
     MailSender,
+    lettre::{AsyncSmtpTransport, Tokio1Executor, message::Mailbox},
 };
 use kitsune_search::{AnySearchBackend, NoopSearchService, SqlSearchService};
-use kitsune_storage::{fs::Storage as FsStorage, s3::Storage as S3Storage, AnyStorageBackend};
-use serde::{de::DeserializeOwned, Serialize};
+use kitsune_storage::{AnyStorageBackend, fs::Storage as FsStorage, s3::Storage as S3Storage};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{fmt::Display, str::FromStr, time::Duration};
 use tokio::sync::OnceCell;
 use triomphe::Arc;
@@ -29,7 +27,7 @@ where
     let cache = match config {
         cache::Configuration::InMemory => InMemoryCache::new(100, Duration::from_secs(60)).into(), // TODO: Parameterise this
         cache::Configuration::None => NoopCache.into(),
-        cache::Configuration::Redis(ref redis_config) => {
+        cache::Configuration::Redis(redis_config) => {
             static REDIS_POOL: OnceCell<RedisPool> = OnceCell::const_new();
 
             let pool = REDIS_POOL
@@ -43,8 +41,8 @@ where
                 .await?;
 
             RedisCache::builder()
+                .conn_pool(pool.clone())
                 .prefix(cache_name)
-                .redis_conn(pool.clone())
                 .ttl(Duration::from_secs(60)) // TODO: Parameterise this
                 .build()
                 .into()
@@ -55,12 +53,13 @@ where
 }
 
 #[must_use]
-pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
+pub fn captcha(client: kitsune_http_client::Client, config: &captcha::Configuration) -> AnyCaptcha {
     match config {
         captcha::Configuration::HCaptcha(config) => HCaptcha::builder()
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
             .secret_key(config.secret_key.to_string())
+            .http_client(client)
             .build()
             .into(),
         captcha::Configuration::MCaptcha(config) => MCaptcha::builder()
@@ -68,6 +67,7 @@ pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
             .verify_url(config.verify_url.to_string())
             .site_key(config.site_key.to_string())
             .secret_key(config.secret_key.to_string())
+            .http_client(client)
             .build()
             .into(),
     }
@@ -75,10 +75,10 @@ pub fn captcha(config: &captcha::Configuration) -> AnyCaptcha {
 
 pub fn storage(config: &storage::Configuration) -> eyre::Result<AnyStorageBackend> {
     let storage = match config {
-        storage::Configuration::Fs(ref fs_config) => {
+        storage::Configuration::Fs(fs_config) => {
             FsStorage::new(fs_config.upload_dir.as_str().into()).into()
         }
-        storage::Configuration::S3(ref s3_config) => {
+        storage::Configuration::S3(s3_config) => {
             let path_style = if s3_config.force_path_style {
                 rusty_s3::UrlStyle::Path
             } else {
@@ -129,13 +129,6 @@ pub async fn search(
     db_pool: &PgPool,
 ) -> eyre::Result<AnySearchBackend> {
     let service = match search_config {
-        search::Configuration::Meilisearch(config) => {
-            kitsune_search::MeiliSearchService::new(&config.instance_url, &config.api_key)
-                .await
-                .map_err(kitsune_error::Error::into_error)
-                .wrap_err("Failed to connect to Meilisearch")?
-                .into()
-        }
         search::Configuration::Sql => SqlSearchService::builder()
             .db_pool(db_pool.clone())
             .language_detection_config(language_detection_config)

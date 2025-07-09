@@ -2,7 +2,7 @@ use crate::{http::responder::ActivityPubJson, state::Zustand};
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum_extra::either::Either;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
-use futures_util::{stream, StreamExt, TryStreamExt};
+use futures_util::{StreamExt, TryStreamExt, stream};
 use kitsune_activitypub::mapping::IntoActivity;
 use kitsune_db::{
     model::{account::Account, post::Post},
@@ -13,9 +13,8 @@ use kitsune_db::{
 use kitsune_error::Result;
 use kitsune_service::account::GetPosts;
 use kitsune_type::ap::{
-    ap_context,
+    Activity, ap_context,
     collection::{Collection, CollectionPage, CollectionType, PageType},
-    Activity,
 };
 use kitsune_url::UrlService;
 use serde::{Deserialize, Serialize};

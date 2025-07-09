@@ -3,11 +3,11 @@
 use const_oid::db::rfc5912::RSA_ENCRYPTION;
 use http::{Method, Request, Uri};
 use pkcs8::{
-    der::EncodePem, spki::AlgorithmIdentifier, Document, LineEnding, PrivateKeyInfo,
-    SecretDocument, SubjectPublicKeyInfoRef,
+    Document, LineEnding, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef, der::EncodePem,
+    spki::AlgorithmIdentifier,
 };
 use ring::signature::{
-    RsaKeyPair, UnparsedPublicKey, RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY,
+    RSA_PKCS1_1024_8192_SHA256_FOR_LEGACY_USE_ONLY, RsaKeyPair, UnparsedPublicKey,
 };
 
 const PUBLIC_KEY: &str = r"

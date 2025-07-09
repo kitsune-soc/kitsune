@@ -1,20 +1,15 @@
 use async_trait::async_trait;
 use eyre::WrapErr;
 use http_body_util::BodyExt;
-use kitsune_config::{open_telemetry::Transport, Configuration};
+use kitsune_config::{Configuration, open_telemetry::Transport};
 use kitsune_core::consts::PROJECT_IDENTIFIER;
-use opentelemetry::trace::{noop::NoopTracer, Tracer, TracerProvider};
+use opentelemetry::trace::{Tracer, TracerProvider, noop::NoopTracer};
 use opentelemetry_http::{Bytes, HttpClient, HttpError, Request, Response};
-use opentelemetry_otlp::{SpanExporterBuilder, WithExportConfig};
-use opentelemetry_sdk::runtime::Tokio;
-use std::{env, fmt};
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
+use std::fmt;
 use tracing_error::ErrorLayer;
 use tracing_opentelemetry::{OpenTelemetryLayer, PreSampledTracer};
-use tracing_subscriber::{
-    filter::{LevelFilter, Targets},
-    layer::SubscriberExt,
-    Layer as _, Registry,
-};
+use tracing_subscriber::{Layer as _, Registry, filter::LevelFilter, layer::SubscriberExt};
 
 #[derive(Clone)]
 struct HttpClientAdapter {
@@ -30,10 +25,8 @@ impl fmt::Debug for HttpClientAdapter {
 
 #[async_trait]
 impl HttpClient for HttpClientAdapter {
-    async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Bytes>, HttpError> {
-        let (parts, body) = request.into_parts();
-        let request = Request::from_parts(parts, body.into());
-
+    async fn send_bytes(&self, request: Request<Bytes>) -> Result<Response<Bytes>, HttpError> {
+        let request = request.map(Into::into);
         let response = self.inner.execute(request).await?.into_inner();
 
         let (parts, body) = response.into_parts();
@@ -43,37 +36,19 @@ impl HttpClient for HttpClientAdapter {
     }
 }
 
-macro_rules! build_exporter {
-    ($exporter_type:ty : $transport:expr, $http_client:expr, $endpoint:expr $(,)?) => {{
-        let exporter: $exporter_type = match $transport {
-            Transport::Grpc => opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint($endpoint)
-                .into(),
-            Transport::Http => opentelemetry_otlp::new_exporter()
-                .http()
-                .with_endpoint($endpoint)
-                .with_http_client($http_client.clone())
-                .into(),
-        };
-
-        exporter
-    }};
-}
-
 fn initialise_logging<T>(tracer: T) -> eyre::Result<()>
 where
     T: Tracer + PreSampledTracer + Send + Sync + 'static,
 {
-    let env_filter = env::var("RUST_LOG")
-        .map_err(eyre::Report::from)
-        .and_then(|targets| targets.parse().wrap_err("Failed to parse RUST_LOG value"))
-        .unwrap_or_else(|_| Targets::default().with_default(LevelFilter::INFO));
+    let env_filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
 
     let subscriber = Registry::default()
-        .with(tracing_subscriber::fmt::layer().with_filter(env_filter))
+        .with(console_subscriber::spawn())
         .with(ErrorLayer::default())
-        .with(OpenTelemetryLayer::new(tracer));
+        .with(OpenTelemetryLayer::new(tracer))
+        .with(tracing_subscriber::fmt::layer().with_filter(env_filter));
 
     tracing::subscriber::set_global_default(subscriber)
         .wrap_err("Couldn't install the global tracing subscriber")?;
@@ -87,17 +62,21 @@ pub fn initialise(config: &Configuration) -> eyre::Result<()> {
             inner: kitsune_http_client::Client::default(),
         };
 
-        let trace_exporter = build_exporter!(
-            SpanExporterBuilder:
-            opentelemetry_config.tracing_transport,
-            &http_client,
-            opentelemetry_config.tracing_endpoint.as_str(),
-        );
+        let trace_exporter = match opentelemetry_config.tracing_transport {
+            Transport::Grpc => opentelemetry_otlp::SpanExporter::builder()
+                .with_tonic()
+                .with_endpoint(opentelemetry_config.tracing_endpoint.as_str())
+                .build()?,
+            Transport::Http => opentelemetry_otlp::SpanExporter::builder()
+                .with_http()
+                .with_endpoint(opentelemetry_config.tracing_endpoint.as_str())
+                .with_http_client(http_client.clone())
+                .build()?,
+        };
 
-        let tracer = opentelemetry_otlp::new_pipeline()
-            .tracing()
-            .with_exporter(trace_exporter)
-            .install_batch(Tokio)?
+        let tracer = opentelemetry_sdk::trace::SdkTracerProvider::builder()
+            .with_batch_exporter(trace_exporter)
+            .build()
             .tracer(PROJECT_IDENTIFIER);
 
         initialise_logging(tracer)?;

@@ -5,34 +5,19 @@ edition.workspace = true
 version.workspace = true
 license.workspace = true
 
-[package.metadata.cargo-machete]
-ignored = ["askama_axum"] # See reason below.
-
 [dependencies]
-askama = { workspace = true }
-askama_axum = "0.4.0" # Damn it, cargo. Because "kitsune" uses "askama" with the axum feature, we have to have the crate available here as well..
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-url = { workspace = true }
-lettre = { version = "0.11.10", default-features = false, features = [
-    "builder",
-    "hostname",
-    "pool",
-    "smtp-transport",
-    "tokio1",
-    "tokio1-rustls-tls",
-    "tracing",
-] }
-mrml = { version = "4.0.1", default-features = false, features = [
-    "parse",
-    "render",
-] }
-speedy-uuid = { workspace = true }
-triomphe = { workspace = true }
-typed-builder = "0.20.0"
+diesel.workspace = true
+diesel-async.workspace = true
+kitsune-db.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-url.workspace = true
+lettre.workspace = true
+mrml.workspace = true
+sailfish.workspace = true
+speedy-uuid.workspace = true
+triomphe.workspace = true
+typed-builder.workspace = true
 
 [lints]
 workspace = true

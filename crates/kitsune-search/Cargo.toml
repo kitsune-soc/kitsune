@@ -6,28 +6,20 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
-bytes = "1.8.0"
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-diesel_full_text_search = { workspace = true }
-enum_dispatch = "0.3.13"
-futures-io = "0.3.31"
-futures-util = "0.3.31"
-http = "1.1.0"
-kitsune-config = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-derive = { workspace = true }
-kitsune-error = { workspace = true }
-kitsune-http-client = { workspace = true }
-kitsune-language = { workspace = true }
-meilisearch-sdk = { version = "0.27.1", default-features = false }
-pin-project-lite = "0.2.15"
-serde = { version = "1.0.214", features = ["derive"] }
-serde_urlencoded = "0.7.1"
-speedy-uuid = { workspace = true }
-strum = { version = "0.26.3", features = ["derive"] }
-tracing = "0.1.40"
+diesel.workspace = true
+diesel-async.workspace = true
+diesel_full_text_search.workspace = true
+enum_dispatch.workspace = true
+futures-util.workspace = true
+kitsune-config.workspace = true
+kitsune-db.workspace = true
+kitsune-derive.workspace = true
+kitsune-error.workspace = true
+kitsune-language.workspace = true
+serde.workspace = true
+speedy-uuid.workspace = true
+strum.workspace = true
+tracing.workspace = true
 
 [lints]
 workspace = true

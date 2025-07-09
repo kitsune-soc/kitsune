@@ -6,19 +6,19 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-athena = { workspace = true }
-derive_more = { version = "1.0.0", features = ["from"] }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-futures-util = "0.3.31"
-kitsune-core = { workspace = true }
-kitsune-db = { workspace = true }
-kitsune-email = { workspace = true }
-kitsune-error = { workspace = true }
-serde = { version = "1.0.214", features = ["derive"] }
-speedy-uuid = { workspace = true }
-tracing = "0.1.40"
-typed-builder = "0.20.0"
+athena.workspace = true
+derive_more.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+futures-util.workspace = true
+kitsune-core.workspace = true
+kitsune-db.workspace = true
+kitsune-email.workspace = true
+kitsune-error.workspace = true
+serde.workspace = true
+speedy-uuid.workspace = true
+tracing.workspace = true
+typed-builder.workspace = true
 
 [lints]
 workspace = true

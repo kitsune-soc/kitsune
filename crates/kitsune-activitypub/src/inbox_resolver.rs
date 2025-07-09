@@ -1,10 +1,11 @@
 use diesel::{
-    result::Error as DieselError, BelongingToDsl, BoolExpressionMethods, ExpressionMethods,
-    JoinOnDsl, QueryDsl, SelectableHelper,
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl,
+    SelectableHelper, result::Error as DieselError,
 };
 use diesel_async::RunQueryDsl;
-use futures_util::{future::Either, Stream, StreamExt};
+use futures_util::{Stream, StreamExt, future::Either};
 use kitsune_db::{
+    PgPool,
     function::coalesce_nullable,
     model::{
         account::Account,
@@ -12,7 +13,7 @@ use kitsune_db::{
         post::{Post, Visibility},
     },
     schema::{accounts, accounts_follows},
-    with_connection, PgPool,
+    with_connection,
 };
 use kitsune_error::{Error, Result};
 
@@ -26,11 +27,11 @@ impl InboxResolver {
         Self { db_pool }
     }
 
-    #[instrument(skip_all, fields(account_id = %account.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(account_id = %account.id)))]
     pub async fn resolve_followers(
         &self,
         account: &Account,
-    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + use<'_>> {
         with_connection!(self.db_pool, |db_conn| {
             accounts_follows::table
                 .filter(accounts_follows::account_id.eq(account.id))
@@ -52,11 +53,11 @@ impl InboxResolver {
         .map_err(Error::from)
     }
 
-    #[instrument(skip_all, fields(post_id = %post.id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(post_id = %post.id)))]
     pub async fn resolve(
         &self,
         post: &Post,
-    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + '_> {
+    ) -> Result<impl Stream<Item = Result<String, DieselError>> + Send + use<'_>> {
         let (account, mentioned_inbox_stream) = with_connection!(self.db_pool, |db_conn| {
             let account = accounts::table
                 .find(post.account_id)

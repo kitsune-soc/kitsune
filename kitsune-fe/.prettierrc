@@ -11,7 +11,8 @@
 	"plugins": [
 		"@trivago/prettier-plugin-sort-imports",
 		"prettier-plugin-css-order",
-		"prettier-plugin-svelte"
+		"prettier-plugin-svelte",
+		"prettier-plugin-tailwindcss"
 	],
 	"overrides": [
 		{

@@ -1,9 +1,8 @@
-use async_trait::async_trait;
 use axum::{
-    body::Body,
-    extract::FromRequest,
-    response::{IntoResponse, Response},
     Form, RequestExt,
+    body::Body,
+    extract::{FromRequest, OptionalFromRequest},
+    response::{IntoResponse, Response},
 };
 use axum_extra::TypedHeader;
 use headers::ContentType;
@@ -27,7 +26,6 @@ mod signed_activity;
 
 pub struct AgnosticForm<T>(pub T);
 
-#[async_trait]
 impl<S, T> FromRequest<S> for AgnosticForm<T>
 where
     S: Send + Sync,
@@ -61,5 +59,25 @@ where
         };
 
         Ok(Self(content))
+    }
+}
+
+impl<S, T> OptionalFromRequest<S> for AgnosticForm<T>
+where
+    S: Send + Sync,
+    T: DeserializeOwned + Send + 'static,
+{
+    type Rejection = Response;
+
+    async fn from_request(
+        req: axum::extract::Request,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        // just silently swallow the error
+        let value = <Self as FromRequest<_>>::from_request(req, state)
+            .await
+            .ok();
+
+        Ok(value)
     }
 }

@@ -3,13 +3,13 @@ use core::{
     marker::PhantomData,
 };
 use serde::{
-    de::{
-        self, value::SeqAccessDeserializer, DeserializeSeed, Deserializer, IgnoredAny, MapAccess,
-        SeqAccess,
-    },
     Deserialize, Serialize,
+    de::{
+        self, DeserializeSeed, Deserializer, IgnoredAny, MapAccess, SeqAccess,
+        value::SeqAccessDeserializer,
+    },
 };
-use serde_with::{de::DeserializeAsWrap, DeserializeAs, SerializeAs};
+use serde_with::{DeserializeAs, SerializeAs, de::DeserializeAsWrap};
 
 /// Deserialises a single node identifier string or a set of node identifier strings.
 #[allow(dead_code)] // Used inside `serde_as` macro.
@@ -129,8 +129,8 @@ where
 mod tests {
     use super::{super::into_deserializer, Id};
     use serde::Deserialize;
-    use serde_test::{assert_de_tokens, Token};
-    use serde_with::{serde_as, DeserializeAs};
+    use serde_test::{Token, assert_de_tokens};
+    use serde_with::{DeserializeAs, serde_as};
     use std::collections::HashMap;
 
     #[test]

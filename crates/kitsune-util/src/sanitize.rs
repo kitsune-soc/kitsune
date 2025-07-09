@@ -1,5 +1,5 @@
 use bubble_bath::BubbleBath;
-use kitsune_type::ap::{actor::Actor, Object};
+use kitsune_type::ap::{Object, actor::Actor};
 use std::sync::LazyLock;
 
 pub trait CleanHtmlExt {

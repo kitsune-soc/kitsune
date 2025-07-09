@@ -1,5 +1,5 @@
 use http_body_util::Full;
-use hyper::{body::Bytes, Request, Response};
+use hyper::{Request, Response, body::Bytes};
 use kitsune_cache::NoopCache;
 use kitsune_core::traits::Resolver;
 use kitsune_http_client::Client;
@@ -21,7 +21,7 @@ async fn basic() {
     });
     let client = Client::builder().service(client);
 
-    let webfinger = Webfinger::with_client(client, Arc::new(NoopCache.into()));
+    let webfinger = Webfinger::new(client, Arc::new(NoopCache.into()));
     let resource = webfinger
         .resolve_account("0x0", "corteximplant.com")
         .await

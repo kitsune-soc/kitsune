@@ -22,4 +22,7 @@ extend-exclude = [
 
     # Exclude all snapshot files
     "*.snap",
+
+    # Exclude all pnpm lockfiles
+    "*/pnpm-lock.yaml",
 ]

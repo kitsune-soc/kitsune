@@ -1,6 +1,6 @@
 use crate::{CsrfData, HashRef, Message, MessageRef, RANDOM_DATA_LEN};
 use hex_simd::{AsOut, AsciiCase};
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use std::{fmt::Display, sync::Mutex};
 use triomphe::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -91,13 +91,14 @@ impl CsrfHandle {
 #[cfg(feature = "axum")]
 mod axum_impl {
     use super::CsrfHandle;
-    use async_trait::async_trait;
     use axum_core::extract::FromRequestParts;
     use http::request::Parts;
     use std::convert::Infallible;
 
-    #[async_trait]
-    impl<S> FromRequestParts<S> for CsrfHandle {
+    impl<S> FromRequestParts<S> for CsrfHandle
+    where
+        S: Sync,
+    {
         type Rejection = Infallible;
 
         async fn from_request_parts(

@@ -1,6 +1,5 @@
 use std::{
     fmt,
-    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };

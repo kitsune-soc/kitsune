@@ -1,9 +1,7 @@
 use crate::mrf_wit::v1::fep::mrf::keyvalue;
-use async_trait::async_trait;
 use color_eyre::eyre;
 use derive_more::From;
 use enum_dispatch::enum_dispatch;
-use std::future::Future;
 use wasmtime::component::Resource;
 
 pub use self::{
@@ -56,7 +54,6 @@ pub enum BucketBackendDispatch {
     Redis(RedisBucketBackend),
 }
 
-#[async_trait]
 impl keyvalue::HostBucket for crate::ctx::Context {
     async fn open(
         &mut self,
@@ -143,12 +140,10 @@ impl keyvalue::HostBucket for crate::ctx::Context {
     }
 }
 
-#[async_trait]
 impl keyvalue::HostError for crate::ctx::Context {
     async fn drop(&mut self, _rep: Resource<keyvalue::Error>) -> wasmtime::Result<()> {
         Ok(())
     }
 }
 
-#[async_trait]
 impl keyvalue::Host for crate::ctx::Context {}

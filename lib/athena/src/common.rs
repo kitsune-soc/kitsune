@@ -1,7 +1,7 @@
 use crate::{
+    JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
     consts::MIN_IDLE_TIME,
     error::{Error, Result},
-    JobContextRepository, JobData, JobQueue, JobResult, Outcome, Runnable,
 };
 use ahash::HashMap;
 use futures_util::TryStreamExt;
@@ -71,21 +71,22 @@ where
                 }
             };
 
-            let job_state = if let Err(error) = result {
-                error!(error = ?error.into(), "Failed run job");
-                JobResult {
-                    outcome: Outcome::Fail {
-                        fail_count: job_data.fail_count,
-                    },
-                    job_id,
-                    ctx: &job_data.ctx,
+            let job_state = match result {
+                Err(error) => {
+                    error!(error = ?error.into(), "Failed run job");
+                    JobResult {
+                        outcome: Outcome::Fail {
+                            fail_count: job_data.fail_count,
+                        },
+                        job_id,
+                        ctx: &job_data.ctx,
+                    }
                 }
-            } else {
-                JobResult {
+                _ => JobResult {
                     outcome: Outcome::Success,
                     job_id,
                     ctx: &job_data.ctx,
-                }
+                },
             };
 
             (|| queue.complete_job(&job_state))

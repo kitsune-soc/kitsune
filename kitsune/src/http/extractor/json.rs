@@ -1,16 +1,14 @@
-use askama_axum::IntoResponse;
-use async_trait::async_trait;
+use axum::response::IntoResponse;
 use axum::{body::Body, extract::FromRequest, response::Response};
 use bytes::{BufMut, Bytes, BytesMut};
-use http::{header, HeaderMap, HeaderValue, Request, StatusCode};
-use serde::{de::DeserializeOwned, Serialize};
+use http::{HeaderMap, HeaderValue, Request, StatusCode, header};
+use serde::{Serialize, de::DeserializeOwned};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, Copy, Default)]
 #[must_use]
 pub struct Json<T>(pub T);
 
-#[async_trait]
 impl<T, S> FromRequest<S> for Json<T>
 where
     T: DeserializeOwned,
@@ -52,10 +50,8 @@ fn json_content_type(headers: &HeaderMap) -> bool {
         return false;
     };
 
-    let is_json_content_type = mime.type_() == "application"
-        && (mime.subtype() == "json" || mime.suffix().map_or(false, |name| name == "json"));
-
-    is_json_content_type
+    mime.type_() == "application"
+        && (mime.subtype() == "json" || mime.suffix().is_some_and(|name| name == "json"))
 }
 
 impl<T> Deref for Json<T> {

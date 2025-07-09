@@ -1,17 +1,17 @@
 use super::account::Account;
 use crate::{error::EnumConversionError, lang::LanguageIsoCode, schema::posts};
 use diesel::{
+    AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
+    Selectable,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
-    Selectable,
 };
 use iso8601_timestamp::Timestamp;
 use kitsune_type::{
-    ap::{helper::CcTo, Privacy},
+    ap::{Privacy, helper::CcTo},
     mastodon::status::Visibility as MastodonVisibility,
 };
 use num_derive::FromPrimitive;

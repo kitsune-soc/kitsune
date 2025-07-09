@@ -6,10 +6,11 @@ use axum::{
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
+    PgPool,
     schema::{oauth2_applications, users},
-    with_connection, PgPool,
+    with_connection,
 };
-use kitsune_error::{bail, ErrorType, Result};
+use kitsune_error::{ErrorType, Result, bail};
 use kitsune_oidc::OidcService;
 use kitsune_service::user::{Register, UserService};
 use serde::Deserialize;

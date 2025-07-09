@@ -1,6 +1,6 @@
 #![cfg(feature = "redis")]
 
-use fred::types::{FromRedis, RedisValue};
+use fred::types::{FromValue, Value};
 use speedy_uuid::Uuid;
 use std::str::FromStr;
 
@@ -12,9 +12,9 @@ const UUID_BYTES: [u8; 16] = [
 #[test]
 fn encode_redis() {
     let uuid = Uuid::from_str(UUID).unwrap();
-    let redis_value = RedisValue::from(uuid);
+    let redis_value = Value::from(uuid);
 
-    assert!(matches!(redis_value, RedisValue::String(..)));
+    assert!(matches!(redis_value, Value::String(..)));
     assert_eq!(redis_value.as_str().as_deref(), Some(UUID));
 }
 
@@ -22,12 +22,12 @@ fn encode_redis() {
 fn decode_redis() {
     let uuid = Uuid::from_slice(&UUID_BYTES).unwrap();
 
-    let decoded = Uuid::from_value(RedisValue::from_static(&UUID_BYTES)).unwrap();
+    let decoded = Uuid::from_value(Value::from_static(&UUID_BYTES)).unwrap();
     assert_eq!(uuid, decoded);
 
-    let decoded = Uuid::from_value(RedisValue::from_static_str(UUID)).unwrap();
+    let decoded = Uuid::from_value(Value::from_static_str(UUID)).unwrap();
     assert_eq!(uuid, decoded);
 
-    let result = Uuid::from_value(RedisValue::Array(vec![]));
+    let result = Uuid::from_value(Value::Array(vec![]));
     assert!(result.is_err());
 }

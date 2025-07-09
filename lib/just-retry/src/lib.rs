@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate tracing;
 
-use retry_policies::{policies::ExponentialBackoff, Jitter, RetryDecision};
-use std::{fmt::Debug, future::Future, ops::ControlFlow, time::SystemTime};
+use retry_policies::{Jitter, RetryDecision, policies::ExponentialBackoff};
+use std::{fmt::Debug, ops::ControlFlow, time::SystemTime};
 use tokio::time::Duration;
 
 pub use retry_policies;
@@ -12,7 +12,7 @@ pub enum StartTime {
     /// Implies the start time is at `n`
     At(SystemTime),
 
-    /// Implies the start time is irrelevant to the policy and we will imply pass  
+    /// Implies the start time is irrelevant to the policy and we will imply pass\
     /// [`SystemTime::UNIX_EPOCH`] to it to avoid syscalls
     Irrelevant,
 }
@@ -47,7 +47,7 @@ where
             self.should_retry(request_start_time.as_time(), n_past_retries)
         {
             let delta = execute_after
-                .duration_since(SystemTime::now())
+                .duration_since(tick_tock_mock::now())
                 .expect("Some major clock fuckery happened");
 
             ControlFlow::Continue(delta)
@@ -70,12 +70,12 @@ where
     T: Send,
     E: Debug + Send,
 {
-    #[instrument(skip_all)]
+    #[cfg_attr(not(coverage), instrument(skip_all))]
     async fn retry<R>(&mut self, retry_policy: R) -> Fut::Output
     where
         R: JustRetryPolicy + Send,
     {
-        let start_time = SystemTime::now();
+        let start_time = tick_tock_mock::now();
         let mut retry_count = 0;
 
         loop {
@@ -87,14 +87,19 @@ where
                 }
             };
 
-            if let ControlFlow::Continue(delta) =
-                JustRetryPolicy::should_retry(&retry_policy, StartTime::At(start_time), retry_count)
-            {
-                debug!(?delta, "retrying after backoff");
-                tokio::time::sleep(delta).await;
-            } else {
-                debug!("not retrying");
-                break result;
+            match JustRetryPolicy::should_retry(
+                &retry_policy,
+                StartTime::At(start_time),
+                retry_count,
+            ) {
+                ControlFlow::Continue(delta) => {
+                    debug!(?delta, "retrying after backoff");
+                    tokio::time::sleep(delta).await;
+                }
+                ControlFlow::Break(()) => {
+                    debug!("not retrying");
+                    break result;
+                }
             }
 
             retry_count += 1;

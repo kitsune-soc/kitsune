@@ -6,6 +6,10 @@ const config = {
 		url: 'http://localhost:5000/graphql'
 	},
 	plugins: {
+		'houdini-plugin-svelte-global-stores': {
+			prefix: 'GQL_',
+			generate: 'all'
+		},
 		'houdini-svelte': {
 			static: true
 		}

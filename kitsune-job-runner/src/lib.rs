@@ -1,21 +1,22 @@
 #[macro_use]
 extern crate tracing;
 
+use self::db_queue::DbQueue;
 use athena::{Coerce, JobContextRepository, JobQueue, RedisJobQueue, TaskTracker};
+use color_eyre::eyre;
 use fred::{
-    clients::RedisPool,
-    interfaces::{ClientLike, RedisResult},
-    types::RedisConfig,
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
 };
+use futures_util::FutureExt;
 use just_retry::RetryExt;
-use kitsune_config::job_queue::Configuration;
+use kitsune_config::job_queue::{Configuration, RedisConfiguration};
 use kitsune_db::PgPool;
 use kitsune_email::{
-    lettre::{AsyncSmtpTransport, Tokio1Executor},
     MailSender, MailingService,
+    lettre::{AsyncSmtpTransport, Tokio1Executor},
 };
 use kitsune_federation::{
-    activitypub::PrepareDeliverer as PrepareActivityPubDeliverer, PrepareDeliverer,
+    PrepareDeliverer, activitypub::PrepareDeliverer as PrepareActivityPubDeliverer,
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_jobs::{JobRunnerContext, KitsuneContextRepo, Service};
@@ -25,6 +26,8 @@ use kitsune_wasm_mrf::MrfService;
 use std::time::Duration;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;
+
+pub mod db_queue;
 
 const EXECUTION_TIMEOUT_DURATION: Duration = Duration::from_secs(30);
 
@@ -38,28 +41,56 @@ pub struct JobDispatcherState {
     url_service: UrlService,
 }
 
-pub async fn prepare_job_queue(
-    db_pool: PgPool,
-    config: &Configuration,
-) -> RedisResult<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
-    let context_repo = KitsuneContextRepo::builder().db_pool(db_pool).build();
+fn build_db_queue(context_repo: KitsuneContextRepo, db_pool: PgPool) -> DbQueue {
+    DbQueue::builder()
+        .context_repo(context_repo)
+        .db_pool(db_pool)
+        .build()
+}
 
+async fn build_redis_queue(
+    context_repo: KitsuneContextRepo,
+    config: &RedisConfiguration,
+) -> eyre::Result<RedisJobQueue<KitsuneContextRepo>> {
     let config = RedisConfig::from_url(config.redis_url.as_str())?;
     // TODO: Make pool size configurable
     let redis_pool = RedisPool::new(config, None, None, None, 10)?;
     redis_pool.init().await?;
 
     let queue = RedisJobQueue::builder()
+        .conn_pool(redis_pool)
         .context_repository(context_repo)
         .queue_name("kitsune-jobs")
-        .redis_pool(redis_pool)
         .build();
 
-    Ok(Arc::new(queue).coerce())
+    Ok(queue)
 }
 
-#[instrument(skip(job_queue, state))]
+pub async fn prepare_job_queue(
+    db_pool: PgPool,
+    config: &Configuration,
+) -> eyre::Result<Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo>>> {
+    let context_repo = KitsuneContextRepo::builder()
+        .db_pool(db_pool.clone())
+        .build();
+
+    let queue = match config {
+        Configuration::Database(..) => {
+            let queue = build_db_queue(context_repo, db_pool);
+            Arc::new(queue).coerce()
+        }
+        Configuration::Redis(redis_config) => {
+            let queue = build_redis_queue(context_repo, redis_config).await?;
+            Arc::new(queue).coerce()
+        }
+    };
+
+    Ok(queue)
+}
+
+#[cfg_attr(not(coverage), instrument(skip(http_client, job_queue, state)))]
 pub async fn run_dispatcher(
+    http_client: kitsune_http_client::Client,
     job_queue: Arc<dyn JobQueue<ContextRepository = KitsuneContextRepo> + '_>,
     state: JobDispatcherState,
     num_job_workers: usize,
@@ -68,6 +99,7 @@ pub async fn run_dispatcher(
         .attachment_service(state.attachment_service)
         .db_pool(state.db_pool.clone())
         .federation_filter(state.federation_filter)
+        .http_client(http_client)
         .mrf_service(state.mrf_service)
         .url_service(state.url_service.clone())
         .build();
@@ -124,6 +156,7 @@ pub async fn run_dispatcher(
             )
         })
         .retry(just_retry::backoff_policy())
+        .boxed()
         .await;
 
         let _ = tokio::time::timeout(EXECUTION_TIMEOUT_DURATION, job_tracker.wait()).await;

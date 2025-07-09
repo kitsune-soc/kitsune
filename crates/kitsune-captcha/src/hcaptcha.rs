@@ -1,4 +1,4 @@
-use crate::{error::CaptchaVerification, CaptchaBackend, ChallengeStatus, Result};
+use crate::{CaptchaBackend, ChallengeStatus, Result, error::CaptchaVerification};
 use http::Request;
 use kitsune_http_client::Client;
 use serde::{Deserialize, Serialize};
@@ -10,8 +10,7 @@ pub struct Captcha {
     pub site_key: String,
     pub secret_key: String,
 
-    #[builder(default)]
-    client: Client,
+    http_client: Client,
 }
 
 #[derive(Serialize, Deserialize, TypedBuilder)]
@@ -46,7 +45,7 @@ impl CaptchaBackend for Captcha {
             .header("Accept", "application/json")
             .body(body.into())?;
 
-        let response = self.client.execute(request).await?;
+        let response = self.http_client.execute(request).await?;
 
         let verification_result = response.json::<HCaptchaResponse>().await?;
         if !verification_result.success {

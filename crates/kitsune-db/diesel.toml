@@ -2,6 +2,7 @@
 # see https://diesel.rs/guides/configuring-diesel-cli
 
 [print_schema]
+custom_type_derives = ["Clone", "diesel::query_builder::QueryId"]
 file = "src/schema.rs"
 generate_missing_sql_type_definitions = true
 import_types = ["diesel::sql_types::*", "diesel_full_text_search::Tsvector"]

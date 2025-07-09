@@ -1,0 +1,11 @@
+---
+source: lib/komainu/tests/code_grant.rs
+expression: "SerdeResponse::from(acceptor.into_response())"
+---
+{
+  "body": null,
+  "headers": {
+    "location": "http://client_1.example/?code=dvbuheoychyjmloq&state=cat+tax"
+  },
+  "status": 302
+}

@@ -7,5 +7,5 @@ mod verify;
 
 pub mod parse;
 
-pub use self::sign::{sign, SigningKey};
-pub use self::verify::{verify, VerifyError};
+pub use self::sign::{SigningKey, sign};
+pub use self::verify::{VerifyError, verify};

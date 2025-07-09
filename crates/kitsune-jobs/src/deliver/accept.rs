@@ -15,7 +15,7 @@ impl Runnable for DeliverAccept {
     type Context = JobRunnerContext;
     type Error = kitsune_error::Error;
 
-    #[instrument(skip_all, fields(follow_id = %self.follow_id))]
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(follow_id = %self.follow_id)))]
     async fn run(&self, ctx: &Self::Context) -> Result<(), Self::Error> {
         let follow = with_connection!(ctx.db_pool, |db_conn| {
             accounts_follows::table

@@ -1,20 +1,23 @@
 use self::scheduled::ScheduledJobActor;
 use crate::{
+    Error, JobContextRepository, JobData, JobDetails, JobResult, KeeperOfTheSecrets, Outcome,
     consts::{BLOCK_TIME, MAX_RETRIES, MIN_IDLE_TIME},
     error::Result,
-    Error, JobContextRepository, JobData, JobDetails, JobResult, KeeperOfTheSecrets, Outcome,
 };
 use async_trait::async_trait;
 use either::Either;
 use fred::{
-    clients::RedisPool,
+    clients::Pool,
     interfaces::{SortedSetsInterface, StreamsInterface},
-    types::{FromRedis, RedisValue, XReadResponse, XReadValue, XID},
+    types::{
+        FromValue, Value,
+        streams::{XID, XReadResponse, XReadValue},
+    },
 };
 use iso8601_timestamp::Timestamp;
 use just_retry::{
-    retry_policies::{policies::ExponentialBackoff, Jitter},
     JustRetryPolicy, StartTime,
+    retry_policies::{Jitter, policies::ExponentialBackoff},
 };
 use smol_str::SmolStr;
 use speedy_uuid::Uuid;
@@ -27,6 +30,7 @@ mod scheduled;
 
 #[derive(TypedBuilder)]
 pub struct JobQueue<CR> {
+    conn_pool: Pool,
     #[builder(default = "athena-job-runners".into(), setter(into))]
     consumer_group: SmolStr,
     #[builder(default = Uuid::now_v7().to_string().into(), setter(into))]
@@ -37,7 +41,6 @@ pub struct JobQueue<CR> {
     max_retries: u32,
     #[builder(setter(into))]
     queue_name: SmolStr,
-    redis_pool: RedisPool,
     #[builder(default = SmolStr::from(format!("{queue_name}:scheduled")))]
     scheduled_queue_name: SmolStr,
 
@@ -47,7 +50,7 @@ pub struct JobQueue<CR> {
     #[builder(
         default = ScheduledJobActor::builder()
             .queue_name(queue_name.clone())
-            .redis_pool(redis_pool.clone())
+            .conn_pool(conn_pool.clone())
             .scheduled_queue_name(scheduled_queue_name.clone())
             .build()
             .spawn(),
@@ -64,7 +67,7 @@ where
         self.group_initialised
             .get_or_try_init(|| async move {
                 let result = self
-                    .redis_pool
+                    .conn_pool
                     .xgroup_create(
                         self.queue_name.as_str(),
                         self.consumer_group.as_str(),
@@ -123,12 +126,12 @@ where
                     None,
                     XID::Auto,
                     vec![
-                        ("job_id", RedisValue::from(job_meta.job_id)),
-                        ("fail_count", RedisValue::from(job_meta.fail_count)),
+                        ("job_id", Value::from(job_meta.job_id)),
+                        ("fail_count", Value::from(job_meta.fail_count)),
                     ],
                 )
                 .await?;
-        };
+        }
 
         Ok(())
     }
@@ -158,7 +161,7 @@ where
             .await
             .map_err(|err| Error::ContextRepository(err.into()))?;
 
-        self.enqueue_ops(&self.redis_pool, &job_data, job_details.run_at)
+        self.enqueue_ops(&self.conn_pool, &job_data, job_details.run_at)
             .await?;
 
         Ok(())
@@ -167,8 +170,8 @@ where
     async fn fetch_job_data(&self, max_jobs: usize) -> Result<Vec<JobData>> {
         self.initialise_group().await?;
 
-        let (_start, claimed_ids): (_, Vec<XReadValue<String, String, RedisValue>>) = self
-            .redis_pool
+        let (_start, claimed_ids): (_, Vec<XReadValue<String, String, Value>>) = self
+            .conn_pool
             .xautoclaim_values(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
@@ -189,8 +192,8 @@ where
                 BLOCK_TIME.as_millis()
             };
 
-            let read_reply: XReadResponse<String, String, String, RedisValue> = self
-                .redis_pool
+            let read_reply: XReadResponse<String, String, String, Value> = self
+                .conn_pool
                 .xreadgroup_map(
                     self.consumer_group.as_str(),
                     self.consumer_name.as_str(),
@@ -209,8 +212,8 @@ where
 
         let job_data = claimed_ids
             .map(|(id, mut map)| {
-                let mut raw_job_id = RedisValue::Null;
-                let mut raw_fail_count = RedisValue::Null;
+                let mut raw_job_id = Value::Null;
+                let mut raw_fail_count = Value::Null;
 
                 mem::swap(map.get_mut("job_id").unwrap(), &mut raw_job_id);
                 mem::swap(map.get_mut("fail_count").unwrap(), &mut raw_fail_count);
@@ -238,7 +241,7 @@ where
             .get::<String>()
             .expect("[Bug] Not a string in the context");
 
-        let client = self.redis_pool.next();
+        let client = self.conn_pool.next();
         let pipeline = client.pipeline();
 
         let () = pipeline
@@ -298,7 +301,7 @@ where
             .expect("[Bug] Not a string in the context");
 
         let () = self
-            .redis_pool
+            .conn_pool
             .xclaim(
                 self.queue_name.as_str(),
                 self.consumer_group.as_str(),
@@ -320,12 +323,12 @@ where
 impl<CR> Clone for JobQueue<CR> {
     fn clone(&self) -> Self {
         Self {
+            conn_pool: self.conn_pool.clone(),
             consumer_group: self.consumer_group.clone(),
             consumer_name: self.consumer_name.clone(),
             context_repository: self.context_repository.clone(),
             max_retries: self.max_retries,
             queue_name: self.queue_name.clone(),
-            redis_pool: self.redis_pool.clone(),
             scheduled_queue_name: self.scheduled_queue_name.clone(),
             group_initialised: self.group_initialised.clone(),
             _scheduled_actor: (),

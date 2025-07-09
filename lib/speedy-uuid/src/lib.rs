@@ -4,7 +4,7 @@ use std::{
     str::{self, FromStr},
 };
 use thiserror::Error;
-use uuid_simd::{format_hyphenated, AsciiCase, Out, UuidExt};
+use uuid_simd::{AsciiCase, Out, UuidExt};
 
 #[cfg(feature = "diesel")]
 use diesel::{deserialize::FromSqlRow, expression::AsExpression};
@@ -27,9 +27,15 @@ pub enum Error {
 pub struct Uuid(pub uuid::Uuid);
 
 impl Uuid {
+    #[inline]
     fn as_ascii_bytes(&self) -> [u8; 36] {
         let mut dst = [0; 36];
-        let _ = format_hyphenated(self.0.as_bytes(), Out::from_mut(&mut dst), AsciiCase::Lower);
+        let _ = uuid_simd::format_hyphenated(
+            self.0.as_bytes(),
+            Out::from_mut(&mut dst),
+            AsciiCase::Lower,
+        );
+
         dst
     }
 
@@ -38,18 +44,25 @@ impl Uuid {
     }
 
     #[must_use]
-    pub fn max() -> Self {
+    pub const fn max() -> Self {
         Self(uuid::Uuid::max())
+    }
+
+    #[must_use]
+    pub const fn nil() -> Self {
+        Self(uuid::Uuid::nil())
+    }
+}
+
+impl Uuid {
+    #[must_use]
+    pub fn new_v4() -> Self {
+        Self(uuid::Uuid::new_v4())
     }
 
     #[must_use]
     pub fn new_v7(ts: uuid::Timestamp) -> Self {
         Self(uuid::Uuid::new_v7(ts))
-    }
-
-    #[must_use]
-    pub fn nil() -> Self {
-        Self(uuid::Uuid::nil())
     }
 
     #[must_use]
@@ -85,6 +98,7 @@ impl DerefMut for Uuid {
 }
 
 impl fmt::Display for Uuid {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = self.as_ascii_bytes();
 
@@ -120,7 +134,7 @@ impl FromStr for Uuid {
 mod async_graphql_impl {
     use super::Uuid;
     use async_graphql::{
-        connection::CursorType, InputValueError, InputValueResult, Scalar, ScalarType, Value,
+        InputValueError, InputValueResult, Scalar, ScalarType, Value, connection::CursorType,
     };
     use std::str::FromStr;
 
@@ -184,12 +198,12 @@ mod diesel_impl {
 mod redis_impl {
     use crate::Uuid;
     use fred::{
-        error::{RedisError, RedisErrorKind},
-        types::RedisValue,
+        error::{Error, ErrorKind},
+        types::Value,
     };
     use std::str::{self, FromStr};
 
-    impl From<Uuid> for RedisValue {
+    impl From<Uuid> for Value {
         fn from(value: Uuid) -> Self {
             let ascii_bytes = value.as_ascii_bytes();
             #[allow(unsafe_code)]
@@ -201,20 +215,14 @@ mod redis_impl {
         }
     }
 
-    impl fred::types::FromRedis for Uuid {
-        fn from_value(val: RedisValue) -> Result<Self, RedisError> {
-            let transform_error =
-                |err: crate::Error| RedisError::new(RedisErrorKind::Parse, err.to_string());
+    impl fred::types::FromValue for Uuid {
+        fn from_value(val: Value) -> Result<Self, Error> {
+            let transform_error = |err: crate::Error| Error::new(ErrorKind::Parse, err.to_string());
 
             let value = match val {
-                RedisValue::Bytes(bytes) => Uuid::from_slice(&bytes).map_err(transform_error)?,
-                RedisValue::String(string) => Uuid::from_str(&string).map_err(transform_error)?,
-                _ => {
-                    return Err(RedisError::new(
-                        RedisErrorKind::Parse,
-                        "invalid type for uuid",
-                    ))
-                }
+                Value::Bytes(bytes) => Uuid::from_slice(&bytes).map_err(transform_error)?,
+                Value::String(string) => Uuid::from_str(&string).map_err(transform_error)?,
+                _ => return Err(Error::new(ErrorKind::Parse, "invalid type for uuid")),
             };
 
             Ok(value)
@@ -226,8 +234,8 @@ mod redis_impl {
 mod serde_impl {
     use crate::Uuid;
     use serde::{
-        de::{self, Error as _},
         Deserialize, Serialize,
+        de::{self, Error as _},
     };
     use std::{fmt, str};
 

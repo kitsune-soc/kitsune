@@ -6,8 +6,8 @@ version.workspace = true
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-lol_html = "2.0.0"
-thiserror = "1.0.68"
+lol_html.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true

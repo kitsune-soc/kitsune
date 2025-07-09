@@ -3,12 +3,14 @@ extern crate tracing;
 
 use self::{
     cache::Cache,
-    ctx::{construct_store, Context},
+    ctx::{Context, construct_store},
     mrf_wit::v1::fep::mrf::types::{Direction, Error as MrfError},
 };
-use color_eyre::{eyre, Section};
-use fred::{clients::RedisPool, interfaces::ClientLike, types::RedisConfig};
-use futures_util::{stream::FuturesUnordered, Stream, TryFutureExt, TryStreamExt};
+use color_eyre::{Section, eyre};
+use fred::{
+    clients::Pool as RedisPool, interfaces::ClientLike, types::config::Config as RedisConfig,
+};
+use futures_util::{StreamExt, TryStreamExt, stream};
 use kitsune_config::mrf::{
     AllocationStrategy, Configuration as MrfConfiguration, FsKvStorage, KvStorage, RedisKvStorage,
 };
@@ -29,40 +31,53 @@ use tokio::fs;
 use triomphe::Arc;
 use walkdir::WalkDir;
 use wasmtime::{
-    component::{Component, Linker},
     Config, Engine, InstanceAllocationStrategy, Store,
+    component::{Component, HasSelf, Linker},
 };
 
 mod cache;
 mod ctx;
+mod http_client;
 mod logging;
 mod mrf_wit;
 
 pub mod kv_storage;
 
 #[inline]
-fn find_mrf_modules<P>(dir: P) -> impl Stream<Item = Result<(PathBuf, Vec<u8>), io::Error>>
+async fn find_mrf_modules<P>(dir: P) -> Result<Vec<(PathBuf, Vec<u8>)>, io::Error>
 where
     P: AsRef<Path>,
 {
     // Read all the `.wasm` files from the disk
     // Recursively traverse the entire directory tree doing so and follow all symlinks
-    // Also run the I/O operations inside a `FuturesUnordered` to enable concurrent reading
-    WalkDir::new(dir)
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            (entry.path().is_file() && entry.path().extension() == Some("wasm".as_ref()))
-                .then(|| entry.into_path())
-        })
-        .inspect(|path| debug!(?path, "discovered WASM module"))
-        .map(|path| fs::read(path.clone()).map_ok(|data| (path, data)))
-        .collect::<FuturesUnordered<_>>()
+    let entries = WalkDir::new(dir).follow_links(true);
+
+    let mut acc = Vec::new();
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(error) => {
+                debug!(?error, "failed to get file entry info");
+                continue;
+            }
+        };
+
+        if !entry.path().is_file() || entry.path().extension() != Some("wasm".as_ref()) {
+            continue;
+        }
+
+        let path = entry.into_path();
+        debug!(?path, "discovered WASM module");
+
+        let data = fs::read(path.clone()).await?;
+        acc.push((path, data));
+    }
+
+    Ok(acc)
 }
 
 #[inline]
-#[instrument(skip_all, fields(module_path = %module_path.display()))]
+#[cfg_attr(not(coverage), instrument(skip_all, fields(module_path = %module_path.display())))]
 fn load_mrf_module(
     cache: Option<&Cache>,
     engine: &Engine,
@@ -117,6 +132,7 @@ pub struct MrfModule {
 #[kitsune_service]
 pub struct MrfService {
     engine: Engine,
+    http_client: kitsune_http_client::Client,
     linker: Arc<Linker<Context>>,
     modules: Arc<[MrfModule]>,
     storage: Arc<kv_storage::BackendDispatch>,
@@ -127,24 +143,31 @@ impl MrfService {
     pub fn from_components(
         engine: Engine,
         modules: Vec<MrfModule>,
+        http_client: kitsune_http_client::Client,
         storage: kv_storage::BackendDispatch,
     ) -> eyre::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
 
-        mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
-        wasmtime_wasi::add_to_linker_async(&mut linker).map_err(eyre::Report::msg)?;
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(eyre::Report::msg)?;
+        self::mrf_wit::v1::Mrf::add_to_linker::<_, HasSelf<_>>(&mut linker, |ctx| ctx)
+            .map_err(eyre::Report::msg)?;
 
-        Ok(__MrfService__Inner {
-            engine,
-            linker: Arc::new(linker),
-            modules: modules.into(),
-            storage: Arc::new(storage),
-        }
-        .into())
+        let this = Self::builder()
+            .engine(engine)
+            .http_client(http_client)
+            .linker(Arc::new(linker))
+            .modules(modules.into())
+            .storage(Arc::new(storage))
+            .build();
+
+        Ok(this)
     }
 
-    #[instrument(skip_all, fields(module_dir = %config.module_dir))]
-    pub async fn from_config(config: &MrfConfiguration) -> eyre::Result<Self> {
+    #[cfg_attr(not(coverage), instrument(skip_all, fields(module_dir = %config.module_dir)))]
+    pub async fn from_config(
+        config: &MrfConfiguration,
+        http_client: kitsune_http_client::Client,
+    ) -> eyre::Result<Self> {
         let cache = config
             .artifact_cache
             .as_ref()
@@ -185,18 +208,22 @@ impl MrfService {
             .wasm_component_model(true);
 
         let engine = Engine::new(&engine_config).map_err(eyre::Report::msg)?;
-        let mut wasm_data_stream = find_mrf_modules(config.module_dir.as_str())
-            .map_err(eyre::Report::from)
-            .and_then(|(module_path, wasm_data)| {
-                let cache = cache.as_ref();
-                let engine = &engine;
 
-                async move { load_mrf_module(cache, engine, &module_path, &wasm_data) }
-            });
+        let wasm_modules = find_mrf_modules(config.module_dir.as_str()).await?;
+        let wasm_data_stream = stream::iter(wasm_modules).map(|(module_path, wasm_data)| {
+            let cache = cache.as_ref();
+            let engine = &engine;
+
+            load_mrf_module(cache, engine, &module_path, &wasm_data)
+        });
         let mut wasm_data_stream = pin!(wasm_data_stream);
 
         let mut modules = Vec::new();
-        while let Some((manifest, component)) = wasm_data_stream.try_next().await?.flatten() {
+        while let Some(maybe_module) = wasm_data_stream.try_next().await? {
+            let Some((manifest, component)) = maybe_module else {
+                continue;
+            };
+
             // TODO: permission grants, etc.
 
             let span = info_span!(
@@ -226,7 +253,7 @@ impl MrfService {
             modules.push(module);
         }
 
-        Self::from_components(engine, modules, storage)
+        Self::from_components(engine, modules, http_client, storage)
     }
 
     #[must_use]
@@ -282,7 +309,8 @@ impl MrfService {
         activity_type: &str,
         activity: &'a str,
     ) -> Result<Outcome<'a>, Error> {
-        let mut store = construct_store(&self.engine, self.storage.clone());
+        let mut store =
+            construct_store(&self.engine, self.http_client.clone(), self.storage.clone());
         let mut activity = Cow::Borrowed(activity);
 
         for module in self.modules.iter() {

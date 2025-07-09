@@ -1,10 +1,9 @@
 use crate::http::extractor::{AgnosticForm, AuthExtractor, MastodonAuthExtractor};
 use axum::{
-    debug_handler,
+    Json, debug_handler,
     extract::{Path, State},
-    Json,
 };
-use kitsune_error::{bail, ErrorType, Result};
+use kitsune_error::{ErrorType, Result, bail};
 use kitsune_mastodon::MastodonMapper;
 use kitsune_service::account::{AccountService, Follow};
 use kitsune_type::mastodon::relationship::Relationship;
@@ -34,7 +33,7 @@ pub async fn post(
         .follower_id(user_data.account.id)
         .build();
     let follow_accounts = account_service
-        .follow(follow, follow_body.map_or(false, |body| body.0.notify))
+        .follow(follow, follow_body.is_some_and(|body| body.0.notify))
         .await?;
 
     Ok(Json(

@@ -2,10 +2,10 @@ use self::{mutation::RootMutation, query::RootQuery};
 use super::extractor::{AuthExtractor, UserData};
 use crate::state::Zustand;
 use async_graphql::{
-    extensions::Tracing, http::GraphiQLSource, Context, EmptySubscription, Error, Result, Schema,
+    Context, EmptySubscription, Error, Result, Schema, extensions::Tracing, http::GraphiQLSource,
 };
 use async_graphql_axum::{GraphQLBatchRequest, GraphQLResponse};
-use axum::{debug_handler, response::Html, Extension};
+use axum::{Extension, debug_handler, response::Html};
 
 type GraphQLSchema = Schema<RootQuery, RootMutation, EmptySubscription>;
 
@@ -32,7 +32,7 @@ impl ContextExt for &Context<'_> {
 #[debug_handler(state = Zustand)]
 pub async fn graphql(
     Extension(schema): Extension<GraphQLSchema>,
-    user_data: Option<AuthExtractor<true>>,
+    user_data: Option<AuthExtractor>,
     req: GraphQLBatchRequest,
 ) -> GraphQLResponse {
     let mut req = req.into_inner();
@@ -44,10 +44,11 @@ pub async fn graphql(
 }
 
 #[allow(clippy::unused_async)]
-pub async fn graphiql() -> Html<String> {
+pub async fn explorer() -> Html<String> {
     let source = GraphiQLSource::build()
-        .endpoint("/graphql")
         .title(concat!(env!("CARGO_PKG_NAME"), " - GraphiQL"))
+        .endpoint("/graphql")
+        .subscription_endpoint("/graphql/ws")
         .finish();
 
     Html(source)

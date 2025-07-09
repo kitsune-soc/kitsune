@@ -4,7 +4,7 @@ use diesel_async::RunQueryDsl;
 use kitsune_activitypub::Fetcher;
 use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
-use kitsune_core::traits::{coerce::CoerceResolver, Fetcher as _};
+use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_db::{
     model::{account::Account, media_attachment::MediaAttachment},
     schema::{accounts, media_attachments},
@@ -21,11 +21,11 @@ use triomphe::Arc;
 
 #[tokio::test]
 async fn fetch_actor() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool)
             .embed_client(None)
             .federation_filter(
@@ -36,7 +36,7 @@ async fn fetch_actor() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -60,11 +60,11 @@ async fn fetch_actor() {
 
 #[tokio::test]
 async fn fetch_emoji() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool|  {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
@@ -75,7 +75,7 @@ async fn fetch_emoji() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();
@@ -111,11 +111,11 @@ async fn fetch_emoji() {
 
 #[tokio::test]
 async fn fetch_note() {
-    database_test(|db_pool| async move {
+    database_test(async |db_pool| {
         let client = Client::builder().service(service_fn(handle));
 
         let fetcher = Fetcher::builder()
-            .client(client.clone())
+            .http_client(client.clone())
             .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
@@ -126,7 +126,7 @@ async fn fetch_note() {
             )
             .language_detection_config(language_detection_config())
             .search_backend(NoopSearchService)
-            .resolver(Arc::new(Webfinger::with_client(client, Arc::new(NoopCache.into()))).coerce())
+            .resolver(Arc::new(Webfinger::new(client, Arc::new(NoopCache.into()))).coerce())
             .account_cache(Arc::new(NoopCache.into()))
             .post_cache(Arc::new(NoopCache.into()))
             .build();

@@ -1,4 +1,51 @@
-package fep:mrf@1.0.0;
+package fep:mrf@0.1.0;
+
+/// Home-grown version of an interface for doing HTTP requests
+interface http-client {
+    /// Opaque representation of some error
+    resource error {}
+
+    /// HTTP request
+    record request {
+        /// The URL to send the request to
+        url: string,
+
+        /// The method to use for the request
+        method: string,
+
+        /// The headers to send with the request
+        headers: list<tuple<string, string>>,
+
+        /// The body of the request
+        body: option<list<u8>>,
+    }
+
+    /// HTTP response
+    record response {
+        /// The status code of the response
+        status: u16,
+
+        /// The headers of the response
+        headers: list<tuple<string, string>>,
+
+        /// The body of the response
+        body: response-body,
+    }
+
+    /// The body of the response
+    resource response-body {
+        /// Get the next chunk of the body
+        next: func() -> result<option<list<u8>>, error>;
+    }
+
+    /// Perform an HTTP request
+    do-request: func(request: request) -> result<response, error>;
+
+    /// Perform an HTTP request but sign it with the instance actor beforehand
+    /// 
+    /// This is required for some fediverse instances to download things like remote actors
+    do-request-signed: func(request: request) -> result<response, error>;
+}
 
 /// Home-grown version of wasi-keyvalue
 /// 
@@ -54,8 +101,14 @@ interface types {
 world mrf {
     use types.{direction, error};
 
+    import http-client;
     import keyvalue;
     import wasi:logging/logging;
+
+    /// Return the JSON schema of the configuration
+    /// 
+    /// Must be a valid JSON schema if you decide to return a value
+    export config-schema: func() -> option<string>;
 
     /// Transform an ActivityPub activity
     export transform: func(configuration: string, direction: direction, activity: string) -> result<string, error>;

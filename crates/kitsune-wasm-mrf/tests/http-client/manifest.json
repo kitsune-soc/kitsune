@@ -1,0 +1,9 @@
+{
+    "manifestVersion": "v1",
+    "apiVersion": "v1",
+    "name": "http-client-test",
+    "version": "1.0.0",
+    "activityTypes": [
+        "*"
+    ]
+}

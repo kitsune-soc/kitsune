@@ -1,5 +1,6 @@
 use crate::error::Result;
-use fred::{clients::RedisPool, types::Script, util::NONE};
+use fred::{clients::Pool, types::scripts::Script, util::NONE};
+use futures_util::FutureExt;
 use rand::Rng;
 use smol_str::SmolStr;
 use std::{ops::RangeInclusive, sync::LazyLock, time::Duration};
@@ -14,20 +15,21 @@ static SCHEDULE_SCRIPT: LazyLock<Script> =
 
 #[derive(TypedBuilder)]
 pub struct ScheduledJobActor {
-    redis_pool: RedisPool,
+    conn_pool: Pool,
     scheduled_queue_name: SmolStr,
     queue_name: SmolStr,
 }
 
 impl ScheduledJobActor {
     async fn run(&mut self) -> Result<()> {
-        let client = self.redis_pool.next();
+        let client = self.conn_pool.next();
         let () = SCHEDULE_SCRIPT
             .evalsha_with_reload(
                 client,
                 (self.queue_name.as_str(), self.scheduled_queue_name.as_str()),
                 NONE,
             )
+            .boxed()
             .await?;
 
         Ok(())

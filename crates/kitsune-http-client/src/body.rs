@@ -1,8 +1,7 @@
 use bytes::Bytes;
-use futures_util::{stream::BoxStream, StreamExt, TryStream, TryStreamExt};
+use futures_util::{StreamExt, TryStream, TryStreamExt};
 use http_body::Frame;
 use http_body_util::StreamBody;
-use pin_project::pin_project;
 use std::{
     borrow::Cow,
     fmt::{self, Debug},
@@ -11,19 +10,40 @@ use std::{
 };
 use tower::BoxError;
 
-/// Body on a budget
-#[derive(Default)]
-#[pin_project(project = BodyProj)]
-pub enum Body {
-    /// Empty body
-    #[default]
-    Empty,
+mod body_def {
+    #![allow(missing_docs)]
 
-    /// Body consisting of a single chunk
-    Full(Option<Bytes>),
+    use super::{BoxError, Bytes, Frame, StreamBody};
+    use futures_util::stream::BoxStream;
+    use pin_project_lite::pin_project;
 
-    /// Body backed by a `StreamBody`
-    Stream(#[pin] StreamBody<BoxStream<'static, Result<Frame<Bytes>, BoxError>>>),
+    pin_project! {
+        #[project = BodyProj]
+        // Body on a budget
+        pub enum Body {
+            // Empty body
+            Empty,
+
+            // Body consisting of a single chunk
+            Full { data: Option<Bytes> },
+
+            // Body backed by a `StreamBody`
+            Stream {
+                #[pin]
+                stream: StreamBody<BoxStream<'static, Result<Frame<Bytes>, BoxError>>>
+            },
+        }
+    }
+}
+
+pub use self::body_def::Body;
+use self::body_def::BodyProj;
+
+impl Default for Body {
+    #[inline]
+    fn default() -> Self {
+        Self::empty()
+    }
 }
 
 impl Body {
@@ -40,7 +60,9 @@ impl Body {
     where
         D: Into<Bytes>,
     {
-        Self::Full(Some(data.into()))
+        Self::Full {
+            data: Some(data.into()),
+        }
     }
 
     /// Stream body
@@ -56,7 +78,9 @@ impl Body {
             .map_err(Into::into)
             .boxed();
 
-        Self::Stream(StreamBody::new(stream))
+        Self::Stream {
+            stream: StreamBody::new(stream),
+        }
     }
 }
 
@@ -107,8 +131,8 @@ impl http_body::Body for Body {
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.project() {
             BodyProj::Empty => Poll::Ready(None),
-            BodyProj::Full(data) => Poll::Ready(data.take().map(|data| Ok(Frame::data(data)))),
-            BodyProj::Stream(stream) => stream.poll_frame(cx),
+            BodyProj::Full { data } => Poll::Ready(data.take().map(|data| Ok(Frame::data(data)))),
+            BodyProj::Stream { stream } => stream.poll_frame(cx),
         }
     }
 }

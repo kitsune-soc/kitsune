@@ -1,6 +1,6 @@
 use crate::http::graphql::{
-    types::{Post, Visibility},
     ContextExt,
+    types::{Post, Visibility},
 };
 use async_graphql::{Context, Object, Result};
 use kitsune_service::post::{CreatePost, DeletePost};

@@ -1,7 +1,13 @@
-query stats {
+query LoadStatistics {
 	instance {
+		captcha {
+			backend
+			key
+		}
+		characterLimit
 		description
 		localPostCount
+		registrationsOpen
 		userCount
 		version
 	}
