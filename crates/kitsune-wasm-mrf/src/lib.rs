@@ -32,7 +32,7 @@ use triomphe::Arc;
 use walkdir::WalkDir;
 use wasmtime::{
     Config, Engine, InstanceAllocationStrategy, Store,
-    component::{Component, Linker},
+    component::{Component, HasSelf, Linker},
 };
 
 mod cache;
@@ -148,17 +148,19 @@ impl MrfService {
     ) -> eyre::Result<Self> {
         let mut linker = Linker::<Context>::new(&engine);
 
-        self::mrf_wit::v1::Mrf::add_to_linker(&mut linker, |ctx| ctx).map_err(eyre::Report::msg)?;
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(eyre::Report::msg)?;
+        self::mrf_wit::v1::Mrf::add_to_linker::<_, HasSelf<_>>(&mut linker, |ctx| ctx)
+            .map_err(eyre::Report::msg)?;
 
-        Ok(__MrfService__Inner {
-            engine,
-            http_client,
-            linker: Arc::new(linker),
-            modules: modules.into(),
-            storage: Arc::new(storage),
-        }
-        .into())
+        let this = Self::builder()
+            .engine(engine)
+            .http_client(http_client)
+            .linker(Arc::new(linker))
+            .modules(modules.into())
+            .storage(Arc::new(storage))
+            .build();
+
+        Ok(this)
     }
 
     #[cfg_attr(not(coverage), instrument(skip_all, fields(module_dir = %config.module_dir)))]
@@ -208,7 +210,7 @@ impl MrfService {
         let engine = Engine::new(&engine_config).map_err(eyre::Report::msg)?;
 
         let wasm_modules = find_mrf_modules(config.module_dir.as_str()).await?;
-        let mut wasm_data_stream = stream::iter(wasm_modules).map(|(module_path, wasm_data)| {
+        let wasm_data_stream = stream::iter(wasm_modules).map(|(module_path, wasm_data)| {
             let cache = cache.as_ref();
             let engine = &engine;
 
