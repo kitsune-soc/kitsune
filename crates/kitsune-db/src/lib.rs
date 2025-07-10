@@ -20,7 +20,6 @@ mod error;
 mod pool;
 mod tls;
 
-pub mod activity;
 pub mod function;
 pub mod json;
 pub mod lang;
@@ -28,6 +27,7 @@ pub mod model;
 pub mod post_permission_check;
 #[allow(clippy::wildcard_imports)]
 pub mod schema;
+pub mod types;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -58,8 +58,7 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
     let pool = Pool::builder()
         .max_size(config.max_connections)
         .build(pool_config)
-        .await
-        .unwrap();
+        .await?;
 
     {
         let mut conn = pool.get().await?;

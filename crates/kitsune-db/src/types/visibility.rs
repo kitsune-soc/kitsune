@@ -1,15 +1,12 @@
-use super::account::Account;
-use crate::{error::EnumConversionError, lang::LanguageIsoCode, schema::posts};
+use crate::{error::EnumConversionError, model::all::AccountsActivitypub};
 use diesel::{
-    AsChangeset, AsExpression, Associations, FromSqlRow, Identifiable, Insertable, Queryable,
-    Selectable,
+    AsExpression, FromSqlRow,
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
 };
-use iso8601_timestamp::Timestamp;
 use kitsune_type::{
     ap::{Privacy, helper::CcTo},
     mastodon::status::Visibility as MastodonVisibility,
@@ -17,94 +14,6 @@ use kitsune_type::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use speedy_uuid::Uuid;
-
-#[derive(
-    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
-)]
-#[diesel(belongs_to(Account), table_name = posts)]
-pub struct Post {
-    pub id: Uuid,
-    pub account_id: Uuid,
-    pub in_reply_to_id: Option<Uuid>,
-    pub reposted_post_id: Option<Uuid>,
-    pub is_sensitive: bool,
-    pub subject: Option<String>,
-    pub content: String,
-    pub content_source: String,
-    pub content_lang: LanguageIsoCode,
-    pub link_preview_url: Option<String>,
-    pub visibility: Visibility,
-    pub is_local: bool,
-    pub url: String,
-    pub created_at: Timestamp,
-    pub updated_at: Timestamp,
-}
-
-#[derive(Clone, Deserialize, Queryable, Selectable, Serialize)]
-#[diesel(table_name = posts)]
-pub struct PostSource {
-    pub id: Uuid,
-    pub subject: Option<String>,
-    #[diesel(column_name = content_source)]
-    pub content: String,
-}
-
-#[derive(AsChangeset)]
-#[diesel(table_name = posts)]
-pub struct PostConflictChangeset<'a> {
-    pub subject: Option<&'a str>,
-    pub content: &'a str,
-}
-
-#[derive(Clone, Insertable)]
-#[diesel(table_name = posts)]
-pub struct NewPost<'a> {
-    pub id: Uuid,
-    pub account_id: Uuid,
-    pub in_reply_to_id: Option<Uuid>,
-    pub reposted_post_id: Option<Uuid>,
-    pub is_sensitive: bool,
-    pub subject: Option<&'a str>,
-    pub content: &'a str,
-    pub content_source: &'a str,
-    pub content_lang: LanguageIsoCode,
-    pub link_preview_url: Option<&'a str>,
-    pub visibility: Visibility,
-    pub is_local: bool,
-    pub url: &'a str,
-    pub created_at: Option<Timestamp>,
-}
-
-#[derive(AsChangeset)]
-#[diesel(table_name = posts)]
-pub struct FullPostChangeset<'a> {
-    pub account_id: Uuid,
-    pub in_reply_to_id: Option<Uuid>,
-    pub reposted_post_id: Option<Uuid>,
-    pub is_sensitive: bool,
-    pub subject: Option<&'a str>,
-    pub content: &'a str,
-    pub content_source: &'a str,
-    pub content_lang: LanguageIsoCode,
-    pub link_preview_url: Option<&'a str>,
-    pub visibility: Visibility,
-    pub is_local: bool,
-    pub updated_at: Timestamp,
-}
-
-#[derive(AsChangeset)]
-#[diesel(table_name = posts)]
-pub struct PartialPostChangeset<'a> {
-    pub id: Uuid,
-    pub is_sensitive: Option<bool>,
-    pub subject: Option<&'a str>,
-    pub content: Option<&'a str>,
-    pub content_source: Option<&'a str>,
-    pub content_lang: Option<LanguageIsoCode>,
-    pub link_preview_url: Option<&'a str>,
-    pub updated_at: Timestamp,
-}
 
 #[derive(
     AsExpression,
@@ -142,14 +51,10 @@ impl Visibility {
     /// Determine the visibility for some ActivityPub object
     ///
     /// Returns none in case the account is local
-    pub fn from_activitypub<O>(owner: &Account, obj: &O) -> Option<Self>
+    pub fn from_activitypub<O>(owner: &AccountsActivitypub, obj: &O) -> Option<Self>
     where
         O: CcTo + Privacy,
     {
-        if owner.local {
-            return None;
-        }
-
         let visibility = if obj.is_public() {
             Self::Public
         } else if obj.is_unlisted() {
@@ -163,6 +68,7 @@ impl Visibility {
         } else {
             Self::MentionOnly
         };
+
         Some(visibility)
     }
 }

@@ -1,8 +1,10 @@
+#![allow(clippy::wildcard_imports)]
+
 use crate::{
     json::Json,
     lang::LanguageIsoCode,
-    model::{account::ActorType, job::JobState, post::Visibility},
     schema::*,
+    types::{ActorType, JobState, Visibility},
 };
 use diesel::{Identifiable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
