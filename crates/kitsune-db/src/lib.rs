@@ -20,7 +20,9 @@ mod error;
 mod pool;
 mod tls;
 
+pub mod changeset;
 pub mod function;
+pub mod insert;
 pub mod json;
 pub mod lang;
 pub mod model;

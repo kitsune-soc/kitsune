@@ -18,11 +18,7 @@ use kitsune_db::{
     PgPool,
     function::now,
     model::{
-        account::{Account, UpdateAccount},
-        follower::{Follow as DbFollow, NewFollow},
-        notification::NewNotification,
-        post::Post,
-        preference::Preferences,
+        Account, Follow as DbFollow, NewFollow, NewNotification, Post, Preferences, UpdateAccount,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},

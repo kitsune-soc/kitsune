@@ -1,11 +1,10 @@
 use diesel::SelectableHelper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use kitsune_db::{
-    model::{
-        account::{Account, ActorType, NewAccount},
-        user::{NewUser, User},
-    },
+    insert::{NewAccount, NewUser},
+    model::{Account, User},
     schema::{accounts, users},
+    types::AccountType,
     with_connection_panicky,
 };
 use kitsune_test::database_test;
@@ -18,7 +17,7 @@ async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<
     diesel::insert_into(accounts::table)
         .values(NewAccount {
             id: Uuid::now_v7(),
-            actor_type: ActorType::Person,
+            account_type: AccountType::Person,
             display_name: None,
             note: None,
             username,

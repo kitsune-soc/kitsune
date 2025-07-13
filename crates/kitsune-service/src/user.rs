@@ -9,12 +9,10 @@ use garde::Validate;
 use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     PgPool,
-    model::{
-        account::{ActorType, NewAccount},
-        preference::Preferences,
-        user::{NewUser, User},
-    },
+    insert::{NewAccount, NewUser},
+    model::{Preferences, User},
     schema::{accounts, accounts_preferences, users},
+    types::{AccountType, NotificationPreference},
     with_transaction,
 };
 use kitsune_derive::kitsune_service;
@@ -178,7 +176,7 @@ impl UserService {
                     note: None,
                     local: true,
                     domain: domain.as_str(),
-                    actor_type: ActorType::Person,
+                    actor_type: AccountType::Person,
                     url: url.as_str(),
                     featured_collection_url: None,
                     followers_url: None,
@@ -210,12 +208,10 @@ impl UserService {
             let preferences_fut = diesel::insert_into(accounts_preferences::table)
                 .values(Preferences {
                     account_id,
-                    notify_on_follow: true,
-                    notify_on_follow_request: true,
-                    notify_on_repost: false,
-                    notify_on_favourite: false,
-                    notify_on_mention: true,
-                    notify_on_post_update: true,
+                    notification: NotificationPreference::ON_FOLLOW
+                        | NotificationPreference::ON_FOLLOW_REQUEST
+                        | NotificationPreference::ON_MENTION
+                        | NotificationPreference::ON_POST_UPDATE,
                 })
                 .execute(tx);
 

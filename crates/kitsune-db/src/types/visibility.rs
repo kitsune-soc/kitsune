@@ -1,9 +1,8 @@
-use crate::{error::EnumConversionError, model::all::AccountsActivitypub};
+use crate::{error::EnumConversionError, model::AccountsActivitypub};
 use diesel::{
     AsExpression, FromSqlRow,
     backend::Backend,
     deserialize::{self, FromSql},
-    pg::Pg,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
 };
@@ -14,6 +13,7 @@ use kitsune_type::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
+use std::ptr;
 
 #[derive(
     AsExpression,
@@ -30,8 +30,9 @@ use serde::{Deserialize, Serialize};
     PartialOrd,
     Serialize,
 )]
-#[serde(rename_all = "camelCase")]
 #[diesel(sql_type = diesel::sql_types::Integer)]
+#[repr(i32)]
+#[serde(rename_all = "camelCase")]
 /// Post visibility
 pub enum Visibility {
     /// Post is public and can be seen and interacted with by anyone
@@ -95,21 +96,25 @@ impl From<Visibility> for MastodonVisibility {
     }
 }
 
-impl FromSql<Integer, Pg> for Visibility
+impl<Db> FromSql<Integer, Db> for Visibility
 where
-    i32: FromSql<Integer, Pg>,
+    i32: FromSql<Integer, Db>,
+    Db: Backend,
 {
-    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: <Db as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let value = i32::from_sql(bytes)?;
         Ok(Self::from_i32(value).ok_or(EnumConversionError(value))?)
     }
 }
 
-impl ToSql<Integer, Pg> for Visibility
+impl<Db> ToSql<Integer, Db> for Visibility
 where
-    i32: ToSql<Integer, Pg>,
+    i32: ToSql<Integer, Db>,
+    Db: Backend,
 {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        <i32 as ToSql<Integer, _>>::to_sql(&(*self as i32), &mut out.reborrow())
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Db>) -> serialize::Result {
+        // SAFETY: We have a `#[repr(i32)]` over the enum, so the representations are really the same
+        #[allow(unsafe_code)]
+        ToSql::to_sql(unsafe { &*ptr::from_ref(self).cast::<i32>() }, out)
     }
 }

@@ -7,6 +7,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
+bitflags.workspace = true
 blowocking.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
@@ -16,6 +17,7 @@ diesel_migrations.workspace = true
 futures-util.workspace = true
 iso8601-timestamp.workspace = true
 kitsune-config.workspace = true
+kitsune-derive.workspace = true
 kitsune-error.workspace = true
 kitsune-language.workspace = true
 kitsune-type.workspace = true

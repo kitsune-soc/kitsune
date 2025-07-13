@@ -16,14 +16,9 @@ use kitsune_config::language_detection::Configuration as LanguageDetectionConfig
 use kitsune_db::{
     PgPool,
     model::{
-        account::Account,
-        custom_emoji::PostCustomEmoji,
-        favourite::{Favourite, NewFavourite},
-        media_attachment::NewPostMediaAttachment,
-        mention::NewMention,
-        notification::{NewNotification, Notification},
-        post::{NewPost, PartialPostChangeset, Post, PostSource, Visibility},
-        user_role::Role,
+        Account, Favourite, NewFavourite, NewMention, NewNotification, NewPost,
+        NewPostMediaAttachment, Notification, PartialPostChangeset, Post, PostCustomEmoji,
+        PostSource, Role, Visibility,
     },
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{

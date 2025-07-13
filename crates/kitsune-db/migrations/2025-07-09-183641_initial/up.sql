@@ -266,12 +266,7 @@ SELECT diesel_manage_updated_at('accounts_follows');
 CREATE TABLE accounts_preferences
 (
     account_id               UUID PRIMARY KEY,
-    notify_on_follow         BOOLEAN NOT NULL,
-    notify_on_follow_request BOOLEAN NOT NULL,
-    notify_on_repost         BOOLEAN NOT NULL,
-    notify_on_post_update    BOOLEAN NOT NULL,
-    notify_on_favourite      BOOLEAN NOT NULL,
-    notify_on_mention        BOOLEAN NOT NULL
+    notification             BIGINT NOT NULL
 );
 
 -- Foreign key constraints
