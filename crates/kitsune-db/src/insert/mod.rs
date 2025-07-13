@@ -1,7 +1,7 @@
 use crate::{
     json::Json,
-    schema::{accounts, job_context, link_previews},
-    types::AccountType,
+    schema::{accounts, job_context, link_previews, users},
+    types::{AccountType, Protocol},
 };
 use diesel::prelude::Insertable;
 use iso8601_timestamp::Timestamp;
@@ -16,6 +16,7 @@ pub use self::notification::NewNotification;
 pub struct NewAccount<'a> {
     pub id: Uuid,
     pub account_type: AccountType,
+    pub protocol: Protocol,
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
     pub display_name: Option<&'a str>,
@@ -23,6 +24,7 @@ pub struct NewAccount<'a> {
     pub username: &'a str,
     pub locked: bool,
     pub local: bool,
+    pub domain: &'a str,
     pub url: &'a str,
     pub created_at: Option<Timestamp>,
 }
@@ -40,4 +42,15 @@ pub struct NewLinkPreview<'a, T> {
     pub url: &'a str,
     pub embed_data: Json<T>,
     pub expires_at: Timestamp,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = users)]
+pub struct NewUser<'a> {
+    pub id: Uuid,
+    pub oidc_id: Option<&'a str>,
+    pub username: &'a str,
+    pub email: &'a str,
+    pub password: Option<&'a str>,
+    pub confirmation_token: &'a str,
 }

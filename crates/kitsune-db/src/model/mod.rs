@@ -4,7 +4,9 @@ use crate::{
     json::Json,
     lang::LanguageIsoCode,
     schema::*,
-    types::{AccountType, JobState, NotificationPreference, NotificationType, Visibility},
+    types::{
+        AccountType, JobState, NotificationPreference, NotificationType, Protocol, Visibility,
+    },
 };
 use diesel::{Identifiable, Queryable, Selectable, prelude::Insertable};
 use iso8601_timestamp::Timestamp;
@@ -18,7 +20,7 @@ mod notification;
 pub struct Account {
     pub id: Uuid,
     pub account_type: AccountType,
-    pub protocol: i32,
+    pub protocol: Protocol,
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
     pub display_name: Option<String>,
@@ -98,7 +100,8 @@ pub struct CustomEmoji {
     pub updated_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
+#[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(primary_key(domain))]
 #[diesel(table_name = domains)]
 pub struct Domain {

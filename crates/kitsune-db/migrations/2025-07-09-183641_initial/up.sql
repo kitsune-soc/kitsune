@@ -7,7 +7,7 @@ CREATE COLLATION kitsune.ignore_accent_case (
     provider = icu,
     deterministic = false,
     locale = 'und-u-ks-level1'
-    );
+);
 
 -- This enum is automatically updated when starting Kitsune
 -- It gets all the supported ISO-639-3 codes pushed into it
@@ -59,6 +59,10 @@ ALTER TABLE users
         UNIQUE (oidc_id);
 
 ALTER TABLE users
+    ADD CONSTRAINT "uk-users-username"
+        UNIQUE (username);
+
+ALTER TABLE users
     ADD CONSTRAINT "uk-users-email"
         UNIQUE (email);
 
@@ -108,7 +112,7 @@ CREATE TABLE accounts
     id           UUID PRIMARY KEY,
 
     account_type INTEGER                                                  NOT NULL,
-    protocol     INTEGER                                                  NOT NULL,
+    protocol     BIGINT                                                   NOT NULL,
 
     avatar_id    UUID,
     header_id    UUID,
