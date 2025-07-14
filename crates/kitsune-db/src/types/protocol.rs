@@ -1,49 +1,60 @@
-use bitflags::bitflags;
 use diesel::{
     backend::Backend,
     deserialize::{FromSql, FromSqlRow},
     expression::AsExpression,
     serialize::ToSql,
-    sql_types::BigInt,
+    sql_types::Integer,
 };
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
+use std::ptr;
 
-bitflags! {
-    #[derive(AsExpression, Clone, Copy, Debug, Deserialize, Eq, FromSqlRow, Ord, PartialEq, PartialOrd, Serialize)]
-    #[diesel(sql_type = diesel::sql_types::BigInt)]
-    pub struct Protocol: i64 {
-        const ACTIVITYPUB = 1 << 0;
-        const ATPROTO = 1 << 1;
-    }
+use crate::error::EnumConversionError;
+
+#[derive(
+    AsExpression,
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    Eq,
+    FromPrimitive,
+    FromSqlRow,
+    Ord,
+    PartialEq,
+    PartialOrd,
+    Serialize,
+)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+#[repr(i32)]
+pub enum Protocol {
+    Activitypub = 0,
+    Atproto = 1,
 }
 
-impl Protocol {
-    #[must_use]
-    pub const fn supported() -> Self {
-        Self::ACTIVITYPUB
-    }
-}
-
-impl<Db> FromSql<BigInt, Db> for Protocol
+impl<Db> FromSql<Integer, Db> for Protocol
 where
-    i64: FromSql<BigInt, Db>,
+    i32: FromSql<Integer, Db>,
     Db: Backend,
 {
     fn from_sql(bytes: <Db as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let value = i64::from_sql(bytes)?;
-        Ok(Self::from_bits_truncate(value))
+        Self::from_i64(value).ok_or_else(|| EnumConversionError(value).into())
     }
 }
 
-impl<Db> ToSql<BigInt, Db> for Protocol
+impl<Db> ToSql<Integer, Db> for Protocol
 where
-    i64: ToSql<BigInt, Db>,
+    i32: ToSql<Integer, Db>,
     Db: Backend,
 {
     fn to_sql<'b>(
         &'b self,
         out: &mut diesel::serialize::Output<'b, '_, Db>,
     ) -> diesel::serialize::Result {
-        ToSql::to_sql(self.0.as_ref(), out)
+        // SAFETY: We have a `#[repr(i32)]` over the enum, so the representations are really the same
+        #[allow(unsafe_code)]
+        ToSql::to_sql(unsafe { &*ptr::from_ref(self).cast::<i32>() }, out)
     }
 }

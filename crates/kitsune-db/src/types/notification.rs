@@ -3,14 +3,14 @@ use diesel::{
     AsExpression, FromSqlRow,
     backend::Backend,
     deserialize::{self, FromSql},
-    query_builder::BindCollector,
-    serialize::{self, IsNull, Output, ToSql},
+    serialize::{self, Output, ToSql},
     sql_types::SmallInt,
 };
 use kitsune_type::mastodon::notification::NotificationType as MastodonNotification;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
+use std::ptr;
 
 #[derive(
     AsExpression,
@@ -27,6 +27,7 @@ use serde::{Deserialize, Serialize};
     Serialize,
 )]
 #[diesel(sql_type = diesel::sql_types::SmallInt)]
+#[repr(i16)]
 /// ActivityPub actor types
 pub enum NotificationType {
     /// User mentioned
@@ -92,12 +93,12 @@ where
 
 impl<Db> ToSql<SmallInt, Db> for NotificationType
 where
-    i16: for<'a> Into<<Db::BindCollector<'a> as BindCollector<'a, Db>>::Buffer>
-        + ToSql<SmallInt, Db>,
+    i16: ToSql<SmallInt, Db>,
     Db: Backend,
 {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Db>) -> serialize::Result {
-        out.set_value(*self as i16);
-        Ok(IsNull::No)
+        // SAFETY: We have a `#[repr(i16)]` over the enum, so the representations are really the same
+        #[allow(unsafe_code)]
+        ToSql::to_sql(unsafe { &*ptr::from_ref(self).cast::<i16>() }, out)
     }
 }
