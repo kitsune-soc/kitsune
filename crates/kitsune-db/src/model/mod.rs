@@ -297,7 +297,7 @@ pub struct User {
     pub updated_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
+#[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
 #[diesel(primary_key(user_id, account_id))]
 #[diesel(table_name = users_accounts)]
 pub struct UsersAccount {

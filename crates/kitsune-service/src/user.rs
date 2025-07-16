@@ -3,6 +3,7 @@ use super::{
     job::{Enqueue, JobService},
 };
 use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
+use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
 use futures_util::future::OptionFuture;
 use garde::Validate;
@@ -10,8 +11,8 @@ use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     PgPool,
     insert::{NewAccount, NewUser},
-    model::{Preferences, User},
-    schema::{accounts, accounts_preferences, users},
+    model::{Account, Preferences, User, UsersAccount},
+    schema::{accounts, accounts_preferences, users, users_accounts},
     types::{AccountType, NotificationPreference},
     with_transaction,
 };
@@ -188,13 +189,13 @@ impl UserService {
                     public_key: public_key_str.as_str(),
                     created_at: None,
                 })
-                .execute(tx);
+                .returning(Account::as_returning())
+                .get_result::<Account>(tx);
 
             let confirmation_token = generate_secret();
             let user_fut = diesel::insert_into(users::table)
                 .values(NewUser {
                     id: Uuid::now_v7(),
-                    account_id,
                     username: register.username.as_str(),
                     oidc_id: register.oidc_id.as_deref(),
                     email: register.email.as_str(),
@@ -215,7 +216,15 @@ impl UserService {
                 })
                 .execute(tx);
 
-            let (_, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
+            let (account, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
+
+            diesel::insert_into(users_accounts::table)
+                .values(&UsersAccount {
+                    user_id: user.id,
+                    account_id: account.id,
+                })
+                .execute(tx)
+                .await?;
 
             Ok::<_, Error>(user)
         })?;
