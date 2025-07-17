@@ -16,10 +16,7 @@ use diesel_async::RunQueryDsl;
 use futures_util::{StreamExt, TryStreamExt, stream::BoxStream};
 use kitsune_core::traits::Deliverer;
 use kitsune_db::{
-    PgPool,
-    json::Json,
-    model::job_context::{JobContext, NewJobContext},
-    schema::job_context,
+    PgPool, insert::NewJobContext, json::Json, model::JobContext, schema::job_context,
     with_connection,
 };
 use kitsune_email::MailingService;

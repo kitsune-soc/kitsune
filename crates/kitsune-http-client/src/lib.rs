@@ -6,8 +6,7 @@ use bytes::Buf;
 use futures_util::{Stream, StreamExt};
 use hickory_resolver::{config::ResolverConfig, name_server::TokioConnectionProvider};
 use http::HeaderValue;
-use http_body::Body as HttpBody;
-use http_body_util::{BodyExt, BodyStream, Limited};
+use http_body_util::{BodyStream, Limited};
 use hyper::{
     HeaderMap, Request, Response as HyperResponse, StatusCode, Uri, Version,
     body::Bytes,
@@ -199,7 +198,7 @@ impl ClientBuilder {
         S: Service<Request<Body>, Response = HyperResponse<B>> + Clone + Send + Sync + 'static,
         S::Error: StdError + Send + Sync + 'static,
         S::Future: Send,
-        B: HttpBody + Default + Send + Sync + 'static,
+        B: http_body::Body + Default + Send + Sync + 'static,
         B::Data: Send + Sync,
         B::Error: StdError + Send + Sync + 'static,
     {
@@ -351,6 +350,8 @@ impl Response {
     ///
     /// Reading the body from the remote failed
     pub async fn bytes(self) -> Result<Bytes> {
+        use http_body_util::BodyExt;
+
         Ok(self.inner.collect().await.map_err(Error::new)?.to_bytes())
     }
 

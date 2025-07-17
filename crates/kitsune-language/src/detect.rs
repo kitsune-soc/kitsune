@@ -12,11 +12,6 @@ pub fn detect_language(config: language_detection::Configuration, text: &str) ->
             .and_then(|info| info.is_reliable().then_some(info.lang()))
             .map_or(config.default_language, crate::map::whatlang_to_isolang),
         DetectionBackend::Whichlang => {
-            // `whichlang` currently panics if it encounters an empty string
-            if text.is_empty() {
-                return config.default_language;
-            }
-
             crate::map::whichlang_to_isolang(whichlang::detect_language(text))
         }
     }

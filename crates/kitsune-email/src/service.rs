@@ -1,7 +1,7 @@
 use crate::{MailSender, mails::confirm_account::ConfirmAccount};
 use diesel::{ExpressionMethods, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{PgPool, function::now, model::user::User, schema::users, with_connection};
+use kitsune_db::{PgPool, function::now, model::User, schema::users, with_connection};
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
 use kitsune_url::UrlService;

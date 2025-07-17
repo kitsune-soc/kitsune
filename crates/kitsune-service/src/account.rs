@@ -16,14 +16,10 @@ use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{Fetcher, Resolver, fetcher::AccountFetchOptions};
 use kitsune_db::{
     PgPool,
+    changeset::UpdateAccount,
     function::now,
-    model::{
-        account::{Account, UpdateAccount},
-        follower::{Follow as DbFollow, NewFollow},
-        notification::NewNotification,
-        post::Post,
-        preference::Preferences,
-    },
+    insert::{NewFollow, NewNotification},
+    model::{Account, Follow as DbFollow, Post, Preferences},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     with_connection,
@@ -244,8 +240,8 @@ impl AccountService {
                     .await
             })?;
 
-            if (preferences.notify_on_follow && !account.locked)
-                || (preferences.notify_on_follow_request && account.locked)
+            if (preferences.notify.on_follow && !account.locked)
+                || (preferences.notify.on_follow_request && account.locked)
             {
                 let notification = if account.locked {
                     NewNotification::builder()

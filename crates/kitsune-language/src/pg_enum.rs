@@ -1,4 +1,4 @@
-use crate::supported_languages;
+use crate::{consts::DB_ENUM_NAME, supported_languages};
 use diesel::{QueryResult, QueryableByName, pg::Pg, row::NamedRow};
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use std::fmt::Write;
@@ -16,12 +16,12 @@ impl QueryableByName<Pg> for CountResult {
 }
 
 /// Generate a PostgreSQL enum definition of all supported ISO language codes
-pub async fn generate_postgres_enum<C>(conn: &mut C, enum_name: &str) -> QueryResult<()>
+pub async fn generate_postgres_enum<C>(conn: &mut C) -> QueryResult<()>
 where
     C: AsyncConnection<Backend = Pg>,
 {
     let language_count: CountResult = diesel::sql_query(format!(
-        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{enum_name}));"
+        "SELECT COUNT(1) AS count FROM UNNEST(ENUM_RANGE(NULL::{DB_ENUM_NAME}));"
     ))
     .get_result(conn)
     .await?;
@@ -35,7 +35,7 @@ where
     let queries = supported_languages().fold(String::new(), |mut out, lang| {
         write!(
             out,
-            "ALTER TYPE {enum_name} ADD VALUE IF NOT EXISTS '{}';",
+            "ALTER TYPE {DB_ENUM_NAME} ADD VALUE IF NOT EXISTS '{}';",
             lang.to_639_3()
         )
         .unwrap();

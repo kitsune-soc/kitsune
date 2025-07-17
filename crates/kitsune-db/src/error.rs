@@ -2,9 +2,12 @@ use core::fmt;
 use std::error::Error as StdError;
 
 #[derive(Debug)]
-pub struct EnumConversionError(pub i32);
+pub struct EnumConversionError<T>(pub T);
 
-impl fmt::Display for EnumConversionError {
+impl<T> fmt::Display for EnumConversionError<T>
+where
+    T: fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -14,7 +17,7 @@ impl fmt::Display for EnumConversionError {
     }
 }
 
-impl StdError for EnumConversionError {}
+impl<T> StdError for EnumConversionError<T> where T: fmt::Debug + fmt::Display {}
 
 #[derive(Debug)]
 pub struct IsoCodeConversionError(pub String);

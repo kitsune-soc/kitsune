@@ -7,10 +7,8 @@ use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
-    PgPool,
-    model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
-    schema::media_attachments,
-    with_connection,
+    PgPool, changeset::UpdateMediaAttachment, insert::NewMediaAttachment, model::MediaAttachment,
+    schema::media_attachments, with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
@@ -215,7 +213,6 @@ impl AttachmentService {
                     content_type: upload.content_type.as_str(),
                     account_id: upload.account_id,
                     description: upload.description.as_deref(),
-                    blurhash: None,
                     file_path: Some(upload.path.as_str()),
                     remote_url: None,
                 })

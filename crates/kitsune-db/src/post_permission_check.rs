@@ -1,6 +1,6 @@
 use crate::{
-    model::post::Visibility,
     schema::{accounts_follows, posts, posts_mentions},
+    types::Visibility,
 };
 use diesel::{
     BoolExpressionMethods, BoxableExpression, ExpressionMethods,

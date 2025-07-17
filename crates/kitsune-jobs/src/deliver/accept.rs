@@ -2,7 +2,7 @@ use crate::{JobRunnerContext, Runnable};
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
-use kitsune_db::{model::follower::Follow, schema::accounts_follows, with_connection};
+use kitsune_db::{model::Follow, schema::accounts_follows, with_connection};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 

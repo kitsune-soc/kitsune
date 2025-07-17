@@ -1,6 +1,6 @@
 use super::{Resolver, coerce::CoerceResolver};
 use async_trait::async_trait;
-use kitsune_db::model::{account::Account, custom_emoji::CustomEmoji, post::Post};
+use kitsune_db::model::{Account, CustomEmoji, Post};
 use kitsune_error::Result;
 use triomphe::Arc;
 use typed_builder::TypedBuilder;

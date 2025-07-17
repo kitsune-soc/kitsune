@@ -1,11 +1,11 @@
 use diesel::SelectableHelper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::{
-        account::{Account, ActorType, NewAccount},
-        user::{NewUser, User},
-    },
-    schema::{accounts, users},
+    insert::{NewAccount, NewUser},
+    model::{Account, Domain, User},
+    schema::{accounts, domains, users},
+    types::AccountType,
     with_connection_panicky,
 };
 use kitsune_test::database_test;
@@ -15,10 +15,26 @@ use std::error::Error;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<Account> {
+    diesel::insert_into(domains::table)
+        .values(&Domain {
+            domain: "kitsune.example".into(),
+            owner_id: None,
+            challenge_value: None,
+            globally_available: false,
+            verified_at: Some(Timestamp::now_utc()),
+            created_at: Timestamp::now_utc(),
+            updated_at: Timestamp::now_utc(),
+        })
+        .on_conflict_do_nothing()
+        .execute(conn)
+        .await?;
+
     diesel::insert_into(accounts::table)
         .values(NewAccount {
             id: Uuid::now_v7(),
-            actor_type: ActorType::Person,
+            account_type: AccountType::Person,
+            avatar_id: None,
+            header_id: None,
             display_name: None,
             note: None,
             username,
@@ -26,14 +42,6 @@ async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<
             local: true,
             domain: "kitsune.example",
             url: format!("https://kitsune.example/users/{username}").as_str(),
-            featured_collection_url: None,
-            followers_url: None,
-            following_url: None,
-            inbox_url: None,
-            outbox_url: None,
-            shared_inbox_url: None,
-            public_key: "---WHATEVER---",
-            public_key_id: format!("can we abandon rsa already? ({username}'s key)").as_str(),
             created_at: None,
         })
         .returning(Account::as_returning())
@@ -43,18 +51,13 @@ async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<
 }
 
 async fn create_user(conn: &mut AsyncPgConnection, username: &str) -> Result<User> {
-    let account = create_account(conn, Uuid::now_v7().to_string().as_str()).await?;
-
     diesel::insert_into(users::table)
         .values(NewUser {
             id: Uuid::now_v7(),
-            account_id: account.id,
             oidc_id: None,
             username,
             email: format!("{username}@kitsune.example").as_str(),
             password: None,
-            domain: "kitsune.example",
-            private_key: "---WHATEVER---",
             confirmation_token: Uuid::now_v7().to_string().as_str(),
         })
         .returning(User::as_returning())
@@ -68,19 +71,19 @@ async fn accounts_username() {
     database_test(async |db_pool| {
         with_connection_panicky!(db_pool, |conn| {
             let initial_insert = create_account(conn, "aumetra").await;
-            assert!(initial_insert.is_ok());
+            initial_insert.unwrap();
 
             let case_mutation = create_account(conn, "AuMeTrA").await;
-            assert!(case_mutation.is_err());
+            case_mutation.unwrap_err();
 
             let unicode_mutation_1 = create_account(conn, "äumeträ").await;
-            assert!(unicode_mutation_1.is_err());
+            unicode_mutation_1.unwrap_err();
 
             let unicode_mutation_2 = create_account(conn, "🅰umetr🅰").await;
-            assert!(unicode_mutation_2.is_err());
+            unicode_mutation_2.unwrap_err();
 
             let unicode_case_mutation = create_account(conn, "🅰UMETR🅰").await;
-            assert!(unicode_case_mutation.is_err());
+            unicode_case_mutation.unwrap_err();
         });
     })
     .await;
@@ -91,19 +94,19 @@ async fn users_username() {
     database_test(async |db_pool| {
         with_connection_panicky!(db_pool, |conn| {
             let initial_insert = create_user(conn, "aumetra").await;
-            assert!(initial_insert.is_ok());
+            initial_insert.unwrap();
 
             let case_mutation = create_user(conn, "AuMeTrA").await;
-            assert!(case_mutation.is_err());
+            case_mutation.unwrap_err();
 
             let unicode_mutation_1 = create_user(conn, "äumeträ").await;
-            assert!(unicode_mutation_1.is_err());
+            unicode_mutation_1.unwrap_err();
 
             let unicode_mutation_2 = create_user(conn, "🅰umetr🅰").await;
-            assert!(unicode_mutation_2.is_err());
+            unicode_mutation_2.unwrap_err();
 
             let unicode_case_mutation = create_user(conn, "🅰UMETR🅰").await;
-            assert!(unicode_case_mutation.is_err());
+            unicode_case_mutation.unwrap_err();
         });
     })
     .await;
