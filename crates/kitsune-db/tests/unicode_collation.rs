@@ -33,7 +33,7 @@ async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<
         .values(NewAccount {
             id: Uuid::now_v7(),
             account_type: AccountType::Person,
-            protocol: Protocol::supported(),
+            protocol: Protocol::Activitypub,
             avatar_id: None,
             header_id: None,
             display_name: None,

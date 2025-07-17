@@ -87,7 +87,7 @@ where
 {
     fn from_sql(bytes: <Db as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let value = i16::from_sql(bytes)?;
-        Ok(Self::from_i16(value).ok_or(EnumConversionError(value.into()))?)
+        Ok(Self::from_i16(value).ok_or(EnumConversionError(value))?)
     }
 }
 

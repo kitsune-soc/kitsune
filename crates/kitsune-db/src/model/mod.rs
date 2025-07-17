@@ -74,6 +74,7 @@ pub struct Follow {
 #[diesel(table_name = accounts_preferences)]
 pub struct Preferences {
     pub account_id: Uuid,
+    #[diesel(embed)]
     pub notification: NotificationPreference,
 }
 
@@ -87,7 +88,7 @@ pub struct CryptographicKey {
     pub created_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
+#[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
 #[diesel(table_name = custom_emojis)]
 pub struct CustomEmoji {
     pub id: Uuid,

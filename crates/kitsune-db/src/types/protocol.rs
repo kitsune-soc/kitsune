@@ -39,8 +39,8 @@ where
     Db: Backend,
 {
     fn from_sql(bytes: <Db as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        let value = i64::from_sql(bytes)?;
-        Self::from_i64(value).ok_or_else(|| EnumConversionError(value).into())
+        let value = i32::from_sql(bytes)?;
+        Self::from_i32(value).ok_or_else(|| EnumConversionError(value).into())
     }
 }
 
