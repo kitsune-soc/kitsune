@@ -5,7 +5,7 @@ use kitsune_db::{
     insert::{NewAccount, NewUser},
     model::{Account, Domain, User},
     schema::{accounts, domains, users},
-    types::{AccountType, Protocol},
+    types::AccountType,
     with_connection_panicky,
 };
 use kitsune_test::database_test;
@@ -33,7 +33,6 @@ async fn create_account(conn: &mut AsyncPgConnection, username: &str) -> Result<
         .values(NewAccount {
             id: Uuid::now_v7(),
             account_type: AccountType::Person,
-            protocol: Protocol::Activitypub,
             avatar_id: None,
             header_id: None,
             display_name: None,

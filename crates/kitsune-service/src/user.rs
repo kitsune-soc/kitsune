@@ -10,9 +10,12 @@ use garde::Validate;
 use kitsune_captcha::ChallengeStatus;
 use kitsune_db::{
     PgPool,
-    insert::{NewAccount, NewUser},
-    model::{Account, Preferences, User, UsersAccount},
-    schema::{accounts, accounts_preferences, users, users_accounts},
+    insert::{NewAccount, NewCryptographicKey, NewUser},
+    model::{Account, AccountsCryptographicKey, CryptographicKey, Preferences, User, UsersAccount},
+    schema::{
+        accounts, accounts_cryptographic_keys, accounts_preferences, cryptographic_keys, users,
+        users_accounts,
+    },
     types::{AccountType, NotifyPreference},
     with_transaction,
 };
@@ -23,7 +26,7 @@ use kitsune_url::UrlService;
 use kitsune_util::{generate_secret, try_join};
 use rsa::{
     RsaPrivateKey,
-    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
+    pkcs8::{EncodePrivateKey, EncodePublicKey},
 };
 use speedy_uuid::Uuid;
 use std::fmt::Write;
@@ -159,8 +162,8 @@ impl UserService {
         let hashed_password = hashed_password.transpose()?.transpose()?;
 
         let private_key = private_key??;
-        let public_key_str = private_key.as_ref().to_public_key_pem(LineEnding::LF)?;
-        let private_key_str = private_key.to_pkcs8_pem(LineEnding::LF)?;
+        let private_key_der = private_key.to_pkcs8_der()?;
+        let public_key_der = private_key.as_ref().to_public_key_der()?;
 
         let account_id = Uuid::now_v7();
         let domain = self.url_service.domain().to_string();
@@ -168,25 +171,29 @@ impl UserService {
         let public_key_id = self.url_service.public_key_id(account_id);
 
         let new_user = with_transaction!(self.db_pool, |tx| {
+            let crypto_key = diesel::insert_into(cryptographic_keys::table)
+                .values(NewCryptographicKey {
+                    key_id: public_key_id.as_str(),
+                    public_key_der: public_key_der.as_bytes(),
+                    private_key_der: Some(private_key_der.as_bytes()),
+                })
+                .returning(CryptographicKey::as_returning())
+                .get_result::<CryptographicKey>(tx)
+                .await?;
+
             let account_fut = diesel::insert_into(accounts::table)
                 .values(NewAccount {
                     id: account_id,
+                    avatar_id: None,
+                    header_id: None,
                     display_name: None,
                     username: register.username.as_str(),
                     locked: false,
                     note: None,
                     local: true,
                     domain: domain.as_str(),
-                    actor_type: AccountType::Person,
+                    account_type: AccountType::Person,
                     url: url.as_str(),
-                    featured_collection_url: None,
-                    followers_url: None,
-                    following_url: None,
-                    inbox_url: None,
-                    outbox_url: None,
-                    shared_inbox_url: None,
-                    public_key_id: public_key_id.as_str(),
-                    public_key: public_key_str.as_str(),
                     created_at: None,
                 })
                 .returning(Account::as_returning())
@@ -200,8 +207,6 @@ impl UserService {
                     oidc_id: register.oidc_id.as_deref(),
                     email: register.email.as_str(),
                     password: hashed_password.as_deref(),
-                    domain: domain.as_str(),
-                    private_key: private_key_str.as_str(),
                     confirmation_token: confirmation_token.as_str(),
                 })
                 .get_result::<User>(tx);
@@ -223,13 +228,21 @@ impl UserService {
 
             let (account, user, _) = try_join!(account_fut, user_fut, preferences_fut)?;
 
-            diesel::insert_into(users_accounts::table)
-                .values(&UsersAccount {
+            let user_acc_assoc_fut = diesel::insert_into(users_accounts::table)
+                .values(UsersAccount {
                     user_id: user.id,
                     account_id: account.id,
                 })
-                .execute(tx)
-                .await?;
+                .execute(tx);
+
+            let account_key_assoc_fut = diesel::insert_into(accounts_cryptographic_keys::table)
+                .values(AccountsCryptographicKey {
+                    account_id: account.id,
+                    key_id: crypto_key.key_id,
+                })
+                .execute(tx);
+
+            try_join!(user_acc_assoc_fut, account_key_assoc_fut)?;
 
             Ok::<_, Error>(user)
         })?;

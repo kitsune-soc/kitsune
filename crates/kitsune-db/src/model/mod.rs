@@ -4,7 +4,7 @@ use crate::{
     json::Json,
     lang::LanguageIsoCode,
     schema::*,
-    types::{AccountType, JobState, NotificationType, NotifyPreference, Protocol, Visibility},
+    types::{AccountType, JobState, NotificationType, NotifyPreference, Visibility},
 };
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
@@ -18,7 +18,6 @@ mod notification;
 pub struct Account {
     pub id: Uuid,
     pub account_type: AccountType,
-    pub protocol: Protocol,
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
     pub display_name: Option<String>,
@@ -49,7 +48,15 @@ pub struct AccountsActivitypub {
 }
 
 #[derive(
-    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+    Associations,
+    Clone,
+    Debug,
+    Deserialize,
+    Identifiable,
+    Insertable,
+    Queryable,
+    Selectable,
+    Serialize,
 )]
 #[diesel(
     belongs_to(Account),

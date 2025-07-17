@@ -2,9 +2,10 @@ use crate::{
     json::Json,
     lang::LanguageIsoCode,
     schema::{
-        accounts, accounts_follows, job_context, link_previews, media_attachments, posts, users,
+        accounts, accounts_follows, cryptographic_keys, job_context, link_previews,
+        media_attachments, posts, users,
     },
-    types::{AccountType, Protocol, Visibility},
+    types::{AccountType, Visibility},
 };
 use diesel::prelude::Insertable;
 use iso8601_timestamp::Timestamp;
@@ -19,7 +20,6 @@ pub use self::notification::NewNotification;
 pub struct NewAccount<'a> {
     pub id: Uuid,
     pub account_type: AccountType,
-    pub protocol: Protocol,
     pub avatar_id: Option<Uuid>,
     pub header_id: Option<Uuid>,
     pub display_name: Option<&'a str>,
@@ -30,6 +30,14 @@ pub struct NewAccount<'a> {
     pub domain: &'a str,
     pub url: &'a str,
     pub created_at: Option<Timestamp>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = cryptographic_keys)]
+pub struct NewCryptographicKey<'a> {
+    pub key_id: &'a str,
+    pub public_key_der: &'a [u8],
+    pub private_key_der: Option<&'a [u8]>,
 }
 
 #[derive(Insertable)]

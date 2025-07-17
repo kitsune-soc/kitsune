@@ -112,7 +112,6 @@ CREATE TABLE accounts
     id           UUID PRIMARY KEY,
 
     account_type INTEGER                                                  NOT NULL,
-    protocol     INTEGER                                                  NOT NULL,
 
     avatar_id    UUID,
     header_id    UUID,
