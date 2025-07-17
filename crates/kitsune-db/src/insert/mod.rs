@@ -1,6 +1,6 @@
 use crate::{
     json::Json,
-    schema::{accounts, job_context, link_previews, users},
+    schema::{accounts, job_context, link_previews, media_attachments, users},
     types::{AccountType, Protocol},
 };
 use diesel::prelude::Insertable;
@@ -42,6 +42,17 @@ pub struct NewLinkPreview<'a, T> {
     pub url: &'a str,
     pub embed_data: Json<T>,
     pub expires_at: Timestamp,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = media_attachments)]
+pub struct NewMediaAttachment<'a> {
+    pub id: Uuid,
+    pub content_type: &'a str,
+    pub account_id: Option<Uuid>,
+    pub description: Option<&'a str>,
+    pub file_path: Option<&'a str>,
+    pub remote_url: Option<&'a str>,
 }
 
 #[derive(Insertable)]

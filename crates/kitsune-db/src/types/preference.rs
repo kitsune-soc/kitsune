@@ -1,5 +1,5 @@
 use crate::schema::accounts_preferences;
-use diesel::{Selectable, prelude::Insertable};
+use diesel::{Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
 #[derive(
@@ -12,12 +12,13 @@ use serde::{Deserialize, Serialize};
     Ord,
     PartialEq,
     PartialOrd,
+    Queryable,
     Selectable,
     Serialize,
 )]
-#[diesel(table_name = accounts_preferences)]
+#[diesel(check_for_backend(diesel::pg::Pg), table_name = accounts_preferences)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct NotificationPreference {
+pub struct NotifyPreference {
     #[diesel(column_name = "notify_on_follow")]
     pub on_follow: bool,
     #[diesel(column_name = "notify_on_follow_request")]

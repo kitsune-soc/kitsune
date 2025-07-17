@@ -13,7 +13,7 @@ use kitsune_db::{
     insert::{NewAccount, NewUser},
     model::{Account, Preferences, User, UsersAccount},
     schema::{accounts, accounts_preferences, users, users_accounts},
-    types::{AccountType, NotificationPreference},
+    types::{AccountType, NotifyPreference},
     with_transaction,
 };
 use kitsune_derive::kitsune_service;
@@ -209,10 +209,15 @@ impl UserService {
             let preferences_fut = diesel::insert_into(accounts_preferences::table)
                 .values(Preferences {
                     account_id,
-                    notification: NotificationPreference::ON_FOLLOW
-                        | NotificationPreference::ON_FOLLOW_REQUEST
-                        | NotificationPreference::ON_MENTION
-                        | NotificationPreference::ON_POST_UPDATE,
+
+                    notify: NotifyPreference {
+                        on_follow: true,
+                        on_follow_request: true,
+                        on_mention: true,
+                        on_post_update: true,
+                        on_favourite: true,
+                        on_repost: true,
+                    },
                 })
                 .execute(tx);
 

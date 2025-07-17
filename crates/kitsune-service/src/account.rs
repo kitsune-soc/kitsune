@@ -240,8 +240,8 @@ impl AccountService {
                     .await
             })?;
 
-            if (preferences.notify_on_follow && !account.locked)
-                || (preferences.notify_on_follow_request && account.locked)
+            if (preferences.notify.on_follow && !account.locked)
+                || (preferences.notify.on_follow_request && account.locked)
             {
                 let notification = if account.locked {
                     NewNotification::builder()

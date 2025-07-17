@@ -4,9 +4,7 @@ use crate::{
     json::Json,
     lang::LanguageIsoCode,
     schema::*,
-    types::{
-        AccountType, JobState, NotificationPreference, NotificationType, Protocol, Visibility,
-    },
+    types::{AccountType, JobState, NotificationType, NotifyPreference, Protocol, Visibility},
 };
 use diesel::{Identifiable, Queryable, Selectable, prelude::Insertable};
 use iso8601_timestamp::Timestamp;
@@ -70,12 +68,12 @@ pub struct Follow {
 }
 
 #[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
-#[diesel(primary_key(account_id))]
+#[diesel(check_for_backend(diesel::pg::Pg), primary_key(account_id))]
 #[diesel(table_name = accounts_preferences)]
 pub struct Preferences {
     pub account_id: Uuid,
     #[diesel(embed)]
-    pub notification: NotificationPreference,
+    pub notify: NotifyPreference,
 }
 
 #[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
