@@ -1,7 +1,10 @@
 use crate::{
     json::Json,
-    schema::{accounts, job_context, link_previews, media_attachments, users},
-    types::{AccountType, Protocol},
+    lang::LanguageIsoCode,
+    schema::{
+        accounts, accounts_follows, job_context, link_previews, media_attachments, posts, users,
+    },
+    types::{AccountType, Protocol, Visibility},
 };
 use diesel::prelude::Insertable;
 use iso8601_timestamp::Timestamp;
@@ -30,6 +33,18 @@ pub struct NewAccount<'a> {
 }
 
 #[derive(Insertable)]
+#[diesel(table_name = accounts_follows)]
+pub struct NewFollow<'a> {
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub follower_id: Uuid,
+    pub approved_at: Option<Timestamp>,
+    pub url: &'a str,
+    pub notify: bool,
+    pub created_at: Option<Timestamp>,
+}
+
+#[derive(Insertable)]
 #[diesel(table_name = job_context)]
 pub struct NewJobContext<T> {
     pub id: Uuid,
@@ -53,6 +68,24 @@ pub struct NewMediaAttachment<'a> {
     pub description: Option<&'a str>,
     pub file_path: Option<&'a str>,
     pub remote_url: Option<&'a str>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = posts)]
+pub struct NewPost<'a> {
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub in_reply_to_id: Option<Uuid>,
+    pub reposted_post_id: Option<Uuid>,
+    pub subject: Option<&'a str>,
+    pub content: &'a str,
+    pub content_source: &'a str,
+    pub content_lang: LanguageIsoCode,
+    pub link_preview_url: Option<&'a str>,
+    pub visibility: Visibility,
+    pub is_local: bool,
+    pub url: &'a str,
+    pub created_at: Option<Timestamp>,
 }
 
 #[derive(Insertable)]

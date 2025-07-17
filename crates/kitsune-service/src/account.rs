@@ -16,10 +16,10 @@ use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{Fetcher, Resolver, fetcher::AccountFetchOptions};
 use kitsune_db::{
     PgPool,
+    changeset::UpdateAccount,
     function::now,
-    model::{
-        Account, Follow as DbFollow, NewFollow, NewNotification, Post, Preferences, UpdateAccount,
-    },
+    insert::{NewFollow, NewNotification},
+    model::{Account, Follow as DbFollow, Post, Preferences},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
     with_connection,

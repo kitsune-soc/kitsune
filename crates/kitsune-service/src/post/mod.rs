@@ -15,17 +15,16 @@ use iso8601_timestamp::Timestamp;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_db::{
     PgPool,
-    model::{
-        Account, Favourite, NewFavourite, NewMention, NewNotification, NewPost,
-        NewPostMediaAttachment, Notification, PartialPostChangeset, Post, PostCustomEmoji,
-        PostSource, Role, Visibility,
-    },
+    changeset::PartialPostChangeset,
+    insert::{NewFavourite, NewMention, NewNotification, NewPost, NewPostMediaAttachment},
+    model::{Account, Favourite, Notification, Post, PostSource, PostsCustomEmoji, Role},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
         accounts, accounts_preferences, media_attachments, notifications, posts,
         posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
         users_roles,
     },
+    types::Visibility,
     with_connection, with_transaction,
 };
 use kitsune_derive::kitsune_service;
@@ -408,12 +407,12 @@ impl PostService {
             .values(
                 custom_emojis
                     .iter()
-                    .map(|(emoji_id, emoji_text)| PostCustomEmoji {
+                    .map(|(emoji_id, emoji_text)| PostsCustomEmoji {
                         post_id,
                         custom_emoji_id: *emoji_id,
                         emoji_text: emoji_text.to_string(),
                     })
-                    .collect::<Vec<PostCustomEmoji>>(),
+                    .collect::<Vec<PostsCustomEmoji>>(),
             )
             .on_conflict_do_nothing()
             .execute(conn)
@@ -495,7 +494,6 @@ impl PostService {
                     content_source: content_source.as_str(),
                     content_lang: content_lang.into(),
                     link_preview_url: link_preview_url.as_deref(),
-                    is_sensitive: create_post.sensitive,
                     visibility: create_post.visibility,
                     is_local: true,
                     url: url.as_str(),
@@ -626,7 +624,6 @@ impl PostService {
                     content_source: update_post.content.as_deref(),
                     content_lang: content_lang.map(Into::into),
                     link_preview_url: link_preview_url.as_deref(),
-                    is_sensitive: update_post.sensitive,
                     updated_at: Timestamp::now_utc(),
                 })
                 .returning(Post::as_returning())
@@ -713,7 +710,6 @@ impl PostService {
                     content_source: "",
                     content_lang: post.content_lang,
                     link_preview_url: None,
-                    is_sensitive: post.is_sensitive,
                     visibility: repost_post.visibility,
                     is_local: true,
                     url: url.as_str(),

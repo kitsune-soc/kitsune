@@ -6,7 +6,7 @@ use crate::{
     schema::*,
     types::{AccountType, JobState, NotificationType, NotifyPreference, Protocol, Visibility},
 };
-use diesel::{Identifiable, Queryable, Selectable, prelude::Insertable};
+use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
@@ -32,8 +32,10 @@ pub struct Account {
     pub updated_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(primary_key(account_id))]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
+#[diesel(belongs_to(Account), primary_key(account_id))]
 #[diesel(table_name = accounts_activitypub)]
 pub struct AccountsActivitypub {
     pub account_id: Uuid,
@@ -46,8 +48,14 @@ pub struct AccountsActivitypub {
     pub key_id: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(primary_key(account_id, key_id))]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
+#[diesel(
+    belongs_to(Account),
+    belongs_to(CryptographicKey, foreign_key = key_id),
+    primary_key(account_id, key_id)
+)]
 #[diesel(table_name = accounts_cryptographic_keys)]
 pub struct AccountsCryptographicKey {
     pub account_id: Uuid,
@@ -67,8 +75,22 @@ pub struct Follow {
     pub updated_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
-#[diesel(check_for_backend(diesel::pg::Pg), primary_key(account_id))]
+#[derive(
+    Associations,
+    Clone,
+    Debug,
+    Deserialize,
+    Identifiable,
+    Insertable,
+    Queryable,
+    Selectable,
+    Serialize,
+)]
+#[diesel(
+    belongs_to(Account),
+    check_for_backend(diesel::pg::Pg),
+    primary_key(account_id)
+)]
 #[diesel(table_name = accounts_preferences)]
 pub struct Preferences {
     pub account_id: Uuid,
@@ -99,9 +121,19 @@ pub struct CustomEmoji {
     pub updated_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Insertable, Queryable, Selectable, Serialize)]
+#[derive(
+    Associations,
+    Clone,
+    Debug,
+    Deserialize,
+    Identifiable,
+    Insertable,
+    Queryable,
+    Selectable,
+    Serialize,
+)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(primary_key(domain))]
+#[diesel(belongs_to(User, foreign_key = owner_id), primary_key(domain))]
 #[diesel(table_name = domains)]
 pub struct Domain {
     pub domain: String,
@@ -146,7 +178,7 @@ pub struct LinkPreview<T> {
 }
 
 #[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(table_name = media_attachments)]
+#[diesel(belongs_to(Account), table_name = media_attachments)]
 pub struct MediaAttachment {
     pub id: Uuid,
     pub account_id: Option<Uuid>,
@@ -217,8 +249,10 @@ pub struct Oauth2RefreshToken {
     pub created_at: Timestamp,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(table_name = posts)]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
+#[diesel(belongs_to(Account), table_name = posts)]
 pub struct Post {
     pub id: Uuid,
     pub account_id: Uuid,
@@ -237,7 +271,26 @@ pub struct Post {
 }
 
 #[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(primary_key(post_id, custom_emoji_id))]
+#[diesel(table_name = posts)]
+pub struct PostSource {
+    pub id: Uuid,
+    pub subject: Option<String>,
+    #[diesel(column_name = content_source)]
+    pub content: String,
+}
+
+#[derive(
+    Associations,
+    Clone,
+    Debug,
+    Deserialize,
+    Identifiable,
+    Insertable,
+    Queryable,
+    Selectable,
+    Serialize,
+)]
+#[diesel(belongs_to(Post), primary_key(post_id, custom_emoji_id))]
 #[diesel(table_name = posts_custom_emojis)]
 pub struct PostsCustomEmoji {
     pub post_id: Uuid,
@@ -245,8 +298,10 @@ pub struct PostsCustomEmoji {
     pub emoji_text: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(table_name = posts_favourites)]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
+#[diesel(belongs_to(Post), table_name = posts_favourites)]
 pub struct Favourite {
     pub id: Uuid,
     pub account_id: Uuid,
@@ -263,8 +318,14 @@ pub struct PostsMediaAttachment {
     pub media_attachment_id: Uuid,
 }
 
-#[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(primary_key(post_id, account_id))]
+#[derive(
+    Associations, Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize,
+)]
+#[diesel(
+    belongs_to(Account),
+    belongs_to(Post),
+    primary_key(post_id, account_id)
+)]
 #[diesel(table_name = posts_mentions)]
 pub struct PostsMention {
     pub post_id: Uuid,
