@@ -361,7 +361,7 @@ uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
 wasm-encoder = "0.235.0"
 wasmparser = "0.235.0"
-wasmtime = { version = "34.0.1", default-features = false, features = [
+wasmtime = { version = "34.0.2", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
