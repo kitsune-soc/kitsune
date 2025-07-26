@@ -371,7 +371,7 @@ wasmtime = { version = "34.0.2", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "34.0.1", default-features = false }
+wasmtime-wasi = { version = "34.0.2", default-features = false }
 wat = "1.235.0"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
