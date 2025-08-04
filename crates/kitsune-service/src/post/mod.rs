@@ -17,11 +17,11 @@ use kitsune_db::{
     PgPool,
     changeset::PartialPostChangeset,
     insert::{NewFavourite, NewMention, NewNotification, NewPost, NewPostMediaAttachment},
-    model::{Account, Favourite, Notification, Post, PostSource, PostsCustomEmoji, Role},
+    model::{Account, Favourite, Notification, Post, PostSource, PostsCustomEmoji},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
         accounts, accounts_preferences, media_attachments, notifications, posts,
-        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
+        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions, roles,
         users_roles,
     },
     types::Visibility,
@@ -803,7 +803,7 @@ impl PostService {
                     id,
                     account_id: favouriting_account_id,
                     post_id: post.id,
-                    url,
+                    url: &url,
                     created_at: None,
                 })
                 .returning(posts_favourites::id)
@@ -1113,10 +1113,11 @@ impl PostService {
             if let Some(user_id) = user_id {
                 let admin_role_count = with_connection!(self.db_pool, |db_conn| {
                     users_roles::table
+                        .inner_join(roles::table)
                         .filter(
                             users_roles::user_id
                                 .eq(user_id)
-                                .and(users_roles::role.eq(Role::Administrator)),
+                                .and(roles::name.eq("Administrator")),
                         )
                         .count()
                         .get_result::<i64>(db_conn)

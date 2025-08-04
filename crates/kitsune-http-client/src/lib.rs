@@ -295,10 +295,10 @@ impl Client {
         &self,
         req: Request<Body>,
         key_id: &str,
-        private_key_pem: &str,
+        private_key_der: &[u8],
     ) -> Result<Response> {
         let req =
-            http_signatures::cavage::easy::sign(self.prepare_request(req), key_id, private_key_pem)
+            http_signatures::cavage::easy::sign(self.prepare_request(req), key_id, private_key_der)
                 .await
                 .map_err(Error::new)?;
 

@@ -5,7 +5,7 @@
 use super::SigningKey as SigningKeyTrait;
 use const_oid::db::{rfc5912::RSA_ENCRYPTION, rfc8410::ID_ED_25519};
 use miette::Diagnostic;
-use pkcs8::{Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef};
+use pkcs8::{DecodePrivateKey, Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef};
 use ring::signature::{
     ED25519, Ed25519KeyPair, RSA_PKCS1_2048_8192_SHA256, RsaKeyPair, UnparsedPublicKey,
     VerificationAlgorithm,
@@ -95,8 +95,8 @@ impl SigningKeyTrait for SigningKey {
 /// - RSA
 /// - Ed25519
 #[inline]
-pub fn private_key(pem: &str) -> Result<SigningKey, Error> {
-    let (_tag_line, document) = SecretDocument::from_pem(pem)?;
+pub fn private_key(der: &[u8]) -> Result<SigningKey, Error> {
+    let document = SecretDocument::from_pkcs8_der(der)?;
     let private_key_raw: PrivateKeyInfo<'_> = document.decode_msg()?;
 
     let signing_key = if private_key_raw.algorithm.oid == RSA_ENCRYPTION {

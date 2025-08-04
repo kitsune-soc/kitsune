@@ -3,7 +3,7 @@ use crate::{ProcessNewObject, process_new_object};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_cache::CacheBackend;
-use kitsune_db::{model::post::Post, schema::posts, with_connection};
+use kitsune_db::{model::Post, schema::posts, with_connection};
 use kitsune_error::Result;
 
 // Maximum call depth of fetching new posts. Prevents unbounded recursion.

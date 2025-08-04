@@ -2,10 +2,11 @@ use crate::{
     json::Json,
     lang::LanguageIsoCode,
     schema::{
-        accounts, accounts_follows, cryptographic_keys, job_context, link_previews,
-        media_attachments, posts, users,
+        accounts, accounts_activitypub, accounts_cryptographic_keys, accounts_follows,
+        cryptographic_keys, job_context, jobs, link_previews, media_attachments, posts,
+        posts_favourites, posts_media_attachments, posts_mentions, users,
     },
-    types::{AccountType, Visibility},
+    types::{AccountType, JobState, Visibility},
 };
 use diesel::prelude::Insertable;
 use iso8601_timestamp::Timestamp;
@@ -50,6 +51,15 @@ pub struct NewFollow<'a> {
     pub url: &'a str,
     pub notify: bool,
     pub created_at: Option<Timestamp>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = jobs)]
+pub struct NewJob<T> {
+    pub id: Uuid,
+    pub meta: Json<T>,
+    pub state: JobState,
+    pub run_at: Timestamp,
 }
 
 #[derive(Insertable)]
@@ -105,4 +115,49 @@ pub struct NewUser<'a> {
     pub email: &'a str,
     pub password: Option<&'a str>,
     pub confirmation_token: &'a str,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = posts_favourites)]
+pub struct NewFavourite<'a> {
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub post_id: Uuid,
+    pub url: &'a str,
+    pub created_at: Option<Timestamp>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = posts_mentions)]
+pub struct NewMention<'a> {
+    pub post_id: Uuid,
+    pub account_id: Uuid,
+    pub mention_text: &'a str,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = posts_media_attachments)]
+pub struct NewPostMediaAttachment {
+    pub post_id: Uuid,
+    pub media_attachment_id: Uuid,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = accounts_activitypub)]
+pub struct NewAccountsActivitypub<'a> {
+    pub account_id: Uuid,
+    pub featured_collection_url: Option<&'a str>,
+    pub followers_url: Option<&'a str>,
+    pub following_url: Option<&'a str>,
+    pub inbox_url: Option<&'a str>,
+    pub outbox_url: Option<&'a str>,
+    pub shared_inbox_url: Option<&'a str>,
+    pub key_id: &'a str,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = accounts_cryptographic_keys)]
+pub struct NewAccountsCryptographicKey<'a> {
+    pub account_id: Uuid,
+    pub key_id: &'a str,
 }

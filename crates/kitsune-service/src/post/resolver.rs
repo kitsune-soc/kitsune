@@ -124,9 +124,8 @@ mod test {
     use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_core::traits::coerce::{CoerceFetcher, CoerceResolver};
     use kitsune_db::{
-        model::{
-            account::Account, custom_emoji::CustomEmoji, media_attachment::NewMediaAttachment,
-        },
+        insert::NewMediaAttachment,
+        model::{Account, CustomEmoji},
         schema::{accounts, custom_emojis, media_attachments},
         with_connection_panicky,
     };
@@ -231,7 +230,6 @@ mod test {
                             content_type: "image/jpeg",
                             account_id: None,
                             description: None,
-                            blurhash: None,
                             file_path: None,
                             remote_url: None,
                         })
@@ -260,7 +258,6 @@ mod test {
                             content_type: "image/jpeg",
                             account_id: None,
                             description: None,
-                            blurhash: None,
                             file_path: None,
                             remote_url: Some("https://media.example.com/emojis/blobhaj.jpeg"),
                         })

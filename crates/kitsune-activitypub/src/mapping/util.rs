@@ -1,5 +1,5 @@
 use super::State;
-use kitsune_db::model::{account::Account, post::Visibility};
+use kitsune_db::{model::Account, types::Visibility};
 use kitsune_type::ap::PUBLIC_IDENTIFIER;
 
 pub trait BaseToCc {

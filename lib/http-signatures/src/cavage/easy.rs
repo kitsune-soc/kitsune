@@ -71,7 +71,7 @@ pub enum Error {
 pub async fn sign<B>(
     mut req: http::Request<B>,
     key_id: &str,
-    key: &str,
+    key: &[u8],
 ) -> Result<http::Request<B>, Error> {
     // First, set/overwrite the `Date` header
     let date_header_value =

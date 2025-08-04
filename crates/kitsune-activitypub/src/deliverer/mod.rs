@@ -13,8 +13,8 @@ use iso8601_timestamp::Timestamp;
 use kitsune_core::traits::{Deliverer as DelivererTrait, deliverer::Action};
 use kitsune_db::{
     PgPool,
-    model::{account::Account, favourite::Favourite, follower::Follow, post::Post, user::User},
-    schema::{accounts, posts, users},
+    model::{Account, Favourite, Follow, Post, User},
+    schema::{accounts, accounts_activitypub, posts, users, users_accounts},
     with_connection,
 };
 use kitsune_error::Result;
@@ -62,12 +62,16 @@ impl Deliverer {
             with_connection!(self.db_pool, |db_conn| {
                 let follower_inbox_url_fut = accounts::table
                     .find(follow.follower_id)
-                    .select(accounts::inbox_url.assume_not_null())
+                    .inner_join(accounts_activitypub::table)
+                    .select(accounts_activitypub::inbox_url.assume_not_null())
                     .get_result::<String>(db_conn);
 
                 let followed_info_fut = accounts::table
                     .find(follow.account_id)
-                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                    .inner_join(
+                        users_accounts::table.on(accounts::id.eq(users_accounts::account_id)),
+                    )
+                    .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(db_conn);
 
@@ -106,7 +110,8 @@ impl Deliverer {
         let (account, user) = with_connection!(self.db_pool, |db_conn| {
             accounts::table
                 .find(post.account_id)
-                .inner_join(users::table)
+                .inner_join(users_accounts::table.on(accounts::id.eq(users_accounts::account_id)))
+                .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                 .select(<(Account, User)>::as_select())
                 .get_result::<(Account, User)>(db_conn)
                 .await
@@ -133,7 +138,8 @@ impl Deliverer {
         let account_user_data = with_connection!(self.db_pool, |db_conn| {
             accounts::table
                 .find(post.account_id)
-                .inner_join(users::table)
+                .inner_join(users_accounts::table.on(accounts::id.eq(users_accounts::account_id)))
+                .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                 .select(<(Account, User)>::as_select())
                 .get_result::<(Account, User)>(db_conn)
                 .await
@@ -165,14 +171,19 @@ impl Deliverer {
         let ((account, user), inbox_url) = with_connection!(self.db_pool, |db_conn| {
             let account_user_fut = accounts::table
                 .find(favourite.account_id)
-                .inner_join(users::table)
+                .inner_join(users_accounts::table.on(accounts::id.eq(users_accounts::account_id)))
+                .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                 .select(<(Account, User)>::as_select())
                 .get_result(db_conn);
 
             let inbox_url_fut = posts::table
                 .find(favourite.post_id)
-                .inner_join(accounts::table)
-                .select(accounts::inbox_url)
+                .inner_join(accounts::table.on(posts::account_id.eq(accounts::id)))
+                .inner_join(
+                    accounts_activitypub::table
+                        .on(accounts::id.eq(accounts_activitypub::account_id)),
+                )
+                .select(accounts_activitypub::inbox_url)
                 .get_result::<Option<String>>(db_conn);
 
             try_join!(account_user_fut, inbox_url_fut)
@@ -194,13 +205,20 @@ impl Deliverer {
             with_connection!(self.db_pool, |db_conn| {
                 let follower_info_fut = accounts::table
                     .find(follow.follower_id)
-                    .inner_join(users::table)
+                    .inner_join(
+                        users_accounts::table.on(accounts::id.eq(users_accounts::account_id)),
+                    )
+                    .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(db_conn);
 
                 let followed_inbox_fut = accounts::table
                     .find(follow.account_id)
-                    .select(accounts::inbox_url)
+                    .inner_join(
+                        accounts_activitypub::table
+                            .on(accounts::id.eq(accounts_activitypub::account_id)),
+                    )
+                    .select(accounts_activitypub::inbox_url)
                     .get_result::<Option<String>>(db_conn);
 
                 try_join!(follower_info_fut, followed_inbox_fut)
@@ -222,12 +240,19 @@ impl Deliverer {
             with_connection!(self.db_pool, |db_conn| {
                 let follower_inbox_url_fut = accounts::table
                     .find(follow.follower_id)
-                    .select(accounts::inbox_url.assume_not_null())
+                    .inner_join(
+                        accounts_activitypub::table
+                            .on(accounts::id.eq(accounts_activitypub::account_id)),
+                    )
+                    .select(accounts_activitypub::inbox_url.assume_not_null())
                     .get_result::<String>(db_conn);
 
                 let followed_info_fut = accounts::table
                     .find(follow.account_id)
-                    .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                    .inner_join(
+                        users_accounts::table.on(accounts::id.eq(users_accounts::account_id)),
+                    )
+                    .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(db_conn);
 
@@ -268,14 +293,19 @@ impl Deliverer {
         let ((account, user), inbox_url) = with_connection!(self.db_pool, |db_conn| {
             let account_user_fut = accounts::table
                 .find(favourite.account_id)
-                .inner_join(users::table)
+                .inner_join(users_accounts::table.on(accounts::id.eq(users_accounts::account_id)))
+                .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                 .select(<(Account, User)>::as_select())
                 .get_result(db_conn);
 
             let inbox_url_fut = posts::table
                 .find(favourite.post_id)
-                .inner_join(accounts::table)
-                .select(accounts::inbox_url)
+                .inner_join(accounts::table.on(posts::account_id.eq(accounts::id)))
+                .inner_join(
+                    accounts_activitypub::table
+                        .on(accounts::id.eq(accounts_activitypub::account_id)),
+                )
+                .select(accounts_activitypub::inbox_url)
                 .get_result::<Option<String>>(db_conn);
 
             try_join!(account_user_fut, inbox_url_fut)
@@ -296,13 +326,20 @@ impl Deliverer {
             with_connection!(self.db_pool, |db_conn| {
                 let follower_info_fut = accounts::table
                     .find(follow.follower_id)
-                    .inner_join(users::table)
+                    .inner_join(
+                        users_accounts::table.on(accounts::id.eq(users_accounts::account_id)),
+                    )
+                    .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                     .select(<(Account, User)>::as_select())
                     .get_result::<(Account, User)>(db_conn);
 
                 let followed_account_inbox_url_fut = accounts::table
                     .find(follow.account_id)
-                    .select(accounts::inbox_url)
+                    .inner_join(
+                        accounts_activitypub::table
+                            .on(accounts::id.eq(accounts_activitypub::account_id)),
+                    )
+                    .select(accounts_activitypub::inbox_url)
                     .get_result::<Option<String>>(db_conn);
 
                 try_join!(follower_info_fut, followed_account_inbox_url_fut)
@@ -326,8 +363,9 @@ impl Deliverer {
 
     async fn update_account(&self, account: Account) -> Result<()> {
         let user = with_connection!(self.db_pool, |db_conn| {
-            users::table
-                .filter(users::account_id.eq(account.id))
+            users_accounts::table
+                .filter(users_accounts::account_id.eq(account.id))
+                .inner_join(users::table)
                 .select(User::as_select())
                 .get_result(db_conn)
                 .await
@@ -357,8 +395,9 @@ impl Deliverer {
         let post_account_user_data = with_connection!(self.db_pool, |db_conn| {
             posts::table
                 .find(post.id)
-                .inner_join(accounts::table)
-                .inner_join(users::table.on(accounts::id.eq(users::account_id)))
+                .inner_join(accounts::table.on(posts::account_id.eq(accounts::id)))
+                .inner_join(users_accounts::table.on(accounts::id.eq(users_accounts::account_id)))
+                .inner_join(users::table.on(users_accounts::user_id.eq(users::id)))
                 .select(<(Account, User)>::as_select())
                 .get_result(db_conn)
                 .await

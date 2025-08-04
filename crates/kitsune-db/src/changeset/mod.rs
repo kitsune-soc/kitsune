@@ -1,7 +1,8 @@
 use crate::{
     json::Json,
     lang::LanguageIsoCode,
-    schema::{accounts, link_previews, media_attachments, posts},
+    schema::{accounts, jobs, link_previews, media_attachments, posts},
+    types::{JobState, Visibility},
 };
 use diesel::prelude::AsChangeset;
 use iso8601_timestamp::Timestamp;
@@ -16,6 +17,22 @@ pub struct ConflictLinkPreview<T> {
 
 #[derive(AsChangeset)]
 #[diesel(table_name = posts)]
+pub struct FullPostChangeset<'a> {
+    pub account_id: Uuid,
+    pub in_reply_to_id: Option<Uuid>,
+    pub reposted_post_id: Option<Uuid>,
+    pub subject: Option<&'a str>,
+    pub content: &'a str,
+    pub content_source: &'a str,
+    pub content_lang: LanguageIsoCode,
+    pub link_preview_url: Option<&'a str>,
+    pub visibility: Visibility,
+    pub is_local: bool,
+    pub updated_at: Timestamp,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = posts)]
 pub struct PartialPostChangeset<'a> {
     pub id: Uuid,
     pub subject: Option<&'a str>,
@@ -24,6 +41,14 @@ pub struct PartialPostChangeset<'a> {
     pub content_lang: Option<LanguageIsoCode>,
     pub link_preview_url: Option<&'a str>,
     pub updated_at: Timestamp,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = jobs)]
+pub struct RequeueChangeset {
+    pub fail_count: i32,
+    pub state: JobState,
+    pub run_at: Timestamp,
 }
 
 #[derive(AsChangeset, Default)]

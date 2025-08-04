@@ -7,8 +7,12 @@ use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
-    PgPool, changeset::UpdateMediaAttachment, insert::NewMediaAttachment, model::MediaAttachment,
-    schema::media_attachments, with_connection,
+    PgPool,
+    changeset::UpdateMediaAttachment,
+    insert::NewMediaAttachment,
+    model::{AccountsActivitypub, MediaAttachment},
+    schema::media_attachments,
+    with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
@@ -238,11 +242,7 @@ mod test {
     };
     use iso8601_timestamp::Timestamp;
     use kitsune_db::{
-        model::{
-            account::{ActorType, NewAccount},
-            media_attachment::MediaAttachment,
-        },
-        schema::accounts,
+        insert::NewAccount, model::MediaAttachment, schema::accounts, types::ActorType,
         with_connection_panicky,
     };
     use kitsune_http_client::Client;
@@ -333,22 +333,16 @@ mod test {
         diesel::insert_into(accounts::table)
             .values(NewAccount {
                 id: account_id,
+                avatar_id: None,
+                header_id: None,
                 display_name: None,
                 username: "alice",
                 locked: false,
                 note: None,
                 local: true,
                 domain: "example.com",
-                actor_type: ActorType::Person,
+                account_type: ActorType::Person,
                 url: "https://example.com/users/alice",
-                featured_collection_url: None,
-                followers_url: None,
-                following_url: None,
-                inbox_url: None,
-                outbox_url: None,
-                shared_inbox_url: None,
-                public_key_id: "https://example.com/users/alice#main-key",
-                public_key: "",
                 created_at: None,
             })
             .execute(db_conn)

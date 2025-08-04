@@ -162,7 +162,7 @@ async fn success_matching_scopes() {
 }
 
 #[futures_test::test]
-#[ignore]
+#[ignore = "test for too many scopes scenario"]
 async fn too_many_scopes() {
     fastrand::seed(RNG_SEED);
     let fixture = Fixture::generate();
