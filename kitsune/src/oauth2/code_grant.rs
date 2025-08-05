@@ -2,7 +2,9 @@ use super::AUTH_CODE_VALID_DURATION;
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
-use kitsune_db::{model::oauth2, schema::oauth2_authorization_codes, with_connection};
+use kitsune_db::{
+    model::Oauth2AuthorizationCode, schema::oauth2_authorization_codes, with_connection,
+};
 use kitsune_util::generate_secret;
 use komainu::code_grant;
 use speedy_uuid::Uuid;
@@ -36,8 +38,8 @@ impl code_grant::Issuer for Issuer {
                         scopes: &scopes,
                         expires_at: Timestamp::now_utc() + AUTH_CODE_VALID_DURATION,
                     })
-                    .returning(oauth2::AuthorizationCode::as_returning())
-                    .get_result::<oauth2::AuthorizationCode>(db_conn)
+                    .returning(Oauth2AuthorizationCode::as_returning())
+                    .get_result::<Oauth2AuthorizationCode>(db_conn)
                     .await
             })?
         };

@@ -33,7 +33,7 @@ const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check you
 const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
 
 #[cfg(feature = "oidc")]
-use {axum::extract::Query, kitsune_db::model::oauth2, kitsune_oidc::OidcService};
+use {axum::extract::Query, kitsune_db::model::Oauth2Application, kitsune_oidc::OidcService};
 
 #[cfg(feature = "oidc")]
 #[derive(Deserialize)]
@@ -156,7 +156,7 @@ pub async fn get(
             oauth2_applications::table
                 .find(query.client_id)
                 .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-                .get_result::<oauth2::Application>(db_conn)
+                .get_result::<Oauth2Application>(db_conn)
                 .await
         })?;
 

@@ -7,6 +7,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
     PgPool,
+    model::Oauth2Application,
     schema::{oauth2_applications, users},
     with_connection,
 };
@@ -57,7 +58,7 @@ pub async fn get(
     let application = with_connection!(db_pool, |db_conn| {
         oauth2_applications::table
             .find(user_info.oauth2.application_id)
-            .get_result(db_conn)
+            .get_result::<Oauth2Application>(db_conn)
             .await
     })?;
 

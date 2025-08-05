@@ -5,14 +5,8 @@ use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_activitypub::{ProcessNewObject, process_new_object, update_object};
 use kitsune_db::{
-    model::{
-        account::Account,
-        favourite::NewFavourite,
-        follower::NewFollow,
-        notification::NewNotification,
-        post::{NewPost, Post},
-        preference::Preferences,
-    },
+    insert::{NewFavourite, NewFollow, NewNotification, NewPost},
+    model::{Account, Post, Preferences},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, accounts_preferences, notifications, posts, posts_favourites},
     with_connection,
@@ -49,7 +43,6 @@ async fn announce_activity(state: &Zustand, author: Account, activity: Activity)
                 account_id: author.id,
                 in_reply_to_id: None,
                 reposted_post_id: Some(reposted_post.id),
-                is_sensitive: false,
                 subject: None,
                 content: "",
                 content_source: "",
@@ -134,8 +127,8 @@ async fn follow_activity(state: &Zustand, author: Account, activity: Activity) -
                 .await
         })?;
 
-        if (preferences.notify_on_follow && !followed_user.locked)
-            || (preferences.notify_on_follow_request && followed_user.locked)
+        if (preferences.notify.on_follow && !followed_user.locked)
+            || (preferences.notify.on_follow_request && followed_user.locked)
         {
             let notification = if followed_user.locked {
                 NewNotification::builder()
@@ -183,7 +176,7 @@ async fn like_activity(state: &Zustand, author: Account, activity: Activity) -> 
                 id: Uuid::now_v7(),
                 account_id: author.id,
                 post_id: post.id,
-                url: activity.id,
+                url: &activity.id,
                 created_at: Some(Timestamp::now_utc()),
             })
             .execute(db_conn)
