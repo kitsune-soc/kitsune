@@ -125,7 +125,7 @@ pub async fn sign<B>(
 pub async fn verify<'a, B, F, Fut, E>(req: &'a http::Request<B>, get_key: F) -> Result<(), Error>
 where
     for<'k_id> F: Fn(&'k_id str) -> ScopedFutureWrapper<'k_id, 'a, Fut>,
-    Fut: Future<Output = Result<String, E>>,
+    Fut: Future<Output = Result<Vec<u8>, E>>,
     E: Into<BoxError>,
 {
     let Some(header) = req.headers().get(&SIGNATURE_HEADER) else {

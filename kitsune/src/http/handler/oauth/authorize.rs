@@ -17,7 +17,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{
-    PgPool, model::user::User, schema::oauth2_applications, schema::users, with_connection,
+    PgPool, model::User, schema::oauth2_applications, schema::users, with_connection,
 };
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_url::UrlService;

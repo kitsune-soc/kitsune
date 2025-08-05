@@ -10,8 +10,8 @@ use diesel_async::RunQueryDsl;
 use headers::{Authorization, authorization::Bearer};
 use http::request::Parts;
 use kitsune_db::{
-    model::{account::Account, user::User},
-    schema::{accounts, oauth2_access_tokens, users},
+    model::{Account, User},
+    schema::{accounts, oauth2_access_tokens, users, users_accounts},
     with_connection,
 };
 use kitsune_error::{Error, Result};
@@ -53,7 +53,8 @@ impl<const ENFORCE_EXPIRATION: bool> FromRequestParts<Zustand>
 
         let mut user_account_query = oauth2_access_tokens::table
             .inner_join(users::table)
-            .inner_join(accounts::table.on(accounts::id.eq(users::account_id)))
+            .inner_join(users_accounts::table.on(users::id.eq(users_accounts::user_id)))
+            .inner_join(accounts::table.on(accounts::id.eq(users_accounts::account_id)))
             .filter(oauth2_access_tokens::token.eq(bearer_token.token()))
             .into_boxed();
 

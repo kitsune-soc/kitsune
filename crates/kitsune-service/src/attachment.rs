@@ -7,12 +7,8 @@ use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
-    PgPool,
-    changeset::UpdateMediaAttachment,
-    insert::NewMediaAttachment,
-    model::{AccountsActivitypub, MediaAttachment},
-    schema::media_attachments,
-    with_connection,
+    PgPool, changeset::UpdateMediaAttachment, insert::NewMediaAttachment, model::MediaAttachment,
+    schema::media_attachments, with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
@@ -242,7 +238,7 @@ mod test {
     };
     use iso8601_timestamp::Timestamp;
     use kitsune_db::{
-        insert::NewAccount, model::MediaAttachment, schema::accounts, types::ActorType,
+        insert::NewAccount, model::MediaAttachment, schema::accounts, types::AccountType,
         with_connection_panicky,
     };
     use kitsune_http_client::Client;
@@ -301,8 +297,8 @@ mod test {
                 account_id: Some(account_id),
                 content_type: String::from("image/jpeg"),
                 description: None,
-                blurhash: None,
                 file_path: Some(String::from("test.jpeg")),
+                is_sensitive: false,
                 remote_url: None,
                 created_at: Timestamp::now_utc(),
                 updated_at: Timestamp::now_utc()
@@ -341,7 +337,7 @@ mod test {
                 note: None,
                 local: true,
                 domain: "example.com",
-                account_type: ActorType::Person,
+                account_type: AccountType::Person,
                 url: "https://example.com/users/alice",
                 created_at: None,
             })

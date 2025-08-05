@@ -1,5 +1,5 @@
 use async_graphql::Enum;
-use kitsune_db::model::post::Visibility as DbVisibility;
+use kitsune_db::types::Visibility as DbVisibility;
 
 #[derive(Clone, Copy, Debug, Enum, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Visibility {

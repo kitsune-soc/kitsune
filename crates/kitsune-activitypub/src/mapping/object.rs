@@ -4,8 +4,8 @@ use diesel_async::RunQueryDsl;
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt, future::OptionFuture};
 use kitsune_db::{
     model::{
-        Account, CryptographicKey, CustomEmoji, MediaAttachment as DbMediaAttachment, Post,
-        PostsCustomEmoji, PostsMention,
+        Account, CustomEmoji, MediaAttachment as DbMediaAttachment, Post, PostsCustomEmoji,
+        PostsMention,
     },
     schema::{
         accounts, accounts_activitypub, cryptographic_keys, custom_emojis, media_attachments,

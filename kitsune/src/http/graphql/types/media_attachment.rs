@@ -1,7 +1,7 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use kitsune_db::model::media_attachment::MediaAttachment as DbMediaAttachment;
+use kitsune_db::model::MediaAttachment as DbMediaAttachment;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -13,7 +13,7 @@ pub struct MediaAttachment {
     pub account_id: Uuid,
     pub content_type: String,
     pub description: Option<String>,
-    pub blurhash: Option<String>,
+    pub is_sensitive: bool,
     pub created_at: OffsetDateTime,
 }
 
@@ -47,7 +47,7 @@ impl From<DbMediaAttachment> for MediaAttachment {
             account_id: value.account_id.unwrap(),
             content_type: value.content_type,
             description: value.description,
-            blurhash: value.blurhash,
+            is_sensitive: value.is_sensitive,
             created_at: value.created_at.assume_utc(),
         }
     }

@@ -5,7 +5,10 @@
 use super::SigningKey as SigningKeyTrait;
 use const_oid::db::{rfc5912::RSA_ENCRYPTION, rfc8410::ID_ED_25519};
 use miette::Diagnostic;
-use pkcs8::{DecodePrivateKey, Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef};
+use pkcs8::{
+    DecodePrivateKey, Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef,
+    der::Decode,
+};
 use ring::signature::{
     ED25519, Ed25519KeyPair, RSA_PKCS1_2048_8192_SHA256, RsaKeyPair, UnparsedPublicKey,
     VerificationAlgorithm,
@@ -36,15 +39,15 @@ pub enum Error {
     UnknownKeyType,
 }
 
-/// Parse a public key from its PKCS#8 PEM form
+/// Parse a public key from its PKCS#8 DER form
 ///
 /// Currently supported algorithms:
 ///
 /// - RSA
 /// - Ed25519
 #[inline]
-pub fn public_key(pem: &str) -> Result<UnparsedPublicKey<Vec<u8>>, Error> {
-    let (_pem_tag, document) = Document::from_pem(pem)?;
+pub fn public_key(der: &[u8]) -> Result<UnparsedPublicKey<Vec<u8>>, Error> {
+    let document = Document::from_der(der)?;
     let spki: SubjectPublicKeyInfoRef<'_> = document.decode_msg()?;
 
     let verify_algo: &dyn VerificationAlgorithm = if spki.algorithm.oid == RSA_ENCRYPTION {
@@ -85,8 +88,8 @@ impl SigningKeyTrait for SigningKey {
     }
 }
 
-/// Parse a private key from its PKCS#8 PEM form.
-/// This function uses constant-time PEM decoding and zeroizes any temporary allocations, following good cryptographic hygiene practices.
+/// Parse a private key from its PKCS#8 DER form.
+/// This function uses constant-time decoding and zeroizes any temporary allocations, following good cryptographic hygiene practices.
 ///
 /// When working with this library, prefer using this function over your own decoding logic.
 ///

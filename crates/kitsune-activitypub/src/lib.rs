@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, SelectableHelper};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{StreamExt, TryStreamExt, stream};
 use http::Uri;

@@ -87,13 +87,6 @@ pub struct CreatePost {
     #[garde(skip)]
     media_ids: Vec<Uuid>,
 
-    /// Mark this post as sensitive
-    ///
-    /// Defaults to false
-    #[builder(default)]
-    #[garde(skip)]
-    sensitive: bool,
-
     /// Subject of the post
     ///
     /// This is optional
@@ -174,13 +167,6 @@ pub struct UpdatePost {
     #[builder(default)]
     #[garde(skip)]
     media_ids: Vec<Uuid>,
-
-    /// Mark this post as sensitive
-    ///
-    /// Defaults to false
-    #[builder(default)]
-    #[garde(skip)]
-    sensitive: Option<bool>,
 
     /// Subject of the post
     ///

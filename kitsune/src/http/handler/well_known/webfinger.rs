@@ -68,10 +68,7 @@ mod tests {
     use kitsune_config::instance::FederationFilterConfiguration;
     use kitsune_core::traits::coerce::{CoerceFetcher, CoerceResolver};
     use kitsune_db::{
-        PgPool,
-        model::account::{ActorType, NewAccount},
-        schema::accounts,
-        with_connection_panicky,
+        PgPool, insert::NewAccount, schema::accounts, types::AccountType, with_connection_panicky,
     };
     use kitsune_error::Error;
     use kitsune_federation_filter::FederationFilter;
@@ -288,22 +285,16 @@ mod tests {
                     diesel::insert_into(accounts::table)
                         .values(NewAccount {
                             id: account_id,
+                            avatar_id: None,
+                            header_id: None,
                             display_name: None,
                             username: "alice",
                             locked: false,
                             note: None,
                             local: true,
                             domain: "example.com",
-                            actor_type: ActorType::Person,
+                            account_type: AccountType::Person,
                             url: "https://example.com/users/alice",
-                            featured_collection_url: None,
-                            followers_url: None,
-                            following_url: None,
-                            inbox_url: None,
-                            outbox_url: None,
-                            shared_inbox_url: None,
-                            public_key_id: "https://example.com/users/alice#main-key",
-                            public_key: "",
                             created_at: None,
                         })
                         .execute(tx)
@@ -312,22 +303,16 @@ mod tests {
                     diesel::insert_into(accounts::table)
                         .values(NewAccount {
                             id: Uuid::now_v7(),
+                            avatar_id: None,
+                            header_id: None,
                             display_name: None,
                             username: "bob",
                             locked: false,
                             note: None,
                             local: false,
                             domain: "example.net",
-                            actor_type: ActorType::Person,
+                            account_type: AccountType::Person,
                             url: "https://example.net/users/bob",
-                            featured_collection_url: None,
-                            followers_url: None,
-                            following_url: None,
-                            inbox_url: None,
-                            outbox_url: None,
-                            shared_inbox_url: None,
-                            public_key_id: "https://example.net/users/bob#main-key",
-                            public_key: "",
                             created_at: None,
                         })
                         .execute(tx)

@@ -1,10 +1,10 @@
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, StreamExt, stream::FuturesUnordered};
 use http::{Method, Request};
 use kitsune_db::{
     PgPool,
-    model::{Account, User},
+    model::Account,
     schema::{accounts_activitypub, cryptographic_keys},
     with_connection,
 };
@@ -36,7 +36,6 @@ impl Deliverer {
         &self,
         inbox_url: &str,
         account: &Account,
-        user: &User,
         activity: &Activity,
     ) -> Result<()> {
         if !self
@@ -97,7 +96,6 @@ impl Deliverer {
     pub async fn deliver_many<S, E>(
         &self,
         account: &Account,
-        user: &User,
         activity: &Activity,
         inbox_stream: S,
     ) -> Result<()>
@@ -110,7 +108,7 @@ impl Deliverer {
         while let Some(inbox_chunk) = inbox_stream.next().await.transpose()? {
             let mut concurrent_resolver: FuturesUnordered<_> = inbox_chunk
                 .iter()
-                .map(|inbox| self.deliver(inbox, account, user, activity))
+                .map(|inbox| self.deliver(inbox, account, activity))
                 .collect();
 
             while let Some(delivery_result) = concurrent_resolver.next().await {

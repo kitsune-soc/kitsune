@@ -7,7 +7,7 @@ use futures_util::{Stream, StreamExt, future::Either};
 use kitsune_db::{
     PgPool,
     function::coalesce_nullable,
-    model::{Account, Post, PostsMention},
+    model::{Account, Post},
     schema::{accounts, accounts_activitypub, accounts_follows, posts_mentions},
     types::Visibility,
     with_connection,
