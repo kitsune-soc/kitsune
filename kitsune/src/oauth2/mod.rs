@@ -3,6 +3,7 @@ use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     PgPool,
+    insert::{NewOauth2Application, NewOauth2AuthorizationCode},
     model::{Oauth2Application, Oauth2AuthorizationCode},
     schema::{oauth2_applications, oauth2_authorization_codes},
     with_connection,
@@ -74,7 +75,7 @@ impl OAuth2Service {
         let secret = generate_secret();
         with_connection!(self.db_pool, |db_conn| {
             diesel::insert_into(oauth2_applications::table)
-                .values(oauth2::NewApplication {
+                .values(NewOauth2Application {
                     id: Uuid::now_v7(),
                     secret: secret.as_str(),
                     name: create_app.name.as_str(),
@@ -103,7 +104,7 @@ impl OAuth2Service {
         let authorization_code: Oauth2AuthorizationCode =
             with_connection!(self.db_pool, |db_conn| {
                 diesel::insert_into(oauth2_authorization_codes::table)
-                    .values(oauth2::NewAuthorizationCode {
+                    .values(NewOauth2AuthorizationCode {
                         code: secret.as_str(),
                         application_id: application.id,
                         user_id,

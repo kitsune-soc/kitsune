@@ -3,6 +3,7 @@ use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
+    insert::{NewOauth2AccessToken, NewOauth2RefreshToken},
     model::{Oauth2AccessToken, Oauth2Application, Oauth2AuthorizationCode, Oauth2RefreshToken},
     schema::{
         oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
@@ -73,7 +74,7 @@ impl authorization::Issuer for Issuer {
         let result: Result<_, kitsune_error::Error> = attempt! { async
             with_transaction!(self.db_pool, |tx| {
                 let access_token = diesel::insert_into(oauth2_access_tokens::table)
-                    .values(oauth2::NewAccessToken {
+                    .values(NewOauth2AccessToken {
                         user_id: Some(user_id),
                         application_id: Some(application_id),
                         token: generate_secret().as_str(),
@@ -85,7 +86,7 @@ impl authorization::Issuer for Issuer {
                     .await?;
 
                 let refresh_token = diesel::insert_into(oauth2_refresh_tokens::table)
-                    .values(oauth2::NewRefreshToken {
+                    .values(NewOauth2RefreshToken {
                         token: generate_secret().as_str(),
                         access_token: access_token.token.as_str(),
                         application_id,

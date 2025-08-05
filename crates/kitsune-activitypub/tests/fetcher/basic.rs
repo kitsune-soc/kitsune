@@ -26,7 +26,7 @@ async fn fetch_actor() {
 
         let fetcher = Fetcher::builder()
             .http_client(client.clone())
-            .db_pool(db_pool)
+            .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
                 FederationFilter::new(&FederationFilterConfiguration::Deny {

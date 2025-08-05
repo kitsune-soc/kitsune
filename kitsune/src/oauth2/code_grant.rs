@@ -3,7 +3,8 @@ use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::Oauth2AuthorizationCode, schema::oauth2_authorization_codes, with_connection,
+    insert::NewOauth2AuthorizationCode, model::Oauth2AuthorizationCode,
+    schema::oauth2_authorization_codes, with_connection,
 };
 use kitsune_util::generate_secret;
 use komainu::code_grant;
@@ -31,7 +32,7 @@ impl code_grant::Issuer for Issuer {
         let result: Result<_, kitsune_error::Error> = attempt! { async
             with_connection!(self.db_pool, |db_conn| {
                 diesel::insert_into(oauth2_authorization_codes::table)
-                    .values(oauth2::NewAuthorizationCode {
+                    .values(NewOauth2AuthorizationCode {
                         code: generate_secret().as_str(),
                         user_id,
                         application_id: client_id,

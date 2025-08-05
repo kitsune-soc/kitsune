@@ -3,8 +3,10 @@ use crate::{
     lang::LanguageIsoCode,
     schema::{
         accounts, accounts_activitypub, accounts_cryptographic_keys, accounts_follows,
-        cryptographic_keys, job_context, jobs, link_previews, media_attachments, posts,
-        posts_favourites, posts_media_attachments, posts_mentions, users,
+        cryptographic_keys, job_context, jobs, link_previews, media_attachments,
+        oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
+        oauth2_refresh_tokens, posts, posts_favourites, posts_media_attachments, posts_mentions,
+        users,
     },
     types::{AccountType, JobState, Visibility},
 };
@@ -160,4 +162,43 @@ pub struct NewAccountsActivitypub<'a> {
 pub struct NewAccountsCryptographicKey<'a> {
     pub account_id: Uuid,
     pub key_id: &'a str,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = oauth2_access_tokens)]
+pub struct NewOauth2AccessToken<'a> {
+    pub user_id: Option<Uuid>,
+    pub application_id: Option<Uuid>,
+    pub token: &'a str,
+    pub scopes: &'a str,
+    pub expires_at: Timestamp,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = oauth2_applications)]
+pub struct NewOauth2Application<'a> {
+    pub id: Uuid,
+    pub secret: &'a str,
+    pub name: &'a str,
+    pub redirect_uri: &'a str,
+    pub scopes: &'a str,
+    pub website: Option<&'a str>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = oauth2_authorization_codes)]
+pub struct NewOauth2AuthorizationCode<'a> {
+    pub code: &'a str,
+    pub user_id: Uuid,
+    pub application_id: Uuid,
+    pub scopes: &'a str,
+    pub expires_at: Timestamp,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = oauth2_refresh_tokens)]
+pub struct NewOauth2RefreshToken<'a> {
+    pub token: &'a str,
+    pub access_token: &'a str,
+    pub application_id: Uuid,
 }

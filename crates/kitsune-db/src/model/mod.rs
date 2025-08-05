@@ -11,8 +11,6 @@ use iso8601_timestamp::Timestamp;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 
-mod notification;
-
 #[derive(Clone, Debug, Deserialize, Identifiable, Queryable, Selectable, Serialize)]
 #[diesel(table_name = accounts)]
 pub struct Account {
