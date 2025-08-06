@@ -146,11 +146,11 @@ ALTER TABLE accounts
         UNIQUE (username, domain);
 
 -- Foreign key constraints
-ALTER TABLE accounts
-    ADD CONSTRAINT "uk-accounts-domains-domain"
-        FOREIGN KEY (domain) REFERENCES domains (domain)
-            ON DELETE SET NULL
-            ON UPDATE CASCADE;
+--ALTER TABLE accounts
+--    ADD CONSTRAINT "uk-accounts-domains-domain"
+--        FOREIGN KEY (domain) REFERENCES domains (domain)
+--            ON DELETE SET NULL
+--            ON UPDATE CASCADE;
 
 -- Create indexes
 

@@ -143,6 +143,8 @@ pub async fn process_attachments(
                         account_id: Some(author.id),
                         content_type,
                         description: attachment.name.as_deref(),
+                        // TODO: set this appropriately
+                        is_sensitive: false,
                         file_path: None,
                         remote_url: Some(attachment.url.as_str()),
                     })

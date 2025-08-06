@@ -3,7 +3,7 @@ use crate::{
     lang::LanguageIsoCode,
     schema::{
         accounts, accounts_activitypub, accounts_cryptographic_keys, accounts_follows,
-        cryptographic_keys, job_context, jobs, link_previews, media_attachments,
+        cryptographic_keys, domains, job_context, jobs, link_previews, media_attachments,
         oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
         oauth2_refresh_tokens, posts, posts_favourites, posts_media_attachments, posts_mentions,
         users,
@@ -41,6 +41,16 @@ pub struct NewCryptographicKey<'a> {
     pub key_id: &'a str,
     pub public_key_der: &'a [u8],
     pub private_key_der: Option<&'a [u8]>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = domains)]
+pub struct NewDomain<'a> {
+    pub domain: &'a str,
+    pub owner_id: Option<Uuid>,
+    pub challenge_value: Option<&'a str>,
+    pub globally_available: bool,
+    pub verified_at: Option<Timestamp>,
 }
 
 #[derive(Insertable)]
@@ -86,6 +96,7 @@ pub struct NewMediaAttachment<'a> {
     pub content_type: &'a str,
     pub account_id: Option<Uuid>,
     pub description: Option<&'a str>,
+    pub is_sensitive: bool,
     pub file_path: Option<&'a str>,
     pub remote_url: Option<&'a str>,
 }

@@ -63,6 +63,10 @@ pub struct Upload<S> {
     #[builder(default, setter(strip_option))]
     #[garde(length(chars, max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
+    #[garde(skip)]
+    // TODO: set this appropriately
+    #[builder(setter(into))]
+    sensitive: bool,
     #[builder(default = "Uuid::now_v7().to_string()")]
     #[garde(skip)]
     path: String,
@@ -213,6 +217,7 @@ impl AttachmentService {
                     content_type: upload.content_type.as_str(),
                     account_id: upload.account_id,
                     description: upload.description.as_deref(),
+                    is_sensitive: upload.sensitive,
                     file_path: Some(upload.path.as_str()),
                     remote_url: None,
                 })

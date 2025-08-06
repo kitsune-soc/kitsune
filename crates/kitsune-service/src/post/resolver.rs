@@ -230,6 +230,7 @@ mod test {
                             content_type: "image/jpeg",
                             account_id: None,
                             description: None,
+                            is_sensitive: false,
                             file_path: None,
                             remote_url: None,
                         })
@@ -258,6 +259,7 @@ mod test {
                             content_type: "image/jpeg",
                             account_id: None,
                             description: None,
+                            is_sensitive: false,
                             file_path: None,
                             remote_url: Some("https://media.example.com/emojis/blobhaj.jpeg"),
                         })
