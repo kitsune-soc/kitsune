@@ -124,7 +124,7 @@ derive_more = { version = "2.0.1", features = ["from"] }
 diesel = { version = "2.2.12", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
-    "sqlite",
+#    "sqlite",
     "uuid",
     "with-deprecated",
 ] }
