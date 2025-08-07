@@ -4,7 +4,7 @@ use axum_extra::extract::Query;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::StreamExt;
-use kitsune_db::{PgPool, model::account::Account, schema::accounts, with_connection};
+use kitsune_db::{PgPool, model::Account, schema::accounts, with_connection};
 use kitsune_error::Result;
 use kitsune_mastodon::MastodonMapper;
 use kitsune_type::mastodon::relationship::Relationship;

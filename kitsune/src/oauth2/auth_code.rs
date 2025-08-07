@@ -3,7 +3,8 @@ use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::oauth2,
+    insert::{NewOauth2AccessToken, NewOauth2RefreshToken},
+    model::{Oauth2AccessToken, Oauth2Application, Oauth2AuthorizationCode, Oauth2RefreshToken},
     schema::{
         oauth2_access_tokens, oauth2_applications, oauth2_authorization_codes,
         oauth2_refresh_tokens,
@@ -36,7 +37,7 @@ impl authorization::Issuer for Issuer {
                 oauth2_authorization_codes::table
                     .find(auth_code)
                     .inner_join(oauth2_applications::table)
-                    .first::<(oauth2::AuthorizationCode, oauth2::Application)>(db_conn)
+                    .first::<(Oauth2AuthorizationCode, Oauth2Application)>(db_conn)
                     .await
                     .optional()
             })?
@@ -73,25 +74,25 @@ impl authorization::Issuer for Issuer {
         let result: Result<_, kitsune_error::Error> = attempt! { async
             with_transaction!(self.db_pool, |tx| {
                 let access_token = diesel::insert_into(oauth2_access_tokens::table)
-                    .values(oauth2::NewAccessToken {
+                    .values(NewOauth2AccessToken {
                         user_id: Some(user_id),
                         application_id: Some(application_id),
                         token: generate_secret().as_str(),
                         scopes: &scopes,
                         expires_at: Timestamp::now_utc() + TOKEN_VALID_DURATION,
                     })
-                    .returning(oauth2::AccessToken::as_returning())
-                    .get_result::<oauth2::AccessToken>(tx)
+                    .returning(Oauth2AccessToken::as_returning())
+                    .get_result::<Oauth2AccessToken>(tx)
                     .await?;
 
                 let refresh_token = diesel::insert_into(oauth2_refresh_tokens::table)
-                    .values(oauth2::NewRefreshToken {
+                    .values(NewOauth2RefreshToken {
                         token: generate_secret().as_str(),
                         access_token: access_token.token.as_str(),
                         application_id,
                     })
-                    .returning(oauth2::RefreshToken::as_returning())
-                    .get_result::<oauth2::RefreshToken>(tx)
+                    .returning(Oauth2RefreshToken::as_returning())
+                    .get_result::<Oauth2RefreshToken>(tx)
                     .await?;
 
                 diesel::delete(oauth2_authorization_codes::table.find(&authorization.code)).execute(tx).await?;

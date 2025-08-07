@@ -1,5 +1,5 @@
 use async_graphql::SimpleObject;
-use kitsune_db::model::oauth2;
+use kitsune_db::model::Oauth2Application;
 use speedy_uuid::Uuid;
 use time::OffsetDateTime;
 
@@ -14,8 +14,8 @@ pub struct OAuth2Application {
     pub updated_at: OffsetDateTime,
 }
 
-impl From<oauth2::Application> for OAuth2Application {
-    fn from(value: oauth2::Application) -> Self {
+impl From<Oauth2Application> for OAuth2Application {
+    fn from(value: Oauth2Application) -> Self {
         Self {
             id: value.id,
             name: value.name,

@@ -1,8 +1,8 @@
 use const_oid::db::rfc5912::RSA_ENCRYPTION;
 use http_signatures::BoxError;
 use pkcs8::{
-    LineEnding, SubjectPublicKeyInfoRef,
-    der::{EncodePem, asn1::BitStringRef},
+    SubjectPublicKeyInfoRef,
+    der::{Encode, asn1::BitStringRef},
     spki::AlgorithmIdentifier,
 };
 use scoped_futures::ScopedFutureExt;
@@ -52,7 +52,7 @@ async fn easy() {
             subject_public_key: BitStringRef::from_bytes(public_key.as_ref()).unwrap(),
         };
 
-        future::ready(spki.to_pem(LineEnding::CR)).scoped()
+        future::ready(spki.to_der()).scoped()
     })
     .await
     .unwrap();

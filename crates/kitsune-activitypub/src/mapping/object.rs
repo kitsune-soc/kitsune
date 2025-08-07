@@ -1,16 +1,16 @@
 use super::{State, util::BaseToCc};
-use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::{FutureExt, TryFutureExt, TryStreamExt, future::OptionFuture};
 use kitsune_db::{
     model::{
-        account::Account,
-        custom_emoji::{CustomEmoji, PostCustomEmoji},
-        media_attachment::{MediaAttachment as DbMediaAttachment, PostMediaAttachment},
-        mention::Mention,
-        post::Post,
+        Account, CustomEmoji, MediaAttachment as DbMediaAttachment, Post, PostsCustomEmoji,
+        PostsMention,
     },
-    schema::{accounts, custom_emojis, media_attachments, posts, posts_custom_emojis},
+    schema::{
+        accounts, accounts_activitypub, cryptographic_keys, custom_emojis, media_attachments,
+        posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
+    },
     with_connection,
 };
 use kitsune_error::{Error, ErrorType, Result, bail, kitsune_error};
@@ -55,16 +55,16 @@ impl IntoObject for DbMediaAttachment {
             r#type,
             name: self.description,
             media_type: Some(self.content_type),
-            blurhash: self.blurhash,
+            blurhash: None,
             url,
         })
     }
 }
 
 fn build_post_tags(
-    mentions: Vec<(Mention, Account)>,
+    mentions: Vec<(PostsMention, Account)>,
     to: &mut Vec<String>,
-    emojis: Vec<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>,
+    emojis: Vec<(CustomEmoji, PostsCustomEmoji, DbMediaAttachment)>,
 ) -> Vec<Tag> {
     let mut tag = Vec::new();
     for (mention, mentioned) in mentions {
@@ -124,10 +124,11 @@ impl IntoObject for Post {
                     }))
                     .map(Option::transpose);
 
-                let mentions_fut = Mention::belonging_to(&self)
-                    .inner_join(accounts::table)
-                    .select((Mention::as_select(), Account::as_select()))
-                    .load::<(Mention, Account)>(db_conn);
+                let mentions_fut = posts_mentions::table
+                    .filter(posts_mentions::post_id.eq(self.id))
+                    .inner_join(accounts::table.on(posts_mentions::account_id.eq(accounts::id)))
+                    .select((PostsMention::as_select(), Account::as_select()))
+                    .load::<(PostsMention, Account)>(db_conn);
 
                 let custom_emojis_fut = custom_emojis::table
                     .inner_join(posts_custom_emojis::table)
@@ -135,15 +136,19 @@ impl IntoObject for Post {
                     .filter(posts_custom_emojis::post_id.eq(self.id))
                     .select((
                         CustomEmoji::as_select(),
-                        PostCustomEmoji::as_select(),
+                        PostsCustomEmoji::as_select(),
                         DbMediaAttachment::as_select(),
                     ))
-                    .load::<(CustomEmoji, PostCustomEmoji, DbMediaAttachment)>(db_conn);
+                    .load::<(CustomEmoji, PostsCustomEmoji, DbMediaAttachment)>(db_conn);
 
-                let attachment_stream_fut = PostMediaAttachment::belonging_to(&self)
-                    .inner_join(media_attachments::table)
-                    .select(DbMediaAttachment::as_select())
-                    .load_stream::<DbMediaAttachment>(db_conn);
+                let attachment_stream_fut =
+                    posts_media_attachments::table
+                        .filter(posts_media_attachments::post_id.eq(self.id))
+                        .inner_join(media_attachments::table.on(
+                            posts_media_attachments::media_attachment_id.eq(media_attachments::id),
+                        ))
+                        .select(DbMediaAttachment::as_select())
+                        .load_stream::<DbMediaAttachment>(db_conn);
 
                 try_join!(
                     account_fut,
@@ -162,7 +167,7 @@ impl IntoObject for Post {
                 Ok(MediaAttachment {
                     r#type: MediaAttachmentType::Document,
                     name: attachment.description,
-                    blurhash: attachment.blurhash,
+                    blurhash: None,
                     media_type: Some(attachment.content_type),
                     url,
                 })
@@ -181,7 +186,7 @@ impl IntoObject for Post {
             r#type: ObjectType::Note,
             attributed_to: account_url,
             in_reply_to,
-            sensitive: self.is_sensitive,
+            sensitive: false,
             name: None,
             summary: self.subject,
             content: self.content,
@@ -199,7 +204,7 @@ impl IntoObject for Account {
     type Output = Actor;
 
     async fn into_object(self, state: State<'_>) -> Result<Self::Output> {
-        let (icon, image) = with_connection!(state.db_pool, |db_conn| {
+        let (icon, image, public_key_info) = with_connection!(state.db_pool, |db_conn| {
             // These calls also probably allocate two cocnnections. ugh.
             let icon_fut = OptionFuture::from(self.avatar_id.map(|avatar_id| {
                 media_attachments::table
@@ -219,7 +224,20 @@ impl IntoObject for Account {
             }))
             .map(Option::transpose);
 
-            try_join!(icon_fut, image_fut)
+            let public_key_fut = accounts_activitypub::table
+                .filter(accounts_activitypub::account_id.eq(self.id))
+                .inner_join(
+                    cryptographic_keys::table
+                        .on(accounts_activitypub::key_id.eq(cryptographic_keys::key_id)),
+                )
+                .select((
+                    accounts_activitypub::key_id,
+                    cryptographic_keys::public_key_der,
+                ))
+                .first::<(String, Vec<u8>)>(db_conn)
+                .map_err(Error::from);
+
+            try_join!(icon_fut, image_fut, public_key_fut)
         })?;
 
         let user_url = state.service.url.user_url(self.id);
@@ -231,7 +249,7 @@ impl IntoObject for Account {
         Ok(Actor {
             context: ap_context(),
             id: user_url.clone(),
-            r#type: self.actor_type.into(),
+            r#type: self.account_type.into(),
             name: self.display_name,
             subject: self.note,
             icon,
@@ -245,9 +263,9 @@ impl IntoObject for Account {
             followers: Some(followers),
             following: Some(following),
             public_key: PublicKey {
-                id: self.public_key_id,
+                id: public_key_info.0,
                 owner: user_url,
-                public_key_pem: self.public_key,
+                public_key_pem: String::from_utf8_lossy(&public_key_info.1).to_string(),
             },
             published: self.created_at,
         })

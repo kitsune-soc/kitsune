@@ -11,7 +11,7 @@ use kitsune_core::traits::{
 };
 use kitsune_db::{
     PgPool,
-    model::{account::Account, post::Post},
+    model::{Account, Post},
 };
 use kitsune_federation_filter::FederationFilter;
 use kitsune_search::AnySearchBackend;
@@ -51,6 +51,7 @@ pub(crate) fn prepare_deliverer(prepare: PrepareDeliverer) -> Arc<dyn Deliverer>
         .federation_filter(prepare.federation_filter)
         .http_client(prepare.http_client)
         .mrf_service(prepare.mrf_service)
+        .db_pool(prepare.db_pool.clone())
         .build();
 
     let inbox_resolver = InboxResolver::new(prepare.db_pool.clone());

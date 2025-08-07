@@ -15,22 +15,16 @@ use iso8601_timestamp::Timestamp;
 use kitsune_config::language_detection::Configuration as LanguageDetectionConfig;
 use kitsune_db::{
     PgPool,
-    model::{
-        account::Account,
-        custom_emoji::PostCustomEmoji,
-        favourite::{Favourite, NewFavourite},
-        media_attachment::NewPostMediaAttachment,
-        mention::NewMention,
-        notification::{NewNotification, Notification},
-        post::{NewPost, PartialPostChangeset, Post, PostSource, Visibility},
-        user_role::Role,
-    },
+    changeset::PartialPostChangeset,
+    insert::{NewFavourite, NewMention, NewNotification, NewPost, NewPostMediaAttachment},
+    model::{Account, Favourite, Notification, Post, PostSource, PostsCustomEmoji},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{
         accounts, accounts_preferences, media_attachments, notifications, posts,
-        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
+        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions, roles,
         users_roles,
     },
+    types::Visibility,
     with_connection, with_transaction,
 };
 use kitsune_derive::kitsune_service;
@@ -92,13 +86,6 @@ pub struct CreatePost {
     #[builder(default)]
     #[garde(skip)]
     media_ids: Vec<Uuid>,
-
-    /// Mark this post as sensitive
-    ///
-    /// Defaults to false
-    #[builder(default)]
-    #[garde(skip)]
-    sensitive: bool,
 
     /// Subject of the post
     ///
@@ -180,13 +167,6 @@ pub struct UpdatePost {
     #[builder(default)]
     #[garde(skip)]
     media_ids: Vec<Uuid>,
-
-    /// Mark this post as sensitive
-    ///
-    /// Defaults to false
-    #[builder(default)]
-    #[garde(skip)]
-    sensitive: Option<bool>,
 
     /// Subject of the post
     ///
@@ -413,12 +393,12 @@ impl PostService {
             .values(
                 custom_emojis
                     .iter()
-                    .map(|(emoji_id, emoji_text)| PostCustomEmoji {
+                    .map(|(emoji_id, emoji_text)| PostsCustomEmoji {
                         post_id,
                         custom_emoji_id: *emoji_id,
                         emoji_text: emoji_text.to_string(),
                     })
-                    .collect::<Vec<PostCustomEmoji>>(),
+                    .collect::<Vec<PostsCustomEmoji>>(),
             )
             .on_conflict_do_nothing()
             .execute(conn)
@@ -500,7 +480,6 @@ impl PostService {
                     content_source: content_source.as_str(),
                     content_lang: content_lang.into(),
                     link_preview_url: link_preview_url.as_deref(),
-                    is_sensitive: create_post.sensitive,
                     visibility: create_post.visibility,
                     is_local: true,
                     url: url.as_str(),
@@ -631,7 +610,6 @@ impl PostService {
                     content_source: update_post.content.as_deref(),
                     content_lang: content_lang.map(Into::into),
                     link_preview_url: link_preview_url.as_deref(),
-                    is_sensitive: update_post.sensitive,
                     updated_at: Timestamp::now_utc(),
                 })
                 .returning(Post::as_returning())
@@ -718,7 +696,6 @@ impl PostService {
                     content_source: "",
                     content_lang: post.content_lang,
                     link_preview_url: None,
-                    is_sensitive: post.is_sensitive,
                     visibility: repost_post.visibility,
                     is_local: true,
                     url: url.as_str(),
@@ -812,7 +789,7 @@ impl PostService {
                     id,
                     account_id: favouriting_account_id,
                     post_id: post.id,
-                    url,
+                    url: &url,
                     created_at: None,
                 })
                 .returning(posts_favourites::id)
@@ -1122,10 +1099,11 @@ impl PostService {
             if let Some(user_id) = user_id {
                 let admin_role_count = with_connection!(self.db_pool, |db_conn| {
                     users_roles::table
+                        .inner_join(roles::table)
                         .filter(
                             users_roles::user_id
                                 .eq(user_id)
-                                .and(users_roles::role.eq(Role::Administrator)),
+                                .and(roles::name.eq("Administrator")),
                         )
                         .count()
                         .get_result::<i64>(db_conn)

@@ -6,8 +6,8 @@ use kitsune_cache::NoopCache;
 use kitsune_config::instance::FederationFilterConfiguration;
 use kitsune_core::traits::{Fetcher as _, coerce::CoerceResolver};
 use kitsune_db::{
-    model::{account::Account, media_attachment::MediaAttachment},
-    schema::{accounts, media_attachments},
+    model::{Account, AccountsActivitypub, MediaAttachment},
+    schema::{accounts, accounts_activitypub, media_attachments},
     with_connection_panicky,
 };
 use kitsune_federation_filter::FederationFilter;
@@ -26,7 +26,7 @@ async fn fetch_actor() {
 
         let fetcher = Fetcher::builder()
             .http_client(client.clone())
-            .db_pool(db_pool)
+            .db_pool(db_pool.clone())
             .embed_client(None)
             .federation_filter(
                 FederationFilter::new(&FederationFilterConfiguration::Deny {
@@ -50,8 +50,17 @@ async fn fetch_actor() {
         assert_eq!(user.username, "0x0");
         assert_eq!(user.domain, "corteximplant.com");
         assert_eq!(user.url, "https://corteximplant.com/users/0x0");
+        let account_activitypub = with_connection_panicky!(db_pool, |db_conn| {
+            accounts_activitypub::table
+                .find(user.id)
+                .select(AccountsActivitypub::as_select())
+                .get_result::<AccountsActivitypub>(db_conn)
+                .await
+        })
+        .expect("Get AccountsActivitypub");
+
         assert_eq!(
-            user.inbox_url,
+            account_activitypub.inbox_url,
             Some("https://corteximplant.com/users/0x0/inbox".into())
         );
     })

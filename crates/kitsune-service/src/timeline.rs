@@ -5,9 +5,10 @@ use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use kitsune_db::{
     PgPool,
-    model::post::{Post, Visibility},
+    model::Post,
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::{accounts_follows, posts, posts_mentions},
+    types::Visibility,
     with_connection,
 };
 use kitsune_derive::kitsune_service;

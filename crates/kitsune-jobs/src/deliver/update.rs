@@ -4,7 +4,7 @@ use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
 use kitsune_db::{
-    model::{account::Account, post::Post},
+    model::{Account, Post},
     schema::{accounts, posts},
     with_connection,
 };

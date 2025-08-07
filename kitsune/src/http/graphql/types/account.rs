@@ -8,9 +8,7 @@ use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
 use kitsune_db::{
-    model::{
-        account::Account as DbAccount, media_attachment::MediaAttachment as DbMediaAttachment,
-    },
+    model::{Account as DbAccount, MediaAttachment as DbMediaAttachment},
     schema::media_attachments,
     with_connection,
 };

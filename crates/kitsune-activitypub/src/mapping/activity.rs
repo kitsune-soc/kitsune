@@ -3,13 +3,14 @@ use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::{account::Account, favourite::Favourite, follower::Follow, post::Post},
+    model::{Account, Favourite, Follow, Post},
     schema::{accounts, posts},
     with_connection,
 };
 use kitsune_error::Result;
 use kitsune_type::ap::{Activity, ActivityType, ObjectField, ap_context};
 use kitsune_util::try_join;
+use std::future::Future;
 
 pub trait IntoActivity {
     type Output;

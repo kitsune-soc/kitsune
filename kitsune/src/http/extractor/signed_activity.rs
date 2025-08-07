@@ -5,12 +5,17 @@ use axum::{
     extract::{FromRequest, OriginalUri},
     response::{IntoResponse, Response},
 };
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http_body_util::BodyExt;
 use kitsune_core::traits::fetcher::AccountFetchOptions;
-use kitsune_db::{PgPool, model::account::Account, schema::accounts, with_connection};
+use kitsune_db::{
+    PgPool,
+    model::{Account, CryptographicKey},
+    schema::{accounts, accounts_cryptographic_keys, cryptographic_keys},
+    with_connection,
+};
 use kitsune_error::{Error, ErrorType, Result, bail};
 use kitsune_type::ap::Activity;
 use kitsune_wasm_mrf::Outcome;
@@ -104,10 +109,12 @@ async fn verify_signature(
 ) -> Result<bool> {
     let is_valid = http_signatures::cavage::easy::verify(req, |key_id| {
         async move {
-            let remote_user: Account = with_connection!(db_pool, |db_conn| {
+            let (key, remote_user): (CryptographicKey, Account) = with_connection!(db_pool, |db_conn| {
                 accounts::table
-                    .filter(accounts::public_key_id.eq(key_id))
-                    .select(Account::as_select())
+                    .inner_join(accounts_cryptographic_keys::table)
+                    .inner_join(cryptographic_keys::table.on(cryptographic_keys::key_id.eq(accounts_cryptographic_keys::key_id)))
+                    .filter(accounts_cryptographic_keys::key_id.eq(key_id))
+                    .select(<(CryptographicKey, Account)>::as_select())
                     .first(db_conn)
                     .await
             })?;
@@ -122,7 +129,7 @@ async fn verify_signature(
                 }
             }
 
-            Ok::<_, Error>(remote_user.public_key)
+            Ok::<_, Error>(key.public_key_der)
         }
         .scoped()
     })

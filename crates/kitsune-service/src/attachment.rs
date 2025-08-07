@@ -7,10 +7,8 @@ use garde::Validate;
 use img_parts::{DynImage, ImageEXIF};
 use kitsune_core::consts::{MAX_MEDIA_DESCRIPTION_LENGTH, USER_AGENT};
 use kitsune_db::{
-    PgPool,
-    model::media_attachment::{MediaAttachment, NewMediaAttachment, UpdateMediaAttachment},
-    schema::media_attachments,
-    with_connection,
+    PgPool, changeset::UpdateMediaAttachment, insert::NewMediaAttachment, model::MediaAttachment,
+    schema::media_attachments, with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
@@ -65,6 +63,10 @@ pub struct Upload<S> {
     #[builder(default, setter(strip_option))]
     #[garde(length(chars, max = MAX_MEDIA_DESCRIPTION_LENGTH))]
     description: Option<String>,
+    #[garde(skip)]
+    // TODO: set this appropriately
+    #[builder(default, setter(into))]
+    sensitive: bool,
     #[builder(default = "Uuid::now_v7().to_string()")]
     #[garde(skip)]
     path: String,
@@ -215,7 +217,7 @@ impl AttachmentService {
                     content_type: upload.content_type.as_str(),
                     account_id: upload.account_id,
                     description: upload.description.as_deref(),
-                    blurhash: None,
+                    is_sensitive: upload.sensitive,
                     file_path: Some(upload.path.as_str()),
                     remote_url: None,
                 })
@@ -241,11 +243,7 @@ mod test {
     };
     use iso8601_timestamp::Timestamp;
     use kitsune_db::{
-        model::{
-            account::{ActorType, NewAccount},
-            media_attachment::MediaAttachment,
-        },
-        schema::accounts,
+        insert::NewAccount, model::MediaAttachment, schema::accounts, types::AccountType,
         with_connection_panicky,
     };
     use kitsune_http_client::Client;
@@ -304,8 +302,8 @@ mod test {
                 account_id: Some(account_id),
                 content_type: String::from("image/jpeg"),
                 description: None,
-                blurhash: None,
                 file_path: Some(String::from("test.jpeg")),
+                is_sensitive: false,
                 remote_url: None,
                 created_at: Timestamp::now_utc(),
                 updated_at: Timestamp::now_utc()
@@ -336,22 +334,16 @@ mod test {
         diesel::insert_into(accounts::table)
             .values(NewAccount {
                 id: account_id,
+                avatar_id: None,
+                header_id: None,
                 display_name: None,
                 username: "alice",
                 locked: false,
                 note: None,
                 local: true,
                 domain: "example.com",
-                actor_type: ActorType::Person,
+                account_type: AccountType::Person,
                 url: "https://example.com/users/alice",
-                featured_collection_url: None,
-                followers_url: None,
-                following_url: None,
-                inbox_url: None,
-                outbox_url: None,
-                shared_inbox_url: None,
-                public_key_id: "https://example.com/users/alice#main-key",
-                public_key: "",
                 created_at: None,
             })
             .execute(db_conn)

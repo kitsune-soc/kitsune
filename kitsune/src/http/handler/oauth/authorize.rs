@@ -17,7 +17,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::RunQueryDsl;
 use flashy::{FlashHandle, IncomingFlashes};
 use kitsune_db::{
-    PgPool, model::user::User, schema::oauth2_applications, schema::users, with_connection,
+    PgPool, model::User, schema::oauth2_applications, schema::users, with_connection,
 };
 use kitsune_error::{Error, ErrorType, Result, kitsune_error};
 use kitsune_url::UrlService;
@@ -33,7 +33,7 @@ const UNCONFIRMED_EMAIL_ADDRESS: &str = "Email address is unconfirmed. Check you
 const WRONG_EMAIL_OR_PASSWORD: &str = "Entered wrong email or password";
 
 #[cfg(feature = "oidc")]
-use {axum::extract::Query, kitsune_db::model::oauth2, kitsune_oidc::OidcService};
+use {axum::extract::Query, kitsune_db::model::Oauth2Application, kitsune_oidc::OidcService};
 
 #[cfg(feature = "oidc")]
 #[derive(Deserialize)]
@@ -156,7 +156,7 @@ pub async fn get(
             oauth2_applications::table
                 .find(query.client_id)
                 .filter(oauth2_applications::redirect_uri.eq(query.redirect_uri))
-                .get_result::<oauth2::Application>(db_conn)
+                .get_result::<Oauth2Application>(db_conn)
                 .await
         })?;
 

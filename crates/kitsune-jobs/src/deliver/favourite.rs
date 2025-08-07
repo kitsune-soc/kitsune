@@ -3,7 +3,7 @@ use athena::Runnable;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
-use kitsune_db::{model::favourite::Favourite, schema::posts_favourites, with_connection};
+use kitsune_db::{model::Favourite, schema::posts_favourites, with_connection};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 

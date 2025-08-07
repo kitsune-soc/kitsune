@@ -1,11 +1,11 @@
 use super::Account;
 use crate::http::graphql::ContextExt;
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
-use diesel::{QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_db::{
-    model::{account::Account as DbAccount, user::User as DbUser},
-    schema::{accounts, users},
+    model::{Account as DbAccount, User as DbUser},
+    schema::{accounts, users, users_accounts},
     with_connection,
 };
 use speedy_uuid::Uuid;
@@ -15,8 +15,6 @@ use time::OffsetDateTime;
 #[graphql(complex)]
 pub struct User {
     pub id: Uuid,
-    #[graphql(skip)]
-    pub account_id: Uuid,
     pub username: String,
     pub email: String,
     pub created_at: OffsetDateTime,
@@ -30,7 +28,8 @@ impl User {
         with_connection!(db_pool, |db_conn| {
             users::table
                 .find(self.id)
-                .inner_join(accounts::table)
+                .inner_join(users_accounts::table)
+                .inner_join(accounts::table.on(accounts::id.eq(users_accounts::account_id)))
                 .select(DbAccount::as_select())
                 .get_result::<DbAccount>(db_conn)
                 .await
@@ -44,7 +43,6 @@ impl From<DbUser> for User {
     fn from(value: DbUser) -> Self {
         Self {
             id: value.id,
-            account_id: value.account_id,
             username: value.username,
             email: value.email,
             created_at: value.created_at.assume_utc(),

@@ -2,10 +2,11 @@
 extern crate tracing;
 
 use enum_dispatch::enum_dispatch;
-use kitsune_db::model::{account::Account as DbAccount, post::Post as DbPost};
+use kitsune_db::model::{Account as DbAccount, Post as DbPost};
 use kitsune_error::Result;
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
+use std::time::{Duration, SystemTime};
 use strum::{AsRefStr, EnumIter};
 
 mod sql;
@@ -26,18 +27,22 @@ pub struct Account {
     pub username: String,
     pub note: Option<String>,
     /// Timestamp of the creation expressed in seconds since the Unix epoch
-    pub created_at: u64,
+    pub created_at: SystemTime,
 }
 
 impl From<DbAccount> for Account {
     fn from(value: DbAccount) -> Self {
-        let (created_at_secs, _) = value.id.get_timestamp().unwrap().to_unix();
+        let (created_at_secs, created_at_subsec_nanos) =
+            value.id.get_timestamp().unwrap().to_unix();
+        let created_at =
+            SystemTime::UNIX_EPOCH + Duration::new(created_at_secs, created_at_subsec_nanos);
+
         Self {
             id: value.id,
             display_name: value.display_name,
             username: value.username,
             note: value.note,
-            created_at: created_at_secs,
+            created_at,
         }
     }
 }

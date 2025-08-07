@@ -3,11 +3,8 @@ use diesel_async::RunQueryDsl;
 use http::{Method, Request};
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    PgPool,
-    json::Json,
-    model::link_preview::{ConflictLinkPreviewChangeset, LinkPreview, NewLinkPreview},
-    schema::link_previews,
-    with_connection,
+    PgPool, changeset::ConflictLinkPreview, insert::NewLinkPreview, json::Json, model::LinkPreview,
+    schema::link_previews, with_connection,
 };
 use kitsune_derive::kitsune_service;
 use kitsune_error::Result;
@@ -92,7 +89,7 @@ impl Client {
                 })
                 .on_conflict(link_previews::url)
                 .do_update()
-                .set(ConflictLinkPreviewChangeset {
+                .set(ConflictLinkPreview {
                     embed_data: Json(&embed_data),
                     expires_at,
                 })

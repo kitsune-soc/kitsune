@@ -3,7 +3,7 @@
 use const_oid::db::rfc5912::RSA_ENCRYPTION;
 use http::{Method, Request, Uri};
 use pkcs8::{
-    Document, LineEnding, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef, der::EncodePem,
+    Document, PrivateKeyInfo, SecretDocument, SubjectPublicKeyInfoRef, der::Encode,
     spki::AlgorithmIdentifier,
 };
 use ring::signature::{
@@ -67,7 +67,7 @@ pub fn get_request() -> Request<()> {
 }
 
 #[must_use]
-pub fn get_pkcs8_private_key() -> String {
+pub fn get_pkcs8_private_key() -> Vec<u8> {
     let (_tag, document) = SecretDocument::from_pem(SOME_PRIVATE_KEY).unwrap();
     let private_key_info = PrivateKeyInfo {
         algorithm: AlgorithmIdentifier {
@@ -77,7 +77,7 @@ pub fn get_pkcs8_private_key() -> String {
         private_key: document.as_bytes(),
         public_key: None,
     };
-    private_key_info.to_pem(LineEnding::CR).unwrap()
+    private_key_info.to_der().unwrap()
 }
 
 #[must_use]

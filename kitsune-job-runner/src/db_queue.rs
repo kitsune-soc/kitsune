@@ -12,12 +12,8 @@ use just_retry::{
     retry_policies::{Jitter, policies::ExponentialBackoff},
 };
 use kitsune_db::{
-    PgPool,
-    function::now,
-    json::Json,
-    model::job::{Job, JobState, NewJob, RequeueChangeset},
-    schema::jobs,
-    with_connection, with_transaction,
+    PgPool, changeset::RequeueChangeset, function::now, insert::NewJob, json::Json, model::Job,
+    schema::jobs, types::JobState, with_connection, with_transaction,
 };
 use kitsune_jobs::KitsuneContextRepo;
 use std::{ops::ControlFlow, time::SystemTime};

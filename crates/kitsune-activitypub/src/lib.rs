@@ -10,16 +10,13 @@ use kitsune_config::language_detection::Configuration as LanguageDetectionConfig
 use kitsune_core::traits::{Fetcher as FetcherTrait, fetcher::PostFetchOptions};
 use kitsune_db::{
     PgPool,
-    model::{
-        account::Account,
-        custom_emoji::PostCustomEmoji,
-        media_attachment::{NewMediaAttachment, NewPostMediaAttachment},
-        mention::NewMention,
-        post::{FullPostChangeset, NewPost, Post, PostConflictChangeset, Visibility},
-    },
+    changeset::FullPostChangeset,
+    insert::{NewMediaAttachment, NewMention, NewPost, NewPostMediaAttachment},
+    model::{Account, Post, PostsCustomEmoji},
     schema::{
         media_attachments, posts, posts_custom_emojis, posts_media_attachments, posts_mentions,
     },
+    types::Visibility,
     with_transaction,
 };
 use kitsune_embed::Client as EmbedClient;
@@ -98,12 +95,12 @@ async fn handle_custom_emojis(
     });
 
     let emojis = futures
-        .map_ok(|(resolved_emoji, emoji_tag)| PostCustomEmoji {
+        .map_ok(|(resolved_emoji, emoji_tag)| PostsCustomEmoji {
             post_id,
             custom_emoji_id: resolved_emoji.id,
             emoji_text: emoji_tag.name.clone(),
         })
-        .try_collect::<Vec<PostCustomEmoji>>()
+        .try_collect::<Vec<PostsCustomEmoji>>()
         .await?;
 
     diesel::insert_into(posts_custom_emojis::table)
@@ -146,7 +143,8 @@ pub async fn process_attachments(
                         account_id: Some(author.id),
                         content_type,
                         description: attachment.name.as_deref(),
-                        blurhash: attachment.blurhash.as_deref(),
+                        // TODO: set this appropriately
+                        is_sensitive: false,
                         file_path: None,
                         remote_url: Some(attachment.url.as_str()),
                     })
@@ -218,7 +216,7 @@ async fn preprocess_object(
         CowBox::boxed(author)
     };
 
-    let visibility = Visibility::from_activitypub(&user, &object).unwrap();
+    let visibility = Visibility::Public; // TODO: Implement proper visibility logic
     let in_reply_to_id = match object.in_reply_to {
         Some(ref in_reply_to) => fetcher
             .fetch_post(
@@ -283,19 +281,21 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
         search_backend,
     } = preprocess_object(process_data).await?;
 
+    let post_id = timestamp_to_uuid(object.published);
     let post = with_transaction!(db_pool, |tx| {
         let new_post = diesel::insert_into(posts::table)
             .values(NewPost {
-                id: timestamp_to_uuid(object.published),
+                id: post_id,
                 account_id: user.id,
                 in_reply_to_id,
                 reposted_post_id: None,
                 subject: object.summary.as_deref(),
                 content: object.content.as_str(),
                 content_source: "",
-                content_lang: content_lang.into(),
+                content_lang: <Language as Into<kitsune_db::lang::LanguageIsoCode>>::into(
+                    content_lang,
+                ),
                 link_preview_url: link_preview_url.as_deref(),
-                is_sensitive: object.sensitive,
                 visibility,
                 is_local: false,
                 url: object.id.as_str(),
@@ -303,11 +303,12 @@ pub async fn process_new_object(process_data: ProcessNewObject<'_>) -> Result<Po
             })
             .on_conflict(posts::url)
             .do_update()
-            .set(PostConflictChangeset {
-                subject: object.summary.as_deref(),
-                content: object.content.as_str(),
-            })
-            .returning(Post::as_returning())
+            .set((
+                posts::subject.eq(object.summary.as_deref()),
+                posts::content.eq(object.content.as_str()),
+                posts::updated_at.eq(iso8601_timestamp::Timestamp::now_utc()),
+            ))
+            .returning(Post::as_select())
             .get_result::<Post>(tx)
             .await?;
 
@@ -364,7 +365,6 @@ pub async fn update_object(process_data: ProcessNewObject<'_>) -> Result<Post> {
                 content_source: "",
                 content_lang: content_lang.into(),
                 link_preview_url: link_preview_url.as_deref(),
-                is_sensitive: object.sensitive,
                 visibility,
                 is_local: false,
                 updated_at: Timestamp::now_utc(),

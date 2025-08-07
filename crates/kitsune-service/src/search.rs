@@ -6,7 +6,7 @@ use garde::Validate;
 use kitsune_core::{consts::API_MAX_LIMIT, traits::Fetcher};
 use kitsune_db::{
     PgPool,
-    model::{account::Account, post::Post},
+    model::{Account, Post},
     schema::{accounts, posts},
     with_connection,
 };

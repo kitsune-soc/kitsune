@@ -1,12 +1,9 @@
 use super::Fetcher;
-use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, Insertable, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iso8601_timestamp::Timestamp;
 use kitsune_db::{
-    model::{
-        custom_emoji::CustomEmoji,
-        media_attachment::{MediaAttachment, NewMediaAttachment},
-    },
+    model::{CustomEmoji, MediaAttachment},
     schema::{custom_emojis, media_attachments},
     with_connection, with_transaction,
 };
@@ -14,6 +11,18 @@ use kitsune_error::{Error, Result, kitsune_error};
 use kitsune_type::ap::emoji::Emoji;
 use speedy_uuid::Uuid;
 use url::Url;
+
+#[derive(Insertable)]
+#[diesel(table_name = media_attachments)]
+struct NewMediaAttachment<'a> {
+    id: Uuid,
+    account_id: Option<Uuid>,
+    content_type: String,
+    description: Option<&'a str>,
+    file_path: Option<&'a str>,
+    is_sensitive: bool,
+    remote_url: Option<&'a str>,
+}
 
 impl Fetcher {
     pub(crate) async fn fetch_emoji(&self, url: &str) -> Result<Option<CustomEmoji>> {
@@ -60,10 +69,10 @@ impl Fetcher {
                 .values(NewMediaAttachment {
                     id: Uuid::now_v7(),
                     account_id: None,
-                    content_type,
+                    content_type: content_type.to_string(),
                     description: None,
-                    blurhash: None,
                     file_path: None,
+                    is_sensitive: false,
                     remote_url: Some(&emoji.icon.url),
                 })
                 .returning(MediaAttachment::as_returning())

@@ -26,8 +26,6 @@ pub struct CreateForm {
     media_ids: Vec<Uuid>,
     status: String,
     in_reply_to_id: Option<Uuid>,
-    #[serde(default)]
-    sensitive: bool,
     spoiler_text: Option<String>,
     #[serde(default)]
     visibility: Visibility,
@@ -39,8 +37,6 @@ pub struct UpdateForm {
     media_ids: Vec<Uuid>,
     #[serde(default)]
     status: Option<String>,
-    #[serde(default)]
-    sensitive: Option<bool>,
     #[serde(default)]
     spoiler_text: Option<String>,
 }
@@ -93,7 +89,6 @@ pub async fn post(
         .content(form.status)
         .in_reply_to_id(form.in_reply_to_id)
         .media_ids(form.media_ids)
-        .sensitive(form.sensitive)
         .subject(form.spoiler_text.filter(|subject| !subject.is_empty()))
         .visibility(form.visibility.into())
         .build();
@@ -116,7 +111,6 @@ pub async fn put(
         .post_id(id)
         .content(form.status)
         .media_ids(form.media_ids)
-        .sensitive(form.sensitive)
         .subject(form.spoiler_text.filter(|subject| !subject.is_empty()))
         .build();
 

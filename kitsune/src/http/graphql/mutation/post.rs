@@ -15,7 +15,6 @@ impl PostMutation {
         &self,
         ctx: &Context<'_>,
         content: String,
-        is_sensitive: bool,
         visibility: Visibility,
     ) -> Result<Post> {
         let state = ctx.state();
@@ -23,7 +22,6 @@ impl PostMutation {
 
         let create_post = CreatePost::builder()
             .author_id(user_data.account.id)
-            .sensitive(is_sensitive)
             .content(content)
             .visibility(visibility.into())
             .build();

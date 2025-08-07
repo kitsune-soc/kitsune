@@ -3,7 +3,7 @@ use athena::Runnable;
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use kitsune_core::traits::deliverer::Action;
-use kitsune_db::{model::post::Post, schema::posts, with_connection};
+use kitsune_db::{model::Post, schema::posts, with_connection};
 use serde::{Deserialize, Serialize};
 use speedy_uuid::Uuid;
 

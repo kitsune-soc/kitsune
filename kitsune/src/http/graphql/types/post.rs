@@ -5,7 +5,7 @@ use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
 use kitsune_db::{
-    model::{media_attachment::MediaAttachment as DbMediaAttachment, post::Post as DbPost},
+    model::{MediaAttachment as DbMediaAttachment, Post as DbPost},
     schema::{media_attachments, posts_media_attachments},
     with_connection,
 };
@@ -20,7 +20,6 @@ pub struct Post {
     pub account_id: Uuid,
     #[graphql(skip)]
     pub in_reply_to_id: Option<Uuid>,
-    pub is_sensitive: bool,
     pub subject: Option<String>,
     pub content: String,
     pub visibility: Visibility,
@@ -66,7 +65,6 @@ impl From<DbPost> for Post {
             id: value.id,
             account_id: value.account_id,
             in_reply_to_id: value.in_reply_to_id,
-            is_sensitive: value.is_sensitive,
             subject: value.subject,
             content: value.content,
             visibility: value.visibility.into(),

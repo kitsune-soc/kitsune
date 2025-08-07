@@ -8,8 +8,8 @@ use kitsune_db::{
     PgPool,
     function::iso_code_to_language,
     lang::LanguageIsoCode,
-    model::post::Visibility,
     schema::{accounts, posts},
+    types::Visibility,
     with_connection,
 };
 use kitsune_derive::kitsune_service;

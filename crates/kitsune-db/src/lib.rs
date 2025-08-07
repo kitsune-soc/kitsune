@@ -20,14 +20,16 @@ mod error;
 mod pool;
 mod tls;
 
-pub mod activity;
+pub mod changeset;
 pub mod function;
+pub mod insert;
 pub mod json;
 pub mod lang;
 pub mod model;
 pub mod post_permission_check;
 #[allow(clippy::wildcard_imports)]
 pub mod schema;
+pub mod types;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -58,19 +60,13 @@ pub async fn connect(config: &DatabaseConfig) -> Result<PgPool> {
     let pool = Pool::builder()
         .max_size(config.max_connections)
         .build(pool_config)
-        .await
-        .unwrap();
+        .await?;
 
     {
         let mut conn = pool.get().await?;
 
-        kitsune_language::generate_postgres_enum(&mut conn, "language_iso_code").await?;
-        kitsune_language::generate_regconfig_function(
-            &mut conn,
-            "iso_code_to_language",
-            "language_iso_code",
-        )
-        .await?;
+        kitsune_language::generate_postgres_enum(&mut conn).await?;
+        kitsune_language::generate_regconfig_function(&mut conn).await?;
     }
 
     Ok(pool)

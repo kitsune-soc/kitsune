@@ -5,7 +5,7 @@ use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use futures_util::{StreamExt, TryStreamExt, stream};
 use kitsune_activitypub::mapping::IntoActivity;
 use kitsune_db::{
-    model::{account::Account, post::Post},
+    model::{Account, Post},
     post_permission_check::{PermissionCheck, PostPermissionCheckExt},
     schema::accounts,
     with_connection,

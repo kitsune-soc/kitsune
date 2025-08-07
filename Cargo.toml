@@ -111,7 +111,7 @@ base64-simd = "0.8.0"
 blake3 = "1.8.2"
 bubble-bath = "0.2.1"
 bytes = "1.10.1"
-clap = { version = "4.5.40", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.42", features = ["derive", "wrap_help"] }
 color-eyre = "0.6.5"
 colored_json = "5.0.0"
 compact_str = { version = "0.9.0", features = ["serde"] }
@@ -121,9 +121,10 @@ const-oid = { version = "=0.9.6", features = ["db"] }
 cookie = { version = "0.18.1", features = ["percent-encode"] }
 derive_builder = "0.20.2"
 derive_more = { version = "2.0.1", features = ["from"] }
-diesel = { version = "2.2.11", default-features = false, features = [
+diesel = { version = "2.2.12", default-features = false, features = [
     "32-column-tables",
     "postgres_backend",
+#    "sqlite",
     "uuid",
     "with-deprecated",
 ] }
@@ -176,7 +177,7 @@ http-serde = "2.1.1"
 httpdate = "1.0.3"
 human-size = { version = "0.4.3", features = ["serde"] }
 hyper = "1.6.0"
-hyper-util = { version = "0.1.15", features = [
+hyper-util = { version = "0.1.16", features = [
     "client-legacy",
     "http1",
     "http2",
@@ -206,7 +207,7 @@ isolang = { version = "2.4.0", features = [
 itertools = { version = "0.14.0", default-features = false }
 lantern-client-sdk = { package = "client-sdk", git = "https://github.com/Lantern-chat/client-sdk-rs.git", rev = "547922fb657f924ff595b78d38b17094fd25be21", default-features = false }
 leb128 = "0.2.5"
-lettre = { version = "0.11.17", default-features = false, features = [
+lettre = { version = "0.11.18", default-features = false, features = [
     "builder",
     "hostname",
     "pool",
@@ -217,9 +218,9 @@ lettre = { version = "0.11.17", default-features = false, features = [
 ] }
 lexical-parse-integer = { version = "1.0.5", default-features = false }
 logos = "0.15.0"
-lol_html = "2.5.0"
+lol_html = "2.6.0"
 memchr = "2.7.5"
-memmap2 = "0.9.5"
+memmap2 = "0.9.7"
 miette = { version = "7.6.0", features = ["fancy"] }
 mimalloc = "0.1.47"
 mime = "0.3.17"
@@ -230,7 +231,7 @@ mrml = { version = "5.0.0", default-features = false, features = [
     "parse",
     "render",
 ] }
-notify-debouncer-full = "0.5.0"
+notify-debouncer-full = "0.6.0"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
 oauth2 = { version = "5.0.0", default-features = false }
@@ -261,34 +262,34 @@ password-hash = { version = "0.5.0", features = ["std"] }
 paste = "1.0.15"
 pin-project-lite = "0.2.16"
 pkcs8 = { version = "0.10.2", features = ["pem", "std"] }
-postcard = { version = "1.1.2", default-features = false, features = ["alloc"] }
+postcard = { version = "1.1.3", default-features = false, features = ["alloc"] }
 pretty_assertions = "1.4.1"
 proc-macro2 = "1.0.95"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = [
     "html",
     "simd",
 ] }
-quick-xml = { version = "0.38.0", features = ["serialize"] }
+quick-xml = { version = "0.38.1", features = ["serialize"] }
 quote = "1.0.40"
 rand = "=0.8.5"
 rand_xorshift = "=0.3.0"
 rayon = "1.10.0"
-redb = { version = "2.6.0", features = ["logging"] }
+redb = { version = "2.6.2", features = ["logging"] }
 regex = "1.11.1"
 retry-policies = "0.5.1"
 ring = { version = "0.17.14", features = ["std"] }
 rsa = "0.9.8"
-rstest = { version = "0.25.0", default-features = false }
+rstest = { version = "0.26.1", default-features = false }
 rust-embed = { version = "8.7.2", features = ["include-exclude"] }
 rustc-hash = "2.1.1"
-rustls = { version = "0.23.28", default-features = false, features = [
+rustls = { version = "0.23.31", default-features = false, features = [
     "logging",
     "ring",
     "std",
     "tls12",
 ] }
-rustls-platform-verifier = "0.6.0"
-rusty-s3 = "0.7.0"
+rustls-platform-verifier = "0.6.1"
+rusty-s3 = "0.8.0"
 sailfish = { version = "0.9.1", default-features = false, features = [
     "derive",
     "perf-inline",
@@ -297,7 +298,7 @@ schemars = { version = "1.0.4", features = ["semver1"] }
 scoped-futures = { version = "0.1.4", default-features = false }
 semver = { version = "1.0.26", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+serde_json = "1.0.142"
 serde_test = "1.0.177"
 serde_urlencoded = "0.7.1"
 serde_with = { version = "3.14.0", default-features = false, features = [
@@ -308,19 +309,22 @@ sha2 = "0.10.9"
 simdutf8 = { version = "0.1.5", features = ["aarch64_neon"] }
 slab = "0.4.10"
 smol_str = { version = "0.3.2", features = ["serde"] }
-sonic-rs = "0.5.2"
-strum = { version = "0.27.1", features = ["derive"] }
+sonic-rs = "0.5.3"
+strum = { version = "0.27.2", features = ["derive"] }
 subtle = "2.6.1"
 syn = { version = "2.0.104", features = ["full"] }
 sync_wrapper = "1.0.2"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
 time = "0.3.41"
-tokio = { version = "1.46.1", features = ["full", "tracing"] }
+tokio = { version = "1.47.1", features = ["full", "tracing"] }
 tokio-postgres = "0.7.13"
 tokio-postgres-rustls = "0.13.0"
-tokio-util = { version = "0.7.15", features = ["io", "rt"] }
-toml = { version = "0.9.0", default-features = false, features = ["parse", "serde"] }
+tokio-util = { version = "0.7.16", features = ["io", "rt"] }
+toml = { version = "0.9.5", default-features = false, features = [
+    "parse",
+    "serde",
+] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 tower-http = { version = "0.6.6", features = [
     "catch-panic",
@@ -359,9 +363,9 @@ urlencoding = "2.1.3"
 uuid = { version = "1.17.0", features = ["fast-rng", "v4", "v7"] }
 uuid-simd = { version = "0.8.0", features = ["uuid"] }
 walkdir = "2.5.0"
-wasm-encoder = "0.235.0"
-wasmparser = "0.235.0"
-wasmtime = { version = "34.0.2", default-features = false, features = [
+wasm-encoder = "0.236.0"
+wasmparser = "0.236.0"
+wasmtime = { version = "35.0.0", default-features = false, features = [
     "addr2line",
     "all-arch",
     "async",
@@ -371,8 +375,8 @@ wasmtime = { version = "34.0.2", default-features = false, features = [
     "pooling-allocator",
     "runtime",
 ] }
-wasmtime-wasi = { version = "34.0.2", default-features = false }
-wat = "1.235.0"
+wasmtime-wasi = { version = "35.0.0", default-features = false }
+wat = "1.236.0"
 whatlang = "0.16.4"
 whichlang = "0.1.1"
 wit-bindgen = "0.43.0"

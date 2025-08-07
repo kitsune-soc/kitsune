@@ -1,6 +1,6 @@
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use kitsune_db::{model::oauth2, schema::oauth2_applications, with_connection};
+use kitsune_db::{model::Oauth2Application, schema::oauth2_applications, with_connection};
 use komainu::{ClientExtractor, scope::Scope};
 use speedy_uuid::Uuid;
 use std::{borrow::Cow, str::FromStr};
@@ -29,7 +29,7 @@ impl ClientExtractor for Extractor {
                     query = query.filter(oauth2_applications::secret.eq(client_secret));
                 }
 
-                query.first::<oauth2::Application>(db_conn).await
+                query.first::<Oauth2Application>(db_conn).await
             })?
         };
 

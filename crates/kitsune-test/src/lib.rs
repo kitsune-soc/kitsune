@@ -37,7 +37,7 @@ where
     F: FnOnce(PgPool) -> Fut,
     Fut: Future,
 {
-    let db_url = env::var("DATABASE_URL").unwrap();
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL variable not set");
     let mut url = Url::parse(&db_url).unwrap();
 
     // Create a new separate database for this test

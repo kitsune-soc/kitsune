@@ -10,7 +10,7 @@ use kitsune_core::traits::{
 };
 use kitsune_db::{
     PgPool,
-    model::{account::Account, custom_emoji::CustomEmoji, post::Post},
+    model::{Account, CustomEmoji, Post},
 };
 use kitsune_embed::Client as EmbedClient;
 use kitsune_error::{Error, Result, bail};

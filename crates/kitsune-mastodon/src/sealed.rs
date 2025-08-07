@@ -8,21 +8,13 @@ use iso8601_timestamp::Timestamp;
 use kitsune_db::{
     PgPool,
     model::{
-        account::Account as DbAccount,
-        custom_emoji::{CustomEmoji as DbCustomEmoji, PostCustomEmoji as DbPostCustomEmoji},
-        favourite::Favourite as DbFavourite,
-        follower::Follow,
-        link_preview::LinkPreview,
-        media_attachment::{
-            MediaAttachment as DbMediaAttachment, PostMediaAttachment as DbPostMediaAttachment,
-        },
-        mention::Mention as DbMention,
-        notification::Notification as DbNotification,
-        post::{Post as DbPost, PostSource},
+        Account as DbAccount, CustomEmoji as DbCustomEmoji, Favourite as DbFavourite, Follow,
+        LinkPreview, MediaAttachment as DbMediaAttachment, Notification as DbNotification,
+        Post as DbPost, PostSource, PostsMention as DbMention,
     },
     schema::{
         accounts, accounts_follows, custom_emojis, media_attachments, notifications, posts,
-        posts_favourites,
+        posts_custom_emojis, posts_favourites, posts_media_attachments, posts_mentions,
     },
     with_connection,
 };
@@ -118,8 +110,8 @@ impl IntoMastodon for DbAccount {
         Ok(Account {
             id: self.id,
             acct,
-            bot: self.actor_type.is_bot(),
-            group: self.actor_type.is_group(),
+            bot: self.account_type.is_bot(),
+            group: self.account_type.is_group(),
             username: self.username,
             display_name: self.display_name.unwrap_or_default(),
             created_at: self.created_at,
@@ -261,7 +253,7 @@ impl IntoMastodon for DbMediaAttachment {
             preview_url: url.clone(),
             remote_url: url,
             description: self.description.unwrap_or_default(),
-            blurhash: self.blurhash,
+            blurhash: None,
         })
     }
 }
@@ -341,8 +333,9 @@ impl IntoMastodon for DbPost {
                     .get_result::<i64>(db_conn)
                     .map_err(Error::from);
 
-                let media_attachments_fut = DbPostMediaAttachment::belonging_to(&self)
-                    .inner_join(media_attachments::table)
+                let media_attachments_fut = media_attachments::table
+                    .inner_join(posts_media_attachments::table)
+                    .filter(posts_media_attachments::post_id.eq(self.id))
                     .select(DbMediaAttachment::as_select())
                     .load_stream::<DbMediaAttachment>(db_conn)
                     .map_err(Error::from)
@@ -353,12 +346,15 @@ impl IntoMastodon for DbPost {
                             .try_collect()
                     });
 
-                let mentions_stream_fut = DbMention::belonging_to(&self)
+                let mentions_stream_fut = posts_mentions::table
+                    .filter(posts_mentions::post_id.eq(self.id))
+                    .select(DbMention::as_select())
                     .load_stream::<DbMention>(db_conn)
                     .map_err(Error::from);
 
-                let custom_emojis_stream_fut = DbPostCustomEmoji::belonging_to(&self)
+                let custom_emojis_stream_fut = posts_custom_emojis::table
                     .inner_join(custom_emojis::table.inner_join(media_attachments::table))
+                    .filter(posts_custom_emojis::post_id.eq(self.id))
                     .select((DbCustomEmoji::as_select(), DbMediaAttachment::as_select()))
                     .load_stream::<(DbCustomEmoji, DbMediaAttachment)>(db_conn)
                     .map_err(Error::from);
@@ -424,7 +420,7 @@ impl IntoMastodon for DbPost {
                 created_at: self.created_at,
                 in_reply_to_account_id: None,
                 in_reply_to_id: self.in_reply_to_id,
-                sensitive: self.is_sensitive,
+                sensitive: self.subject.is_some(),
                 spoiler_text: self.subject,
                 visibility: self.visibility.into(),
                 language,

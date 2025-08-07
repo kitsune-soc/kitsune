@@ -1,18 +1,15 @@
 use diesel::{
-    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl,
-    SelectableHelper, result::Error as DieselError,
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper,
+    result::Error as DieselError,
 };
 use diesel_async::RunQueryDsl;
 use futures_util::{Stream, StreamExt, future::Either};
 use kitsune_db::{
     PgPool,
     function::coalesce_nullable,
-    model::{
-        account::Account,
-        mention::Mention,
-        post::{Post, Visibility},
-    },
-    schema::{accounts, accounts_follows},
+    model::{Account, Post},
+    schema::{accounts, accounts_activitypub, accounts_follows, posts_mentions},
+    types::Visibility,
     with_connection,
 };
 use kitsune_error::{Error, Result};
@@ -35,17 +32,20 @@ impl InboxResolver {
         with_connection!(self.db_pool, |db_conn| {
             accounts_follows::table
                 .filter(accounts_follows::account_id.eq(account.id))
+                .inner_join(accounts::table.on(accounts::id.eq(accounts_follows::follower_id)))
                 .inner_join(
-                    accounts::table.on(accounts::id.eq(accounts_follows::follower_id).and(
-                        accounts::inbox_url
-                            .is_not_null()
-                            .or(accounts::shared_inbox_url.is_not_null()),
-                    )),
+                    accounts_activitypub::table
+                        .on(accounts::id.eq(accounts_activitypub::account_id)),
+                )
+                .filter(
+                    accounts_activitypub::inbox_url
+                        .is_not_null()
+                        .or(accounts_activitypub::shared_inbox_url.is_not_null()),
                 )
                 .distinct()
                 .select(coalesce_nullable(
-                    accounts::shared_inbox_url,
-                    accounts::inbox_url,
+                    accounts_activitypub::shared_inbox_url,
+                    accounts_activitypub::inbox_url,
                 ))
                 .load_stream(db_conn)
                 .await
@@ -65,16 +65,21 @@ impl InboxResolver {
                 .first(db_conn)
                 .await?;
 
-            let mentioned_inbox_stream = Mention::belonging_to(post)
-                .inner_join(accounts::table)
+            let mentioned_inbox_stream = posts_mentions::table
+                .filter(posts_mentions::post_id.eq(post.id))
+                .inner_join(accounts::table.on(posts_mentions::account_id.eq(accounts::id)))
+                .inner_join(
+                    accounts_activitypub::table
+                        .on(accounts::id.eq(accounts_activitypub::account_id)),
+                )
                 .filter(
-                    accounts::shared_inbox_url
+                    accounts_activitypub::shared_inbox_url
                         .is_not_null()
-                        .or(accounts::inbox_url.is_not_null()),
+                        .or(accounts_activitypub::inbox_url.is_not_null()),
                 )
                 .select(coalesce_nullable(
-                    accounts::shared_inbox_url,
-                    accounts::inbox_url,
+                    accounts_activitypub::shared_inbox_url,
+                    accounts_activitypub::inbox_url,
                 ))
                 .load_stream(db_conn)
                 .await?;

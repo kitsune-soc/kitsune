@@ -8,8 +8,10 @@ use futures_util::{Stream, TryStreamExt};
 use garde::Validate;
 use kitsune_db::{
     PgPool,
-    model::notification::{NewNotification, Notification, NotificationType},
+    insert::NewNotification,
+    model::Notification,
     schema::{accounts, accounts_follows, accounts_preferences, notifications, posts},
+    types::NotificationType,
     with_connection,
 };
 use kitsune_derive::kitsune_service;
