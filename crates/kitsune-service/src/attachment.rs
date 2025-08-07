@@ -65,7 +65,7 @@ pub struct Upload<S> {
     description: Option<String>,
     #[garde(skip)]
     // TODO: set this appropriately
-    #[builder(setter(into))]
+    #[builder(default, setter(into))]
     sensitive: bool,
     #[builder(default = "Uuid::now_v7().to_string()")]
     #[garde(skip)]
